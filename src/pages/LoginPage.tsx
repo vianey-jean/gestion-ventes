@@ -36,7 +36,7 @@ const LoginPage: React.FC = () => {
     setIsCheckingEmail(true);
     try {
       // Use axios directly to get user's name
-      const response = await axios.post('http://localhost:3001/api/auth/check-email', { email });
+      const response = await axios.post('https://server-gestion-ventes.onrender.com/api/auth/check-email', { email });
       setIsCheckingEmail(false);
       
       if (response.data.exists) {
