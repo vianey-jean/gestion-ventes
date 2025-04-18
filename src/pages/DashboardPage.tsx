@@ -8,7 +8,7 @@ import { Sale } from '@/types';
 import SalesTable from '@/components/dashboard/SalesTable';
 import AddSaleForm from '@/components/dashboard/AddSaleForm';
 import AddProductForm from '@/components/dashboard/AddProductForm';
-import EditProductForm from '@/components/dashboard/EditProductForm';
+import EditProductForm from '@/components/dashboard/AddProductForm';
 import { PlusCircle, FileText, ShoppingCart, Edit } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 
