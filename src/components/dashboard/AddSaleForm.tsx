@@ -1,13 +1,15 @@
-
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog, DialogContent, DialogDescription, DialogFooter,
+  DialogHeader, DialogTitle
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useApp } from '@/contexts/AppContext';
 import { Product, Sale } from '@/types';
 import ProductSearchInput from './ProductSearchInput';
-import { Plus, Minus } from 'lucide-react';
+import { Plus, Minus, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface AddSaleFormProps {
@@ -17,8 +19,9 @@ interface AddSaleFormProps {
 }
 
 const AddSaleForm: React.FC<AddSaleFormProps> = ({ isOpen, onClose, editSale }) => {
-  const { addSale, updateSale, products } = useApp();
+  const { addSale, updateSale, deleteSale, products } = useApp();
   const { toast } = useToast();
+
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
     description: '',
@@ -28,6 +31,7 @@ const AddSaleForm: React.FC<AddSaleFormProps> = ({ isOpen, onClose, editSale }) 
     purchasePrice: '',
     profit: '',
   });
+
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [maxQuantity, setMaxQuantity] = useState(0);
@@ -35,25 +39,28 @@ const AddSaleForm: React.FC<AddSaleFormProps> = ({ isOpen, onClose, editSale }) 
   useEffect(() => {
     if (editSale) {
       const product = products.find(p => p.id === editSale.productId);
+      if (product) {
+        setSelectedProduct(product);
+        setMaxQuantity(product.quantity + editSale.quantitySold);
+      }
       setFormData({
         date: new Date(editSale.date).toISOString().split('T')[0],
         description: editSale.description,
         productId: editSale.productId,
-        sellingPrice: editSale.sellingPrice.toString(),
+        sellingPrice: editSale.sellingPrice.toFixed(2),
         quantitySold: editSale.quantitySold.toString(),
-        purchasePrice: editSale.purchasePrice.toString(),
-        profit: editSale.profit.toString(),
+        purchasePrice: editSale.purchasePrice.toFixed(2),
+        profit: editSale.profit.toFixed(2),
       });
-      if (product) {
-        setSelectedProduct(product);
-        setMaxQuantity(product.quantity + (editSale ? editSale.quantitySold : 0));
-      }
     }
   }, [editSale, products]);
 
-  const updateProfit = (price: string, quantity: string) => {
-    if (formData.purchasePrice && price && quantity) {
-      const profit = (Number(price) - Number(formData.purchasePrice)) * Number(quantity);
+  const updateProfit = (price: string, quantity: string, purchasePrice: string) => {
+    const selling = Number(price);
+    const qty = Number(quantity);
+    const purchase = Number(purchasePrice);
+    if (!isNaN(selling) && !isNaN(qty) && !isNaN(purchase)) {
+      const profit = (selling - purchase) * qty;
       setFormData(prev => ({
         ...prev,
         profit: profit.toFixed(2),
@@ -64,10 +71,8 @@ const AddSaleForm: React.FC<AddSaleFormProps> = ({ isOpen, onClose, editSale }) 
   const handleQuantityChange = (increment: boolean) => {
     const currentQty = Number(formData.quantitySold);
     let newQty = increment ? currentQty + 1 : currentQty - 1;
-
     if (newQty < 1) newQty = 1;
-    
-    if (increment && newQty > maxQuantity) {
+    if (newQty > maxQuantity) {
       toast({
         title: "Quantité insuffisante",
         description: `Stock disponible: ${maxQuantity} unités`,
@@ -75,48 +80,41 @@ const AddSaleForm: React.FC<AddSaleFormProps> = ({ isOpen, onClose, editSale }) 
       });
       return;
     }
-
-    setFormData(prev => {
-      const newQuantity = newQty.toString();
-      updateProfit(prev.sellingPrice, newQuantity);
-      return {
-        ...prev,
-        quantitySold: newQuantity,
-      };
-    });
+    const qtyStr = newQty.toString();
+    updateProfit(formData.sellingPrice, qtyStr, formData.purchasePrice);
+    setFormData(prev => ({
+      ...prev,
+      quantitySold: qtyStr,
+    }));
   };
 
   const handlePriceChange = (increment: boolean) => {
     const currentPrice = Number(formData.sellingPrice);
-    const step = 0.5; // Incrément de 0.50€
+    const step = 1;
     const newPrice = increment ? currentPrice + step : currentPrice - step;
-    
     if (newPrice < 0) return;
-
-    setFormData(prev => {
-      const priceString = newPrice.toFixed(2);
-      updateProfit(priceString, prev.quantitySold);
-      return {
-        ...prev,
-        sellingPrice: priceString,
-      };
-    });
+    const priceStr = newPrice.toFixed(2);
+    updateProfit(priceStr, formData.quantitySold, formData.purchasePrice);
+    setFormData(prev => ({
+      ...prev,
+      sellingPrice: priceStr,
+    }));
   };
 
   const handleProductSelect = (product: Product) => {
     setSelectedProduct(product);
-    setMaxQuantity(product.quantity + (editSale ? editSale.quantitySold : 0));
-    setFormData(prev => {
-      const newData = {
-        ...prev,
-        description: product.description,
-        productId: product.id,
-        purchasePrice: product.purchasePrice.toString(),
-        sellingPrice: (product.purchasePrice * 1.2).toFixed(2), // Prix de vente suggéré: +20%
-        quantitySold: '1',
-      };
-      updateProfit(newData.sellingPrice, newData.quantitySold);
-      return newData;
+    setMaxQuantity(product.quantity + (editSale?.quantitySold || 0));
+    const defaultSellingPrice = (product.purchasePrice * 1.2).toFixed(2);
+    const defaultQty = '1';
+    updateProfit(defaultSellingPrice, defaultQty, product.purchasePrice.toFixed(2));
+    setFormData({
+      date: formData.date,
+      description: product.description,
+      productId: product.id,
+      purchasePrice: product.purchasePrice.toFixed(2),
+      sellingPrice: defaultSellingPrice,
+      quantitySold: defaultQty,
+      profit: ((Number(defaultSellingPrice) - product.purchasePrice) * 1).toFixed(2),
     });
   };
 
@@ -124,15 +122,27 @@ const AddSaleForm: React.FC<AddSaleFormProps> = ({ isOpen, onClose, editSale }) 
     e.preventDefault();
     setIsSubmitting(true);
 
+    const { productId, sellingPrice, quantitySold, purchasePrice, profit } = formData;
+
+    if (!productId || !sellingPrice || !quantitySold || !purchasePrice || !profit) {
+      toast({
+        title: "Champs manquants",
+        description: "Veuillez compléter toutes les informations avant de valider.",
+        variant: "destructive",
+      });
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
-      const saleData = {
+      const saleData: Omit<Sale, 'id'> = {
         date: formData.date,
-        productId: formData.productId,
+        productId,
         description: formData.description,
-        sellingPrice: Number(formData.sellingPrice),
-        quantitySold: Number(formData.quantitySold),
-        purchasePrice: Number(formData.purchasePrice),
-        profit: Number(formData.profit),
+        sellingPrice: Number(sellingPrice),
+        quantitySold: Number(quantitySold),
+        purchasePrice: Number(purchasePrice),
+        profit: Number(profit),
       };
 
       if (editSale) {
@@ -145,11 +155,29 @@ const AddSaleForm: React.FC<AddSaleFormProps> = ({ isOpen, onClose, editSale }) 
     } catch (error) {
       toast({
         title: "Erreur",
-        description: "Une erreur est survenue lors de l'enregistrement",
+        description: "Une erreur est survenue lors de l'enregistrement.",
         variant: "destructive",
       });
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!editSale) return;
+    try {
+      await deleteSale(editSale.id);
+      toast({
+        title: "Vente supprimée",
+        description: "La vente a été supprimée avec succès.",
+      });
+      onClose();
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Impossible de supprimer la vente.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -159,116 +187,69 @@ const AddSaleForm: React.FC<AddSaleFormProps> = ({ isOpen, onClose, editSale }) 
         <DialogHeader>
           <DialogTitle>{editSale ? 'Modifier la vente' : 'Ajouter une vente'}</DialogTitle>
           <DialogDescription>
-            {editSale ? 'Modifiez les détails de la vente.' : 'Enregistrez une nouvelle vente.'}
+            {editSale ? 'Modifiez les détails de la vente ou supprimez-la.' : 'Enregistrez une nouvelle vente.'}
           </DialogDescription>
         </DialogHeader>
-        
+
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="date">Date de vente</Label>
               <Input
                 id="date"
-                name="date"
                 type="date"
                 value={formData.date}
-                onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
+                onChange={e => setFormData(prev => ({ ...prev, date: e.target.value }))}
               />
             </div>
-            
+
             <div className="space-y-2">
-              <Label htmlFor="description">Produit</Label>
+              <Label>Produit</Label>
               {editSale ? (
-                <Input
-                  id="description"
-                  name="description"
-                  value={formData.description}
-                  readOnly
-                  disabled
-                />
+                <Input value={formData.description} readOnly disabled />
               ) : (
                 <ProductSearchInput onProductSelect={handleProductSelect} />
               )}
             </div>
-            
+
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="purchasePrice">Prix d'achat (€)</Label>
-                <Input
-                  id="purchasePrice"
-                  name="purchasePrice"
-                  type="number"
-                  step="0.01"
-                  value={formData.purchasePrice}
-                  readOnly
-                  disabled
-                />
+                <Label>Prix d'achat (€)</Label>
+                <Input value={formData.purchasePrice} readOnly disabled />
               </div>
-              
+
               <div className="space-y-2">
-                <Label htmlFor="sellingPrice">Prix de vente (€)</Label>
+                <Label>Prix de vente (€)</Label>
                 <div className="flex items-center space-x-2">
-                  <Button 
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    onClick={() => handlePriceChange(false)}
-                  >
-                    <Minus className="h-4 w-4" />
-                  </Button>
+                  <Button type="button" size="icon" variant="outline" onClick={() => handlePriceChange(false)}><Minus className="w-4 h-4" /></Button>
                   <Input
-                    id="sellingPrice"
-                    name="sellingPrice"
                     type="number"
                     step="0.01"
-                    min="0"
                     value={formData.sellingPrice}
-                    onChange={(e) => {
+                    onChange={e => {
                       const value = e.target.value;
-                      setFormData(prev => {
-                        updateProfit(value, prev.quantitySold);
-                        return {
-                          ...prev,
-                          sellingPrice: value,
-                        };
-                      });
+                      updateProfit(value, formData.quantitySold, formData.purchasePrice);
+                      setFormData(prev => ({ ...prev, sellingPrice: value }));
                     }}
                   />
-                  <Button 
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    onClick={() => handlePriceChange(true)}
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
+                  <Button type="button" size="icon" variant="outline" onClick={() => handlePriceChange(true)}><Plus className="w-4 h-4" /></Button>
                 </div>
               </div>
             </div>
-            
+
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="quantitySold">Quantité vendue</Label>
+                <Label>Quantité vendue</Label>
                 <div className="flex items-center space-x-2">
-                  <Button 
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    onClick={() => handleQuantityChange(false)}
-                  >
-                    <Minus className="h-4 w-4" />
-                  </Button>
+                  <Button type="button" size="icon" variant="outline" onClick={() => handleQuantityChange(false)}><Minus className="w-4 h-4" /></Button>
                   <Input
-                    id="quantitySold"
-                    name="quantitySold"
                     type="number"
                     min="1"
                     value={formData.quantitySold}
-                    onChange={(e) => {
+                    onChange={e => {
                       const value = e.target.value;
-                      const numValue = Number(value);
-                      
-                      if (numValue > maxQuantity) {
+                      const num = Number(value);
+                      if (num > maxQuantity) {
                         toast({
                           title: "Quantité insuffisante",
                           description: `Stock disponible: ${maxQuantity} unités`,
@@ -276,61 +257,38 @@ const AddSaleForm: React.FC<AddSaleFormProps> = ({ isOpen, onClose, editSale }) 
                         });
                         return;
                       }
-                      
-                      setFormData(prev => {
-                        updateProfit(prev.sellingPrice, value);
-                        return {
-                          ...prev,
-                          quantitySold: value,
-                        };
-                      });
+                      updateProfit(formData.sellingPrice, value, formData.purchasePrice);
+                      setFormData(prev => ({ ...prev, quantitySold: value }));
                     }}
                   />
-                  <Button 
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    onClick={() => handleQuantityChange(true)}
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
+                  <Button type="button" size="icon" variant="outline" onClick={() => handleQuantityChange(true)}><Plus className="w-4 h-4" /></Button>
                 </div>
-                {selectedProduct && (
-                  <p className="text-xs text-gray-500">
-                    Stock disponible: {maxQuantity} unités
-                  </p>
-                )}
+                {selectedProduct && <p className="text-xs text-muted-foreground">Stock disponible: {maxQuantity}</p>}
               </div>
-              
+
               <div className="space-y-2">
-                <Label htmlFor="profit">Bénéfice (€)</Label>
-                <Input
-                  id="profit"
-                  name="profit"
-                  type="number"
-                  step="0.01"
-                  value={formData.profit}
-                  readOnly
-                  disabled
-                />
+                <Label>Bénéfice (€)</Label>
+                <Input value={formData.profit} readOnly disabled />
               </div>
             </div>
           </div>
-          
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onClose}
-              disabled={isSubmitting}
-            >
-              Annuler
-            </Button>
-            <Button
-              type="submit"
-              className="bg-app-green hover:bg-opacity-90"
-              disabled={isSubmitting}
-            >
+
+          <DialogFooter className="flex justify-between items-center">
+            <div className="flex gap-2">
+              <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>Annuler</Button>
+              {editSale && (
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={handleDelete}
+                  disabled={isSubmitting}
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Supprimer
+                </Button>
+              )}
+            </div>
+            <Button type="submit" disabled={isSubmitting} className="bg-app-green hover:bg-opacity-90">
               {isSubmitting ? "Enregistrement..." : editSale ? "Mettre à jour" : "Ajouter"}
             </Button>
           </DialogFooter>

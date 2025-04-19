@@ -2,6 +2,11 @@
 import axios from 'axios';
 import { LoginCredentials, PasswordResetData, PasswordResetRequest, Product, RegistrationData, Sale, User } from "../types";
 
+import axiosRetry from 'axios-retry';
+
+
+
+
 // API base URL
 const API_URL = 'https://server-gestion-ventes.onrender.com/api';
 
@@ -11,9 +16,10 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 120000  // Increase timeout to 30 seconds to prevent timeout errors
-});
 
+  timeout: 30000  // Increase timeout to 30 seconds to prevent timeout errors
+});
+axiosRetry(api, { retries: 3, retryDelay: axiosRetry.exponentialDelay });
 // Add interceptor to include auth token in requests
 api.interceptors.request.use(
   (config) => {
@@ -115,16 +121,17 @@ export const authService = {
 
 // Product service
 export const productService = {
-  getProducts: async (): Promise<Product[]> => {
-    try {
-      const response = await api.get('/products');
-      return response.data;
-    } catch (error) {
-      console.error("Get products error:", error);
-      return [];
-    }
-  },
-  
+// Modify your getProducts function to accept pagination parameters
+getProducts: async (page: number = 1, limit: number = 10): Promise<Product[]> => {
+  try {
+    const response = await api.get(`/products?page=${page}&limit=${limit}`);
+    return response.data;
+  } catch (error) {
+    console.error("Get products error:", error);
+    return [];
+  }
+},
+
   addProduct: async (product: Omit<Product, 'id'>): Promise<Product> => {
     try {
       const response = await api.post('/products', product);
