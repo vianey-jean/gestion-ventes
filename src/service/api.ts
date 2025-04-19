@@ -11,7 +11,7 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 30000  // Increase timeout to 30 seconds to prevent timeout errors
+  timeout: 120000  // Increase timeout to 30 seconds to prevent timeout errors
 });
 
 // Add interceptor to include auth token in requests
