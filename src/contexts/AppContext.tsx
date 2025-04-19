@@ -1,7 +1,7 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useCallback } from 'react';
 import { Product, Sale } from '../types';
 import { productService, salesService } from '../service/api';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 
 interface AppContextType {
   products: Product[];
@@ -9,6 +9,7 @@ interface AppContextType {
   currentMonth: number;
   currentYear: number;
   isLoading: boolean;
+  error: string | null;  // Ajout de la propriété error
   fetchProducts: () => Promise<void>;
   fetchSales: () => Promise<void>;
   addProduct: (product: Omit<Product, 'id'>) => Promise<Product | null>;
@@ -31,6 +32,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const today = new Date();
   const [currentMonth] = useState(today.getMonth());
   const [currentYear] = useState(today.getFullYear());
+
+  const [searchCache, setSearchCache] = useState<Record<string, Product[]>>({});
+  const [error, setError] = useState<string | null>(null);
 
   const fetchProducts = async () => {
     try {
@@ -184,13 +188,36 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  const searchProducts = async (query: string): Promise<Product[]> => {
+  const searchProducts = useCallback(async (query: string): Promise<Product[]> => {
     try {
       if (!query || query.length < 3) return [];
       
-      console.log(`Searching for products with query: "${query}"`);
+      const normalizedQuery = query.toLowerCase().trim();
+      
+      if (searchCache[normalizedQuery]) {
+        console.log(`Using cached results for "${normalizedQuery}"`);
+        return searchCache[normalizedQuery];
+      }
+      
+      console.log(`Searching for products with query: "${normalizedQuery}"`);
+      
+      if (products.length > 0) {
+        const localResults = products.filter(p => 
+          p.description.toLowerCase().includes(normalizedQuery)
+        );
+        
+        if (localResults.length > 0) {
+          console.log(`Found ${localResults.length} local results`);
+          setSearchCache(prev => ({...prev, [normalizedQuery]: localResults}));
+          return localResults;
+        }
+      }
+      
       const searchResults = await productService.searchProducts(query);
-      console.log(`Found ${searchResults.length} results`);
+      console.log(`Found ${searchResults.length} API results`);
+      
+      setSearchCache(prev => ({...prev, [normalizedQuery]: searchResults}));
+      
       return searchResults;
     } catch (error) {
       console.error("Search products error:", error);
@@ -201,7 +228,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       });
       return [];
     }
-  };
+  }, [products, toast]);
 
   const exportMonth = async (): Promise<boolean> => {
     try {
@@ -234,6 +261,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     currentMonth,
     currentYear,
     isLoading,
+    error: null,  // Ajout de la valeur error
     fetchProducts,
     fetchSales,
     addProduct,

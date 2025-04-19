@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from '@/components/ui/table';
 import { Sale } from '@/types';
 
 interface SalesTableProps {
@@ -26,6 +25,11 @@ const SalesTable: React.FC<SalesTableProps> = ({ sales, onRowClick }) => {
       currency: 'EUR',
     }).format(amount);
   };
+  
+  // Calculate totals
+  const totalSellingPrice = sales.reduce((sum, sale) => sum + sale.sellingPrice, 0);
+  const totalQuantitySold = sales.reduce((sum, sale) => sum + sale.quantitySold, 0);
+  const totalProfit = sales.reduce((sum, sale) => sum + sale.profit, 0);
   
   return (
     <div className="rounded-md border">
@@ -66,6 +70,25 @@ const SalesTable: React.FC<SalesTableProps> = ({ sales, onRowClick }) => {
             ))
           )}
         </TableBody>
+        {sales.length > 0 && (
+          <TableFooter>
+            <TableRow className="bg-gray-50 font-semibold">
+              <TableCell colSpan={2} className="text-right">
+                Totaux:
+              </TableCell>
+              <TableCell className="text-right text-app-blue">
+                {formatCurrency(totalSellingPrice)}
+              </TableCell>
+              <TableCell className="text-right text-app-purple">
+                {totalQuantitySold}
+              </TableCell>
+              <TableCell></TableCell>
+              <TableCell className="text-right text-app-green">
+                {formatCurrency(totalProfit)}
+              </TableCell>
+            </TableRow>
+          </TableFooter>
+        )}
       </Table>
     </div>
   );

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Input } from '@/components/ui/input';
 import { Product } from '@/types';
@@ -11,7 +10,7 @@ interface ProductSearchInputProps {
 
 const ProductSearchInput: React.FC<ProductSearchInputProps> = ({ 
   onProductSelect,
-  placeholder = "Rechercher un produit...",
+  placeholder = "Rechercher un produit..."
 }) => {
   const { searchProducts } = useApp();
   const [query, setQuery] = useState('');
@@ -19,6 +18,7 @@ const ProductSearchInput: React.FC<ProductSearchInputProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   useEffect(() => {
     const handleSearch = async () => {
@@ -32,7 +32,7 @@ const ProductSearchInput: React.FC<ProductSearchInputProps> = ({
       try {
         const searchResults = await searchProducts(query);
         setResults(searchResults);
-        setIsOpen(true);
+        setIsOpen(searchResults.length > 0);
       } catch (error) {
         console.error("Error searching products:", error);
         setResults([]);
@@ -41,10 +41,16 @@ const ProductSearchInput: React.FC<ProductSearchInputProps> = ({
       }
     };
     
-    const debounceTimeout = setTimeout(handleSearch, 300);
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current);
+    }
+    
+    debounceTimeoutRef.current = setTimeout(handleSearch, 100);
     
     return () => {
-      clearTimeout(debounceTimeout);
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current);
+      }
     };
   }, [query, searchProducts]);
   
@@ -78,11 +84,12 @@ const ProductSearchInput: React.FC<ProductSearchInputProps> = ({
         placeholder={placeholder}
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        onFocus={() => query.length >= 3 && setIsOpen(true)}
+        onFocus={() => query.length >= 3 && results.length > 0 && setIsOpen(true)}
+        className="w-full"
       />
       
       {isOpen && (
-        <div className="absolute z-10 w-full mt-1 bg-white rounded-md shadow-lg max-h-60 overflow-auto">
+        <div className="absolute z-50 w-full mt-1 bg-white rounded-md shadow-lg max-h-60 overflow-auto">
           {isLoading ? (
             <div className="p-3 text-sm text-gray-500">Chargement...</div>
           ) : results.length > 0 ? (
