@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from '@/components/ui/table';
 import { Sale } from '@/types';
@@ -7,8 +8,13 @@ interface SalesTableProps {
   onRowClick: (sale: Sale) => void;
 }
 
+/**
+ * Tableau des ventes
+ * @param sales - Liste des ventes à afficher
+ * @param onRowClick - Fonction appelée lorsqu'une ligne est cliquée
+ */
 const SalesTable: React.FC<SalesTableProps> = ({ sales, onRowClick }) => {
-  // Format date to display in a readable format
+  // Formater une date au format local
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('fr-FR', {
@@ -18,7 +24,7 @@ const SalesTable: React.FC<SalesTableProps> = ({ sales, onRowClick }) => {
     });
   };
   
-  // Format currency
+  // Formater un montant en euros
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('fr-FR', {
       style: 'currency',
@@ -26,9 +32,10 @@ const SalesTable: React.FC<SalesTableProps> = ({ sales, onRowClick }) => {
     }).format(amount);
   };
   
-  // Calculate totals
+  // Calculer les totaux
   const totalSellingPrice = sales.reduce((sum, sale) => sum + sale.sellingPrice, 0);
   const totalQuantitySold = sales.reduce((sum, sale) => sum + sale.quantitySold, 0);
+  const totalPurchasePrice = sales.reduce((sum, sale) => sum + (sale.purchasePrice * sale.quantitySold), 0);
   const totalProfit = sales.reduce((sum, sale) => sum + sale.profit, 0);
   
   return (
@@ -82,7 +89,9 @@ const SalesTable: React.FC<SalesTableProps> = ({ sales, onRowClick }) => {
               <TableCell className="text-right text-app-purple">
                 {totalQuantitySold}
               </TableCell>
-              <TableCell></TableCell>
+              <TableCell className="text-right text-gray-700">
+                {formatCurrency(totalPurchasePrice)}
+              </TableCell>
               <TableCell className="text-right text-app-green">
                 {formatCurrency(totalProfit)}
               </TableCell>

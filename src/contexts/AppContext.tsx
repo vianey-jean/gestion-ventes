@@ -1,47 +1,76 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { Product, Sale } from '../types';
 import { productService, salesService } from '../service/api';
 import { useToast } from '@/hooks/use-toast';
 
+// Interface pour le contexte AppContext
 interface AppContextType {
-  products: Product[];
-  sales: Sale[];
-  currentMonth: number;
-  currentYear: number;
-  isLoading: boolean;
-  error: string | null;  // Ajout de la propriété error
-  fetchProducts: () => Promise<void>;
-  fetchSales: () => Promise<void>;
-  addProduct: (product: Omit<Product, 'id'>) => Promise<Product | null>;
-  updateProduct: (product: Product) => Promise<Product | null>;
-  addSale: (sale: Omit<Sale, 'id'>) => Promise<Sale | null>;
-  updateSale: (sale: Sale) => Promise<Sale | null>;
-  deleteSale: (id: string) => Promise<boolean>;
-  searchProducts: (query: string) => Promise<Product[]>;
-  exportMonth: () => Promise<boolean>;
+  products: Product[];                                 // Liste des produits
+  sales: Sale[];                                       // Liste des ventes
+  currentMonth: number;                                // Mois actuel
+  currentYear: number;                                 // Année actuelle 
+  isLoading: boolean;                                  // État de chargement
+  error: string | null;                                // Message d'erreur
+  fetchProducts: () => Promise<void>;                  // Fonction pour récupérer les produits
+  fetchSales: () => Promise<void>;                     // Fonction pour récupérer les ventes
+  addProduct: (product: Omit<Product, 'id'>) => Promise<Product | null>; // Ajouter un produit
+  updateProduct: (product: Product) => Promise<Product | null>;          // Mettre à jour un produit
+  addSale: (sale: Omit<Sale, 'id'>) => Promise<Sale | null>;             // Ajouter une vente
+  updateSale: (sale: Sale) => Promise<Sale | null>;                      // Mettre à jour une vente
+  deleteSale: (id: string) => Promise<boolean>;                          // Supprimer une vente
+  searchProducts: (query: string) => Promise<Product[]>;                 // Rechercher des produits
+  exportMonth: () => Promise<boolean>;                                   // Exporter le mois
 }
 
+// Création du contexte
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
+// Fournisseur du contexte AppContext
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [sales, setSales] = useState<Sale[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
+  // États
+  const [products, setProducts] = useState<Product[]>([]);     // État pour les produits
+  const [sales, setSales] = useState<Sale[]>([]);              // État pour les ventes
+  const [isLoading, setIsLoading] = useState(false);           // État de chargement
+  const { toast } = useToast();                                // Hook pour les notifications
 
+  // Date actuelle
   const today = new Date();
   const [currentMonth] = useState(today.getMonth());
   const [currentYear] = useState(today.getFullYear());
 
+  // Cache pour les recherches
   const [searchCache, setSearchCache] = useState<Record<string, Product[]>>({});
   const [error, setError] = useState<string | null>(null);
+  const [initialLoadDone, setInitialLoadDone] = useState(false);  // Pour le chargement initial
 
+  // Chargement initial des données
+  useEffect(() => {
+    if (!initialLoadDone) {
+      const loadInitialData = async () => {
+        try {
+          await Promise.all([fetchProducts(), fetchSales()]);
+        } catch (error) {
+          console.error("Initial data load error:", error);
+        } finally {
+          setInitialLoadDone(true);
+        }
+      };
+      
+      loadInitialData();
+    }
+  }, [initialLoadDone]);
+
+  // Fonction pour récupérer les produits
   const fetchProducts = async () => {
     try {
       setIsLoading(true);
+      setError(null);
       const data = await productService.getProducts();
       setProducts(data);
     } catch (error) {
+      console.error("Error fetching products:", error);
+      setError("Impossible de récupérer les produits");
       toast({
         title: "Erreur",
         description: "Impossible de récupérer les produits",
@@ -52,12 +81,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  // Fonction pour récupérer les ventes
   const fetchSales = async () => {
     try {
       setIsLoading(true);
+      setError(null);
       const data = await salesService.getSales(currentMonth, currentYear);
       setSales(data);
     } catch (error) {
+      console.error("Error fetching sales:", error);
+      setError("Impossible de récupérer les ventes");
       toast({
         title: "Erreur",
         description: "Impossible de récupérer les ventes",
@@ -68,11 +101,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  // Fonction pour ajouter un produit
   const addProduct = async (product: Omit<Product, 'id'>): Promise<Product | null> => {
     try {
       setIsLoading(true);
+      setError(null);
       const newProduct = await productService.addProduct(product);
-      await fetchProducts();
+      
+      // Mettre à jour la liste des produits sans refetch
+      setProducts(prevProducts => [...prevProducts, newProduct]);
+      
       toast({
         title: "Succès",
         description: "Produit ajouté avec succès",
@@ -80,6 +118,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       });
       return newProduct;
     } catch (error) {
+      console.error("Error adding product:", error);
+      setError("Impossible d'ajouter le produit");
       toast({
         title: "Erreur",
         description: "Impossible d'ajouter le produit",
@@ -91,11 +131,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  // Fonction pour mettre à jour un produit
   const updateProduct = async (product: Product): Promise<Product | null> => {
     try {
       setIsLoading(true);
+      setError(null);
       const updatedProduct = await productService.updateProduct(product);
-      await fetchProducts();
+      
+      // Mettre à jour la liste des produits sans refetch
+      setProducts(prevProducts => 
+        prevProducts.map(p => p.id === product.id ? updatedProduct : p)
+      );
+      
       toast({
         title: "Succès",
         description: "Produit mis à jour avec succès",
@@ -103,6 +150,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       });
       return updatedProduct;
     } catch (error) {
+      console.error("Error updating product:", error);
+      setError("Impossible de mettre à jour le produit");
       toast({
         title: "Erreur",
         description: "Impossible de mettre à jour le produit",
@@ -114,12 +163,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  // Fonction pour ajouter une vente
   const addSale = async (sale: Omit<Sale, 'id'>): Promise<Sale | null> => {
     try {
       setIsLoading(true);
+      setError(null);
       const newSale = await salesService.addSale(sale);
-      await fetchSales();
+      
+      // Mettre à jour la liste des ventes sans refetch
+      setSales(prevSales => [...prevSales, newSale]);
+      
+      // Mettre à jour le produit concerné
       await fetchProducts();
+      
       toast({
         title: "Succès",
         description: "Vente ajoutée avec succès",
@@ -127,6 +183,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       });
       return newSale;
     } catch (error) {
+      console.error("Error adding sale:", error);
+      setError("Impossible d'ajouter la vente");
       toast({
         title: "Erreur",
         description: "Impossible d'ajouter la vente",
@@ -138,12 +196,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  // Fonction pour mettre à jour une vente
   const updateSale = async (sale: Sale): Promise<Sale | null> => {
     try {
       setIsLoading(true);
+      setError(null);
       const updatedSale = await salesService.updateSale(sale);
-      await fetchSales();
+      
+      // Mettre à jour la liste des ventes sans refetch
+      setSales(prevSales => 
+        prevSales.map(s => s.id === sale.id ? updatedSale : s)
+      );
+      
+      // Mettre à jour le produit concerné
       await fetchProducts();
+      
       toast({
         title: "Succès",
         description: "Vente mise à jour avec succès",
@@ -151,6 +218,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       });
       return updatedSale;
     } catch (error) {
+      console.error("Error updating sale:", error);
+      setError("Impossible de mettre à jour la vente");
       toast({
         title: "Erreur",
         description: "Impossible de mettre à jour la vente",
@@ -162,13 +231,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  // Fonction pour supprimer une vente
   const deleteSale = async (id: string): Promise<boolean> => {
     try {
       setIsLoading(true);
+      setError(null);
       const success = await salesService.deleteSale(id);
+      
       if (success) {
-        await fetchSales();
+        // Supprimer la vente de la liste sans refetch
+        setSales(prevSales => prevSales.filter(s => s.id !== id));
+        
+        // Mettre à jour les produits
         await fetchProducts();
+        
         toast({
           title: "Succès",
           description: "Vente supprimée avec succès",
@@ -177,6 +253,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
       return success;
     } catch (error) {
+      console.error("Error deleting sale:", error);
+      setError("Impossible de supprimer la vente");
       toast({
         title: "Erreur",
         description: "Impossible de supprimer la vente",
@@ -188,12 +266,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  // Fonction pour rechercher des produits
   const searchProducts = useCallback(async (query: string): Promise<Product[]> => {
     try {
       if (!query || query.length < 3) return [];
       
       const normalizedQuery = query.toLowerCase().trim();
       
+      // Utiliser le cache si disponible
       if (searchCache[normalizedQuery]) {
         console.log(`Using cached results for "${normalizedQuery}"`);
         return searchCache[normalizedQuery];
@@ -201,6 +281,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       
       console.log(`Searching for products with query: "${normalizedQuery}"`);
       
+      // Rechercher d'abord dans les produits locaux
       if (products.length > 0) {
         const localResults = products.filter(p => 
           p.description.toLowerCase().includes(normalizedQuery)
@@ -213,6 +294,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         }
       }
       
+      // Sinon, faire une requête API
       const searchResults = await productService.searchProducts(query);
       console.log(`Found ${searchResults.length} API results`);
       
@@ -230,12 +312,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, [products, toast]);
 
+  // Fonction pour exporter le mois
   const exportMonth = async (): Promise<boolean> => {
     try {
       setIsLoading(true);
+      setError(null);
       const success = await salesService.exportSalesToPdf(currentMonth, currentYear);
+      
       if (success) {
-        await fetchSales();
+        // Vider la liste des ventes sans refetch
+        setSales([]);
+        
         toast({
           title: "Succès",
           description: "Les ventes ont été exportées et réinitialisées pour le mois prochain",
@@ -244,6 +331,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
       return success;
     } catch (error) {
+      console.error("Error exporting sales:", error);
+      setError("Impossible d'exporter les ventes");
       toast({
         title: "Erreur",
         description: "Impossible d'exporter les ventes",
@@ -255,13 +344,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  // Valeur du contexte
   const value = {
     products,
     sales,
     currentMonth,
     currentYear,
     isLoading,
-    error: null,  // Ajout de la valeur error
+    error,
     fetchProducts,
     fetchSales,
     addProduct,
@@ -276,6 +366,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 };
 
+// Hook pour utiliser le contexte AppContext
 export const useApp = (): AppContextType => {
   const context = useContext(AppContext);
   if (context === undefined) {

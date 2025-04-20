@@ -1,25 +1,18 @@
-
 import axios from 'axios';
 import { LoginCredentials, PasswordResetData, PasswordResetRequest, Product, RegistrationData, Sale, User } from "../types";
-
-import axiosRetry from 'axios-retry';
-
-
-
 
 // API base URL
 const API_URL = 'https://server-gestion-ventes.onrender.com/api';
 
-// Create axios instance with increased timeout
+// Create axios instance with increased timeout and retry logic
 const api = axios.create({
   baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
   },
-
-  timeout: 30000  // Increase timeout to 30 seconds to prevent timeout errors
+  timeout: 10000  // Réduit à 10 secondes pour éviter les attentes trop longues
 });
-axiosRetry(api, { retries: 3, retryDelay: axiosRetry.exponentialDelay });
+
 // Add interceptor to include auth token in requests
 api.interceptors.request.use(
   (config) => {
@@ -31,6 +24,24 @@ api.interceptors.request.use(
   },
   (error) => Promise.reject(error)
 );
+
+// Add response interceptor for error handling
+api.interceptors.response.use(
+  response => response,
+  async error => {
+    // Si l'erreur est un timeout, on ne retente pas
+    if (error.code === 'ECONNABORTED') {
+      console.warn('Request timed out, not retrying to prevent cascading timeouts');
+      return Promise.reject(error);
+    }
+    return Promise.reject(error);
+  }
+);
+
+// Cache pour les produits
+let productsCache = null;
+let productsCacheExpiry = null;
+const CACHE_DURATION = 60000; // 1 minute
 
 // User authentication service
 export const authService = {
@@ -119,22 +130,46 @@ export const authService = {
   }
 };
 
-// Product service
+// Product service with caching
 export const productService = {
-// Modify your getProducts function to accept pagination parameters
-getProducts: async (page: number = 1, limit: number = 10): Promise<Product[]> => {
-  try {
-    const response = await api.get(`/products?page=${page}&limit=${limit}`);
-    return response.data;
-  } catch (error) {
-    console.error("Get products error:", error);
-    return [];
-  }
-},
+  getProducts: async (): Promise<Product[]> => {
+    try {
+      // Vérifier si le cache est valide
+      const now = Date.now();
+      if (productsCache && productsCacheExpiry && now < productsCacheExpiry) {
+        console.log("Using cached products data");
+        return productsCache;
+      }
 
+      console.log("Fetching fresh products data");
+      const response = await api.get('/products');
+      
+      // Mettre à jour le cache
+      productsCache = response.data;
+      productsCacheExpiry = now + CACHE_DURATION;
+      
+      return response.data;
+    } catch (error) {
+      console.error("Get products error:", error);
+      // En cas d'erreur, retourner le cache s'il existe (même expiré)
+      if (productsCache) {
+        console.warn("Using expired cache due to API error");
+        return productsCache;
+      }
+      return [];
+    }
+  },
+  
+  invalidateCache: () => {
+    // Fonction pour invalider le cache après des modifications
+    productsCache = null;
+    productsCacheExpiry = null;
+  },
+  
   addProduct: async (product: Omit<Product, 'id'>): Promise<Product> => {
     try {
       const response = await api.post('/products', product);
+      productService.invalidateCache(); // Invalider le cache
       return response.data;
     } catch (error) {
       console.error("Add product error:", error);
@@ -145,6 +180,7 @@ getProducts: async (page: number = 1, limit: number = 10): Promise<Product[]> =>
   updateProduct: async (product: Product): Promise<Product> => {
     try {
       const response = await api.put(`/products/${product.id}`, product);
+      productService.invalidateCache(); // Invalider le cache
       return response.data;
     } catch (error) {
       console.error("Update product error:", error);
@@ -154,6 +190,15 @@ getProducts: async (page: number = 1, limit: number = 10): Promise<Product[]> =>
   
   getProductById: async (id: string): Promise<Product | null> => {
     try {
+      // Essayer d'abord de trouver dans le cache
+      if (productsCache) {
+        const cachedProduct = productsCache.find(p => p.id === id);
+        if (cachedProduct) {
+          console.log("Using cached product data for ID:", id);
+          return cachedProduct;
+        }
+      }
+      
       const response = await api.get(`/products/${id}`);
       return response.data;
     } catch (error) {
@@ -166,6 +211,20 @@ getProducts: async (page: number = 1, limit: number = 10): Promise<Product[]> =>
     try {
       if (!query || query.length < 3) return [];
       
+      // Essayer d'abord de chercher dans le cache
+      if (productsCache) {
+        console.log("Searching in cache first");
+        const normalizedQuery = query.toLowerCase().trim();
+        const results = productsCache.filter(p => 
+          p.description.toLowerCase().includes(normalizedQuery)
+        );
+        
+        if (results.length > 0) {
+          console.log(`Found ${results.length} results in cache`);
+          return results;
+        }
+      }
+      
       const response = await api.get(`/products/search?query=${encodeURIComponent(query)}`);
       return response.data;
     } catch (error) {
@@ -175,27 +234,67 @@ getProducts: async (page: number = 1, limit: number = 10): Promise<Product[]> =>
   }
 };
 
-// Sales service
+// Cache pour les ventes
+let salesCache = {};
+let salesCacheExpiry = {};
+
+// Sales service with caching
 export const salesService = {
   getSales: async (month?: number, year?: number): Promise<Sale[]> => {
     try {
       let url = '/sales';
+      let cacheKey = 'all';
       
       if (month !== undefined && year !== undefined) {
         url = `/sales/by-month?month=${month}&year=${year}`;
+        cacheKey = `${month}-${year}`;
       }
       
+      // Vérifier si le cache est valide
+      const now = Date.now();
+      if (salesCache[cacheKey] && salesCacheExpiry[cacheKey] && now < salesCacheExpiry[cacheKey]) {
+        console.log(`Using cached sales data for ${cacheKey}`);
+        return salesCache[cacheKey];
+      }
+      
+      console.log(`Fetching fresh sales data for ${cacheKey}`);
       const response = await api.get(url);
+      
+      // Mettre à jour le cache
+      salesCache[cacheKey] = response.data;
+      salesCacheExpiry[cacheKey] = now + CACHE_DURATION;
+      
       return response.data;
     } catch (error) {
       console.error("Get sales error:", error);
+      // En cas d'erreur, retourner le cache s'il existe (même expiré)
+      const cacheKey = month !== undefined && year !== undefined ? `${month}-${year}` : 'all';
+      if (salesCache[cacheKey]) {
+        console.warn("Using expired cache due to API error");
+        return salesCache[cacheKey];
+      }
       return [];
+    }
+  },
+  
+  invalidateCache: (month?: number, year?: number) => {
+    // Fonction pour invalider le cache après des modifications
+    if (month !== undefined && year !== undefined) {
+      const cacheKey = `${month}-${year}`;
+      delete salesCache[cacheKey];
+      delete salesCacheExpiry[cacheKey];
+    } else {
+      salesCache = {};
+      salesCacheExpiry = {};
     }
   },
   
   addSale: async (sale: Omit<Sale, 'id'>): Promise<Sale> => {
     try {
       const response = await api.post('/sales', sale);
+      // Invalider les caches
+      salesService.invalidateCache();
+      productService.invalidateCache();
       return response.data;
     } catch (error) {
       console.error("Add sale error:", error);
@@ -206,6 +305,9 @@ export const salesService = {
   updateSale: async (sale: Sale): Promise<Sale> => {
     try {
       const response = await api.put(`/sales/${sale.id}`, sale);
+      // Invalider les caches
+      salesService.invalidateCache();
+      productService.invalidateCache();
       return response.data;
     } catch (error) {
       console.error("Update sale error:", error);
@@ -216,6 +318,9 @@ export const salesService = {
   deleteSale: async (id: string): Promise<boolean> => {
     try {
       await api.delete(`/sales/${id}`);
+      // Invalider les caches
+      salesService.invalidateCache();
+      productService.invalidateCache();
       return true;
     } catch (error) {
       console.error("Delete sale error:", error);
@@ -226,6 +331,8 @@ export const salesService = {
   exportSalesToPdf: async (month: number, year: number): Promise<boolean> => {
     try {
       const response = await api.post('/sales/export-month', { month, year });
+      // Invalider les caches
+      salesService.invalidateCache();
       return response.data.success;
     } catch (error) {
       console.error("Export sales error:", error);
