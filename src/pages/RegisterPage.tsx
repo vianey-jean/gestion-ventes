@@ -302,7 +302,7 @@ const RegisterPage: React.FC = () => {
                     <PasswordInput
                       id="password"
                       name="password"
-                      placeholder="••••••••"
+                      placeholder=""
                       value={formData.password}
                       onChange={handleChange}
                       error={errors.password}
@@ -315,7 +315,7 @@ const RegisterPage: React.FC = () => {
                     <PasswordInput
                       id="confirmPassword"
                       name="confirmPassword"
-                      placeholder="••••••••"
+                      placeholder=""
                       value={formData.confirmPassword}
                       onChange={handleChange}
                       error={errors.confirmPassword}
