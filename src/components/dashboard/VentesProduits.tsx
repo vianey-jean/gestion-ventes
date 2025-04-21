@@ -93,18 +93,19 @@ const VentesProduits: React.FC = () => {
 
     autoTable(doc, {
       startY: 30,
-      head: [['Date', 'Produit', 'Quantité', 'Prix Unitaire (€)', 'Total (€)', 'Bénéfice (€)']],
+      head: [['Date', 'Produit' , 'Prix Achat (€)' , 'Quantité', 'Prix Vendu (€)', 'Bénéfice (€)']],
       body: sales.map(sale => {
-        const unitPrice = typeof sale.sellingPrice === 'number' ? sale.sellingPrice : 0;
+        const achatPrice = typeof sale.purchasePrice=== 'number' ? sale.purchasePrice : 0;
         const quantity = typeof sale.quantitySold === 'number' ? sale.quantitySold : 0;
+        const ventePrice = typeof sale.sellingPrice === 'number' ? sale.sellingPrice : 0;
         const profit = typeof sale.profit === 'number' ? sale.profit : 0;
 
         return [
           new Date(sale.date).toLocaleDateString('fr-FR'),
           sale.description || 'Inconnu',
+          achatPrice.toFixed(2),
           quantity,
-          unitPrice.toFixed(2),
-          (quantity * unitPrice).toFixed(2),
+          ventePrice.toFixed(2),
           profit.toFixed(2),
         ];
       }),
