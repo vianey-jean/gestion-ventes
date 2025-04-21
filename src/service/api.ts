@@ -627,5 +627,11 @@ export const depenseService = {
   invalidateDepensesFixeCache: () => {
     depenseService._depensesFixeCache = null;
     depenseService._depensesFixeCacheExpiry = null;
+  },
+  
+  resetMouvements: async () => {
+    // Appel le endpoint reset côté serveur
+    const { data } = await api.post('/depenses/reset');
+    return data;
   }
 };

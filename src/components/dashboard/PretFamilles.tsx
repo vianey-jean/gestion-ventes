@@ -6,19 +6,31 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2 } from 'lucide-react';
+import { CalendarIcon, Loader2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { pretFamilleService } from '@/service/api';
 import { PretFamille } from '@/types';
 
 const PretFamilles: React.FC = () => {
   const [prets, setPrets] = useState<PretFamille[]>([]);
   const [loading, setLoading] = useState(false);
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [remboursementDialogOpen, setRemboursementDialogOpen] = useState(false);
+  const [demandePretDialogOpen, setDemandePretDialogOpen] = useState(false);
   const [searchText, setSearchText] = useState('');
   const [searchResults, setSearchResults] = useState<PretFamille[]>([]);
   const [selectedPret, setSelectedPret] = useState<PretFamille | null>(null);
   const [montantRemboursement, setMontantRemboursement] = useState('');
+  
+  // États pour demande de prêt
+  const [nouvNom, setNouvNom] = useState('');
+  const [nouvPretTotal, setNouvPretTotal] = useState('');
+  const [nouvDate, setNouvDate] = useState<Date>(new Date());
+  
   const { toast } = useToast();
 
   // Charger les données depuis l'API
@@ -112,7 +124,6 @@ const PretFamilles: React.FC = () => {
       // Créer l'objet mis à jour
       const updatedPret: PretFamille = {
         ...selectedPret,
-        pretTotal: soldRst,
         soldeRestant: pretReel,
         dernierRemboursement: dernierRem,
         dateRemboursement: new Date().toISOString().split('T')[0]
@@ -136,7 +147,7 @@ const PretFamilles: React.FC = () => {
       setSelectedPret(null);
       setSearchText('');
       setMontantRemboursement('');
-      setDialogOpen(false);
+      setRemboursementDialogOpen(false);
     } catch (error) {
       console.error('Erreur lors de l\'enregistrement du remboursement', error);
       toast({
@@ -149,13 +160,80 @@ const PretFamilles: React.FC = () => {
     }
   };
 
+  // Enregistrer une nouvelle demande de prêt
+  const handleDemandePret = async () => {
+    if (!nouvNom) {
+      toast({
+        title: 'Erreur',
+        description: 'Veuillez saisir un nom',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!nouvPretTotal || parseFloat(nouvPretTotal) <= 0) {
+      toast({
+        title: 'Erreur',
+        description: 'Veuillez saisir un montant de prêt valide',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      setLoading(true);
+      
+      const newPret: Omit<PretFamille, 'id'> = {
+        nom: nouvNom,
+        pretTotal: parseFloat(nouvPretTotal),
+        soldeRestant: parseFloat(nouvPretTotal),
+        dernierRemboursement: 0,
+        dateRemboursement: format(nouvDate, 'yyyy-MM-dd')
+      };
+      
+      // Enregistrer via l'API
+      await pretFamilleService.addPretFamille(newPret);
+      
+      // Recharger les données
+      const updatedPrets = await pretFamilleService.getPretFamilles();
+      setPrets(updatedPrets);
+      
+      toast({
+        title: 'Succès',
+        description: 'Demande de prêt enregistrée avec succès',
+        variant: 'default',
+        className: 'notification-success',
+      });
+      
+      // Réinitialiser le formulaire
+      setNouvNom('');
+      setNouvPretTotal('');
+      setNouvDate(new Date());
+      setDemandePretDialogOpen(false);
+    } catch (error) {
+      console.error('Erreur lors de l\'enregistrement de la demande de prêt', error);
+      toast({
+        title: 'Erreur',
+        description: 'Impossible d\'enregistrer la demande de prêt',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="mt-6">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold">Prêts aux Familles</h2>
-        <Button onClick={() => setDialogOpen(true)} className="bg-app-blue hover:bg-opacity-90">
-          Remboursement
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={() => setRemboursementDialogOpen(true)} className="bg-app-blue hover:bg-opacity-90">
+            Remboursement
+          </Button>
+          <Button onClick={() => setDemandePretDialogOpen(true)} className="bg-app-green hover:bg-opacity-90">
+            Demande Prêt
+          </Button>
+        </div>
       </div>
       
       <Card className="mb-6">
@@ -211,7 +289,7 @@ const PretFamilles: React.FC = () => {
       </Card>
       
       {/* Formulaire de remboursement */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      <Dialog open={remboursementDialogOpen} onOpenChange={setRemboursementDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>Enregistrer un remboursement</DialogTitle>
@@ -271,6 +349,74 @@ const PretFamilles: React.FC = () => {
             >
               {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
               Enregistrer le remboursement
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Formulaire de demande de prêt */}
+      <Dialog open={demandePretDialogOpen} onOpenChange={setDemandePretDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Enregistrer une demande de prêt</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="nouvNom">Nom de la famille</Label>
+              <Input 
+                id="nouvNom" 
+                value={nouvNom} 
+                onChange={(e) => setNouvNom(e.target.value)}
+                placeholder="Nom de la famille"
+              />
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="nouvPretTotal">Montant du prêt</Label>
+              <Input 
+                id="nouvPretTotal" 
+                type="number" 
+                value={nouvPretTotal} 
+                onChange={(e) => setNouvPretTotal(e.target.value)}
+                placeholder="0.00"
+                min="0"
+                step="0.01"
+              />
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="nouvDate">Date</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant={"outline"}
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !nouvDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {nouvDate ? format(nouvDate, 'PP', { locale: fr }) : <span>Sélectionner une date</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={nouvDate}
+                    onSelect={(date) => date && setNouvDate(date)}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+            
+            <Button 
+              onClick={handleDemandePret} 
+              disabled={loading || !nouvNom || !nouvPretTotal || parseFloat(nouvPretTotal) <= 0}
+              className="mt-2"
+            >
+              {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              Enregistrer la demande de prêt
             </Button>
           </div>
         </DialogContent>

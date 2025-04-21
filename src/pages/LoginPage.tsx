@@ -82,6 +82,7 @@ const LoginPage: React.FC = () => {
   };
   
   return (
+    <Layout >
     <main className="min-h-screen bg-gray-50">
       <article className="container mx-auto py-12 px-4">
         <section className="max-w-md mx-auto">
@@ -167,6 +168,7 @@ const LoginPage: React.FC = () => {
         </section>
       </article>
     </main>
+    </Layout>
   );
 };
 

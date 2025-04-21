@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -17,22 +16,12 @@ import { cn } from '@/lib/utils';
 import { depenseService } from '@/service/api';
 import { DepenseMouvement, DepenseFixe } from '@/types';
 
-// Catégories de dépenses/revenus
 const categories = [
-  { id: 'free', label: 'Free', isFixe: true },
-  { id: 'internetZeop', label: 'Internet Zeop', isFixe: true },
-  { id: 'assuranceVoiture', label: 'Assurance Voiture', isFixe: true },
-  { id: 'autreDepense', label: 'Autre dépense', isFixe: true },
-  { id: 'assuranceVie', label: 'Assurance de vie', isFixe: true },
-  { id: 'courses', label: 'Courses', isFixe: false },
-  { id: 'restaurant', label: 'Restaurant', isFixe: false },
-  { id: 'loisirs', label: 'Loisirs', isFixe: false },
-  { id: 'salaire', label: 'Salaire', isFixe: false },
+  { id: 'depenseFixe', label: 'Dépense Fixe', isFixe: true },
   { id: 'autre', label: 'Autre', isFixe: false },
 ];
 
 const DepenseDuMois: React.FC = () => {
-  // États
   const [mouvements, setMouvements] = useState<DepenseMouvement[]>([]);
   const [depensesFixe, setDepensesFixe] = useState<DepenseFixe>({
     free: 19.99,
@@ -46,40 +35,49 @@ const DepenseDuMois: React.FC = () => {
   const [ajoutDialogOpen, setAjoutDialogOpen] = useState(false);
   const [depenseFixeDialogOpen, setDepenseFixeDialogOpen] = useState(false);
   
-  // États du formulaire d'ajout
   const [date, setDate] = useState<Date>(new Date());
   const [description, setDescription] = useState('');
   const [categorie, setCategorie] = useState('');
   const [debit, setDebit] = useState('');
   const [credit, setCredit] = useState('');
   
-  // États du formulaire de dépenses fixes
   const [tempDepensesFixe, setTempDepensesFixe] = useState<DepenseFixe>(depensesFixe);
   
   const { toast } = useToast();
   
-  // Mois actuel pour l'affichage
   const moisActuel = format(new Date(), 'MMMM yyyy', { locale: fr });
 
-  // Charger les données depuis l'API
   useEffect(() => {
-    const fetchData = async () => {
+    const checkAndResetMois = async () => {
       try {
         setLoading(true);
-        
-        // Charger les mouvements
         const mouvementsData = await depenseService.getMouvements();
-        setMouvements(mouvementsData);
-        
-        // Charger les dépenses fixes
+        if (mouvementsData.length > 0) {
+          const lastMouvement = mouvementsData[mouvementsData.length - 1];
+          const lastDate = new Date(lastMouvement.date);
+          const now = new Date();
+          if (lastDate.getMonth() !== now.getMonth() || lastDate.getFullYear() !== now.getFullYear()) {
+            await depenseService.resetMouvements();
+            setMouvements([]);
+            toast({
+              title: 'Fin du mois',
+              description: 'Le solde et la liste des mouvements ont été réinitialisés pour le nouveau mois.',
+              className: 'notification-success'
+            });
+          } else {
+            setMouvements(mouvementsData);
+          }
+        } else {
+          setMouvements([]);
+        }
         const depensesFixeData = await depenseService.getDepensesFixe();
         setDepensesFixe(depensesFixeData);
         setTempDepensesFixe(depensesFixeData);
       } catch (error) {
-        console.error('Erreur lors du chargement des données', error);
+        console.error('Erreur lors du contrôle du changement de mois', error);
         toast({
           title: 'Erreur',
-          description: 'Impossible de charger les données',
+          description: 'Impossible de charger ou de réinitialiser les mouvements',
           variant: 'destructive',
         });
       } finally {
@@ -87,27 +85,32 @@ const DepenseDuMois: React.FC = () => {
       }
     };
 
-    fetchData();
+    checkAndResetMois();
   }, [toast]);
 
-  // Calculer les totaux
   const totalDebit = mouvements.reduce((sum, mvt) => sum + mvt.debit, 0);
   const totalCredit = mouvements.reduce((sum, mvt) => sum + mvt.credit, 0);
   const soldeCompte = mouvements.length > 0 ? mouvements[mouvements.length - 1].solde : 0;
 
-  // Gestion du formulaire de dépense/crédit
-  const handleCategorieChange = (value: string) => {
+  const handleCategorieChange = async (value: string) => {
     setCategorie(value);
     
-    // Si catégorie fixe, récupérer le montant
-    const cat = categories.find(c => c.id === value);
-    if (cat?.isFixe) {
-      setDebit(depensesFixe[value as keyof DepenseFixe].toString());
-      setCredit('');
+    if (value === 'depenseFixe') {
+      try {
+        const depensesFixeData = await depenseService.getDepensesFixe();
+        setDebit(depensesFixeData.total.toString());
+        setCredit('');
+      } catch (error) {
+        console.error('Erreur lors de la récupération des dépenses fixes', error);
+        toast({
+          title: 'Erreur',
+          description: 'Impossible de récupérer les dépenses fixes',
+          variant: 'destructive',
+        });
+      }
     }
   };
 
-  // Gestion de l'exclusivité débit/crédit
   const handleDebitChange = (value: string) => {
     setDebit(value);
     if (value) {
@@ -122,7 +125,6 @@ const DepenseDuMois: React.FC = () => {
     }
   };
 
-  // Enregistrer une nouvelle dépense/crédit
   const handleAjoutMouvement = async () => {
     if (!description) {
       toast({
@@ -165,10 +167,8 @@ const DepenseDuMois: React.FC = () => {
         credit: creditValue
       };
       
-      // Enregistrer via l'API
       await depenseService.addMouvement(nouveauMouvement);
       
-      // Recharger les données
       const updatedMouvements = await depenseService.getMouvements();
       setMouvements(updatedMouvements);
       
@@ -179,7 +179,6 @@ const DepenseDuMois: React.FC = () => {
         className: 'notification-success',
       });
       
-      // Réinitialiser le formulaire
       setDate(new Date());
       setDescription('');
       setCategorie('');
@@ -198,15 +197,12 @@ const DepenseDuMois: React.FC = () => {
     }
   };
 
-  // Mettre à jour les dépenses fixes
   const handleUpdateDepensesFixe = async () => {
     try {
       setLoading(true);
       
-      // Mettre à jour via l'API
       const updatedDepensesFixe = await depenseService.updateDepensesFixe(tempDepensesFixe);
       
-      // Mettre à jour l'état
       setDepensesFixe(updatedDepensesFixe);
       
       toast({
@@ -229,7 +225,6 @@ const DepenseDuMois: React.FC = () => {
     }
   };
 
-  // Mettre à jour une valeur dans les dépenses fixes temporaires
   const handleDepenseFixeChange = (key: keyof DepenseFixe, value: string) => {
     setTempDepensesFixe(prev => ({
       ...prev,
@@ -305,7 +300,6 @@ const DepenseDuMois: React.FC = () => {
                   </TableRow>
                 ))}
                 
-                {/* Ligne des totaux */}
                 <TableRow className="font-bold">
                   <TableCell colSpan={3}>TOTAL</TableCell>
                   <TableCell className="text-right text-app-red">
@@ -376,7 +370,6 @@ const DepenseDuMois: React.FC = () => {
         </div>
       </Card>
       
-      {/* Formulaire d'ajout de dépense/crédit */}
       <Dialog open={ajoutDialogOpen} onOpenChange={setAjoutDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
@@ -426,7 +419,6 @@ const DepenseDuMois: React.FC = () => {
                   <SelectValue placeholder="Sélectionner une catégorie" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Sélectionner...</SelectItem>
                   {categories.map(cat => (
                     <SelectItem key={cat.id} value={cat.id}>{cat.label}</SelectItem>
                   ))}
@@ -444,7 +436,7 @@ const DepenseDuMois: React.FC = () => {
                 placeholder="0.00"
                 min="0"
                 step="0.01"
-                disabled={!!credit}
+                disabled={!!credit || categorie === 'depenseFixe'}
               />
             </div>
             
@@ -458,7 +450,7 @@ const DepenseDuMois: React.FC = () => {
                 placeholder="0.00"
                 min="0"
                 step="0.01"
-                disabled={!!debit}
+                disabled={!!debit || categorie === 'depenseFixe'}
               />
             </div>
             
@@ -474,7 +466,6 @@ const DepenseDuMois: React.FC = () => {
         </DialogContent>
       </Dialog>
       
-      {/* Formulaire de dépenses fixes */}
       <Dialog open={depenseFixeDialogOpen} onOpenChange={setDepenseFixeDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>

@@ -1,4 +1,3 @@
-
 export interface User {
   id: string;
   email: string;
@@ -41,6 +40,7 @@ export interface PretProduit {
   id: string;
   date: string;
   description: string;
+  nom?: string;
   prixVente: number;
   avanceRecue: number;
   reste: number;
