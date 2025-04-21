@@ -14,25 +14,8 @@ import { fr } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
 import { CalendarIcon, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-
-interface DepenseMouvement {
-  id: string;
-  date: string;
-  description: string;
-  categorie: string;
-  debit: number;
-  credit: number;
-  solde: number;
-}
-
-interface DepenseFixe {
-  free: number;
-  internetZeop: number;
-  assuranceVoiture: number;
-  autreDepense: number;
-  assuranceVie: number;
-  total: number;
-}
+import { depenseService } from '@/service/api';
+import { DepenseMouvement, DepenseFixe } from '@/types';
 
 // Catégories de dépenses/revenus
 const categories = [
@@ -78,25 +61,20 @@ const DepenseDuMois: React.FC = () => {
   // Mois actuel pour l'affichage
   const moisActuel = format(new Date(), 'MMMM yyyy', { locale: fr });
 
-  // Simuler le chargement des données depuis le serveur
+  // Charger les données depuis l'API
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        // Simulation - À remplacer par de vraies API calls
-        // const reponseMovements = await axios.get('/api/depenses/mouvements');
-        // const reponseFixe = await axios.get('/api/depenses/fixe');
-        // setMouvements(reponseMovements.data);
-        // setDepensesFixe(reponseFixe.data);
         
-        // Données simulées pour démonstration
-        const mockMouvements: DepenseMouvement[] = [
-          { id: '1', date: '2023-04-05', description: 'Salaire', categorie: 'salaire', debit: 0, credit: 2000, solde: 2000 },
-          { id: '2', date: '2023-04-10', description: 'Courses Leclerc', categorie: 'courses', debit: 150, credit: 0, solde: 1850 },
-          { id: '3', date: '2023-04-15', description: 'Restaurant', categorie: 'restaurant', debit: 45, credit: 0, solde: 1805 },
-          { id: '4', date: '2023-04-20', description: 'Free Mobile', categorie: 'free', debit: 19.99, credit: 0, solde: 1785.01 },
-        ];
-        setMouvements(mockMouvements);
+        // Charger les mouvements
+        const mouvementsData = await depenseService.getMouvements();
+        setMouvements(mouvementsData);
+        
+        // Charger les dépenses fixes
+        const depensesFixeData = await depenseService.getDepensesFixe();
+        setDepensesFixe(depensesFixeData);
+        setTempDepensesFixe(depensesFixeData);
       } catch (error) {
         console.error('Erreur lors du chargement des données', error);
         toast({
@@ -179,26 +157,20 @@ const DepenseDuMois: React.FC = () => {
       const debitValue = parseFloat(debit) || 0;
       const creditValue = parseFloat(credit) || 0;
       
-      // Calculer le nouveau solde
-      const dernierSolde = mouvements.length > 0 ? mouvements[mouvements.length - 1].solde : 0;
-      const nouveauSolde = dernierSolde + creditValue - debitValue;
-      
-      const nouveauMouvement: DepenseMouvement = {
-        id: Date.now().toString(), // ID temporaire, sera remplacé par l'ID du serveur
+      const nouveauMouvement: Omit<DepenseMouvement, 'id' | 'solde'> = {
         date: format(date, 'yyyy-MM-dd'),
         description,
         categorie,
         debit: debitValue,
-        credit: creditValue,
-        solde: nouveauSolde
+        credit: creditValue
       };
       
-      // Simulation - À remplacer par une vraie API call
-      // const response = await axios.post('/api/depenses/mouvements', nouveauMouvement);
-      // const savedMouvement = response.data;
+      // Enregistrer via l'API
+      await depenseService.addMouvement(nouveauMouvement);
       
-      // Mise à jour de l'état local
-      setMouvements([...mouvements, nouveauMouvement]);
+      // Recharger les données
+      const updatedMouvements = await depenseService.getMouvements();
+      setMouvements(updatedMouvements);
       
       toast({
         title: 'Succès',
@@ -231,22 +203,10 @@ const DepenseDuMois: React.FC = () => {
     try {
       setLoading(true);
       
-      // Calculer le total
-      const total = tempDepensesFixe.free + 
-                    tempDepensesFixe.internetZeop + 
-                    tempDepensesFixe.assuranceVoiture + 
-                    tempDepensesFixe.autreDepense + 
-                    tempDepensesFixe.assuranceVie;
+      // Mettre à jour via l'API
+      const updatedDepensesFixe = await depenseService.updateDepensesFixe(tempDepensesFixe);
       
-      const updatedDepensesFixe = {
-        ...tempDepensesFixe,
-        total
-      };
-      
-      // Simulation - À remplacer par une vraie API call
-      // await axios.put('/api/depenses/fixe', updatedDepensesFixe);
-      
-      // Mise à jour de l'état local
+      // Mettre à jour l'état
       setDepensesFixe(updatedDepensesFixe);
       
       toast({

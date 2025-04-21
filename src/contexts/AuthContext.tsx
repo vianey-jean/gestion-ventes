@@ -41,7 +41,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         toast({
           title: "Connexion réussie",
           description: `Bienvenue ${loggedInUser.firstName} ${loggedInUser.lastName}`,
-          className: "notification-success",
+          className: "bg-green-500 text-white",
         });
         return true;
       } else {

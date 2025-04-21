@@ -14,18 +14,8 @@ import { useToast } from '@/hooks/use-toast';
 import { CalendarIcon, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useApp } from '@/contexts/AppContext';
-import { Product } from '@/types';
-
-interface PretProduit {
-  id: string;
-  date: string;
-  description: string;
-  prixVente: number;
-  avanceRecue: number;
-  reste: number;
-  estPaye: boolean;
-  productId?: string;
-}
+import { Product, PretProduit } from '@/types';
+import { pretProduitService } from '@/service/api';
 
 const PretProduits: React.FC = () => {
   const [prets, setPrets] = useState<PretProduit[]>([]);
@@ -50,22 +40,13 @@ const PretProduits: React.FC = () => {
   // État du paiement
   const estPaye = reste <= 0;
 
-  // Simuler le chargement des données depuis le serveur
+  // Charger les données depuis l'API
   useEffect(() => {
     const fetchPrets = async () => {
       try {
         setLoading(true);
-        // Simulation - À remplacer par une vraie API call
-        // const response = await axios.get('/api/prets-produits');
-        // setPrets(response.data);
-        
-        // Données simulées pour démonstration
-        const mockData: PretProduit[] = [
-          { id: '1', date: '2023-04-10', description: 'Perruque Blonde', prixVente: 450, avanceRecue: 200, reste: 250, estPaye: false },
-          { id: '2', date: '2023-04-15', description: 'Perruque Brune', prixVente: 300, avanceRecue: 300, reste: 0, estPaye: true },
-          { id: '3', date: '2023-04-20', description: 'Perruque Rousse', prixVente: 500, avanceRecue: 250, reste: 250, estPaye: false },
-        ];
-        setPrets(mockData);
+        const data = await pretProduitService.getPretProduits();
+        setPrets(data);
       } catch (error) {
         console.error('Erreur lors du chargement des prêts produits', error);
         toast({
@@ -130,8 +111,7 @@ const PretProduits: React.FC = () => {
     try {
       setLoading(true);
       
-      const newPret: PretProduit = {
-        id: Date.now().toString(), // ID temporaire, sera remplacé par l'ID du serveur
+      const newPret: Omit<PretProduit, 'id'> = {
         date: format(date, 'yyyy-MM-dd'),
         description,
         prixVente: parseFloat(prixVente),
@@ -141,12 +121,12 @@ const PretProduits: React.FC = () => {
         productId: selectedProduct?.id
       };
       
-      // Simulation - À remplacer par une vraie API call
-      // const response = await axios.post('/api/prets-produits', newPret);
-      // const savedPret = response.data;
+      // Enregistrer via l'API
+      await pretProduitService.addPretProduit(newPret);
       
-      // Mise à jour de l'état local
-      setPrets([...prets, newPret]);
+      // Recharger les données
+      const updatedPrets = await pretProduitService.getPretProduits();
+      setPrets(updatedPrets);
       
       toast({
         title: 'Succès',

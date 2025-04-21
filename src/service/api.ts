@@ -340,3 +340,292 @@ export const salesService = {
     }
   }
 };
+
+// Service pour les prêts aux familles
+export const pretFamilleService = {
+  _cache: null,
+  _cacheExpiry: null,
+  
+  getPretFamilles: async () => {
+    try {
+      // Vérifier si le cache est valide
+      const now = Date.now();
+      if (pretFamilleService._cache && pretFamilleService._cacheExpiry && now < pretFamilleService._cacheExpiry) {
+        console.log("Using cached pret familles data");
+        return pretFamilleService._cache;
+      }
+
+      console.log("Fetching fresh pret familles data");
+      const response = await api.get('/pretfamilles');
+      
+      // Mettre à jour le cache
+      pretFamilleService._cache = response.data;
+      pretFamilleService._cacheExpiry = now + CACHE_DURATION;
+      
+      return response.data;
+    } catch (error) {
+      console.error("Get pret familles error:", error);
+      // En cas d'erreur, retourner le cache s'il existe (même expiré)
+      if (pretFamilleService._cache) {
+        console.warn("Using expired cache due to API error");
+        return pretFamilleService._cache;
+      }
+      return [];
+    }
+  },
+  
+  searchByName: async (query: string) => {
+    try {
+      if (!query || query.length < 3) return [];
+      
+      // Essayer d'abord de chercher dans le cache
+      if (pretFamilleService._cache) {
+        console.log("Searching in cache first");
+        const normalizedQuery = query.toLowerCase().trim();
+        const results = pretFamilleService._cache.filter(pret => 
+          pret.nom.toLowerCase().includes(normalizedQuery)
+        );
+        
+        if (results.length > 0) {
+          console.log(`Found ${results.length} results in cache`);
+          return results;
+        }
+      }
+      
+      const response = await api.get(`/pretfamilles/search/nom?q=${encodeURIComponent(query)}`);
+      return response.data;
+    } catch (error) {
+      console.error("Search pret familles error:", error);
+      return [];
+    }
+  },
+  
+  addPretFamille: async (pretFamille) => {
+    try {
+      const response = await api.post('/pretfamilles', pretFamille);
+      pretFamilleService.invalidateCache();
+      return response.data;
+    } catch (error) {
+      console.error("Add pret famille error:", error);
+      throw error;
+    }
+  },
+  
+  updatePretFamille: async (id, pretFamille) => {
+    try {
+      const response = await api.put(`/pretfamilles/${id}`, pretFamille);
+      pretFamilleService.invalidateCache();
+      return response.data;
+    } catch (error) {
+      console.error("Update pret famille error:", error);
+      throw error;
+    }
+  },
+  
+  deletePretFamille: async (id) => {
+    try {
+      await api.delete(`/pretfamilles/${id}`);
+      pretFamilleService.invalidateCache();
+      return true;
+    } catch (error) {
+      console.error("Delete pret famille error:", error);
+      return false;
+    }
+  },
+  
+  invalidateCache: () => {
+    pretFamilleService._cache = null;
+    pretFamilleService._cacheExpiry = null;
+  }
+};
+
+// Service pour les prêts de produits
+export const pretProduitService = {
+  _cache: null,
+  _cacheExpiry: null,
+  
+  getPretProduits: async () => {
+    try {
+      // Vérifier si le cache est valide
+      const now = Date.now();
+      if (pretProduitService._cache && pretProduitService._cacheExpiry && now < pretProduitService._cacheExpiry) {
+        console.log("Using cached pret produits data");
+        return pretProduitService._cache;
+      }
+
+      console.log("Fetching fresh pret produits data");
+      const response = await api.get('/pretproduits');
+      
+      // Mettre à jour le cache
+      pretProduitService._cache = response.data;
+      pretProduitService._cacheExpiry = now + CACHE_DURATION;
+      
+      return response.data;
+    } catch (error) {
+      console.error("Get pret produits error:", error);
+      // En cas d'erreur, retourner le cache s'il existe (même expiré)
+      if (pretProduitService._cache) {
+        console.warn("Using expired cache due to API error");
+        return pretProduitService._cache;
+      }
+      return [];
+    }
+  },
+  
+  addPretProduit: async (pretProduit) => {
+    try {
+      const response = await api.post('/pretproduits', pretProduit);
+      pretProduitService.invalidateCache();
+      return response.data;
+    } catch (error) {
+      console.error("Add pret produit error:", error);
+      throw error;
+    }
+  },
+  
+  updatePretProduit: async (id, pretProduit) => {
+    try {
+      const response = await api.put(`/pretproduits/${id}`, pretProduit);
+      pretProduitService.invalidateCache();
+      return response.data;
+    } catch (error) {
+      console.error("Update pret produit error:", error);
+      throw error;
+    }
+  },
+  
+  deletePretProduit: async (id) => {
+    try {
+      await api.delete(`/pretproduits/${id}`);
+      pretProduitService.invalidateCache();
+      return true;
+    } catch (error) {
+      console.error("Delete pret produit error:", error);
+      return false;
+    }
+  },
+  
+  invalidateCache: () => {
+    pretProduitService._cache = null;
+    pretProduitService._cacheExpiry = null;
+  }
+};
+
+// Service pour les dépenses du mois
+export const depenseService = {
+  _mouvementsCache: null,
+  _mouvementsCacheExpiry: null,
+  
+  _depensesFixeCache: null,
+  _depensesFixeCacheExpiry: null,
+  
+  getMouvements: async () => {
+    try {
+      // Vérifier si le cache est valide
+      const now = Date.now();
+      if (depenseService._mouvementsCache && depenseService._mouvementsCacheExpiry && now < depenseService._mouvementsCacheExpiry) {
+        console.log("Using cached mouvements data");
+        return depenseService._mouvementsCache;
+      }
+
+      console.log("Fetching fresh mouvements data");
+      const response = await api.get('/depenses/mouvements');
+      
+      // Mettre à jour le cache
+      depenseService._mouvementsCache = response.data;
+      depenseService._mouvementsCacheExpiry = now + CACHE_DURATION;
+      
+      return response.data;
+    } catch (error) {
+      console.error("Get mouvements error:", error);
+      // En cas d'erreur, retourner le cache s'il existe (même expiré)
+      if (depenseService._mouvementsCache) {
+        console.warn("Using expired cache due to API error");
+        return depenseService._mouvementsCache;
+      }
+      return [];
+    }
+  },
+  
+  addMouvement: async (mouvement) => {
+    try {
+      const response = await api.post('/depenses/mouvements', mouvement);
+      depenseService.invalidateMouvementsCache();
+      return response.data;
+    } catch (error) {
+      console.error("Add mouvement error:", error);
+      throw error;
+    }
+  },
+  
+  updateMouvement: async (id, mouvement) => {
+    try {
+      const response = await api.put(`/depenses/mouvements/${id}`, mouvement);
+      depenseService.invalidateMouvementsCache();
+      return response.data;
+    } catch (error) {
+      console.error("Update mouvement error:", error);
+      throw error;
+    }
+  },
+  
+  deleteMouvement: async (id) => {
+    try {
+      await api.delete(`/depenses/mouvements/${id}`);
+      depenseService.invalidateMouvementsCache();
+      return true;
+    } catch (error) {
+      console.error("Delete mouvement error:", error);
+      return false;
+    }
+  },
+  
+  getDepensesFixe: async () => {
+    try {
+      // Vérifier si le cache est valide
+      const now = Date.now();
+      if (depenseService._depensesFixeCache && depenseService._depensesFixeCacheExpiry && now < depenseService._depensesFixeCacheExpiry) {
+        console.log("Using cached depenses fixe data");
+        return depenseService._depensesFixeCache;
+      }
+
+      console.log("Fetching fresh depenses fixe data");
+      const response = await api.get('/depenses/fixe');
+      
+      // Mettre à jour le cache
+      depenseService._depensesFixeCache = response.data;
+      depenseService._depensesFixeCacheExpiry = now + CACHE_DURATION;
+      
+      return response.data;
+    } catch (error) {
+      console.error("Get depenses fixe error:", error);
+      // En cas d'erreur, retourner le cache s'il existe (même expiré)
+      if (depenseService._depensesFixeCache) {
+        console.warn("Using expired cache due to API error");
+        return depenseService._depensesFixeCache;
+      }
+      return {};
+    }
+  },
+  
+  updateDepensesFixe: async (depensesFixe) => {
+    try {
+      const response = await api.put('/depenses/fixe', depensesFixe);
+      depenseService.invalidateDepensesFixeCache();
+      return response.data;
+    } catch (error) {
+      console.error("Update depenses fixe error:", error);
+      throw error;
+    }
+  },
+  
+  invalidateMouvementsCache: () => {
+    depenseService._mouvementsCache = null;
+    depenseService._mouvementsCacheExpiry = null;
+  },
+  
+  invalidateDepensesFixeCache: () => {
+    depenseService._depensesFixeCache = null;
+    depenseService._depensesFixeCacheExpiry = null;
+  }
+};

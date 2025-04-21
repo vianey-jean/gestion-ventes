@@ -7,17 +7,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import axios from 'axios';
 import { Loader2 } from 'lucide-react';
-
-interface PretFamille {
-  id: string;
-  nom: string;
-  pretTotal: number;
-  soldeRestant: number;
-  dernierRemboursement: number;
-  dateRemboursement: string;
-}
+import { pretFamilleService } from '@/service/api';
+import { PretFamille } from '@/types';
 
 const PretFamilles: React.FC = () => {
   const [prets, setPrets] = useState<PretFamille[]>([]);
@@ -29,22 +21,13 @@ const PretFamilles: React.FC = () => {
   const [montantRemboursement, setMontantRemboursement] = useState('');
   const { toast } = useToast();
 
-  // Simuler le chargement des données depuis le serveur
+  // Charger les données depuis l'API
   useEffect(() => {
     const fetchPrets = async () => {
       try {
         setLoading(true);
-        // Simulation - À remplacer par une vraie API call
-        // const response = await axios.get('/api/prets-familles');
-        // setPrets(response.data);
-        
-        // Données simulées pour démonstration
-        const mockData: PretFamille[] = [
-          { id: '1', nom: 'Famille Martin', pretTotal: 2000, soldeRestant: 1500, dernierRemboursement: 500, dateRemboursement: '2024-04-15' },
-          { id: '2', nom: 'Famille Dupont', pretTotal: 1000, soldeRestant: 500, dernierRemboursement: 200, dateRemboursement: '2024-04-10' },
-          { id: '3', nom: 'Famille Bernard', pretTotal: 3000, soldeRestant: 2000, dernierRemboursement: 1000, dateRemboursement: '2024-04-05' },
-        ];
-        setPrets(mockData);
+        const data = await pretFamilleService.getPretFamilles();
+        setPrets(data);
       } catch (error) {
         console.error('Erreur lors du chargement des prêts', error);
         toast({
@@ -65,13 +48,16 @@ const PretFamilles: React.FC = () => {
   const totalSolde = prets.reduce((sum, pret) => sum + pret.soldeRestant, 0);
 
   // Recherche des familles par nom
-  const handleSearch = (text: string) => {
+  const handleSearch = async (text: string) => {
     setSearchText(text);
     if (text.length >= 3) {
-      const results = prets.filter(pret => 
-        pret.nom.toLowerCase().includes(text.toLowerCase())
-      );
-      setSearchResults(results);
+      try {
+        const results = await pretFamilleService.searchByName(text);
+        setSearchResults(results);
+      } catch (error) {
+        console.error('Erreur lors de la recherche', error);
+        setSearchResults([]);
+      }
     } else {
       setSearchResults([]);
     }
@@ -132,13 +118,12 @@ const PretFamilles: React.FC = () => {
         dateRemboursement: new Date().toISOString().split('T')[0]
       };
       
-      // Simulation - À remplacer par une vraie API call
-      // await axios.put(`/api/prets-familles/${selectedPret.id}`, updatedPret);
+      // Mettre à jour via l'API
+      await pretFamilleService.updatePretFamille(selectedPret.id, updatedPret);
       
-      // Mettre à jour l'état local
-      setPrets(prets.map(pret => 
-        pret.id === selectedPret.id ? updatedPret : pret
-      ));
+      // Recharger les données
+      const updatedPrets = await pretFamilleService.getPretFamilles();
+      setPrets(updatedPrets);
       
       toast({
         title: 'Succès',

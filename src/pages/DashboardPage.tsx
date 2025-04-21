@@ -102,10 +102,10 @@ const DashboardPage: React.FC = () => {
         {/* Système d'onglets pour les différentes sections */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid grid-cols-4 mb-6">
-            <TabsTrigger value="ventes">Ventes Produits</TabsTrigger>
-            <TabsTrigger value="pret-familles">Prêt Familles</TabsTrigger>
-            <TabsTrigger value="pret-produits">Prêt Produits</TabsTrigger>
-            <TabsTrigger value="depenses">Dépenses du mois</TabsTrigger>
+            <TabsTrigger value="ventes" className="font-bold text-purple-700 uppercase">VENTES PRODUITS</TabsTrigger>
+            <TabsTrigger value="pret-familles" className="font-bold text-purple-700 uppercase">PRÊT FAMILLES</TabsTrigger>
+            <TabsTrigger value="pret-produits" className="font-bold text-purple-700 uppercase">PRÊT PRODUITS</TabsTrigger>
+            <TabsTrigger value="depenses" className="font-bold text-purple-700 uppercase">DÉPENSES DU MOIS</TabsTrigger>
           </TabsList>
           
           <TabsContent value="ventes">
