@@ -305,8 +305,9 @@ const DepenseDuMois = () => {
           <DollarSign className="inline-block mr-2 h-5 w-5" />
           Solde actuel
         </h3>
-        <p className={`text-2xl font-bold ${solde >= 0 ? 'text-app-green' : 'text-app-red'}`}>
-          {formatAmount(solde)}
+        <p className={`text-2xl font-bold ${solde >= 0 ? 'text-app-green'  : 'text-app-red' }`}>
+        {solde > 0 ? `Bonne (${formatAmount(solde)})` : `Découvert (${formatAmount(solde)})`}
+          
         </p>
       </div>
       
