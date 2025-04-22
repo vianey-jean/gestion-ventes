@@ -1,566 +1,646 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
+import { authService } from '@/service/api';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
-import { useToast } from '@/hooks/use-toast';
-import { CalendarIcon, Loader2 } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { depenseService } from '@/service/api';
-import { DepenseMouvement, DepenseFixe } from '@/types';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { useToast } from '@/components/ui/use-toast';
+import { Plus, Edit, Trash2, RotateCcw, CreditCard, Save } from 'lucide-react';
+import MonthlyResetHandler from './MonthlyResetHandler';
+import { useIsMobile } from '@/hooks/use-mobile';
 
-const categories = [
-  { id: 'depenseFixe', label: 'Dépense Fixe', isFixe: true },
-  { id: 'autre', label: 'Autre', isFixe: false },
-];
-
-const DepenseDuMois: React.FC = () => {
-  const [mouvements, setMouvements] = useState<DepenseMouvement[]>([]);
-  const [depensesFixe, setDepensesFixe] = useState<DepenseFixe>({
-    free: 19.99,
-    internetZeop: 39.99,
-    assuranceVoiture: 85,
-    autreDepense: 45,
-    assuranceVie: 120,
-    total: 309.98
+const DepenseDuMois = () => {
+  const [mouvements, setMouvements] = useState([]);
+  const [newMouvement, setNewMouvement] = useState({
+    description: '',
+    categorie: '',
+    date: new Date().toISOString().substring(0, 10),
+    debit: '',
+    credit: '',
   });
-  const [loading, setLoading] = useState(false);
-  const [ajoutDialogOpen, setAjoutDialogOpen] = useState(false);
-  const [depenseFixeDialogOpen, setDepenseFixeDialogOpen] = useState(false);
-  
-  const [date, setDate] = useState<Date>(new Date());
-  const [description, setDescription] = useState('');
-  const [categorie, setCategorie] = useState('');
-  const [debit, setDebit] = useState('');
-  const [credit, setCredit] = useState('');
-  
-  const [tempDepensesFixe, setTempDepensesFixe] = useState<DepenseFixe>(depensesFixe);
-  
+  const [editMouvementId, setEditMouvementId] = useState(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [deleteId, setDeleteId] = useState(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isFixeDialogOpen, setIsFixeDialogOpen] = useState(false);
+  const [depensesFixe, setDepensesFixe] = useState({
+    salaire: '',
+    loyer: '',
+    creditVoiture: '',
+    eau: '',
+    electricite: '',
+    internet: '',
+    telephone: '',
+    assurances: '',
+  });
+  const isMobile = useIsMobile();
   const { toast } = useToast();
-  
-  const moisActuel = format(new Date(), 'MMMM yyyy', { locale: fr });
 
-  useEffect(() => {
-    const checkAndResetMois = async () => {
-      try {
-        setLoading(true);
-        const mouvementsData = await depenseService.getMouvements();
-        if (mouvementsData.length > 0) {
-          const lastMouvement = mouvementsData[mouvementsData.length - 1];
-          const lastDate = new Date(lastMouvement.date);
-          const now = new Date();
-          if (lastDate.getMonth() !== now.getMonth() || lastDate.getFullYear() !== now.getFullYear()) {
-            await depenseService.resetMouvements();
-            setMouvements([]);
-            toast({
-              title: 'Fin du mois',
-              description: 'Le solde et la liste des mouvements ont été réinitialisés pour le nouveau mois.',
-              className: 'notification-success'
-            });
-          } else {
-            setMouvements(mouvementsData);
-          }
-        } else {
-          setMouvements([]);
-        }
-        const depensesFixeData = await depenseService.getDepensesFixe();
-        setDepensesFixe(depensesFixeData);
-        setTempDepensesFixe(depensesFixeData);
-      } catch (error) {
-        console.error('Erreur lors du contrôle du changement de mois', error);
-        toast({
-          title: 'Erreur',
-          description: 'Impossible de charger ou de réinitialiser les mouvements',
-          variant: 'destructive',
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
+  // Calcul du solde
+  const solde = mouvements.reduce((total, m) => {
+    return total + (parseFloat(m.credit) || 0) - (parseFloat(m.debit) || 0);
+  }, 0);
 
-    checkAndResetMois();
-  }, [toast]);
-
-  const totalDebit = mouvements.reduce((sum, mvt) => sum + mvt.debit, 0);
-  const totalCredit = mouvements.reduce((sum, mvt) => sum + mvt.credit, 0);
-  const soldeCompte = mouvements.length > 0 ? mouvements[mouvements.length - 1].solde : 0;
-
-  const handleCategorieChange = async (value: string) => {
-    setCategorie(value);
-    
-    if (value === 'depenseFixe') {
-      try {
-        const depensesFixeData = await depenseService.getDepensesFixe();
-        setDebit(depensesFixeData.total.toString());
-        setCredit('');
-      } catch (error) {
-        console.error('Erreur lors de la récupération des dépenses fixes', error);
-        toast({
-          title: 'Erreur',
-          description: 'Impossible de récupérer les dépenses fixes',
-          variant: 'destructive',
-        });
-      }
-    }
+  // Formatage des dates
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat('fr-FR').format(date);
   };
 
-  const handleDebitChange = (value: string) => {
-    setDebit(value);
-    if (value) {
-      setCredit('');
-    }
+  // Formatage des montants
+  const formatAmount = (amount) => {
+    return new Intl.NumberFormat('fr-FR', {
+      style: 'currency',
+      currency: 'EUR',
+    }).format(amount || 0);
   };
 
-  const handleCreditChange = (value: string) => {
-    setCredit(value);
-    if (value) {
-      setDebit('');
-    }
-  };
-
-  const handleAjoutMouvement = async () => {
-    if (!description) {
-      toast({
-        title: 'Erreur',
-        description: 'Veuillez saisir une description',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    if (!categorie) {
-      toast({
-        title: 'Erreur',
-        description: 'Veuillez sélectionner une catégorie',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    if ((!debit || parseFloat(debit) <= 0) && (!credit || parseFloat(credit) <= 0)) {
-      toast({
-        title: 'Erreur',
-        description: 'Veuillez saisir un montant valide (débit ou crédit)',
-        variant: 'destructive',
-      });
-      return;
-    }
-
+  // Récupération des mouvements
+  const fetchMouvements = async () => {
     try {
-      setLoading(true);
-      
-      const debitValue = parseFloat(debit) || 0;
-      const creditValue = parseFloat(credit) || 0;
-      
-      const nouveauMouvement: Omit<DepenseMouvement, 'id' | 'solde'> = {
-        date: format(date, 'yyyy-MM-dd'),
-        description,
-        categorie,
-        debit: debitValue,
-        credit: creditValue
-      };
-      
-      await depenseService.addMouvement(nouveauMouvement);
-      
-      const updatedMouvements = await depenseService.getMouvements();
-      setMouvements(updatedMouvements);
-      
-      toast({
-        title: 'Succès',
-        description: 'Mouvement enregistré avec succès',
-        variant: 'default',
-        className: 'notification-success',
+      const token = authService.getToken();
+      const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/depenses/mouvements`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
       });
-      
-      setDate(new Date());
-      setDescription('');
-      setCategorie('');
-      setDebit('');
-      setCredit('');
-      setAjoutDialogOpen(false);
+      setMouvements(response.data);
     } catch (error) {
-      console.error('Erreur lors de l\'enregistrement du mouvement', error);
+      console.error("Erreur lors de la récupération des mouvements:", error);
       toast({
-        title: 'Erreur',
-        description: 'Impossible d\'enregistrer le mouvement',
-        variant: 'destructive',
+        title: "Erreur",
+        description: "Impossible de récupérer les mouvements",
+        variant: "destructive",
       });
-    } finally {
-      setLoading(false);
     }
   };
 
+  // Récupération des dépenses fixes
+  const fetchDepensesFixe = async () => {
+    try {
+      const token = authService.getToken();
+      const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/depenses/fixe`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      setDepensesFixe(response.data);
+    } catch (error) {
+      console.error("Erreur lors de la récupération des dépenses fixes:", error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de récupérer les dépenses fixes",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Ajout/Modification d'un mouvement
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    try {
+      const token = authService.getToken();
+      
+      // Validation des données
+      if (!newMouvement.description || !newMouvement.categorie || (!newMouvement.debit && !newMouvement.credit)) {
+        toast({
+          title: "Erreur",
+          description: "Veuillez remplir tous les champs obligatoires",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      if (editMouvementId) {
+        // Mise à jour d'un mouvement existant
+        await axios.put(
+          `${import.meta.env.VITE_API_URL}/api/depenses/mouvements/${editMouvementId}`,
+          newMouvement,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          }
+        );
+        
+        toast({
+          title: "Succès",
+          description: "Mouvement mis à jour avec succès",
+          className: "bg-app-green text-white",
+        });
+      } else {
+        // Création d'un nouveau mouvement
+        await axios.post(
+          `${import.meta.env.VITE_API_URL}/api/depenses/mouvements`,
+          newMouvement,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          }
+        );
+        
+        toast({
+          title: "Succès",
+          description: "Mouvement ajouté avec succès",
+          className: "bg-app-green text-white",
+        });
+      }
+      
+      // Réinitialisation et rechargement des données
+      setNewMouvement({
+        description: '',
+        categorie: '',
+        date: new Date().toISOString().substring(0, 10),
+        debit: '',
+        credit: '',
+      });
+      setEditMouvementId(null);
+      setIsDialogOpen(false);
+      fetchMouvements();
+    } catch (error) {
+      console.error("Erreur lors de l'ajout/modification du mouvement:", error);
+      toast({
+        title: "Erreur",
+        description: "Une erreur est survenue lors de l'enregistrement",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Suppression d'un mouvement
+  const handleDelete = async () => {
+    try {
+      const token = authService.getToken();
+      await axios.delete(`${import.meta.env.VITE_API_URL}/api/depenses/mouvements/${deleteId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      
+      toast({
+        title: "Succès",
+        description: "Mouvement supprimé avec succès",
+        className: "bg-app-green text-white",
+      });
+      
+      setIsDeleteDialogOpen(false);
+      fetchMouvements();
+    } catch (error) {
+      console.error("Erreur lors de la suppression du mouvement:", error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de supprimer le mouvement",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Modification d'un mouvement existant
+  const handleEdit = (mouvement) => {
+    setNewMouvement({
+      description: mouvement.description,
+      categorie: mouvement.categorie,
+      date: mouvement.date.substring(0, 10),
+      debit: mouvement.debit || '',
+      credit: mouvement.credit || '',
+    });
+    setEditMouvementId(mouvement.id);
+    setIsDialogOpen(true);
+  };
+
+  // Mise à jour des dépenses fixes
   const handleUpdateDepensesFixe = async () => {
     try {
-      setLoading(true);
-      
-      const updatedDepensesFixe = await depenseService.updateDepensesFixe(tempDepensesFixe);
-      
-      setDepensesFixe(updatedDepensesFixe);
+      const token = authService.getToken();
+      await axios.put(
+        `${import.meta.env.VITE_API_URL}/api/depenses/fixe`,
+        depensesFixe,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
       
       toast({
-        title: 'Succès',
-        description: 'Dépenses fixes mises à jour avec succès',
-        variant: 'default',
-        className: 'notification-success',
+        title: "Succès",
+        description: "Dépenses fixes mises à jour avec succès",
+        className: "bg-app-green text-white",
       });
       
-      setDepenseFixeDialogOpen(false);
+      setIsFixeDialogOpen(false);
     } catch (error) {
-      console.error('Erreur lors de la mise à jour des dépenses fixes', error);
+      console.error("Erreur lors de la mise à jour des dépenses fixes:", error);
       toast({
-        title: 'Erreur',
-        description: 'Impossible de mettre à jour les dépenses fixes',
-        variant: 'destructive',
+        title: "Erreur",
+        description: "Impossible de mettre à jour les dépenses fixes",
+        variant: "destructive",
       });
-    } finally {
-      setLoading(false);
     }
   };
 
-  const handleDepenseFixeChange = (key: keyof DepenseFixe, value: string) => {
-    setTempDepensesFixe(prev => ({
-      ...prev,
-      [key]: parseFloat(value) || 0
-    }));
+  // Chargement des données au montage du composant
+  useEffect(() => {
+    fetchMouvements();
+    fetchDepensesFixe();
+  }, []);
+
+  // Réinitialisation manuelle de tous les mouvements
+  const handleReset = async () => {
+    try {
+      const token = authService.getToken();
+      await axios.post(
+        `${import.meta.env.VITE_API_URL}/api/depenses/reset`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+      
+      toast({
+        title: "Succès",
+        description: "Tous les mouvements ont été réinitialisés",
+        className: "bg-app-blue text-white",
+      });
+      
+      fetchMouvements();
+    } catch (error) {
+      console.error("Erreur lors de la réinitialisation des mouvements:", error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de réinitialiser les mouvements",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
-    <div className="mt-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
-        <h2 className="text-2xl font-bold">Dépenses du mois</h2>
-        <div className="flex gap-2 mt-4 sm:mt-0">
-          <Button onClick={() => setAjoutDialogOpen(true)} className="bg-app-green hover:bg-opacity-90">
-            Ajout dépense/crédit
+    <div className="space-y-6">
+      <MonthlyResetHandler />
+      
+      {/* En-tête avec titre et boutons */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
+        <h2 className="text-2xl font-bold mb-4 sm:mb-0">Dépenses du mois</h2>
+        <div className="flex flex-wrap gap-2">
+          <Button 
+            variant="outline" 
+            className="btn-3d" 
+            onClick={() => setIsFixeDialogOpen(true)}
+          >
+            <CreditCard className="h-4 w-4 mr-2" />
+            Dépenses fixes
           </Button>
-          <Button onClick={() => {
-            setTempDepensesFixe(depensesFixe);
-            setDepenseFixeDialogOpen(true);
-          }} className="bg-app-blue hover:bg-opacity-90">
-            Dépenses fixes du mois
+          <Button 
+            className="btn-3d bg-app-green text-white" 
+            onClick={() => {
+              setEditMouvementId(null);
+              setNewMouvement({
+                description: '',
+                categorie: '',
+                date: new Date().toISOString().substring(0, 10),
+                debit: '',
+                credit: '',
+              });
+              setIsDialogOpen(true);
+            }}
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Ajouter
+          </Button>
+          <Button 
+            variant="outline" 
+            className="btn-3d border-app-red text-app-red" 
+            onClick={handleReset}
+          >
+            <RotateCcw className="h-4 w-4 mr-2" />
+            Réinitialiser
           </Button>
         </div>
       </div>
       
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
-        <div className="text-xl font-semibold">
-          Mois: <span className="text-app-purple capitalize">{moisActuel}</span>
-        </div>
-        <div className="text-xl font-semibold mt-2 sm:mt-0">
-          Solde dans le compte: <span className={soldeCompte >= 0 ? 'text-app-green' : 'text-app-red'}>
-            {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(soldeCompte)}
-          </span>
-        </div>
+      {/* Affichage du solde */}
+      <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg mb-6 card-3d">
+        <h3 className="text-lg font-semibold mb-2">Solde actuel</h3>
+        <p className={`text-2xl font-bold ${solde >= 0 ? 'text-app-green' : 'text-app-red'}`}>
+          {formatAmount(solde)}
+        </p>
       </div>
       
-      <Card className="mb-6">
-        <div className="p-6">
-          <h3 className="text-lg font-semibold mb-4">Solde</h3>
-          {loading ? (
-            <div className="flex justify-center items-center py-10">
-              <Loader2 className="h-6 w-6 animate-spin text-app-blue mr-2" />
-              <p>Chargement des données...</p>
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead>Catégorie</TableHead>
-                  <TableHead className="text-right">Débit (dépense)</TableHead>
-                  <TableHead className="text-right">Crédit (revenu)</TableHead>
-                  <TableHead className="text-right">Solde</TableHead>
+      {/* Tableau des mouvements */}
+      <div className="table-responsive">
+        <Table className={isMobile ? "table-responsive-stack" : ""}>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Date</TableHead>
+              <TableHead>Description</TableHead>
+              <TableHead>Catégorie</TableHead>
+              <TableHead className="text-right">Débit</TableHead>
+              <TableHead className="text-right">Crédit</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {mouvements.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center py-6 text-gray-500">
+                  Aucun mouvement enregistré
+                </TableCell>
+              </TableRow>
+            ) : (
+              mouvements.map((mouvement) => (
+                <TableRow key={mouvement.id}>
+                  <TableCell data-label="Date">{formatDate(mouvement.date)}</TableCell>
+                  <TableCell data-label="Description">{mouvement.description}</TableCell>
+                  <TableCell data-label="Catégorie">{mouvement.categorie}</TableCell>
+                  <TableCell data-label="Débit" className="text-right text-app-red">
+                    {mouvement.debit ? formatAmount(mouvement.debit) : '-'}
+                  </TableCell>
+                  <TableCell data-label="Crédit" className="text-right text-app-green">
+                    {mouvement.credit ? formatAmount(mouvement.credit) : '-'}
+                  </TableCell>
+                  <TableCell data-label="Actions" className="text-right space-x-2">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="btn-3d"
+                      onClick={() => handleEdit(mouvement)}
+                    >
+                      <Edit className="h-4 w-4 text-app-blue" />
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="btn-3d"
+                      onClick={() => {
+                        setDeleteId(mouvement.id);
+                        setIsDeleteDialogOpen(true);
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4 text-app-red" />
+                    </Button>
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {mouvements.map((mvt) => (
-                  <TableRow key={mvt.id}>
-                    <TableCell>{format(new Date(mvt.date), 'dd/MM/yyyy')}</TableCell>
-                    <TableCell className="font-medium">{mvt.description}</TableCell>
-                    <TableCell>
-                      {categories.find(c => c.id === mvt.categorie)?.label || mvt.categorie}
-                    </TableCell>
-                    <TableCell className="text-right text-app-red">
-                      {mvt.debit > 0 ? new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(mvt.debit) : '-'}
-                    </TableCell>
-                    <TableCell className="text-right text-app-green">
-                      {mvt.credit > 0 ? new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(mvt.credit) : '-'}
-                    </TableCell>
-                    <TableCell className={`text-right font-semibold ${mvt.solde >= 0 ? 'text-app-green' : 'text-app-red'}`}>
-                      {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(mvt.solde)}
-                    </TableCell>
-                  </TableRow>
-                ))}
-                
-                <TableRow className="font-bold">
-                  <TableCell colSpan={3}>TOTAL</TableCell>
-                  <TableCell className="text-right text-app-red">
-                    {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(totalDebit)}
-                  </TableCell>
-                  <TableCell className="text-right text-app-green">
-                    {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(totalCredit)}
-                  </TableCell>
-                  <TableCell className={`text-right ${soldeCompte >= 0 ? 'text-app-green' : 'text-app-red'}`}>
-                    {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(soldeCompte)}
-                  </TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
-          )}
-        </div>
-      </Card>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
       
-      <Card>
-        <div className="p-6">
-          <h3 className="text-lg font-semibold mb-4">Dépenses fixes</h3>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Catégorie</TableHead>
-                <TableHead className="text-right">Montant</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              <TableRow>
-                <TableCell>Free</TableCell>
-                <TableCell className="text-right">
-                  {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(depensesFixe.free)}
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>Internet Zeop</TableCell>
-                <TableCell className="text-right">
-                  {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(depensesFixe.internetZeop)}
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>Assurance voiture</TableCell>
-                <TableCell className="text-right">
-                  {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(depensesFixe.assuranceVoiture)}
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>Autre dépense</TableCell>
-                <TableCell className="text-right">
-                  {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(depensesFixe.autreDepense)}
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>Assurance de vie</TableCell>
-                <TableCell className="text-right">
-                  {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(depensesFixe.assuranceVie)}
-                </TableCell>
-              </TableRow>
-              <TableRow className="font-bold">
-                <TableCell>TOTAL</TableCell>
-                <TableCell className="text-right text-app-red">
-                  {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(depensesFixe.total)}
-                </TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
-        </div>
-      </Card>
-      
-      <Dialog open={ajoutDialogOpen} onOpenChange={setAjoutDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
+      {/* Dialogue d'ajout/modification de mouvement */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Ajouter une dépense ou un crédit</DialogTitle>
+            <DialogTitle>{editMouvementId ? 'Modifier le mouvement' : 'Ajouter un mouvement'}</DialogTitle>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="date">Date</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant={"outline"}
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !date && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {date ? format(date, 'PP', { locale: fr }) : <span>Sélectionner une date</span>}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={date}
-                    onSelect={(date) => date && setDate(date)}
-                    initialFocus
+          
+          <form onSubmit={handleSubmit} className="space-y-4 py-4">
+            <div className="grid grid-cols-1 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="description">Description</Label>
+                <Input
+                  id="description"
+                  value={newMouvement.description}
+                  onChange={(e) => setNewMouvement({...newMouvement, description: e.target.value})}
+                  required
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="categorie">Catégorie</Label>
+                <Select
+                  value={newMouvement.categorie}
+                  onValueChange={(value) => setNewMouvement({...newMouvement, categorie: value})}
+                  required
+                >
+                  <SelectTrigger id="categorie">
+                    <SelectValue placeholder="Sélectionner une catégorie" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Alimentation">Alimentation</SelectItem>
+                    <SelectItem value="Transport">Transport</SelectItem>
+                    <SelectItem value="Logement">Logement</SelectItem>
+                    <SelectItem value="Loisirs">Loisirs</SelectItem>
+                    <SelectItem value="Santé">Santé</SelectItem>
+                    <SelectItem value="Éducation">Éducation</SelectItem>
+                    <SelectItem value="Vêtements">Vêtements</SelectItem>
+                    <SelectItem value="Salaire">Salaire</SelectItem>
+                    <SelectItem value="Autres">Autres</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="date">Date</Label>
+                <Input
+                  id="date"
+                  type="date"
+                  value={newMouvement.date}
+                  onChange={(e) => setNewMouvement({...newMouvement, date: e.target.value})}
+                  required
+                />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="debit">Débit (€)</Label>
+                  <Input
+                    id="debit"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={newMouvement.debit}
+                    onChange={(e) => setNewMouvement({...newMouvement, debit: e.target.value, credit: ''})}
                   />
-                </PopoverContent>
-              </Popover>
-            </div>
-            
-            <div className="grid gap-2">
-              <Label htmlFor="description">Description</Label>
-              <Input 
-                id="description" 
-                value={description} 
-                onChange={(e) => setDescription(e.target.value)} 
-                placeholder="Description de la dépense ou du crédit"
-              />
-            </div>
-            
-            <div className="grid gap-2">
-              <Label htmlFor="categorie">Catégorie</Label>
-              <Select value={categorie} onValueChange={handleCategorieChange}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner une catégorie" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map(cat => (
-                    <SelectItem key={cat.id} value={cat.id}>{cat.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="grid gap-2">
-              <Label htmlFor="debit">Débit (dépense)</Label>
-              <Input 
-                id="debit" 
-                type="number" 
-                value={debit} 
-                onChange={(e) => handleDebitChange(e.target.value)}
-                placeholder="0.00"
-                min="0"
-                step="0.01"
-                disabled={!!credit || categorie === 'depenseFixe'}
-              />
-            </div>
-            
-            <div className="grid gap-2">
-              <Label htmlFor="credit">Crédit (revenu)</Label>
-              <Input 
-                id="credit" 
-                type="number" 
-                value={credit} 
-                onChange={(e) => handleCreditChange(e.target.value)}
-                placeholder="0.00"
-                min="0"
-                step="0.01"
-                disabled={!!debit || categorie === 'depenseFixe'}
-              />
-            </div>
-            
-            <Button 
-              onClick={handleAjoutMouvement} 
-              disabled={loading || !description || !categorie || ((!debit || parseFloat(debit) <= 0) && (!credit || parseFloat(credit) <= 0))}
-              className="mt-2"
-            >
-              {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-              Enregistrer
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-      
-      <Dialog open={depenseFixeDialogOpen} onOpenChange={setDepenseFixeDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>Dépenses fixes du mois</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="free">Free</Label>
-              <Input 
-                id="free" 
-                type="number" 
-                value={tempDepensesFixe.free.toString()} 
-                onChange={(e) => handleDepenseFixeChange('free', e.target.value)}
-                placeholder="0.00"
-                min="0"
-                step="0.01"
-              />
-            </div>
-            
-            <div className="grid gap-2">
-              <Label htmlFor="internetZeop">Internet Zeop</Label>
-              <Input 
-                id="internetZeop" 
-                type="number" 
-                value={tempDepensesFixe.internetZeop.toString()} 
-                onChange={(e) => handleDepenseFixeChange('internetZeop', e.target.value)}
-                placeholder="0.00"
-                min="0"
-                step="0.01"
-              />
-            </div>
-            
-            <div className="grid gap-2">
-              <Label htmlFor="assuranceVoiture">Assurance voiture</Label>
-              <Input 
-                id="assuranceVoiture" 
-                type="number" 
-                value={tempDepensesFixe.assuranceVoiture.toString()} 
-                onChange={(e) => handleDepenseFixeChange('assuranceVoiture', e.target.value)}
-                placeholder="0.00"
-                min="0"
-                step="0.01"
-              />
-            </div>
-            
-            <div className="grid gap-2">
-              <Label htmlFor="autreDepense">Autre dépense</Label>
-              <Input 
-                id="autreDepense" 
-                type="number" 
-                value={tempDepensesFixe.autreDepense.toString()} 
-                onChange={(e) => handleDepenseFixeChange('autreDepense', e.target.value)}
-                placeholder="0.00"
-                min="0"
-                step="0.01"
-              />
-            </div>
-            
-            <div className="grid gap-2">
-              <Label htmlFor="assuranceVie">Assurance de vie</Label>
-              <Input 
-                id="assuranceVie" 
-                type="number" 
-                value={tempDepensesFixe.assuranceVie.toString()} 
-                onChange={(e) => handleDepenseFixeChange('assuranceVie', e.target.value)}
-                placeholder="0.00"
-                min="0"
-                step="0.01"
-              />
-            </div>
-            
-            <div className="bg-gray-50 p-3 rounded-md">
-              <div className="flex justify-between">
-                <p><strong>Total:</strong></p>
-                <p className="text-app-red font-semibold">
-                  {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(
-                    parseFloat(tempDepensesFixe.free.toString() || '0') +
-                    parseFloat(tempDepensesFixe.internetZeop.toString() || '0') +
-                    parseFloat(tempDepensesFixe.assuranceVoiture.toString() || '0') +
-                    parseFloat(tempDepensesFixe.autreDepense.toString() || '0') +
-                    parseFloat(tempDepensesFixe.assuranceVie.toString() || '0')
-                  )}
-                </p>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="credit">Crédit (€)</Label>
+                  <Input
+                    id="credit"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={newMouvement.credit}
+                    onChange={(e) => setNewMouvement({...newMouvement, credit: e.target.value, debit: ''})}
+                  />
+                </div>
               </div>
             </div>
             
-            <Button 
-              onClick={handleUpdateDepensesFixe} 
-              disabled={loading}
-              className="mt-2"
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsDialogOpen(false)}
+              >
+                Annuler
+              </Button>
+              <Button type="submit" className="bg-app-green text-white">
+                {editMouvementId ? 'Mettre à jour' : 'Ajouter'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Dialogue de confirmation de suppression */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Confirmer la suppression</DialogTitle>
+          </DialogHeader>
+          <p className="py-4">Êtes-vous sûr de vouloir supprimer ce mouvement ? Cette action est irréversible.</p>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsDeleteDialogOpen(false)}
             >
-              {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-              Enregistrer les dépenses fixes
+              Annuler
             </Button>
+            <Button 
+              type="button" 
+              variant="destructive"
+              onClick={handleDelete}
+            >
+              Supprimer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Dialogue des dépenses fixes */}
+      <Dialog open={isFixeDialogOpen} onOpenChange={setIsFixeDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Dépenses fixes mensuelles</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="grid grid-cols-1 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="salaire">Salaire (€)</Label>
+                <Input
+                  id="salaire"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={depensesFixe.salaire}
+                  onChange={(e) => setDepensesFixe({...depensesFixe, salaire: e.target.value})}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="loyer">Loyer (€)</Label>
+                <Input
+                  id="loyer"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={depensesFixe.loyer}
+                  onChange={(e) => setDepensesFixe({...depensesFixe, loyer: e.target.value})}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="creditVoiture">Crédit voiture (€)</Label>
+                <Input
+                  id="creditVoiture"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={depensesFixe.creditVoiture}
+                  onChange={(e) => setDepensesFixe({...depensesFixe, creditVoiture: e.target.value})}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="eau">Eau (€)</Label>
+                <Input
+                  id="eau"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={depensesFixe.eau}
+                  onChange={(e) => setDepensesFixe({...depensesFixe, eau: e.target.value})}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="electricite">Électricité (€)</Label>
+                <Input
+                  id="electricite"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={depensesFixe.electricite}
+                  onChange={(e) => setDepensesFixe({...depensesFixe, electricite: e.target.value})}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="internet">Internet (€)</Label>
+                <Input
+                  id="internet"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={depensesFixe.internet}
+                  onChange={(e) => setDepensesFixe({...depensesFixe, internet: e.target.value})}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="telephone">Téléphone (€)</Label>
+                <Input
+                  id="telephone"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={depensesFixe.telephone}
+                  onChange={(e) => setDepensesFixe({...depensesFixe, telephone: e.target.value})}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="assurances">Assurances (€)</Label>
+                <Input
+                  id="assurances"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={depensesFixe.assurances}
+                  onChange={(e) => setDepensesFixe({...depensesFixe, assurances: e.target.value})}
+                />
+              </div>
+            </div>
           </div>
+          
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsFixeDialogOpen(false)}
+            >
+              Annuler
+            </Button>
+            <Button 
+              type="button"
+              className="bg-app-green text-white"
+              onClick={handleUpdateDepensesFixe}
+            >
+              <Save className="h-4 w-4 mr-2" />
+              Enregistrer
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

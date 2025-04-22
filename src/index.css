@@ -96,7 +96,7 @@
 /* Custom components */
 @layer components {
   .btn-primary {
-    @apply bg-app-red hover:bg-opacity-90 text-white;
+    @apply bg-app-red hover:bg-opacity-90 text-white dark:bg-app-purple dark:hover:bg-opacity-90;
   }
   
   .btn-success {
@@ -113,5 +113,52 @@
   
   .notification-error {
     @apply bg-app-red text-white p-3 rounded-md shadow-md;
+  }
+
+  /* 3D Effects */
+  .btn-3d {
+    @apply transform transition-transform hover:translate-y-[-3px] hover:shadow-lg active:translate-y-[-1px];
+  }
+
+  .card-3d {
+    @apply transform transition-transform hover:translate-y-[-5px] hover:shadow-xl;
+  }
+
+  .tab-3d {
+    @apply transform transition-transform hover:translate-y-[-2px];
+  }
+}
+
+/* Responsive tables */
+@layer utilities {
+  .table-responsive {
+    @apply overflow-x-auto;
+  }
+
+  .table-responsive table {
+    @apply min-w-full;
+  }
+
+  @media (max-width: 640px) {
+    .table-responsive-stack {
+      @apply block;
+    }
+    
+    .table-responsive-stack thead {
+      @apply hidden;
+    }
+    
+    .table-responsive-stack tbody,
+    .table-responsive-stack tr {
+      @apply block w-full;
+    }
+    
+    .table-responsive-stack td {
+      @apply block text-right pl-16 relative border-b border-gray-200 py-2;
+    }
+    
+    .table-responsive-stack td::before {
+      @apply content-[attr(data-label)] absolute top-2 left-2 font-semibold text-left;
+    }
   }
 }
