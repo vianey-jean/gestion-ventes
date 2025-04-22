@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useApp } from '@/contexts/AppContext';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { useToast } from '@/components/ui/use-toast';
@@ -12,6 +13,13 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { depenseService } from '@/service/api';
 
 const DepenseDuMois = () => {
+
+   // Noms des mois en français
+ const monthNames = [
+  'JANVIER', 'FÉVRIER', 'MARS', 'AVRIL', 'MAI', 'JUIN',
+  'JUILLET', 'AOÛT', 'SEPTEMBRE', 'OCTOBRE', 'NOVEMBRE', 'DÉCEMBRE'
+];
+
   const [mouvements, setMouvements] = useState([]);
   const [newMouvement, setNewMouvement] = useState({
     description: '',
@@ -26,15 +34,20 @@ const DepenseDuMois = () => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isFixeDialogOpen, setIsFixeDialogOpen] = useState(false);
   const [depensesFixe, setDepensesFixe] = useState({
-    salaire: '',
-    loyer: '',
-    creditVoiture: '',
-    eau: '',
-    electricite: '',
-    internet: '',
-    telephone: '',
-    assurances: '',
+    
+    free: '',
+    internetZeop: '',
+    assuranceVoiture: '',
+    autreDepense: '',
+    assuranceVie: '',
   });
+
+   const { 
+      currentMonth,
+      currentYear, 
+    
+    } = useApp();
+
   const isMobile = useIsMobile();
   const { toast } = useToast();
 
@@ -78,14 +91,11 @@ const DepenseDuMois = () => {
     try {
       const depensesFixeData = await depenseService.getDepensesFixe();
       setDepensesFixe(depensesFixeData || {
-        salaire: '',
-        loyer: '',
-        creditVoiture: '',
-        eau: '',
-        electricite: '',
-        internet: '',
-        telephone: '',
-        assurances: '',
+        free: '',
+        internetZeop: '',
+        assuranceVoiture: '',
+        autreDepense: '',
+        assuranceVie: '',
       });
     } catch (error) {
       console.error("Erreur lors de la récupération des dépenses fixes:", error);
@@ -249,6 +259,9 @@ const DepenseDuMois = () => {
           <Wallet className="inline-block mr-2 h-6 w-6" />
           Dépenses du mois
         </h2>
+        <h2 className="text-xl font-bold text-app-red mr-4">
+              {monthNames[currentMonth]} {currentYear}
+          </h2>
         <div className="flex flex-wrap gap-2">
           <Button 
             variant="outline" 
@@ -397,14 +410,7 @@ const DepenseDuMois = () => {
                     <SelectValue placeholder="Sélectionner une catégorie" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Alimentation">Alimentation</SelectItem>
-                    <SelectItem value="Transport">Transport</SelectItem>
-                    <SelectItem value="Logement">Logement</SelectItem>
-                    <SelectItem value="Loisirs">Loisirs</SelectItem>
-                    <SelectItem value="Santé">Santé</SelectItem>
-                    <SelectItem value="Éducation">Éducation</SelectItem>
-                    <SelectItem value="Vêtements">Vêtements</SelectItem>
-                    <SelectItem value="Salaire">Salaire</SelectItem>
+                    <SelectItem value="chargeFixe">Charge Fixe</SelectItem>
                     <SelectItem value="Autres">Autres</SelectItem>
                   </SelectContent>
                 </Select>
@@ -511,133 +517,87 @@ const DepenseDuMois = () => {
           
           <div className="space-y-4 py-4">
             <div className="grid grid-cols-1 gap-4">
+                       
               <div className="space-y-2">
-                <Label htmlFor="salaire">Salaire (€)</Label>
+                <Label htmlFor="free">Free (€)</Label>
                 <div className="relative">
-                  <ArrowUp className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-app-green" />
+                  <ArrowDown className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-app-red" />
                   <Input
-                    id="salaire"
+                    id="free"
                     type="number"
                     min="0"
                     step="0.01"
-                    value={depensesFixe.salaire}
-                    onChange={(e) => setDepensesFixe({...depensesFixe, salaire: e.target.value})}
+                    value={depensesFixe.free}
+                    onChange={(e) => setDepensesFixe({...depensesFixe, free: e.target.value})}
                     className="pl-8 btn-3d"
                   />
                 </div>
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="loyer">Loyer (€)</Label>
+                <Label htmlFor="internetZeop">internet Zeop (€)</Label>
                 <div className="relative">
                   <ArrowDown className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-app-red" />
                   <Input
-                    id="loyer"
+                    id="internetZeop"
                     type="number"
                     min="0"
                     step="0.01"
-                    value={depensesFixe.loyer}
-                    onChange={(e) => setDepensesFixe({...depensesFixe, loyer: e.target.value})}
+                    value={depensesFixe.internetZeop}
+                    onChange={(e) => setDepensesFixe({...depensesFixe, internetZeop: e.target.value})}
                     className="pl-8 btn-3d"
                   />
                 </div>
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="creditVoiture">Crédit voiture (€)</Label>
+                <Label htmlFor="assuranceVoiture">Assurance Voiture (€)</Label>
                 <div className="relative">
                   <ArrowDown className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-app-red" />
                   <Input
-                    id="creditVoiture"
+                    id="assuranceVoiture"
                     type="number"
                     min="0"
                     step="0.01"
-                    value={depensesFixe.creditVoiture}
-                    onChange={(e) => setDepensesFixe({...depensesFixe, creditVoiture: e.target.value})}
+                    value={depensesFixe.assuranceVoiture}
+                    onChange={(e) => setDepensesFixe({...depensesFixe, assuranceVoiture: e.target.value})}
                     className="pl-8 btn-3d"
                   />
                 </div>
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="eau">Eau (€)</Label>
+                <Label htmlFor="autreDepense">Autre Depense (€)</Label>
                 <div className="relative">
                   <ArrowDown className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-app-red" />
                   <Input
-                    id="eau"
+                    id="autreDepense"
                     type="number"
                     min="0"
                     step="0.01"
-                    value={depensesFixe.eau}
-                    onChange={(e) => setDepensesFixe({...depensesFixe, eau: e.target.value})}
+                    value={depensesFixe.autreDepense}
+                    onChange={(e) => setDepensesFixe({...depensesFixe, autreDepense: e.target.value})}
                     className="pl-8 btn-3d"
                   />
                 </div>
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="electricite">Électricité (€)</Label>
+                <Label htmlFor="assuranceVie">Assurance Vie (€)</Label>
                 <div className="relative">
                   <ArrowDown className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-app-red" />
                   <Input
-                    id="electricite"
+                    id="assuranceVie"
                     type="number"
                     min="0"
                     step="0.01"
-                    value={depensesFixe.electricite}
-                    onChange={(e) => setDepensesFixe({...depensesFixe, electricite: e.target.value})}
+                    value={depensesFixe.assuranceVie}
+                    onChange={(e) => setDepensesFixe({...depensesFixe, assuranceVie: e.target.value})}
                     className="pl-8 btn-3d"
                   />
                 </div>
               </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="internet">Internet (€)</Label>
-                <div className="relative">
-                  <ArrowDown className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-app-red" />
-                  <Input
-                    id="internet"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={depensesFixe.internet}
-                    onChange={(e) => setDepensesFixe({...depensesFixe, internet: e.target.value})}
-                    className="pl-8 btn-3d"
-                  />
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="telephone">Téléphone (€)</Label>
-                <div className="relative">
-                  <ArrowDown className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-app-red" />
-                  <Input
-                    id="telephone"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={depensesFixe.telephone}
-                    onChange={(e) => setDepensesFixe({...depensesFixe, telephone: e.target.value})}
-                    className="pl-8 btn-3d"
-                  />
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="assurances">Assurances (€)</Label>
-                <div className="relative">
-                  <ArrowDown className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-app-red" />
-                  <Input
-                    id="assurances"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={depensesFixe.assurances}
-                    onChange={(e) => setDepensesFixe({...depensesFixe, assurances: e.target.value})}
-                    className="pl-8 btn-3d"
-                  />
-                </div>
-              </div>
+
             </div>
           </div>
           
