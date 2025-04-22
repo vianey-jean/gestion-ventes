@@ -71,6 +71,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       title: "Déconnexion réussie",
       description: "Vous avez été déconnecté avec succès",
     });
+    // Redirect to login page after logout
+    window.location.href = '/login';
   };
 
   const register = async (data: RegistrationData): Promise<boolean> => {

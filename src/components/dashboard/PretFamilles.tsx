@@ -11,7 +11,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
-import { CalendarIcon, Loader2 } from 'lucide-react';
+import { CalendarIcon, Loader2, Wallet, CreditCard, Plus, ArrowUp, ArrowDown, Receipt, HandCoins, DollarSign } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { pretFamilleService } from '@/service/api';
 import { PretFamille } from '@/types';
@@ -225,18 +225,23 @@ const PretFamilles: React.FC = () => {
   return (
     <div className="mt-6">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">Prêts aux Familles</h2>
+        <h2 className="text-2xl font-bold">
+          <HandCoins className="inline-block mr-2 h-6 w-6" />
+          Prêts aux Familles
+        </h2>
         <div className="flex gap-2">
-          <Button onClick={() => setRemboursementDialogOpen(true)} className="bg-app-blue hover:bg-opacity-90">
+          <Button onClick={() => setRemboursementDialogOpen(true)} className="bg-app-blue hover:bg-opacity-90 btn-3d">
+            <Receipt className="h-4 w-4 mr-2" />
             Remboursement
           </Button>
-          <Button onClick={() => setDemandePretDialogOpen(true)} className="bg-app-green hover:bg-opacity-90">
+          <Button onClick={() => setDemandePretDialogOpen(true)} className="bg-app-green hover:bg-opacity-90 btn-3d">
+            <Plus className="h-4 w-4 mr-2" />
             Demande Prêt
           </Button>
         </div>
       </div>
       
-      <Card className="mb-6">
+      <Card className="mb-6 card-3d">
         <div className="p-6">
           {loading ? (
             <div className="flex justify-center items-center py-10">
@@ -259,12 +264,15 @@ const PretFamilles: React.FC = () => {
                   <TableRow key={pret.id}>
                     <TableCell className="font-medium">{pret.nom}</TableCell>
                     <TableCell className="text-right">
+                      <CreditCard className="inline-block mr-1 h-4 w-4" />
                       {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(pret.pretTotal)}
                     </TableCell>
                     <TableCell className="text-right text-app-red font-semibold">
+                      <ArrowDown className="inline-block mr-1 h-4 w-4" />
                       {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(pret.soldeRestant)}
                     </TableCell>
                     <TableCell className="text-right text-app-green">
+                      <ArrowUp className="inline-block mr-1 h-4 w-4" />
                       {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(pret.dernierRemboursement)}
                     </TableCell>
                     <TableCell className="text-right">{pret.dateRemboursement}</TableCell>
@@ -273,7 +281,10 @@ const PretFamilles: React.FC = () => {
                 
                 {/* Ligne des totaux */}
                 <TableRow className="font-bold">
-                  <TableCell>TOTAL</TableCell>
+                  <TableCell>
+                    <DollarSign className="inline-block mr-1 h-4 w-4" />
+                    TOTAL
+                  </TableCell>
                   <TableCell className="text-right">
                     {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(totalPret)}
                   </TableCell>
@@ -292,7 +303,10 @@ const PretFamilles: React.FC = () => {
       <Dialog open={remboursementDialogOpen} onOpenChange={setRemboursementDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>Enregistrer un remboursement</DialogTitle>
+            <DialogTitle>
+              <Receipt className="inline-block mr-2 h-5 w-5" />
+              Enregistrer un remboursement
+            </DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
@@ -303,13 +317,14 @@ const PretFamilles: React.FC = () => {
                   value={searchText} 
                   onChange={(e) => handleSearch(e.target.value)} 
                   placeholder="Saisir au moins 3 caractères"
+                  className="btn-3d"
                 />
                 {searchResults.length > 0 && (
-                  <div className="absolute z-10 w-full bg-white border rounded-md shadow-lg mt-1">
+                  <div className="absolute z-10 w-full bg-white dark:bg-gray-800 border rounded-md shadow-lg mt-1">
                     {searchResults.map((result) => (
                       <div 
                         key={result.id} 
-                        className="p-2 hover:bg-gray-100 cursor-pointer"
+                        className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
                         onClick={() => selectFamille(result)}
                       >
                         {result.nom} (Solde: {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(result.soldeRestant)})
@@ -322,19 +337,23 @@ const PretFamilles: React.FC = () => {
             
             <div className="grid gap-2">
               <Label htmlFor="montant">Montant du remboursement</Label>
-              <Input 
-                id="montant" 
-                type="number" 
-                value={montantRemboursement} 
-                onChange={(e) => setMontantRemboursement(e.target.value)}
-                placeholder="0.00"
-                min="0"
-                step="0.01"
-              />
+              <div className="relative">
+                <ArrowUp className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-app-green" />
+                <Input 
+                  id="montant" 
+                  type="number" 
+                  value={montantRemboursement} 
+                  onChange={(e) => setMontantRemboursement(e.target.value)}
+                  placeholder="0.00"
+                  min="0"
+                  step="0.01"
+                  className="pl-8 btn-3d"
+                />
+              </div>
             </div>
             
             {selectedPret && (
-              <div className="bg-gray-50 p-3 rounded-md">
+              <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-md card-3d">
                 <p><strong>Solde actuel:</strong> {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(selectedPret.soldeRestant)}</p>
                 {montantRemboursement && !isNaN(parseFloat(montantRemboursement)) && (
                   <p><strong>Nouveau solde:</strong> {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(selectedPret.soldeRestant - parseFloat(montantRemboursement))}</p>
@@ -345,9 +364,9 @@ const PretFamilles: React.FC = () => {
             <Button 
               onClick={handleRemboursement} 
               disabled={loading || !selectedPret || !montantRemboursement || parseFloat(montantRemboursement) <= 0}
-              className="mt-2"
+              className="mt-2 btn-3d"
             >
-              {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Receipt className="h-4 w-4 mr-2" />}
               Enregistrer le remboursement
             </Button>
           </div>
@@ -358,7 +377,10 @@ const PretFamilles: React.FC = () => {
       <Dialog open={demandePretDialogOpen} onOpenChange={setDemandePretDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>Enregistrer une demande de prêt</DialogTitle>
+            <DialogTitle>
+              <CreditCard className="inline-block mr-2 h-5 w-5" />
+              Enregistrer une demande de prêt
+            </DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
@@ -368,20 +390,25 @@ const PretFamilles: React.FC = () => {
                 value={nouvNom} 
                 onChange={(e) => setNouvNom(e.target.value)}
                 placeholder="Nom de la famille"
+                className="btn-3d"
               />
             </div>
             
             <div className="grid gap-2">
               <Label htmlFor="nouvPretTotal">Montant du prêt</Label>
-              <Input 
-                id="nouvPretTotal" 
-                type="number" 
-                value={nouvPretTotal} 
-                onChange={(e) => setNouvPretTotal(e.target.value)}
-                placeholder="0.00"
-                min="0"
-                step="0.01"
-              />
+              <div className="relative">
+                <CreditCard className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4" />
+                <Input 
+                  id="nouvPretTotal" 
+                  type="number" 
+                  value={nouvPretTotal} 
+                  onChange={(e) => setNouvPretTotal(e.target.value)}
+                  placeholder="0.00"
+                  min="0"
+                  step="0.01"
+                  className="pl-8 btn-3d"
+                />
+              </div>
             </div>
             
             <div className="grid gap-2">
@@ -391,7 +418,7 @@ const PretFamilles: React.FC = () => {
                   <Button
                     variant={"outline"}
                     className={cn(
-                      "w-full justify-start text-left font-normal",
+                      "w-full justify-start text-left font-normal btn-3d",
                       !nouvDate && "text-muted-foreground"
                     )}
                   >
@@ -413,9 +440,9 @@ const PretFamilles: React.FC = () => {
             <Button 
               onClick={handleDemandePret} 
               disabled={loading || !nouvNom || !nouvPretTotal || parseFloat(nouvPretTotal) <= 0}
-              className="mt-2"
+              className="mt-2 btn-3d"
             >
-              {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Plus className="h-4 w-4 mr-2" />}
               Enregistrer la demande de prêt
             </Button>
           </div>

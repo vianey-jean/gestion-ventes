@@ -1,7 +1,4 @@
-
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
-import { authService } from '@/service/api';
 import { Button } from '@/components/ui/button';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
@@ -9,9 +6,10 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { useToast } from '@/components/ui/use-toast';
-import { Plus, Edit, Trash2, RotateCcw, CreditCard, Save } from 'lucide-react';
+import { Plus, Edit, Trash2, RotateCcw, CreditCard, Save, Wallet, ArrowUp, ArrowDown, DollarSign } from 'lucide-react';
 import MonthlyResetHandler from './MonthlyResetHandler';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { depenseService } from '@/service/api';
 
 const DepenseDuMois = () => {
   const [mouvements, setMouvements] = useState([]);
@@ -40,10 +38,10 @@ const DepenseDuMois = () => {
   const isMobile = useIsMobile();
   const { toast } = useToast();
 
-  // Calcul du solde
-  const solde = mouvements.reduce((total, m) => {
+  // Calcul du solde - Make sure mouvements is an array before calling reduce
+  const solde = Array.isArray(mouvements) ? mouvements.reduce((total, m) => {
     return total + (parseFloat(m.credit) || 0) - (parseFloat(m.debit) || 0);
-  }, 0);
+  }, 0) : 0;
 
   // Formatage des dates
   const formatDate = (dateString) => {
@@ -62,13 +60,8 @@ const DepenseDuMois = () => {
   // Récupération des mouvements
   const fetchMouvements = async () => {
     try {
-      const token = authService.getToken();
-      const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/depenses/mouvements`, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
-      setMouvements(response.data);
+      const mouvementsData = await depenseService.getMouvements();
+      setMouvements(mouvementsData || []);
     } catch (error) {
       console.error("Erreur lors de la récupération des mouvements:", error);
       toast({
@@ -76,19 +69,24 @@ const DepenseDuMois = () => {
         description: "Impossible de récupérer les mouvements",
         variant: "destructive",
       });
+      setMouvements([]);
     }
   };
 
   // Récupération des dépenses fixes
   const fetchDepensesFixe = async () => {
     try {
-      const token = authService.getToken();
-      const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/depenses/fixe`, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
+      const depensesFixeData = await depenseService.getDepensesFixe();
+      setDepensesFixe(depensesFixeData || {
+        salaire: '',
+        loyer: '',
+        creditVoiture: '',
+        eau: '',
+        electricite: '',
+        internet: '',
+        telephone: '',
+        assurances: '',
       });
-      setDepensesFixe(response.data);
     } catch (error) {
       console.error("Erreur lors de la récupération des dépenses fixes:", error);
       toast({
@@ -104,8 +102,6 @@ const DepenseDuMois = () => {
     e.preventDefault();
     
     try {
-      const token = authService.getToken();
-      
       // Validation des données
       if (!newMouvement.description || !newMouvement.categorie || (!newMouvement.debit && !newMouvement.credit)) {
         toast({
@@ -118,15 +114,7 @@ const DepenseDuMois = () => {
       
       if (editMouvementId) {
         // Mise à jour d'un mouvement existant
-        await axios.put(
-          `${import.meta.env.VITE_API_URL}/api/depenses/mouvements/${editMouvementId}`,
-          newMouvement,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`
-            }
-          }
-        );
+        await depenseService.updateMouvement(editMouvementId, newMouvement);
         
         toast({
           title: "Succès",
@@ -135,15 +123,7 @@ const DepenseDuMois = () => {
         });
       } else {
         // Création d'un nouveau mouvement
-        await axios.post(
-          `${import.meta.env.VITE_API_URL}/api/depenses/mouvements`,
-          newMouvement,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`
-            }
-          }
-        );
+        await depenseService.addMouvement(newMouvement);
         
         toast({
           title: "Succès",
@@ -176,12 +156,7 @@ const DepenseDuMois = () => {
   // Suppression d'un mouvement
   const handleDelete = async () => {
     try {
-      const token = authService.getToken();
-      await axios.delete(`${import.meta.env.VITE_API_URL}/api/depenses/mouvements/${deleteId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
+      await depenseService.deleteMouvement(deleteId);
       
       toast({
         title: "Succès",
@@ -217,16 +192,7 @@ const DepenseDuMois = () => {
   // Mise à jour des dépenses fixes
   const handleUpdateDepensesFixe = async () => {
     try {
-      const token = authService.getToken();
-      await axios.put(
-        `${import.meta.env.VITE_API_URL}/api/depenses/fixe`,
-        depensesFixe,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        }
-      );
+      await depenseService.updateDepensesFixe(depensesFixe);
       
       toast({
         title: "Succès",
@@ -254,16 +220,7 @@ const DepenseDuMois = () => {
   // Réinitialisation manuelle de tous les mouvements
   const handleReset = async () => {
     try {
-      const token = authService.getToken();
-      await axios.post(
-        `${import.meta.env.VITE_API_URL}/api/depenses/reset`,
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        }
-      );
+      await depenseService.resetMouvements();
       
       toast({
         title: "Succès",
@@ -288,7 +245,10 @@ const DepenseDuMois = () => {
       
       {/* En-tête avec titre et boutons */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
-        <h2 className="text-2xl font-bold mb-4 sm:mb-0">Dépenses du mois</h2>
+        <h2 className="text-2xl font-bold mb-4 sm:mb-0">
+          <Wallet className="inline-block mr-2 h-6 w-6" />
+          Dépenses du mois
+        </h2>
         <div className="flex flex-wrap gap-2">
           <Button 
             variant="outline" 
@@ -328,7 +288,10 @@ const DepenseDuMois = () => {
       
       {/* Affichage du solde */}
       <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg mb-6 card-3d">
-        <h3 className="text-lg font-semibold mb-2">Solde actuel</h3>
+        <h3 className="text-lg font-semibold mb-2">
+          <DollarSign className="inline-block mr-2 h-5 w-5" />
+          Solde actuel
+        </h3>
         <p className={`text-2xl font-bold ${solde >= 0 ? 'text-app-green' : 'text-app-red'}`}>
           {formatAmount(solde)}
         </p>
@@ -348,7 +311,7 @@ const DepenseDuMois = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {mouvements.length === 0 ? (
+            {!Array.isArray(mouvements) || mouvements.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="text-center py-6 text-gray-500">
                   Aucun mouvement enregistré
@@ -361,10 +324,14 @@ const DepenseDuMois = () => {
                   <TableCell data-label="Description">{mouvement.description}</TableCell>
                   <TableCell data-label="Catégorie">{mouvement.categorie}</TableCell>
                   <TableCell data-label="Débit" className="text-right text-app-red">
-                    {mouvement.debit ? formatAmount(mouvement.debit) : '-'}
+                    {mouvement.debit ? (
+                      <><ArrowDown className="inline mr-1 h-4 w-4" />{formatAmount(mouvement.debit)}</>
+                    ) : '-'}
                   </TableCell>
                   <TableCell data-label="Crédit" className="text-right text-app-green">
-                    {mouvement.credit ? formatAmount(mouvement.credit) : '-'}
+                    {mouvement.credit ? (
+                      <><ArrowUp className="inline mr-1 h-4 w-4" />{formatAmount(mouvement.credit)}</>
+                    ) : '-'}
                   </TableCell>
                   <TableCell data-label="Actions" className="text-right space-x-2">
                     <Button 
@@ -398,7 +365,12 @@ const DepenseDuMois = () => {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>{editMouvementId ? 'Modifier le mouvement' : 'Ajouter un mouvement'}</DialogTitle>
+            <DialogTitle>
+              {editMouvementId ? 
+                <><Edit className="inline mr-2 h-5 w-5" />Modifier le mouvement</> : 
+                <><Plus className="inline mr-2 h-5 w-5" />Ajouter un mouvement</>
+              }
+            </DialogTitle>
           </DialogHeader>
           
           <form onSubmit={handleSubmit} className="space-y-4 py-4">
@@ -410,6 +382,7 @@ const DepenseDuMois = () => {
                   value={newMouvement.description}
                   onChange={(e) => setNewMouvement({...newMouvement, description: e.target.value})}
                   required
+                  className="btn-3d"
                 />
               </div>
               
@@ -420,7 +393,7 @@ const DepenseDuMois = () => {
                   onValueChange={(value) => setNewMouvement({...newMouvement, categorie: value})}
                   required
                 >
-                  <SelectTrigger id="categorie">
+                  <SelectTrigger id="categorie" className="btn-3d">
                     <SelectValue placeholder="Sélectionner une catégorie" />
                   </SelectTrigger>
                   <SelectContent>
@@ -445,32 +418,41 @@ const DepenseDuMois = () => {
                   value={newMouvement.date}
                   onChange={(e) => setNewMouvement({...newMouvement, date: e.target.value})}
                   required
+                  className="btn-3d"
                 />
               </div>
               
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="debit">Débit (€)</Label>
-                  <Input
-                    id="debit"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={newMouvement.debit}
-                    onChange={(e) => setNewMouvement({...newMouvement, debit: e.target.value, credit: ''})}
-                  />
+                  <div className="relative">
+                    <ArrowDown className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-app-red" />
+                    <Input
+                      id="debit"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={newMouvement.debit}
+                      onChange={(e) => setNewMouvement({...newMouvement, debit: e.target.value, credit: ''})}
+                      className="pl-8 btn-3d"
+                    />
+                  </div>
                 </div>
                 
                 <div className="space-y-2">
                   <Label htmlFor="credit">Crédit (€)</Label>
-                  <Input
-                    id="credit"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={newMouvement.credit}
-                    onChange={(e) => setNewMouvement({...newMouvement, credit: e.target.value, debit: ''})}
-                  />
+                  <div className="relative">
+                    <ArrowUp className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-app-green" />
+                    <Input
+                      id="credit"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={newMouvement.credit}
+                      onChange={(e) => setNewMouvement({...newMouvement, credit: e.target.value, debit: ''})}
+                      className="pl-8 btn-3d"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
@@ -480,10 +462,11 @@ const DepenseDuMois = () => {
                 type="button"
                 variant="outline"
                 onClick={() => setIsDialogOpen(false)}
+                className="btn-3d"
               >
                 Annuler
               </Button>
-              <Button type="submit" className="bg-app-green text-white">
+              <Button type="submit" className="bg-app-green text-white btn-3d">
                 {editMouvementId ? 'Mettre à jour' : 'Ajouter'}
               </Button>
             </DialogFooter>
@@ -495,7 +478,7 @@ const DepenseDuMois = () => {
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Confirmer la suppression</DialogTitle>
+            <DialogTitle><Trash2 className="inline mr-2 h-5 w-5 text-app-red" />Confirmer la suppression</DialogTitle>
           </DialogHeader>
           <p className="py-4">Êtes-vous sûr de vouloir supprimer ce mouvement ? Cette action est irréversible.</p>
           <DialogFooter>
@@ -503,6 +486,7 @@ const DepenseDuMois = () => {
               type="button"
               variant="outline"
               onClick={() => setIsDeleteDialogOpen(false)}
+              className="btn-3d"
             >
               Annuler
             </Button>
@@ -510,6 +494,7 @@ const DepenseDuMois = () => {
               type="button" 
               variant="destructive"
               onClick={handleDelete}
+              className="btn-3d"
             >
               Supprimer
             </Button>
@@ -521,105 +506,137 @@ const DepenseDuMois = () => {
       <Dialog open={isFixeDialogOpen} onOpenChange={setIsFixeDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Dépenses fixes mensuelles</DialogTitle>
+            <DialogTitle><CreditCard className="inline mr-2 h-5 w-5" />Dépenses fixes mensuelles</DialogTitle>
           </DialogHeader>
           
           <div className="space-y-4 py-4">
             <div className="grid grid-cols-1 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="salaire">Salaire (€)</Label>
-                <Input
-                  id="salaire"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={depensesFixe.salaire}
-                  onChange={(e) => setDepensesFixe({...depensesFixe, salaire: e.target.value})}
-                />
+                <div className="relative">
+                  <ArrowUp className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-app-green" />
+                  <Input
+                    id="salaire"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={depensesFixe.salaire}
+                    onChange={(e) => setDepensesFixe({...depensesFixe, salaire: e.target.value})}
+                    className="pl-8 btn-3d"
+                  />
+                </div>
               </div>
               
               <div className="space-y-2">
                 <Label htmlFor="loyer">Loyer (€)</Label>
-                <Input
-                  id="loyer"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={depensesFixe.loyer}
-                  onChange={(e) => setDepensesFixe({...depensesFixe, loyer: e.target.value})}
-                />
+                <div className="relative">
+                  <ArrowDown className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-app-red" />
+                  <Input
+                    id="loyer"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={depensesFixe.loyer}
+                    onChange={(e) => setDepensesFixe({...depensesFixe, loyer: e.target.value})}
+                    className="pl-8 btn-3d"
+                  />
+                </div>
               </div>
               
               <div className="space-y-2">
                 <Label htmlFor="creditVoiture">Crédit voiture (€)</Label>
-                <Input
-                  id="creditVoiture"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={depensesFixe.creditVoiture}
-                  onChange={(e) => setDepensesFixe({...depensesFixe, creditVoiture: e.target.value})}
-                />
+                <div className="relative">
+                  <ArrowDown className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-app-red" />
+                  <Input
+                    id="creditVoiture"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={depensesFixe.creditVoiture}
+                    onChange={(e) => setDepensesFixe({...depensesFixe, creditVoiture: e.target.value})}
+                    className="pl-8 btn-3d"
+                  />
+                </div>
               </div>
               
               <div className="space-y-2">
                 <Label htmlFor="eau">Eau (€)</Label>
-                <Input
-                  id="eau"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={depensesFixe.eau}
-                  onChange={(e) => setDepensesFixe({...depensesFixe, eau: e.target.value})}
-                />
+                <div className="relative">
+                  <ArrowDown className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-app-red" />
+                  <Input
+                    id="eau"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={depensesFixe.eau}
+                    onChange={(e) => setDepensesFixe({...depensesFixe, eau: e.target.value})}
+                    className="pl-8 btn-3d"
+                  />
+                </div>
               </div>
               
               <div className="space-y-2">
                 <Label htmlFor="electricite">Électricité (€)</Label>
-                <Input
-                  id="electricite"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={depensesFixe.electricite}
-                  onChange={(e) => setDepensesFixe({...depensesFixe, electricite: e.target.value})}
-                />
+                <div className="relative">
+                  <ArrowDown className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-app-red" />
+                  <Input
+                    id="electricite"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={depensesFixe.electricite}
+                    onChange={(e) => setDepensesFixe({...depensesFixe, electricite: e.target.value})}
+                    className="pl-8 btn-3d"
+                  />
+                </div>
               </div>
               
               <div className="space-y-2">
                 <Label htmlFor="internet">Internet (€)</Label>
-                <Input
-                  id="internet"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={depensesFixe.internet}
-                  onChange={(e) => setDepensesFixe({...depensesFixe, internet: e.target.value})}
-                />
+                <div className="relative">
+                  <ArrowDown className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-app-red" />
+                  <Input
+                    id="internet"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={depensesFixe.internet}
+                    onChange={(e) => setDepensesFixe({...depensesFixe, internet: e.target.value})}
+                    className="pl-8 btn-3d"
+                  />
+                </div>
               </div>
               
               <div className="space-y-2">
                 <Label htmlFor="telephone">Téléphone (€)</Label>
-                <Input
-                  id="telephone"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={depensesFixe.telephone}
-                  onChange={(e) => setDepensesFixe({...depensesFixe, telephone: e.target.value})}
-                />
+                <div className="relative">
+                  <ArrowDown className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-app-red" />
+                  <Input
+                    id="telephone"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={depensesFixe.telephone}
+                    onChange={(e) => setDepensesFixe({...depensesFixe, telephone: e.target.value})}
+                    className="pl-8 btn-3d"
+                  />
+                </div>
               </div>
               
               <div className="space-y-2">
                 <Label htmlFor="assurances">Assurances (€)</Label>
-                <Input
-                  id="assurances"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={depensesFixe.assurances}
-                  onChange={(e) => setDepensesFixe({...depensesFixe, assurances: e.target.value})}
-                />
+                <div className="relative">
+                  <ArrowDown className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-app-red" />
+                  <Input
+                    id="assurances"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={depensesFixe.assurances}
+                    onChange={(e) => setDepensesFixe({...depensesFixe, assurances: e.target.value})}
+                    className="pl-8 btn-3d"
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -629,12 +646,13 @@ const DepenseDuMois = () => {
               type="button"
               variant="outline"
               onClick={() => setIsFixeDialogOpen(false)}
+              className="btn-3d"
             >
               Annuler
             </Button>
             <Button 
               type="button"
-              className="bg-app-green text-white"
+              className="bg-app-green text-white btn-3d"
               onClick={handleUpdateDepensesFixe}
             >
               <Save className="h-4 w-4 mr-2" />

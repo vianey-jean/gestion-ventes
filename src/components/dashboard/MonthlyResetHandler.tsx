@@ -2,7 +2,6 @@
 import { useEffect } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 import axios from 'axios';
-import { authService } from '@/service/api';
 
 /**
  * Composant qui vérifie si c'est la fin du mois pour réinitialiser les dépenses.
@@ -24,7 +23,7 @@ const MonthlyResetHandler = () => {
   // Fonction pour réinitialiser les dépenses du mois
   const resetMonthlyExpenses = async () => {
     try {
-      const token = authService.getToken();
+      const token = localStorage.getItem('token');
       
       if (!token) return;
       

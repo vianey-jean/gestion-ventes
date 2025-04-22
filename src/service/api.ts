@@ -34,6 +34,20 @@ api.interceptors.response.use(
       console.warn('Request timed out, not retrying to prevent cascading timeouts');
       return Promise.reject(error);
     }
+    
+    // Si l'erreur est 401 (non autorisé), vérifier si le token est expiré
+    if (error.response && error.response.status === 401) {
+      console.warn('Authentication failed - token may be expired');
+      // Optionally redirect to login page or refresh token logic here
+      localStorage.removeItem('token');
+      localStorage.removeItem('currentUser');
+      
+      // Force page refresh to redirect to login if required
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login';
+      }
+    }
+    
     return Promise.reject(error);
   }
 );
@@ -127,6 +141,11 @@ export const authService = {
       localStorage.removeItem('currentUser');
       localStorage.removeItem('token');
     }
+  },
+  
+  // Check if user is authenticated
+  isAuthenticated: (): boolean => {
+    return !!localStorage.getItem('token') && !!localStorage.getItem('currentUser');
   }
 };
 
@@ -134,6 +153,12 @@ export const authService = {
 export const productService = {
   getProducts: async (): Promise<Product[]> => {
     try {
+      // Vérifier si le token existe
+      if (!authService.isAuthenticated()) {
+        console.warn("User not authenticated when fetching products");
+        return [];
+      }
+      
       // Vérifier si le cache est valide
       const now = Date.now();
       if (productsCache && productsCacheExpiry && now < productsCacheExpiry) {
@@ -250,6 +275,12 @@ export const salesService = {
         cacheKey = `${month}-${year}`;
       }
       
+      // Vérifier si le token existe
+      if (!authService.isAuthenticated()) {
+        console.error('No authentication token found');
+        return [];
+      }
+      
       // Vérifier si le cache est valide
       const now = Date.now();
       if (salesCache[cacheKey] && salesCacheExpiry[cacheKey] && now < salesCacheExpiry[cacheKey]) {
@@ -348,6 +379,12 @@ export const pretFamilleService = {
   
   getPretFamilles: async () => {
     try {
+      // Vérifier si l'utilisateur est authentifié
+      if (!authService.isAuthenticated()) {
+        console.warn("User not authenticated when fetching pret familles");
+        return [];
+      }
+      
       // Vérifier si le cache est valide
       const now = Date.now();
       if (pretFamilleService._cache && pretFamilleService._cacheExpiry && now < pretFamilleService._cacheExpiry) {
@@ -446,6 +483,12 @@ export const pretProduitService = {
   
   getPretProduits: async () => {
     try {
+      // Vérifier si l'utilisateur est authentifié
+      if (!authService.isAuthenticated()) {
+        console.warn("User not authenticated when fetching pret produits");
+        return [];
+      }
+      
       // Vérifier si le cache est valide
       const now = Date.now();
       if (pretProduitService._cache && pretProduitService._cacheExpiry && now < pretProduitService._cacheExpiry) {
@@ -521,6 +564,12 @@ export const depenseService = {
   
   getMouvements: async () => {
     try {
+      // Vérifier si l'utilisateur est authentifié
+      if (!authService.isAuthenticated()) {
+        console.warn("User not authenticated when fetching mouvements");
+        return [];
+      }
+      
       // Vérifier si le cache est valide
       const now = Date.now();
       if (depenseService._mouvementsCache && depenseService._mouvementsCacheExpiry && now < depenseService._mouvementsCacheExpiry) {
@@ -582,6 +631,12 @@ export const depenseService = {
   
   getDepensesFixe: async () => {
     try {
+      // Vérifier si l'utilisateur est authentifié
+      if (!authService.isAuthenticated()) {
+        console.warn("User not authenticated when fetching depenses fixes");
+        return {};
+      }
+      
       // Vérifier si le cache est valide
       const now = Date.now();
       if (depenseService._depensesFixeCache && depenseService._depensesFixeCacheExpiry && now < depenseService._depensesFixeCacheExpiry) {
@@ -619,6 +674,30 @@ export const depenseService = {
     }
   },
   
+  resetMouvements: async () => {
+    try {
+      const response = await api.post('/depenses/reset');
+      depenseService.invalidateMouvementsCache();
+      return response.data;
+    } catch (error) {
+      console.error("Reset mouvements error:", error);
+      throw error;
+    }
+  },
+  
+  checkMonthEnd: async () => {
+    try {
+      const response = await api.get('/depenses/check-month-end');
+      if (response.data.reset) {
+        depenseService.invalidateMouvementsCache();
+      }
+      return response.data;
+    } catch (error) {
+      console.error("Check month end error:", error);
+      return { reset: false };
+    }
+  },
+  
   invalidateMouvementsCache: () => {
     depenseService._mouvementsCache = null;
     depenseService._mouvementsCacheExpiry = null;
@@ -627,11 +706,5 @@ export const depenseService = {
   invalidateDepensesFixeCache: () => {
     depenseService._depensesFixeCache = null;
     depenseService._depensesFixeCacheExpiry = null;
-  },
-  
-  resetMouvements: async () => {
-    // Appel le endpoint reset côté serveur
-    const { data } = await api.post('/depenses/reset');
-    return data;
   }
 };
