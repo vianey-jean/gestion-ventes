@@ -6,12 +6,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useApp } from '@/contexts/AppContext';
 import { Product, Sale } from '@/types';
-import ProductSearchInput from './ProductSearchInput';
 import { useToast } from '@/hooks/use-toast';
+import { Trash2 } from 'lucide-react';
+import ProductSearchInput from './ProductSearchInput';
 import SalePriceInput from './forms/SalePriceInput';
 import SaleQuantityInput from './forms/SaleQuantityInput';
 import ConfirmDeleteDialog from './forms/ConfirmDeleteDialog';
-import { Trash2 } from 'lucide-react';
 
 interface AddSaleFormProps {
   isOpen: boolean;
@@ -24,7 +24,7 @@ interface AddSaleFormProps {
  */
 const AddSaleForm: React.FC<AddSaleFormProps> = ({ isOpen, onClose, editSale }) => {
   // Récupérer les fonctions et données du contexte
-  const { addSale, updateSale, deleteSale, products } = useApp();
+  const { products, addSale, updateSale, deleteSale } = useApp();
   const { toast } = useToast();
   
   // État pour les données du formulaire
@@ -54,7 +54,7 @@ const AddSaleForm: React.FC<AddSaleFormProps> = ({ isOpen, onClose, editSale }) 
       setFormData({
         date: new Date(editSale.date).toISOString().split('T')[0],
         description: editSale.description,
-        productId: editSale.productId,
+        productId: String(editSale.productId),
         sellingPrice: editSale.sellingPrice.toString(),
         quantitySold: editSale.quantitySold.toString(),
         purchasePrice: editSale.purchasePrice.toString(),
@@ -64,10 +64,25 @@ const AddSaleForm: React.FC<AddSaleFormProps> = ({ isOpen, onClose, editSale }) 
       // Définir le produit sélectionné et calculer le stock maximum
       if (product) {
         setSelectedProduct(product);
-        setMaxQuantity(product.quantity + (editSale ? editSale.quantitySold : 0));
+        const editQuantity = editSale ? Number(editSale.quantitySold) : 0;
+        const productQuantity = product.quantity !== undefined ? product.quantity : 0;
+        setMaxQuantity(productQuantity + editQuantity);
       }
+    } else {
+      // Réinitialiser le formulaire pour un nouvel ajout
+      setFormData({
+        date: new Date().toISOString().split('T')[0],
+        description: '',
+        productId: '',
+        sellingPrice: '',
+        quantitySold: '1',
+        purchasePrice: '',
+        profit: '',
+      });
+      setSelectedProduct(null);
+      setMaxQuantity(0);
     }
-  }, [editSale, products]);
+  }, [editSale, products, isOpen]);
 
   // Fonction pour calculer le profit
   const updateProfit = (price: string, quantity: string) => {
@@ -103,18 +118,23 @@ const AddSaleForm: React.FC<AddSaleFormProps> = ({ isOpen, onClose, editSale }) 
     });
   };
 
+  // Vérifier si le stock est épuisé
+  const isOutOfStock = selectedProduct && (selectedProduct.quantity === 0 || selectedProduct.quantity === undefined);
+
   // Gestionnaire pour la sélection d'un produit
   const handleProductSelect = (product: Product) => {
     setSelectedProduct(product);
+    
     // Calculer le stock maximum disponible
-    setMaxQuantity(product.quantity + (editSale ? editSale.quantitySold : 0));
+    const productQuantity = product.quantity !== undefined ? product.quantity : 0;
+    setMaxQuantity(productQuantity);
     
     // Initialiser les données du formulaire avec les infos du produit
     setFormData(prev => {
       const newData = {
         ...prev,
         description: product.description,
-        productId: product.id,
+        productId: String(product.id),
         purchasePrice: product.purchasePrice.toString(),
         sellingPrice: (product.purchasePrice * 1.2).toFixed(2), // Prix de vente suggéré: +20%
         quantitySold: '1',
@@ -127,6 +147,15 @@ const AddSaleForm: React.FC<AddSaleFormProps> = ({ isOpen, onClose, editSale }) 
   // Fonction pour soumettre le formulaire
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!selectedProduct || isOutOfStock) {
+      toast({
+        title: "Erreur",
+        description: "Stock épuisé. Impossible d'ajouter cette vente.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setIsSubmitting(true);
 
     try {
@@ -142,13 +171,23 @@ const AddSaleForm: React.FC<AddSaleFormProps> = ({ isOpen, onClose, editSale }) 
       };
 
       // Mettre à jour ou ajouter la vente
-      if (editSale) {
-        await updateSale({ ...saleData, id: editSale.id });
-      } else {
-        await addSale(saleData);
+      let success = false;
+      
+      if (editSale && updateSale) {
+        success = await updateSale({ ...saleData, id: editSale.id });
+      } else if (addSale) {
+        success = await addSale(saleData);
       }
-
-      onClose();
+      
+      if (success) {
+        toast({
+          title: "Succès",
+          description: editSale ? "Vente mise à jour avec succès" : "Vente ajoutée avec succès",
+          variant: "default",
+          className: "notification-success",
+        });
+        onClose();
+      }
     } catch (error) {
       toast({
         title: "Erreur",
@@ -162,7 +201,7 @@ const AddSaleForm: React.FC<AddSaleFormProps> = ({ isOpen, onClose, editSale }) 
 
   // Fonction pour gérer la suppression
   const handleDelete = async () => {
-    if (!editSale) return;
+    if (!editSale || !deleteSale) return;
     
     setIsSubmitting(true);
     try {
@@ -171,6 +210,7 @@ const AddSaleForm: React.FC<AddSaleFormProps> = ({ isOpen, onClose, editSale }) 
         toast({
           title: "Succès",
           description: "La vente a été supprimée avec succès",
+          variant: "default",
           className: "notification-success",
         });
         onClose();
@@ -183,8 +223,12 @@ const AddSaleForm: React.FC<AddSaleFormProps> = ({ isOpen, onClose, editSale }) 
       });
     } finally {
       setIsSubmitting(false);
+      setShowDeleteConfirm(false);
     }
   };
+
+  // Calculer si le profit est négatif
+  const isProfitNegative = Number(formData.profit) < 0;
 
   return (
     <>
@@ -247,6 +291,7 @@ const AddSaleForm: React.FC<AddSaleFormProps> = ({ isOpen, onClose, editSale }) 
                   price={formData.sellingPrice}
                   onChange={handleSellingPriceChange}
                   disabled={isSubmitting}
+                  isProfitNegative={isProfitNegative}
                 />
               </div>
               
@@ -256,7 +301,7 @@ const AddSaleForm: React.FC<AddSaleFormProps> = ({ isOpen, onClose, editSale }) 
                   quantity={formData.quantitySold}
                   maxQuantity={maxQuantity}
                   onChange={handleQuantityChange}
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || isOutOfStock}
                   showAvailableStock={!!selectedProduct}
                 />
                 
@@ -271,6 +316,7 @@ const AddSaleForm: React.FC<AddSaleFormProps> = ({ isOpen, onClose, editSale }) 
                     value={formData.profit}
                     readOnly
                     disabled
+                    className={isProfitNegative ? "border-red-500 bg-red-50" : ""}
                   />
                 </div>
               </div>
@@ -305,9 +351,16 @@ const AddSaleForm: React.FC<AddSaleFormProps> = ({ isOpen, onClose, editSale }) 
               <Button
                 type="submit"
                 className="bg-app-green hover:bg-opacity-90"
-                disabled={isSubmitting}
+                disabled={isSubmitting || (!editSale && (!selectedProduct || isOutOfStock))}
               >
-                {isSubmitting ? "Enregistrement..." : editSale ? "Mettre à jour" : "Ajouter"}
+                {isSubmitting 
+                  ? "Enregistrement..." 
+                  : isOutOfStock && !editSale
+                    ? "Stock épuisé" 
+                    : editSale 
+                      ? "Mettre à jour" 
+                      : "Ajouter"
+                }
               </Button>
             </DialogFooter>
           </form>
@@ -321,6 +374,7 @@ const AddSaleForm: React.FC<AddSaleFormProps> = ({ isOpen, onClose, editSale }) 
         onConfirm={handleDelete}
         title="Supprimer la vente"
         description="Êtes-vous sûr de vouloir supprimer cette vente ? Cette action ne peut pas être annulée."
+        isSubmitting={isSubmitting}
       />
     </>
   );
