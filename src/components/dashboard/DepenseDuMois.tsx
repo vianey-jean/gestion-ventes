@@ -1,25 +1,28 @@
+
 import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useApp } from '@/contexts/AppContext';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { useToast } from '@/components/ui/use-toast';
-import { Plus, Edit, Trash2, RotateCcw, CreditCard, Save, Wallet, ArrowUp, ArrowDown, DollarSign } from 'lucide-react';
+import { Plus, Edit, Trash2, RotateCcw, CreditCard, Save, Wallet, ArrowUp, ArrowDown, DollarSign, Calendar } from 'lucide-react';
 import MonthlyResetHandler from './MonthlyResetHandler';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { depenseService } from '@/service/api';
+import { useApp } from '@/contexts/AppContext';
+
+// Fonction pour formater le mois en français
+const formatMonthInFrench = (month: number): string => {
+  const months = [
+    'JANVIER', 'FÉVRIER', 'MARS', 'AVRIL', 'MAI', 'JUIN',
+    'JUILLET', 'AOÛT', 'SEPTEMBRE', 'OCTOBRE', 'NOVEMBRE', 'DÉCEMBRE'
+  ];
+  return months[month];
+};
 
 const DepenseDuMois = () => {
-
-   // Noms des mois en français
- const monthNames = [
-  'JANVIER', 'FÉVRIER', 'MARS', 'AVRIL', 'MAI', 'JUIN',
-  'JUILLET', 'AOÛT', 'SEPTEMBRE', 'OCTOBRE', 'NOVEMBRE', 'DÉCEMBRE'
-];
-
   const [mouvements, setMouvements] = useState([]);
   const [newMouvement, setNewMouvement] = useState({
     description: '',
@@ -34,20 +37,18 @@ const DepenseDuMois = () => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isFixeDialogOpen, setIsFixeDialogOpen] = useState(false);
   const [depensesFixe, setDepensesFixe] = useState({
-    
     free: '',
     internetZeop: '',
     assuranceVoiture: '',
     autreDepense: '',
     assuranceVie: '',
   });
-
-   const { 
-      currentMonth,
-      currentYear, 
-    
-    } = useApp();
-
+  
+  const { 
+    currentMonth,
+    currentYear,
+  } = useApp();
+  
   const isMobile = useIsMobile();
   const { toast } = useToast();
 
@@ -90,12 +91,12 @@ const DepenseDuMois = () => {
   const fetchDepensesFixe = async () => {
     try {
       const depensesFixeData = await depenseService.getDepensesFixe();
-      setDepensesFixe(depensesFixeData || {
-        free: '',
-        internetZeop: '',
-        assuranceVoiture: '',
-        autreDepense: '',
-        assuranceVie: '',
+      setDepensesFixe({
+        free: depensesFixeData.free || '',
+        internetZeop: depensesFixeData.internetZeop || '',
+        assuranceVoiture: depensesFixeData.assuranceVoiture || '',
+        autreDepense: depensesFixeData.autreDepense || '',
+        assuranceVie: depensesFixeData.assuranceVie || '',
       });
     } catch (error) {
       console.error("Erreur lors de la récupération des dépenses fixes:", error);
@@ -249,19 +250,47 @@ const DepenseDuMois = () => {
     }
   };
 
+  // Gérer le changement de catégorie dans le formulaire
+  const handleCategorieChange = (value) => {
+    if (value === "chargeFixe") {
+      // Si charge fixe est sélectionné, pré-remplir avec les données de dépenses fixes
+      depenseService.getDepensesFixe().then(depensesFixeData => {
+        setNewMouvement({
+          ...newMouvement,
+          categorie: value,
+          description: "Charge fixe",
+          debit: depensesFixeData.total.toString(),
+          credit: ''
+        });
+      });
+    } else {
+      // Sinon, réinitialiser les champs
+      setNewMouvement({
+        ...newMouvement,
+        categorie: value,
+        description: '',
+        debit: '',
+        credit: ''
+      });
+    }
+  };
+
   return (
     <div className="space-y-6">
       <MonthlyResetHandler />
       
       {/* En-tête avec titre et boutons */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
-        <h2 className="text-2xl font-bold mb-4 sm:mb-0">
-          <Wallet className="inline-block mr-2 h-6 w-6" />
-          Dépenses du mois
-        </h2>
-        <h2 className="text-xl font-bold text-app-red mr-4">
-              {monthNames[currentMonth]} {currentYear}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+          <h2 className="text-2xl font-bold mb-4 sm:mb-0">
+            <Wallet className="inline-block mr-2 h-6 w-6" />
+            Dépenses du mois
           </h2>
+          <div className="text-xl font-semibold text-app-blue flex items-center">
+            <Calendar className="inline-block mr-1 h-5 w-5" />
+            {formatMonthInFrench(currentMonth)} {currentYear}
+          </div>
+        </div>
         <div className="flex flex-wrap gap-2">
           <Button 
             variant="outline" 
@@ -305,9 +334,8 @@ const DepenseDuMois = () => {
           <DollarSign className="inline-block mr-2 h-5 w-5" />
           Solde actuel
         </h3>
-        <p className={`text-2xl font-bold ${solde >= 0 ? 'text-app-green'  : 'text-app-red' }`}>
-        {solde > 0 ? `Bonne (${formatAmount(solde)})` : `Découvert (${formatAmount(solde)})`}
-          
+        <p className={`text-2xl font-bold ${solde >= 0 ? 'text-app-green' : 'text-app-red'}`}>
+          {formatAmount(solde)}
         </p>
       </div>
       
@@ -390,21 +418,10 @@ const DepenseDuMois = () => {
           <form onSubmit={handleSubmit} className="space-y-4 py-4">
             <div className="grid grid-cols-1 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
-                <Input
-                  id="description"
-                  value={newMouvement.description}
-                  onChange={(e) => setNewMouvement({...newMouvement, description: e.target.value})}
-                  required
-                  className="btn-3d"
-                />
-              </div>
-              
-              <div className="space-y-2">
                 <Label htmlFor="categorie">Catégorie</Label>
                 <Select
                   value={newMouvement.categorie}
-                  onValueChange={(value) => setNewMouvement({...newMouvement, categorie: value})}
+                  onValueChange={handleCategorieChange}
                   required
                 >
                   <SelectTrigger id="categorie" className="btn-3d">
@@ -415,6 +432,18 @@ const DepenseDuMois = () => {
                     <SelectItem value="Autres">Autres</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="description">Description</Label>
+                <Input
+                  id="description"
+                  value={newMouvement.description}
+                  onChange={(e) => setNewMouvement({...newMouvement, description: e.target.value})}
+                  required
+                  className="btn-3d"
+                  disabled={newMouvement.categorie === "chargeFixe"}
+                />
               </div>
               
               <div className="space-y-2">
@@ -442,6 +471,7 @@ const DepenseDuMois = () => {
                       value={newMouvement.debit}
                       onChange={(e) => setNewMouvement({...newMouvement, debit: e.target.value, credit: ''})}
                       className="pl-8 btn-3d"
+                      disabled={newMouvement.categorie === "chargeFixe" || !!newMouvement.credit}
                     />
                   </div>
                 </div>
@@ -458,6 +488,7 @@ const DepenseDuMois = () => {
                       value={newMouvement.credit}
                       onChange={(e) => setNewMouvement({...newMouvement, credit: e.target.value, debit: ''})}
                       className="pl-8 btn-3d"
+                      disabled={newMouvement.categorie === "chargeFixe" || !!newMouvement.debit}
                     />
                   </div>
                 </div>
@@ -518,7 +549,6 @@ const DepenseDuMois = () => {
           
           <div className="space-y-4 py-4">
             <div className="grid grid-cols-1 gap-4">
-                       
               <div className="space-y-2">
                 <Label htmlFor="free">Free (€)</Label>
                 <div className="relative">
@@ -536,7 +566,7 @@ const DepenseDuMois = () => {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="internetZeop">internet Zeop (€)</Label>
+                <Label htmlFor="internetZeop">Internet Zeop (€)</Label>
                 <div className="relative">
                   <ArrowDown className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-app-red" />
                   <Input
@@ -568,7 +598,7 @@ const DepenseDuMois = () => {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="autreDepense">Autre Depense (€)</Label>
+                <Label htmlFor="autreDepense">Autre Dépense (€)</Label>
                 <div className="relative">
                   <ArrowDown className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-app-red" />
                   <Input
@@ -598,7 +628,6 @@ const DepenseDuMois = () => {
                   />
                 </div>
               </div>
-
             </div>
           </div>
           

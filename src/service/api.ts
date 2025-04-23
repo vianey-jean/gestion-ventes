@@ -1,3 +1,4 @@
+
 import axios from 'axios';
 import { LoginCredentials, PasswordResetData, PasswordResetRequest, Product, RegistrationData, Sale, User } from "../types";
 
@@ -19,6 +20,8 @@ api.interceptors.request.use(
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+    } else {
+      console.warn('No authentication token found');
     }
     return config;
   },
