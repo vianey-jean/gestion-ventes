@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Calendar } from '@/components/ui/calendar';
@@ -11,7 +11,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
-import {PlusCircle, Edit, CalendarIcon, Loader2, Delete ,Trash2} from 'lucide-react';
+import { PlusCircle, Edit, CalendarIcon, Loader2, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useApp } from '@/contexts/AppContext';
 import { Product, PretProduit } from '@/types';
@@ -23,6 +23,7 @@ const PretProduits: React.FC = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [searchDialogOpen, setSearchDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [date, setDate] = useState<Date>(new Date());
   const [description, setDescription] = useState('');
   const [nom, setNom] = useState('');
@@ -47,24 +48,24 @@ const PretProduits: React.FC = () => {
   const estPaye = reste <= 0;
 
   // Charger les données depuis l'API
-  useEffect(() => {
-    const fetchPrets = async () => {
-      try {
-        setLoading(true);
-        const data = await pretProduitService.getPretProduits();
-        setPrets(data);
-      } catch (error) {
-        console.error('Erreur lors du chargement des prêts produits', error);
-        toast({
-          title: 'Erreur',
-          description: 'Impossible de charger les prêts produits',
-          variant: 'destructive',
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchPrets = async () => {
+    try {
+      setLoading(true);
+      const data = await pretProduitService.getPretProduits();
+      setPrets(data);
+    } catch (error) {
+      console.error('Erreur lors du chargement des prêts produits', error);
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de charger les prêts produits',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchPrets();
   }, [toast]);
 
@@ -124,8 +125,21 @@ const PretProduits: React.FC = () => {
     setEditDialogOpen(true);
   };
 
-  // Sélectionner un prêt depuis le tableau
+  // Sélectionner un prêt pour suppression
+  const selectPretForDelete = (pret: PretProduit, e: React.MouseEvent) => {
+    e.stopPropagation(); // Empêche le déclenchement du onClick de la ligne
+    setSelectedPret(pret);
+    setDeleteDialogOpen(true);
+  };
+
+  // Sélectionner un prêt depuis le tableau pour édition
   const handleRowClick = (pret: PretProduit) => {
+    selectPretForEdit(pret);
+  };
+
+  // Ouvrir le formulaire d'édition pour un prêt
+  const handleEditClick = (pret: PretProduit, e: React.MouseEvent) => {
+    e.stopPropagation(); // Empêche le déclenchement du onClick de la ligne
     selectPretForEdit(pret);
   };
 
@@ -167,8 +181,7 @@ const PretProduits: React.FC = () => {
       await pretProduitService.addPretProduit(newPret);
       
       // Recharger les données
-      const updatedPrets = await pretProduitService.getPretProduits();
-      setPrets(updatedPrets);
+      await fetchPrets();
       
       toast({
         title: 'Succès',
@@ -178,12 +191,7 @@ const PretProduits: React.FC = () => {
       });
       
       // Réinitialiser le formulaire
-      setDate(new Date());
-      setDescription('');
-      setNom('');
-      setPrixVente('');
-      setAvanceRecue('');
-      setSelectedProduct(null);
+      resetForm();
       setDialogOpen(false);
     } catch (error) {
       console.error('Erreur lors de l\'enregistrement du prêt', error);
@@ -206,6 +214,10 @@ const PretProduits: React.FC = () => {
       
       const updatedPret: PretProduit = {
         ...selectedPret,
+        date: selectedPret.date, // Conserver la date d'origine
+        description: selectedPret.description,
+        nom: selectedPret.nom,
+        prixVente: selectedPret.prixVente,
         avanceRecue: parseFloat(avanceRecue) || 0,
         reste: reste,
         estPaye: estPaye
@@ -215,8 +227,7 @@ const PretProduits: React.FC = () => {
       await pretProduitService.updatePretProduit(selectedPret.id, updatedPret);
       
       // Recharger les données
-      const updatedPrets = await pretProduitService.getPretProduits();
-      setPrets(updatedPrets);
+      await fetchPrets();
       
       toast({
         title: 'Succès',
@@ -226,12 +237,7 @@ const PretProduits: React.FC = () => {
       });
       
       // Réinitialiser le formulaire
-      setSelectedPret(null);
-      setDate(new Date());
-      setDescription('');
-      setNom('');
-      setPrixVente('');
-      setAvanceRecue('');
+      resetForm();
       setEditDialogOpen(false);
     } catch (error) {
       console.error('Erreur lors de la mise à jour du prêt', error);
@@ -245,8 +251,54 @@ const PretProduits: React.FC = () => {
     }
   };
 
+  // Supprimer un prêt
+  const handleDelete = async () => {
+    if (!selectedPret) return;
+
+    try {
+      setLoading(true);
+      
+      // Supprimer via l'API
+      await pretProduitService.deletePretProduit(selectedPret.id);
+      
+      // Recharger les données
+      await fetchPrets();
+      
+      toast({
+        title: 'Succès',
+        description: 'Prêt supprimé avec succès',
+        variant: 'default',
+        className: 'notification-success',
+      });
+      
+      // Réinitialiser et fermer
+      resetForm();
+      setDeleteDialogOpen(false);
+    } catch (error) {
+      console.error('Erreur lors de la suppression du prêt', error);
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de supprimer le prêt',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Réinitialiser le formulaire
+  const resetForm = () => {
+    setSelectedPret(null);
+    setDate(new Date());
+    setDescription('');
+    setNom('');
+    setPrixVente('');
+    setAvanceRecue('');
+    setSelectedProduct(null);
+  };
+
   return (
-<div className="mt-6">
+    <div className="mt-6">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold">Prêts de Produits</h2>
         <div className="flex items-center gap-4">
@@ -254,18 +306,13 @@ const PretProduits: React.FC = () => {
             Total Reste: <span className="text-app-red">{new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(totalReste)}</span>
           </div>
           <Button onClick={() => setDialogOpen(true)} className="bg-app-green hover:bg-opacity-90">
-          <PlusCircle className="mr-2 h-4 w-4" />
+            <PlusCircle className="mr-2 h-4 w-4" />
             Ajout de Prêt
           </Button>
-          <Button onClick={() => setSearchDialogOpen(true)} className="bg-app-red hover:bg-opacity-90">
-        
-           Modifier un Prêt
+          <Button onClick={() => setSearchDialogOpen(true)} className="bg-app-blue hover:bg-opacity-90">
+            <Edit className="mr-2 h-4 w-4" />
+            Modifier un Prêt
           </Button>
-          <Button onClick={() => setSearchDialogOpen(true)} className="bg-app-red hover:bg-opacity-90">
-            
-            Supprimer un Prêt
-          </Button>
-        
         </div>
       </div>
       
@@ -287,6 +334,7 @@ const PretProduits: React.FC = () => {
                   <TableHead className="text-right">Avance Reçue</TableHead>
                   <TableHead className="text-right">Reste</TableHead>
                   <TableHead className="text-center">Paiement</TableHead>
+                  <TableHead className="text-center">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -309,8 +357,16 @@ const PretProduits: React.FC = () => {
                         {pret.estPaye ? 'Tout payé' : 'Reste à payer'}
                       </span>
                     </TableCell>
-                    <Edit className="text-xs inline h-5 w-8 text-app-blue" />
-                    <Trash2 className="inline mr-2 h-5 w-4 text-app-red" />
+                    <TableCell className="text-center">
+                      <div className="flex justify-center space-x-2">
+                        <button onClick={(e) => handleEditClick(pret, e)} className="text-app-blue hover:text-app-blue/80">
+                          <Edit className="h-4 w-4" />
+                        </button>
+                        <button onClick={(e) => selectPretForDelete(pret, e)} className="text-app-red hover:text-app-red/80">
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -341,12 +397,13 @@ const PretProduits: React.FC = () => {
                     {date ? format(date, 'PP', { locale: fr }) : <span>Sélectionner une date</span>}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
+                <PopoverContent className="w-auto p-0 pointer-events-auto" align="start">
                   <Calendar
                     mode="single"
                     selected={date}
                     onSelect={(date) => date && setDate(date)}
                     initialFocus
+                    className={cn("p-3")}
                   />
                 </PopoverContent>
               </Popover>
@@ -502,13 +559,14 @@ const PretProduits: React.FC = () => {
                     {date ? format(date, 'PP', { locale: fr }) : <span>Sélectionner une date</span>}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
+                <PopoverContent className="w-auto p-0 pointer-events-auto" align="start">
                   <Calendar
                     mode="single"
                     selected={date}
                     onSelect={(date) => date && setDate(date)}
                     initialFocus
                     disabled
+                    className={cn("p-3")}
                   />
                 </PopoverContent>
               </Popover>
@@ -580,6 +638,43 @@ const PretProduits: React.FC = () => {
               Enregistrer les modifications
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialogue de confirmation de suppression */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle>Confirmer la suppression</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p>Êtes-vous sûr de vouloir supprimer ce prêt ?</p>
+            {selectedPret && (
+              <div className="mt-4 p-3 bg-gray-50 rounded-md">
+                <p><strong>Description:</strong> {selectedPret.description}</p>
+                <p><strong>Montant:</strong> {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(selectedPret.prixVente)}</p>
+                <p><strong>Date:</strong> {format(new Date(selectedPret.date), 'dd/MM/yyyy')}</p>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setDeleteDialogOpen(false)}
+              disabled={loading}
+            >
+              Annuler
+            </Button>
+            <Button 
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={loading}
+              className="ml-2"
+            >
+              {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              Supprimer
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
