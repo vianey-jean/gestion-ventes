@@ -11,7 +11,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
-import {PlusCircle, Edit, CalendarIcon, Loader2, Delete } from 'lucide-react';
+import {PlusCircle, Edit, CalendarIcon, Loader2, Delete ,Trash2} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useApp } from '@/contexts/AppContext';
 import { Product, PretProduit } from '@/types';
@@ -258,11 +258,11 @@ const PretProduits: React.FC = () => {
             Ajout de Prêt
           </Button>
           <Button onClick={() => setSearchDialogOpen(true)} className="bg-app-red hover:bg-opacity-90">
-          <Edit className="mr-2 h-4 w-4" />
+        
            Modifier un Prêt
           </Button>
           <Button onClick={() => setSearchDialogOpen(true)} className="bg-app-red hover:bg-opacity-90">
-            <Delete className="mr-2 h-4 w-4" />
+            
             Supprimer un Prêt
           </Button>
         
@@ -309,6 +309,8 @@ const PretProduits: React.FC = () => {
                         {pret.estPaye ? 'Tout payé' : 'Reste à payer'}
                       </span>
                     </TableCell>
+                    <Edit className="text-xs inline h-5 w-8 text-app-blue" />
+                    <Trash2 className="inline mr-2 h-5 w-4 text-app-red" />
                   </TableRow>
                 ))}
               </TableBody>
