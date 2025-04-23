@@ -274,6 +274,7 @@ const DepenseDuMois = () => {
       });
     }
   };
+  const estPositif = solde >= 0;
 
   return (
     <div className="space-y-6">
@@ -330,26 +331,35 @@ const DepenseDuMois = () => {
       
       {/* Affichage du solde */}
       <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg mb-6 card-3d">
-        <h3 className="text-lg font-semibold mb-2">
-          <DollarSign className="inline-block mr-2 h-5 w-5" />
-          Solde actuel
-        </h3>
-        <p className={`text-2xl font-bold ${solde >= 0 ? 'text-app-green' : 'text-app-red'}`}>
+      <h3 className="text-lg font-semibold mb-2 flex items-center">
+        <DollarSign className="inline-block mr-2 h-5 w-5" />
+        Solde actuel
+      </h3>
+
+      <div className="text-2xl font-bold flex items-center space-x-2">
+        <span className={estPositif ? 'text-app-green' : 'text-app-red'}>
           {formatAmount(solde)}
-        </p>
+        </span>
+        <span
+          className={`text-2xl font-bold px-2 py-1 rounded ${
+            estPositif ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+          }`}
+        >
+          {estPositif ? 'Bonne' : 'Découvert'}
+        </span>
       </div>
-      
+    </div>
       {/* Tableau des mouvements */}
       <div className="table-responsive">
         <Table className={isMobile ? "table-responsive-stack" : ""}>
           <TableHeader>
             <TableRow>
-              <TableHead>Date</TableHead>
-              <TableHead>Description</TableHead>
-              <TableHead>Catégorie</TableHead>
-              <TableHead className="text-right">Débit</TableHead>
-              <TableHead className="text-right">Crédit</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead className="font-bold">Date</TableHead>
+              <TableHead className="font-bold">Description</TableHead>
+              <TableHead className="font-bold">Catégorie</TableHead>
+              <TableHead className="text-right font-bold ">Débit</TableHead>
+              <TableHead className="text-right font-bold ">Crédit</TableHead>
+              <TableHead className="text-right font-bold ">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

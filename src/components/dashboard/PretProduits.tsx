@@ -327,14 +327,14 @@ const PretProduits: React.FC = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead>Nom</TableHead>
-                  <TableHead className="text-right">Prix du produit vendu</TableHead>
-                  <TableHead className="text-right">Avance Reçue</TableHead>
-                  <TableHead className="text-right">Reste</TableHead>
-                  <TableHead className="text-center">Paiement</TableHead>
-                  <TableHead className="text-center">Actions</TableHead>
+                  <TableHead className="font-bold">Date</TableHead>
+                  <TableHead className="font-bold">Description</TableHead>
+                  <TableHead className="font-bold">Nom</TableHead>
+                  <TableHead className="text-right font-bold">Prix du produit vendu</TableHead>
+                  <TableHead className="text-right font-bold">Avance Reçue</TableHead>
+                  <TableHead className="text-right font-bold">Reste</TableHead>
+                  <TableHead className="text-center font-bold">Paiement</TableHead>
+                  <TableHead className="text-center font-bold">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

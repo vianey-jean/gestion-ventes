@@ -43,12 +43,12 @@ const SalesTable: React.FC<SalesTableProps> = ({ sales, onRowClick }) => {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Date</TableHead>
-            <TableHead>Description</TableHead>
-            <TableHead className="text-right">Prix de vente</TableHead>
-            <TableHead className="text-right">Quantité</TableHead>
-            <TableHead className="text-right">Prix d'achat</TableHead>
-            <TableHead className="text-right">Bénéfice</TableHead>
+            <TableHead className="font-bold">Date</TableHead>
+            <TableHead className="font-bold">Description</TableHead>
+            <TableHead className="text-right font-bold">Prix de vente</TableHead>
+            <TableHead className="text-right font-bold">Quantité</TableHead>
+            <TableHead className="text-right font-bold">Prix d'achat</TableHead>
+            <TableHead className="text-right font-bold">Bénéfice</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
