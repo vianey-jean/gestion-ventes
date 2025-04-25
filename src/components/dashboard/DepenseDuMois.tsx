@@ -350,7 +350,7 @@ const DepenseDuMois = () => {
       </div>
     </div>
       {/* Tableau des mouvements */}
-      <div className="table-responsive">
+      <div className="table-responsive card-3d">
         <Table className={isMobile ? "table-responsive-stack" : ""}>
           <TableHeader>
             <TableRow>

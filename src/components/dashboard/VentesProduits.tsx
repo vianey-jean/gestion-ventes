@@ -128,8 +128,8 @@ const VentesProduits: React.FC = () => {
     <div className="mt-6">
       {/* Affichage des statistiques */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <Card>
-          <CardHeader className="pb-2">
+        <Card className='card-3d'>
+          <CardHeader className="pb-2 ">
             <CardTitle className="text-lg">Total des bénéfices</CardTitle>
             <CardDescription>Du mois en cours</CardDescription>
           </CardHeader>
@@ -140,7 +140,7 @@ const VentesProduits: React.FC = () => {
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className='card-3d'>
           <CardHeader className="pb-2">
             <CardTitle className="text-lg">Produits vendus</CardTitle>
             <CardDescription>Nombre total d'unités</CardDescription>
@@ -150,7 +150,7 @@ const VentesProduits: React.FC = () => {
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className='card-3d'>
           <CardHeader className="pb-2">
             <CardTitle className="text-lg">Produits disponibles</CardTitle>
             <CardDescription>Dans l'inventaire</CardDescription>
@@ -160,7 +160,7 @@ const VentesProduits: React.FC = () => {
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className='card-3d'>
           <CardHeader className="pb-2">
             <CardTitle className="text-lg">Stock total</CardTitle>
             <CardDescription>Toutes unités confondues</CardDescription>
@@ -173,7 +173,7 @@ const VentesProduits: React.FC = () => {
       
       {/* Boutons d'action */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
-        <h2 className="text-2xl font-bold">Ventes du mois</h2>
+        <h2 className="text-2xl font-bold ">Ventes du mois</h2>
         <div className="mt-4 sm:mt-0 flex items-center">
             <h2 className="text-xl font-bold text-app-red mr-4">
               {monthNames[currentMonth]} {currentYear}
@@ -181,7 +181,7 @@ const VentesProduits: React.FC = () => {
             <Button
               onClick={handleExportMonth}
               variant="outline"
-              className="flex items-center border-gray-300 mr-2"
+              className="flex items-center border-gray-300 mr-2 card-3d"
             >
               <FileText className="mr-2 h-4 w-4" />
               Exporter
@@ -190,15 +190,15 @@ const VentesProduits: React.FC = () => {
         <div className="flex flex-wrap gap-2 mt-4 sm:mt-0">
           <Button
             onClick={() => setAddProductDialogOpen(true)}
-            className="bg-app-red hover:bg-opacity-90"
+            className="bg-app-red hover:bg-opacity-90 card-3d"
           >
-            <PlusCircle className="mr-2 h-4 w-4" />
+            <PlusCircle className="mr-2 h-4 w-4 " />
             Ajouter un produit
           </Button>
           
           <Button
             onClick={() => setEditProductDialogOpen(true)}
-            className="bg-app-blue hover:bg-opacity-90"
+            className="bg-app-blue hover:bg-opacity-90 card-3d"
           >
             <Edit className="mr-2 h-4 w-4" />
             Modifier un produit
@@ -209,7 +209,7 @@ const VentesProduits: React.FC = () => {
               setSelectedSale(undefined);
               setAddSaleDialogOpen(true);
             }}
-            className="bg-app-green hover:bg-opacity-90"
+            className="bg-app-green hover:bg-opacity-90 card-3d"
           >
             <ShoppingCart className="mr-2 h-4 w-4" />
             Ajouter une vente

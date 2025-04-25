@@ -40,9 +40,9 @@ const SalesTable: React.FC<SalesTableProps> = ({ sales, onRowClick }) => {
   
   return (
     <div className="rounded-md border">
-      <Table>
+      <Table className="card-3d">
         <TableHeader>
-          <TableRow>
+          <TableRow >
             <TableHead className="font-bold">Date</TableHead>
             <TableHead className="font-bold">Description</TableHead>
             <TableHead className="text-right font-bold">Prix de vente</TableHead>

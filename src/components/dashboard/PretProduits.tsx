@@ -302,14 +302,14 @@ const PretProduits: React.FC = () => {
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold">Prêts de Produits</h2>
         <div className="flex items-center gap-4">
-          <div className="text-lg font-semibold">
+          <div className="text-lg font-semibold ">
             Total Reste: <span className="text-app-red">{new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(totalReste)}</span>
           </div>
-          <Button onClick={() => setDialogOpen(true)} className="bg-app-green hover:bg-opacity-90">
+          <Button onClick={() => setDialogOpen(true)} className="bg-app-green hover:bg-opacity-90 card-3d">
             <PlusCircle className="mr-2 h-4 w-4" />
             Ajout de Prêt
           </Button>
-          <Button onClick={() => setSearchDialogOpen(true)} className="bg-app-blue hover:bg-opacity-90">
+          <Button onClick={() => setSearchDialogOpen(true)} className="bg-app-blue hover:bg-opacity-90 card-3d">
             <Edit className="mr-2 h-4 w-4" />
             Modifier un Prêt
           </Button>
@@ -324,7 +324,7 @@ const PretProduits: React.FC = () => {
               <p>Chargement des données...</p>
             </div>
           ) : (
-            <Table>
+            <Table className='card-3d'>
               <TableHeader>
                 <TableRow>
                   <TableHead className="font-bold">Date</TableHead>
