@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -8,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { useToast } from "@/hooks/use-toast";
 import PasswordInput from '@/components/PasswordInput';
 import PasswordStrengthChecker from '@/components/PasswordStrengthChecker';
 import Layout from '@/components/Layout';
@@ -15,7 +15,8 @@ import Layout from '@/components/Layout';
 const RegisterPage: React.FC = () => {
   const navigate = useNavigate();
   const { register, checkEmail } = useAuth();
-  
+  const { toast } = useToast();
+
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -27,18 +28,19 @@ const RegisterPage: React.FC = () => {
     confirmPassword: '',
     acceptTerms: false,
   });
-  
+
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isEmailChecking, setIsEmailChecking] = useState(false);
   const [isEmailValid, setIsEmailValid] = useState(true);
-  
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
     setFormData({
       ...formData,
       [name]: type === 'checkbox' ? checked : value,
     });
-    
+
     // Clear error when field is edited
     if (errors[name]) {
       setErrors({
@@ -46,14 +48,19 @@ const RegisterPage: React.FC = () => {
         [name]: '',
       });
     }
+
+    // Reset email validation when email is changed
+    if (name === 'email') {
+      setIsEmailValid(true);
+    }
   };
-  
+
   const handleSelectChange = (value: string) => {
     setFormData({
       ...formData,
       gender: value,
     });
-    
+
     // Clear error when field is edited
     if (errors.gender) {
       setErrors({
@@ -62,103 +69,114 @@ const RegisterPage: React.FC = () => {
       });
     }
   };
-  
+
   const validateEmail = async () => {
-    if (!formData.email) return;
-    
+    if (!formData.email) {
+      setIsEmailValid(true); // Reset to true if email is empty
+      return;
+    }
+
     if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      setErrors({
-        ...errors,
+      setErrors(prev => ({
+        ...prev,
         email: 'Veuillez entrer un email valide',
-      });
+      }));
       setIsEmailValid(false);
       return;
     }
-    
+
     setIsEmailChecking(true);
     const emailExists = await checkEmail(formData.email);
     setIsEmailChecking(false);
-    
+
     if (emailExists) {
-      setErrors({
-        ...errors,
+      setErrors(prev => ({
+        ...prev,
         email: 'Cet email est déjà utilisé',
-      });
+      }));
       setIsEmailValid(false);
+      toast({
+        title: "Email déjà utilisé",
+        description: "Veuillez utiliser une autre adresse email.",
+        variant: "destructive"
+      });
     } else {
       setIsEmailValid(true);
-      setErrors({
-        ...errors,
+      setErrors(prev => ({
+        ...prev,
         email: '',
-      });
+      }));
     }
   };
-  
+
   useEffect(() => {
     const debounce = setTimeout(() => {
       if (formData.email && formData.email.includes('@')) {
         validateEmail();
       }
     }, 500);
-    
+
     return () => clearTimeout(debounce);
   }, [formData.email]);
-  
+
   const validatePassword = () => {
     const hasLowerCase = /[a-z]/.test(formData.password);
     const hasUpperCase = /[A-Z]/.test(formData.password);
     const hasNumber = /[0-9]/.test(formData.password);
     const hasSpecialChar = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(formData.password);
     const hasMinLength = formData.password.length >= 8;
-    
+
     return hasLowerCase && hasUpperCase && hasNumber && hasSpecialChar && hasMinLength;
   };
-  
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Reset errors
     setErrors({});
-    
+    setIsSubmitting(true);
+
     // Validate all fields
     const newErrors: Record<string, string> = {};
-    
+
     if (!formData.firstName) newErrors.firstName = 'Le prénom est requis';
     if (!formData.lastName) newErrors.lastName = 'Le nom est requis';
-    if (!formData.email) newErrors.email = 'L\'email est requis';
+    if (!formData.email) newErrors.email = "L'email est requis";
     if (!formData.gender) newErrors.gender = 'Le genre est requis';
-    if (!formData.address) newErrors.address = 'L\'adresse est requise';
+    if (!formData.address) newErrors.address = "L'adresse est requise";
     if (!formData.phone) newErrors.phone = 'Le téléphone est requis';
     if (!formData.password) newErrors.password = 'Le mot de passe est requis';
     if (!formData.confirmPassword) newErrors.confirmPassword = 'La confirmation du mot de passe est requise';
     if (!formData.acceptTerms) newErrors.acceptTerms = 'Vous devez accepter les conditions';
-    
+
     // Email validation
     if (formData.email && !/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = 'Veuillez entrer un email valide';
     }
-    
+
     // Password validation
     if (formData.password && !validatePassword()) {
       newErrors.password = 'Le mot de passe ne répond pas aux exigences de sécurité';
     }
-    
+
     // Confirm password validation
     if (formData.password && formData.confirmPassword && formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = 'Les mots de passe ne correspondent pas';
     }
-    
+
     // If there are errors, set them and stop form submission
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
+      setIsSubmitting(false);
       return;
     }
-    
+
     // Check if email is already used
     if (!isEmailValid) {
+      setIsSubmitting(false);
       return;
     }
-    
+
     // Submit form
     const success = await register({
       email: formData.email,
@@ -171,12 +189,28 @@ const RegisterPage: React.FC = () => {
       phone: formData.phone,
       acceptTerms: formData.acceptTerms,
     });
-    
+
     if (success) {
       navigate('/dashboard');
     }
+    setIsSubmitting(false);
   };
-  
+
+  // Compute if the form is valid and the button should be enabled
+  const isFormValid =
+    formData.firstName &&
+    formData.lastName &&
+    formData.email &&
+    formData.gender &&
+    formData.address &&
+    formData.phone &&
+    formData.password &&
+    formData.confirmPassword &&
+    formData.acceptTerms &&
+    isEmailValid &&
+    !isEmailChecking &&
+    Object.keys(errors).filter(key => errors[key]).length === 0;
+
   return (
     <Layout>
       <div className="container mx-auto py-12 px-4">
@@ -188,7 +222,7 @@ const RegisterPage: React.FC = () => {
                 Créez un compte pour accéder à toutes les fonctionnalités
               </CardDescription>
             </CardHeader>
-            
+
             <form onSubmit={handleSubmit}>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -206,7 +240,7 @@ const RegisterPage: React.FC = () => {
                       <p className="text-sm text-red-500">{errors.firstName}</p>
                     )}
                   </div>
-                  
+
                   <div className="space-y-2">
                     <Label htmlFor="lastName">Nom</Label>
                     <Input
@@ -222,7 +256,7 @@ const RegisterPage: React.FC = () => {
                     )}
                   </div>
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
                   <Input
@@ -243,12 +277,12 @@ const RegisterPage: React.FC = () => {
                     <p className="text-sm text-gray-500">Vérification de l'email...</p>
                   )}
                 </div>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="gender">Genre</Label>
-                    <Select 
-                      value={formData.gender} 
+                    <Select
+                      value={formData.gender}
                       onValueChange={handleSelectChange}
                     >
                       <SelectTrigger className={errors.gender ? "border-red-500" : ""}>
@@ -264,7 +298,7 @@ const RegisterPage: React.FC = () => {
                       <p className="text-sm text-red-500">{errors.gender}</p>
                     )}
                   </div>
-                  
+
                   <div className="space-y-2">
                     <Label htmlFor="phone">Téléphone</Label>
                     <Input
@@ -280,7 +314,7 @@ const RegisterPage: React.FC = () => {
                     )}
                   </div>
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="address">Adresse</Label>
                   <Input
@@ -295,7 +329,7 @@ const RegisterPage: React.FC = () => {
                     <p className="text-sm text-red-500">{errors.address}</p>
                   )}
                 </div>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="password">Mot de passe</Label>
@@ -309,7 +343,7 @@ const RegisterPage: React.FC = () => {
                     />
                     <PasswordStrengthChecker password={formData.password} />
                   </div>
-                  
+
                   <div className="space-y-2">
                     <Label htmlFor="confirmPassword">Confirmer le mot de passe</Label>
                     <PasswordInput
@@ -322,13 +356,13 @@ const RegisterPage: React.FC = () => {
                     />
                   </div>
                 </div>
-                
+
                 <div className="flex items-center space-x-2">
                   <Checkbox
                     id="acceptTerms"
                     name="acceptTerms"
                     checked={formData.acceptTerms}
-                    onCheckedChange={(checked) => 
+                    onCheckedChange={(checked) =>
                       setFormData({
                         ...formData,
                         acceptTerms: checked as boolean,
@@ -347,15 +381,16 @@ const RegisterPage: React.FC = () => {
                   <p className="text-sm text-red-500">{errors.acceptTerms}</p>
                 )}
               </CardContent>
-              
+
               <CardFooter className="flex flex-col space-y-4">
                 <Button
                   type="submit"
                   className="w-full bg-app-red hover:bg-opacity-90"
+                  disabled={!isFormValid || isSubmitting}
                 >
-                  S'inscrire
+                  {isSubmitting ? "Envoi en cours..." : isEmailChecking ? "Vérification..." : "S'inscrire"}
                 </Button>
-                
+
                 <p className="text-sm text-center">
                   Vous avez déjà un compte?{" "}
                   <Link to="/login" className="text-app-blue hover:underline">
