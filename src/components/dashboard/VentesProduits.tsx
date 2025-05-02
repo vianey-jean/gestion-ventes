@@ -87,32 +87,50 @@ const VentesProduits: React.FC = () => {
       "Êtes-vous sûr de vouloir exporter les ventes de ce mois ?"
     );
     if (!confirmed) return;
-
+  
     const doc = new jsPDF();
     doc.text(`Rapport de ventes – ${monthNames[currentMonth]} ${currentYear}`, 14, 20);
-
+  
+    // Préparer le corps du tableau
+    const tableBody = sales.map(sale => {
+      const achatPrice = typeof sale.purchasePrice === 'number' ? sale.purchasePrice : 0;
+      const quantity = typeof sale.quantitySold === 'number' ? sale.quantitySold : 0;
+      const ventePrice = typeof sale.sellingPrice === 'number' ? sale.sellingPrice : 0;
+      const profit = typeof sale.profit === 'number' ? sale.profit : 0;
+  
+      return [
+        new Date(sale.date).toLocaleDateString('fr-FR'),
+        sale.description || 'Inconnu',
+        achatPrice.toFixed(2),
+        quantity,
+        ventePrice.toFixed(2),
+        profit.toFixed(2),
+      ];
+    });
+  
+    // Calcul des totaux
+    const totalQuantite = sales.reduce((sum, sale) => sum + (typeof sale.quantitySold === 'number' ? sale.quantitySold : 0), 0);
+    const totalVente = sales.reduce((sum, sale) => sum + (typeof sale.sellingPrice === 'number' ? sale.sellingPrice : 0), 0);
+    const totalProfit = sales.reduce((sum, sale) => sum + (typeof sale.profit === 'number' ? sale.profit : 0), 0);
+  
+    // Ajouter la ligne des totaux
+    tableBody.push([
+      '', // Date vide
+      'TOTAL',
+      '', // Pas de total achat
+      totalQuantite,
+      totalVente.toFixed(2),
+      totalProfit.toFixed(2),
+    ]);
+  
     autoTable(doc, {
       startY: 30,
-      head: [['Date', 'Produit' , 'Prix Achat (€)' , 'Quantité', 'Prix Vendu (€)', 'Bénéfice (€)']],
-      body: sales.map(sale => {
-        const achatPrice = typeof sale.purchasePrice=== 'number' ? sale.purchasePrice : 0;
-        const quantity = typeof sale.quantitySold === 'number' ? sale.quantitySold : 0;
-        const ventePrice = typeof sale.sellingPrice === 'number' ? sale.sellingPrice : 0;
-        const profit = typeof sale.profit === 'number' ? sale.profit : 0;
-
-        return [
-          new Date(sale.date).toLocaleDateString('fr-FR'),
-          sale.description || 'Inconnu',
-          achatPrice.toFixed(2),
-          quantity,
-          ventePrice.toFixed(2),
-          profit.toFixed(2),
-        ];
-      }),
+      head: [['Date', 'Produit', 'Prix Achat (€)', 'Quantité', 'Prix Vendu (€)', 'Bénéfice (€)']],
+      body: tableBody,
     });
-
+  
     doc.save(`ventes_${monthNames[currentMonth]}_${currentYear}.pdf`);
-
+  
     const success = await exportMonth();
     if (success) {
       toast({
@@ -121,7 +139,8 @@ const VentesProduits: React.FC = () => {
         className: "notification-success",
       });
     }
-  }
+  };
+  
     
 
   return (
