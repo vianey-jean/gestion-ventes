@@ -2,17 +2,19 @@
 import axios from 'axios';
 import { LoginCredentials, PasswordResetData, PasswordResetRequest, Product, RegistrationData, Sale, User } from "../types";
 
-// API base URL
-const API_URL = 'https://server-gestion-ventes.onrender.com/api';
+// 🔁 URL de base récupérée depuis le fichier .env (Vite)
+const AUTH_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-// Create axios instance with increased timeout and retry logic
+// ✅ Création de l'instance Axios
 const api = axios.create({
-  baseURL: API_URL,
+  baseURL: `${AUTH_BASE_URL}/api`, // base de l’API commune à toutes les routes
   headers: {
     'Content-Type': 'application/json',
+    // Tu peux ajouter ici d'autres headers, comme Authorization si besoin
   },
-  timeout: 10000  // Réduit à 10 secondes pour éviter les attentes trop longues
+  timeout: 10000, // ⏱️ Timeout de 10 secondes
 });
+
 
 // Add interceptor to include auth token in requests
 api.interceptors.request.use(

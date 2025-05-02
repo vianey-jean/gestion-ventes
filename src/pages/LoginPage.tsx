@@ -10,6 +10,9 @@ import PasswordStrengthChecker from '@/components/PasswordStrengthChecker';
 import Layout from '@/components/Layout';
 import axios from 'axios';
 
+  // 🔁 URL de base récupérée depuis le .env
+  const AUTH_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const { login, checkEmail } = useAuth();
@@ -35,7 +38,8 @@ const LoginPage: React.FC = () => {
     
     setIsCheckingEmail(true);
     try {
-      const response = await axios.post('https://server-gestion-ventes.onrender.com/api/auth/check-email', { email });
+      const response = await axios.post(`${AUTH_BASE_URL}/api/auth/check-email`, { email }); // correction de la syntaxe
+
       setIsCheckingEmail(false);
       
       if (response.data.exists) {
