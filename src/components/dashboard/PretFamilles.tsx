@@ -224,23 +224,25 @@ const PretFamilles: React.FC = () => {
 
   return (
     <div className="mt-6">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">
-          <HandCoins className="inline-block mr-2 h-6 w-6" />
-          Prêts aux Familles
-        </h2>
-        <div className="flex gap-2">
-          <Button onClick={() => setRemboursementDialogOpen(true)} className="bg-app-blue hover:bg-opacity-90 btn-3d">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold">
+                <HandCoins className="inline-block mr-2 h-6 w-6" />
+              Prêts aux Familles</h2>
+              <div className="flex items-center gap-4 ">
+  
+                <div className='ml-2'>
+            <Button onClick={() => setRemboursementDialogOpen(true)} className="bg-app-blue hover:bg-opacity-90 btn-3d mr-12">
             <Receipt className="h-4 w-4 mr-2" />
             Remboursement
           </Button>
-          <Button onClick={() => setDemandePretDialogOpen(true)} className="bg-app-green hover:bg-opacity-90 btn-3d">
+          <Button onClick={() => setDemandePretDialogOpen(true)} className="bg-app-green hover:bg-opacity-90 btn-3d mt-4">
             <Plus className="h-4 w-4 mr-2" />
             Demande Prêt
           </Button>
-        </div>
-      </div>
-      
+                </div>
+              </div>
+            </div>
+
       <Card className="mb-6 card-3d">
         <div className="p-6">
           {loading ? (

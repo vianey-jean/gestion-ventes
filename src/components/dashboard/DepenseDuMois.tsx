@@ -282,7 +282,7 @@ const DepenseDuMois = () => {
       
       {/* En-tête avec titre et boutons */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 items-center">
           <h2 className="text-2xl font-bold mb-4 sm:mb-0">
             <Wallet className="inline-block mr-2 h-6 w-6" />
             Dépenses du mois
