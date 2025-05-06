@@ -18,7 +18,12 @@ const Navbar: React.FC = () => {
             {/* Logo and brand name */}
             <div className="flex items-center">
               <Link to="/" className="flex-shrink-0 flex items-center">
-                <h1 className="text-2xl font-bold text-app-red dark:text-app-purple">Gestion Vente</h1>
+                <div className="logo-container flex items-center">
+                  <span className="text-2xl font-extrabold text-app-red dark:text-app-purple">G</span>
+                  <span className="text-2xl font-light text-app-red dark:text-app-purple">estion</span>
+                  <span className="text-2xl font-extrabold text-app-red dark:text-app-purple ml-2">V</span>
+                  <span className="text-2xl font-light text-app-red dark:text-app-purple">ente</span>
+                </div>
               </Link>
             </div>
             

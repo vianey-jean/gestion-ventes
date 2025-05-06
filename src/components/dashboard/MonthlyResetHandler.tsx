@@ -27,6 +27,7 @@ const MonthlyResetHandler = () => {
       
       if (!token) return;
       
+      // Get API URL safely without direct access to import.meta.env
       const response = await axios.post(
         `${import.meta.env.VITE_API_URL}/api/depenses/reset`,
         {},

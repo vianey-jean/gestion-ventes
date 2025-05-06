@@ -171,7 +171,7 @@ const AddSaleForm: React.FC<AddSaleFormProps> = ({ isOpen, onClose, editSale }) 
       };
 
       // Mettre à jour ou ajouter la vente
-      let success = false;
+      let success: boolean | Sale = false;
       
       if (editSale && updateSale) {
         success = await updateSale({ ...saleData, id: editSale.id });
@@ -291,7 +291,6 @@ const AddSaleForm: React.FC<AddSaleFormProps> = ({ isOpen, onClose, editSale }) 
                   price={formData.sellingPrice}
                   onChange={handleSellingPriceChange}
                   disabled={isSubmitting}
-                  isProfitNegative={isProfitNegative}
                 />
               </div>
               
@@ -374,7 +373,6 @@ const AddSaleForm: React.FC<AddSaleFormProps> = ({ isOpen, onClose, editSale }) 
         onConfirm={handleDelete}
         title="Supprimer la vente"
         description="Êtes-vous sûr de vouloir supprimer cette vente ? Cette action ne peut pas être annulée."
-        isSubmitting={isSubmitting}
       />
     </>
   );

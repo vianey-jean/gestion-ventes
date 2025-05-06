@@ -1,20 +1,18 @@
-
 import axios from 'axios';
 import { LoginCredentials, PasswordResetData, PasswordResetRequest, Product, RegistrationData, Sale, User } from "../types";
 
 // 🔁 URL de base récupérée depuis le fichier .env (Vite)
 const AUTH_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
+
 // ✅ Création de l'instance Axios
 const api = axios.create({
-  baseURL: `${AUTH_BASE_URL}/api`, // base de l’API commune à toutes les routes
+  baseURL: `${AUTH_BASE_URL}/api`, // base de l'API commune à toutes les routes
   headers: {
     'Content-Type': 'application/json',
-    // Tu peux ajouter ici d'autres headers, comme Authorization si besoin
   },
   timeout: 10000, // ⏱️ Timeout de 10 secondes
 });
-
 
 // Add interceptor to include auth token in requests
 api.interceptors.request.use(
@@ -325,7 +323,7 @@ export const salesService = {
     }
   },
   
-  addSale: async (sale: Omit<Sale, 'id'>): Promise<Sale> => {
+  addSale: async (sale: Omit<Sale, 'id'>): Promise<Sale | boolean> => {
     try {
       const response = await api.post('/sales', sale);
       // Invalider les caches
@@ -338,7 +336,7 @@ export const salesService = {
     }
   },
   
-  updateSale: async (sale: Sale): Promise<Sale> => {
+  updateSale: async (sale: Sale): Promise<Sale | boolean> => {
     try {
       const response = await api.put(`/sales/${sale.id}`, sale);
       // Invalider les caches
