@@ -274,8 +274,10 @@ export const salesService = {
       let cacheKey = 'all';
       
       if (month !== undefined && year !== undefined) {
+        // Make sure month is passed as a number between 1-12 (not 0-11)
         url = `/sales/by-month?month=${month}&year=${year}`;
         cacheKey = `${month}-${year}`;
+        console.log(`Fetching sales for month=${month} year=${year}`);
       }
       
       // Vérifier si le token existe

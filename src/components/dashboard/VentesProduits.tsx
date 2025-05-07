@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -10,11 +9,10 @@ import SalesTable from '@/components/dashboard/SalesTable';
 import AddSaleForm from '@/components/dashboard/AddSaleForm';
 import AddProductForm from '@/components/dashboard/AddProductForm';
 import EditProductForm from '@/components/dashboard/EditProductForm';
-import { PlusCircle, Edit, ShoppingCart, Loader2 } from 'lucide-react';
+import ExportSalesDialog from '@/components/dashboard/ExportSalesDialog';
+import { PlusCircle, Edit, ShoppingCart, Loader2, FileText } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-
-import { FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
  // Noms des mois en français
@@ -42,6 +40,7 @@ const VentesProduits: React.FC = () => {
   const [addSaleDialogOpen, setAddSaleDialogOpen] = React.useState(false);
   const [addProductDialogOpen, setAddProductDialogOpen] = React.useState(false);
   const [editProductDialogOpen, setEditProductDialogOpen] = React.useState(false);
+  const [exportDialogOpen, setExportDialogOpen] = React.useState(false);
   const [selectedSale, setSelectedSale] = React.useState<Sale | undefined>(undefined);
   const [showProductsList, setShowProductsList] = React.useState(false);
 
@@ -58,7 +57,7 @@ const VentesProduits: React.FC = () => {
     setAddSaleDialogOpen(true);
   };
 
-    // Charger les données au montage du composant
+  // Charger les données au montage du composant
   useEffect(() => {
     const loadData = async () => {
       setLoadError(null);
@@ -80,68 +79,10 @@ const VentesProduits: React.FC = () => {
     loadData();
   }, [fetchProducts, fetchSales, toast]);
 
-
-
-  const handleExportMonth = async () => {
-    const confirmed = window.confirm(
-      "Êtes-vous sûr de vouloir exporter les ventes de ce mois ?"
-    );
-    if (!confirmed) return;
-  
-    const doc = new jsPDF();
-    doc.text(`Rapport de ventes – ${monthNames[currentMonth]} ${currentYear}`, 14, 20);
-  
-    // Préparer le corps du tableau
-    const tableBody = sales.map(sale => {
-      const achatPrice = typeof sale.purchasePrice === 'number' ? sale.purchasePrice : 0;
-      const quantity = typeof sale.quantitySold === 'number' ? sale.quantitySold : 0;
-      const ventePrice = typeof sale.sellingPrice === 'number' ? sale.sellingPrice : 0;
-      const profit = typeof sale.profit === 'number' ? sale.profit : 0;
-  
-      return [
-        new Date(sale.date).toLocaleDateString('fr-FR'),
-        sale.description || 'Inconnu',
-        achatPrice.toFixed(2),
-        quantity,
-        ventePrice.toFixed(2),
-        profit.toFixed(2),
-      ];
-    });
-  
-    // Calcul des totaux
-    const totalQuantite = sales.reduce((sum, sale) => sum + (typeof sale.quantitySold === 'number' ? sale.quantitySold : 0), 0);
-    const totalVente = sales.reduce((sum, sale) => sum + (typeof sale.sellingPrice === 'number' ? sale.sellingPrice : 0), 0);
-    const totalProfit = sales.reduce((sum, sale) => sum + (typeof sale.profit === 'number' ? sale.profit : 0), 0);
-  
-    // Ajouter la ligne des totaux
-    tableBody.push([
-      '', // Date vide
-      'TOTAL',
-      '', // Pas de total achat
-      totalQuantite,
-      totalVente.toFixed(2),
-      totalProfit.toFixed(2),
-    ]);
-  
-    autoTable(doc, {
-      startY: 30,
-      head: [['Date', 'Produit', 'Prix Achat (€)', 'Quantité', 'Prix Vendu (€)', 'Bénéfice (€)']],
-      body: tableBody,
-    });
-  
-    doc.save(`ventes_${monthNames[currentMonth]}_${currentYear}.pdf`);
-  
-    const success = await exportMonth();
-    if (success) {
-      toast({
-        title: "Export réussi",
-        description: "PDF téléchargé et ventes réinitialisées pour le mois prochain.",
-        className: "notification-success",
-      });
-    }
+  // Ouverture du dialogue d'exportation
+  const handleOpenExportDialog = () => {
+    setExportDialogOpen(true);
   };
-  
-    
 
   return (
     <div className="mt-6">
@@ -198,7 +139,7 @@ const VentesProduits: React.FC = () => {
               {monthNames[currentMonth]} {currentYear}
             </h2>
             <Button
-              onClick={handleExportMonth}
+              onClick={handleOpenExportDialog}
               variant="outline"
               className="flex items-center border-gray-300 mr-2 card-3d"
             >
@@ -275,6 +216,12 @@ const VentesProduits: React.FC = () => {
           onClose={() => setEditProductDialogOpen(false)}
         />
       )}
+      
+      {/* Dialogue d'exportation des ventes */}
+      <ExportSalesDialog
+        isOpen={exportDialogOpen}
+        onClose={() => setExportDialogOpen(false)}
+      />
       
       {/* Liste des produits disponibles */}
       <Dialog open={showProductsList} onOpenChange={setShowProductsList}>
