@@ -34,16 +34,21 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider = ({ children }: { children: ReactNode }) => {
+  // Get current date for initialization
+  const now = new Date();
+  const currentMonthNum = now.getMonth() + 1; // Convert from 0-based to 1-based
+  const currentYearNum = now.getFullYear();
+  
   const [products, setProducts] = useState<Product[]>([]);
   const [sales, setSales] = useState<Sale[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
-  const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth() + 1);
-  const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
+  const [selectedMonth, setSelectedMonth] = useState<number>(currentMonthNum);
+  const [selectedYear, setSelectedYear] = useState<number>(currentYearNum);
   
   // Add the missing properties that components are expecting
-  const currentMonth = selectedMonth - 1; // Convert to 0-based for array index
+  const currentMonth = selectedMonth;
   const currentYear = selectedYear;
   const isLoading = loading;
 
@@ -66,10 +71,16 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   }, [toast]);
 
   const fetchSales = useCallback(async (month?: number, year?: number) => {
+    const monthToFetch = month || selectedMonth;
+    const yearToFetch = year || selectedYear;
+    
+    console.log(`Fetching sales for month: ${monthToFetch}, year: ${yearToFetch}`);
+    
     setLoading(true);
     setError(null);
     try {
-      const fetchedSales = await salesService.getSales(month, year);
+      const fetchedSales = await salesService.getSales(monthToFetch, yearToFetch);
+      console.log(`Fetched ${fetchedSales.length} sales for ${monthToFetch}/${yearToFetch}`);
       setSales(fetchedSales);
     } catch (err: any) {
       setError(err.message || 'Failed to fetch sales');
@@ -81,7 +92,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     } finally {
       setLoading(false);
     }
-  }, [toast]);
+  }, [toast, selectedMonth, selectedYear]);
 
   useEffect(() => {
     fetchProducts();
@@ -151,7 +162,24 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       
       // Update local state only if we get a Sale object back
       if (result && typeof result !== 'boolean') {
-        setSales(prevSales => [...prevSales, result]);
+        // Check if the new sale belongs to the current month/year
+        const saleDate = new Date(result.date);
+        const saleMonth = saleDate.getMonth() + 1; // Convert from 0-based to 1-based
+        const saleYear = saleDate.getFullYear();
+        
+        console.log(`New sale added for ${saleMonth}/${saleYear}, current filter is ${selectedMonth}/${selectedYear}`);
+        
+        if (saleMonth === selectedMonth && saleYear === selectedYear) {
+          setSales(prevSales => [...prevSales, result]);
+        } else {
+          // If the sale is for a different month, we should refresh the sales list
+          // but no need to add it to the current view
+          console.log("Sale added but for a different month than currently selected");
+          toast({
+            title: "Vente ajoutée",
+            description: `La vente a été ajoutée pour le mois de ${saleMonth}/${saleYear}, différent du mois en cours.`,
+          });
+        }
         return result;
       }
       

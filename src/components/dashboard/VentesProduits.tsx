@@ -33,6 +33,10 @@ const VentesProduits: React.FC = () => {
     fetchSales, 
     exportMonth,
     fetchProducts,
+    selectedMonth,
+    selectedYear,
+    setSelectedMonth,
+    setSelectedYear
   } = useApp();
   const { toast } = useToast();
   
@@ -43,19 +47,42 @@ const VentesProduits: React.FC = () => {
   const [exportDialogOpen, setExportDialogOpen] = React.useState(false);
   const [selectedSale, setSelectedSale] = React.useState<Sale | undefined>(undefined);
   const [showProductsList, setShowProductsList] = React.useState(false);
-
-  // Calcul des statistiques
-  const totalProfit = sales.reduce((sum, sale) => sum + sale.profit, 0);
-  const totalProductsSold = sales.reduce((sum, sale) => sum + sale.quantitySold, 0);
-  const availableProducts = products.filter(p => p.quantity > 0);
-  const totalStock = products.reduce((sum, product) => sum + product.quantity, 0);
+  const [filteredSales, setFilteredSales] = useState<Sale[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
 
-  // Gestion du clic sur une ligne du tableau des ventes
-  const handleRowClick = (sale: Sale) => {
-    setSelectedSale(sale);
-    setAddSaleDialogOpen(true);
-  };
+  // Calcul des statistiques basés sur les ventes filtrées
+  const totalProfit = filteredSales.reduce((sum, sale) => sum + sale.profit, 0);
+  const totalProductsSold = filteredSales.reduce((sum, sale) => sum + sale.quantitySold, 0);
+  const availableProducts = products.filter(p => p.quantity > 0);
+  const totalStock = products.reduce((sum, product) => sum + product.quantity, 0);
+
+  // Filtrer les ventes pour le mois et l'année en cours
+  useEffect(() => {
+    // Assurez-vous de filtrer les ventes pour n'afficher que celles du mois et de l'année sélectionnés
+    const currentDate = new Date();
+    const currentMonthIndex = currentDate.getMonth(); // 0-based index (0 = Janvier)
+    const currentYearValue = currentDate.getFullYear();
+    
+    // Définir le mois et l'année actuels si nécessaire
+    if (selectedMonth !== currentMonthIndex + 1) {
+      setSelectedMonth(currentMonthIndex + 1);
+    }
+    
+    if (selectedYear !== currentYearValue) {
+      setSelectedYear(currentYearValue);
+    }
+    
+    // Filtrer les ventes pour le mois en cours
+    const filtered = sales.filter(sale => {
+      const saleDate = new Date(sale.date);
+      // saleDate.getMonth() retourne 0-11, selectedMonth est 1-12
+      return saleDate.getMonth() + 1 === selectedMonth && saleDate.getFullYear() === selectedYear;
+    });
+    
+    setFilteredSales(filtered);
+    
+    console.log(`Filtered sales for month ${selectedMonth}, year ${selectedYear}: ${filtered.length} sales`);
+  }, [sales, selectedMonth, selectedYear, setSelectedMonth, setSelectedYear]);
 
   // Charger les données au montage du composant
   useEffect(() => {
@@ -64,7 +91,17 @@ const VentesProduits: React.FC = () => {
       
       try {
         // Charger les produits et les ventes en parallèle
-        await Promise.all([fetchProducts(), fetchSales()]);
+        // S'assurer que les ventes sont chargées pour le mois en cours
+        const currentDate = new Date();
+        const currentMonthNum = currentDate.getMonth() + 1; // Convertir de 0-11 à 1-12
+        const currentYearNum = currentDate.getFullYear();
+        
+        await Promise.all([
+          fetchProducts(),
+          fetchSales(currentMonthNum, currentYearNum)
+        ]);
+        
+        console.log(`Loaded sales for month ${currentMonthNum}, year ${currentYearNum}`);
       } catch (error) {
         console.error("Failed to load data:", error);
         setLoadError("Impossible de charger les données. Veuillez réessayer.");
@@ -78,6 +115,12 @@ const VentesProduits: React.FC = () => {
     
     loadData();
   }, [fetchProducts, fetchSales, toast]);
+
+  // Gestion du clic sur une ligne du tableau des ventes
+  const handleRowClick = (sale: Sale) => {
+    setSelectedSale(sale);
+    setAddSaleDialogOpen(true);
+  };
 
   // Ouverture du dialogue d'exportation
   const handleOpenExportDialog = () => {
@@ -136,7 +179,7 @@ const VentesProduits: React.FC = () => {
         <h2 className="text-2xl font-bold ">Ventes du mois</h2>
         <div className="mt-4 sm:mt-0 flex items-center">
             <h2 className="text-xl font-bold text-app-red mr-4">
-              {monthNames[currentMonth]} {currentYear}
+              {monthNames[selectedMonth - 1]} {selectedYear}
             </h2>
             <Button
               onClick={handleOpenExportDialog}
@@ -185,9 +228,9 @@ const VentesProduits: React.FC = () => {
         </div>
       ) : null}
       
-      {/* Tableau des ventes */}
+      {/* Tableau des ventes - maintenant avec les ventes filtrées */}
       <SalesTable 
-        sales={sales} 
+        sales={filteredSales} 
         onRowClick={handleRowClick} 
       />
       
