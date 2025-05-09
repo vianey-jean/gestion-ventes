@@ -32,9 +32,22 @@ const SalesTable: React.FC<SalesTableProps> = ({ sales, onRowClick }) => {
     }).format(amount);
   };
   
+  // Vérifier si le produit est une avance
+  const isAdvanceProduct = (description: string) => {
+    return description.includes("Avance Perruque") || description.includes("Tissages");
+  };
+  
+  // Obtenir la quantité à afficher selon le type de produit
+  const getDisplayQuantity = (sale: Sale) => {
+    return isAdvanceProduct(sale.description) ? 0 : sale.quantitySold;
+  };
+  
   // Calculer les totaux
   const totalSellingPrice = sales.reduce((sum, sale) => sum + sale.sellingPrice, 0);
-  const totalQuantitySold = sales.reduce((sum, sale) => sum + sale.quantitySold, 0);
+  const totalQuantitySold = sales.reduce((sum, sale) => {
+    // Pour le total des quantités, on utilise la même logique conditionnelle
+    return sum + (isAdvanceProduct(sale.description) ? 0 : sale.quantitySold);
+  }, 0);
   const totalPurchasePrice = sales.reduce((sum, sale) => sum + (sale.purchasePrice * sale.quantitySold), 0);
   const totalProfit = sales.reduce((sum, sale) => sum + sale.profit, 0);
   
@@ -68,7 +81,7 @@ const SalesTable: React.FC<SalesTableProps> = ({ sales, onRowClick }) => {
                 <TableCell>{formatDate(sale.date)}</TableCell>
                 <TableCell>{sale.description}</TableCell>
                 <TableCell className="text-right">{formatCurrency(sale.sellingPrice)}</TableCell>
-                <TableCell className="text-right">{sale.quantitySold}</TableCell>
+                <TableCell className="text-right">{getDisplayQuantity(sale)}</TableCell>
                 <TableCell className="text-right">{formatCurrency(sale.purchasePrice)}</TableCell>
                 <TableCell className="text-right font-medium">
                   {formatCurrency(sale.profit)}
