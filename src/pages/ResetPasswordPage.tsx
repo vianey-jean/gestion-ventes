@@ -20,6 +20,7 @@ const ResetPasswordPage: React.FC = () => {
   const [emailVerified, setEmailVerified] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; newPassword?: string; confirmPassword?: string }>({});
   const [isLoading, setIsLoading] = useState(false);
+  const [isPasswordValid, setIsPasswordValid] = useState(false);
   
   const validatePassword = () => {
     const hasLowerCase = /[a-z]/.test(newPassword);
@@ -96,6 +97,11 @@ const ResetPasswordPage: React.FC = () => {
     }
   };
   
+  // Gestion du changement de validité du mot de passe
+  const handlePasswordValidityChange = (isValid: boolean) => {
+    setIsPasswordValid(isValid);
+  };
+  
   return (
     <Layout>
       <div className="container mx-auto py-12 px-4">
@@ -164,7 +170,10 @@ const ResetPasswordPage: React.FC = () => {
                       error={errors.newPassword}
                       disabled={isLoading}
                     />
-                    <PasswordStrengthChecker password={newPassword} />
+                    <PasswordStrengthChecker 
+                      password={newPassword}
+                      onValidityChange={handlePasswordValidityChange}
+                    />
                   </div>
                   
                   <div className="space-y-2">
@@ -184,7 +193,7 @@ const ResetPasswordPage: React.FC = () => {
                   <Button
                     type="submit"
                     className="w-full bg-app-red hover:bg-opacity-90"
-                    disabled={isLoading}
+                    disabled={isLoading || !isPasswordValid || !confirmPassword}
                   >
                     {isLoading ? "Traitement..." : "Réinitialiser le mot de passe"}
                   </Button>

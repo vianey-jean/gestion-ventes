@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -33,6 +34,7 @@ const RegisterPage: React.FC = () => {
   const [isEmailChecking, setIsEmailChecking] = useState(false);
   const [isEmailValid, setIsEmailValid] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isPasswordValid, setIsPasswordValid] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -129,6 +131,11 @@ const RegisterPage: React.FC = () => {
     return hasLowerCase && hasUpperCase && hasNumber && hasSpecialChar && hasMinLength;
   };
 
+  // Gestion du changement de validité du mot de passe
+  const handlePasswordValidityChange = (isValid: boolean) => {
+    setIsPasswordValid(isValid);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -208,6 +215,7 @@ const RegisterPage: React.FC = () => {
     formData.confirmPassword &&
     formData.acceptTerms &&
     isEmailValid &&
+    isPasswordValid &&
     !isEmailChecking &&
     Object.keys(errors).filter(key => errors[key]).length === 0;
 
@@ -341,7 +349,10 @@ const RegisterPage: React.FC = () => {
                       onChange={handleChange}
                       error={errors.password}
                     />
-                    <PasswordStrengthChecker password={formData.password} />
+                    <PasswordStrengthChecker 
+                      password={formData.password} 
+                      onValidityChange={handlePasswordValidityChange}
+                    />
                   </div>
 
                   <div className="space-y-2">

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -10,8 +11,8 @@ import PasswordStrengthChecker from '@/components/PasswordStrengthChecker';
 import Layout from '@/components/Layout';
 import axios from 'axios';
 
-  // 🔁 URL de base récupérée depuis le .env
-  const AUTH_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+// 🔁 URL de base récupérée depuis le .env
+const AUTH_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
@@ -24,6 +25,7 @@ const LoginPage: React.FC = () => {
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
   const [emailExists, setEmailExists] = useState(false);
   const [userName, setUserName] = useState('');
+  const [isPasswordValid, setIsPasswordValid] = useState(false);
   
   const handleEmailCheck = async () => {
     if (!email) {
@@ -85,6 +87,11 @@ const LoginPage: React.FC = () => {
     }
   };
   
+  // Gère le changement de validité du mot de passe
+  const handlePasswordValidityChange = (isValid: boolean) => {
+    setIsPasswordValid(isValid);
+  };
+  
   return (
     <Layout >
       <main className="min-h-screen bg-gray-50">
@@ -139,7 +146,10 @@ const LoginPage: React.FC = () => {
                         onChange={(e) => setPassword(e.target.value)}
                         error={errors.password}
                       />
-                      <PasswordStrengthChecker password={password} />
+                      <PasswordStrengthChecker 
+                        password={password} 
+                        onValidityChange={handlePasswordValidityChange}
+                      />
                       <div className="text-sm text-right">
                         <Link to="/reset-password" className="text-app-blue hover:underline">
                           Mot de passe oublié?
@@ -154,7 +164,7 @@ const LoginPage: React.FC = () => {
                     <Button
                       type="submit"
                       className="w-full bg-app-red hover:bg-opacity-90"
-                      disabled={isCheckingEmail}
+                      disabled={isCheckingEmail || (showPasswordField && !isPasswordValid)}
                     >
                       {isCheckingEmail ? "Vérification..." : showPasswordField ? "Connexion" : "Continuer"}
                     </Button>

@@ -1,21 +1,35 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 
 interface PasswordStrengthCheckerProps {
   password: string;
+  onValidityChange?: (isValid: boolean) => void;
 }
 
 /**
  * Composant qui vérifie la force du mot de passe
  * et affiche les critères requis
  */
-const PasswordStrengthChecker: React.FC<PasswordStrengthCheckerProps> = ({ password }) => {
+const PasswordStrengthChecker: React.FC<PasswordStrengthCheckerProps> = ({ 
+  password, 
+  onValidityChange 
+}) => {
   // Vérifie les différents critères du mot de passe
   const hasLowerCase = /[a-z]/.test(password);
   const hasUpperCase = /[A-Z]/.test(password);
   const hasNumber = /[0-9]/.test(password);
   const hasSpecialChar = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password);
   const hasMinLength = password.length >= 8;
+  
+  // Détermine si tous les critères sont remplis
+  const isPasswordValid = hasLowerCase && hasUpperCase && hasNumber && hasSpecialChar && hasMinLength;
+  
+  // Notifie le parent quand la validité change
+  useEffect(() => {
+    if (onValidityChange) {
+      onValidityChange(isPasswordValid);
+    }
+  }, [isPasswordValid, onValidityChange]);
   
   return (
     <section className="mt-2">
