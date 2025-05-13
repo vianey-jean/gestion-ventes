@@ -43,12 +43,17 @@ const AddSaleForm: React.FC<AddSaleFormProps> = ({ isOpen, onClose, editSale }) 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [maxQuantity, setMaxQuantity] = useState(0);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isAdvanceProduct, setIsAdvanceProduct] = useState(false);
 
   // Effet pour initialiser le formulaire avec les données d'une vente existante
   useEffect(() => {
     if (editSale) {
       // Trouver le produit correspondant à la vente
       const product = products.find(p => p.id === editSale.productId);
+      
+      // Vérifier si c'est un produit avance
+      const isAdvance = editSale.description.toLowerCase().includes('avance');
+      setIsAdvanceProduct(isAdvance);
       
       // Initialiser le formulaire avec les données de la vente
       setFormData({
@@ -81,18 +86,28 @@ const AddSaleForm: React.FC<AddSaleFormProps> = ({ isOpen, onClose, editSale }) 
       });
       setSelectedProduct(null);
       setMaxQuantity(0);
+      setIsAdvanceProduct(false);
     }
   }, [editSale, products, isOpen]);
 
   // Fonction pour calculer le profit
   const updateProfit = (price: string, quantity: string) => {
-    if (formData.purchasePrice && price && quantity) {
-      // Calculer le profit = (prix de vente - prix d'achat) * quantité
-      const profit = (Number(price) - Number(formData.purchasePrice)) * Number(quantity);
-      setFormData(prev => ({
-        ...prev,
-        profit: profit.toFixed(2),
-      }));
+    if (formData.purchasePrice && price) {
+      // Pour les produits avance, le profit est calculé sans quantité
+      if (isAdvanceProduct) {
+        const profit = Number(price) - Number(formData.purchasePrice);
+        setFormData(prev => ({
+          ...prev,
+          profit: profit.toFixed(2),
+        }));
+      } else {
+        // Pour les produits normaux, le profit est (prix vente - prix achat) * quantité
+        const profit = (Number(price) - Number(formData.purchasePrice)) * Number(quantity);
+        setFormData(prev => ({
+          ...prev,
+          profit: profit.toFixed(2),
+        }));
+      }
     }
   };
 
@@ -109,21 +124,28 @@ const AddSaleForm: React.FC<AddSaleFormProps> = ({ isOpen, onClose, editSale }) 
 
   // Gestionnaire pour le changement de quantité
   const handleQuantityChange = (quantity: string) => {
-    setFormData(prev => {
-      updateProfit(prev.sellingPrice, quantity);
-      return {
-        ...prev,
-        quantitySold: quantity,
-      };
-    });
+    // Pour les produits avance, on ne change pas la quantité qui reste à 0
+    if (!isAdvanceProduct) {
+      setFormData(prev => {
+        updateProfit(prev.sellingPrice, quantity);
+        return {
+          ...prev,
+          quantitySold: quantity,
+        };
+      });
+    }
   };
 
   // Vérifier si le stock est épuisé
-  const isOutOfStock = selectedProduct && (selectedProduct.quantity === 0 || selectedProduct.quantity === undefined);
+  const isOutOfStock = selectedProduct && !isAdvanceProduct && (selectedProduct.quantity === 0 || selectedProduct.quantity === undefined);
 
   // Gestionnaire pour la sélection d'un produit
   const handleProductSelect = (product: Product) => {
     setSelectedProduct(product);
+    
+    // Vérifier si c'est un produit avance
+    const isAdvance = product.description.toLowerCase().includes('avance');
+    setIsAdvanceProduct(isAdvance);
     
     // Calculer le stock maximum disponible
     const productQuantity = product.quantity !== undefined ? product.quantity : 0;
@@ -137,9 +159,16 @@ const AddSaleForm: React.FC<AddSaleFormProps> = ({ isOpen, onClose, editSale }) 
         productId: String(product.id),
         purchasePrice: product.purchasePrice.toString(),
         sellingPrice: (product.purchasePrice * 1.2).toFixed(2), // Prix de vente suggéré: +20%
-        quantitySold: '1',
+        quantitySold: isAdvance ? '0' : '1', // Pour produits avance, quantité = 0
       };
-      updateProfit(newData.sellingPrice, newData.quantitySold);
+      
+      // Calculer le profit initial
+      if (isAdvance) {
+        newData.profit = (Number(newData.sellingPrice) - Number(newData.purchasePrice)).toFixed(2);
+      } else {
+        newData.profit = ((Number(newData.sellingPrice) - Number(newData.purchasePrice)) * Number(newData.quantitySold)).toFixed(2);
+      }
+      
       return newData;
     });
   };
@@ -147,7 +176,19 @@ const AddSaleForm: React.FC<AddSaleFormProps> = ({ isOpen, onClose, editSale }) 
   // Fonction pour soumettre le formulaire
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedProduct || isOutOfStock) {
+    
+    // Pour les produits non-avance, vérifier le stock
+    if (!isAdvanceProduct && !selectedProduct) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez sélectionner un produit.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Pour les produits non-avance, vérifier le stock disponible
+    if (!isAdvanceProduct && isOutOfStock) {
       toast({
         title: "Erreur",
         description: "Stock épuisé. Impossible d'ajouter cette vente.",
@@ -165,9 +206,11 @@ const AddSaleForm: React.FC<AddSaleFormProps> = ({ isOpen, onClose, editSale }) 
         productId: formData.productId,
         description: formData.description,
         sellingPrice: Number(formData.sellingPrice),
-        quantitySold: Number(formData.quantitySold),
+        quantitySold: isAdvanceProduct ? 0 : Number(formData.quantitySold),
         purchasePrice: Number(formData.purchasePrice),
-        profit: Number(formData.profit),
+        profit: isAdvanceProduct 
+          ? Number(formData.sellingPrice) - Number(formData.purchasePrice)
+          : (Number(formData.sellingPrice) - Number(formData.purchasePrice)) * Number(formData.quantitySold),
       };
 
       // Mettre à jour ou ajouter la vente
@@ -238,6 +281,11 @@ const AddSaleForm: React.FC<AddSaleFormProps> = ({ isOpen, onClose, editSale }) 
             <DialogTitle>{editSale ? 'Modifier la vente' : 'Ajouter une vente'}</DialogTitle>
             <DialogDescription>
               {editSale ? 'Modifiez les détails de la vente.' : 'Enregistrez une nouvelle vente.'}
+              {isAdvanceProduct && (
+                <div className="mt-2 text-amber-600 text-sm font-medium">
+                  Produit d'avance détecté - La quantité sera automatiquement fixée à 0.
+                </div>
+              )}
             </DialogDescription>
           </DialogHeader>
           
@@ -300,8 +348,8 @@ const AddSaleForm: React.FC<AddSaleFormProps> = ({ isOpen, onClose, editSale }) 
                   quantity={formData.quantitySold}
                   maxQuantity={maxQuantity}
                   onChange={handleQuantityChange}
-                  disabled={isSubmitting || isOutOfStock}
-                  showAvailableStock={!!selectedProduct}
+                  disabled={isSubmitting || isOutOfStock || isAdvanceProduct}
+                  showAvailableStock={!!selectedProduct && !isAdvanceProduct}
                 />
                 
                 {/* Bénéfice calculé */}
@@ -317,6 +365,11 @@ const AddSaleForm: React.FC<AddSaleFormProps> = ({ isOpen, onClose, editSale }) 
                     disabled
                     className={isProfitNegative ? "border-red-500 bg-red-50" : ""}
                   />
+                  {isAdvanceProduct && (
+                    <p className="text-xs text-amber-600">
+                      Pour les produits d'avance, le bénéfice est calculé sans tenir compte de la quantité.
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -350,11 +403,11 @@ const AddSaleForm: React.FC<AddSaleFormProps> = ({ isOpen, onClose, editSale }) 
               <Button
                 type="submit"
                 className="bg-app-green hover:bg-opacity-90"
-                disabled={isSubmitting || (!editSale && (!selectedProduct || isOutOfStock))}
+                disabled={isSubmitting || (!editSale && (!selectedProduct || (isOutOfStock && !isAdvanceProduct)))}
               >
                 {isSubmitting 
                   ? "Enregistrement..." 
-                  : isOutOfStock && !editSale
+                  : isOutOfStock && !isAdvanceProduct && !editSale
                     ? "Stock épuisé" 
                     : editSale 
                       ? "Mettre à jour" 

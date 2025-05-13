@@ -34,7 +34,7 @@ const SalesTable: React.FC<SalesTableProps> = ({ sales, onRowClick }) => {
   
   // Vérifier si le produit est une avance
   const isAdvanceProduct = (description: string) => {
-    return description.includes("Avance Perruque") || description.includes("Tissages");
+    return description.includes("Avance Perruque ou Tissages");
   };
   
   // Obtenir la quantité à afficher selon le type de produit
