@@ -25,6 +25,10 @@ interface ExportSalesDialogProps {
   onClose: () => void;
 }
 
+/**
+ * Composant pour l'exportation des ventes en PDF
+ * Permet de sélectionner un mois et une année pour l'exportation
+ */
 const ExportSalesDialog: React.FC<ExportSalesDialogProps> = ({ isOpen, onClose }) => {
   const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth());
   const [selectedYear, setSelectedYear] = useState<number>(currentYear);
@@ -43,7 +47,18 @@ const ExportSalesDialog: React.FC<ExportSalesDialogProps> = ({ isOpen, onClose }
     setIsConfirming(true);
   };
 
-  // Gérer l'exportation
+  /**
+   * Vérifie si le produit est une avance
+   * @param description - Description du produit
+   * @returns true si c'est une avance, false sinon
+   */
+  const isAdvanceProduct = (description: string) => {
+    return description.toLowerCase().includes('avance');
+  };
+
+  /**
+   * Gère l'exportation des ventes en PDF
+   */
   const handleExport = async () => {
     setIsLoading(true);
     
@@ -89,15 +104,21 @@ const ExportSalesDialog: React.FC<ExportSalesDialogProps> = ({ isOpen, onClose }
     }
   };
 
-  // Générer le PDF
+  /**
+   * Génère le PDF avec les données des ventes
+   * @param sales - Liste des ventes à exporter
+   * @param month - Mois sélectionné (0-11)
+   * @param year - Année sélectionnée
+   */
   const generatePDF = (sales: Sale[], month: number, year: number) => {
     const doc = new jsPDF();
     doc.text(`Rapport de ventes – ${monthNames[month]} ${year}`, 14, 20);
   
     // Préparer le corps du tableau
     const tableBody = sales.map(sale => {
+      // Obtenir les valeurs formatées
       const achatPrice = typeof sale.purchasePrice === 'number' ? sale.purchasePrice : 0;
-      const quantity = typeof sale.quantitySold === 'number' ? sale.quantitySold : 0;
+      const quantity = isAdvanceProduct(sale.description) ? 0 : (typeof sale.quantitySold === 'number' ? sale.quantitySold : 0);
       const ventePrice = typeof sale.sellingPrice === 'number' ? sale.sellingPrice : 0;
       const profit = typeof sale.profit === 'number' ? sale.profit : 0;
   
@@ -111,21 +132,30 @@ const ExportSalesDialog: React.FC<ExportSalesDialogProps> = ({ isOpen, onClose }
       ];
     });
   
-    // Calcul des totaux
-    const totalQuantite = sales.reduce((sum, sale) => sum + (typeof sale.quantitySold === 'number' ? sale.quantitySold : 0), 0);
-    const totalVente = sales.reduce((sum, sale) => sum + (typeof sale.sellingPrice === 'number' ? sale.sellingPrice * sale.quantitySold : 0), 0);
+    // Calcul des totaux - exactement comme dans SalesTable
+    const totalQuantite = sales.reduce((sum, sale) => {
+      return sum + (isAdvanceProduct(sale.description) ? 0 : (typeof sale.quantitySold === 'number' ? sale.quantitySold : 0));
+    }, 0);
+    
+    const totalVente = sales.reduce((sum, sale) => {
+      return sum + (typeof sale.sellingPrice === 'number' ? sale.sellingPrice : 0);
+    }, 0);
+    
     const totalAchat = sales.reduce((sum, sale) => {
-      const quantite = typeof sale.quantitySold === 'number' ? sale.quantitySold : 0;
+      const quantite = isAdvanceProduct(sale.description) ? 0 : (typeof sale.quantitySold === 'number' ? sale.quantitySold : 0);
       const prixAchat = typeof sale.purchasePrice === 'number' ? sale.purchasePrice : 0;
       return sum + (prixAchat * quantite);
     }, 0);
-    const totalProfit = sales.reduce((sum, sale) => sum + (typeof sale.profit === 'number' ? sale.profit : 0), 0);
+    
+    const totalProfit = sales.reduce((sum, sale) => {
+      return sum + (typeof sale.profit === 'number' ? sale.profit : 0);
+    }, 0);
   
     // Ajouter la ligne des totaux avec le total des prix d'achat
     tableBody.push([
       '', // Date vide
       'TOTAL',
-      totalAchat.toFixed(2), // Total des prix d'achat
+      totalAchat.toFixed(2),
       totalQuantite,
       totalVente.toFixed(2),
       totalProfit.toFixed(2),
@@ -135,6 +165,23 @@ const ExportSalesDialog: React.FC<ExportSalesDialogProps> = ({ isOpen, onClose }
       startY: 30,
       head: [['Date', 'Produit', 'Prix Achat (€)', 'Quantité', 'Prix Vendu (€)', 'Bénéfice (€)']],
       body: tableBody,
+      foot: [['', '', '', '', '', '']],
+      headStyles: {
+        fillColor: [51, 51, 51],
+        textColor: [255, 255, 255],
+        fontStyle: 'bold'
+      },
+      footStyles: {
+        fillColor: [255, 255, 255]
+      },
+      didDrawCell: (data) => {
+        // Colorer la dernière ligne (totaux) en rouge
+        if (data.row.index === tableBody.length - 1) {
+          doc.setTextColor(234, 56, 76); // Rouge (#ea384c)
+        } else {
+          doc.setTextColor(0, 0, 0); // Noir par défaut
+        }
+      }
     });
   
     doc.save(`ventes_${monthNames[month]}_${year}.pdf`);
