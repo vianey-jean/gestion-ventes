@@ -114,13 +114,18 @@ const ExportSalesDialog: React.FC<ExportSalesDialogProps> = ({ isOpen, onClose }
     // Calcul des totaux
     const totalQuantite = sales.reduce((sum, sale) => sum + (typeof sale.quantitySold === 'number' ? sale.quantitySold : 0), 0);
     const totalVente = sales.reduce((sum, sale) => sum + (typeof sale.sellingPrice === 'number' ? sale.sellingPrice * sale.quantitySold : 0), 0);
+    const totalAchat = sales.reduce((sum, sale) => {
+      const quantite = typeof sale.quantitySold === 'number' ? sale.quantitySold : 0;
+      const prixAchat = typeof sale.purchasePrice === 'number' ? sale.purchasePrice : 0;
+      return sum + (prixAchat * quantite);
+    }, 0);
     const totalProfit = sales.reduce((sum, sale) => sum + (typeof sale.profit === 'number' ? sale.profit : 0), 0);
   
-    // Ajouter la ligne des totaux
+    // Ajouter la ligne des totaux avec le total des prix d'achat
     tableBody.push([
       '', // Date vide
       'TOTAL',
-      '', // Pas de total achat
+      totalAchat.toFixed(2), // Total des prix d'achat
       totalQuantite,
       totalVente.toFixed(2),
       totalProfit.toFixed(2),
