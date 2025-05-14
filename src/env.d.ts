@@ -1,21 +1,20 @@
-
-/// <reference types="vite/client" />
-
+/**
+ * Types d'environnement pour TypeScript
+ * Définit les types pour les variables d'environnement accessibles via import.meta.env
+ */
 interface ImportMetaEnv {
   readonly VITE_API_BASE_URL: string;
-  readonly VITE_API_URL: string;
-  // add more env vars here if needed
+  // Ajoutez d'autres variables d'environnement ici si nécessaire
 }
 
 interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
 
-// Make process.env available in TypeScript
-declare namespace NodeJS {
-  interface ProcessEnv {
-    VITE_API_BASE_URL: string;
-    VITE_API_URL: string;
-    // add more env vars here if needed
+interface Window {
+  process: {
+    env: {
+      [key: string]: string | undefined;
+    }
   }
 }

@@ -16,15 +16,23 @@ import RegisterPage from "./pages/RegisterPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import DashboardPage from "./pages/DashboardPage";
 import NotFound from "./pages/NotFound";
+import Index from "./pages/Index";
 
 const queryClient = new QueryClient();
 
-// Component to apply the auto-logout functionality
+/**
+ * Composant qui encapsule l'application avec la fonctionnalité d'auto-déconnexion
+ * Déconnecte automatiquement l'utilisateur après une période d'inactivité
+ */
 const AutoLogoutWrapper = ({ children }: { children: React.ReactNode }) => {
   useAutoLogout();
   return <>{children}</>;
 };
 
+/**
+ * Composant racine de l'application
+ * Configure les providers pour l'état global et les routes de l'application
+ */
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -36,7 +44,8 @@ const App = () => (
               <Sonner />
               <BrowserRouter>
                 <Routes>
-                  <Route path="/" element={<HomePage />} />
+                  <Route path="/" element={<Index />} />
+                  <Route path="/home" element={<HomePage />} />
                   <Route path="/about" element={<AboutPage />} />
                   <Route path="/contact" element={<ContactPage />} />
                   <Route path="/login" element={<LoginPage />} />

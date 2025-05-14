@@ -1,8 +1,6 @@
+
 import React, { useEffect, useState } from 'react';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useApp } from '@/contexts/AppContext';
 import { Sale } from '@/types';
 import SalesTable from '@/components/dashboard/SalesTable';
@@ -14,24 +12,29 @@ import { PlusCircle, Edit, ShoppingCart, Loader2, FileText } from 'lucide-react'
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
+import StatCard from '@/components/dashboard/StatCard';
+import ActionButton from '@/components/dashboard/ActionButton';
+import useCurrencyFormatter from '@/hooks/use-currency-formatter';
 
- // Noms des mois en français
- const monthNames = [
+/**
+ * Noms des mois en français pour l'affichage
+ */
+const monthNames = [
   'JANVIER', 'FÉVRIER', 'MARS', 'AVRIL', 'MAI', 'JUIN',
   'JUILLET', 'AOÛT', 'SEPTEMBRE', 'OCTOBRE', 'NOVEMBRE', 'DÉCEMBRE'
 ];
 
-
+/**
+ * Composant principal pour la gestion des ventes de produits
+ * Affiche les statistiques, la liste des ventes, et permet d'ajouter/modifier des ventes et produits
+ */
 const VentesProduits: React.FC = () => {
   // Récupérer les données et fonctions du contexte
   const { 
-    currentMonth,
-    currentYear, 
     sales, 
     products, 
     isLoading: appLoading,
     fetchSales, 
-    exportMonth,
     fetchProducts,
     selectedMonth,
     selectedYear,
@@ -39,6 +42,7 @@ const VentesProduits: React.FC = () => {
     setSelectedYear
   } = useApp();
   const { toast } = useToast();
+  const { formatEuro } = useCurrencyFormatter();
   
   // États pour gérer les dialogues
   const [addSaleDialogOpen, setAddSaleDialogOpen] = React.useState(false);
@@ -56,7 +60,7 @@ const VentesProduits: React.FC = () => {
   const availableProducts = products.filter(p => p.quantity > 0);
   const totalStock = products.reduce((sum, product) => sum + product.quantity, 0);
 
-  // Filtrer les ventes pour le mois et l'année en cours
+  // Filtrer les ventes pour le mois et l'année sélectionnés
   useEffect(() => {
     // Assurez-vous de filtrer les ventes pour n'afficher que celles du mois et de l'année sélectionnés
     const currentDate = new Date();
@@ -131,104 +135,90 @@ const VentesProduits: React.FC = () => {
     <div className="mt-6">
       {/* Affichage des statistiques */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <Card className='card-3d'>
-          <CardHeader className="pb-2 ">
-            <CardTitle className="text-lg">Total des bénéfices</CardTitle>
-            <CardDescription>Du mois en cours</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold text-app-green">
-              {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(totalProfit)}
-            </p>
-          </CardContent>
-        </Card>
+        <StatCard 
+          title="Total des bénéfices"
+          description="Du mois en cours"
+          value={formatEuro(totalProfit)}
+          valueClassName="text-app-green"
+        />
         
-        <Card className='card-3d'>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg">Produits vendus</CardTitle>
-            <CardDescription>Nombre total d'unités</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold text-app-blue">{totalProductsSold}</p>
-          </CardContent>
-        </Card>
+        <StatCard 
+          title="Produits vendus"
+          description="Nombre total d'unités"
+          value={totalProductsSold}
+          valueClassName="text-app-blue"
+        />
         
-        <Card className='card-3d'>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg">Produits disponibles</CardTitle>
-            <CardDescription>Dans l'inventaire</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold text-app-purple">{availableProducts.length}</p>
-          </CardContent>
-        </Card>
+        <StatCard 
+          title="Produits disponibles"
+          description="Dans l'inventaire"
+          value={availableProducts.length}
+          valueClassName="text-app-purple"
+        />
         
-        <Card className='card-3d'>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg">Stock total</CardTitle>
-            <CardDescription>Toutes unités confondues</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold text-gray-700">{totalStock}</p>
-          </CardContent>
-        </Card>
+        <StatCard 
+          title="Stock total"
+          description="Toutes unités confondues"
+          value={totalStock}
+          valueClassName="text-gray-700"
+        />
       </div>
       
       {/* Boutons d'action */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
-        <h2 className="text-2xl font-bold ">Ventes du mois</h2>
+        <h2 className="text-2xl font-bold">Ventes du mois</h2>
         <div className="mt-4 sm:mt-0 flex items-center">
-            <h2 className="text-xl font-bold text-app-red mr-4">
-              {monthNames[selectedMonth - 1]} {selectedYear}
-            </h2>
-            <Button
-              onClick={handleOpenExportDialog}
-              variant="outline"
-              className="flex items-center border-gray-300 mr-2 card-3d"
-            >
-              <FileText className="mr-2 h-4 w-4" />
-              Exporter
-            </Button>
-          </div>
+          <h2 className="text-xl font-bold text-app-red mr-4">
+            {monthNames[selectedMonth - 1]} {selectedYear}
+          </h2>
+          <ActionButton
+            icon={FileText}
+            onClick={handleOpenExportDialog}
+            variant="outline"
+            className="border-gray-300 mr-2"
+          >
+            Exporter
+          </ActionButton>
+        </div>
         <div className="flex flex-wrap gap-2 mt-4 sm:mt-0">
-          <Button
+          <ActionButton
+            icon={PlusCircle}
             onClick={() => setAddProductDialogOpen(true)}
-            className="bg-app-red hover:bg-opacity-90 card-3d"
+            className="bg-app-red hover:bg-opacity-90"
           >
-            <PlusCircle className="mr-2 h-4 w-4 " />
             Ajouter un produit
-          </Button>
+          </ActionButton>
           
-          <Button
+          <ActionButton
+            icon={Edit}
             onClick={() => setEditProductDialogOpen(true)}
-            className="bg-app-blue hover:bg-opacity-90 card-3d"
+            className="bg-app-blue hover:bg-opacity-90"
           >
-            <Edit className="mr-2 h-4 w-4" />
             Modifier un produit
-          </Button>
+          </ActionButton>
           
-          <Button
+          <ActionButton
+            icon={ShoppingCart}
             onClick={() => {
               setSelectedSale(undefined);
               setAddSaleDialogOpen(true);
             }}
-            className="bg-app-green hover:bg-opacity-90 card-3d"
+            className="bg-app-green hover:bg-opacity-90"
           >
-            <ShoppingCart className="mr-2 h-4 w-4" />
             Ajouter une vente
-          </Button>
+          </ActionButton>
         </div>
       </div>
       
-      {/* Tableau des ventes avec indicateur de chargement */}
-      {appLoading ? (
+      {/* Indicateur de chargement */}
+      {appLoading && (
         <div className="flex justify-center items-center my-4">
           <Loader2 className="h-6 w-6 animate-spin text-app-blue mr-2" />
           <p>Chargement des données...</p>
         </div>
-      ) : null}
+      )}
       
-      {/* Tableau des ventes - maintenant avec les ventes filtrées */}
+      {/* Tableau des ventes */}
       <SalesTable 
         sales={filteredSales} 
         onRowClick={handleRowClick} 
@@ -281,8 +271,7 @@ const VentesProduits: React.FC = () => {
                     <p className="text-sm text-gray-500">Stock: {product.quantity}</p>
                   </div>
                   <p className="font-medium">
-                    {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' })
-                      .format(product.purchasePrice)}
+                    {formatEuro(product.purchasePrice)}
                   </p>
                 </div>
               ))}
