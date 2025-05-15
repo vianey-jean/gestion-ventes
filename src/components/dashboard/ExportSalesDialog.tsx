@@ -167,21 +167,25 @@ const ExportSalesDialog: React.FC<ExportSalesDialogProps> = ({ isOpen, onClose }
       body: tableBody,
       foot: [['', '', '', '', '', '']],
       headStyles: {
-        fillColor: [51, 51, 51],
+        fillColor: [0, 0, 255],
         textColor: [255, 255, 255],
         fontStyle: 'bold'
       },
       footStyles: {
-        fillColor: [255, 255, 255]
+        fillColor: [255, 255, 255],
+        textColor: [255, 0, 0],
+        fontStyle: 'bold'
       },
       didDrawCell: (data) => {
         // Colorer la dernière ligne (totaux) en rouge
         if (data.row.index === tableBody.length - 1) {
-          doc.setTextColor(234, 56, 76); // Rouge (#ea384c)
+           doc.setTextColor(234, 56, 76);        // Rouge
+           doc.setFont(undefined, 'bold');       // Gras
+           doc.setFillColor(240, 240, 240);      // Fond gris clair
         } else {
-          doc.setTextColor(0, 0, 0); // Noir par défaut
-        }
-      }
+          doc.setTextColor(0, 0, 0);            // Noir
+          doc.setFont(undefined, 'normal');     // Normal
+         }}
     });
   
     doc.save(`ventes_${monthNames[month]}_${year}.pdf`);
