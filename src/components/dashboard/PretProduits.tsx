@@ -418,14 +418,14 @@ const PretProduits: React.FC = () => {
             <Table className='card-3d'>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="font-bold">Date</TableHead>
-                  <TableHead className="font-bold">Description</TableHead>
-                  <TableHead className="font-bold">Nom</TableHead>
-                  <TableHead className="text-right font-bold">Prix du produit vendu</TableHead>
-                  <TableHead className="text-right font-bold">Avance Reçue</TableHead>
-                  <TableHead className="text-right font-bold">Reste</TableHead>
-                  <TableHead className="text-center font-bold">Paiement</TableHead>
-                  <TableHead className="text-center font-bold">Actions</TableHead>
+                  <TableHead className="font-bold text-red-600">Date</TableHead>
+                  <TableHead className="font-bold text-red-600">Description</TableHead>
+                  <TableHead className="font-bold text-red-600">Nom</TableHead>
+                  <TableHead className="text-right font-bold text-red-600">Prix du produit vendu</TableHead>
+                  <TableHead className="text-right font-bold text-red-600">Avance Reçue</TableHead>
+                  <TableHead className="text-right font-bold text-red-600">Reste</TableHead>
+                  <TableHead className="text-center font-bold text-red-600">Paiement</TableHead>
+                  <TableHead className="text-center font-bold text-red-600">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

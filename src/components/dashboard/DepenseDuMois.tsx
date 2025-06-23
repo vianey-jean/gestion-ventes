@@ -354,12 +354,12 @@ const DepenseDuMois = () => {
         <Table className={isMobile ? "table-responsive-stack" : ""}>
           <TableHeader>
             <TableRow>
-              <TableHead className="font-bold">Date</TableHead>
-              <TableHead className="font-bold">Description</TableHead>
-              <TableHead className="font-bold">Catégorie</TableHead>
-              <TableHead className="text-right font-bold ">Débit</TableHead>
-              <TableHead className="text-right font-bold ">Crédit</TableHead>
-              <TableHead className="text-right font-bold ">Actions</TableHead>
+              <TableHead className="font-bold text-red-600">Date</TableHead>
+              <TableHead className="font-bold text-red-600">Description</TableHead>
+              <TableHead className="font-bold text-red-600">Catégorie</TableHead>
+              <TableHead className="text-right font-bold text-red-600">Débit</TableHead>
+              <TableHead className="text-right font-bold text-red-600">Crédit</TableHead>
+              <TableHead className="text-right font-bold text-red-600">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

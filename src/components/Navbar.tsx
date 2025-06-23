@@ -50,8 +50,9 @@ const Navbar: React.FC = () => {
                 
                 {isAuthenticated && (
                   <Link to="/dashboard" className="group inline-flex items-center px-4 py-2 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all duration-200">
-                    <LayoutDashboard className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform" />
-                    Admin
+                    <LayoutDashboard className="mr-2 h-4 w-4 text-blue-600 group-hover:scale-110 transition-transform" />
+                    <p className="text-blue-600 bg-transparent">Tableau de Bord</p>
+
                   </Link>
                 )}
 

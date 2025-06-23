@@ -254,11 +254,11 @@ const PretFamilles: React.FC = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="font-bold">Nom</TableHead>
-                  <TableHead className="text-right font-bold">Prêt Total</TableHead>
-                  <TableHead className="text-right font-bold">Solde Restant</TableHead>
-                  <TableHead className="text-right font-bold">Dernier Remboursement</TableHead>
-                  <TableHead className="text-right font-bold">Date</TableHead>
+                  <TableHead className="font-bold text-red-600">Nom</TableHead>
+                  <TableHead className="text-right font-bold text-red-600">Prêt Total</TableHead>
+                  <TableHead className="text-right font-bold text-red-600">Solde Restant</TableHead>
+                  <TableHead className="text-right font-bold text-red-600">Dernier Remboursement</TableHead>
+                  <TableHead className="text-right font-bold text-red-600">Date</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

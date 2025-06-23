@@ -55,28 +55,28 @@ const SalesTable: React.FC<SalesTableProps> = ({ sales, onRowClick }) => {
         <TableRow>
           <ModernTableHead>
             <div className="flex items-center space-x-2">
-              <Calendar className="h-4 w-4" />
-              <span>Date</span>
+              <Calendar className="h-4 w-4 text-red-600" />
+              <span className='text-red-600'>Date</span>
             </div>
           </ModernTableHead>
           <ModernTableHead>
             <div className="flex items-center space-x-2">
-              <Package className="h-4 w-4" />
-              <span>Description</span>
+              <Package className="h-4 w-4 text-red-600" />
+              <span className='text-red-600'>Description</span>
             </div>
           </ModernTableHead>
           <ModernTableHead className="text-right">
             <div className="flex items-center justify-end space-x-2">
-              <Euro className="h-4 w-4" />
-              <span>Prix de vente</span>
+              <Euro className="h-4 w-4 text-red-600" />
+              <span className='text-red-600'>Prix de vente</span>
             </div>
           </ModernTableHead>
-          <ModernTableHead className="text-right">Quantité</ModernTableHead>
-          <ModernTableHead className="text-right">Prix d'achat</ModernTableHead>
+          <ModernTableHead className="text-right text-red-600">Quantité</ModernTableHead>
+          <ModernTableHead className="text-right text-red-600">Prix d'achat</ModernTableHead>
           <ModernTableHead className="text-right">
             <div className="flex items-center justify-end space-x-2">
-              <TrendingUp className="h-4 w-4" />
-              <span>Bénéfice</span>
+              <TrendingUp className="h-4 w-4 text-red-600" />
+              <span className='text-red-600'>Bénéfice</span>
             </div>
           </ModernTableHead>
         </TableRow>
