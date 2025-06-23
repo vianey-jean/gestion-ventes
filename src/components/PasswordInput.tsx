@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Input } from '@/components/ui/input';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Shield } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface PasswordInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
@@ -16,29 +16,58 @@ const PasswordInput: React.FC<PasswordInputProps> = ({ className, error, ...prop
   };
   
   return (
-    <div className="relative">
-      <Input
-        type={showPassword ? "text" : "password"}
-        className={cn(
-          "pr-10",
-          error && "border-red-500 focus-visible:ring-red-500",
-          className
-        )}
-        {...props}
-      />
-      <button
-        type="button"
-        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
-        onClick={togglePasswordVisibility}
-      >
-        {showPassword ? (
-          <EyeOff className="h-4 w-4" />
-        ) : (
-          <Eye className="h-4 w-4" />
-        )}
-      </button>
+    <div className="relative group">
+      <div className="relative">
+        <Input
+          type={showPassword ? "text" : "password"}
+          className={cn(
+            "pl-10 pr-12 h-12 rounded-xl border-2 transition-all duration-200",
+            "focus:border-purple-500 focus:ring-purple-500/20 focus:ring-4",
+            "group-hover:border-purple-300",
+            error && "border-red-500 focus:border-red-500 focus:ring-red-500/20",
+            className
+          )}
+          {...props}
+        />
+        
+        {/* Security icon */}
+        <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+          <Shield className={cn(
+            "h-5 w-5 transition-colors duration-200",
+            error ? "text-red-400" : "text-purple-400 group-hover:text-purple-500"
+          )} />
+        </div>
+        
+        {/* Toggle button */}
+        <button
+          type="button"
+          className={cn(
+            "absolute right-3 top-1/2 transform -translate-y-1/2 p-1 rounded-lg",
+            "hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all duration-200",
+            "focus:outline-none focus:ring-2 focus:ring-purple-500/20",
+            error && "hover:bg-red-50 dark:hover:bg-red-900/20"
+          )}
+          onClick={togglePasswordVisibility}
+        >
+          {showPassword ? (
+            <EyeOff className={cn(
+              "h-5 w-5 transition-colors duration-200",
+              error ? "text-red-400 hover:text-red-500" : "text-gray-400 hover:text-purple-500"
+            )} />
+          ) : (
+            <Eye className={cn(
+              "h-5 w-5 transition-colors duration-200",
+              error ? "text-red-400 hover:text-red-500" : "text-gray-400 hover:text-purple-500"
+            )} />
+          )}
+        </button>
+      </div>
+      
       {error && (
-        <p className="mt-1 text-sm text-red-500">{error}</p>
+        <div className="mt-2 flex items-center animate-in fade-in-50 duration-200">
+          <div className="w-1 h-1 bg-red-500 rounded-full mr-2"></div>
+          <p className="text-sm text-red-500 font-medium">{error}</p>
+        </div>
       )}
     </div>
   );

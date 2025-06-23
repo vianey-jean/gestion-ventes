@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import PasswordInput from '@/components/PasswordInput';
 import PasswordStrengthChecker from '@/components/PasswordStrengthChecker';
 import Layout from '@/components/Layout';
+import { UserPlus, Mail, User, Phone, MapPin, Shield, Sparkles } from 'lucide-react';
 
 const RegisterPage: React.FC = () => {
   const navigate = useNavigate();
@@ -43,7 +44,6 @@ const RegisterPage: React.FC = () => {
       [name]: type === 'checkbox' ? checked : value,
     });
 
-    // Clear error when field is edited
     if (errors[name]) {
       setErrors({
         ...errors,
@@ -51,7 +51,6 @@ const RegisterPage: React.FC = () => {
       });
     }
 
-    // Reset email validation when email is changed
     if (name === 'email') {
       setIsEmailValid(true);
     }
@@ -63,7 +62,6 @@ const RegisterPage: React.FC = () => {
       gender: value,
     });
 
-    // Clear error when field is edited
     if (errors.gender) {
       setErrors({
         ...errors,
@@ -74,7 +72,7 @@ const RegisterPage: React.FC = () => {
 
   const validateEmail = async () => {
     if (!formData.email) {
-      setIsEmailValid(true); // Reset to true if email is empty
+      setIsEmailValid(true);
       return;
     }
 
@@ -131,7 +129,6 @@ const RegisterPage: React.FC = () => {
     return hasLowerCase && hasUpperCase && hasNumber && hasSpecialChar && hasMinLength;
   };
 
-  // Gestion du changement de validité du mot de passe
   const handlePasswordValidityChange = (isValid: boolean) => {
     setIsPasswordValid(isValid);
   };
@@ -139,11 +136,9 @@ const RegisterPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Reset errors
     setErrors({});
     setIsSubmitting(true);
 
-    // Validate all fields
     const newErrors: Record<string, string> = {};
 
     if (!formData.firstName) newErrors.firstName = 'Le prénom est requis';
@@ -156,35 +151,29 @@ const RegisterPage: React.FC = () => {
     if (!formData.confirmPassword) newErrors.confirmPassword = 'La confirmation du mot de passe est requise';
     if (!formData.acceptTerms) newErrors.acceptTerms = 'Vous devez accepter les conditions';
 
-    // Email validation
     if (formData.email && !/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = 'Veuillez entrer un email valide';
     }
 
-    // Password validation
     if (formData.password && !validatePassword()) {
       newErrors.password = 'Le mot de passe ne répond pas aux exigences de sécurité';
     }
 
-    // Confirm password validation
     if (formData.password && formData.confirmPassword && formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = 'Les mots de passe ne correspondent pas';
     }
 
-    // If there are errors, set them and stop form submission
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       setIsSubmitting(false);
       return;
     }
 
-    // Check if email is already used
     if (!isEmailValid) {
       setIsSubmitting(false);
       return;
     }
 
-    // Submit form
     const success = await register({
       email: formData.email,
       password: formData.password,
@@ -203,7 +192,6 @@ const RegisterPage: React.FC = () => {
     setIsSubmitting(false);
   };
 
-  // Compute if the form is valid and the button should be enabled
   const isFormValid =
     formData.firstName &&
     formData.lastName &&
@@ -221,193 +209,312 @@ const RegisterPage: React.FC = () => {
 
   return (
     <Layout>
-      <div className="container mx-auto py-12 px-4">
-        <div className="max-w-2xl mx-auto">
-          <Card>
-            <CardHeader className="space-y-1">
-              <CardTitle className="text-2xl font-bold text-center">Inscription</CardTitle>
-              <CardDescription className="text-center">
-                Créez un compte pour accéder à toutes les fonctionnalités
+      <div className="min-h-screen bg-gradient-to-br from-violet-50 via-purple-50 to-fuchsia-100 dark:from-gray-900 dark:via-purple-900/20 dark:to-slate-900 py-12 px-4">
+        {/* Background decorations */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute top-1/4 left-1/6 w-72 h-72 bg-purple-400/20 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-1/4 right-1/6 w-72 h-72 bg-pink-400/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-r from-violet-400/10 to-fuchsia-400/10 rounded-full blur-3xl"></div>
+        </div>
+
+        <div className="relative container mx-auto max-w-4xl">
+          <Card className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl border-0 shadow-2xl">
+            <CardHeader className="text-center pb-8 pt-10">
+              <div className="flex justify-center mb-6">
+                <div className="w-20 h-20 bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 rounded-2xl flex items-center justify-center shadow-lg">
+                  <UserPlus className="h-10 w-10 text-white" />
+                </div>
+              </div>
+              <CardTitle className="text-3xl font-bold bg-gradient-to-r from-violet-600 to-fuchsia-600 bg-clip-text text-transparent">
+                Créer un compte
+              </CardTitle>
+              <CardDescription className="text-gray-600 dark:text-gray-300 text-lg mt-2">
+                Rejoignez notre communauté et découvrez toutes nos fonctionnalités
               </CardDescription>
             </CardHeader>
 
             <form onSubmit={handleSubmit}>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="firstName">Prénom</Label>
+              <CardContent className="space-y-8 px-8">
+                {/* Personal Info Section */}
+                <div className="space-y-6">
+                  <div className="flex items-center gap-2 mb-4">
+                    <User className="h-5 w-5 text-purple-600" />
+                    <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">Informations personnelles</h3>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-3">
+                      <Label htmlFor="firstName" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                        Prénom
+                      </Label>
+                      <Input
+                        id="firstName"
+                        name="firstName"
+                        placeholder="Jean"
+                        value={formData.firstName}
+                        onChange={handleChange}
+                        className={`h-12 bg-white/50 dark:bg-gray-700/50 border-2 rounded-xl transition-all duration-200 ${
+                          errors.firstName ? "border-red-500" : "border-purple-200 dark:border-purple-700 focus:border-purple-500"
+                        } focus:ring-4 focus:ring-purple-500/20`}
+                      />
+                      {errors.firstName && (
+                        <p className="text-sm text-red-500 flex items-center gap-2">
+                          <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                          {errors.firstName}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="space-y-3">
+                      <Label htmlFor="lastName" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                        Nom
+                      </Label>
+                      <Input
+                        id="lastName"
+                        name="lastName"
+                        placeholder="Dupont"
+                        value={formData.lastName}
+                        onChange={handleChange}
+                        className={`h-12 bg-white/50 dark:bg-gray-700/50 border-2 rounded-xl transition-all duration-200 ${
+                          errors.lastName ? "border-red-500" : "border-purple-200 dark:border-purple-700 focus:border-purple-500"
+                        } focus:ring-4 focus:ring-purple-500/20`}
+                      />
+                      {errors.lastName && (
+                        <p className="text-sm text-red-500 flex items-center gap-2">
+                          <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                          {errors.lastName}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <Label htmlFor="email" className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                      <Mail className="h-4 w-4" />
+                      Adresse email
+                    </Label>
                     <Input
-                      id="firstName"
-                      name="firstName"
-                      placeholder="Jean"
-                      value={formData.firstName}
+                      id="email"
+                      name="email"
+                      type="email"
+                      placeholder="exemple@email.com"
+                      value={formData.email}
                       onChange={handleChange}
-                      className={errors.firstName ? "border-red-500" : ""}
+                      onBlur={validateEmail}
+                      disabled={isEmailChecking}
+                      className={`h-12 bg-white/50 dark:bg-gray-700/50 border-2 rounded-xl transition-all duration-200 ${
+                        errors.email ? "border-red-500" : "border-purple-200 dark:border-purple-700 focus:border-purple-500"
+                      } focus:ring-4 focus:ring-purple-500/20`}
                     />
-                    {errors.firstName && (
-                      <p className="text-sm text-red-500">{errors.firstName}</p>
+                    {errors.email && (
+                      <p className="text-sm text-red-500 flex items-center gap-2">
+                        <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                        {errors.email}
+                      </p>
+                    )}
+                    {isEmailChecking && (
+                      <p className="text-sm text-purple-600 flex items-center gap-2">
+                        <div className="w-4 h-4 border-2 border-purple-600/30 border-t-purple-600 rounded-full animate-spin"></div>
+                        Vérification de l'email...
+                      </p>
                     )}
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="lastName">Nom</Label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-3">
+                      <Label htmlFor="gender" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                        Genre
+                      </Label>
+                      <Select
+                        value={formData.gender}
+                        onValueChange={handleSelectChange}
+                      >
+                        <SelectTrigger className={`h-12 bg-white/50 dark:bg-gray-700/50 border-2 rounded-xl transition-all duration-200 ${
+                          errors.gender ? "border-red-500" : "border-purple-200 dark:border-purple-700"
+                        }`}>
+                          <SelectValue placeholder="Sélectionnez votre genre" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="male">Homme</SelectItem>
+                          <SelectItem value="female">Femme</SelectItem>
+                          <SelectItem value="other">Autre</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      {errors.gender && (
+                        <p className="text-sm text-red-500 flex items-center gap-2">
+                          <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                          {errors.gender}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="space-y-3">
+                      <Label htmlFor="phone" className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                        <Phone className="h-4 w-4" />
+                        Téléphone
+                      </Label>
+                      <Input
+                        id="phone"
+                        name="phone"
+                        placeholder="+33 6 12 34 56 78"
+                        value={formData.phone}
+                        onChange={handleChange}
+                        className={`h-12 bg-white/50 dark:bg-gray-700/50 border-2 rounded-xl transition-all duration-200 ${
+                          errors.phone ? "border-red-500" : "border-purple-200 dark:border-purple-700 focus:border-purple-500"
+                        } focus:ring-4 focus:ring-purple-500/20`}
+                      />
+                      {errors.phone && (
+                        <p className="text-sm text-red-500 flex items-center gap-2">
+                          <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                          {errors.phone}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <Label htmlFor="address" className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                      <MapPin className="h-4 w-4" />
+                      Adresse
+                    </Label>
                     <Input
-                      id="lastName"
-                      name="lastName"
-                      placeholder="Dupont"
-                      value={formData.lastName}
+                      id="address"
+                      name="address"
+                      placeholder="123 Rue de Paris, 75001 Paris"
+                      value={formData.address}
                       onChange={handleChange}
-                      className={errors.lastName ? "border-red-500" : ""}
+                      className={`h-12 bg-white/50 dark:bg-gray-700/50 border-2 rounded-xl transition-all duration-200 ${
+                        errors.address ? "border-red-500" : "border-purple-200 dark:border-purple-700 focus:border-purple-500"
+                      } focus:ring-4 focus:ring-purple-500/20`}
                     />
-                    {errors.lastName && (
-                      <p className="text-sm text-red-500">{errors.lastName}</p>
+                    {errors.address && (
+                      <p className="text-sm text-red-500 flex items-center gap-2">
+                        <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                        {errors.address}
+                      </p>
                     )}
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    name="email"
-                    type="email"
-                    placeholder="exemple@email.com"
-                    value={formData.email}
-                    onChange={handleChange}
-                    onBlur={validateEmail}
-                    disabled={isEmailChecking}
-                    className={errors.email ? "border-red-500" : ""}
-                  />
-                  {errors.email && (
-                    <p className="text-sm text-red-500">{errors.email}</p>
-                  )}
-                  {isEmailChecking && (
-                    <p className="text-sm text-gray-500">Vérification de l'email...</p>
-                  )}
+                {/* Security Section */}
+                <div className="space-y-6">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Shield className="h-5 w-5 text-purple-600" />
+                    <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">Sécurité du compte</h3>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-3">
+                      <Label htmlFor="password" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                        Mot de passe
+                      </Label>
+                      <PasswordInput
+                        id="password"
+                        name="password"
+                        placeholder="••••••••"
+                        value={formData.password}
+                        onChange={handleChange}
+                        error={errors.password}
+                        className="h-12"
+                      />
+                      <PasswordStrengthChecker 
+                        password={formData.password} 
+                        onValidityChange={handlePasswordValidityChange}
+                      />
+                    </div>
+
+                    <div className="space-y-3">
+                      <Label htmlFor="confirmPassword" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                        Confirmer le mot de passe
+                      </Label>
+                      <PasswordInput
+                        id="confirmPassword"
+                        name="confirmPassword"
+                        placeholder="••••••••"
+                        value={formData.confirmPassword}
+                        onChange={handleChange}
+                        error={errors.confirmPassword}
+                        className="h-12"
+                      />
+                    </div>
+                  </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="gender">Genre</Label>
-                    <Select
-                      value={formData.gender}
-                      onValueChange={handleSelectChange}
+                {/* Terms and Conditions */}
+                <div className="space-y-4">
+                  <div className="flex items-start space-x-3 p-4 bg-purple-50 dark:bg-purple-900/20 rounded-xl border border-purple-200 dark:border-purple-800">
+                    <Checkbox
+                      id="acceptTerms"
+                      name="acceptTerms"
+                      checked={formData.acceptTerms}
+                      onCheckedChange={(checked) =>
+                        setFormData({
+                          ...formData,
+                          acceptTerms: checked as boolean,
+                        })
+                      }
+                      className="mt-1"
+                    />
+                    <Label
+                      htmlFor="acceptTerms"
+                      className={`text-sm leading-relaxed cursor-pointer ${
+                        errors.acceptTerms ? "text-red-500" : "text-gray-700 dark:text-gray-300"
+                      }`}
                     >
-                      <SelectTrigger className={errors.gender ? "border-red-500" : ""}>
-                        <SelectValue placeholder="Sélectionnez" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="male">Homme</SelectItem>
-                        <SelectItem value="female">Femme</SelectItem>
-                        <SelectItem value="other">Autre</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    {errors.gender && (
-                      <p className="text-sm text-red-500">{errors.gender}</p>
-                    )}
+                      J'accepte les{" "}
+                      <Link to="/terms" className="text-purple-600 hover:text-purple-700 underline">
+                        conditions générales d'utilisation
+                      </Link>{" "}
+                      et la{" "}
+                      <Link to="/privacy" className="text-purple-600 hover:text-purple-700 underline">
+                        politique de confidentialité
+                      </Link>
+                    </Label>
                   </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="phone">Téléphone</Label>
-                    <Input
-                      id="phone"
-                      name="phone"
-                      placeholder="+33 6 12 34 56 78"
-                      value={formData.phone}
-                      onChange={handleChange}
-                      className={errors.phone ? "border-red-500" : ""}
-                    />
-                    {errors.phone && (
-                      <p className="text-sm text-red-500">{errors.phone}</p>
-                    )}
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="address">Adresse</Label>
-                  <Input
-                    id="address"
-                    name="address"
-                    placeholder="123 Rue de Paris, 75001 Paris"
-                    value={formData.address}
-                    onChange={handleChange}
-                    className={errors.address ? "border-red-500" : ""}
-                  />
-                  {errors.address && (
-                    <p className="text-sm text-red-500">{errors.address}</p>
+                  {errors.acceptTerms && (
+                    <p className="text-sm text-red-500 flex items-center gap-2">
+                      <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                      {errors.acceptTerms}
+                    </p>
                   )}
                 </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="password">Mot de passe</Label>
-                    <PasswordInput
-                      id="password"
-                      name="password"
-                      placeholder=""
-                      value={formData.password}
-                      onChange={handleChange}
-                      error={errors.password}
-                    />
-                    <PasswordStrengthChecker 
-                      password={formData.password} 
-                      onValidityChange={handlePasswordValidityChange}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="confirmPassword">Confirmer le mot de passe</Label>
-                    <PasswordInput
-                      id="confirmPassword"
-                      name="confirmPassword"
-                      placeholder=""
-                      value={formData.confirmPassword}
-                      onChange={handleChange}
-                      error={errors.confirmPassword}
-                    />
-                  </div>
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="acceptTerms"
-                    name="acceptTerms"
-                    checked={formData.acceptTerms}
-                    onCheckedChange={(checked) =>
-                      setFormData({
-                        ...formData,
-                        acceptTerms: checked as boolean,
-                      })
-                    }
-                    className={errors.acceptTerms ? "border-red-500" : ""}
-                  />
-                  <Label
-                    htmlFor="acceptTerms"
-                    className={`text-sm ${errors.acceptTerms ? "text-red-500" : ""}`}
-                  >
-                    J'accepte les conditions générales d'utilisation et la politique de confidentialité
-                  </Label>
-                </div>
-                {errors.acceptTerms && (
-                  <p className="text-sm text-red-500">{errors.acceptTerms}</p>
-                )}
               </CardContent>
 
-              <CardFooter className="flex flex-col space-y-4">
+              <CardFooter className="flex flex-col space-y-6 px-8 pb-10">
                 <Button
                   type="submit"
-                  className="w-full bg-app-red hover:bg-opacity-90"
+                  className="w-full h-14 bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 hover:from-violet-700 hover:via-purple-700 hover:to-fuchsia-700 text-white font-bold text-lg rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center gap-3"
                   disabled={!isFormValid || isSubmitting}
                 >
-                  {isSubmitting ? "Envoi en cours..." : isEmailChecking ? "Vérification..." : "S'inscrire"}
+                  {isSubmitting ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                      Création en cours...
+                    </>
+                  ) : isEmailChecking ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                      Vérification...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="h-5 w-5" />
+                      Créer mon compte
+                    </>
+                  )}
                 </Button>
 
-                <p className="text-sm text-center">
-                  Vous avez déjà un compte?{" "}
-                  <Link to="/login" className="text-app-blue hover:underline">
-                    Se connecter
-                  </Link>
-                </p>
+                <div className="text-center">
+                  <p className="text-gray-600 dark:text-gray-300">
+                    Déjà membre?{" "}
+                    <Link 
+                      to="/login" 
+                      className="text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 font-semibold hover:underline transition-colors"
+                    >
+                      Se connecter
+                    </Link>
+                  </p>
+                </div>
               </CardFooter>
             </form>
           </Card>

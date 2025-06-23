@@ -34,9 +34,10 @@ export interface Product {
 export interface PretFamille {
   id: string;
   nom: string;
-  montant: number;
-  date: string;
-  status: 'en_cours' | 'remboursé';
+  pretTotal: number;
+  soldeRestant: number;
+  dernierRemboursement: number;
+  dateRemboursement: string;
 }
 
 export interface PretProduit {

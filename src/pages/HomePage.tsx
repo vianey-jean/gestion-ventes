@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import Layout from '@/components/Layout';
 import { useAuth } from '@/contexts/AuthContext';
+import { ArrowRight, BarChart3, Shield, Zap, TrendingUp } from 'lucide-react';
 
 const HomePage: React.FC = () => {
   const navigate = useNavigate();
@@ -11,136 +12,162 @@ const HomePage: React.FC = () => {
   
   return (
     <Layout>
-      <div className="relative">
-        {/* Hero section */}
-        <div className="bg-gradient-to-b from-white to-gray-100">
-          <div className="container mx-auto px-4 py-16 sm:py-24">
+      <div className="relative overflow-hidden">
+        {/* Hero section with modern gradient */}
+        <div className="relative bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 min-h-screen flex items-center">
+          {/* Animated background elements */}
+          <div className="absolute inset-0 overflow-hidden">
+            <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-float"></div>
+            <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-float" style={{animationDelay: '2s'}}></div>
+            <div className="absolute top-40 left-1/2 w-80 h-80 bg-indigo-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-float" style={{animationDelay: '4s'}}></div>
+          </div>
+          
+          <div className="container mx-auto px-4 py-16 sm:py-24 relative z-10">
             <div className="text-center">
-              <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 sm:text-5xl md:text-6xl">
-                <span className="block">Gestion de vente</span>
-                <span className="block text-app-red">Simplifiée et efficace</span>
+              <div className="mb-8 animate-in fade-in-50 duration-1000">
+                <span className="inline-block px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full text-white/90 text-sm font-medium mb-6 border border-white/20">
+                  ✨ Solution complète de gestion
+                </span>
+              </div>
+              
+              <h1 className="text-4xl font-extrabold tracking-tight text-white sm:text-5xl md:text-7xl animate-in fade-in-50 duration-1000 delay-200">
+                <span className="block bg-gradient-to-r from-white via-purple-200 to-blue-200 bg-clip-text text-transparent">
+                  Gestion de vente
+                </span>
+                <span className="block bg-gradient-to-r from-pink-400 via-purple-400 to-indigo-400 bg-clip-text text-transparent mt-2">
+                  Simplifiée et efficace
+                </span>
               </h1>
-              <p className="mt-3 max-w-md mx-auto text-base text-gray-500 sm:text-lg md:mt-5 md:text-xl md:max-w-3xl">
-                Une solution complète pour gérer vos ventes, suivre vos produits et maximiser vos bénéfices.
+              
+              <p className="mt-6 max-w-2xl mx-auto text-xl text-white/80 leading-relaxed animate-in fade-in-50 duration-1000 delay-400">
+                Transformez votre façon de gérer les ventes avec notre plateforme moderne. 
+                Suivez vos produits, maximisez vos bénéfices et développez votre business.
               </p>
               
               {!isAuthenticated && (
-                <div className="mt-10 sm:flex sm:justify-center">
-                  <div className="rounded-md shadow">
-                    <Button 
-                      className="w-full px-8 py-6 text-lg font-medium rounded-md bg-app-red hover:bg-opacity-90"
-                      onClick={() => navigate('/register')}
-                    >
-                      S'inscrire
-                    </Button>
-                  </div>
-                  <div className="mt-3 sm:mt-0 sm:ml-3">
-                    <Button 
-                      variant="outline"
-                      className="w-full px-8 py-6 text-lg font-medium rounded-md border-app-purple text-app-purple hover:bg-app-purple hover:text-white"
-                      onClick={() => navigate('/login')}
-                    >
-                      Se connecter
-                    </Button>
-                  </div>
+                <div className="mt-12 flex flex-col sm:flex-row gap-4 justify-center animate-in fade-in-50 duration-1000 delay-600">
+                  <Button 
+                    className="group px-8 py-4 text-lg font-semibold rounded-2xl bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-2xl hover:shadow-purple-500/25 transform hover:scale-105 transition-all duration-300"
+                    onClick={() => navigate('/register')}
+                  >
+                    Commencer gratuitement
+                    <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    className="px-8 py-4 text-lg font-semibold rounded-2xl border-2 border-white/30 text-red-900 font-bold hover:bg-white/10 backdrop-blur-sm transition-all duration-300 hover:scale-105"
+                    onClick={() => navigate('/login')}
+                  >
+                    Se connecter
+                  </Button>
                 </div>
               )}
             </div>
           </div>
         </div>
         
-        {/* Features section */}
-        <div className="py-16 bg-white">
+        {/* Features section with modern cards */}
+        <div className="py-24 bg-gradient-to-b from-gray-50 to-white relative">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="lg:text-center">
-              <h2 className="text-base text-app-purple font-semibold tracking-wide uppercase">Fonctionnalités</h2>
-              <p className="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 sm:text-4xl">
+            <div className="text-center mb-20">
+              <span className="inline-block px-4 py-2 bg-purple-100 text-purple-800 rounded-full text-sm font-semibold mb-4">
+                Fonctionnalités
+              </span>
+              <h2 className="text-4xl font-bold text-gray-900 mb-6">
                 Une meilleure façon de gérer vos ventes
-              </p>
-              <p className="mt-4 max-w-2xl text-xl text-gray-500 lg:mx-auto">
-                Découvrez comment notre application peut vous aider à organiser et optimiser votre activité commerciale.
+              </h2>
+              <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+                Découvrez comment notre application peut révolutionner votre activité commerciale
               </p>
             </div>
             
-            <div className="mt-10">
-              <div className="space-y-10 md:space-y-0 md:grid md:grid-cols-2 md:gap-x-8 md:gap-y-10">
+            <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
+              <div className="group relative bg-white rounded-3xl p-8 shadow-xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 border border-gray-100">
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-purple-500/5 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                 <div className="relative">
-                  <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-app-blue text-white">
-                    <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
-                    </svg>
+                  <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                    <BarChart3 className="h-8 w-8 text-white" />
                   </div>
-                  <div className="ml-16">
-                    <h3 className="text-lg font-medium text-gray-900">Suivi des ventes en temps réel</h3>
-                    <p className="mt-2 text-base text-gray-500">
-                      Suivez toutes vos transactions en temps réel. Visualisez vos ventes quotidiennes, hebdomadaires et mensuelles.
-                    </p>
-                  </div>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-4">Suivi en temps réel</h3>
+                  <p className="text-gray-600 leading-relaxed">
+                    Visualisez toutes vos transactions instantanément. Tableaux de bord interactifs pour 
+                    un suivi précis de vos ventes quotidiennes, hebdomadaires et mensuelles.
+                  </p>
                 </div>
-                
+              </div>
+              
+              <div className="group relative bg-white rounded-3xl p-8 shadow-xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 border border-gray-100">
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-500/5 to-pink-500/5 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                 <div className="relative">
-                  <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-app-red text-white">
-                    <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                    </svg>
+                  <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                    <Shield className="h-8 w-8 text-white" />
                   </div>
-                  <div className="ml-16">
-                    <h3 className="text-lg font-medium text-gray-900">Gestion d'inventaire</h3>
-                    <p className="mt-2 text-base text-gray-500">
-                      Gérez facilement votre inventaire de produits. Recevez des alertes lorsque les stocks sont bas.
-                    </p>
-                  </div>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-4">Gestion intelligente</h3>
+                  <p className="text-gray-600 leading-relaxed">
+                    Gérez votre inventaire avec des alertes automatiques. Notifications intelligentes 
+                    pour optimiser vos stocks et éviter les ruptures.
+                  </p>
                 </div>
-                
+              </div>
+              
+              <div className="group relative bg-white rounded-3xl p-8 shadow-xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 border border-gray-100">
+                <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/5 to-blue-500/5 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                 <div className="relative">
-                  <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-app-purple text-white">
-                    <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                    </svg>
+                  <div className="w-16 h-16 bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                    <Zap className="h-8 w-8 text-white" />
                   </div>
-                  <div className="ml-16">
-                    <h3 className="text-lg font-medium text-gray-900">Rapports détaillés</h3>
-                    <p className="mt-2 text-base text-gray-500">
-                      Générez des rapports détaillés sur vos performances commerciales. Exportez-les facilement en PDF.
-                    </p>
-                  </div>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-4">Rapports avancés</h3>
+                  <p className="text-gray-600 leading-relaxed">
+                    Générez des rapports détaillés avec analyse prédictive. Exportation facilitée 
+                    et insights personnalisés pour booster vos performances.
+                  </p>
                 </div>
-                
+              </div>
+              
+              <div className="group relative bg-white rounded-3xl p-8 shadow-xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 border border-gray-100">
+                <div className="absolute inset-0 bg-gradient-to-r from-green-500/5 to-emerald-500/5 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                 <div className="relative">
-                  <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-app-green text-white">
-                    <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
+                  <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                    <TrendingUp className="h-8 w-8 text-white" />
                   </div>
-                  <div className="ml-16">
-                    <h3 className="text-lg font-medium text-gray-900">Analyse des bénéfices</h3>
-                    <p className="mt-2 text-base text-gray-500">
-                      Analysez vos marges et bénéfices pour chaque produit. Identifiez vos produits les plus rentables.
-                    </p>
-                  </div>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-4">Analyse des profits</h3>
+                  <p className="text-gray-600 leading-relaxed">
+                    Maximisez vos marges avec des analyses approfondies. Identifiez rapidement 
+                    vos produits stars et optimisez votre rentabilité.
+                  </p>
                 </div>
               </div>
             </div>
           </div>
         </div>
         
-        {/* CTA section */}
-        <div className="bg-app-dark">
-          <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:py-16 lg:px-8 lg:flex lg:items-center lg:justify-between">
-            <h2 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
-              <span className="block">Prêt à commencer?</span>
-              <span className="block text-app-purple">Inscrivez-vous gratuitement dès aujourd'hui.</span>
+        {/* CTA section with modern gradient */}
+        <div className="relative bg-gradient-to-r from-gray-900 via-purple-900 to-indigo-900 overflow-hidden">
+          <div className="absolute inset-0">
+            <div className="absolute top-0 left-1/4 w-72 h-72 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl opacity-20"></div>
+            <div className="absolute bottom-0 right-1/4 w-72 h-72 bg-blue-500 rounded-full mix-blend-multiply filter blur-xl opacity-20"></div>
+          </div>
+          
+          <div className="relative max-w-7xl mx-auto py-24 px-4 sm:px-6 lg:px-8 text-center">
+            <h2 className="text-4xl font-bold text-white mb-6">
+              <span className="block">Prêt à transformer votre business?</span>
+              <span className="block bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent mt-2">
+                Rejoignez des milliers d'entrepreneurs satisfaits
+              </span>
             </h2>
+            <p className="text-xl text-white/80 mb-12 max-w-2xl mx-auto">
+              Commencez dès aujourd'hui et découvrez pourquoi notre solution est adoptée par les leaders du marché
+            </p>
+            
             {!isAuthenticated && (
-              <div className="mt-8 flex lg:mt-0 lg:flex-shrink-0">
-                <div className="inline-flex rounded-md shadow">
-                  <Button 
-                    className="px-5 py-6 text-lg font-medium rounded-md bg-app-red hover:bg-opacity-90"
-                    onClick={() => navigate('/register')}
-                  >
-                    Commencer maintenant
-                  </Button>
-                </div>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Button 
+                  className="group px-10 py-4 text-lg font-semibold rounded-2xl bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-2xl hover:shadow-purple-500/25 transform hover:scale-105 transition-all duration-300"
+                  onClick={() => navigate('/register')}
+                >
+                  Démarrer maintenant
+                  <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                </Button>
               </div>
             )}
           </div>

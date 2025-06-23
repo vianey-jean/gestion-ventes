@@ -1,6 +1,4 @@
-
 import React, { useEffect, useState } from 'react';
-import { Button } from '@/components/ui/button';
 import { useApp } from '@/contexts/AppContext';
 import { Sale } from '@/types';
 import SalesTable from '@/components/dashboard/SalesTable';
@@ -8,12 +6,13 @@ import AddSaleForm from '@/components/dashboard/AddSaleForm';
 import AddProductForm from '@/components/dashboard/AddProductForm';
 import EditProductForm from '@/components/dashboard/EditProductForm';
 import ExportSalesDialog from '@/components/dashboard/ExportSalesDialog';
-import { PlusCircle, Edit, ShoppingCart, Loader2, FileText } from 'lucide-react';
+import ModernCard from '@/components/dashboard/forms/ModernCard';
+import ModernButton from '@/components/dashboard/forms/ModernButton';
+import { PlusCircle, Edit, ShoppingCart, Loader2, FileText, TrendingUp, Package, Warehouse, BarChart3 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import StatCard from '@/components/dashboard/StatCard';
-import ActionButton from '@/components/dashboard/ActionButton';
 import useCurrencyFormatter from '@/hooks/use-currency-formatter';
 
 /**
@@ -25,8 +24,7 @@ const monthNames = [
 ];
 
 /**
- * Composant principal pour la gestion des ventes de produits
- * Affiche les statistiques, la liste des ventes, et permet d'ajouter/modifier des ventes et produits
+ * Composant principal pour la gestion des ventes de produits - Version modernisée
  */
 const VentesProduits: React.FC = () => {
   // Récupérer les données et fonctions du contexte
@@ -132,97 +130,126 @@ const VentesProduits: React.FC = () => {
   };
 
   return (
-    <div className="mt-6">
-      {/* Affichage des statistiques */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <StatCard 
-          title="Total des bénéfices"
-          description="Du mois en cours"
-          value={formatEuro(totalProfit)}
-          valueClassName="text-app-green"
-        />
+    <div className="space-y-8 p-6">
+      {/* Statistiques modernisées */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <ModernCard className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20">
+          <div className="flex items-center space-x-4">
+            <div className="p-3 rounded-full bg-gradient-to-br from-green-500 to-green-600 text-white">
+              <TrendingUp className="h-6 w-6" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-green-600 dark:text-green-400">Bénéfices totaux</p>
+              <p className="text-2xl font-bold text-green-700 dark:text-green-300">{formatEuro(totalProfit)}</p>
+            </div>
+          </div>
+        </ModernCard>
         
-        <StatCard 
-          title="Produits vendus"
-          description="Nombre total d'unités"
-          value={totalProductsSold}
-          valueClassName="text-app-blue"
-        />
+        <ModernCard className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20">
+          <div className="flex items-center space-x-4">
+            <div className="p-3 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-white">
+              <Package className="h-6 w-6" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-blue-600 dark:text-blue-400">Produits vendus</p>
+              <p className="text-2xl font-bold text-blue-700 dark:text-blue-300">{totalProductsSold}</p>
+            </div>
+          </div>
+        </ModernCard>
         
-        <StatCard 
-          title="Produits disponibles"
-          description="Dans l'inventaire"
-          value={availableProducts.length}
-          valueClassName="text-app-purple"
-        />
+        <ModernCard className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20">
+          <div className="flex items-center space-x-4">
+            <div className="p-3 rounded-full bg-gradient-to-br from-purple-500 to-purple-600 text-white">
+              <BarChart3 className="h-6 w-6" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-purple-600 dark:text-purple-400">Produits disponibles</p>
+              <p className="text-2xl font-bold text-purple-700 dark:text-purple-300">{availableProducts.length}</p>
+            </div>
+          </div>
+        </ModernCard>
         
-        <StatCard 
-          title="Stock total"
-          description="Toutes unités confondues"
-          value={totalStock}
-          valueClassName="text-gray-700"
-        />
+        <ModernCard className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20">
+          <div className="flex items-center space-x-4">
+            <div className="p-3 rounded-full bg-gradient-to-br from-orange-500 to-orange-600 text-white">
+              <Warehouse className="h-6 w-6" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-orange-600 dark:text-orange-400">Stock total</p>
+              <p className="text-2xl font-bold text-orange-700 dark:text-orange-300">{totalStock}</p>
+            </div>
+          </div>
+        </ModernCard>
       </div>
       
-      {/* Boutons d'action */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
-        <h2 className="text-2xl font-bold">Ventes du mois</h2>
-        <div className="mt-4 sm:mt-0 flex items-center">
-          <h2 className="text-xl font-bold text-app-red mr-4">
-            {monthNames[selectedMonth - 1]} {selectedYear}
-          </h2>
-          <ActionButton
-            icon={FileText}
-            onClick={handleOpenExportDialog}
-            variant="outline"
-            className="border-gray-300 mr-2"
-          >
-            Exporter
-          </ActionButton>
-        </div>
-        <div className="flex flex-wrap gap-2 mt-4 sm:mt-0">
-          <ActionButton
+      {/* En-tête modernisé */}
+      <ModernCard 
+        title="Gestion des ventes" 
+        icon={ShoppingCart}
+        headerActions={
+          <div className="flex items-center space-x-4">
+            <div className="text-right">
+              <p className="text-sm text-gray-500">Période actuelle</p>
+              <p className="text-lg font-bold text-app-red">
+                {monthNames[selectedMonth - 1]} {selectedYear}
+              </p>
+            </div>
+            <ModernButton
+              icon={FileText}
+              onClick={handleOpenExportDialog}
+              variant="outline"
+              className="border-gray-300"
+            >
+              Exporter
+            </ModernButton>
+          </div>
+        }
+      >
+        <div className="flex flex-wrap gap-3 mb-6">
+          <ModernButton
             icon={PlusCircle}
             onClick={() => setAddProductDialogOpen(true)}
-            className="bg-app-red hover:bg-opacity-90"
+            gradient="red"
           >
             Ajouter un produit
-          </ActionButton>
+          </ModernButton>
           
-          <ActionButton
+          <ModernButton
             icon={Edit}
             onClick={() => setEditProductDialogOpen(true)}
-            className="bg-app-blue hover:bg-opacity-90"
+            gradient="blue"
           >
             Modifier un produit
-          </ActionButton>
+          </ModernButton>
           
-          <ActionButton
+          <ModernButton
             icon={ShoppingCart}
             onClick={() => {
               setSelectedSale(undefined);
               setAddSaleDialogOpen(true);
             }}
-            className="bg-app-green hover:bg-opacity-90"
+            gradient="green"
           >
             Ajouter une vente
-          </ActionButton>
+          </ModernButton>
         </div>
-      </div>
-      
-      {/* Indicateur de chargement */}
-      {appLoading && (
-        <div className="flex justify-center items-center my-4">
-          <Loader2 className="h-6 w-6 animate-spin text-app-blue mr-2" />
-          <p>Chargement des données...</p>
-        </div>
-      )}
-      
-      {/* Tableau des ventes */}
-      <SalesTable 
-        sales={filteredSales} 
-        onRowClick={handleRowClick} 
-      />
+        
+        {/* Indicateur de chargement */}
+        {appLoading && (
+          <div className="flex justify-center items-center py-8">
+            <div className="flex items-center space-x-3">
+              <Loader2 className="h-6 w-6 animate-spin text-blue-500" />
+              <p className="text-gray-600">Chargement des données...</p>
+            </div>
+          </div>
+        )}
+        
+        {/* Tableau des ventes */}
+        <SalesTable 
+          sales={filteredSales} 
+          onRowClick={handleRowClick} 
+        />
+      </ModernCard>
       
       {/* Formulaires dans des dialogues */}
       {addSaleDialogOpen && (

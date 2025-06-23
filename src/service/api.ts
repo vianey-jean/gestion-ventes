@@ -2,8 +2,7 @@ import axios from 'axios';
 import { LoginCredentials, PasswordResetData, PasswordResetRequest, Product, RegistrationData, Sale, User } from "../types";
 
 // 🔁 URL de base récupérée depuis le fichier .env (Vite)
-const AUTH_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-
+const AUTH_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
 
 // ✅ Création de l'instance Axios
 const api = axios.create({

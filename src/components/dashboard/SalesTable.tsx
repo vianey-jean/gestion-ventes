@@ -1,7 +1,8 @@
-
 import React from 'react';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from '@/components/ui/table';
+import { TableBody, TableCell, TableFooter, TableRow } from '@/components/ui/table';
+import { ModernTable, ModernTableHeader, ModernTableRow, ModernTableHead, ModernTableCell } from '@/components/dashboard/forms/ModernTable';
 import { Sale } from '@/types';
+import { TrendingUp, Package, Euro, Calendar } from 'lucide-react';
 
 interface SalesTableProps {
   sales: Sale[];
@@ -9,9 +10,7 @@ interface SalesTableProps {
 }
 
 /**
- * Tableau des ventes
- * @param sales - Liste des ventes à afficher
- * @param onRowClick - Fonction appelée lorsqu'une ligne est cliquée
+ * Tableau des ventes modernisé
  */
 const SalesTable: React.FC<SalesTableProps> = ({ sales, onRowClick }) => {
   // Formater une date au format local
@@ -45,74 +44,97 @@ const SalesTable: React.FC<SalesTableProps> = ({ sales, onRowClick }) => {
   // Calculer les totaux
   const totalSellingPrice = sales.reduce((sum, sale) => sum + sale.sellingPrice, 0);
   const totalQuantitySold = sales.reduce((sum, sale) => {
-    // Pour le total des quantités, on utilise la même logique conditionnelle
     return sum + (isAdvanceProduct(sale.description) ? 0 : sale.quantitySold);
   }, 0);
   const totalPurchasePrice = sales.reduce((sum, sale) => sum + (sale.purchasePrice * sale.quantitySold), 0);
   const totalProfit = sales.reduce((sum, sale) => sum + sale.profit, 0);
   
   return (
-    <div className="rounded-md border">
-      <Table className="card-3d">
-        <TableHeader>
-          <TableRow >
-            <TableHead className="font-bold">Date</TableHead>
-            <TableHead className="font-bold">Description</TableHead>
-            <TableHead className="text-right font-bold">Prix de vente</TableHead>
-            <TableHead className="text-right font-bold">Quantité</TableHead>
-            <TableHead className="text-right font-bold">Prix d'achat</TableHead>
-            <TableHead className="text-right font-bold">Bénéfice</TableHead>
+    <ModernTable>
+      <ModernTableHeader>
+        <TableRow>
+          <ModernTableHead>
+            <div className="flex items-center space-x-2">
+              <Calendar className="h-4 w-4" />
+              <span>Date</span>
+            </div>
+          </ModernTableHead>
+          <ModernTableHead>
+            <div className="flex items-center space-x-2">
+              <Package className="h-4 w-4" />
+              <span>Description</span>
+            </div>
+          </ModernTableHead>
+          <ModernTableHead className="text-right">
+            <div className="flex items-center justify-end space-x-2">
+              <Euro className="h-4 w-4" />
+              <span>Prix de vente</span>
+            </div>
+          </ModernTableHead>
+          <ModernTableHead className="text-right">Quantité</ModernTableHead>
+          <ModernTableHead className="text-right">Prix d'achat</ModernTableHead>
+          <ModernTableHead className="text-right">
+            <div className="flex items-center justify-end space-x-2">
+              <TrendingUp className="h-4 w-4" />
+              <span>Bénéfice</span>
+            </div>
+          </ModernTableHead>
+        </TableRow>
+      </ModernTableHeader>
+      <TableBody>
+        {sales.length === 0 ? (
+          <TableRow>
+            <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+              <div className="flex flex-col items-center space-y-2">
+                <Package className="h-12 w-12 text-gray-300" />
+                <p>Aucune vente enregistrée pour ce mois</p>
+              </div>
+            </TableCell>
           </TableRow>
-        </TableHeader>
-        <TableBody>
-          {sales.length === 0 ? (
-            <TableRow>
-              <TableCell colSpan={6} className="text-center py-6 text-gray-500">
-                Aucune vente enregistrée pour ce mois
-              </TableCell>
-            </TableRow>
-          ) : (
-            sales.map((sale) => (
-              <TableRow 
-                key={sale.id} 
-                className="cursor-pointer hover:bg-gray-50"
-                onClick={() => onRowClick(sale)}
-              >
-                <TableCell>{formatDate(sale.date)}</TableCell>
-                <TableCell>{sale.description}</TableCell>
-                <TableCell className="text-right">{formatCurrency(sale.sellingPrice)}</TableCell>
-                <TableCell className="text-right">{getDisplayQuantity(sale)}</TableCell>
-                <TableCell className="text-right">{formatCurrency(sale.purchasePrice)}</TableCell>
-                <TableCell className="text-right font-medium">
-                  {formatCurrency(sale.profit)}
-                </TableCell>
-              </TableRow>
-            ))
-          )}
-        </TableBody>
-        {sales.length > 0 && (
-          <TableFooter>
-            <TableRow className="bg-gray-50 font-semibold">
-              <TableCell colSpan={2} className="text-right">
-                Totaux:
-              </TableCell>
-              <TableCell className="text-right text-app-blue">
-                {formatCurrency(totalSellingPrice)}
-              </TableCell>
-              <TableCell className="text-right text-app-purple">
-                {totalQuantitySold}
-              </TableCell>
-              <TableCell className="text-right text-gray-700">
-                {formatCurrency(totalPurchasePrice)}
-              </TableCell>
-              <TableCell className="text-right text-app-green">
-                {formatCurrency(totalProfit)}
-              </TableCell>
-            </TableRow>
-          </TableFooter>
+        ) : (
+          sales.map((sale) => (
+            <ModernTableRow 
+              key={sale.id} 
+              onClick={() => onRowClick(sale)}
+            >
+              <ModernTableCell>{formatDate(sale.date)}</ModernTableCell>
+              <ModernTableCell className="font-medium">{sale.description}</ModernTableCell>
+              <ModernTableCell className="text-right font-semibold text-green-600">
+                {formatCurrency(sale.sellingPrice)}
+              </ModernTableCell>
+              <ModernTableCell className="text-right">{getDisplayQuantity(sale)}</ModernTableCell>
+              <ModernTableCell className="text-right text-gray-600">
+                {formatCurrency(sale.purchasePrice)}
+              </ModernTableCell>
+              <ModernTableCell className="text-right font-bold text-blue-600">
+                {formatCurrency(sale.profit)}
+              </ModernTableCell>
+            </ModernTableRow>
+          ))
         )}
-      </Table>
-    </div>
+      </TableBody>
+      {sales.length > 0 && (
+        <TableFooter>
+          <TableRow className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700 font-bold">
+            <TableCell colSpan={2} className="text-right text-lg">
+              Totaux:
+            </TableCell>
+            <TableCell className="text-right text-lg text-green-600 font-bold">
+              {formatCurrency(totalSellingPrice)}
+            </TableCell>
+            <TableCell className="text-right text-lg text-purple-600 font-bold">
+              {totalQuantitySold}
+            </TableCell>
+            <TableCell className="text-right text-lg text-gray-700 font-bold">
+              {formatCurrency(totalPurchasePrice)}
+            </TableCell>
+            <TableCell className="text-right text-lg text-blue-600 font-bold">
+              {formatCurrency(totalProfit)}
+            </TableCell>
+          </TableRow>
+        </TableFooter>
+      )}
+    </ModernTable>
   );
 };
 

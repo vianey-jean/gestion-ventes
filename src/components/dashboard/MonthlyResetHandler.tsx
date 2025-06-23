@@ -1,72 +1,50 @@
 
-import { useEffect } from 'react';
-import { useToast } from '@/components/ui/use-toast';
+import React, { useEffect } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 import axios from 'axios';
 
-/**
- * Composant qui vérifie si c'est la fin du mois pour réinitialiser les dépenses.
- * Ce composant ne rend rien, il exécute seulement la logique de vérification.
- */
-const MonthlyResetHandler = () => {
-  const { toast } = useToast();
+const AUTH_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-  // Fonction qui vérifie si c'est le dernier jour du mois à la fin de la journée
-  const checkEndOfMonth = () => {
-    const now = new Date();
-    const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-    const isLastDay = now.getDate() === lastDayOfMonth;
-    const isEndOfDay = now.getHours() >= 23 && now.getMinutes() >= 59;
-    
-    return isLastDay && isEndOfDay;
-  };
-
-  // Fonction pour réinitialiser les dépenses du mois
-  const resetMonthlyExpenses = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      
-      if (!token) return;
-      
-      // Get API URL safely without direct access to import.meta.env
-      const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}/api/depenses/reset`,
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        }
-      );
-      
-      if (response.status === 200) {
-        toast({
-          title: "Réinitialisation automatique",
-          description: "Les dépenses du mois ont été réinitialisées (fin de mois)",
-          className: "bg-app-blue text-white",
-        });
-      }
-    } catch (error) {
-      console.error("Erreur lors de la réinitialisation des dépenses:", error);
-    }
-  };
+const MonthlyResetHandler: React.FC = () => {
+  const { user } = useAuth();
 
   useEffect(() => {
-    // Vérifie immédiatement au chargement du composant
-    if (checkEndOfMonth()) {
-      resetMonthlyExpenses();
-    }
-    
-    // Configure un intervalle pour vérifier régulièrement (toutes les heures)
-    const intervalId = setInterval(() => {
-      if (checkEndOfMonth()) {
-        resetMonthlyExpenses();
+    const checkAndResetMonthlyData = async () => {
+      if (!user) return;
+
+      try {
+        const currentDate = new Date();
+        const currentMonth = currentDate.getMonth();
+        const currentYear = currentDate.getFullYear();
+        
+        const lastResetKey = `lastReset_${user.id}`;
+        const lastReset = localStorage.getItem(lastResetKey);
+        
+        if (lastReset) {
+          const lastResetDate = new Date(lastReset);
+          const lastResetMonth = lastResetDate.getMonth();
+          const lastResetYear = lastResetDate.getFullYear();
+          
+          if (currentMonth !== lastResetMonth || currentYear !== lastResetYear) {
+            await axios.post(`${AUTH_BASE_URL}/api/depenses/reset-monthly`, {}, {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem('token')}`
+              }
+            });
+            
+            localStorage.setItem(lastResetKey, currentDate.toISOString());
+          }
+        } else {
+          localStorage.setItem(lastResetKey, currentDate.toISOString());
+        }
+      } catch (error) {
+        console.error('Erreur lors du reset mensuel:', error);
       }
-    }, 60 * 60 * 1000); // Vérifie toutes les heures
-    
-    return () => clearInterval(intervalId);
-  }, []);
-  
-  // Ce composant ne rend rien
+    };
+
+    checkAndResetMonthlyData();
+  }, [user]);
+
   return null;
 };
 
