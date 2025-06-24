@@ -1,13 +1,15 @@
+
 import React, { useEffect, useState } from 'react';
 import { useApp } from '@/contexts/AppContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { Sale } from '@/types';
 import SalesTable from '@/components/dashboard/SalesTable';
 import AddSaleForm from '@/components/dashboard/AddSaleForm';
 import AddProductForm from '@/components/dashboard/AddProductForm';
 import EditProductForm from '@/components/dashboard/EditProductForm';
 import ExportSalesDialog from '@/components/dashboard/ExportSalesDialog';
-import ModernCard from '@/components/dashboard/forms/ModernCard';
-import ModernButton from '@/components/dashboard/forms/ModernButton';
+import ModernContainer from '@/components/dashboard/forms/ModernContainer';
+import ModernActionButton from '@/components/dashboard/forms/ModernActionButton';
 import { PlusCircle, Edit, ShoppingCart, Loader2, FileText, TrendingUp, Package, Warehouse, BarChart3 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -39,6 +41,8 @@ const VentesProduits: React.FC = () => {
     setSelectedMonth,
     setSelectedYear
   } = useApp();
+  
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
   const { formatEuro } = useCurrencyFormatter();
   
@@ -86,8 +90,13 @@ const VentesProduits: React.FC = () => {
     console.log(`Filtered sales for month ${selectedMonth}, year ${selectedYear}: ${filtered.length} sales`);
   }, [sales, selectedMonth, selectedYear, setSelectedMonth, setSelectedYear]);
 
-  // Charger les données au montage du composant
+  // Charger les données au montage du composant seulement si authentifié
   useEffect(() => {
+    if (!isAuthenticated || authLoading) {
+      console.log('User not authenticated, not loading data');
+      return;
+    }
+
     const loadData = async () => {
       setLoadError(null);
       
@@ -116,7 +125,18 @@ const VentesProduits: React.FC = () => {
     };
     
     loadData();
-  }, [fetchProducts, fetchSales, toast]);
+  }, [fetchProducts, fetchSales, toast, isAuthenticated, authLoading]);
+
+  // Si l'utilisateur n'est pas authentifié, afficher un message
+  if (!isAuthenticated) {
+    return (
+      <div className="flex justify-center items-center py-12">
+        <div className="flex items-center space-x-4 p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg">
+          <p className="text-lg text-gray-600 dark:text-gray-300">Veuillez vous connecter pour accéder à cette page.</p>
+        </div>
+      </div>
+    );
+  }
 
   // Gestion du clic sur une ligne du tableau des ventes
   const handleRowClick = (sale: Sale) => {
@@ -130,62 +150,63 @@ const VentesProduits: React.FC = () => {
   };
 
   return (
-    <div className="space-y-8 p-6">
-      {/* Statistiques modernisées */}
+    <div className="space-y-8 p-6 bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 min-h-screen">
+      {/* Statistiques modernisées avec des cartes élégantes */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <ModernCard className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20">
+        <ModernContainer gradient="green" className="transform hover:scale-105 transition-all duration-300">
           <div className="flex items-center space-x-4">
-            <div className="p-3 rounded-full bg-gradient-to-br from-green-500 to-green-600 text-white">
-              <TrendingUp className="h-6 w-6" />
+            <div className="p-4 rounded-full bg-gradient-to-br from-green-500 to-green-600 text-white shadow-lg">
+              <TrendingUp className="h-8 w-8" />
             </div>
             <div>
               <p className="text-sm font-medium text-green-600 dark:text-green-400">Bénéfices totaux</p>
-              <p className="text-2xl font-bold text-green-700 dark:text-green-300">{formatEuro(totalProfit)}</p>
+              <p className="text-3xl font-bold text-green-700 dark:text-green-300">{formatEuro(totalProfit)}</p>
             </div>
           </div>
-        </ModernCard>
+        </ModernContainer>
         
-        <ModernCard className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20">
+        <ModernContainer gradient="blue" className="transform hover:scale-105 transition-all duration-300">
           <div className="flex items-center space-x-4">
-            <div className="p-3 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-white">
-              <Package className="h-6 w-6" />
+            <div className="p-4 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg">
+              <Package className="h-8 w-8" />
             </div>
             <div>
               <p className="text-sm font-medium text-blue-600 dark:text-blue-400">Produits vendus</p>
-              <p className="text-2xl font-bold text-blue-700 dark:text-blue-300">{totalProductsSold}</p>
+              <p className="text-3xl font-bold text-blue-700 dark:text-blue-300">{totalProductsSold}</p>
             </div>
           </div>
-        </ModernCard>
+        </ModernContainer>
         
-        <ModernCard className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20">
+        <ModernContainer gradient="purple" className="transform hover:scale-105 transition-all duration-300">
           <div className="flex items-center space-x-4">
-            <div className="p-3 rounded-full bg-gradient-to-br from-purple-500 to-purple-600 text-white">
-              <BarChart3 className="h-6 w-6" />
+            <div className="p-4 rounded-full bg-gradient-to-br from-purple-500 to-purple-600 text-white shadow-lg">
+              <BarChart3 className="h-8 w-8" />
             </div>
             <div>
               <p className="text-sm font-medium text-purple-600 dark:text-purple-400">Produits disponibles</p>
-              <p className="text-2xl font-bold text-purple-700 dark:text-purple-300">{availableProducts.length}</p>
+              <p className="text-3xl font-bold text-purple-700 dark:text-purple-300">{availableProducts.length}</p>
             </div>
           </div>
-        </ModernCard>
+        </ModernContainer>
         
-        <ModernCard className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20">
+        <ModernContainer gradient="orange" className="transform hover:scale-105 transition-all duration-300">
           <div className="flex items-center space-x-4">
-            <div className="p-3 rounded-full bg-gradient-to-br from-orange-500 to-orange-600 text-white">
-              <Warehouse className="h-6 w-6" />
+            <div className="p-4 rounded-full bg-gradient-to-br from-orange-500 to-orange-600 text-white shadow-lg">
+              <Warehouse className="h-8 w-8" />
             </div>
             <div>
               <p className="text-sm font-medium text-orange-600 dark:text-orange-400">Stock total</p>
-              <p className="text-2xl font-bold text-orange-700 dark:text-orange-300">{totalStock}</p>
+              <p className="text-3xl font-bold text-orange-700 dark:text-orange-300">{totalStock}</p>
             </div>
           </div>
-        </ModernCard>
+        </ModernContainer>
       </div>
       
-      {/* En-tête modernisé */}
-      <ModernCard 
+      {/* Conteneur principal modernisé */}
+      <ModernContainer 
         title="Gestion des ventes" 
         icon={ShoppingCart}
+        gradient="neutral"
         headerActions={
           <div className="flex items-center space-x-4">
             <div className="text-right">
@@ -194,62 +215,71 @@ const VentesProduits: React.FC = () => {
                 {monthNames[selectedMonth - 1]} {selectedYear}
               </p>
             </div>
-            <ModernButton
+            <ModernActionButton
               icon={FileText}
               onClick={handleOpenExportDialog}
               variant="outline"
-              className="border-gray-300"
+              gradient="indigo"
+              buttonSize="md"
             >
               Exporter
-            </ModernButton>
+            </ModernActionButton>
           </div>
         }
       >
-        <div className="flex flex-wrap gap-3 mb-6">
-          <ModernButton
+        {/* Boutons d'action modernisés */}
+        <div className="flex flex-wrap gap-4 mb-8">
+          <ModernActionButton
             icon={PlusCircle}
             onClick={() => setAddProductDialogOpen(true)}
             gradient="red"
+            buttonSize="md"
           >
             Ajouter un produit
-          </ModernButton>
+          </ModernActionButton>
           
-          <ModernButton
+          <ModernActionButton
             icon={Edit}
             onClick={() => setEditProductDialogOpen(true)}
             gradient="blue"
+            buttonSize="md"
           >
             Modifier un produit
-          </ModernButton>
+          </ModernActionButton>
           
-          <ModernButton
+          <ModernActionButton
             icon={ShoppingCart}
             onClick={() => {
               setSelectedSale(undefined);
               setAddSaleDialogOpen(true);
             }}
             gradient="green"
+            buttonSize="md"
           >
             Ajouter une vente
-          </ModernButton>
+          </ModernActionButton>
         </div>
         
-        {/* Indicateur de chargement */}
-        {appLoading && (
-          <div className="flex justify-center items-center py-8">
-            <div className="flex items-center space-x-3">
-              <Loader2 className="h-6 w-6 animate-spin text-blue-500" />
-              <p className="text-gray-600">Chargement des données...</p>
+        {/* Indicateur de chargement modernisé */}
+        {(appLoading || authLoading) && (
+          <div className="flex justify-center items-center py-12">
+            <div className="flex items-center space-x-4 p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg">
+              <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+              <p className="text-lg text-gray-600 dark:text-gray-300">Chargement des données...</p>
             </div>
           </div>
         )}
         
         {/* Tableau des ventes */}
-        <SalesTable 
-          sales={filteredSales} 
-          onRowClick={handleRowClick} 
-        />
-      </ModernCard>
+        {!appLoading && !authLoading && (
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+            <SalesTable 
+              sales={filteredSales} 
+              onRowClick={handleRowClick} 
+            />
+          </div>
+        )}
+      </ModernContainer>
       
       {/* Formulaires dans des dialogues */}
       {addSaleDialogOpen && (

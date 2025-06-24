@@ -1,8 +1,9 @@
+
 import axios from 'axios';
 import { LoginCredentials, PasswordResetData, PasswordResetRequest, Product, RegistrationData, Sale, User } from "../types";
 
-// 🔁 URL de base récupérée depuis le fichier .env (Vite)
-const AUTH_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+// 🔁 URL de base récupérée depuis le fichier .env (Vite) - Correction pour pointer vers le serveur correct
+const AUTH_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://server-gestion-ventes.onrender.com';
 
 // ✅ Création de l'instance Axios
 const api = axios.create({
@@ -19,8 +20,9 @@ api.interceptors.request.use(
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+      console.log('Token found and added to request');
     } else {
-      console.warn('No authentication token found');
+      console.warn('No authentication token found - user may need to login');
     }
     return config;
   },

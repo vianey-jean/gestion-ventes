@@ -4,6 +4,7 @@ import { createContext, useContext, useState, ReactNode, useEffect, useCallback 
 import { useToast } from '@/hooks/use-toast';
 import { Product, Sale } from '@/types';
 import { productService, salesService } from '@/service/api';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface AppContextType {
   products: Product[];
@@ -46,6 +47,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const { toast } = useToast();
   const [selectedMonth, setSelectedMonth] = useState<number>(currentMonthNum);
   const [selectedYear, setSelectedYear] = useState<number>(currentYearNum);
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
   
   // Add the missing properties that components are expecting
   const currentMonth = selectedMonth;
@@ -53,6 +55,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const isLoading = loading;
 
   const fetchProducts = useCallback(async () => {
+    if (!isAuthenticated || authLoading) {
+      console.log('User not authenticated, skipping product fetch');
+      return;
+    }
+    
     setLoading(true);
     setError(null);
     try {
@@ -68,9 +75,14 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     } finally {
       setLoading(false);
     }
-  }, [toast]);
+  }, [toast, isAuthenticated, authLoading]);
 
   const fetchSales = useCallback(async (month?: number, year?: number) => {
+    if (!isAuthenticated || authLoading) {
+      console.log('User not authenticated, skipping sales fetch');
+      return;
+    }
+    
     const monthToFetch = month || selectedMonth;
     const yearToFetch = year || selectedYear;
     
@@ -92,12 +104,20 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     } finally {
       setLoading(false);
     }
-  }, [toast, selectedMonth, selectedYear]);
+  }, [toast, selectedMonth, selectedYear, isAuthenticated, authLoading]);
 
+  // Only fetch data when user is authenticated and not loading
   useEffect(() => {
-    fetchProducts();
-    fetchSales(selectedMonth, selectedYear);
-  }, [fetchProducts, fetchSales, selectedMonth, selectedYear]);
+    if (isAuthenticated && !authLoading) {
+      console.log('User authenticated, fetching data...');
+      fetchProducts();
+      fetchSales(selectedMonth, selectedYear);
+    } else {
+      console.log('User not authenticated or auth loading, clearing data');
+      setProducts([]);
+      setSales([]);
+    }
+  }, [isAuthenticated, authLoading, selectedMonth, selectedYear]);
 
   // Add searchProducts function that is being used
   const searchProducts = async (query: string): Promise<Product[]> => {
@@ -127,6 +147,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const addProduct = async (productData: Omit<Product, 'id'>): Promise<Product | null> => {
+    if (!isAuthenticated) {
+      console.log('User not authenticated, cannot add product');
+      return null;
+    }
+    
     try {
       const newProduct = await productService.addProduct(productData);
       if (newProduct) {
@@ -141,6 +166,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const updateProduct = async (product: Product): Promise<Product | null> => {
+    if (!isAuthenticated) {
+      console.log('User not authenticated, cannot update product');
+      return null;
+    }
+    
     try {
       const updatedProduct = await productService.updateProduct(product);
       if (updatedProduct) {
@@ -157,6 +187,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   };
   
   const addSale = async (saleData: Omit<Sale, 'id'>): Promise<Sale | null> => {
+    if (!isAuthenticated) {
+      console.log('User not authenticated, cannot add sale');
+      return null;
+    }
+    
     try {
       const result = await salesService.addSale(saleData);
       
@@ -197,6 +232,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const updateSale = async (sale: Sale): Promise<Sale | null> => {
+    if (!isAuthenticated) {
+      console.log('User not authenticated, cannot update sale');
+      return null;
+    }
+    
     try {
       const result = await salesService.updateSale(sale);
       
@@ -222,6 +262,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const deleteSale = async (id: string): Promise<boolean> => {
+    if (!isAuthenticated) {
+      console.log('User not authenticated, cannot delete sale');
+      return false;
+    }
+    
     try {
       const success = await salesService.deleteSale(id);
       if (success) {
