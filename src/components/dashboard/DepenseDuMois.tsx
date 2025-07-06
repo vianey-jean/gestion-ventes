@@ -14,12 +14,12 @@ import { depenseService } from '@/service/api';
 import { useApp } from '@/contexts/AppContext';
 
 // Fonction pour formater le mois en français
-const formatMonthInFrench = (month: number): string => {
+const formatMonthInFrench = (monthIndex: number): string => {
   const months = [
     'JANVIER', 'FÉVRIER', 'MARS', 'AVRIL', 'MAI', 'JUIN',
     'JUILLET', 'AOÛT', 'SEPTEMBRE', 'OCTOBRE', 'NOVEMBRE', 'DÉCEMBRE'
   ];
-  return months[month];
+  return months[monthIndex - 1] || 'MOIS INCONNU';
 };
 
 const DepenseDuMois = () => {
