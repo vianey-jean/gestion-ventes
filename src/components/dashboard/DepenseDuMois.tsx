@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
@@ -19,7 +18,7 @@ const formatMonthInFrench = (monthIndex: number): string => {
     'JANVIER', 'FÉVRIER', 'MARS', 'AVRIL', 'MAI', 'JUIN',
     'JUILLET', 'AOÛT', 'SEPTEMBRE', 'OCTOBRE', 'NOVEMBRE', 'DÉCEMBRE'
   ];
-  return months[monthIndex - 1] || 'MOIS INCONNU';
+  return months[monthIndex -1] || 'MOIS INCONNU';
 };
 
 const DepenseDuMois = () => {
@@ -282,7 +281,7 @@ const DepenseDuMois = () => {
       
       {/* En-tête avec titre et boutons */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 items-center">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
           <h2 className="text-2xl font-bold mb-4 sm:mb-0">
             <Wallet className="inline-block mr-2 h-6 w-6" />
             Dépenses du mois

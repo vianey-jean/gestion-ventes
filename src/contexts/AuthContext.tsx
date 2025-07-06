@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { LoginCredentials, PasswordResetData, PasswordResetRequest, RegistrationData, User } from '../types';
 import { authService } from '../service/api';
@@ -8,6 +7,7 @@ interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  token: string | null;
   login: (credentials: LoginCredentials) => Promise<boolean>;
   logout: () => void;
   register: (data: RegistrationData) => Promise<boolean>;
@@ -21,12 +21,16 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [token, setToken] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
     // Check if user is already logged in
     const currentUser = authService.getCurrentUser();
+    const storedToken = localStorage.getItem('token');
+    
     setUser(currentUser);
+    setToken(storedToken);
     setIsLoading(false);
   }, []);
 
@@ -37,6 +41,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (loggedInUser) {
         setUser(loggedInUser);
+        setToken(localStorage.getItem('token'));
         authService.setCurrentUser(loggedInUser);
         toast({
           title: "Connexion réussie",
@@ -66,6 +71,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = () => {
     setUser(null);
+    setToken(null);
     authService.setCurrentUser(null);
     toast({
       title: "Déconnexion réussie",
@@ -82,6 +88,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (newUser) {
         setUser(newUser);
+        setToken(localStorage.getItem('token'));
         authService.setCurrentUser(newUser);
         toast({
           title: "Inscription réussie",
@@ -179,6 +186,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     user,
     isAuthenticated: !!user,
     isLoading,
+    token,
     login,
     logout,
     register,

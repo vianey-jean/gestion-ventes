@@ -27,6 +27,7 @@ const monthNames = [
 
 /**
  * Composant principal pour la gestion des ventes de produits - Version modernisée
+ * Affiche automatiquement le mois en cours uniquement
  */
 const VentesProduits: React.FC = () => {
   // Récupérer les données et fonctions du contexte
@@ -36,10 +37,8 @@ const VentesProduits: React.FC = () => {
     isLoading: appLoading,
     fetchSales, 
     fetchProducts,
-    selectedMonth,
-    selectedYear,
-    setSelectedMonth,
-    setSelectedYear
+    currentMonth,
+    currentYear
   } = useApp();
   
   const { isAuthenticated, isLoading: authLoading } = useAuth();
@@ -53,42 +52,16 @@ const VentesProduits: React.FC = () => {
   const [exportDialogOpen, setExportDialogOpen] = React.useState(false);
   const [selectedSale, setSelectedSale] = React.useState<Sale | undefined>(undefined);
   const [showProductsList, setShowProductsList] = React.useState(false);
-  const [filteredSales, setFilteredSales] = useState<Sale[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
 
-  // Calcul des statistiques basés sur les ventes filtrées
+  // Les ventes sont automatiquement filtrées pour le mois en cours par le contexte
+  const filteredSales = sales;
+
+  // Calcul des statistiques basés sur les ventes du mois en cours
   const totalProfit = filteredSales.reduce((sum, sale) => sum + sale.profit, 0);
   const totalProductsSold = filteredSales.reduce((sum, sale) => sum + sale.quantitySold, 0);
   const availableProducts = products.filter(p => p.quantity > 0);
   const totalStock = products.reduce((sum, product) => sum + product.quantity, 0);
-
-  // Filtrer les ventes pour le mois et l'année sélectionnés
-  useEffect(() => {
-    // Assurez-vous de filtrer les ventes pour n'afficher que celles du mois et de l'année sélectionnés
-    const currentDate = new Date();
-    const currentMonthIndex = currentDate.getMonth(); // 0-based index (0 = Janvier)
-    const currentYearValue = currentDate.getFullYear();
-    
-    // Définir le mois et l'année actuels si nécessaire
-    if (selectedMonth !== currentMonthIndex + 1) {
-      setSelectedMonth(currentMonthIndex + 1);
-    }
-    
-    if (selectedYear !== currentYearValue) {
-      setSelectedYear(currentYearValue);
-    }
-    
-    // Filtrer les ventes pour le mois en cours
-    const filtered = sales.filter(sale => {
-      const saleDate = new Date(sale.date);
-      // saleDate.getMonth() retourne 0-11, selectedMonth est 1-12
-      return saleDate.getMonth() + 1 === selectedMonth && saleDate.getFullYear() === selectedYear;
-    });
-    
-    setFilteredSales(filtered);
-    
-    console.log(`Filtered sales for month ${selectedMonth}, year ${selectedYear}: ${filtered.length} sales`);
-  }, [sales, selectedMonth, selectedYear, setSelectedMonth, setSelectedYear]);
 
   // Charger les données au montage du composant seulement si authentifié
   useEffect(() => {
@@ -101,18 +74,14 @@ const VentesProduits: React.FC = () => {
       setLoadError(null);
       
       try {
+        console.log(`Loading data for current month ${currentMonth}, year ${currentYear}`);
         // Charger les produits et les ventes en parallèle
-        // S'assurer que les ventes sont chargées pour le mois en cours
-        const currentDate = new Date();
-        const currentMonthNum = currentDate.getMonth() + 1; // Convertir de 0-11 à 1-12
-        const currentYearNum = currentDate.getFullYear();
-        
         await Promise.all([
           fetchProducts(),
-          fetchSales(currentMonthNum, currentYearNum)
+          fetchSales()
         ]);
         
-        console.log(`Loaded sales for month ${currentMonthNum}, year ${currentYearNum}`);
+        console.log(`Loaded sales for current month ${currentMonth}, year ${currentYear}`);
       } catch (error) {
         console.error("Failed to load data:", error);
         setLoadError("Impossible de charger les données. Veuillez réessayer.");
@@ -125,7 +94,7 @@ const VentesProduits: React.FC = () => {
     };
     
     loadData();
-  }, [fetchProducts, fetchSales, toast, isAuthenticated, authLoading]);
+  }, [fetchProducts, fetchSales, toast, isAuthenticated, authLoading, currentMonth, currentYear]);
 
   // Si l'utilisateur n'est pas authentifié, afficher un message
   if (!isAuthenticated) {
@@ -159,7 +128,7 @@ const VentesProduits: React.FC = () => {
               <TrendingUp className="h-8 w-8" />
             </div>
             <div>
-              <p className="text-sm font-medium text-green-600 dark:text-green-400">Bénéfices totaux</p>
+              <p className="text-sm font-medium text-green-600 dark:text-green-400">Bénéfices du mois</p>
               <p className="text-3xl font-bold text-green-700 dark:text-green-300">{formatEuro(totalProfit)}</p>
             </div>
           </div>
@@ -171,7 +140,7 @@ const VentesProduits: React.FC = () => {
               <Package className="h-8 w-8" />
             </div>
             <div>
-              <p className="text-sm font-medium text-blue-600 dark:text-blue-400">Produits vendus</p>
+              <p className="text-sm font-medium text-blue-600 dark:text-blue-400">Produits vendus ce mois</p>
               <p className="text-3xl font-bold text-blue-700 dark:text-blue-300">{totalProductsSold}</p>
             </div>
           </div>
@@ -204,15 +173,15 @@ const VentesProduits: React.FC = () => {
       
       {/* Conteneur principal modernisé */}
       <ModernContainer 
-        title="Gestion des ventes" 
+        title="Ventes du mois en cours" 
         icon={ShoppingCart}
         gradient="neutral"
         headerActions={
           <div className="flex items-center space-x-4">
             <div className="text-right">
-              <p className="text-sm text-gray-500">Période actuelle</p>
+              <p className="text-sm text-gray-500">Mois en cours</p>
               <p className="text-lg font-bold text-app-red">
-                {monthNames[selectedMonth - 1]} {selectedYear}
+                {monthNames[currentMonth - 1]} {currentYear}
               </p>
             </div>
             <ModernActionButton
@@ -265,7 +234,7 @@ const VentesProduits: React.FC = () => {
           <div className="flex justify-center items-center py-12">
             <div className="flex items-center space-x-4 p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg">
               <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
-              <p className="text-lg text-gray-600 dark:text-gray-300">Chargement des données...</p>
+              <p className="text-lg text-gray-600 dark:text-gray-300">Chargement des données du mois en cours...</p>
             </div>
           </div>
         )}
@@ -279,6 +248,16 @@ const VentesProduits: React.FC = () => {
             />
           </div>
         )}
+        
+        {/* Message informatif */}
+        <div className="text-sm text-gray-500 mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+          <p className="font-medium text-blue-700 dark:text-blue-300">
+            📅 Affichage automatique du mois en cours: {monthNames[currentMonth - 1]} {currentYear}
+          </p>
+          <p className="text-blue-600 dark:text-blue-400 mt-1">
+            Les données se mettront automatiquement à jour le 1er du mois prochain.
+          </p>
+        </div>
       </ModernContainer>
       
       {/* Formulaires dans des dialogues */}

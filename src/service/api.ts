@@ -1,4 +1,3 @@
-
 import axios from 'axios';
 import { LoginCredentials, PasswordResetData, PasswordResetRequest, Product, RegistrationData, Sale, User } from "../types";
 
@@ -6,7 +5,7 @@ import { LoginCredentials, PasswordResetData, PasswordResetRequest, Product, Reg
 const AUTH_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://server-gestion-ventes.onrender.com';
 
 // ✅ Création de l'instance Axios
-const api = axios.create({
+export const api = axios.create({
   baseURL: `${AUTH_BASE_URL}/api`, // base de l'API commune à toutes les routes
   headers: {
     'Content-Type': 'application/json',
