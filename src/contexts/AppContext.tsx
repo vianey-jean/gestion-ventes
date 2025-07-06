@@ -10,10 +10,13 @@ interface AppContextType {
   setProducts: React.Dispatch<React.SetStateAction<Product[]>>;
   sales: Sale[];
   setSales: React.Dispatch<React.SetStateAction<Sale[]>>;
+  allSales: Sale[]; // Toutes les ventes historiques pour les tendances
+  setAllSales: React.Dispatch<React.SetStateAction<Sale[]>>;
   loading: boolean;
   error: string | null;
   fetchProducts: () => Promise<void>;
   fetchSales: (month?: number, year?: number) => Promise<void>;
+  fetchAllSales: () => Promise<void>; // Nouvelle fonction pour récupérer toutes les ventes
   addProduct: (product: Omit<Product, 'id'>) => Promise<Product | null>;
   updateProduct: (product: Product) => Promise<Product | null>;
   addSale: (sale: Omit<Sale, 'id'>) => Promise<Sale | null>;
@@ -23,13 +26,11 @@ interface AppContextType {
   selectedYear: number;
   setSelectedMonth: (month: number) => void;
   setSelectedYear: (year: number) => void;
-  // Add missing properties reported in the TypeScript errors
   currentMonth: number;
   currentYear: number;
   isLoading: boolean;
   searchProducts: (query: string) => Promise<Product[]>;
   exportMonth: () => Promise<boolean>;
-  // Add refreshData for real-time sync
   refreshData: () => Promise<void>;
 }
 
@@ -49,6 +50,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [currentDate, setCurrentDate] = useState(getCurrentMonthYear());
   const [products, setProducts] = useState<Product[]>([]);
   const [sales, setSales] = useState<Sale[]>([]);
+  const [allSales, setAllSales] = useState<Sale[]>([]); // Nouvelles données pour toutes les ventes
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
@@ -150,6 +152,34 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [toast, currentDate, isAuthenticated, authLoading]);
 
+  // Nouvelle fonction pour récupérer toutes les ventes historiques
+  const fetchAllSales = useCallback(async () => {
+    if (!isAuthenticated || authLoading) {
+      console.log('User not authenticated, skipping all sales fetch');
+      return;
+    }
+    
+    console.log('Fetching ALL historical sales for trends analysis');
+    
+    setLoading(true);
+    setError(null);
+    try {
+      const fetchedAllSales = await salesService.getAllSales();
+      console.log(`Fetched ${fetchedAllSales.length} total historical sales`);
+      setAllSales(fetchedAllSales);
+    } catch (err: any) {
+      console.error('Error fetching all sales:', err);
+      setError(err.message || 'Failed to fetch all sales');
+      toast({
+        title: "Erreur de chargement",
+        description: "Impossible de charger les données historiques.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [toast, isAuthenticated, authLoading]);
+
   // Fonction de rafraîchissement pour la synchronisation temps réel
   const refreshData = useCallback(async () => {
     if (!isAuthenticated || authLoading) return;
@@ -157,25 +187,28 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     try {
       await Promise.all([
         fetchProducts(),
-        fetchSales()
+        fetchSales(),
+        fetchAllSales() // Rafraîchir aussi toutes les données historiques
       ]);
     } catch (error) {
       console.error('Erreur lors du rafraîchissement des données:', error);
     }
-  }, [fetchProducts, fetchSales, isAuthenticated, authLoading]);
+  }, [fetchProducts, fetchSales, fetchAllSales, isAuthenticated, authLoading]);
 
-  // Charger les données seulement pour le mois en cours
+  // Charger les données seulement pour le mois en cours + toutes les données historiques
   useEffect(() => {
     if (isAuthenticated && !authLoading) {
       console.log(`User authenticated, fetching data for current month: ${currentDate.month}/${currentDate.year}`);
       fetchProducts();
       fetchSales();
+      fetchAllSales(); // Charger aussi toutes les données historiques
     } else {
       console.log('User not authenticated or auth loading, clearing data');
       setProducts([]);
       setSales([]);
+      setAllSales([]);
     }
-  }, [isAuthenticated, authLoading, currentDate, fetchProducts, fetchSales]);
+  }, [isAuthenticated, authLoading, currentDate, fetchProducts, fetchSales, fetchAllSales]);
 
   // Add searchProducts function that is being used
   const searchProducts = async (query: string): Promise<Product[]> => {
@@ -253,8 +286,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     try {
       const result = await salesService.addSale(saleData);
       
-      // Update local state only if we get a Sale object back
-      if (result && typeof result !== 'boolean') {
+      // Update local state - result should be a Sale object
+      if (result && typeof result === 'object' && 'id' in result) {
         // Check if the new sale belongs to the current month/year
         const saleDate = new Date(result.date);
         const saleMonth = saleDate.getMonth() + 1; // Convert from 0-based to 1-based
@@ -271,13 +304,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
             description: `La vente a été ajoutée pour le mois de ${saleMonth}/${saleYear}, différent du mois en cours.`,
           });
         }
+        
+        // Toujours ajouter à allSales pour les tendances
+        setAllSales(prevAllSales => [...prevAllSales, result]);
+        
         return result;
-      }
-      
-      // If we got a boolean result, still consider it a success but return null
-      if (result === true) {
-        await fetchSales();
-        return null;
       }
       
       return null;
@@ -296,18 +327,18 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     try {
       const result = await salesService.updateSale(sale);
       
-      // Update local state only if we get a Sale object back
-      if (result && typeof result !== 'boolean') {
+      // Update local state - result should be a Sale object
+      if (result && typeof result === 'object' && 'id' in result) {
         setSales(prevSales =>
           prevSales.map(s => (s.id === sale.id ? result : s))
         );
+        
+        // Mettre à jour aussi allSales
+        setAllSales(prevAllSales =>
+          prevAllSales.map(s => (s.id === sale.id ? result : s))
+        );
+        
         return result;
-      }
-      
-      // If we got a boolean result, still consider it a success but return null
-      if (result === true) {
-        await fetchSales();
-        return null;
       }
       
       return null;
@@ -327,6 +358,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       const success = await salesService.deleteSale(id);
       if (success) {
         setSales(prevSales => prevSales.filter(sale => sale.id !== id));
+        setAllSales(prevAllSales => prevAllSales.filter(sale => sale.id !== id));
         return true;
       }
       return false;
@@ -343,10 +375,13 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         setProducts,
         sales,
         setSales,
+        allSales, // Nouvelles données pour les tendances
+        setAllSales,
         loading,
         error,
         fetchProducts,
         fetchSales,
+        fetchAllSales, // Nouvelle fonction
         addProduct,
         updateProduct,
         addSale,
@@ -356,7 +391,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         selectedYear,
         setSelectedMonth,
         setSelectedYear,
-        // Add the new properties to the context value
         currentMonth,
         currentYear,
         isLoading,

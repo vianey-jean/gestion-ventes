@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -11,11 +10,12 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
-import { PlusCircle, Edit, CalendarIcon, Loader2, Trash2, Plus } from 'lucide-react';
+import { PlusCircle, Edit, CalendarIcon, Loader2, Trash2, Plus, CreditCard, TrendingUp, Wallet, CheckCircle, Clock, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useApp } from '@/contexts/AppContext';
 import { Product, PretProduit } from '@/types';
 import { pretProduitService } from '@/service/api';
+import { motion } from 'framer-motion';
 
 const PretProduits: React.FC = () => {
   const [prets, setPrets] = useState<PretProduit[]>([]);
@@ -87,6 +87,9 @@ const PretProduits: React.FC = () => {
 
   // Calculer le total restant
   const totalReste = prets.reduce((sum, pret) => sum + pret.reste, 0);
+  const totalAvances = prets.reduce((sum, pret) => sum + pret.avanceRecue, 0);
+  const totalVentes = prets.reduce((sum, pret) => sum + pret.prixVente, 0);
+  const pretsPayes = prets.filter(pret => pret.estPaye).length;
 
   // Recherche des produits par description
   const handleSearch = async (text: string) => {
@@ -389,217 +392,375 @@ const PretProduits: React.FC = () => {
   };
 
   return (
-    <div className="mt-6">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">Prêts de Produits</h2>
-        <div className="flex items-center gap-4">
-          <div className="text-lg font-semibold ">
-            Total Reste: <span className="text-app-red">{formatCurrency(totalReste)}</span>
-          </div>
-          <Button onClick={() => setDialogOpen(true)} className="bg-app-green hover:bg-opacity-90 card-3d">
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Ajout de Prêt
-          </Button>
-          <Button onClick={() => setSearchDialogOpen(true)} className="bg-app-blue hover:bg-opacity-90 card-3d">
-            <Edit className="mr-2 h-4 w-4" />
-            Modifier un Prêt
-          </Button>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-purple-50 to-indigo-50 dark:from-gray-900 dark:via-purple-900/20 dark:to-slate-900 p-6">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="max-w-7xl mx-auto"
+      >
+        {/* Hero Header */}
+        <div className="text-center mb-12">
+          <motion.div 
+            initial={{ scale: 0.9 }}
+            animate={{ scale: 1 }}
+            transition={{ duration: 0.5 }}
+            className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-purple-500/10 to-indigo-500/10 backdrop-blur-sm rounded-full text-purple-600 dark:text-purple-400 text-sm font-semibold mb-6 border border-purple-200/50 dark:border-purple-800/50"
+          >
+            <CreditCard className="h-5 w-5 mr-2 animate-pulse" />
+            Gestion Premium des Prêts
+          </motion.div>
+          
+          <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 bg-clip-text text-transparent mb-4">
+            Prêts Produits
+          </h1>
+          <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+            Gérez vos prêts avec élégance et efficacité
+          </p>
         </div>
-      </div>
-      
-      <Card className="mb-6">
-        <div className="p-6">
-          {loading ? (
-            <div className="flex justify-center items-center py-10">
-              <Loader2 className="h-6 w-6 animate-spin text-app-blue mr-2" />
-              <p>Chargement des données...</p>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1, duration: 0.5 }}
+          >
+            <Card className="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white border-none shadow-xl hover:shadow-2xl transition-all duration-300">
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="p-3 bg-white/20 rounded-lg">
+                    <TrendingUp className="h-6 w-6" />
+                  </div>
+                  <div className="text-right">
+                    <p className="text-emerald-100 text-sm">Total Ventes</p>
+                    <p className="text-2xl font-bold">{formatCurrency(totalVentes)}</p>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.5 }}
+          >
+            <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white border-none shadow-xl hover:shadow-2xl transition-all duration-300">
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="p-3 bg-white/20 rounded-lg">
+                    <Wallet className="h-6 w-6" />
+                  </div>
+                  <div className="text-right">
+                    <p className="text-blue-100 text-sm">Avances Reçues</p>
+                    <p className="text-2xl font-bold">{formatCurrency(totalAvances)}</p>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
+          >
+            <Card className="bg-gradient-to-br from-orange-500 to-red-500 text-white border-none shadow-xl hover:shadow-2xl transition-all duration-300">
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="p-3 bg-white/20 rounded-lg">
+                    <Clock className="h-6 w-6" />
+                  </div>
+                  <div className="text-right">
+                    <p className="text-orange-100 text-sm">Reste à Payer</p>
+                    <p className="text-2xl font-bold">{formatCurrency(totalReste)}</p>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4, duration: 0.5 }}
+          >
+            <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white border-none shadow-xl hover:shadow-2xl transition-all duration-300">
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="p-3 bg-white/20 rounded-lg">
+                    <CheckCircle className="h-6 w-6" />
+                  </div>
+                  <div className="text-right">
+                    <p className="text-purple-100 text-sm">Prêts Payés</p>
+                    <p className="text-2xl font-bold">{pretsPayes}/{prets.length}</p>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          </motion.div>
+        </div>
+
+        {/* Action Buttons */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5, duration: 0.5 }}
+          className="flex flex-wrap gap-4 mb-8 justify-center"
+        >
+          <Button 
+            onClick={() => setDialogOpen(true)} 
+            className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 px-8 py-3 rounded-xl font-semibold"
+          >
+            <PlusCircle className="mr-2 h-5 w-5" />
+            Nouveau Prêt
+          </Button>
+          
+          <Button 
+            onClick={() => setSearchDialogOpen(true)} 
+            className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 px-8 py-3 rounded-xl font-semibold"
+          >
+            <Search className="mr-2 h-5 w-5" />
+            Rechercher
+          </Button>
+        </motion.div>
+        
+        {/* Main Table */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6, duration: 0.5 }}
+        >
+          <Card className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl border border-white/20 shadow-2xl">
+            <div className="p-8">
+              {loading ? (
+                <div className="flex justify-center items-center py-16">
+                  <div className="text-center">
+                    <Loader2 className="h-12 w-12 animate-spin text-purple-600 mx-auto mb-4" />
+                    <p className="text-lg text-gray-600 dark:text-gray-300">Chargement des données...</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <Table className="w-full">
+                    <TableHeader>
+                      <TableRow className="border-gray-200 dark:border-gray-700">
+                        <TableHead className="font-bold text-purple-600 dark:text-purple-400 text-left">Date</TableHead>
+                        <TableHead className="font-bold text-purple-600 dark:text-purple-400 text-left">Description</TableHead>
+                        <TableHead className="font-bold text-purple-600 dark:text-purple-400 text-left">Nom</TableHead>
+                        <TableHead className="font-bold text-purple-600 dark:text-purple-400 text-right">Prix Vente</TableHead>
+                        <TableHead className="font-bold text-purple-600 dark:text-purple-400 text-right">Avance</TableHead>
+                        <TableHead className="font-bold text-purple-600 dark:text-purple-400 text-right">Reste</TableHead>
+                        <TableHead className="font-bold text-purple-600 dark:text-purple-400 text-center">Statut</TableHead>
+                        <TableHead className="font-bold text-purple-600 dark:text-purple-400 text-center">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {prets.map((pret) => (
+                        <TableRow 
+                          key={pret.id} 
+                          className="cursor-pointer hover:bg-purple-50/50 dark:hover:bg-purple-900/20 transition-all duration-200 border-gray-100 dark:border-gray-700" 
+                          onClick={() => handleRowClick(pret)}
+                        >
+                          <TableCell className="font-medium">{format(new Date(pret.date), 'dd/MM/yyyy')}</TableCell>
+                          <TableCell className="font-medium text-gray-900 dark:text-gray-100">{pret.description}</TableCell>
+                          <TableCell className="text-gray-600 dark:text-gray-300">{pret.nom || '-'}</TableCell>
+                          <TableCell className="text-right font-semibold">
+                            {formatCurrency(pret.prixVente)}
+                          </TableCell>
+                          <TableCell className="text-right font-semibold text-blue-600">
+                            {formatCurrency(pret.avanceRecue)}
+                          </TableCell>
+                          <TableCell className="text-right font-bold text-orange-600">
+                            {formatCurrency(pret.reste)}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold ${
+                              pret.estPaye 
+                                ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400' 
+                                : 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400'
+                            }`}>
+                              {pret.estPaye ? (
+                                <>
+                                  <CheckCircle className="h-3 w-3 mr-1" />
+                                  Payé
+                                </>
+                              ) : (
+                                <>
+                                  <Clock className="h-3 w-3 mr-1" />
+                                  En cours
+                                </>
+                              )}
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <div className="flex justify-center space-x-2">
+                              <button 
+                                onClick={(e) => selectPretForAjoutAvance(pret, e)} 
+                                className="p-2 rounded-lg bg-emerald-100 text-emerald-600 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:hover:bg-emerald-900/50 transition-colors"
+                                title="Ajouter une avance"
+                              >
+                                <Plus className="h-4 w-4" />
+                              </button>
+                              <button 
+                                onClick={(e) => handleEditClick(pret, e)} 
+                                className="p-2 rounded-lg bg-blue-100 text-blue-600 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50 transition-colors"
+                                title="Modifier"
+                              >
+                                <Edit className="h-4 w-4" />
+                              </button>
+                              <button 
+                                onClick={(e) => selectPretForDelete(pret, e)} 
+                                className="p-2 rounded-lg bg-red-100 text-red-600 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50 transition-colors"
+                                title="Supprimer"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
             </div>
-          ) : (
-            <Table className='card-3d'>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="font-bold text-red-600">Date</TableHead>
-                  <TableHead className="font-bold text-red-600">Description</TableHead>
-                  <TableHead className="font-bold text-red-600">Nom</TableHead>
-                  <TableHead className="text-right font-bold text-red-600">Prix du produit vendu</TableHead>
-                  <TableHead className="text-right font-bold text-red-600">Avance Reçue</TableHead>
-                  <TableHead className="text-right font-bold text-red-600">Reste</TableHead>
-                  <TableHead className="text-center font-bold text-red-600">Paiement</TableHead>
-                  <TableHead className="text-center font-bold text-red-600">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {prets.map((pret) => (
-                  <TableRow key={pret.id} className="cursor-pointer" onClick={() => handleRowClick(pret)}>
-                    <TableCell>{format(new Date(pret.date), 'dd/MM/yyyy')}</TableCell>
-                    <TableCell className="font-medium">{pret.description}</TableCell>
-                    <TableCell>{pret.nom || '-'}</TableCell>
-                    <TableCell className="text-right">
-                      {formatCurrency(pret.prixVente)}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {formatCurrency(pret.avanceRecue)}
-                    </TableCell>
-                    <TableCell className="text-right font-semibold">
-                      {formatCurrency(pret.reste)}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <span className={`px-2 py-1 rounded-full text-xs ${pret.estPaye ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                        {pret.estPaye ? 'Tout payé' : 'Reste à payer'}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <div className="flex justify-center space-x-2">
-                        <button 
-                          onClick={(e) => selectPretForAjoutAvance(pret, e)} 
-                          className="text-app-green hover:text-app-green/80"
-                          title="Ajouter une avance"
-                        >
-                          <Plus className="h-4 w-4" />
-                        </button>
-                        <button 
-                          onClick={(e) => handleEditClick(pret, e)} 
-                          className="text-app-blue hover:text-app-blue/80"
-                          title="Modifier"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </button>
-                        <button 
-                          onClick={(e) => selectPretForDelete(pret, e)} 
-                          className="text-app-red hover:text-app-red/80"
-                          title="Supprimer"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </div>
-      </Card>
+          </Card>
+        </motion.div>
+      </motion.div>
       
       {/* Formulaire d'ajout de prêt */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-[500px] bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border border-white/20">
           <DialogHeader>
-            <DialogTitle>Ajouter un prêt de produit</DialogTitle>
+            <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+              Ajouter un prêt de produit
+            </DialogTitle>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
+          <div className="grid gap-6 py-6">
             <div className="grid gap-2">
-              <Label htmlFor="date">Date</Label>
+              <Label htmlFor="date" className="text-sm font-semibold text-gray-700 dark:text-gray-300">Date</Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
                     variant={"outline"}
                     className={cn(
-                      "w-full justify-start text-left font-normal",
+                      "w-full justify-start text-left font-normal bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm border-gray-300 dark:border-gray-600",
                       !date && "text-muted-foreground"
                     )}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {date ? format(date, 'PP', { locale: fr }) : <span>Sélectionner une date</span>}
+                    {date ? format(date, "PPP", { locale: fr }) : "Sélectionner une date"}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0 pointer-events-auto" align="start">
+                <PopoverContent className="w-auto p-0" align="start">
                   <Calendar
                     mode="single"
                     selected={date}
-                    onSelect={(date) => date && setDate(date)}
+                    onSelect={(newDate) => setDate(newDate || new Date())}
+                    disabled={(date) =>
+                      date > new Date() || date < new Date("1900-01-01")
+                    }
                     initialFocus
-                    className={cn("p-3")}
                   />
                 </PopoverContent>
               </Popover>
             </div>
             
             <div className="grid gap-2">
-              <Label htmlFor="description">Description</Label>
-              <div className="relative">
-                <Input 
-                  id="description" 
-                  value={description} 
-                  onChange={(e) => handleSearch(e.target.value)} 
-                  placeholder="Saisir au moins 3 caractères pour rechercher"
-                />
-                {searchResults.length > 0 && (
-                  <div className="absolute z-10 w-full bg-white border rounded-md shadow-lg mt-1">
-                    {searchResults.map((product) => (
-                      <div 
-                        key={product.id} 
-                        className="p-2 hover:bg-gray-100 cursor-pointer"
-                        onClick={() => selectProduct(product)}
-                      >
-                        {product.description} (Prix: {formatCurrency(product.purchasePrice)})
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+              <Label htmlFor="description" className="text-sm font-semibold text-gray-700 dark:text-gray-300">Description du produit</Label>
+              <Input
+                id="description"
+                value={description}
+                onChange={(e) => handleSearch(e.target.value)}
+                placeholder="Tapez pour rechercher un produit..."
+                className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm border-gray-300 dark:border-gray-600"
+              />
+              {searchResults.length > 0 && (
+                <div className="border rounded-md max-h-40 overflow-y-auto bg-white dark:bg-gray-800">
+                  {searchResults.map((product) => (
+                    <div
+                      key={product.id}
+                      className="p-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                      onClick={() => selectProduct(product)}
+                    >
+                      <div className="text-sm font-medium">{product.description}</div>
+                      <div className="text-xs text-gray-500">Prix: {formatCurrency(product.purchasePrice)}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-            
+
             <div className="grid gap-2">
-              <Label htmlFor="nom">Nom</Label>
-              <Input 
-                id="nom" 
-                value={nom} 
+              <Label htmlFor="nom" className="text-sm font-semibold text-gray-700 dark:text-gray-300">Nom du client (optionnel)</Label>
+              <Input
+                id="nom"
+                value={nom}
                 onChange={(e) => setNom(e.target.value)}
-                placeholder="Nom de l'acheteur"
+                placeholder="Nom du client"
+                className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm border-gray-300 dark:border-gray-600"
               />
             </div>
-            
-            <div className="grid gap-2">
-              <Label htmlFor="prixVente">Prix du produit vendu</Label>
-              <Input 
-                id="prixVente" 
-                type="number" 
-                value={prixVente} 
-                onChange={(e) => setPrixVente(e.target.value)}
-                placeholder="0.00"
-                min="0"
-                step="0.01"
-              />
-            </div>
-            
-            <div className="grid gap-2">
-              <Label htmlFor="avanceRecue">Avance reçue</Label>
-              <Input 
-                id="avanceRecue" 
-                type="number" 
-                value={avanceRecue} 
-                onChange={(e) => setAvanceRecue(e.target.value)}
-                placeholder="0.00"
-                min="0"
-                step="0.01"
-              />
-            </div>
-            
-            <div className="bg-gray-50 p-3 rounded-md">
-              <div className="flex justify-between">
-                <p><strong>Reste:</strong></p>
-                <p className={reste > 0 ? 'text-app-red font-semibold' : 'text-app-green font-semibold'}>
-                  {formatCurrency(reste)}
-                </p>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="prixVente" className="text-sm font-semibold text-gray-700 dark:text-gray-300">Prix de vente (€)</Label>
+                <Input
+                  id="prixVente"
+                  type="number"
+                  step="0.01"
+                  value={prixVente}
+                  onChange={(e) => setPrixVente(e.target.value)}
+                  className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm border-gray-300 dark:border-gray-600"
+                />
               </div>
-              <div className="flex justify-between mt-1">
-                <p><strong>Statut:</strong></p>
-                <p className={estPaye ? 'text-app-green font-semibold' : 'text-app-red font-semibold'}>
-                  {estPaye ? 'Tout payé' : 'Reste à payer'}
-                </p>
+              
+              <div className="grid gap-2">
+                <Label htmlFor="avanceRecue" className="text-sm font-semibold text-gray-700 dark:text-gray-300">Avance reçue (€)</Label>
+                <Input
+                  id="avanceRecue"
+                  type="number"
+                  step="0.01"
+                  value={avanceRecue}
+                  onChange={(e) => setAvanceRecue(e.target.value)}
+                  className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm border-gray-300 dark:border-gray-600"
+                />
               </div>
             </div>
-            
+
+            {(prixVente || avanceRecue) && (
+              <div className="p-4 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                <div className="flex justify-between items-center">
+                  <span className="font-semibold text-gray-700 dark:text-gray-300">Reste à payer:</span>
+                  <span className={`font-bold text-lg ${reste <= 0 ? 'text-green-600' : 'text-orange-600'}`}>
+                    {formatCurrency(reste)}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center mt-2">
+                  <span className="text-sm text-gray-600 dark:text-gray-400">Statut:</span>
+                  <span className={`text-sm font-semibold ${estPaye ? 'text-green-600' : 'text-orange-600'}`}>
+                    {estPaye ? 'Entièrement payé' : 'Paiement en cours'}
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDialogOpen(false)}>
+              Annuler
+            </Button>
             <Button 
               onClick={handleSubmit} 
-              disabled={loading || !description || !prixVente || parseFloat(prixVente) <= 0}
-              className="mt-2"
+              disabled={loading}
+              className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white"
             >
               {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-              Enregistrer le prêt
+              Enregistrer
             </Button>
-          </div>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
       

@@ -1,7 +1,8 @@
+
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { LoginCredentials, PasswordResetData, PasswordResetRequest, RegistrationData, User } from '../types';
 import { authService } from '../service/api';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 
 interface AuthContextType {
   user: User | null;
@@ -37,15 +38,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (credentials: LoginCredentials): Promise<boolean> => {
     try {
       setIsLoading(true);
-      const loggedInUser = await authService.login(credentials);
+      const result = await authService.login(credentials);
       
-      if (loggedInUser) {
-        setUser(loggedInUser);
-        setToken(localStorage.getItem('token'));
-        authService.setCurrentUser(loggedInUser);
+      if (result && result.user) {
+        setUser(result.user);
+        setToken(result.token);
         toast({
           title: "Connexion réussie",
-          description: `Bienvenue ${loggedInUser.firstName} ${loggedInUser.lastName}`,
+          description: `Bienvenue ${result.user.firstName} ${result.user.lastName}`,
           className: "bg-green-500 text-white",
         });
         return true;
@@ -84,15 +84,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const register = async (data: RegistrationData): Promise<boolean> => {
     try {
       setIsLoading(true);
-      const newUser = await authService.register(data);
+      const registerData = {
+        email: data.email,
+        password: data.password,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        gender: data.gender,
+        address: data.address,
+        phone: data.phone,
+      };
       
-      if (newUser) {
-        setUser(newUser);
-        setToken(localStorage.getItem('token'));
-        authService.setCurrentUser(newUser);
+      const result = await authService.register(registerData);
+      
+      if (result && result.user) {
+        setUser(result.user);
+        setToken(result.token);
         toast({
           title: "Inscription réussie",
-          description: `Bienvenue ${newUser.firstName} ${newUser.lastName}`,
+          description: `Bienvenue ${result.user.firstName} ${result.user.lastName}`,
           className: "notification-success",
         });
         return true;
@@ -118,7 +127,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const checkEmail = async (email: string): Promise<boolean> => {
     try {
-      return await authService.checkEmail(email);
+      const result = await authService.checkEmail(email);
+      return result.exists;
     } catch (error) {
       return false;
     }
@@ -153,23 +163,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const resetPassword = async (data: PasswordResetData): Promise<boolean> => {
     try {
       setIsLoading(true);
-      const success = await authService.resetPassword(data);
+      const result = await authService.resetPassword(data.email);
       
-      if (success) {
+      if (result.success) {
         toast({
           title: "Réinitialisation réussie",
           description: "Votre mot de passe a été réinitialisé avec succès",
           className: "notification-success",
         });
+        return true;
       } else {
         toast({
           title: "Échec de la réinitialisation",
           description: "Le nouveau mot de passe doit être différent de l'ancien",
           variant: "destructive",
         });
+        return false;
       }
-      
-      return success;
     } catch (error) {
       toast({
         title: "Erreur",

@@ -1,10 +1,9 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
-import { Home, Info, Mail, LogIn, UserCircle, LogOut, LayoutDashboard, Moon, Sun, Sparkles } from 'lucide-react';
+import { Home, Info, Mail, LogIn, UserCircle, LogOut, LayoutDashboard, Moon, Sun, Sparkles, TrendingUp } from 'lucide-react';
 
 const Navbar: React.FC = () => {
   const { isAuthenticated, user, logout } = useAuth();
@@ -49,11 +48,17 @@ const Navbar: React.FC = () => {
                 </Link>
                 
                 {isAuthenticated && (
-                  <Link to="/dashboard" className="group inline-flex items-center px-4 py-2 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all duration-200">
-                    <LayoutDashboard className="mr-2 h-4 w-4 text-blue-600 group-hover:scale-110 transition-transform" />
-                    <p className="text-blue-600 bg-transparent">Tableau de Bord</p>
-
-                  </Link>
+                  <>
+                    <Link to="/dashboard" className="group inline-flex items-center px-4 py-2 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all duration-200">
+                      <LayoutDashboard className="mr-2 h-4 w-4 text-blue-600 group-hover:scale-110 transition-transform" />
+                      <p className="text-blue-600 bg-transparent">Tableau de Bord</p>
+                    </Link>
+                    
+                    <Link to="/tendances" className="group inline-flex items-center px-4 py-2 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-all duration-200">
+                      <TrendingUp className="mr-2 h-4 w-4 text-emerald-600 group-hover:scale-110 transition-transform" />
+                      <p className="text-emerald-600 bg-transparent">Tendances</p>
+                    </Link>
+                  </>
                 )}
 
                 <Button 
@@ -122,6 +127,16 @@ const Navbar: React.FC = () => {
                         className="h-10 w-10 p-0 rounded-xl border-2 border-green-200 text-green-600 hover:bg-green-500 hover:text-white hover:border-green-500"
                       >
                         <LayoutDashboard className="h-4 w-4" />
+                      </Button>
+                    </Link>
+                    
+                    <Link to="/tendances">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="h-10 w-10 p-0 rounded-xl border-2 border-emerald-200 text-emerald-600 hover:bg-emerald-500 hover:text-white hover:border-emerald-500"
+                      >
+                        <TrendingUp className="h-4 w-4" />
                       </Button>
                     </Link>
                     

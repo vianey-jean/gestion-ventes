@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Download, FileText, CheckCircle, Calendar, TrendingUp } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { Sale } from '@/types';
@@ -105,34 +107,52 @@ const ExportSalesDialog: React.FC<ExportSalesDialogProps> = ({ isOpen, onClose }
   };
 
   /**
-   * Génère le PDF avec les données des ventes
+   * Génère le PDF avec les données des ventes - Version Premium
    * @param sales - Liste des ventes à exporter
    * @param month - Mois sélectionné (0-11)
    * @param year - Année sélectionnée
    */
   const generatePDF = (sales: Sale[], month: number, year: number) => {
     const doc = new jsPDF();
-    doc.text(`Rapport de ventes – ${monthNames[month]} ${year}`, 14, 20);
-  
+    
+    // En-tête premium avec gradient simulé
+    doc.setFillColor(37, 99, 235); // Bleu premium 
+    doc.rect(0, 0, 210, 35, 'F');
+    
+    // Titre principal en blanc
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(22);
+    doc.setFont(undefined, 'bold');
+    doc.text('RAPPORT DE VENTES PREMIUM', 105, 15, { align: 'center' });
+    
+    // Sous-titre avec période
+    doc.setFontSize(14);
+    doc.setFont(undefined, 'normal');
+    doc.text(`${monthNames[month]} ${year}`, 105, 25, { align: 'center' });
+    
+    // Ligne de séparation élégante
+    doc.setDrawColor(37, 99, 235);
+    doc.setLineWidth(2);
+    doc.line(20, 40, 190, 40);
+
     // Préparer le corps du tableau
     const tableBody = sales.map(sale => {
-      // Obtenir les valeurs formatées
       const achatPrice = typeof sale.purchasePrice === 'number' ? sale.purchasePrice : 0;
       const quantity = isAdvanceProduct(sale.description) ? 0 : (typeof sale.quantitySold === 'number' ? sale.quantitySold : 0);
       const ventePrice = typeof sale.sellingPrice === 'number' ? sale.sellingPrice : 0;
       const profit = typeof sale.profit === 'number' ? sale.profit : 0;
-  
+
       return [
         new Date(sale.date).toLocaleDateString('fr-FR'),
         sale.description || 'Inconnu',
-        achatPrice.toFixed(2),
-        quantity,
-        ventePrice.toFixed(2),
-        profit.toFixed(2),
+        `${achatPrice.toFixed(2)} €`,
+        quantity.toString(),
+        `${ventePrice.toFixed(2)} €`,
+        `${profit.toFixed(2)} €`,
       ];
     });
-  
-    // Calcul des totaux - exactement comme dans SalesTable
+
+    // Calcul des totaux
     const totalQuantite = sales.reduce((sum, sale) => {
       return sum + (isAdvanceProduct(sale.description) ? 0 : (typeof sale.quantitySold === 'number' ? sale.quantitySold : 0));
     }, 0);
@@ -150,135 +170,296 @@ const ExportSalesDialog: React.FC<ExportSalesDialogProps> = ({ isOpen, onClose }
     const totalProfit = sales.reduce((sum, sale) => {
       return sum + (typeof sale.profit === 'number' ? sale.profit : 0);
     }, 0);
-  
-    // Ajouter la ligne des totaux avec le total des prix d'achat
+
+    // Ligne de totaux premium
     tableBody.push([
-      '', // Date vide
-      'TOTAL',
-      totalAchat.toFixed(2),
-      totalQuantite,
-      totalVente.toFixed(2),
-      totalProfit.toFixed(2),
+      '', 
+      'TOTAUX',
+      `${totalAchat.toFixed(2)} €`,
+      totalQuantite.toString(),
+      `${totalVente.toFixed(2)} €`,
+      `${totalProfit.toFixed(2)} €`,
     ]);
-  
+
+    // Tableau premium avec style moderne
     autoTable(doc, {
-      startY: 30,
-      head: [['Date', 'Produit', 'Prix Achat (€)', 'Quantité', 'Prix Vendu (€)', 'Bénéfice (€)']],
+      startY: 50,
+      head: [['Date', 'Produit', 'Prix Achat', 'Quantité', 'Prix Vendu', 'Bénéfice']],
       body: tableBody,
-      foot: [['', '', '', '', '', '']],
+      theme: 'grid',
       headStyles: {
-        fillColor: [0, 0, 255],
+        fillColor: [37, 99, 235], // Bleu premium
         textColor: [255, 255, 255],
-        fontStyle: 'bold'
+        fontStyle: 'bold',
+        fontSize: 11,
+        halign: 'center',
+        valign: 'middle',
+        cellPadding: 8,
       },
-      footStyles: {
-        fillColor: [255, 255, 255],
-        textColor: [255, 0, 0],
-        fontStyle: 'bold'
+      bodyStyles: {
+        fontSize: 10,
+        cellPadding: 6,
+        halign: 'center',
+        valign: 'middle',
       },
-      didDrawCell: (data) => {
-        // Colorer la dernière ligne (totaux) en rouge
+      alternateRowStyles: {
+        fillColor: [248, 250, 252], // Gris très clair pour alternance
+      },
+      styles: {
+        lineColor: [203, 213, 225], // Bordures grises élégantes
+        lineWidth: 0.5,
+        font: 'helvetica',
+      },
+      columnStyles: {
+        0: { halign: 'center', cellWidth: 25 }, // Date
+        1: { halign: 'left', cellWidth: 50 },   // Produit
+        2: { halign: 'right', cellWidth: 25 },  // Prix Achat
+        3: { halign: 'center', cellWidth: 20 }, // Quantité
+        4: { halign: 'right', cellWidth: 25 },  // Prix Vendu
+        5: { halign: 'right', cellWidth: 25 },  // Bénéfice
+      },
+      didParseCell: (data) => {
+        // Styling spécial pour la ligne de totaux
         if (data.row.index === tableBody.length - 1) {
-           doc.setTextColor(234, 56, 76);        // Rouge
-           doc.setFont(undefined, 'bold');       // Gras
-           doc.setFillColor(240, 240, 240);      // Fond gris clair
-        } else {
-          doc.setTextColor(0, 0, 0);            // Noir
-          doc.setFont(undefined, 'normal');     // Normal
-         }}
+          data.cell.styles.fillColor = [220, 252, 231]; // Vert très clair
+          data.cell.styles.textColor = [22, 101, 52];   // Vert foncé
+          data.cell.styles.fontStyle = 'bold';
+          data.cell.styles.fontSize = 11;
+        }
+      },
+      margin: { top: 50, left: 20, right: 20 },
     });
-  
-    doc.save(`ventes_${monthNames[month]}_${year}.pdf`);
+
+    // Footer premium avec informations additionnelles
+    const finalY = (doc as any).lastAutoTable.finalY + 20;
+    doc.setTextColor(100, 116, 139);
+    doc.setFontSize(9);
+    doc.text(`Généré le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleTimeString('fr-FR')}`, 105, finalY, { align: 'center' });
+    
+    // Ligne de séparation footer
+    doc.setDrawColor(203, 213, 225);
+    doc.setLineWidth(0.5);
+    doc.line(20, finalY + 5, 190, finalY + 5);
+    
+    doc.setFontSize(8);
+    doc.text('Rapport confidentiel - Usage interne uniquement', 105, finalY + 12, { align: 'center' });
+
+    doc.save(`rapport_ventes_premium_${monthNames[month]}_${year}.pdf`);
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle className="text-xl font-semibold">
-            {isConfirming ? 'Confirmer l\'exportation' : 'Exporter les ventes'}
-          </DialogTitle>
-        </DialogHeader>
-        
-        {!isConfirming ? (
-          // Formulaire de sélection du mois et de l'année
-          <div className="grid gap-6 py-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="month">Mois</Label>
-                <Select 
-                  value={selectedMonth.toString()} 
-                  onValueChange={(value) => setSelectedMonth(Number(value))}
-                >
-                  <SelectTrigger id="month" className="w-full">
-                    <SelectValue placeholder="Sélectionner le mois" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {monthNames.map((month, index) => (
-                      <SelectItem key={month} value={index.toString()}>
-                        {month}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="year">Année</Label>
-                <Select 
-                  value={selectedYear.toString()} 
-                  onValueChange={(value) => setSelectedYear(Number(value))}
-                >
-                  <SelectTrigger id="year" className="w-full">
-                    <SelectValue placeholder="Sélectionner l'année" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {years.map((year) => (
-                      <SelectItem key={year} value={year.toString()}>
-                        {year}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            
-            <DialogFooter>
-              <Button variant="outline" onClick={handleClose}>
-                Annuler
-              </Button>
-              <Button onClick={handleProceed} className="ml-2">
-                Suivant
-              </Button>
-            </DialogFooter>
-          </div>
-        ) : (
-          // Écran de confirmation
-          <div className="py-6">
-            <p className="mb-6 text-center">
-              Voulez-vous exporter vers PDF les ventes du mois 
-              <span className="font-bold"> {monthNames[selectedMonth]} </span> 
-              et de l'année <span className="font-bold">{selectedYear}</span> ?
+      <DialogContent className="sm:max-w-[600px] bg-gradient-to-br from-white via-blue-50/30 to-purple-50/30 dark:from-gray-900 dark:via-blue-900/10 dark:to-purple-900/10 border-0 shadow-2xl">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <DialogHeader className="text-center pb-6">
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.1, type: "spring", stiffness: 200 }}
+              className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg"
+            >
+              <FileText className="h-8 w-8 text-white" />
+            </motion.div>
+            <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              {isConfirming ? 'Confirmation d\'exportation' : 'Exportation Premium'}
+            </DialogTitle>
+            <p className="text-sm text-muted-foreground mt-2">
+              Génération de rapport PDF professionnel
             </p>
-            
-            <p className="mb-4 text-sm text-gray-500">
-              Note: Cette opération n'affectera pas les données dans la base de données.
-            </p>
-            
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsConfirming(false)}>
-                Retour
-              </Button>
-              <Button 
-                onClick={handleExport} 
-                className="ml-2"
-                disabled={isLoading}
+          </DialogHeader>
+          
+          <AnimatePresence mode="wait">
+            {!isConfirming ? (
+              <motion.div
+                key="form"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                transition={{ duration: 0.3 }}
+                className="space-y-6 py-4"
               >
-                {isLoading ? "Exportation..." : "Confirmer l'export"}
-              </Button>
-            </DialogFooter>
-          </div>
-        )}
+                <div className="grid grid-cols-2 gap-6">
+                  <motion.div 
+                    className="space-y-3"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                  >
+                    <Label htmlFor="month" className="text-sm font-semibold flex items-center gap-2">
+                      <Calendar className="h-4 w-4 text-blue-500" />
+                      Mois
+                    </Label>
+                    <Select 
+                      value={selectedMonth.toString()} 
+                      onValueChange={(value) => setSelectedMonth(Number(value))}
+                    >
+                      <SelectTrigger 
+                        id="month" 
+                        className="w-full h-12 border-2 border-gray-200 focus:border-blue-500 rounded-xl shadow-sm hover:shadow-md transition-all duration-200"
+                      >
+                        <SelectValue placeholder="Sélectionner le mois" />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-xl border-0 shadow-xl">
+                        {monthNames.map((month, index) => (
+                          <SelectItem 
+                            key={month} 
+                            value={index.toString()}
+                            className="rounded-lg hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50"
+                          >
+                            {month}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </motion.div>
+                  
+                  <motion.div 
+                    className="space-y-3"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                  >
+                    <Label htmlFor="year" className="text-sm font-semibold flex items-center gap-2">
+                      <TrendingUp className="h-4 w-4 text-purple-500" />
+                      Année
+                    </Label>
+                    <Select 
+                      value={selectedYear.toString()} 
+                      onValueChange={(value) => setSelectedYear(Number(value))}
+                    >
+                      <SelectTrigger 
+                        id="year" 
+                        className="w-full h-12 border-2 border-gray-200 focus:border-purple-500 rounded-xl shadow-sm hover:shadow-md transition-all duration-200"
+                      >
+                        <SelectValue placeholder="Sélectionner l'année" />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-xl border-0 shadow-xl">
+                        {years.map((year) => (
+                          <SelectItem 
+                            key={year} 
+                            value={year.toString()}
+                            className="rounded-lg hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50"
+                          >
+                            {year}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </motion.div>
+                </div>
+
+                <motion.div 
+                  className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 p-4 rounded-xl border border-blue-200/50"
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.4 }}
+                >
+                  <div className="flex items-center gap-3">
+                    <CheckCircle className="h-5 w-5 text-green-500" />
+                    <div>
+                      <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                        Format PDF Premium
+                      </p>
+                      <p className="text-xs text-gray-600 dark:text-gray-400">
+                        Tableau professionnel avec en-tête personnalisé et totaux mis en évidence
+                      </p>
+                    </div>
+                  </div>
+                </motion.div>
+                
+                <DialogFooter className="pt-4">
+                  <Button 
+                    variant="outline" 
+                    onClick={handleClose}
+                    className="rounded-xl border-2 hover:bg-gray-50"
+                  >
+                    Annuler
+                  </Button>
+                  <Button 
+                    onClick={handleProceed} 
+                    className="ml-2 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all duration-200"
+                  >
+                    Continuer
+                  </Button>
+                </DialogFooter>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="confirmation"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.3 }}
+                className="py-6 text-center"
+              >
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.1, type: "spring", stiffness: 200 }}
+                  className="w-20 h-20 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg"
+                >
+                  <Download className="h-10 w-10 text-white" />
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="space-y-4"
+                >
+                  <p className="text-lg font-medium text-gray-900 dark:text-gray-100">
+                    Exporter les ventes de{' '}
+                    <span className="font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                      {monthNames[selectedMonth]} {selectedYear}
+                    </span>
+                  </p>
+                  
+                  <div className="bg-amber-50 dark:bg-amber-900/20 p-4 rounded-xl border border-amber-200/50">
+                    <p className="text-sm text-amber-800 dark:text-amber-200 flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4" />
+                      Génération d'un rapport PDF professionnel avec analyse détaillée
+                    </p>
+                  </div>
+                </motion.div>
+                
+                <DialogFooter className="pt-6">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setIsConfirming(false)}
+                    className="rounded-xl border-2 hover:bg-gray-50"
+                  >
+                    Retour
+                  </Button>
+                  <Button 
+                    onClick={handleExport} 
+                    disabled={isLoading}
+                    className="ml-2 rounded-xl bg-gradient-to-r from-green-500 to-blue-600 hover:from-green-600 hover:to-blue-700 shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50"
+                  >
+                    {isLoading ? (
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                        className="flex items-center gap-2"
+                      >
+                        <Download className="h-4 w-4" />
+                        Génération...
+                      </motion.div>
+                    ) : (
+                      <span className="flex items-center gap-2">
+                        <Download className="h-4 w-4" />
+                        Générer le PDF
+                      </span>
+                    )}
+                  </Button>
+                </DialogFooter>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
       </DialogContent>
     </Dialog>
   );

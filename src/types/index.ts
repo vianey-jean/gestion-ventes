@@ -76,6 +76,16 @@ export interface LoginCredentials {
   password: string;
 }
 
+export interface RegisterCredentials {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  gender: 'male' | 'female' | 'other';
+  address: string;
+  phone: string;
+}
+
 export interface RegistrationData {
   email: string;
   password: string;
