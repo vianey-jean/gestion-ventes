@@ -8,7 +8,7 @@ const getBaseURL = () => {
   const isDevelopment = import.meta.env.DEV;
   
   if (isDevelopment) {
-    return import.meta.env.VITE_API_URL || 'http://localhost:10000';
+    return import.meta.env.VITE_API_URL || 'https://server-gestion-ventes.onrender.com';
   }
   
   // En production, utiliser l'URL du serveur déployé

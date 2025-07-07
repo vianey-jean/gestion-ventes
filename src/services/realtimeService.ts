@@ -53,7 +53,7 @@ class RealtimeService {
     console.log('Tentative de connexion SSE...');
 
     try {
-      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:10000';
+      const baseUrl = import.meta.env.VITE_API_URL || 'https://server-gestion-ventes.onrender.com';
       const url = `${baseUrl}/api/sync/events`;
       
       console.log('URL SSE:', url);
