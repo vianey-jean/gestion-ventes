@@ -1,4 +1,3 @@
-
 import { api } from '@/service/api';
 
 export interface SyncData {
@@ -44,7 +43,7 @@ class RealtimeService {
     });
   }
 
-  // Connexion au serveur SSE
+  // Connexion au serveur SSE avec gestion CORS améliorée
   connect(token?: string) {
     if (this.eventSource) {
       this.eventSource.close();
@@ -58,7 +57,10 @@ class RealtimeService {
       
       console.log('URL SSE:', url);
       
-      this.eventSource = new EventSource(url);
+      // Configuration EventSource avec headers CORS
+      this.eventSource = new EventSource(url, {
+        withCredentials: true
+      });
 
       this.eventSource.onopen = () => {
         console.log('✅ Connexion SSE établie');
@@ -87,6 +89,11 @@ class RealtimeService {
         this.isConnected = false;
         this.stopHeartbeat();
         
+        // Fermer la connexion actuelle
+        if (this.eventSource) {
+          this.eventSource.close();
+        }
+        
         if (this.reconnectAttempts < this.maxReconnectAttempts) {
           const delay = Math.min(this.reconnectInterval * Math.pow(1.5, this.reconnectAttempts), 30000);
           setTimeout(() => {
@@ -96,6 +103,8 @@ class RealtimeService {
           }, delay);
         } else {
           console.error('🚫 Nombre maximum de tentatives de reconnexion atteint');
+          // Fallback: synchronisation périodique
+          this.fallbackToPolling();
         }
       };
 
@@ -115,7 +124,20 @@ class RealtimeService {
     } catch (error) {
       console.error('Erreur création EventSource:', error);
       this.isConnected = false;
+      this.fallbackToPolling();
     }
+  }
+
+  // Fallback en cas d'échec SSE
+  private fallbackToPolling() {
+    console.log('🔄 Fallback vers polling périodique');
+    setInterval(async () => {
+      try {
+        await this.syncAllData();
+      } catch (error) {
+        console.error('Erreur polling:', error);
+      }
+    }, 10000); // Poll toutes les 10 secondes
   }
 
   // Déconnexion
