@@ -241,14 +241,22 @@ const TendancesPage = () => {
 
           {/* Main Charts */}
           <Tabs defaultValue="overview" className="space-y-8">
-            <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl rounded-3xl shadow-2xl p-6 border border-white/20">
-              <TabsList className="grid w-full grid-cols-1 md:grid-cols-4 gap-2 bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm rounded-2xl p-2">
-                <TabsTrigger value="overview" className="rounded-xl font-semibold">Vue d'ensemble</TabsTrigger>
-                <TabsTrigger value="products" className="rounded-xl font-semibold">Par Produits</TabsTrigger>
-                <TabsTrigger value="categories" className="rounded-xl font-semibold">Par Catégories</TabsTrigger>
-                <TabsTrigger value="recommendations" className="rounded-xl font-semibold">Recommandations</TabsTrigger>
+         <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl rounded-3xl shadow-2xl p-6 border border-white/20">
+  
+            {/* Conteneur avec overflow horizontal sur mobile */}
+            <div className="overflow-x-auto">
+              
+              <TabsList className="inline-flex min-w-max gap-2 bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm rounded-2xl p-2">
+                <TabsTrigger value="overview" className="rounded-xl font-semibold whitespace-nowrap">Vue d'ensemble</TabsTrigger>
+                <TabsTrigger value="products" className="rounded-xl font-semibold whitespace-nowrap">Par Produits</TabsTrigger>
+                <TabsTrigger value="categories" className="rounded-xl font-semibold whitespace-nowrap">Par Catégories</TabsTrigger>
+                <TabsTrigger value="recommendations" className="rounded-xl font-semibold whitespace-nowrap">Recommandations</TabsTrigger>
               </TabsList>
+
             </div>
+            
+          </div>
+
 
             {/* Vue d'ensemble */}
             <TabsContent value="overview" className="space-y-6">
