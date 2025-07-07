@@ -7,29 +7,40 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, LineCh
 import { TrendingUp, TrendingDown, DollarSign, Package, Award, Target, ShoppingCart, Sparkles } from 'lucide-react';
 import { useApp } from '@/contexts/AppContext';
 import { cn } from '@/lib/utils';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const TendancesPage = () => {
   const { allSales, products, loading } = useApp();
   const [selectedPeriod, setSelectedPeriod] = useState('all');
+  const [activeTab, setActiveTab] = useState('overview');
+  const isMobile = useIsMobile();
 
-  // Fonction pour déterminer la catégorie d'un produit
+  // Fonction pour déterminer la catégorie d'un produit (exclure les avances)
   const getProductCategory = (description: string) => {
     const desc = description.toLowerCase();
-    if (desc.includes('tissage')) {
+    if (desc.includes('avance')) {
+      return null; // Exclure les avances
+    } else if (desc.includes('tissage')) {
       return 'Tissages';
     } else if (desc.includes('perruque')) {
       return 'Perruques';
     } else if (desc.includes('colle') || desc.includes('disolvant')) {
       return 'Accessoires';
-    } else if (desc.includes('avance')) {
-      return 'Avances';
     }
     return 'Autres';
   };
 
-  // Données pour les graphiques de ventes par produit (utiliser allSales)
+  // Filtrer les ventes pour exclure les avances
+  const filteredSales = useMemo(() => {
+    return allSales.filter(sale => {
+      const category = getProductCategory(sale.description);
+      return category !== null; // Exclure les ventes avec catégorie null (avances)
+    });
+  }, [allSales]);
+
+  // Données pour les graphiques de ventes par produit (utiliser filteredSales)
   const salesByProduct = useMemo(() => {
-    const productSales = allSales.reduce((acc, sale) => {
+    const productSales = filteredSales.reduce((acc, sale) => {
       const productName = sale.description.length > 50 ? 
         sale.description.substring(0, 47) + '...' : 
         sale.description;
@@ -57,13 +68,13 @@ const TendancesPage = () => {
     return Object.values(productSales)
       .sort((a, b) => b.benefice - a.benefice)
       .slice(0, 15); // Top 15 produits
-  }, [allSales]);
+  }, [filteredSales]);
 
-  // Données pour les graphiques par catégorie (utiliser allSales)
+  // Données pour les graphiques par catégorie (utiliser filteredSales)
   const salesByCategory = useMemo(() => {
-    const categorySales = allSales.reduce((acc, sale) => {
+    const categorySales = filteredSales.reduce((acc, sale) => {
       const category = getProductCategory(sale.description);
-      if (!acc[category]) {
+      if (category && !acc[category]) {
         acc[category] = {
           category,
           ventes: 0,
@@ -72,19 +83,21 @@ const TendancesPage = () => {
           count: 0
         };
       }
-      acc[category].ventes += sale.sellingPrice;
-      acc[category].benefice += sale.profit;
-      acc[category].quantite += sale.quantitySold;
-      acc[category].count += 1;
+      if (category) {
+        acc[category].ventes += sale.sellingPrice;
+        acc[category].benefice += sale.profit;
+        acc[category].quantite += sale.quantitySold;
+        acc[category].count += 1;
+      }
       return acc;
     }, {} as Record<string, any>);
 
     return Object.values(categorySales);
-  }, [allSales]);
+  }, [filteredSales]);
 
-  // Données temporelles (par mois) (utiliser allSales)
+  // Données temporelles (par mois) (utiliser filteredSales)
   const salesOverTime = useMemo(() => {
-    const monthlySales = allSales.reduce((acc, sale) => {
+    const monthlySales = filteredSales.reduce((acc, sale) => {
       const date = new Date(sale.date);
       const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
       const monthName = date.toLocaleDateString('fr-FR', { year: 'numeric', month: 'short' });
@@ -105,7 +118,7 @@ const TendancesPage = () => {
     }, {} as Record<string, any>);
 
     return Object.values(monthlySales).sort((a, b) => a.mois.localeCompare(b.mois));
-  }, [allSales]);
+  }, [filteredSales]);
 
   // Produits les plus rentables
   const topProfitableProducts = useMemo(() => {
@@ -115,12 +128,12 @@ const TendancesPage = () => {
       .slice(0, 10);
   }, [salesByProduct]);
 
-  // Recommandations d'achat basées sur le ROI
+  // Recommandations d'achat basées sur le ROI (montrer 12 produits)
   const buyingRecommendations = useMemo(() => {
     return salesByProduct
       .filter(product => product.benefice > 30 && product.prixAchat > 0)
       .sort((a, b) => (b.benefice / b.prixAchat) - (a.benefice / a.prixAchat))
-      .slice(0, 8)
+      .slice(0, 12) // Changé de 8 à 12
       .map(product => ({
         ...product,
         roi: ((product.benefice / product.prixAchat) * 100).toFixed(1),
@@ -134,7 +147,6 @@ const TendancesPage = () => {
     'Perruques': '#8B5CF6',
     'Tissages': '#06D6A0',
     'Accessoires': '#F59E0B',
-    'Avances': '#EF4444',
     'Autres': '#6B7280'
   };
 
@@ -185,10 +197,10 @@ const TendancesPage = () => {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {allSales.reduce((sum, sale) => sum + sale.sellingPrice, 0).toLocaleString()} €
+                  {filteredSales.reduce((sum, sale) => sum + sale.sellingPrice, 0).toLocaleString()} €
                 </div>
                 <p className="text-xs text-purple-100">
-                  +{allSales.length} transactions historiques
+                  +{filteredSales.length} transactions historiques
                 </p>
               </CardContent>
             </Card>
@@ -200,10 +212,10 @@ const TendancesPage = () => {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {allSales.reduce((sum, sale) => sum + sale.profit, 0).toLocaleString()} €
+                  {filteredSales.reduce((sum, sale) => sum + sale.profit, 0).toLocaleString()} €
                 </div>
                 <p className="text-xs text-emerald-100">
-                  Marge moyenne: {allSales.length > 0 ? ((allSales.reduce((sum, sale) => sum + sale.profit, 0) / allSales.reduce((sum, sale) => sum + sale.sellingPrice, 0)) * 100).toFixed(1) : 0}%
+                  Marge moyenne: {filteredSales.length > 0 ? ((filteredSales.reduce((sum, sale) => sum + sale.profit, 0) / filteredSales.reduce((sum, sale) => sum + sale.sellingPrice, 0)) * 100).toFixed(1) : 0}%
                 </p>
               </CardContent>
             </Card>
@@ -215,7 +227,7 @@ const TendancesPage = () => {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {allSales.reduce((sum, sale) => sum + sale.quantitySold, 0)}
+                  {filteredSales.reduce((sum, sale) => sum + sale.quantitySold, 0)}
                 </div>
                 <p className="text-xs text-orange-100">
                   {salesByProduct.length} produits différents
@@ -240,23 +252,72 @@ const TendancesPage = () => {
           </div>
 
           {/* Main Charts */}
-          <Tabs defaultValue="overview" className="space-y-8">
-         <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl rounded-3xl shadow-2xl p-6 border border-white/20">
-  
-            {/* Conteneur avec overflow horizontal sur mobile */}
-            <div className="overflow-x-auto">
+          <Tabs defaultValue="overview" onValueChange={setActiveTab} className="space-y-8">
+            {/* Modern Tab Navigation - Matching DashboardPage style */}
+            <div className={cn(
+              "relative bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl rounded-3xl shadow-2xl p-6 border border-white/20",
+              isMobile && "pt-8 pb-12"
+            )}>
+              {/* Background gradient */}
+              <div className="absolute inset-0 bg-gradient-to-r from-emerald-600/10 via-blue-600/10 to-purple-600/10 rounded-3xl"></div>
               
-              <TabsList className="inline-flex min-w-max gap-2 bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm rounded-2xl p-2">
-                <TabsTrigger value="overview" className="rounded-xl font-semibold whitespace-nowrap">Vue d'ensemble</TabsTrigger>
-                <TabsTrigger value="products" className="rounded-xl font-semibold whitespace-nowrap">Par Produits</TabsTrigger>
-                <TabsTrigger value="categories" className="rounded-xl font-semibold whitespace-nowrap">Par Catégories</TabsTrigger>
-                <TabsTrigger value="recommendations" className="rounded-xl font-semibold whitespace-nowrap">Recommandations</TabsTrigger>
+              <TabsList className={cn(
+                "relative grid w-full h-auto p-2 bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm rounded-2xl border border-white/20",
+                isMobile ? 'grid-cols-1 gap-3' : 'grid-cols-4 gap-2'
+              )}>
+                <TabsTrigger 
+                  value="overview" 
+                  className={cn(
+                    "font-bold text-sm uppercase flex items-center justify-center gap-3 py-4 px-6 rounded-xl transition-all duration-300 data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-600 data-[state=active]:to-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:scale-105",
+                    activeTab === "overview" 
+                      ? "text-white bg-gradient-to-r from-emerald-600 to-blue-600 shadow-lg scale-105" 
+                      : "text-gray-600 dark:text-gray-300 hover:bg-white/70 dark:hover:bg-gray-700/70 hover:scale-102"
+                  )}
+                >
+                  <TrendingUp className="h-5 w-5" />
+                  <span className={isMobile ? "text-xs" : "text-sm"}>Vue d'ensemble</span>
+                </TabsTrigger>
+                
+                <TabsTrigger 
+                  value="products" 
+                  className={cn(
+                    "font-bold text-sm uppercase flex items-center justify-center gap-3 py-4 px-6 rounded-xl transition-all duration-300 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-pink-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:scale-105",
+                    activeTab === "products" 
+                      ? "text-white bg-gradient-to-r from-purple-600 to-pink-600 shadow-lg scale-105" 
+                      : "text-gray-600 dark:text-gray-300 hover:bg-white/70 dark:hover:bg-gray-700/70 hover:scale-102"
+                  )}
+                >
+                  <ShoppingCart className="h-5 w-5" />
+                  <span className={isMobile ? "text-xs" : "text-sm"}>Par Produits</span>
+                </TabsTrigger>
+                
+                <TabsTrigger 
+                  value="categories" 
+                  className={cn(
+                    "font-bold text-sm uppercase flex items-center justify-center gap-3 py-4 px-6 rounded-xl transition-all duration-300 data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-600 data-[state=active]:to-red-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:scale-105",
+                    activeTab === "categories" 
+                      ? "text-white bg-gradient-to-r from-orange-600 to-red-600 shadow-lg scale-105" 
+                      : "text-gray-600 dark:text-gray-300 hover:bg-white/70 dark:hover:bg-gray-700/70 hover:scale-102"
+                  )}
+                >
+                  <Target className="h-5 w-5" />
+                  <span className={isMobile ? "text-xs" : "text-sm"}>Par Catégories</span>
+                </TabsTrigger>
+                
+                <TabsTrigger 
+                  value="recommendations" 
+                  className={cn(
+                    "font-bold text-sm uppercase flex items-center justify-center gap-3 py-4 px-6 rounded-xl transition-all duration-300 data-[state=active]:bg-gradient-to-r data-[state=active]:from-yellow-600 data-[state=active]:to-orange-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:scale-105",
+                    activeTab === "recommendations" 
+                      ? "text-white bg-gradient-to-r from-yellow-600 to-orange-600 shadow-lg scale-105" 
+                      : "text-gray-600 dark:text-gray-300 hover:bg-white/70 dark:hover:bg-gray-700/70 hover:scale-102"
+                  )}
+                >
+                  <Sparkles className="h-5 w-5" />
+                  <span className={isMobile ? "text-xs" : "text-sm"}>Recommandations</span>
+                </TabsTrigger>
               </TabsList>
-
             </div>
-            
-          </div>
-
 
             {/* Vue d'ensemble */}
             <TabsContent value="overview" className="space-y-6">
@@ -522,13 +583,13 @@ const TendancesPage = () => {
               </div>
             </TabsContent>
 
-            {/* Recommandations */}
+            {/* Recommandations - Affichage de 12 produits */}
             <TabsContent value="recommendations" className="space-y-6">
               <Card className="bg-gradient-to-br from-emerald-50 to-blue-50 dark:from-emerald-900/20 dark:to-blue-900/20 border-emerald-200 dark:border-emerald-800 shadow-2xl">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Sparkles className="h-5 w-5 text-emerald-600 animate-pulse" />
-                    Recommandations d'Achat Intelligentes
+                    Recommandations d'Achat Intelligentes (Top 12)
                   </CardTitle>
                   <CardDescription>Produits à privilégier pour maximiser vos bénéfices (basé sur le ROI historique)</CardDescription>
                 </CardHeader>
