@@ -1,9 +1,9 @@
-
-import React from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { TableBody, TableCell, TableFooter, TableRow } from '@/components/ui/table';
 import { ModernTable, ModernTableHeader, ModernTableRow, ModernTableHead, ModernTableCell } from '@/components/dashboard/forms/ModernTable';
 import { Sale } from '@/types';
-import { TrendingUp, Package, Euro, Calendar, Sparkles, Award } from 'lucide-react';
+import { TrendingUp, Package, Euro, Calendar, Sparkles, Award, Clock } from 'lucide-react';
+import { realtimeService } from '@/services/realtimeService';
 
 interface SalesTableProps {
   sales: Sale[];
@@ -11,9 +11,82 @@ interface SalesTableProps {
 }
 
 /**
- * Tableau des ventes modernisé et luxueux
+ * Tableau des ventes modernisé avec synchronisation temps réel
+ * Affiche uniquement les ventes du mois en cours avec filtrage strict
  */
-const SalesTable: React.FC<SalesTableProps> = ({ sales, onRowClick }) => {
+const SalesTable: React.FC<SalesTableProps> = ({ sales: initialSales, onRowClick }) => {
+  const [sales, setSales] = useState<Sale[]>([]);
+  const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
+  const [isRealtimeActive, setIsRealtimeActive] = useState(false);
+
+  // Fonction pour filtrer les ventes du mois en cours
+  const filterCurrentMonthSales = (salesData: Sale[]) => {
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+    
+    return salesData.filter(sale => {
+      const saleDate = new Date(sale.date);
+      return saleDate.getMonth() === currentMonth && saleDate.getFullYear() === currentYear;
+    });
+  };
+
+  // Filtrer les ventes initiales pour le mois en cours
+  const currentMonthSales = useMemo(() => {
+    return filterCurrentMonthSales(initialSales);
+  }, [initialSales]);
+
+  // Synchronisation temps réel pour les ventes du mois en cours
+  useEffect(() => {
+    console.log('🔄 Initialisation SalesTable - Filtrage mois en cours');
+    
+    // Initialiser avec les ventes du mois en cours seulement
+    setSales(currentMonthSales);
+    
+    // Connexion au service temps réel
+    realtimeService.connect();
+    
+    // Écouter les changements de données
+    const unsubscribeData = realtimeService.addDataListener((data) => {
+      if (data.sales) {
+        // Double filtrage : côté serveur ET côté client pour être sûr
+        const filteredSales = filterCurrentMonthSales(data.sales);
+        console.log('📊 Ventes mois en cours filtrées:', filteredSales.length, 'sur', data.sales.length);
+        setSales(filteredSales);
+        setLastUpdate(new Date());
+      }
+    });
+
+    // Écouter les événements de connexion
+    const unsubscribeSync = realtimeService.addSyncListener((event) => {
+      if (event.type === 'connected') {
+        console.log('✅ Connexion temps réel établie pour SalesTable');
+        setIsRealtimeActive(true);
+      } else if (event.type === 'data-changed' && event.data?.type === 'sales') {
+        console.log('⚡ Changement de ventes détecté - Filtrage mois en cours');
+        if (event.data.data) {
+          const filteredSales = filterCurrentMonthSales(event.data.data);
+          setSales(filteredSales);
+        }
+        setLastUpdate(new Date());
+      }
+    });
+
+    // Vérifier le statut de connexion
+    setIsRealtimeActive(realtimeService.getConnectionStatus());
+
+    return () => {
+      unsubscribeData();
+      unsubscribeSync();
+    };
+  }, [currentMonthSales]);
+
+  // Mettre à jour les ventes quand les props changent
+  useEffect(() => {
+    const filtered = filterCurrentMonthSales(initialSales);
+    setSales(filtered);
+  }, [initialSales]);
+
   // Formater une date au format local
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -42,29 +115,57 @@ const SalesTable: React.FC<SalesTableProps> = ({ sales, onRowClick }) => {
     return isAdvanceProduct(sale.description) ? 0 : sale.quantitySold;
   };
   
-  // Calculer les totaux
+  // Calculer les totaux pour le mois en cours uniquement
   const totalSellingPrice = sales.reduce((sum, sale) => sum + sale.sellingPrice, 0);
   const totalQuantitySold = sales.reduce((sum, sale) => {
     return sum + (isAdvanceProduct(sale.description) ? 0 : sale.quantitySold);
   }, 0);
   const totalPurchasePrice = sales.reduce((sum, sale) => sum + (sale.purchasePrice * sale.quantitySold), 0);
   const totalProfit = sales.reduce((sum, sale) => sum + sale.profit, 0);
+
+  const getCurrentMonthName = () => {
+    const now = new Date();
+    return now.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+  };
   
   return (
     <div className="bg-gradient-to-br from-white/95 to-gray-50/95 dark:from-gray-900/95 dark:to-gray-800/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 overflow-hidden">
-      {/* Header avec gradient luxueux */}
+      {/* Header avec gradient luxueux et indicateur temps réel */}
       <div className="bg-gradient-to-r from-purple-600 via-blue-600 to-emerald-600 p-6">
         <div className="flex items-center gap-3">
           <div className="bg-white/20 backdrop-blur-sm rounded-full p-3">
             <Award className="h-6 w-6 text-white" />
           </div>
-          <div>
-            <h3 className="text-xl font-bold text-white">Tableau des Ventes Premium</h3>
-            <p className="text-white/80 text-sm">Visualisation avancée de vos performances</p>
+          <div className="flex-1">
+            <h3 className="text-xl font-bold text-white">Ventes de {getCurrentMonthName()} - Temps Réel</h3>
+            <p className="text-white/80 text-sm">Synchronisation instantanée • Filtrage mois en cours</p>
           </div>
-          <div className="ml-auto">
+          <div className="flex items-center gap-2">
+            {/* Indicateur de synchronisation temps réel */}
+            <div className={`flex items-center gap-2 px-3 py-1 rounded-full ${
+              isRealtimeActive 
+                ? 'bg-green-500/20 text-green-100' 
+                : 'bg-red-500/20 text-red-100'
+            }`}>
+              <div className={`w-2 h-2 rounded-full ${
+                isRealtimeActive ? 'bg-green-400 animate-pulse' : 'bg-red-400'
+              }`} />
+              <span className="text-xs font-medium">
+                {isRealtimeActive ? 'Temps réel' : 'Hors ligne'}
+              </span>
+            </div>
+            <div className="bg-white/20 backdrop-blur-sm rounded-full p-2">
+              <Clock className="h-4 w-4 text-white" />
+            </div>
+          </div>
+          <div className="ml-2">
             <Sparkles className="h-6 w-6 text-white animate-pulse" />
           </div>
+        </div>
+        
+        {/* Informations de dernière mise à jour */}
+        <div className="mt-2 text-xs text-white/60">
+          Dernière mise à jour: {lastUpdate.toLocaleTimeString('fr-FR')} • {sales.length} ventes ce mois
         </div>
       </div>
 
@@ -120,8 +221,8 @@ const SalesTable: React.FC<SalesTableProps> = ({ sales, onRowClick }) => {
                     <Package className="h-12 w-12 text-purple-500" />
                   </div>
                   <div>
-                    <p className="text-lg font-semibold text-gray-700 dark:text-gray-300">Aucune vente enregistrée</p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Commencez à ajouter vos premières ventes</p>
+                    <p className="text-lg font-semibold text-gray-700 dark:text-gray-300">Aucune vente ce mois-ci</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Les ventes apparaîtront ici en temps réel</p>
                   </div>
                 </div>
               </TableCell>
@@ -131,7 +232,7 @@ const SalesTable: React.FC<SalesTableProps> = ({ sales, onRowClick }) => {
               <ModernTableRow 
                 key={sale.id} 
                 onClick={() => onRowClick(sale)}
-                className="hover:bg-gradient-to-r hover:from-purple-50/50 hover:to-blue-50/50 dark:hover:from-purple-900/20 dark:hover:to-blue-900/20 transition-all duration-300 hover:shadow-lg border-b border-gray-100/50 dark:border-gray-700/50"
+                className="hover:bg-gradient-to-r hover:from-purple-50/50 hover:to-blue-50/50 dark:hover:from-purple-900/20 dark:hover:to-blue-900/20 transition-all duration-300 hover:shadow-lg border-b border-gray-100/50 dark:border-gray-700/50 cursor-pointer"
               >
                 <ModernTableCell className="font-medium">
                   <div className="flex items-center space-x-3">
@@ -184,7 +285,7 @@ const SalesTable: React.FC<SalesTableProps> = ({ sales, onRowClick }) => {
               <TableCell colSpan={2} className="text-right text-lg font-bold bg-transparent">
                 <div className="flex items-center justify-end space-x-2">
                   <Award className="h-5 w-5" />
-                  <span>Totaux:</span>
+                  <span>Totaux du mois:</span>
                 </div>
               </TableCell>
               <TableCell className="text-right bg-transparent">

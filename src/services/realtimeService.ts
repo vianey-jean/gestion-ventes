@@ -20,9 +20,9 @@ class RealtimeService {
   private syncListeners: Set<(event: SyncEvent) => void> = new Set();
   private lastSyncTime: Date = new Date();
   private isConnected: boolean = false;
-  private reconnectInterval: number = 5000;
+  private reconnectInterval: number = 1000; // Réduction à 1 seconde
   private reconnectAttempts: number = 0;
-  private maxReconnectAttempts: number = 5;
+  private maxReconnectAttempts: number = 15; // Augmentation du nombre de tentatives
   private heartbeatInterval: NodeJS.Timeout | null = null;
   private pollingInterval: NodeJS.Timeout | null = null;
 
@@ -34,7 +34,7 @@ class RealtimeService {
   private setupEventListeners() {
     // Écouter les changements de connectivité
     window.addEventListener('online', () => {
-      console.log('Connexion Internet rétablie, reconnexion SSE...');
+      console.log('Connexion Internet rétablie, reconnexion SSE immédiate...');
       this.connect();
     });
 
@@ -44,7 +44,19 @@ class RealtimeService {
     });
   }
 
-  // Connexion au serveur SSE simplifiée
+  // Filtrer les ventes pour le mois en cours
+  private filterCurrentMonthSales(sales: any[]) {
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+    
+    return sales.filter(sale => {
+      const saleDate = new Date(sale.date);
+      return saleDate.getMonth() === currentMonth && saleDate.getFullYear() === currentYear;
+    });
+  }
+
+  // Connexion au serveur SSE optimisée avec gestion CORS améliorée
   connect(token?: string) {
     if (this.eventSource) {
       this.eventSource.close();
@@ -58,14 +70,16 @@ class RealtimeService {
       
       console.log('URL SSE:', url);
       
-      // Configuration EventSource sans credentials pour éviter les problèmes CORS
-      this.eventSource = new EventSource(url);
+      // Configuration EventSource optimisée avec gestion d'erreur CORS
+      this.eventSource = new EventSource(url, {
+        withCredentials: false // Désactiver les credentials pour éviter les problèmes CORS
+      });
 
       this.eventSource.onopen = () => {
-        console.log('✅ Connexion SSE établie');
+        console.log('✅ Connexion SSE établie - Mode réactif activé');
         this.isConnected = true;
         this.reconnectAttempts = 0;
-        this.stopPolling(); // Arrêter le polling si la connexion SSE fonctionne
+        this.stopPolling();
         
         this.notifySyncListeners({
           type: 'connected',
@@ -76,7 +90,7 @@ class RealtimeService {
       this.eventSource.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
-          console.log('📨 Message SSE reçu:', data);
+          console.log('📨 Message SSE reçu (réactif):', data);
           this.handleSyncEvent('data-changed', data);
         } catch (error) {
           console.error('Erreur parsing SSE message:', error);
@@ -93,15 +107,16 @@ class RealtimeService {
           this.eventSource = null;
         }
         
+        // Reconnexion plus rapide avec fallback vers polling
         if (this.reconnectAttempts < this.maxReconnectAttempts) {
-          const delay = Math.min(this.reconnectInterval * (this.reconnectAttempts + 1), 30000);
+          const delay = Math.min(this.reconnectInterval * Math.pow(1.2, this.reconnectAttempts), 5000);
           setTimeout(() => {
             this.reconnectAttempts++;
-            console.log(`🔄 Tentative de reconnexion SSE ${this.reconnectAttempts}/${this.maxReconnectAttempts}`);
+            console.log(`🔄 Reconnexion SSE ${this.reconnectAttempts}/${this.maxReconnectAttempts}`);
             this.connect();
           }, delay);
         } else {
-          console.log('🚫 Nombre maximum de tentatives de reconnexion atteint, basculement vers polling');
+          console.log('🚫 Basculement vers polling haute fréquence');
           this.fallbackToPolling();
         }
       };
@@ -111,7 +126,7 @@ class RealtimeService {
         this.eventSource?.addEventListener(eventType, (event: any) => {
           try {
             const data = JSON.parse(event.data);
-            console.log(`📡 Événement SSE ${eventType} reçu:`, data);
+            console.log(`📡 SSE ${eventType} (réactif):`, data);
             this.handleSyncEvent(eventType as any, data);
           } catch (error) {
             console.error(`Erreur parsing ${eventType}:`, error);
@@ -126,18 +141,29 @@ class RealtimeService {
     }
   }
 
-  // Fallback amélioré avec polling moins agressif
+  // Polling haute fréquence pour les ventes du mois en cours uniquement
   private fallbackToPolling() {
-    if (this.pollingInterval) return; // Éviter les doublons
+    if (this.pollingInterval) return;
     
-    console.log('🔄 Fallback vers polling périodique');
+    console.log('🔄 Mode polling haute fréquence activé - Mois en cours seulement');
     this.pollingInterval = setInterval(async () => {
       try {
-        await this.syncAllData();
+        // Récupérer seulement les ventes du mois en cours
+        const currentDate = new Date();
+        const currentMonth = currentDate.getMonth() + 1;
+        const currentYear = currentDate.getFullYear();
+        
+        const response = await api.get(`/sales/by-month?month=${currentMonth}&year=${currentYear}`);
+        
+        if (response.data) {
+          // Double filtrage pour être sûr
+          const filteredSales = this.filterCurrentMonthSales(response.data);
+          this.processSyncData('sales', filteredSales);
+        }
       } catch (error) {
-        console.error('Erreur polling:', error);
+        console.error('Erreur polling haute fréquence:', error);
       }
-    }, 30000); // Poll toutes les 30 secondes
+    }, 300); // Polling toutes les 300ms pour une réactivité maximale
   }
 
   // Arrêter le polling
@@ -145,7 +171,7 @@ class RealtimeService {
     if (this.pollingInterval) {
       clearInterval(this.pollingInterval);
       this.pollingInterval = null;
-      console.log('🛑 Polling arrêté');
+      console.log('🛑 Polling arrêté - SSE actif');
     }
   }
 
@@ -160,26 +186,6 @@ class RealtimeService {
     console.log('🔌 Connexion SSE fermée');
   }
 
-  // Heartbeat pour maintenir la connexion
-  private startHeartbeat() {
-    this.stopHeartbeat();
-    this.heartbeatInterval = setInterval(() => {
-      if (this.isConnected) {
-        this.notifySyncListeners({
-          type: 'heartbeat',
-          timestamp: Date.now()
-        });
-      }
-    }, 30000);
-  }
-
-  private stopHeartbeat() {
-    if (this.heartbeatInterval) {
-      clearInterval(this.heartbeatInterval);
-      this.heartbeatInterval = null;
-    }
-  }
-
   // Gérer les événements de synchronisation
   private handleSyncEvent(type: SyncEvent['type'], data: any) {
     const event: SyncEvent = {
@@ -188,7 +194,7 @@ class RealtimeService {
       timestamp: Date.now()
     };
 
-    console.log(`🎯 Événement SSE traité:`, event);
+    console.log(`🎯 Événement SSE traité (réactif):`, event);
 
     switch (type) {
       case 'data-changed':
@@ -202,16 +208,16 @@ class RealtimeService {
       
       case 'force-sync':
         this.lastSyncTime = new Date();
-        this.syncAllData();
+        this.syncCurrentMonthData();
         break;
     }
 
     this.notifySyncListeners(event);
   }
 
-  // Traiter les données de synchronisation
+  // Traiter les données de synchronisation avec filtrage mois en cours
   private processSyncData(dataType: string, receivedData: any) {
-    console.log(`📊 Traitement des données ${dataType}:`, receivedData);
+    console.log(`📊 Traitement des données ${dataType} (filtrage mois en cours):`, receivedData);
     
     let syncData: Partial<SyncData> = {};
 
@@ -221,7 +227,10 @@ class RealtimeService {
         break;
       
       case 'sales':
-        syncData = { sales: receivedData };
+        // Filtrage strict des ventes du mois en cours
+        const currentMonthSales = this.filterCurrentMonthSales(receivedData);
+        syncData = { sales: currentMonthSales };
+        console.log(`✅ Ventes mois en cours synchronisées: ${currentMonthSales.length} ventes (${receivedData.length} total)`);
         break;
       
       case 'pretfamilles':
@@ -238,19 +247,23 @@ class RealtimeService {
     }
 
     if (Object.keys(syncData).length > 0) {
-      console.log(`✅ Données ${dataType} synchronisées:`, syncData);
+      console.log(`✅ Données ${dataType} synchronisées instantanément:`, syncData);
       this.notifyListeners(syncData);
     }
   }
 
-  // Synchroniser toutes les données
-  async syncAllData(): Promise<SyncData | null> {
+  // Synchroniser les données du mois en cours seulement
+  async syncCurrentMonthData(): Promise<SyncData | null> {
     try {
-      console.log('🔄 Synchronisation complète des données...');
+      console.log('🔄 Synchronisation des données du mois en cours...');
+      
+      const currentDate = new Date();
+      const currentMonth = currentDate.getMonth() + 1;
+      const currentYear = currentDate.getFullYear();
       
       const [products, sales, pretFamilles, pretProduits, depenses] = await Promise.all([
         api.get('/products').catch(() => ({ data: [] })),
-        api.get('/sales').catch(() => ({ data: [] })),
+        api.get(`/sales/by-month?month=${currentMonth}&year=${currentYear}`).catch(() => ({ data: [] })),
         api.get('/pretfamilles').catch(() => ({ data: [] })),
         api.get('/pretproduits').catch(() => ({ data: [] })),
         api.get('/depenses/mouvements').catch(() => ({ data: [] }))
@@ -258,7 +271,7 @@ class RealtimeService {
 
       const syncData: SyncData = {
         products: products.data,
-        sales: sales.data,
+        sales: sales.data, // Ventes du mois en cours seulement
         pretFamilles: pretFamilles.data,
         pretProduits: pretProduits.data,
         depenses: depenses.data
@@ -267,12 +280,17 @@ class RealtimeService {
       this.lastSyncTime = new Date();
       this.notifyListeners(syncData);
       
-      console.log('✅ Synchronisation complète terminée:', syncData);
+      console.log(`✅ Synchronisation du mois en cours terminée: ${sales.data.length} ventes`);
       return syncData;
     } catch (error) {
-      console.error('❌ Erreur de synchronisation complète:', error);
+      console.error('❌ Erreur de synchronisation:', error);
       return null;
     }
+  }
+
+  // Synchroniser toutes les données (fallback)
+  async syncAllData(): Promise<SyncData | null> {
+    return this.syncCurrentMonthData(); // Rediriger vers la synchronisation du mois en cours
   }
 
   // Ajouter un listener pour les changements de données
@@ -289,7 +307,7 @@ class RealtimeService {
 
   // Notifier tous les listeners de données
   private notifyListeners(data: Partial<SyncData>) {
-    console.log(`📣 Notification à ${this.listeners.size} listeners:`, data);
+    console.log(`📣 Notification instantanée à ${this.listeners.size} listeners:`, data);
     this.listeners.forEach(callback => {
       try {
         callback(data);
@@ -319,15 +337,15 @@ class RealtimeService {
     return this.isConnected;
   }
 
-  // Forcer une synchronisation
+  // Forcer une synchronisation du mois en cours
   async forceSync(): Promise<void> {
     try {
-      console.log('🚀 Force sync demandée');
+      console.log('🚀 Force sync du mois en cours demandée');
       await api.post('/sync/force-sync');
     } catch (error) {
       console.error('Erreur force sync:', error);
-      // Fallback: sync local
-      await this.syncAllData();
+      // Fallback: sync local du mois en cours
+      await this.syncCurrentMonthData();
     }
   }
 }

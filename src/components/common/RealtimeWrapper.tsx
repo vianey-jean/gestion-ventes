@@ -45,12 +45,7 @@ export const RealtimeWrapper: React.FC<RealtimeWrapperProps> = ({
       setLastSync(new Date());
       
       // Notification discrète
-      toast({
-        title: "Données synchronisées",
-        description: "Les données ont été mises à jour",
-        variant: "default",
-        className: "notification-info",
-      });
+    
     });
     
     // Écouter les événements de sync
