@@ -71,7 +71,10 @@ const SaleFormFields: React.FC<SaleFormFieldsProps> = ({
             disabled
           />
         ) : (
-          <ProductSearchInput onProductSelect={onProductSelect} />
+          <ProductSearchInput 
+            onProductSelect={onProductSelect}
+            selectedProduct={selectedProduct}
+          />
         )}
       </div>
       

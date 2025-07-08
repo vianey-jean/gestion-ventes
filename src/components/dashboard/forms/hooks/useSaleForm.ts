@@ -73,6 +73,14 @@ export const useSaleForm = (editSale: Sale | undefined, products: Product[], isO
   };
 
   const handleProductSelect = (product: Product) => {
+    console.log('🎯 Produit sélectionné dans useSaleForm:', product);
+    console.log('🎯 Données complètes du produit:', {
+      id: product.id,
+      description: product.description,
+      purchasePrice: product.purchasePrice,
+      quantity: product.quantity
+    });
+    
     setSelectedProduct(product);
     
     const isAdvance = product.description.toLowerCase().includes('avance');
@@ -81,24 +89,54 @@ export const useSaleForm = (editSale: Sale | undefined, products: Product[], isO
     const productQuantity = product.quantity !== undefined ? product.quantity : 0;
     setMaxQuantity(productQuantity);
     
+    // Calculer un prix de vente suggéré (prix d'achat + 20% de marge)
+    const suggestedSellingPrice = (product.purchasePrice * 1.2).toFixed(2);
+    
+    console.log('💰 Calculs initiaux:', {
+      purchasePrice: product.purchasePrice,
+      suggestedSellingPrice: suggestedSellingPrice,
+      isAdvance: isAdvance,
+      quantity: isAdvance ? '0' : '1'
+    });
+    
     setFormData(prev => {
       const purchasePriceUnit = product.purchasePrice.toString();
-      const sellingPriceUnit = (product.purchasePrice * 1.2).toFixed(2);
+      const sellingPriceUnit = suggestedSellingPrice;
       const quantity = isAdvance ? '0' : '1';
       
-      const A = Number(purchasePriceUnit) * Number(quantity);
-      const V = Number(sellingPriceUnit) * Number(quantity);
-      const B = V - A;
+      // Calculer le profit selon le type de produit
+      let profit;
+      if (isAdvance) {
+        // Pour les produits "avance", profit = prix de vente - prix d'achat (sans quantité)
+        profit = Number(sellingPriceUnit) - Number(purchasePriceUnit);
+      } else {
+        // Pour les autres produits, profit normal
+        const A = Number(purchasePriceUnit) * Number(quantity);
+        const V = Number(sellingPriceUnit) * Number(quantity);
+        profit = V - A;
+      }
       
-      return {
+      console.log('💰 Calcul final du profit:', { 
+        isAdvance, 
+        purchasePriceUnit, 
+        sellingPriceUnit, 
+        quantity, 
+        profit: profit.toFixed(2),
+        productPurchasePrice: product.purchasePrice
+      });
+      
+      const newFormData = {
         ...prev,
         description: product.description,
         productId: String(product.id),
         purchasePriceUnit: purchasePriceUnit,
         sellingPriceUnit: sellingPriceUnit,
         quantitySold: quantity,
-        profit: B.toFixed(2),
+        profit: profit.toFixed(2),
       };
+      
+      console.log('📝 FormData mis à jour:', newFormData);
+      return newFormData;
     });
   };
 

@@ -116,7 +116,6 @@ const EditProductForm: React.FC<EditProductFormProps> = ({ isOpen, onClose }) =>
             <Label htmlFor="search">Rechercher un produit</Label>
             <ProductSearchInput
               onProductSelect={handleSelectProduct}
-              placeholder="Tapez au moins 3 caractères..."
             />
           </div>
           
