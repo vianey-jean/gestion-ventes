@@ -49,11 +49,21 @@ const AddSaleForm: React.FC<AddSaleFormProps> = ({ isOpen, onClose, editSale }) 
 
   // Fonction pour calculer le profit selon la nouvelle logique
   const updateProfit = (priceUnit: string, quantity: string, purchasePriceUnit: string) => {
-    const profit = calculateSaleProfit(priceUnit, quantity, purchasePriceUnit);
-    setFormData(prev => ({
-      ...prev,
-      profit: profit,
-    }));
+    if (isAdvanceProduct) {
+      // Pour les produits d'avance : profit = prix de vente - prix d'achat (sans quantité)
+      const profit = Number(priceUnit || 0) - Number(purchasePriceUnit || 0);
+      setFormData(prev => ({
+        ...prev,
+        profit: profit.toFixed(2),
+      }));
+    } else {
+      // Pour les autres produits : profit normal
+      const profit = calculateSaleProfit(priceUnit, quantity, purchasePriceUnit);
+      setFormData(prev => ({
+        ...prev,
+        profit: profit,
+      }));
+    }
   };
 
   // Gestionnaire pour le changement de prix de vente unitaire
@@ -80,7 +90,7 @@ const AddSaleForm: React.FC<AddSaleFormProps> = ({ isOpen, onClose, editSale }) 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!isAdvanceProduct && !selectedProduct) {
+    if (!selectedProduct) {
       toast({
         title: "Erreur",
         description: "Veuillez sélectionner un produit.",
@@ -105,21 +115,42 @@ const AddSaleForm: React.FC<AddSaleFormProps> = ({ isOpen, onClose, editSale }) 
       const purchasePriceUnit = Number(formData.purchasePriceUnit);
       const sellingPriceUnit = Number(formData.sellingPriceUnit);
       
-      // A = Prix d'achat unitaire * Quantité
-      const A = purchasePriceUnit * quantity;
-      // V = Prix de vente unitaire * Quantité
-      const V = sellingPriceUnit * quantity;
-      // B = Profit déjà calculé (ne pas recalculer ici)
-      const B = Number(formData.profit);
+      let purchasePrice, sellingPrice;
+      
+      if (isAdvanceProduct) {
+        // Pour les produits d'avance
+        // purchasePrice = prix d'achat du produit (pas unitaire)
+        // sellingPrice = prix de vente unitaire saisi par l'utilisateur
+        purchasePrice = purchasePriceUnit; // Le prix d'achat est directement le prix du produit
+        sellingPrice = sellingPriceUnit;   // Le prix de vente est ce que l'utilisateur a saisi
+      } else {
+        // Pour les autres produits
+        // A = Prix d'achat unitaire * Quantité
+        // V = Prix de vente unitaire * Quantité
+        purchasePrice = purchasePriceUnit * quantity;
+        sellingPrice = sellingPriceUnit * quantity;
+      }
+      
+      const profit = Number(formData.profit);
+      
+      console.log('📊 Données calculées pour la vente:', {
+        isAdvanceProduct,
+        quantity,
+        purchasePriceUnit,
+        sellingPriceUnit,
+        purchasePrice,
+        sellingPrice,
+        profit
+      });
       
       const saleData = {
         date: formData.date,
         productId: formData.productId,
         description: formData.description,
-        sellingPrice: V,
+        sellingPrice: sellingPrice,
         quantitySold: quantity,
-        purchasePrice: A,
-        profit: B, // Utiliser directement le profit calculé
+        purchasePrice: purchasePrice,
+        profit: profit,
       };
 
       let success: boolean | Sale = false;

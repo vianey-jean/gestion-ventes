@@ -74,12 +74,6 @@ export const useSaleForm = (editSale: Sale | undefined, products: Product[], isO
 
   const handleProductSelect = (product: Product) => {
     console.log('🎯 Produit sélectionné dans useSaleForm:', product);
-    console.log('🎯 Données complètes du produit:', {
-      id: product.id,
-      description: product.description,
-      purchasePrice: product.purchasePrice,
-      quantity: product.quantity
-    });
     
     setSelectedProduct(product);
     
@@ -89,50 +83,42 @@ export const useSaleForm = (editSale: Sale | undefined, products: Product[], isO
     const productQuantity = product.quantity !== undefined ? product.quantity : 0;
     setMaxQuantity(productQuantity);
     
-    // Calculer un prix de vente suggéré (prix d'achat + 20% de marge)
-    const suggestedSellingPrice = (product.purchasePrice * 1.2).toFixed(2);
+    // Pour les produits d'avance, le prix d'achat unitaire est le prix du produit dans la DB
+    // Pour les autres produits, calculer un prix de vente suggéré
+    const purchasePriceUnit = product.purchasePrice;
+    const suggestedSellingPrice = isAdvance ? '' : (product.purchasePrice * 1.2).toFixed(2);
     
-    console.log('💰 Calculs initiaux:', {
-      purchasePrice: product.purchasePrice,
-      suggestedSellingPrice: suggestedSellingPrice,
+    console.log('💰 Calculs pour produit:', {
+      description: product.description,
       isAdvance: isAdvance,
+      purchasePrice: product.purchasePrice,
+      purchasePriceUnit: purchasePriceUnit,
+      suggestedSellingPrice: suggestedSellingPrice || 'À définir par l\'utilisateur',
       quantity: isAdvance ? '0' : '1'
     });
     
+    // Mettre à jour le formulaire avec les données du produit
     setFormData(prev => {
-      const purchasePriceUnit = product.purchasePrice.toString();
-      const sellingPriceUnit = suggestedSellingPrice;
-      const quantity = isAdvance ? '0' : '1';
+      const newQuantity = isAdvance ? '0' : '1';
+      const newPurchasePriceUnit = purchasePriceUnit.toString();
+      const newSellingPriceUnit = isAdvance ? '' : suggestedSellingPrice;
       
-      // Calculer le profit selon le type de produit
-      let profit;
-      if (isAdvance) {
-        // Pour les produits "avance", profit = prix de vente - prix d'achat (sans quantité)
-        profit = Number(sellingPriceUnit) - Number(purchasePriceUnit);
-      } else {
-        // Pour les autres produits, profit normal
-        const A = Number(purchasePriceUnit) * Number(quantity);
-        const V = Number(sellingPriceUnit) * Number(quantity);
-        profit = V - A;
+      // Calculer le profit initial
+      let initialProfit = '0';
+      if (!isAdvance && suggestedSellingPrice) {
+        const A = Number(newPurchasePriceUnit) * Number(newQuantity);
+        const V = Number(suggestedSellingPrice) * Number(newQuantity);
+        initialProfit = (V - A).toFixed(2);
       }
-      
-      console.log('💰 Calcul final du profit:', { 
-        isAdvance, 
-        purchasePriceUnit, 
-        sellingPriceUnit, 
-        quantity, 
-        profit: profit.toFixed(2),
-        productPurchasePrice: product.purchasePrice
-      });
       
       const newFormData = {
         ...prev,
         description: product.description,
         productId: String(product.id),
-        purchasePriceUnit: purchasePriceUnit,
-        sellingPriceUnit: sellingPriceUnit,
-        quantitySold: quantity,
-        profit: profit.toFixed(2),
+        purchasePriceUnit: newPurchasePriceUnit,
+        sellingPriceUnit: newSellingPriceUnit,
+        quantitySold: newQuantity,
+        profit: initialProfit,
       };
       
       console.log('📝 FormData mis à jour:', newFormData);
