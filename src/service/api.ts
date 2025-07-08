@@ -1,4 +1,3 @@
-
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import axiosRetry from 'axios-retry';
 import { Product, Sale, User, LoginCredentials, RegisterCredentials, PretFamille, PretProduit, DepenseFixe, DepenseDuMois } from '@/types';
@@ -139,23 +138,51 @@ export const authService = {
 // Products API
 export const productService = {
   async getProducts(): Promise<Product[]> {
-    const response: AxiosResponse<Product[]> = await api.get('/api/products');
-    return response.data;
+    try {
+      console.log('📦 Fetching products from API...');
+      const response: AxiosResponse<Product[]> = await api.get('/api/products');
+      console.log(`✅ Retrieved ${response.data.length} products from API`);
+      return response.data;
+    } catch (error) {
+      console.error('❌ Error fetching products:', error);
+      throw error;
+    }
   },
 
   async addProduct(product: Omit<Product, 'id'>): Promise<Product> {
-    const response: AxiosResponse<Product> = await api.post('/api/products', product);
-    return response.data;
+    try {
+      console.log('📝 Adding new product:', product);
+      const response: AxiosResponse<Product> = await api.post('/api/products', product);
+      console.log('✅ Product added successfully:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ Error adding product:', error);
+      throw error;
+    }
   },
 
   async updateProduct(product: Product): Promise<Product> {
-    const response: AxiosResponse<Product> = await api.put(`/api/products/${product.id}`, product);
-    return response.data;
+    try {
+      console.log('📝 Updating product:', product);
+      const response: AxiosResponse<Product> = await api.put(`/api/products/${product.id}`, product);
+      console.log('✅ Product updated successfully:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ Error updating product:', error);
+      throw error;
+    }
   },
 
   async deleteProduct(id: string): Promise<boolean> {
-    await api.delete(`/api/products/${id}`);
-    return true;
+    try {
+      console.log('🗑️ Deleting product with ID:', id);
+      const response = await api.delete(`/api/products/${id}`);
+      console.log('✅ Product deleted successfully');
+      return true;
+    } catch (error) {
+      console.error('❌ Error deleting product:', error);
+      throw error;
+    }
   },
 };
 
