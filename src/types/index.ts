@@ -44,7 +44,9 @@ export interface PretProduit {
   id: string;
   description: string;
   nom?: string;
-  date: string;
+  date: string; // date de prêt
+  datePaiement?: string; // nouvelle date de paiement
+  phone?: string; // nouveau numéro de téléphone
   prixVente: number;
   avanceRecue: number;
   reste: number;

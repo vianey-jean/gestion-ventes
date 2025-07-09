@@ -10,12 +10,13 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
-import { PlusCircle, Edit, CalendarIcon, Loader2, Trash2, Plus, CreditCard, TrendingUp, Wallet, CheckCircle, Clock, Search } from 'lucide-react';
+import { PlusCircle, Edit, CalendarIcon, Loader2, Trash2, Plus, CreditCard, TrendingUp, Wallet, CheckCircle, Clock, Search, Phone } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useApp } from '@/contexts/AppContext';
 import { Product, PretProduit } from '@/types';
 import { pretProduitService } from '@/service/api';
 import { motion } from 'framer-motion';
+import PretRetardNotification from './PretRetardNotification';
 
 const PretProduits: React.FC = () => {
   const [prets, setPrets] = useState<PretProduit[]>([]);
@@ -25,9 +26,11 @@ const PretProduits: React.FC = () => {
   const [searchDialogOpen, setSearchDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [ajoutAvanceDialogOpen, setAjoutAvanceDialogOpen] = useState(false);
-  const [date, setDate] = useState<Date>(new Date());
+  const [datePret, setDatePret] = useState<Date>(new Date());
+  const [datePaiement, setDatePaiement] = useState<Date | undefined>();
   const [description, setDescription] = useState('');
   const [nom, setNom] = useState('');
+  const [phone, setPhone] = useState('');
   const [prixVente, setPrixVente] = useState('');
   const [avanceRecue, setAvanceRecue] = useState('');
   const [ajoutAvance, setAjoutAvance] = useState('');
@@ -62,6 +65,33 @@ const PretProduits: React.FC = () => {
 
   // État du paiement
   const estPaye = reste <= 0;
+
+  // Fonction pour vérifier si une date de paiement est dépassée
+  const isDatePaiementDepassee = (datePaiement: string) => {
+    const date = new Date(datePaiement);
+    const aujourdhui = new Date();
+    aujourdhui.setHours(0, 0, 0, 0);
+    date.setHours(0, 0, 0, 0);
+    return date < aujourdhui;
+  };
+
+  // Fonction pour déterminer la classe CSS de la date de paiement
+  const getDatePaiementClass = (pret: PretProduit) => {
+    if (!pret.datePaiement) return "font-medium text-green-600";
+    
+    const isDepassee = isDatePaiementDepassee(pret.datePaiement);
+    
+    if (pret.estPaye) {
+      // Si le prêt est payé, toujours en vert
+      return "font-medium text-green-600";
+    } else if (isDepassee) {
+      // Si le prêt n'est pas payé et la date est dépassée, rouge et clignotant
+      return "font-medium text-red-600 animate-pulse font-bold";
+    } else {
+      // Si le prêt n'est pas payé et la date n'est pas dépassée, vert
+      return "font-medium text-green-600";
+    }
+  };
 
   // Charger les données depuis l'API
   const fetchPrets = async () => {
@@ -134,9 +164,11 @@ const PretProduits: React.FC = () => {
   // Sélectionner un prêt pour modification
   const selectPretForEdit = (pret: PretProduit) => {
     setSelectedPret(pret);
-    setDate(new Date(pret.date));
+    setDatePret(new Date(pret.date));
+    setDatePaiement(pret.datePaiement ? new Date(pret.datePaiement) : undefined);
     setDescription(pret.description);
     setNom(pret.nom || '');
+    setPhone(pret.phone || '');
     setPrixVente(pret.prixVente.toString());
     setAvanceRecue(pret.avanceRecue.toString());
     setSearchPretResults([]);
@@ -194,9 +226,11 @@ const PretProduits: React.FC = () => {
       setLoading(true);
       
       const newPret: Omit<PretProduit, 'id'> = {
-        date: format(date, 'yyyy-MM-dd'),
+        date: format(datePret, 'yyyy-MM-dd'),
+        datePaiement: datePaiement ? format(datePaiement, 'yyyy-MM-dd') : undefined,
         description,
         nom,
+        phone,
         prixVente: parseFloat(prixVente),
         avanceRecue: parseFloat(avanceRecue) || 0,
         reste,
@@ -241,10 +275,9 @@ const PretProduits: React.FC = () => {
       
       const updatedPret: PretProduit = {
         ...selectedPret,
-        date: selectedPret.date, // Conserver la date d'origine
-        description: selectedPret.description,
-        nom: selectedPret.nom,
-        prixVente: selectedPret.prixVente,
+        datePaiement: datePaiement ? format(datePaiement, 'yyyy-MM-dd') : undefined,
+        nom,
+        phone,
         avanceRecue: parseFloat(avanceRecue) || 0,
         reste: reste,
         estPaye: estPaye
@@ -377,9 +410,11 @@ const PretProduits: React.FC = () => {
   // Réinitialiser le formulaire
   const resetForm = () => {
     setSelectedPret(null);
-    setDate(new Date());
+    setDatePret(new Date());
+    setDatePaiement(undefined);
     setDescription('');
     setNom('');
+    setPhone('');
     setPrixVente('');
     setAvanceRecue('');
     setAjoutAvance('');
@@ -393,6 +428,9 @@ const PretProduits: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-purple-50 to-indigo-50 dark:from-gray-900 dark:via-purple-900/20 dark:to-slate-900 p-6">
+      {/* Notifications des prêts en retard */}
+      <PretRetardNotification prets={prets} />
+      
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -546,9 +584,11 @@ const PretProduits: React.FC = () => {
                   <Table className="w-full">
                     <TableHeader>
                       <TableRow className="border-gray-200 dark:border-gray-700">
-                        <TableHead className="font-bold text-purple-600 dark:text-purple-400 text-left">Date</TableHead>
+                        <TableHead className="font-bold text-purple-600 dark:text-purple-400 text-left">Date de Prêt</TableHead>
+                        <TableHead className="font-bold text-purple-600 dark:text-purple-400 text-left">Date Paiement</TableHead>
                         <TableHead className="font-bold text-purple-600 dark:text-purple-400 text-left">Description</TableHead>
                         <TableHead className="font-bold text-purple-600 dark:text-purple-400 text-left">Nom</TableHead>
+                        <TableHead className="font-bold text-purple-600 dark:text-purple-400 text-left">Téléphone</TableHead>
                         <TableHead className="font-bold text-purple-600 dark:text-purple-400 text-right">Prix Vente</TableHead>
                         <TableHead className="font-bold text-purple-600 dark:text-purple-400 text-right">Avance</TableHead>
                         <TableHead className="font-bold text-purple-600 dark:text-purple-400 text-right">Reste</TableHead>
@@ -561,11 +601,22 @@ const PretProduits: React.FC = () => {
                         <TableRow 
                           key={pret.id} 
                           className="cursor-pointer hover:bg-purple-50/50 dark:hover:bg-purple-900/20 transition-all duration-200 border-gray-100 dark:border-gray-700" 
-                          onClick={() => handleRowClick(pret)}
+                          onClick={() => selectPretForEdit(pret)}
                         >
                           <TableCell className="font-medium">{format(new Date(pret.date), 'dd/MM/yyyy')}</TableCell>
+                          <TableCell className={getDatePaiementClass(pret)}>
+                            {pret.datePaiement ? format(new Date(pret.datePaiement), 'dd/MM/yyyy') : '-'}
+                          </TableCell>
                           <TableCell className="font-medium text-gray-900 dark:text-gray-100">{pret.description}</TableCell>
                           <TableCell className="text-gray-600 dark:text-gray-300">{pret.nom || '-'}</TableCell>
+                          <TableCell className="text-gray-600 dark:text-gray-300">
+                            {pret.phone && (
+                              <div className="flex items-center gap-1">
+                                <Phone className="h-3 w-3" />
+                                <span>{pret.phone}</span>
+                              </div>
+                            )}
+                          </TableCell>
                           <TableCell className="text-right font-semibold">
                             {formatCurrency(pret.prixVente)}
                           </TableCell>
@@ -597,21 +648,33 @@ const PretProduits: React.FC = () => {
                           <TableCell className="text-center">
                             <div className="flex justify-center space-x-2">
                               <button 
-                                onClick={(e) => selectPretForAjoutAvance(pret, e)} 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedPret(pret);
+                                  setAjoutAvance('');
+                                  setAjoutAvanceDialogOpen(true);
+                                }} 
                                 className="p-2 rounded-lg bg-emerald-100 text-emerald-600 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:hover:bg-emerald-900/50 transition-colors"
                                 title="Ajouter une avance"
                               >
                                 <Plus className="h-4 w-4" />
                               </button>
                               <button 
-                                onClick={(e) => handleEditClick(pret, e)} 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  selectPretForEdit(pret);
+                                }} 
                                 className="p-2 rounded-lg bg-blue-100 text-blue-600 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50 transition-colors"
                                 title="Modifier"
                               >
                                 <Edit className="h-4 w-4" />
                               </button>
                               <button 
-                                onClick={(e) => selectPretForDelete(pret, e)} 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedPret(pret);
+                                  setDeleteDialogOpen(true);
+                                }} 
                                 className="p-2 rounded-lg bg-red-100 text-red-600 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50 transition-colors"
                                 title="Supprimer"
                               >
@@ -632,40 +695,73 @@ const PretProduits: React.FC = () => {
       
       {/* Formulaire d'ajout de prêt */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-[500px] bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border border-white/20">
+        <DialogContent className="sm:max-w-[600px] bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border border-white/20">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
               Ajouter un prêt de produit
             </DialogTitle>
           </DialogHeader>
           <div className="grid gap-6 py-6">
-            <div className="grid gap-2">
-              <Label htmlFor="date" className="text-sm font-semibold text-gray-700 dark:text-gray-300">Date</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant={"outline"}
-                    className={cn(
-                      "w-full justify-start text-left font-normal bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm border-gray-300 dark:border-gray-600",
-                      !date && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {date ? format(date, "PPP", { locale: fr }) : "Sélectionner une date"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={date}
-                    onSelect={(newDate) => setDate(newDate || new Date())}
-                    disabled={(date) =>
-                      date > new Date() || date < new Date("1900-01-01")
-                    }
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="datePret" className="text-sm font-semibold text-gray-700 dark:text-gray-300">Date de prêt</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant={"outline"}
+                      className={cn(
+                        "w-full justify-start text-left font-normal bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm border-gray-300 dark:border-gray-600",
+                        !datePret && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {datePret ? format(datePret, "PPP", { locale: fr }) : "Sélectionner une date"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={datePret}
+                      onSelect={(newDate) => setDatePret(newDate || new Date())}
+                      disabled={(date) =>
+                        date > new Date() || date < new Date("1900-01-01")
+                      }
+                      initialFocus
+                      className="p-3 pointer-events-auto"
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="datePaiement" className="text-sm font-semibold text-gray-700 dark:text-gray-300">Date de paiement prévue</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant={"outline"}
+                      className={cn(
+                        "w-full justify-start text-left font-normal bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm border-gray-300 dark:border-gray-600",
+                        !datePaiement && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {datePaiement ? format(datePaiement, "PPP", { locale: fr }) : "Sélectionner une date"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={datePaiement}
+                      onSelect={setDatePaiement}
+                      disabled={(date) =>
+                        date < new Date("1900-01-01")
+                      }
+                      initialFocus
+                      className="p-3 pointer-events-auto"
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
             </div>
             
             <div className="grid gap-2">
@@ -693,15 +789,28 @@ const PretProduits: React.FC = () => {
               )}
             </div>
 
-            <div className="grid gap-2">
-              <Label htmlFor="nom" className="text-sm font-semibold text-gray-700 dark:text-gray-300">Nom du client (optionnel)</Label>
-              <Input
-                id="nom"
-                value={nom}
-                onChange={(e) => setNom(e.target.value)}
-                placeholder="Nom du client"
-                className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm border-gray-300 dark:border-gray-600"
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="nom" className="text-sm font-semibold text-gray-700 dark:text-gray-300">Nom du client</Label>
+                <Input
+                  id="nom"
+                  value={nom}
+                  onChange={(e) => setNom(e.target.value)}
+                  placeholder="Nom du client"
+                  className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm border-gray-300 dark:border-gray-600"
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="phone" className="text-sm font-semibold text-gray-700 dark:text-gray-300">Numéro de téléphone</Label>
+                <Input
+                  id="phone"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="+262 692 123 456"
+                  className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm border-gray-300 dark:border-gray-600"
+                />
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -763,7 +872,143 @@ const PretProduits: React.FC = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      
+
+      {/* Formulaire de modification de prêt */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Modifier un prêt</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="editDatePret">Date de prêt</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant={"outline"}
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !datePret && "text-muted-foreground"
+                      )}
+                      disabled
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {datePret ? format(datePret, 'PP', { locale: fr }) : <span>Sélectionner une date</span>}
+                    </Button>
+                  </PopoverTrigger>
+                </Popover>
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="editDatePaiement">Date de paiement prévue</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant={"outline"}
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !datePaiement && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {datePaiement ? format(datePaiement, 'PP', { locale: fr }) : <span>Sélectionner une date</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={datePaiement}
+                      onSelect={setDatePaiement}
+                      initialFocus
+                      className="p-3 pointer-events-auto"
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="editDescription">Description</Label>
+              <Input 
+                id="editDescription" 
+                value={description} 
+                disabled
+              />
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="editNom">Nom</Label>
+                <Input 
+                  id="editNom" 
+                  value={nom} 
+                  onChange={(e) => setNom(e.target.value)}
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="editPhone">Numéro de téléphone</Label>
+                <Input 
+                  id="editPhone" 
+                  value={phone} 
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="+262 692 123 456"
+                />
+              </div>
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="editPrixVente">Prix du produit vendu</Label>
+              <Input 
+                id="editPrixVente" 
+                type="number" 
+                value={prixVente} 
+                disabled
+                className="bg-gray-100"
+              />
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="editAvanceRecue">Avance reçue</Label>
+              <Input 
+                id="editAvanceRecue" 
+                type="number" 
+                value={avanceRecue} 
+                onChange={(e) => setAvanceRecue(e.target.value)}
+                placeholder="0.00"
+                min="0"
+                step="0.01"
+              />
+            </div>
+            
+            <div className="bg-gray-50 p-3 rounded-md">
+              <div className="flex justify-between">
+                <p><strong>Reste:</strong></p>
+                <p className={reste > 0 ? 'text-red-600 font-semibold' : 'text-green-600 font-semibold'}>
+                  {formatCurrency(reste)}
+                </p>
+              </div>
+              <div className="flex justify-between mt-1">
+                <p><strong>Statut:</strong></p>
+                <p className={estPaye ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'}>
+                  {estPaye ? 'Tout payé' : 'Reste à payer'}
+                </p>
+              </div>
+            </div>
+            
+            <Button 
+              onClick={handleUpdate} 
+              disabled={loading || !selectedPret}
+              className="mt-2"
+            >
+              {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              Enregistrer les modifications
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Formulaire d'ajout d'avance */}
       <Dialog open={ajoutAvanceDialogOpen} onOpenChange={setAjoutAvanceDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
@@ -887,111 +1132,6 @@ const PretProduits: React.FC = () => {
                 )}
               </div>
             </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-      
-      {/* Formulaire de modification de prêt */}
-      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>Modifier un prêt</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="editDate">Date</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant={"outline"}
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !date && "text-muted-foreground"
-                    )}
-                    disabled
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {date ? format(date, 'PP', { locale: fr }) : <span>Sélectionner une date</span>}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0 pointer-events-auto" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={date}
-                    onSelect={(date) => date && setDate(date)}
-                    initialFocus
-                    disabled
-                    className={cn("p-3")}
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-            
-            <div className="grid gap-2">
-              <Label htmlFor="editDescription">Description</Label>
-              <Input 
-                id="editDescription" 
-                value={description} 
-                disabled
-              />
-            </div>
-            
-            <div className="grid gap-2">
-              <Label htmlFor="editNom">Nom</Label>
-              <Input 
-                id="editNom" 
-                value={nom} 
-                disabled
-              />
-            </div>
-            
-            <div className="grid gap-2">
-              <Label htmlFor="editPrixVente">Prix du produit vendu</Label>
-              <Input 
-                id="editPrixVente" 
-                type="number" 
-                value={prixVente} 
-                disabled
-                className="bg-gray-100"
-              />
-            </div>
-            
-            <div className="grid gap-2">
-              <Label htmlFor="editAvanceRecue">Avance reçue</Label>
-              <Input 
-                id="editAvanceRecue" 
-                type="number" 
-                value={avanceRecue} 
-                onChange={(e) => setAvanceRecue(e.target.value)}
-                placeholder="0.00"
-                min="0"
-                step="0.01"
-              />
-            </div>
-            
-            <div className="bg-gray-50 p-3 rounded-md">
-              <div className="flex justify-between">
-                <p><strong>Reste:</strong></p>
-                <p className={reste > 0 ? 'text-app-red font-semibold' : 'text-app-green font-semibold'}>
-                  {formatCurrency(reste)}
-                </p>
-              </div>
-              <div className="flex justify-between mt-1">
-                <p><strong>Statut:</strong></p>
-                <p className={estPaye ? 'text-app-green font-semibold' : 'text-app-red font-semibold'}>
-                  {estPaye ? 'Tout payé' : 'Reste à payer'}
-                </p>
-              </div>
-            </div>
-            
-            <Button 
-              onClick={handleUpdate} 
-              disabled={loading || !selectedPret}
-              className="mt-2"
-            >
-              {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-              Enregistrer les modifications
-            </Button>
           </div>
         </DialogContent>
       </Dialog>

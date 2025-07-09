@@ -1,4 +1,3 @@
-
 import { api } from '@/service/api';
 
 export interface SyncData {
@@ -21,13 +20,14 @@ class RealtimeService {
   private syncListeners: Set<(event: SyncEvent) => void> = new Set();
   private lastSyncTime: Date = new Date();
   private isConnected: boolean = false;
-  private reconnectInterval: number = 2000;
+  private reconnectInterval: number = 3000;
   private reconnectAttempts: number = 0;
-  private maxReconnectAttempts: number = 10;
+  private maxReconnectAttempts: number = 5;
   private lastDataCache: Map<string, string> = new Map();
+  private connectionTimeout: NodeJS.Timeout | null = null;
 
   constructor() {
-    console.log('RealtimeService initialisé avec synchronisation optimisée');
+    console.log('RealtimeService initialisé avec gestion CORS optimisée');
     this.setupEventListeners();
   }
 
@@ -39,6 +39,11 @@ class RealtimeService {
 
     window.addEventListener('offline', () => {
       console.log('Connexion Internet perdue');
+      this.disconnect();
+    });
+
+    // Gérer la fermeture de l'onglet
+    window.addEventListener('beforeunload', () => {
       this.disconnect();
     });
   }
@@ -68,26 +73,45 @@ class RealtimeService {
     });
   }
 
-  // Connexion au serveur SSE optimisée
+  // Connexion au serveur SSE avec gestion CORS améliorée
   connect(token?: string) {
     if (this.eventSource) {
       this.eventSource.close();
     }
 
-    console.log('Connexion SSE optimisée...');
+    // Réinitialiser le timeout de connexion
+    if (this.connectionTimeout) {
+      clearTimeout(this.connectionTimeout);
+    }
+
+    console.log('Connexion SSE avec gestion CORS optimisée...');
 
     try {
-      const baseUrl = import.meta.env.VITE_API_BASE_URL ;
+      const baseUrl = import.meta.env.VITE_API_BASE_URL;
       const url = `${baseUrl}/api/sync/events`;
+      
+      console.log('URL de connexion SSE:', url);
       
       this.eventSource = new EventSource(url, {
         withCredentials: false
       });
 
+      // Timeout de connexion
+      this.connectionTimeout = setTimeout(() => {
+        if (!this.isConnected) {
+          console.log('Timeout de connexion SSE');
+          this.handleConnectionError();
+        }
+      }, 10000);
+
       this.eventSource.onopen = () => {
-        console.log('✅ Connexion SSE optimisée établie');
+        console.log('✅ Connexion SSE établie avec succès');
         this.isConnected = true;
         this.reconnectAttempts = 0;
+        
+        if (this.connectionTimeout) {
+          clearTimeout(this.connectionTimeout);
+        }
         
         this.notifySyncListeners({
           type: 'connected',
@@ -106,23 +130,10 @@ class RealtimeService {
 
       this.eventSource.onerror = (error) => {
         console.error('❌ Erreur SSE:', error);
-        this.isConnected = false;
-        
-        if (this.eventSource) {
-          this.eventSource.close();
-          this.eventSource = null;
-        }
-        
-        if (this.reconnectAttempts < this.maxReconnectAttempts) {
-          const delay = Math.min(this.reconnectInterval * Math.pow(1.5, this.reconnectAttempts), 10000);
-          setTimeout(() => {
-            this.reconnectAttempts++;
-            console.log(`🔄 Reconnexion SSE ${this.reconnectAttempts}/${this.maxReconnectAttempts}`);
-            this.connect();
-          }, delay);
-        }
+        this.handleConnectionError();
       };
 
+      // Écouter les événements personnalisés
       ['data-changed', 'force-sync', 'connected', 'heartbeat'].forEach(eventType => {
         this.eventSource?.addEventListener(eventType, (event: any) => {
           try {
@@ -136,18 +147,65 @@ class RealtimeService {
 
     } catch (error) {
       console.error('Erreur création EventSource:', error);
-      this.isConnected = false;
+      this.handleConnectionError();
     }
   }
 
-  // Déconnexion
-  disconnect() {
+  // Gérer les erreurs de connexion
+  private handleConnectionError() {
+    this.isConnected = false;
+    
     if (this.eventSource) {
       this.eventSource.close();
       this.eventSource = null;
     }
+    
+    if (this.connectionTimeout) {
+      clearTimeout(this.connectionTimeout);
+    }
+    
+    // Reconnexion progressive seulement si on n'a pas atteint la limite
+    if (this.reconnectAttempts < this.maxReconnectAttempts) {
+      const delay = Math.min(this.reconnectInterval * Math.pow(1.5, this.reconnectAttempts), 30000);
+      
+      setTimeout(() => {
+        this.reconnectAttempts++;
+        console.log(`🔄 Tentative de reconnexion SSE ${this.reconnectAttempts}/${this.maxReconnectAttempts}`);
+        this.connect();
+      }, delay);
+    } else {
+      console.log('❌ Nombre maximum de tentatives de reconnexion atteint');
+      // Fallback sur la synchronisation périodique
+      this.startFallbackSync();
+    }
+  }
+
+  // Synchronisation de secours en cas d'échec SSE
+  private startFallbackSync() {
+    console.log('🔄 Démarrage synchronisation de secours');
+    const fallbackInterval = setInterval(async () => {
+      if (!this.isConnected) {
+        console.log('📡 Synchronisation de secours...');
+        await this.syncCurrentMonthData();
+      } else {
+        clearInterval(fallbackInterval);
+      }
+    }, 30000); // Toutes les 30 secondes
+  }
+
+  // Déconnexion propre
+  disconnect() {
+    if (this.connectionTimeout) {
+      clearTimeout(this.connectionTimeout);
+    }
+    
+    if (this.eventSource) {
+      this.eventSource.close();
+      this.eventSource = null;
+    }
+    
     this.isConnected = false;
-    console.log('🔌 Connexion SSE fermée');
+    console.log('🔌 Connexion SSE fermée proprement');
   }
 
   // Gérer les événements de synchronisation avec vérification de changement
