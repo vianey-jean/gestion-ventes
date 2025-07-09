@@ -7,11 +7,11 @@ const getBaseURL = () => {
   const isDevelopment = import.meta.env.DEV;
   
   if (isDevelopment) {
-    return import.meta.env.VITE_API_URL || 'https://server-gestion-ventes.onrender.com';
+    return import.meta.env.VITE_API_BASE_URL ;
   }
   
   // En production, utiliser l'URL du serveur déployé
-  return import.meta.env.VITE_API_URL || 'https://server-gestion-ventes.onrender.com';
+  return import.meta.env.VITE_API_BASE_URL;
 };
 
 // Create axios instance with base configuration

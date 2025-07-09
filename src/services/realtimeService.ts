@@ -77,7 +77,7 @@ class RealtimeService {
     console.log('Connexion SSE optimisée...');
 
     try {
-      const baseUrl = import.meta.env.VITE_API_URL || 'https://server-gestion-ventes.onrender.com';
+      const baseUrl = import.meta.env.VITE_API_BASE_URL ;
       const url = `${baseUrl}/api/sync/events`;
       
       this.eventSource = new EventSource(url, {
