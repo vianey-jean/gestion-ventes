@@ -10,6 +10,9 @@ interface FormData {
   quantitySold: string;
   purchasePriceUnit: string;
   profit: string;
+  clientName: string;
+  clientAddress: string;
+  clientPhone: string;
 }
 
 export const useSaleForm = (editSale: Sale | undefined, products: Product[], isOpen: boolean) => {
@@ -21,6 +24,9 @@ export const useSaleForm = (editSale: Sale | undefined, products: Product[], isO
     quantitySold: '1',
     purchasePriceUnit: '',
     profit: '',
+    clientName: '',
+    clientAddress: '',
+    clientPhone: '',
   });
   
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -48,6 +54,9 @@ export const useSaleForm = (editSale: Sale | undefined, products: Product[], isO
         quantitySold: editSale.quantitySold.toString(),
         purchasePriceUnit: purchasePriceUnit.toString(),
         profit: editSale.profit.toString(),
+        clientName: editSale.clientName || '',
+        clientAddress: editSale.clientAddress || '',
+        clientPhone: editSale.clientPhone || '',
       });
       
       if (product) {
@@ -65,6 +74,9 @@ export const useSaleForm = (editSale: Sale | undefined, products: Product[], isO
         quantitySold: '1',
         purchasePriceUnit: '',
         profit: '',
+        clientName: '',
+        clientAddress: '',
+        clientPhone: '',
       });
       setSelectedProduct(null);
       setMaxQuantity(0);

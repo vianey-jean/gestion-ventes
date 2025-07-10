@@ -1,4 +1,3 @@
-
 // Types pour l'application
 
 export interface User {
@@ -20,6 +19,10 @@ export interface Sale {
   purchasePrice: number;
   sellingPrice: number;
   profit: number;
+  // Nouvelles informations client pour la facturation
+  clientName?: string;
+  clientAddress?: string;
+  clientPhone?: string;
 }
 
 export interface Product {

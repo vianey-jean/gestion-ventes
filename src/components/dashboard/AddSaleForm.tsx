@@ -2,15 +2,10 @@
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { useApp } from '@/contexts/AppContext';
 import { Product, Sale } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { Trash2 } from 'lucide-react';
-import ProductSearchInput from './ProductSearchInput';
-import SalePriceInput from './forms/SalePriceInput';
-import SaleQuantityInput from './forms/SaleQuantityInput';
 import ConfirmDeleteDialog from './forms/ConfirmDeleteDialog';
 import { useSaleForm } from './forms/hooks/useSaleForm';
 import { calculateSaleProfit } from './forms/utils/saleCalculations';
@@ -99,7 +94,8 @@ const AddSaleForm: React.FC<AddSaleFormProps> = ({ isOpen, onClose, editSale }) 
       return;
     }
     
-    if (!isAdvanceProduct && isOutOfStock) {
+    // Pour les nouveaux ajouts (pas les modifications), vérifier le stock
+    if (!editSale && !isAdvanceProduct && isOutOfStock) {
       toast({
         title: "Erreur",
         description: "Stock épuisé. Impossible d'ajouter cette vente.",
@@ -151,6 +147,9 @@ const AddSaleForm: React.FC<AddSaleFormProps> = ({ isOpen, onClose, editSale }) 
         quantitySold: quantity,
         purchasePrice: purchasePrice,
         profit: profit,
+        clientName: formData.clientName,
+        clientAddress: formData.clientAddress,
+        clientPhone: formData.clientPhone,
       };
 
       let success: boolean | Sale = false;
@@ -211,10 +210,31 @@ const AddSaleForm: React.FC<AddSaleFormProps> = ({ isOpen, onClose, editSale }) 
 
   const isProfitNegative = Number(formData.profit) < 0;
 
+  // Améliorer la logique de désactivation du bouton
+  const isButtonDisabled = () => {
+    if (isSubmitting) return true;
+    if (!selectedProduct) return true;
+    
+    // Pour les nouveaux ajouts seulement
+    if (!editSale) {
+      // Pour les produits normaux, vérifier le stock
+      if (!isAdvanceProduct && isOutOfStock) return true;
+    }
+    
+    return false;
+  };
+
+  const getButtonText = () => {
+    if (isSubmitting) return "Enregistrement...";
+    if (!editSale && !selectedProduct) return "Sélectionner un produit";
+    if (!editSale && !isAdvanceProduct && isOutOfStock) return "Stock épuisé";
+    return editSale ? "Mettre à jour" : "Ajouter";
+  };
+
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editSale ? 'Modifier la vente' : 'Ajouter une vente'}</DialogTitle>
             <DialogDescription>
@@ -269,16 +289,9 @@ const AddSaleForm: React.FC<AddSaleFormProps> = ({ isOpen, onClose, editSale }) 
               <Button
                 type="submit"
                 className="bg-app-green hover:bg-opacity-90"
-                disabled={isSubmitting || (!editSale && (!selectedProduct || (isOutOfStock && !isAdvanceProduct)))}
+                disabled={isButtonDisabled()}
               >
-                {isSubmitting 
-                  ? "Enregistrement..." 
-                  : isOutOfStock && !isAdvanceProduct && !editSale
-                    ? "Stock épuisé" 
-                    : editSale 
-                      ? "Mettre à jour" 
-                      : "Ajouter"
-                }
+                {getButtonText()}
               </Button>
             </DialogFooter>
           </form>

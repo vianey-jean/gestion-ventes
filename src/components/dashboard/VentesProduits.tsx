@@ -8,9 +8,10 @@ import AddSaleForm from '@/components/dashboard/AddSaleForm';
 import AddProductForm from '@/components/dashboard/AddProductForm';
 import EditProductForm from '@/components/dashboard/EditProductForm';
 import ExportSalesDialog from '@/components/dashboard/ExportSalesDialog';
+import InvoiceGenerator from '@/components/dashboard/InvoiceGenerator';
 import ModernContainer from '@/components/dashboard/forms/ModernContainer';
 import ModernActionButton from '@/components/dashboard/forms/ModernActionButton';
-import { PlusCircle, Edit, ShoppingCart, Loader2, FileText, TrendingUp, Package, Warehouse, BarChart3 } from 'lucide-react';
+import { PlusCircle, Edit, ShoppingCart, Loader2, FileText, TrendingUp, Package, Warehouse, BarChart3, Receipt } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
@@ -50,6 +51,7 @@ const VentesProduits: React.FC = () => {
   const [addProductDialogOpen, setAddProductDialogOpen] = React.useState(false);
   const [editProductDialogOpen, setEditProductDialogOpen] = React.useState(false);
   const [exportDialogOpen, setExportDialogOpen] = React.useState(false);
+  const [invoiceGeneratorOpen, setInvoiceGeneratorOpen] = React.useState(false);
   const [selectedSale, setSelectedSale] = React.useState<Sale | undefined>(undefined);
   const [showProductsList, setShowProductsList] = React.useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -227,6 +229,16 @@ const VentesProduits: React.FC = () => {
           >
             Ajouter une vente
           </ModernActionButton>
+
+          <ModernActionButton
+            icon={Receipt}
+            onClick={() => setInvoiceGeneratorOpen(true)}
+            gradient="purple"
+            buttonSize="md"
+            className="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 shadow-lg hover:shadow-xl"
+          >
+            Générer facture
+          </ModernActionButton>
         </div>
         
         {/* Indicateur de chargement modernisé */}
@@ -290,6 +302,12 @@ const VentesProduits: React.FC = () => {
       <ExportSalesDialog
         isOpen={exportDialogOpen}
         onClose={() => setExportDialogOpen(false)}
+      />
+
+      {/* Générateur de factures */}
+      <InvoiceGenerator
+        isOpen={invoiceGeneratorOpen}
+        onClose={() => setInvoiceGeneratorOpen(false)}
       />
       
       {/* Liste des produits disponibles */}

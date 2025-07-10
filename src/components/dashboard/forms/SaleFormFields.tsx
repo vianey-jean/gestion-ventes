@@ -14,6 +14,9 @@ interface FormData {
   quantitySold: string;
   purchasePriceUnit: string;
   profit: string;
+  clientName: string;
+  clientAddress: string;
+  clientPhone: string;
 }
 
 interface SaleFormFieldsProps {
@@ -57,6 +60,49 @@ const SaleFormFields: React.FC<SaleFormFieldsProps> = ({
           value={formData.date}
           onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
         />
+      </div>
+
+      {/* Informations client */}
+      <div className="space-y-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+        <h3 className="text-sm font-semibold text-blue-700 dark:text-blue-300 flex items-center gap-2">
+          <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+          Informations Client
+        </h3>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="clientName">Nom du client</Label>
+            <Input
+              id="clientName"
+              name="clientName"
+              value={formData.clientName}
+              onChange={(e) => setFormData(prev => ({ ...prev, clientName: e.target.value }))}
+              placeholder="Nom complet du client"
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="clientPhone">Numéro de téléphone</Label>
+            <Input
+              id="clientPhone"
+              name="clientPhone"
+              value={formData.clientPhone}
+              onChange={(e) => setFormData(prev => ({ ...prev, clientPhone: e.target.value }))}
+              placeholder="Ex: 0692123456"
+            />
+          </div>
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="clientAddress">Adresse</Label>
+          <Input
+            id="clientAddress"
+            name="clientAddress"
+            value={formData.clientAddress}
+            onChange={(e) => setFormData(prev => ({ ...prev, clientAddress: e.target.value }))}
+            placeholder="Adresse complète du client"
+          />
+        </div>
       </div>
       
       {/* Sélection du produit */}
