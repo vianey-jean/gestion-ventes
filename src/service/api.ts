@@ -313,6 +313,67 @@ export const pretProduitService = {
   },
 };
 
+// Benefice Service
+export const beneficeService = {
+  async getBenefices(): Promise<any[]> {
+    try {
+      console.log('📊 Fetching benefices from API...');
+      const response = await api.get('/api/benefices');
+      console.log(`✅ Retrieved ${response.data.length} benefices from API`);
+      return response.data;
+    } catch (error) {
+      console.error('❌ Error fetching benefices:', error);
+      throw error;
+    }
+  },
+
+  async getBeneficeByProductId(productId: string): Promise<any> {
+    try {
+      const response = await api.get(`/api/benefices/product/${productId}`);
+      return response.data;
+    } catch (error) {
+      console.log('Aucune donnée de bénéfice existante pour ce produit');
+      return null;
+    }
+  },
+
+  async createBenefice(beneficeData: any): Promise<any> {
+    try {
+      console.log('📝 Adding new benefice:', beneficeData);
+      const response = await api.post('/api/benefices', beneficeData);
+      console.log('✅ Benefice added successfully:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ Error adding benefice:', error);
+      throw error;
+    }
+  },
+
+  async updateBenefice(id: string, beneficeData: any): Promise<any> {
+    try {
+      console.log('📝 Updating benefice:', beneficeData);
+      const response = await api.put(`/api/benefices/${id}`, beneficeData);
+      console.log('✅ Benefice updated successfully:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ Error updating benefice:', error);
+      throw error;
+    }
+  },
+
+  async deleteBenefice(id: string): Promise<boolean> {
+    try {
+      console.log('🗑️ Deleting benefice with ID:', id);
+      await api.delete(`/api/benefices/${id}`);
+      console.log('✅ Benefice deleted successfully');
+      return true;
+    } catch (error) {
+      console.error('❌ Error deleting benefice:', error);
+      throw error;
+    }
+  },
+};
+
 // Export the api instance for direct use if needed
 export { api };
 export default api;
