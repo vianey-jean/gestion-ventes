@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Search, X } from 'lucide-react';
 import { useApp } from '@/contexts/AppContext';
 import { Product } from '@/types';
+import { beneficeService } from '@/service/beneficeService';
 
 interface ProductSearchInputProps {
   onProductSelect: (product: Product) => void;
@@ -19,19 +20,56 @@ const ProductSearchInput: React.FC<ProductSearchInputProps> = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [benefices, setBenefices] = useState<any[]>([]);
+
+  // Charger les bénéfices au montage du composant
+  useEffect(() => {
+    const loadBenefices = async () => {
+      try {
+        const beneficesData = await beneficeService.getBenefices();
+        setBenefices(beneficesData);
+        console.log('📊 Bénéfices chargés dans ProductSearchInput:', beneficesData);
+      } catch (error) {
+        console.error('Erreur lors du chargement des bénéfices:', error);
+      }
+    };
+    loadBenefices();
+
+    // Écouter les suppressions de bénéfices
+    const handleBeneficeDeleted = () => {
+      loadBenefices();
+    };
+
+    window.addEventListener('benefice-deleted', handleBeneficeDeleted);
+    
+    // Recharger périodiquement pour s'assurer de la synchronisation
+    const interval = setInterval(loadBenefices, 3000);
+
+    return () => {
+      window.removeEventListener('benefice-deleted', handleBeneficeDeleted);
+      clearInterval(interval);
+    };
+  }, []);
 
   useEffect(() => {
     if (searchTerm.length >= 2) {
-      const filtered = products.filter(product =>
+      // Filtrer les produits par terme de recherche
+      let filtered = products.filter(product =>
         product.description.toLowerCase().includes(searchTerm.toLowerCase())
       );
+      
+      // Exclure les produits qui ont déjà des calculs de bénéfice
+      filtered = filtered.filter(product => 
+        !benefices.some(benefice => benefice.productId === product.id)
+      );
+      
       setFilteredProducts(filtered);
       setShowDropdown(true);
     } else {
       setFilteredProducts([]);
       setShowDropdown(false);
     }
-  }, [searchTerm, products]);
+  }, [searchTerm, products, benefices]);
 
   const handleProductSelect = (product: Product) => {
     console.log('🚀 DEBUT - ProductSearchInput handleProductSelect');

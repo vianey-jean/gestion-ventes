@@ -95,6 +95,14 @@ const ProfitCalculator: React.FC<ProfitCalculatorProps> = ({
     loadBeneficesData();
   }, []);
 
+  // Recharger la liste quand un produit est ajouté/supprimé
+  useEffect(() => {
+    const interval = setInterval(() => {
+      loadBeneficesData();
+    }, 2000);
+    return () => clearInterval(interval);
+  }, []);
+
   // Gérer la sélection d'un produit
   const handleProductSelect = (product: Product) => {
     console.log('🎯 Produit sélectionné pour calcul bénéfice:', product);
@@ -209,6 +217,17 @@ const ProfitCalculator: React.FC<ProfitCalculatorProps> = ({
       return;
     }
 
+    // Vérifier si le produit existe déjà
+    const existingBenefice = beneficesList.find(b => b.productId === selectedProduct.id);
+    if (existingBenefice) {
+      toast({
+        title: "Erreur",
+        description: "Ce produit a déjà un calcul de bénéfice enregistré.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -233,7 +252,22 @@ const ProfitCalculator: React.FC<ProfitCalculatorProps> = ({
         description: "Calcul de bénéfice sauvegardé avec succès!",
       });
 
+      // Recharger les données et réinitialiser le formulaire
       await loadBeneficesData();
+      setSelectedProduct(null);
+      setProductDescription('');
+      setValues({
+        prixAchat: 0,
+        taxeDouane: 0,
+        tva: 20,
+        autresFrais: 0,
+        coutTotal: 0,
+        margeDesire: 30,
+        prixVenteRecommande: 0,
+        beneficeNet: 0,
+        tauxMarge: 0
+      });
+      
       console.log('✅ Calcul de bénéfice sauvegardé:', response);
     } catch (error) {
       console.error('❌ Erreur lors de la sauvegarde:', error);
@@ -257,7 +291,14 @@ const ProfitCalculator: React.FC<ProfitCalculatorProps> = ({
         description: "Calcul de bénéfice supprimé avec succès!",
       });
 
+      // Recharger les données immédiatement après suppression
       await loadBeneficesData();
+      
+      // Forcer une mise à jour du composant ProductSearchInput
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('benefice-deleted'));
+      }, 100);
+      
     } catch (error) {
       console.error('❌ Erreur lors de la suppression:', error);
       toast({
