@@ -60,130 +60,189 @@ const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ isOpen, onClose }) 
 
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.width;
+    const pageHeight = doc.internal.pageSize.height;
     
-    // Couleurs et styles
-    const primaryColor = [220, 38, 127]; // Rose moderne
-    const secondaryColor = [99, 102, 241]; // Indigo
-    const accentColor = [16, 185, 129]; // Emeraude
-    const textColor = [31, 41, 55]; // Gris foncé
+    // Couleurs modernes inspirées de la photo
+    const primaryBlue = [51, 153, 204]; // Bleu cyan moderne
+    const lightGray = [248, 249, 250]; // Gris très clair
+    const darkGray = [52, 58, 64]; // Gris foncé pour le texte
+    const accentColor = [255, 193, 7]; // Jaune/doré pour les accents
     
-    // En-tête avec gradient visuel simulé
-    doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-    doc.rect(0, 0, pageWidth, 40, 'F');
+    // En-tête avec style moderne - Fond coloré en haut
+    doc.setFillColor(primaryBlue[0], primaryBlue[1], primaryBlue[2]);
+    doc.rect(0, 0, pageWidth, 50, 'F');
     
-    doc.setFillColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
-    doc.rect(0, 35, pageWidth, 5, 'F');
-    
-    // Logo et titre de l'entreprise
+    // Titre de l'entreprise - Style moderne
     doc.setTextColor(255, 255, 255);
-    doc.setFontSize(24);
-    doc.setFont('helvetica', 'bold');
-    doc.text('RIZIKY BEAUTÉ', 20, 25);
-    
-    // Informations de l'entreprise
-    doc.setFontSize(24);
-    doc.setFont('helvetica', 'normal');
-    doc.text('10 Allée des Beryls Bleus', 20, 55);
-    doc.text('97400 Saint-Denis, La Réunion', 20, 65);
-    doc.text('Tél: 0692 19 87 01', 20, 75);
-    
-    // Titre FACTURE avec style moderne
-    doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
     doc.setFontSize(28);
     doc.setFont('helvetica', 'bold');
-    doc.text('FACTURE', pageWidth - 80, 60);
+    doc.text('Riziky Beauté', 20, 25);
     
-    // Numéro de facture et date
-    doc.setTextColor(textColor[0], textColor[1], textColor[2]);
+    // Sous-titre élégant
     doc.setFontSize(12);
     doc.setFont('helvetica', 'normal');
-    doc.text(`N° ${sale.id}`, pageWidth - 80, 75);
-    doc.text(`Date: ${new Date(sale.date).toLocaleDateString('fr-FR')}`, pageWidth - 80, 85);
+    doc.text('Votre partenaire beauté à La Réunion', 20, 35);
     
-    // Informations client avec encadré stylé
-    const clientY = 100;
-    doc.setFillColor(248, 250, 252); // Fond gris très clair
-    doc.rect(20, clientY, pageWidth - 40, 40, 'F');
-    doc.setDrawColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
-    doc.setLineWidth(1);
-    doc.rect(20, clientY, pageWidth - 40, 40, 'S');
+    // Informations de contact dans l'en-tête
+    doc.setFontSize(10);
+    doc.text('10 Allée des Beryls Bleus', 20, 45);
     
-    doc.setTextColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
-    doc.setFontSize(14);
-    doc.setFont('helvetica', 'bold');
-    doc.text('FACTURÉ À:', 25, clientY + 15);
-    
-    doc.setTextColor(textColor[0], textColor[1], textColor[2]);
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'normal');
-    doc.text(sale.clientName, 25, clientY + 25);
-    if (sale.clientAddress) {
-      doc.text(sale.clientAddress, 25, clientY + 32);
-    }
-    if (sale.clientPhone) {
-      doc.text(`Tél: ${sale.clientPhone}`, 25, clientY + 39);
-    }
-    
-    // Tableau des produits avec style moderne
-    const tableY = clientY + 60;
-    
-    // En-tête du tableau avec gradient
-    doc.setFillColor(accentColor[0], accentColor[1], accentColor[2]);
-    doc.rect(20, tableY, pageWidth - 40, 15, 'F');
-    
+    // FACTURE en gros sur la droite
     doc.setTextColor(255, 255, 255);
+    doc.setFontSize(36);
+    doc.setFont('helvetica', 'bold');
+    doc.text('FACTURE', pageWidth - 85, 35);
+    
+    // Informations de l'entreprise - Section gauche
+    const companyInfoY = 65;
+    doc.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
     doc.setFontSize(11);
     doc.setFont('helvetica', 'bold');
-    doc.text('DÉSIGNATION', 25, tableY + 10);
-    doc.text('QTÉ', 100, tableY + 10);
-    doc.text('PRIX UNIT.', 125, tableY + 10);
-    doc.text('TOTAL HT', 160, tableY + 10);
+    doc.text('Riziky Beauté', 20, companyInfoY);
     
-    // Ligne du produit
-    const rowY = tableY + 15;
-    doc.setFillColor(255, 255, 255);
-    doc.rect(20, rowY, pageWidth - 40, 15, 'F');
-    doc.setDrawColor(200, 200, 200);
-    doc.rect(20, rowY, pageWidth - 40, 15, 'S');
-    
-    doc.setTextColor(textColor[0], textColor[1], textColor[2]);
     doc.setFont('helvetica', 'normal');
-    doc.text(sale.description, 25, rowY + 10);
-    doc.text(sale.quantitySold.toString(), 100, rowY + 10);
+    doc.setFontSize(10);
+    doc.text('10 Allée des Beryls Bleus', 20, companyInfoY + 8);
+    doc.text('97400 Saint-Denis, La Réunion', 20, companyInfoY + 16);
+    doc.text('Tél: 0692 19 87 01', 20, companyInfoY + 24);
     
-    const unitPrice = sale.quantitySold > 0 ? sale.sellingPrice / sale.quantitySold : sale.sellingPrice;
-    doc.text(formatEuro(unitPrice), 125, rowY + 10);
-    doc.text(formatEuro(sale.sellingPrice), 160, rowY + 10);
+    // Informations de facturation - Section droite
+    const invoiceInfoY = companyInfoY;
+    const rightX = pageWidth - 80;
     
-    // Total avec style élégant
-    const totalY = rowY + 30;
-    doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-    doc.rect(120, totalY, pageWidth - 140, 25, 'F');
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Facture n°', rightX, invoiceInfoY);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`2024-${sale.id.toString().padStart(3, '0')}`, rightX, invoiceInfoY + 8);
+    
+    doc.setFont('helvetica', 'bold');
+    doc.text('Date:', rightX, invoiceInfoY + 20);
+    doc.setFont('helvetica', 'normal');
+    doc.text(new Date(sale.date).toLocaleDateString('fr-FR'), rightX, invoiceInfoY + 28);
+    
+    doc.setFont('helvetica', 'bold');
+    doc.text('Échéance:', rightX, invoiceInfoY + 40);
+    doc.setFont('helvetica', 'normal');
+    const echeanceDate = new Date(sale.date);
+    echeanceDate.setDate(echeanceDate.getDate() + 30);
+    doc.text(echeanceDate.toLocaleDateString('fr-FR'), rightX, invoiceInfoY + 48);
+    
+    // Section client avec bordure moderne
+    const clientY = 125;
+    doc.setFillColor(lightGray[0], lightGray[1], lightGray[2]);
+    doc.rect(20, clientY, pageWidth - 40, 35, 'F');
+    doc.setDrawColor(primaryBlue[0], primaryBlue[1], primaryBlue[2]);
+    doc.setLineWidth(0.5);
+    doc.rect(20, clientY, pageWidth - 40, 35, 'S');
+    
+    doc.setTextColor(primaryBlue[0], primaryBlue[1], primaryBlue[2]);
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Expédier à:', 25, clientY + 12);
+    
+    doc.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.text(sale.clientName, 25, clientY + 22);
+    
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    if (sale.clientAddress) {
+      doc.text(sale.clientAddress, 25, clientY + 30);
+    }
+    if (sale.clientPhone) {
+      doc.text(`Tél: ${sale.clientPhone}`, 120, clientY + 30);
+    }
+    
+    // Tableau des produits - Style moderne
+    const tableY = 180;
+    
+    // En-tête du tableau avec gradient simulé
+    doc.setFillColor(primaryBlue[0], primaryBlue[1], primaryBlue[2]);
+    doc.rect(20, tableY, pageWidth - 40, 12, 'F');
     
     doc.setTextColor(255, 255, 255);
-    doc.setFontSize(14);
-    doc.setFont('helvetica', 'bold');
-    doc.text('TOTAL TTC:', 125, totalY + 12);
-    doc.text(formatEuro(sale.sellingPrice), 160, totalY + 12);
-    
-    // Bénéfice (information interne)
-    doc.setTextColor(accentColor[0], accentColor[1], accentColor[2]);
     doc.setFontSize(10);
-    doc.setFont('helvetica', 'italic');
-    doc.text(`Bénéfice: ${formatEuro(sale.profit)}`, 125, totalY + 20);
+    doc.setFont('helvetica', 'bold');
+    doc.text('DESCRIPTION', 25, tableY + 8);
+    doc.text('QTÉ', 110, tableY + 8);
+    doc.text('PRIX UNIT.', 130, tableY + 8);
+    doc.text('MONTANT EUR', 160, tableY + 8);
+    
+    // Ligne de produit
+    const rowY = tableY + 12;
+    doc.setFillColor(255, 255, 255);
+    doc.rect(20, rowY, pageWidth - 40, 15, 'F');
+    doc.setDrawColor(220, 220, 220);
+    doc.setLineWidth(0.3);
+    doc.rect(20, rowY, pageWidth - 40, 15, 'S');
+    
+    doc.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
+    doc.setFont('helvetica', 'normal');
+    doc.text(sale.description, 25, rowY + 9);
+    doc.text(sale.quantitySold.toString(), 115, rowY + 9);
+    
+    const unitPrice = sale.quantitySold > 0 ? sale.sellingPrice / sale.quantitySold : sale.sellingPrice;
+    doc.text(formatEuro(unitPrice), 135, rowY + 9);
+    doc.text(formatEuro(sale.sellingPrice), 165, rowY + 9);
+    
+    // Section totaux - Style moderne
+    const totalsY = rowY + 35;
+    const totalsX = pageWidth - 100;
+    
+    // Sous-total
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Sous-total HT:', totalsX - 30, totalsY);
+    doc.text(formatEuro(sale.sellingPrice), totalsX + 15, totalsY);
+    
+    // Ligne de séparation
+    doc.setDrawColor(220, 220, 220);
+    doc.line(totalsX - 30, totalsY + 3, totalsX + 35, totalsY + 3);
+    
+    // TVA (si applicable)
+    doc.text('TVA (0%):', totalsX - 30, totalsY + 10);
+    doc.text('0,00 €', totalsX + 15, totalsY + 10);
+    
+    // Total TTC - Mis en évidence
+    doc.setFillColor(primaryBlue[0], primaryBlue[1], primaryBlue[2]);
+    doc.rect(totalsX - 35, totalsY + 15, 75, 12, 'F');
+    
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Total TTC:', totalsX - 30, totalsY + 23);
+    doc.text(formatEuro(sale.sellingPrice), totalsX + 15, totalsY + 23);
+    
+    // Informations de paiement
+    const paymentY = totalsY + 45;
+    doc.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Informations de paiement:', 20, paymentY);
+    
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.text('Paiement à réception de facture', 20, paymentY + 8);
+    doc.text('Modes de paiement acceptés: Espèces, Virement, Carte bancaire', 20, paymentY + 16);
     
     // Pied de page élégant
-    const footerY = doc.internal.pageSize.height - 30;
-    doc.setDrawColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-    doc.setLineWidth(2);
+    const footerY = pageHeight - 40;
+    doc.setDrawColor(primaryBlue[0], primaryBlue[1], primaryBlue[2]);
+    doc.setLineWidth(1);
     doc.line(20, footerY, pageWidth - 20, footerY);
     
-    doc.setTextColor(textColor[0], textColor[1], textColor[2]);
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(primaryBlue[0], primaryBlue[1], primaryBlue[2]);
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
     doc.text('Merci de votre confiance !', pageWidth / 2, footerY + 10, { align: 'center' });
-    doc.text('Riziky Beauté - Votre partenaire beauté à La Réunion', pageWidth / 2, footerY + 20, { align: 'center' });
     
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.setTextColor(120, 120, 120);
+    doc.text('Riziky Beauté - Votre partenaire beauté à La Réunion', pageWidth / 2, footerY + 20, { align: 'center' });
+    doc.text('TVA non applicable - Article 293B du CGI', pageWidth / 2, footerY + 28, { align: 'center' });
     
     // Télécharger le PDF
     const fileName = `Facture_${sale.clientName?.replace(/\s+/g, '_')}_${sale.id}.pdf`;
