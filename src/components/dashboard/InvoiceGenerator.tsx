@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -21,20 +20,44 @@ interface InvoiceGeneratorProps {
 }
 
 const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ isOpen, onClose }) => {
-  const { sales } = useApp();
+  // Utiliser allSales au lieu de sales pour avoir TOUTES les ventes historiques
+  const { allSales } = useApp();
   const { toast } = useToast();
   const { formatEuro } = useCurrencyFormatter();
   
-  const [searchYear, setSearchYear] = useState(new Date().getFullYear().toString());
+  // Commencer avec 2025 puisque c'est l'année de vos données
+  const [searchYear, setSearchYear] = useState('2025');
   const [searchName, setSearchName] = useState('');
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
   const [showSaleDetails, setShowSaleDetails] = useState(false);
 
-  // Filtrer les ventes par année
-  const filteredSalesByYear = sales.filter(sale => {
-    const saleYear = new Date(sale.date).getFullYear().toString();
-    return saleYear === searchYear;
+  // Debug: afficher toutes les ventes historiques et leurs dates
+  console.log('=== DEBUG FACTURES (TOUTES LES VENTES HISTORIQUES) ===');
+  console.log('Toutes les ventes historiques dans AppContext:', allSales.map(sale => ({
+    id: sale.id,
+    date: sale.date,
+    client: sale.clientName,
+    description: sale.description
+  })));
+
+  // Filtrer les ventes par année complète (du 1er janvier au 31 décembre de l'année sélectionnée)
+  const filteredSalesByYear = allSales.filter(sale => {
+    const saleDate = new Date(sale.date);
+    const saleYear = saleDate.getFullYear();
+    const selectedYear = parseInt(searchYear);
+    
+    console.log(`Vente ID ${sale.id}: date=${sale.date}, année extraite=${saleYear}, année recherchée=${selectedYear}, client=${sale.clientName}`);
+    
+    // Vérifier que la vente est dans l'année sélectionnée
+    return saleYear === selectedYear;
   });
+
+  console.log(`Total ventes historiques: ${allSales.length}, Ventes pour ${searchYear}: ${filteredSalesByYear.length}`);
+  console.log('Ventes filtrées par année:', filteredSalesByYear.map(sale => ({
+    id: sale.id,
+    date: sale.date,
+    client: sale.clientName
+  })));
 
   // Filtrer les ventes par nom (à partir de 3 caractères)
   const filteredSalesByName = searchName.length >= 3 
@@ -287,13 +310,34 @@ const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ isOpen, onClose }) 
                     min="2020"
                     max="2030"
                     value={searchYear}
-                    onChange={(e) => setSearchYear(e.target.value)}
+                    onChange={(e) => {
+                      setSearchYear(e.target.value);
+                      setSearchName(''); // Reset search name when year changes
+                    }}
                     className="w-32 border-blue-300 focus:border-blue-500"
                   />
                   <Badge variant="secondary" className="bg-blue-100 text-blue-700">
-                    {filteredSalesByYear.length} vente{filteredSalesByYear.length !== 1 ? 's' : ''} trouvée{filteredSalesByYear.length !== 1 ? 's' : ''}
+                    {filteredSalesByYear.length} vente{filteredSalesByYear.length !== 1 ? 's' : ''} trouvée{filteredSalesByYear.length !== 1 ? 's' : ''} pour {searchYear}
                   </Badge>
                 </div>
+                
+                {/* Debug info étendu */}
+                {/*<div className="mt-2 text-xs text-gray-500">
+                  <p>Debug: Total ventes historiques = {allSales.length}</p>
+                  <p>Années disponibles: {[...new Set(allSales.map(sale => new Date(sale.date).getFullYear()))].sort().join(', ')}</p>
+                  <p>Mois disponibles pour {searchYear}: {[...new Set(
+                    allSales
+                      .filter(sale => new Date(sale.date).getFullYear() === parseInt(searchYear))
+                      .map(sale => new Date(sale.date).getMonth() + 1)
+                  )].sort().join(', ')}</p>
+                  <p>Dates complètes pour {searchYear}: {
+                    allSales
+                      .filter(sale => new Date(sale.date).getFullYear() === parseInt(searchYear))
+                      .map(sale => sale.date)
+                      .sort()
+                      .join(', ')
+                  }</p>
+                </div>*/}
               </CardContent>
             </Card>
 
@@ -330,7 +374,7 @@ const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ isOpen, onClose }) 
                 <CardHeader className="pb-3">
                   <CardTitle className="text-lg flex items-center gap-2 text-purple-700">
                     <User className="h-5 w-5" />
-                    Ventes de {searchName}
+                    Ventes de {searchName} en {searchYear}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
