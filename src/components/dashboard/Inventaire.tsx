@@ -80,19 +80,6 @@ const Inventaire = () => {
       setLoading(true);
       const data = await productService.getProducts();
       setProducts(data);
-      
-      // Vérifier s'il y a des produits en rupture de stock (une seule fois par session utilisateur connectée)
-      const stockAlertShown = localStorage.getItem('stockAlertShown');
-      const outOfStock = data.filter(p => p.quantity === 0);
-      
-      if (outOfStock.length > 0 && !stockAlertShown) {
-        localStorage.setItem('stockAlertShown', 'true');
-        toast({
-          title: "🚨 ALERTE STOCK PREMIUM !",
-          description: `⚠️ Attention ! Il y a ${outOfStock.length} produit(s) de luxe en rupture de stock. Action immédiate requise !`,
-          className: "bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-400 text-red-900 shadow-2xl rounded-xl font-bold animate-pulse",
-        });
-      }
     } catch (error) {
       toast({
         title: "Erreur",

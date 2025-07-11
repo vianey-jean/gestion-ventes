@@ -13,7 +13,10 @@ const useCurrencyFormatter = () => {
     }).format(amount);
   };
 
-  return { formatEuro };
+  // Alias pour la compatibilité
+  const formatCurrency = formatEuro;
+
+  return { formatEuro, formatCurrency };
 };
 
 export default useCurrencyFormatter;
