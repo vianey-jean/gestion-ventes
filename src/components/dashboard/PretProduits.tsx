@@ -604,16 +604,16 @@ const PretProduits: React.FC = () => {
                           onClick={() => selectPretForEdit(pret)}
                         >
                           <TableCell className="font-medium">{format(new Date(pret.date), 'dd/MM/yyyy')}</TableCell>
-                          <TableCell className={getDatePaiementClass(pret)}>
+                          <TableCell className={getDatePaiementClass(pret)} >
                             {pret.datePaiement ? format(new Date(pret.datePaiement), 'dd/MM/yyyy') : '-'}
                           </TableCell>
                           <TableCell className="font-medium text-gray-900 dark:text-gray-100">{pret.description}</TableCell>
-                          <TableCell className="text-gray-600 dark:text-gray-300">{pret.nom || '-'}</TableCell>
+                          <TableCell className="text-purple-600 dark:text-purple-300 font-bold">{pret.nom || '-'}</TableCell>
                           <TableCell className="text-gray-600 dark:text-gray-300">
                             {pret.phone && (
                               <div className="flex items-center gap-1">
-                                <Phone className="h-3 w-3" />
-                                <span>{pret.phone}</span>
+                                <Phone className="h-6 w-6 text-green-800" />
+                                <span className="text-red-800 font-bold">{pret.phone}</span>
                               </div>
                             )}
                           </TableCell>
