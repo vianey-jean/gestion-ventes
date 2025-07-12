@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useApp } from '@/contexts/AppContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -11,7 +12,7 @@ import InvoiceGenerator from '@/components/dashboard/InvoiceGenerator';
 import AdvancedDashboard from '@/components/dashboard/AdvancedDashboard';
 import ModernContainer from '@/components/dashboard/forms/ModernContainer';
 import ModernActionButton from '@/components/dashboard/forms/ModernActionButton';
-import { PlusCircle, Edit, ShoppingCart, Loader2, FileText, TrendingUp, Package, Warehouse, BarChart3, Receipt, Activity } from 'lucide-react';
+import { PlusCircle, Edit, ShoppingCart, Loader2, FileText, TrendingUp, Package, Warehouse, BarChart3, Receipt, Activity, Crown } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -114,16 +115,33 @@ const VentesProduits: React.FC = () => {
 
   return (
     <div className="space-y-8 p-6 bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 min-h-screen">
-      {/* Navigation par onglets */}
+      {/* Navigation par onglets modernisée */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 h-12 mb-6">
-          <TabsTrigger value="sales" className="flex items-center gap-2">
-            <ShoppingCart className="h-4 w-4" />
-            <span>Gestion des Ventes</span>
+        <TabsList className="grid w-full grid-cols-2 h-16 mb-8 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-xl rounded-2xl border border-gray-200/50 dark:border-gray-700/50 p-2">
+          <TabsTrigger 
+            value="sales" 
+            className="group relative flex items-center gap-4 data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-600 data-[state=active]:via-green-600 data-[state=active]:to-emerald-600 data-[state=active]:text-white transition-all duration-500 hover:shadow-xl rounded-xl overflow-hidden font-bold text-base"
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/20 to-green-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <div className="relative z-10 flex items-center gap-4">
+              <div className="p-2 rounded-lg bg-gradient-to-br from-emerald-500 to-green-500 group-data-[state=active]:bg-white/20 shadow-lg">
+                <ShoppingCart className="h-5 w-5" />
+              </div>
+              <span className="font-black">Gestion des Ventes Premium</span>
+            </div>
           </TabsTrigger>
-          <TabsTrigger value="advanced" className="flex items-center gap-2">
-            <Activity className="h-4 w-4" />
-            <span>Tableau de Bord Avancé</span>
+          
+          <TabsTrigger 
+            value="advanced" 
+            className="group relative flex items-center gap-4 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:via-pink-600 data-[state=active]:to-purple-600 data-[state=active]:text-white transition-all duration-500 hover:shadow-xl rounded-xl overflow-hidden font-bold text-base"
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-pink-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <div className="relative z-10 flex items-center gap-4">
+              <div className="p-2 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 group-data-[state=active]:bg-white/20 shadow-lg">
+                <Crown className="h-5 w-5" />
+              </div>
+              <span className="font-black">Tableau de Bord Executive</span>
+            </div>
           </TabsTrigger>
         </TabsList>
 
