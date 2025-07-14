@@ -12,6 +12,7 @@ import InvoiceGenerator from '@/components/dashboard/InvoiceGenerator';
 import AdvancedDashboard from '@/components/dashboard/AdvancedDashboard';
 import ModernContainer from '@/components/dashboard/forms/ModernContainer';
 import ModernActionButton from '@/components/dashboard/forms/ModernActionButton';
+import PremiumLoading from '@/components/ui/premium-loading';
 import { PlusCircle, Edit, ShoppingCart, Loader2, FileText, TrendingUp, Package, Warehouse, BarChart3, Receipt, Activity, Crown } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -97,9 +98,11 @@ const VentesProduits: React.FC = () => {
   if (!isAuthenticated) {
     return (
       <div className="flex justify-center items-center py-12">
-        <div className="flex items-center space-x-4 p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg">
-          <p className="text-lg text-gray-600 dark:text-gray-300">Veuillez vous connecter pour accéder à cette page.</p>
-        </div>
+        <PremiumLoading 
+          text="Authentification requise"
+          variant="ventes"
+          size="lg"
+        />
       </div>
     );
   }
@@ -265,13 +268,14 @@ const VentesProduits: React.FC = () => {
               </ModernActionButton>
             </div>
             
-            {/* Indicateur de chargement modernisé */}
+            {/* Indicateur de chargement premium */}
             {(appLoading || authLoading) && (
               <div className="flex justify-center items-center py-12">
-                <div className="flex items-center space-x-4 p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg">
-                  <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
-                  <p className="text-lg text-gray-600 dark:text-gray-300">Chargement des données du mois en cours...</p>
-                </div>
+                <PremiumLoading 
+                  text="Chargement des ventes..."
+                  variant="ventes"
+                  size="lg"
+                />
               </div>
             )}
             
@@ -298,7 +302,15 @@ const VentesProduits: React.FC = () => {
         </TabsContent>
 
         <TabsContent value="advanced">
-          <AdvancedDashboard />
+          <React.Suspense fallback={
+            <PremiumLoading 
+              text="Chargement du tableau de bord avancé..."
+              variant="ventes"
+              size="lg"
+            />
+          }>
+            <AdvancedDashboard />
+          </React.Suspense>
         </TabsContent>
       </Tabs>
       

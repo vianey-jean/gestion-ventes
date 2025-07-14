@@ -10,10 +10,14 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
-import { CalendarIcon, Loader2, Wallet, CreditCard, Plus, ArrowUp, ArrowDown, Receipt, HandCoins, DollarSign, Sparkles, Award, Users, TrendingDown, TrendingUp } from 'lucide-react';
+import { 
+  CalendarIcon, Loader2, Wallet, CreditCard, Plus, ArrowUp, ArrowDown,
+  Receipt, HandCoins, DollarSign, Sparkles, Award, Users, TrendingDown, TrendingUp
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { pretFamilleService } from '@/service/api';
 import { PretFamille } from '@/types';
+import PremiumLoading from '@/components/ui/premium-loading'; // ✅ Import ajouté
 
 const PretFamilles: React.FC = () => {
   const [prets, setPrets] = useState<PretFamille[]>([]);
@@ -24,15 +28,12 @@ const PretFamilles: React.FC = () => {
   const [searchResults, setSearchResults] = useState<PretFamille[]>([]);
   const [selectedPret, setSelectedPret] = useState<PretFamille | null>(null);
   const [montantRemboursement, setMontantRemboursement] = useState('');
-  
-  // États pour demande de prêt
   const [nouvNom, setNouvNom] = useState('');
   const [nouvPretTotal, setNouvPretTotal] = useState('');
   const [nouvDate, setNouvDate] = useState<Date>(new Date());
-  
+
   const { toast } = useToast();
 
-  // Charger les données depuis l'API
   useEffect(() => {
     const fetchPrets = async () => {
       try {
@@ -54,11 +55,9 @@ const PretFamilles: React.FC = () => {
     fetchPrets();
   }, [toast]);
 
-  // Calculer les totaux
   const totalPret = prets.reduce((sum, pret) => sum + pret.pretTotal, 0);
   const totalSolde = prets.reduce((sum, pret) => sum + pret.soldeRestant, 0);
 
-  // Recherche des familles par nom
   const handleSearch = async (text: string) => {
     setSearchText(text);
     if (text.length >= 3) {
@@ -74,35 +73,23 @@ const PretFamilles: React.FC = () => {
     }
   };
 
-  // Sélectionner une famille dans les résultats de recherche
   const selectFamille = (pret: PretFamille) => {
     setSelectedPret(pret);
     setSearchText(pret.nom);
     setSearchResults([]);
   };
 
-  // Enregistrer le remboursement
   const handleRemboursement = async () => {
     if (!selectedPret) {
-      toast({
-        title: 'Erreur',
-        description: 'Veuillez sélectionner une famille',
-        variant: 'destructive',
-      });
+      toast({ title: 'Erreur', description: 'Veuillez sélectionner une famille', variant: 'destructive' });
       return;
     }
-
     if (!montantRemboursement || parseFloat(montantRemboursement) <= 0) {
-      toast({
-        title: 'Erreur',
-        description: 'Veuillez saisir un montant de remboursement valide',
-        variant: 'destructive',
-      });
+      toast({ title: 'Erreur', description: 'Veuillez saisir un montant valide', variant: 'destructive' });
       return;
     }
 
     const montant = parseFloat(montantRemboursement);
-    
     if (montant > selectedPret.soldeRestant) {
       toast({
         title: 'Erreur',
@@ -114,115 +101,80 @@ const PretFamilles: React.FC = () => {
 
     try {
       setLoading(true);
-      
-      // Calculer les nouvelles valeurs
-      const dernierRem = montant;
-      const soldRst = selectedPret.soldeRestant;
-      const pretReel = soldRst - dernierRem;
-      
-      // Créer l'objet mis à jour
       const updatedPret: PretFamille = {
         ...selectedPret,
-        soldeRestant: pretReel,
-        dernierRemboursement: dernierRem,
-        dateRemboursement: new Date().toISOString().split('T')[0]
+        soldeRestant: selectedPret.soldeRestant - montant,
+        dernierRemboursement: montant,
+        dateRemboursement: new Date().toISOString().split('T')[0],
       };
-      
-      // Mettre à jour via l'API
       await pretFamilleService.updatePretFamille(selectedPret.id, updatedPret);
-      
-      // Recharger les données
       const updatedPrets = await pretFamilleService.getPretFamilles();
       setPrets(updatedPrets);
-      
-      toast({
-        title: 'Succès',
-        description: 'Remboursement enregistré avec succès',
-        variant: 'default',
-        className: 'notification-success',
-      });
-      
-      // Réinitialiser le formulaire
+      toast({ title: 'Succès', description: 'Remboursement enregistré', variant: 'default', className: 'notification-success' });
       setSelectedPret(null);
       setSearchText('');
       setMontantRemboursement('');
       setRemboursementDialogOpen(false);
     } catch (error) {
-      console.error('Erreur lors de l\'enregistrement du remboursement', error);
-      toast({
-        title: 'Erreur',
-        description: 'Impossible d\'enregistrer le remboursement',
-        variant: 'destructive',
-      });
+      console.error('Erreur remboursement', error);
+      toast({ title: 'Erreur', description: 'Impossible d\'enregistrer le remboursement', variant: 'destructive' });
     } finally {
       setLoading(false);
     }
   };
 
-  // Enregistrer une nouvelle demande de prêt
   const handleDemandePret = async () => {
     if (!nouvNom) {
-      toast({
-        title: 'Erreur',
-        description: 'Veuillez saisir un nom',
-        variant: 'destructive',
-      });
+      toast({ title: 'Erreur', description: 'Veuillez saisir un nom', variant: 'destructive' });
       return;
     }
-
     if (!nouvPretTotal || parseFloat(nouvPretTotal) <= 0) {
-      toast({
-        title: 'Erreur',
-        description: 'Veuillez saisir un montant de prêt valide',
-        variant: 'destructive',
-      });
+      toast({ title: 'Erreur', description: 'Veuillez saisir un montant valide', variant: 'destructive' });
       return;
     }
 
     try {
       setLoading(true);
-      
       const newPret: Omit<PretFamille, 'id'> = {
         nom: nouvNom,
         pretTotal: parseFloat(nouvPretTotal),
         soldeRestant: parseFloat(nouvPretTotal),
         dernierRemboursement: 0,
-        dateRemboursement: format(nouvDate, 'yyyy-MM-dd')
+        dateRemboursement: format(nouvDate, 'yyyy-MM-dd'),
       };
-      
-      // Enregistrer via l'API
       await pretFamilleService.addPretFamille(newPret);
-      
-      // Recharger les données
       const updatedPrets = await pretFamilleService.getPretFamilles();
       setPrets(updatedPrets);
-      
-      toast({
-        title: 'Succès',
-        description: 'Demande de prêt enregistrée avec succès',
-        variant: 'default',
-        className: 'notification-success',
-      });
-      
-      // Réinitialiser le formulaire
+      toast({ title: 'Succès', description: 'Demande enregistrée', variant: 'default', className: 'notification-success' });
       setNouvNom('');
       setNouvPretTotal('');
       setNouvDate(new Date());
       setDemandePretDialogOpen(false);
     } catch (error) {
-      console.error('Erreur lors de l\'enregistrement de la demande de prêt', error);
-      toast({
-        title: 'Erreur',
-        description: 'Impossible d\'enregistrer la demande de prêt',
-        variant: 'destructive',
-      });
+      console.error('Erreur demande de prêt', error);
+      toast({ title: 'Erreur', description: 'Impossible d\'enregistrer la demande de prêt', variant: 'destructive' });
     } finally {
       setLoading(false);
     }
   };
 
+  // ✅ Rendu conditionnel pour affichage du loader personnalisé
+  if (loading) {
+    return (
+      <PremiumLoading 
+        text="Chargement des Prêts Familles"
+        size="md"
+        variant="dashboard"
+        showText={true}
+      />
+    );
+  }
+
+  // ❗ Le reste de ton composant JSX reste inchangé (header, tableaux, dialogues)
+  // 👉 Tu peux maintenant réutiliser ton code existant pour toute l’interface en-dessous de cette condition.
+
   return (
-    <div className="mt-6 space-y-6">
+       <div className="mt-6 space-y-6">
       {/* Header avec design luxueux */}
       <div className="bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 rounded-3xl shadow-2xl p-8 border border-white/20">
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">

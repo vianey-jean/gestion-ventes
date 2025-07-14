@@ -4,6 +4,7 @@ import { ModernTable, ModernTableHeader, ModernTableRow, ModernTableHead, Modern
 import { Sale } from '@/types';
 import { TrendingUp, Package, Euro, Calendar, Sparkles, Award, Clock } from 'lucide-react';
 import { realtimeService } from '@/services/realtimeService';
+import PremiumLoading from '@/components/ui/premium-loading';
 
 interface SalesTableProps {
   sales: Sale[];
@@ -18,6 +19,7 @@ const SalesTable: React.FC<SalesTableProps> = ({ sales: initialSales, onRowClick
   const [sales, setSales] = useState<Sale[]>([]);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
   const [isRealtimeActive, setIsRealtimeActive] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Fonction pour filtrer les ventes du mois en cours
   const filterCurrentMonthSales = (salesData: Sale[]) => {
@@ -128,6 +130,25 @@ const SalesTable: React.FC<SalesTableProps> = ({ sales: initialSales, onRowClick
     return now.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
   };
   
+  // Simuler un chargement initial
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1200);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (isLoading) {
+    return (
+      <PremiumLoading 
+        text="Chargement des Ventes"
+        size="md"
+        variant="ventes"
+        showText={true}
+      />
+    );
+  }
+
   return (
     <div className="bg-gradient-to-br from-white/95 to-gray-50/95 dark:from-gray-900/95 dark:to-gray-800/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 overflow-hidden">
       {/* Header avec gradient luxueux et indicateur temps réel */}

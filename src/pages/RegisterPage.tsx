@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -12,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import PasswordInput from '@/components/PasswordInput';
 import PasswordStrengthChecker from '@/components/PasswordStrengthChecker';
 import Layout from '@/components/Layout';
+import PremiumLoading from '@/components/ui/premium-loading';
 import { UserPlus, Mail, User, Phone, MapPin, Shield, Sparkles } from 'lucide-react';
 
 const RegisterPage: React.FC = () => {
@@ -207,8 +207,23 @@ const RegisterPage: React.FC = () => {
     !isEmailChecking &&
     Object.keys(errors).filter(key => errors[key]).length === 0;
 
+  // Show loading during form submission
+  if (isSubmitting) {
+    return (
+      <Layout>
+        <PremiumLoading 
+          text="Création du compte..."
+          size="lg"
+          overlay={true}
+          variant="default"
+        />
+      </Layout>
+    );
+  }
+
   return (
     <Layout>
+      {/* Background decorations */}
       <div className="min-h-screen bg-gradient-to-br from-violet-50 via-purple-50 to-fuchsia-100 dark:from-gray-900 dark:via-purple-900/20 dark:to-slate-900 py-12 px-4">
         {/* Background decorations */}
         <div className="absolute inset-0 overflow-hidden">
@@ -486,12 +501,7 @@ const RegisterPage: React.FC = () => {
                   className="w-full h-14 bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 hover:from-violet-700 hover:via-purple-700 hover:to-fuchsia-700 text-white font-bold text-lg rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center gap-3"
                   disabled={!isFormValid || isSubmitting}
                 >
-                  {isSubmitting ? (
-                    <>
-                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                      Création en cours...
-                    </>
-                  ) : isEmailChecking ? (
+                  {isEmailChecking ? (
                     <>
                       <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                       Vérification...

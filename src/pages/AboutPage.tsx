@@ -1,9 +1,32 @@
-
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
+import PremiumLoading from '@/components/ui/premium-loading';
 import { Users, Target, Lightbulb, Award, ArrowRight } from 'lucide-react';
 
 const AboutPage: React.FC = () => {
+  const [isLoading, setIsLoading] = useState(true);
+  
+  // Simulate initial page load
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1200);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (isLoading) {
+    return (
+      <Layout>
+        <PremiumLoading 
+          text="Découvrez Notre Histoire"
+          size="lg"
+          overlay={true}
+          variant="default"
+        />
+      </Layout>
+    );
+  }
+
   return (
     <Layout>
       <div className="relative overflow-hidden">

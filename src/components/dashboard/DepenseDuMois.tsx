@@ -11,18 +11,19 @@ import MonthlyResetHandler from './MonthlyResetHandler';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { depenseService } from '@/service/api';
 import { useApp } from '@/contexts/AppContext';
+import PremiumLoading from '@/components/ui/premium-loading';
 
-// Fonction pour formater le mois en français
 const formatMonthInFrench = (monthIndex: number): string => {
   const months = [
     'JANVIER', 'FÉVRIER', 'MARS', 'AVRIL', 'MAI', 'JUIN',
     'JUILLET', 'AOÛT', 'SEPTEMBRE', 'OCTOBRE', 'NOVEMBRE', 'DÉCEMBRE'
   ];
-  return months[monthIndex -1] || 'MOIS INCONNU';
+  return months[monthIndex - 1] || 'MOIS INCONNU';
 };
 
 const DepenseDuMois = () => {
   const [mouvements, setMouvements] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [newMouvement, setNewMouvement] = useState({
     description: '',
     categorie: '',
@@ -42,37 +43,27 @@ const DepenseDuMois = () => {
     autreDepense: '',
     assuranceVie: '',
   });
-  
-  const { 
-    currentMonth,
-    currentYear,
-  } = useApp();
-  
+
+  const { currentMonth, currentYear } = useApp();
   const isMobile = useIsMobile();
   const { toast } = useToast();
 
-  // Calcul du solde - Make sure mouvements is an array before calling reduce
-  const solde = Array.isArray(mouvements) ? mouvements.reduce((total, m) => {
-    return total + (parseFloat(m.credit) || 0) - (parseFloat(m.debit) || 0);
-  }, 0) : 0;
+  const solde = Array.isArray(mouvements)
+    ? mouvements.reduce((total, m) => total + (parseFloat(m.credit) || 0) - (parseFloat(m.debit) || 0), 0)
+    : 0;
 
-  // Formatage des dates
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     return new Intl.DateTimeFormat('fr-FR').format(date);
   };
 
-  // Formatage des montants
   const formatAmount = (amount) => {
-    return new Intl.NumberFormat('fr-FR', {
-      style: 'currency',
-      currency: 'EUR',
-    }).format(amount || 0);
+    return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(amount || 0);
   };
 
-  // Récupération des mouvements
   const fetchMouvements = async () => {
     try {
+      setLoading(true);
       const mouvementsData = await depenseService.getMouvements();
       setMouvements(mouvementsData || []);
     } catch (error) {
@@ -83,10 +74,11 @@ const DepenseDuMois = () => {
         variant: "destructive",
       });
       setMouvements([]);
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Récupération des dépenses fixes
   const fetchDepensesFixe = async () => {
     try {
       const depensesFixeData = await depenseService.getDepensesFixe();
@@ -107,48 +99,39 @@ const DepenseDuMois = () => {
     }
   };
 
-  // Ajout/Modification d'un mouvement
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    try {
-      // Validation des données
-      if (!newMouvement.description || !newMouvement.categorie || (!newMouvement.debit && !newMouvement.credit)) {
-        toast({
-          title: "Erreur",
-          description: "Veuillez remplir tous les champs obligatoires",
-          variant: "destructive",
-        });
-        return;
-      }
+    if (!newMouvement.description || !newMouvement.categorie || (!newMouvement.debit && !newMouvement.credit)) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez remplir tous les champs obligatoires",
+        variant: "destructive",
+      });
+      return;
+    }
 
-      // Créer l'objet mouvement avec le solde calculé
+    try {
       const mouvementData = {
         ...newMouvement,
-        solde: solde + (parseFloat(newMouvement.credit) || 0) - (parseFloat(newMouvement.debit) || 0)
+        solde: solde + (parseFloat(newMouvement.credit) || 0) - (parseFloat(newMouvement.debit) || 0),
       };
-      
+
       if (editMouvementId) {
-        // Mise à jour d'un mouvement existant
         await depenseService.updateMouvement(editMouvementId, mouvementData);
-        
         toast({
           title: "Succès",
           description: "Mouvement mis à jour avec succès",
           className: "bg-app-green text-white",
         });
       } else {
-        // Création d'un nouveau mouvement
         await depenseService.addMouvement(mouvementData);
-        
         toast({
           title: "Succès",
           description: "Mouvement ajouté avec succès",
           className: "bg-app-green text-white",
         });
       }
-      
-      // Réinitialisation et rechargement des données
+
       setNewMouvement({
         description: '',
         categorie: '',
@@ -169,17 +152,14 @@ const DepenseDuMois = () => {
     }
   };
 
-  // Suppression d'un mouvement
   const handleDelete = async () => {
     try {
       await depenseService.deleteMouvement(deleteId);
-      
       toast({
         title: "Succès",
         description: "Mouvement supprimé avec succès",
         className: "bg-app-green text-white",
       });
-      
       setIsDeleteDialogOpen(false);
       fetchMouvements();
     } catch (error) {
@@ -192,7 +172,6 @@ const DepenseDuMois = () => {
     }
   };
 
-  // Modification d'un mouvement existant
   const handleEdit = (mouvement) => {
     setNewMouvement({
       description: mouvement.description,
@@ -205,10 +184,8 @@ const DepenseDuMois = () => {
     setIsDialogOpen(true);
   };
 
-  // Mise à jour des dépenses fixes
   const handleUpdateDepensesFixe = async () => {
     try {
-      // Convertir les strings en numbers pour l'API
       const depensesFixeNumbers = {
         free: parseFloat(depensesFixe.free) || 0,
         internetZeop: parseFloat(depensesFixe.internetZeop) || 0,
@@ -216,15 +193,12 @@ const DepenseDuMois = () => {
         autreDepense: parseFloat(depensesFixe.autreDepense) || 0,
         assuranceVie: parseFloat(depensesFixe.assuranceVie) || 0,
       };
-      
       await depenseService.updateDepensesFixe(depensesFixeNumbers);
-      
       toast({
         title: "Succès",
         description: "Dépenses fixes mises à jour avec succès",
         className: "bg-app-green text-white",
       });
-      
       setIsFixeDialogOpen(false);
     } catch (error) {
       console.error("Erreur lors de la mise à jour des dépenses fixes:", error);
@@ -236,23 +210,19 @@ const DepenseDuMois = () => {
     }
   };
 
-  // Chargement des données au montage du composant
   useEffect(() => {
-    fetchMouvements();
-    fetchDepensesFixe();
+    setLoading(true);
+    Promise.all([fetchMouvements(), fetchDepensesFixe()]).finally(() => setLoading(false));
   }, []);
 
-  // Réinitialisation manuelle de tous les mouvements
   const handleReset = async () => {
     try {
       await depenseService.resetMouvements();
-      
       toast({
         title: "Succès",
         description: "Tous les mouvements ont été réinitialisés",
         className: "bg-app-blue text-white",
       });
-      
       fetchMouvements();
     } catch (error) {
       console.error("Erreur lors de la réinitialisation des mouvements:", error);
@@ -264,10 +234,8 @@ const DepenseDuMois = () => {
     }
   };
 
-  // Gérer le changement de catégorie dans le formulaire
   const handleCategorieChange = (value) => {
     if (value === "chargeFixe") {
-      // Si charge fixe est sélectionné, pré-remplir avec les données de dépenses fixes
       depenseService.getDepensesFixe().then(depensesFixeData => {
         setNewMouvement({
           ...newMouvement,
@@ -278,7 +246,6 @@ const DepenseDuMois = () => {
         });
       });
     } else {
-      // Sinon, réinitialiser les champs
       setNewMouvement({
         ...newMouvement,
         categorie: value,
@@ -290,6 +257,17 @@ const DepenseDuMois = () => {
   };
 
   const estPositif = solde >= 0;
+
+  if (loading) {
+    return (
+      <PremiumLoading
+        text="Chargement des Dépense du Mois"
+        size="md"
+        variant="dashboard"
+        showText={true}
+      />
+    );
+  }
 
   return (
     <div className="space-y-8">

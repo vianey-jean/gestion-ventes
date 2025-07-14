@@ -17,6 +17,7 @@ import { Product, PretProduit } from '@/types';
 import { pretProduitService } from '@/service/api';
 import { motion } from 'framer-motion';
 import PretRetardNotification from './PretRetardNotification';
+import PremiumLoading from '@/components/ui/premium-loading';
 
 const PretProduits: React.FC = () => {
   const [prets, setPrets] = useState<PretProduit[]>([]);
@@ -42,31 +43,23 @@ const PretProduits: React.FC = () => {
   const { products, searchProducts } = useApp();
   const { toast } = useToast();
 
-  // Calculer reste automatiquement
   const reste = React.useMemo(() => {
     const prix = parseFloat(prixVente) || 0;
     const avance = parseFloat(avanceRecue) || 0;
     return prix - avance;
   }, [prixVente, avanceRecue]);
 
-  // Calculer nouveau reste après ajout d'avance
   const nouveauReste = React.useMemo(() => {
     if (!selectedPret) return 0;
-    
     const prix = selectedPret.prixVente || 0;
     const avanceActuelle = selectedPret.avanceRecue || 0;
     const nouvelleAvance = parseFloat(ajoutAvance) || 0;
-    
     return prix - (avanceActuelle + nouvelleAvance);
   }, [selectedPret, ajoutAvance]);
 
-  // Nouvel état du paiement après ajout d'avance
   const nouveauEstPaye = nouveauReste <= 0;
-
-  // État du paiement
   const estPaye = reste <= 0;
 
-  // Fonction pour vérifier si une date de paiement est dépassée
   const isDatePaiementDepassee = (datePaiement: string) => {
     const date = new Date(datePaiement);
     const aujourdhui = new Date();
@@ -75,25 +68,13 @@ const PretProduits: React.FC = () => {
     return date < aujourdhui;
   };
 
-  // Fonction pour déterminer la classe CSS de la date de paiement
   const getDatePaiementClass = (pret: PretProduit) => {
     if (!pret.datePaiement) return "font-bold text-green-600";
-    
     const isDepassee = isDatePaiementDepassee(pret.datePaiement);
-    
-    if (pret.estPaye) {
-      // Si le prêt est payé, toujours en vert
-      return "font-bold text-green-600";
-    } else if (isDepassee) {
-      // Si le prêt n'est pas payé et la date est dépassée, rouge et clignotant
-      return "font-bold text-red-600 animate-pulse font-bold";
-    } else {
-      // Si le prêt n'est pas payé et la date n'est pas dépassée, vert
-      return "font-bold text-green-600";
-    }
+    if (pret.estPaye) return "font-bold text-green-600";
+    return isDepassee ? "font-bold text-red-600 animate-pulse font-bold" : "font-bold text-green-600";
   };
 
-  // Charger les données depuis l'API
   const fetchPrets = async () => {
     try {
       setLoading(true);
@@ -115,13 +96,11 @@ const PretProduits: React.FC = () => {
     fetchPrets();
   }, [toast]);
 
-  // Calculer le total restant
   const totalReste = prets.reduce((sum, pret) => sum + pret.reste, 0);
   const totalAvances = prets.reduce((sum, pret) => sum + pret.avanceRecue, 0);
   const totalVentes = prets.reduce((sum, pret) => sum + pret.prixVente, 0);
   const pretsPayes = prets.filter(pret => pret.estPaye).length;
 
-  // Recherche des produits par description
   const handleSearch = async (text: string) => {
     setDescription(text);
     if (text.length >= 3) {
@@ -136,12 +115,11 @@ const PretProduits: React.FC = () => {
     }
   };
 
-  // Recherche des prêts par description
   const handleSearchPret = async (text: string) => {
     setSearchTerm(text);
     if (text.length >= 3) {
       try {
-        const filtered = prets.filter(pret => 
+        const filtered = prets.filter(pret =>
           pret.description.toLowerCase().includes(text.toLowerCase())
         );
         setSearchPretResults(filtered);
@@ -153,7 +131,6 @@ const PretProduits: React.FC = () => {
     }
   };
 
-  // Sélectionner un produit dans les résultats de recherche
   const selectProduct = (product: Product) => {
     setSelectedProduct(product);
     setDescription(product.description);
@@ -161,7 +138,6 @@ const PretProduits: React.FC = () => {
     setSearchResults([]);
   };
 
-  // Sélectionner un prêt pour modification
   const selectPretForEdit = (pret: PretProduit) => {
     setSelectedPret(pret);
     setDatePret(new Date(pret.date));
@@ -176,55 +152,41 @@ const PretProduits: React.FC = () => {
     setEditDialogOpen(true);
   };
 
-  // Sélectionner un prêt pour ajouter une avance
   const selectPretForAjoutAvance = (pret: PretProduit, e: React.MouseEvent) => {
-    e.stopPropagation(); // Empêche le déclenchement du onClick de la ligne
+    e.stopPropagation();
     setSelectedPret(pret);
     setAjoutAvance('');
     setAjoutAvanceDialogOpen(true);
   };
 
-  // Sélectionner un prêt pour suppression
   const selectPretForDelete = (pret: PretProduit, e: React.MouseEvent) => {
-    e.stopPropagation(); // Empêche le déclenchement du onClick de la ligne
+    e.stopPropagation();
     setSelectedPret(pret);
     setDeleteDialogOpen(true);
   };
 
-  // Sélectionner un prêt depuis le tableau pour édition
   const handleRowClick = (pret: PretProduit) => {
     selectPretForEdit(pret);
   };
 
-  // Ouvrir le formulaire d'édition pour un prêt
   const handleEditClick = (pret: PretProduit, e: React.MouseEvent) => {
-    e.stopPropagation(); // Empêche le déclenchement du onClick de la ligne
+    e.stopPropagation();
     selectPretForEdit(pret);
   };
 
-  // Enregistrer le prêt
   const handleSubmit = async () => {
     if (!description) {
-      toast({
-        title: 'Erreur',
-        description: 'Veuillez saisir une description',
-        variant: 'destructive',
-      });
+      toast({ title: 'Erreur', description: 'Veuillez saisir une description', variant: 'destructive' });
       return;
     }
 
     if (!prixVente || parseFloat(prixVente) <= 0) {
-      toast({
-        title: 'Erreur',
-        description: 'Veuillez saisir un prix de vente valide',
-        variant: 'destructive',
-      });
+      toast({ title: 'Erreur', description: 'Veuillez saisir un prix de vente valide', variant: 'destructive' });
       return;
     }
 
     try {
       setLoading(true);
-      
       const newPret: Omit<PretProduit, 'id'> = {
         date: format(datePret, 'yyyy-MM-dd'),
         datePaiement: datePaiement ? format(datePaiement, 'yyyy-MM-dd') : undefined,
@@ -237,177 +199,89 @@ const PretProduits: React.FC = () => {
         estPaye,
         productId: selectedProduct?.id
       };
-      
-      // Enregistrer via l'API
       await pretProduitService.addPretProduit(newPret);
-      
-      // Recharger les données
       await fetchPrets();
-      
-      toast({
-        title: 'Succès',
-        description: 'Prêt enregistré avec succès',
-        variant: 'default',
-        className: 'notification-success',
-      });
-      
-      // Réinitialiser le formulaire
+      toast({ title: 'Succès', description: 'Prêt enregistré avec succès', variant: 'default', className: 'notification-success' });
       resetForm();
       setDialogOpen(false);
     } catch (error) {
       console.error('Erreur lors de l\'enregistrement du prêt', error);
-      toast({
-        title: 'Erreur',
-        description: 'Impossible d\'enregistrer le prêt',
-        variant: 'destructive',
-      });
+      toast({ title: 'Erreur', description: 'Impossible d\'enregistrer le prêt', variant: 'destructive' });
     } finally {
       setLoading(false);
     }
   };
 
-  // Mettre à jour un prêt existant
   const handleUpdate = async () => {
     if (!selectedPret) return;
-
     try {
       setLoading(true);
-      
       const updatedPret: PretProduit = {
         ...selectedPret,
         datePaiement: datePaiement ? format(datePaiement, 'yyyy-MM-dd') : undefined,
         nom,
         phone,
         avanceRecue: parseFloat(avanceRecue) || 0,
-        reste: reste,
-        estPaye: estPaye
+        reste,
+        estPaye
       };
-      
-      // Mettre à jour via l'API
       await pretProduitService.updatePretProduit(selectedPret.id, updatedPret);
-      
-      // Recharger les données
       await fetchPrets();
-      
-      toast({
-        title: 'Succès',
-        description: 'Prêt mis à jour avec succès',
-        variant: 'default',
-        className: 'notification-success',
-      });
-      
-      // Réinitialiser le formulaire
+      toast({ title: 'Succès', description: 'Prêt mis à jour avec succès', variant: 'default', className: 'notification-success' });
       resetForm();
       setEditDialogOpen(false);
     } catch (error) {
       console.error('Erreur lors de la mise à jour du prêt', error);
-      toast({
-        title: 'Erreur',
-        description: 'Impossible de mettre à jour le prêt',
-        variant: 'destructive',
-      });
+      toast({ title: 'Erreur', description: 'Impossible de mettre à jour le prêt', variant: 'destructive' });
     } finally {
       setLoading(false);
     }
   };
 
-  // Ajouter une avance à un prêt
   const handleAjoutAvance = async () => {
     if (!selectedPret) return;
-    
     if (!ajoutAvance || parseFloat(ajoutAvance) <= 0) {
-      toast({
-        title: 'Erreur',
-        description: 'Veuillez saisir un montant valide',
-        variant: 'destructive',
-      });
+      toast({ title: 'Erreur', description: 'Veuillez saisir un montant valide', variant: 'destructive' });
       return;
     }
 
     try {
       setLoading(true);
-      
-      // Calculer la nouvelle avance totale
       const nouvelleAvanceRecue = selectedPret.avanceRecue + parseFloat(ajoutAvance);
-      
-      // Calculer le nouveau reste
       const nouveauReste = selectedPret.prixVente - nouvelleAvanceRecue;
-      
-      // Déterminer si le prêt est maintenant entièrement payé
       const nouveauEstPaye = nouveauReste <= 0;
-      
-      const updatedPret: PretProduit = {
-        ...selectedPret,
-        avanceRecue: nouvelleAvanceRecue,
-        reste: nouveauReste,
-        estPaye: nouveauEstPaye
-      };
-      
-      // Mettre à jour via l'API
+      const updatedPret: PretProduit = { ...selectedPret, avanceRecue: nouvelleAvanceRecue, reste: nouveauReste, estPaye: nouveauEstPaye };
       await pretProduitService.updatePretProduit(selectedPret.id, updatedPret);
-      
-      // Recharger les données
       await fetchPrets();
-      
-      toast({
-        title: 'Succès',
-        description: 'Avance ajoutée avec succès',
-        variant: 'default',
-        className: 'notification-success',
-      });
-      
-      // Réinitialiser le formulaire
+      toast({ title: 'Succès', description: 'Avance ajoutée avec succès', variant: 'default', className: 'notification-success' });
       setAjoutAvance('');
       setSelectedPret(null);
       setAjoutAvanceDialogOpen(false);
     } catch (error) {
       console.error('Erreur lors de l\'ajout de l\'avance', error);
-      toast({
-        title: 'Erreur',
-        description: 'Impossible d\'ajouter l\'avance',
-        variant: 'destructive',
-      });
+      toast({ title: 'Erreur', description: 'Impossible d\'ajouter l\'avance', variant: 'destructive' });
     } finally {
       setLoading(false);
     }
   };
 
-  // Supprimer un prêt
   const handleDelete = async () => {
     if (!selectedPret) return;
-
     try {
       setLoading(true);
-      
-      // Supprimer via l'API
       await pretProduitService.deletePretProduit(selectedPret.id);
-      
-      // Recharger les données
       await fetchPrets();
-      
-      toast({
-        title: 'Succès',
-        description: 'Prêt supprimé avec succès',
-        variant: 'default',
-        className: 'notification-success',
-      });
-      
-      // Réinitialiser et fermer
+      toast({ title: 'Succès', description: 'Prêt supprimé avec succès', variant: 'default', className: 'notification-success' });
       resetForm();
       setDeleteDialogOpen(false);
     } catch (error) {
       console.error('Erreur lors de la suppression du prêt', error);
-      toast({
-        title: 'Erreur',
-        description: 'Impossible de supprimer le prêt',
-        variant: 'destructive',
-      });
+      toast({ title: 'Erreur', description: 'Impossible de supprimer le prêt', variant: 'destructive' });
     } finally {
       setLoading(false);
     }
   };
 
-  // Réinitialiser le formulaire
   const resetForm = () => {
     setSelectedPret(null);
     setDatePret(new Date());
@@ -421,10 +295,20 @@ const PretProduits: React.FC = () => {
     setSelectedProduct(null);
   };
 
-  // Format de devise
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(amount);
   };
+
+  if (loading) {
+    return (
+      <PremiumLoading
+        text="Chargement des Prêts Produits"
+        size="md"
+        variant="dashboard"
+        showText={true}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-purple-50 to-indigo-50 dark:from-gray-900 dark:via-purple-900/20 dark:to-slate-900 p-6">

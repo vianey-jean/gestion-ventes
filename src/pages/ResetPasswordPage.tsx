@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -9,6 +8,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import PasswordInput from '@/components/PasswordInput';
 import PasswordStrengthChecker from '@/components/PasswordStrengthChecker';
 import Layout from '@/components/Layout';
+import PremiumLoading from '@/components/ui/premium-loading';
 import { KeyRound, Mail, ArrowLeft, Shield, CheckCircle } from 'lucide-react';
 
 const ResetPasswordPage: React.FC = () => {
@@ -97,6 +97,20 @@ const ResetPasswordPage: React.FC = () => {
   const handlePasswordValidityChange = (isValid: boolean) => {
     setIsPasswordValid(isValid);
   };
+
+  // Show loading during form submission
+  if (isLoading) {
+    return (
+      <Layout>
+        <PremiumLoading 
+          text="Traitement en cours..."
+          size="md"
+          overlay={true}
+          variant="default"
+        />
+      </Layout>
+    );
+  }
   
   return (
     <Layout>

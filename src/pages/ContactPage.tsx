@@ -1,11 +1,11 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import Layout from '@/components/Layout';
+import PremiumLoading from '@/components/ui/premium-loading';
 import { Mail, Phone, MapPin, Send, Clock, MessageCircle } from 'lucide-react';
 
 const ContactPage: React.FC = () => {
@@ -17,6 +17,15 @@ const ContactPage: React.FC = () => {
     message: '',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  // Simulate initial page load
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, []);
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -47,6 +56,33 @@ const ContactPage: React.FC = () => {
       setIsSubmitting(false);
     }, 1000);
   };
+
+  if (isLoading) {
+    return (
+      <Layout>
+        <PremiumLoading 
+          text="Chargement du Contact"
+          size="lg"
+          overlay={true}
+          variant="default"
+        />
+      </Layout>
+    );
+  }
+
+  // Show loading during form submission
+  if (isSubmitting) {
+    return (
+      <Layout>
+        <PremiumLoading 
+          text="Envoi du message..."
+          size="md"
+          overlay={true}
+          variant="default"
+        />
+      </Layout>
+    );
+  }
   
   return (
     <Layout>
@@ -226,17 +262,8 @@ const ContactPage: React.FC = () => {
                       className="w-full h-16 bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 hover:from-purple-700 hover:via-pink-700 hover:to-red-700 text-white font-bold text-lg rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center gap-3"
                       disabled={isSubmitting}
                     >
-                      {isSubmitting ? (
-                        <>
-                          <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                          Envoi en cours...
-                        </>
-                      ) : (
-                        <>
-                          <Send className="h-5 w-5" />
-                          Envoyer le message
-                        </>
-                      )}
+                      <Send className="h-5 w-5" />
+                      Envoyer le message
                     </Button>
                   </form>
                 </div>

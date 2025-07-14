@@ -1,14 +1,36 @@
-
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import Layout from '@/components/Layout';
 import { useAuth } from '@/contexts/AuthContext';
+import PremiumLoading from '@/components/ui/premium-loading';
 import { ArrowRight, BarChart3, Shield, Zap, TrendingUp } from 'lucide-react';
 
 const HomePage: React.FC = () => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
+  const [isLoading, setIsLoading] = useState(true);
+  
+  // Simulate initial page load
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1200);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (isLoading) {
+    return (
+      <Layout>
+        <PremiumLoading 
+          text="Bienvenue sur Gestion Ventes"
+          size="xl"
+          overlay={true}
+          variant="default"
+        />
+      </Layout>
+    );
+  }
   
   return (
     <Layout>
@@ -55,7 +77,7 @@ const HomePage: React.FC = () => {
                   </Button>
                   <Button 
                     variant="outline"
-                    className="px-8 py-4 text-lg font-semibold rounded-2xl border-2 border-white/30 text-red-900 font-bold hover:bg-white/10 backdrop-blur-sm transition-all duration-300 hover:scale-105"
+                    className="px-8 py-4 text-lg font-semibold rounded-2xl border-2 border-white/30 text-white hover:bg-white/10 backdrop-blur-sm transition-all duration-300 hover:scale-105"
                     onClick={() => navigate('/login')}
                   >
                     Se connecter

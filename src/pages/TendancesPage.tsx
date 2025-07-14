@@ -8,6 +8,7 @@ import { TrendingUp, TrendingDown, DollarSign, Package, Award, Target, ShoppingC
 import { useApp } from '@/contexts/AppContext';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
+import PremiumLoading from '@/components/ui/premium-loading';
 
 const TendancesPage = () => {
   const { allSales, products, loading } = useApp();
@@ -211,12 +212,12 @@ const TendancesPage = () => {
   if (loading) {
     return (
       <Layout requireAuth>
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-purple-900/20 dark:to-slate-900 flex items-center justify-center">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600 dark:text-gray-300">Chargement des tendances...</p>
-          </div>
-        </div>
+        <PremiumLoading 
+          text="Chargement des Tendances"
+          size="lg"
+          overlay={true}
+          variant="tendances"
+        />
       </Layout>
     );
   }

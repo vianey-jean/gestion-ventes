@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -9,6 +8,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import PasswordInput from '@/components/PasswordInput';
 import PasswordStrengthChecker from '@/components/PasswordStrengthChecker';
 import Layout from '@/components/Layout';
+import PremiumLoading from '@/components/ui/premium-loading';
 import { Lock, Mail, ArrowRight, Sparkles } from 'lucide-react';
 import axios from 'axios';
 
@@ -26,6 +26,7 @@ const LoginPage: React.FC = () => {
   const [emailExists, setEmailExists] = useState(false);
   const [userName, setUserName] = useState('');
   const [isPasswordValid, setIsPasswordValid] = useState(false);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
   
   const handleEmailCheck = async () => {
     if (!email) {
@@ -81,15 +82,31 @@ const LoginPage: React.FC = () => {
       return;
     }
     
+    setIsLoggingIn(true);
     const success = await login({ email, password });
     if (success) {
       navigate('/dashboard');
     }
+    setIsLoggingIn(false);
   };
   
   const handlePasswordValidityChange = (isValid: boolean) => {
     setIsPasswordValid(isValid);
   };
+
+  // Show loading during login process
+  if (isLoggingIn) {
+    return (
+      <Layout>
+        <PremiumLoading 
+          text="Connexion en cours..."
+          size="lg"
+          overlay={true}
+          variant="default"
+        />
+      </Layout>
+    );
+  }
   
   return (
     <Layout>

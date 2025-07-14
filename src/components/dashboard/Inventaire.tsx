@@ -14,6 +14,7 @@ import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import ModernActionButton from '@/components/dashboard/forms/ModernActionButton';
 import ModernContainer from '@/components/dashboard/forms/ModernContainer';
+import PremiumLoading from '@/components/ui/premium-loading';
 
 type CategoryType = 'all' | 'perruque' | 'tissage' | 'autre';
 type SortOrder = 'asc' | 'desc';
@@ -40,7 +41,6 @@ const Inventaire = () => {
 
   const ITEMS_PER_PAGE = 10;
 
-  // Catégoriser les produits
   const categorizeProduct = (description: string): CategoryType => {
     const lowerDesc = description.toLowerCase();
     if (lowerDesc.includes('perruque')) return 'perruque';
@@ -48,33 +48,18 @@ const Inventaire = () => {
     return 'autre';
   };
 
-  // Obtenir la priorité basée sur la quantité
   const getPriority = (quantity: number) => {
-    if (quantity === 0) return { 
-      label: 'URGENT', 
-      color: 'text-red-100 bg-gradient-to-r from-red-500 to-red-600 border-0 shadow-lg shadow-red-500/30',
-      icon: AlertTriangle 
-    };
-    if (quantity >= 1 && quantity <= 2) return { 
-      label: 'ATTENTION', 
-      color: 'text-orange-100 bg-gradient-to-r from-orange-500 to-orange-600 border-0 shadow-lg shadow-orange-500/30',
-      icon: Clock 
-    };
-    return { 
-      label: 'NORMALE', 
-      color: 'text-green-100 bg-gradient-to-r from-green-500 to-green-600 border-0 shadow-lg shadow-green-500/30',
-      icon: CheckCircle 
-    };
+    if (quantity === 0) return { label: 'URGENT', color: 'text-red-100 bg-gradient-to-r from-red-500 to-red-600 border-0 shadow-lg shadow-red-500/30', icon: AlertTriangle };
+    if (quantity >= 1 && quantity <= 2) return { label: 'ATTENTION', color: 'text-orange-100 bg-gradient-to-r from-orange-500 to-orange-600 border-0 shadow-lg shadow-orange-500/30', icon: Clock };
+    return { label: 'NORMALE', color: 'text-green-100 bg-gradient-to-r from-green-500 to-green-600 border-0 shadow-lg shadow-green-500/30', icon: CheckCircle };
   };
 
-  // Obtenir la couleur de la quantité
   const getQuantityColor = (quantity: number) => {
     if (quantity === 0) return 'text-red-600 font-bold';
     if (quantity >= 1 && quantity <= 2) return 'text-orange-600 font-bold';
     return 'text-green-600 font-bold';
   };
 
-  // Charger les produits
   const loadProducts = async () => {
     try {
       setLoading(true);
@@ -91,39 +76,27 @@ const Inventaire = () => {
     }
   };
 
-  // Filtrer et trier les produits
+  useEffect(() => {
+    loadProducts();
+  }, []);
+
   useEffect(() => {
     let filtered = [...products];
-
-    // Filtrer par recherche
     if (searchTerm.length >= 3) {
-      filtered = filtered.filter(product => 
-        product.description.toLowerCase().includes(searchTerm.toLowerCase())
-      );
+      filtered = filtered.filter(product => product.description.toLowerCase().includes(searchTerm.toLowerCase()));
     }
-
-    // Filtrer par catégorie
     if (category !== 'all') {
       filtered = filtered.filter(product => categorizeProduct(product.description) === category);
     }
-
-    // Trier
     filtered.sort((a, b) => {
       const aValue = a.description.toLowerCase();
       const bValue = b.description.toLowerCase();
       return sortOrder === 'asc' ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
     });
-
     setFilteredProducts(filtered);
     setCurrentPage(1);
   }, [products, searchTerm, category, sortOrder]);
 
-  // Charger les produits au montage
-  useEffect(() => {
-    loadProducts();
-  }, []);
-
-  // Calculer les statistiques par catégorie
   const getStats = () => {
     const perruques = products.filter(p => categorizeProduct(p.description) === 'perruque').length;
     const tissages = products.filter(p => categorizeProduct(p.description) === 'tissage').length;
@@ -131,12 +104,10 @@ const Inventaire = () => {
     return { perruques, tissages, autres };
   };
 
-  // Pagination
   const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const currentProducts = filteredProducts.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
-  // Ajouter un produit
   const handleAddProduct = async () => {
     if (!newProduct.description.trim()) {
       toast({
@@ -146,9 +117,8 @@ const Inventaire = () => {
       });
       return;
     }
-
     try {
-      const addedProduct = await productService.addProduct(newProduct);
+      await productService.addProduct(newProduct);
       await loadProducts();
       setNewProduct({ description: '', purchasePrice: 0, quantity: 0 });
       setIsAddDialogOpen(false);
@@ -166,10 +136,8 @@ const Inventaire = () => {
     }
   };
 
-  // Modifier un produit
   const handleEditProduct = async () => {
     if (!editingProduct) return;
-
     try {
       await productService.updateProduct(editingProduct);
       await loadProducts();
@@ -188,10 +156,8 @@ const Inventaire = () => {
     }
   };
 
-  // Supprimer un produit
   const handleDeleteProduct = async () => {
     if (!deletingProduct) return;
-
     try {
       await productService.deleteProduct(deletingProduct.id);
       await loadProducts();
@@ -214,14 +180,17 @@ const Inventaire = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
+      <PremiumLoading
+        text="Chargement de l'Inventaire"
+        size="md"
+        variant="dashboard"
+        showText={true}
+      />
     );
   }
 
   return (
-    <div className="space-y-8">
+     <div className="space-y-8">
       {/* Statistiques par catégorie avec design premium */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <ModernContainer gradient="purple" className="card-3d transform hover:scale-105 transition-all duration-300">

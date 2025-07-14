@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import useCurrencyFormatter from '@/hooks/use-currency-formatter';
@@ -32,6 +31,7 @@ import {
   BarChart3,
   Coins
 } from 'lucide-react';
+import PremiumLoading from '@/components/ui/premium-loading';
 
 interface ProfitCalculation {
   prixAchat: number;
@@ -90,12 +90,10 @@ const ProfitCalculator: React.FC<ProfitCalculatorProps> = ({
   const [prixVenteCustom, setPrixVenteCustom] = useState<number>(0);
   const [showCustomPrice, setShowCustomPrice] = useState(false);
 
-  // Charger les données de bénéfices au montage
   useEffect(() => {
     loadBeneficesData();
   }, []);
 
-  // Recharger la liste quand un produit est ajouté/supprimé
   useEffect(() => {
     const interval = setInterval(() => {
       loadBeneficesData();
@@ -103,40 +101,28 @@ const ProfitCalculator: React.FC<ProfitCalculatorProps> = ({
     return () => clearInterval(interval);
   }, []);
 
-  // Gérer la sélection d'un produit
   const handleProductSelect = (product: Product) => {
-    console.log('🎯 Produit sélectionné pour calcul bénéfice:', product);
     setSelectedProduct(product);
     setProductDescription(product.description);
-    
-    // Mettre à jour le prix d'achat avec les données du produit
-    console.log('💰 Prix d\'achat du produit:', product.purchasePrice);
     setValues(prev => ({
       ...prev,
       prixAchat: product.purchasePrice || 0
     }));
-    
-    // Charger les données de bénéfice existantes pour ce produit
     loadExistingBeneficeData(product.id);
   };
 
-  // Charger toutes les données de bénéfices
   const loadBeneficesData = async () => {
     try {
       const data = await beneficeService.getBenefices();
       setBeneficesList(data);
-      console.log('✅ Données de bénéfices chargées:', data);
     } catch (error) {
-      console.error('❌ Erreur lors du chargement des bénéfices:', error);
       setBeneficesList([]);
     }
   };
 
-  // Charger les données de bénéfice existantes
   const loadExistingBeneficeData = async (productId: string) => {
     try {
       const beneficeData = await beneficeService.getBeneficeByProductId(productId);
-      
       if (beneficeData) {
         setValues({
           prixAchat: beneficeData.prixAchat || 0,
@@ -149,110 +135,63 @@ const ProfitCalculator: React.FC<ProfitCalculatorProps> = ({
           beneficeNet: beneficeData.beneficeNet || 0,
           tauxMarge: beneficeData.tauxMarge || 0
         });
-        
         toast({
           title: "Données chargées",
           description: `Calculs existants chargés pour ${beneficeData.productDescription}`,
         });
       }
     } catch (error) {
-      console.log('Aucune donnée de bénéfice existante pour ce produit');
+      // Aucun calcul existant
     }
   };
 
-  // Calcul automatique des bénéfices
   useEffect(() => {
     if (values.prixAchat > 0) {
       const coutSansTva = values.prixAchat + values.taxeDouane + values.autresFrais;
       const coutAvecTva = coutSansTva * (1 + values.tva / 100);
       const prixVenteRecommande = coutAvecTva * (1 + values.margeDesire / 100);
-      
       const beneficeNet = prixVenteRecommande - coutAvecTva;
       const tauxMarge = coutAvecTva > 0 ? (beneficeNet / coutAvecTva) * 100 : 0;
-
-      const newCalculation = {
-        ...values,
-        coutTotal: coutAvecTva,
-        prixVenteRecommande,
-        beneficeNet,
-        tauxMarge
-      };
-
+      const newCalculation = { ...values, coutTotal: coutAvecTva, prixVenteRecommande, beneficeNet, tauxMarge };
       setValues(newCalculation);
       onCalculationChange?.(newCalculation);
     }
   }, [values.prixAchat, values.taxeDouane, values.tva, values.autresFrais, values.margeDesire, onCalculationChange]);
 
-  // Calcul avec prix de vente personnalisé
   const calculateWithCustomPrice = () => {
     if (prixVenteCustom > 0 && values.coutTotal > 0) {
       const beneficeNet = prixVenteCustom - values.coutTotal;
-      const tauxMarge = values.coutTotal > 0 ? (beneficeNet / values.coutTotal) * 100 : 0;
-      
-      const customCalculation = {
-        ...values,
-        prixVenteRecommande: prixVenteCustom,
-        beneficeNet,
-        tauxMarge
-      };
-      
+      const tauxMarge = (beneficeNet / values.coutTotal) * 100;
+      const customCalculation = { ...values, prixVenteRecommande: prixVenteCustom, beneficeNet, tauxMarge };
       setValues(customCalculation);
       onCalculationChange?.(customCalculation);
     }
   };
 
   const updateValue = (field: keyof ProfitCalculation, value: number) => {
-    const numValue = isNaN(value) ? 0 : value;
-    setValues(prev => ({ ...prev, [field]: numValue }));
+    setValues(prev => ({ ...prev, [field]: isNaN(value) ? 0 : value }));
   };
 
-  // Sauvegarder les calculs
   const handleSave = async () => {
     if (!selectedProduct) {
-      toast({
-        title: "Erreur",
-        description: "Veuillez sélectionner un produit avant de sauvegarder.",
-        variant: "destructive"
-      });
+      toast({ title: "Erreur", description: "Veuillez sélectionner un produit avant de sauvegarder.", variant: "destructive" });
       return;
     }
 
-    // Vérifier si le produit existe déjà
     const existingBenefice = beneficesList.find(b => b.productId === selectedProduct.id);
     if (existingBenefice) {
-      toast({
-        title: "Erreur",
-        description: "Ce produit a déjà un calcul de bénéfice enregistré.",
-        variant: "destructive"
-      });
+      toast({ title: "Erreur", description: "Ce produit a déjà un calcul de bénéfice enregistré.", variant: "destructive" });
       return;
     }
 
     setIsLoading(true);
-
     try {
-      const beneficeData = {
+      await beneficeService.createBenefice({
         productId: selectedProduct.id,
         productDescription: productDescription || selectedProduct.description,
-        prixAchat: values.prixAchat || 0,
-        taxeDouane: values.taxeDouane || 0,
-        tva: values.tva || 20,
-        autresFrais: values.autresFrais || 0,
-        coutTotal: values.coutTotal || 0,
-        margeDesire: values.margeDesire || 30,
-        prixVenteRecommande: values.prixVenteRecommande || 0,
-        beneficeNet: values.beneficeNet || 0,
-        tauxMarge: values.tauxMarge || 0
-      };
-
-      const response = await beneficeService.createBenefice(beneficeData);
-
-      toast({
-        title: "Succès",
-        description: "Calcul de bénéfice sauvegardé avec succès!",
+        ...values
       });
-
-      // Recharger les données et réinitialiser le formulaire
+      toast({ title: "Succès", description: "Calcul de bénéfice sauvegardé avec succès!" });
       await loadBeneficesData();
       setSelectedProduct(null);
       setProductDescription('');
@@ -267,121 +206,34 @@ const ProfitCalculator: React.FC<ProfitCalculatorProps> = ({
         beneficeNet: 0,
         tauxMarge: 0
       });
-      
-      console.log('✅ Calcul de bénéfice sauvegardé:', response);
     } catch (error) {
-      console.error('❌ Erreur lors de la sauvegarde:', error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de sauvegarder le calcul de bénéfice.",
-        variant: "destructive"
-      });
+      toast({ title: "Erreur", description: "Impossible de sauvegarder le calcul de bénéfice.", variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Supprimer un calcul de bénéfice
   const handleDelete = async (id: string) => {
     try {
       await beneficeService.deleteBenefice(id);
-
-      toast({
-        title: "Succès",
-        description: "Calcul de bénéfice supprimé avec succès!",
-      });
-
-      // Recharger les données immédiatement après suppression
+      toast({ title: "Succès", description: "Calcul de bénéfice supprimé avec succès!" });
       await loadBeneficesData();
-      
-      // Forcer une mise à jour du composant ProductSearchInput
-      setTimeout(() => {
-        window.dispatchEvent(new CustomEvent('benefice-deleted'));
-      }, 100);
-      
+      setTimeout(() => window.dispatchEvent(new CustomEvent('benefice-deleted')), 100);
     } catch (error) {
-      console.error('❌ Erreur lors de la suppression:', error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de supprimer le calcul de bénéfice.",
-        variant: "destructive"
-      });
+      toast({ title: "Erreur", description: "Impossible de supprimer le calcul de bénéfice.", variant: "destructive" });
     }
   };
 
   const isRentable = (values.tauxMarge || 0) >= 20;
 
-  if (compact) {
+  if (isLoading) {
     return (
-      <ModernContainer
-        title="Calcul Premium de Bénéfices"
-        icon={Diamond}
-        gradient="purple"
-        className={className}
-      >
-        <div className="space-y-6">
-          <ProductSearchInput
-            onProductSelect={handleProductSelect}
-            selectedProduct={selectedProduct}
-          />
-          
-          {selectedProduct && (
-            <>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label className="text-sm font-semibold flex items-center gap-2 text-emerald-700">
-                    <DollarSign className="h-4 w-4" />
-                    Prix d'achat
-                  </Label>
-                  <Input
-                    type="number"
-                    value={values.prixAchat}
-                    onChange={(e) => updateValue('prixAchat', Number(e.target.value))}
-                    className="border-emerald-200 focus:border-emerald-500 bg-white/80"
-                    placeholder="0.00"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-sm font-semibold flex items-center gap-2 text-blue-700">
-                    <Percent className="h-4 w-4" />
-                    Marge désirée (%)
-                  </Label>
-                  <Input
-                    type="number"
-                    value={values.margeDesire}
-                    onChange={(e) => updateValue('margeDesire', Number(e.target.value))}
-                    className="border-blue-200 focus:border-blue-500 bg-white/80"
-                    placeholder="30"
-                  />
-                </div>
-              </div>
-              
-              <div className="bg-gradient-to-r from-emerald-50 to-blue-50 dark:from-emerald-900/20 dark:to-blue-900/20 rounded-xl p-6 border-2 border-emerald-200 shadow-lg">
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                      <Crown className="h-4 w-4 text-amber-500" />
-                      Prix de vente recommandé:
-                    </span>
-                    <span className="text-xl font-bold text-emerald-600">
-                      {formatEuro(values.prixVenteRecommande)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                      <Sparkles className="h-4 w-4 text-purple-500" />
-                      Bénéfice net:
-                    </span>
-                    <span className={cn("text-xl font-bold", isRentable ? "text-emerald-600" : "text-red-600")}>
-                      {formatEuro(values.beneficeNet)}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </>
-          )}
-        </div>
-      </ModernContainer>
+      <PremiumLoading
+        text="Calcul des Bénéfices"
+        size="md"
+        variant="ventes"
+        showText={true}
+      />
     );
   }
 
