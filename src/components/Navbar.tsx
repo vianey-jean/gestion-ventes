@@ -32,20 +32,12 @@ const Navbar: React.FC = () => {
             {/* Navigation links with modern styling */}
             <div className="flex items-center">
               <div className="hidden sm:ml-6 sm:flex sm:space-x-2">
-                <Link to="/" className="group inline-flex items-center px-4 py-2 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all duration-200">
+                {/* <Link to="/" className="group inline-flex items-center px-4 py-2 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all duration-200">
                   <Home className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform" />
                   Accueil
-                </Link>
+                </Link> */}
                 
-                <Link to="/about" className="group inline-flex items-center px-4 py-2 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all duration-200">
-                  <Info className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform" />
-                  À propos
-                </Link>
                 
-                <Link to="/contact" className="group inline-flex items-center px-4 py-2 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all duration-200">
-                  <Mail className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform" />
-                  Contact
-                </Link>
                 
                 {isAuthenticated && (
                   <>
@@ -61,6 +53,16 @@ const Navbar: React.FC = () => {
                   </>
                 )}
 
+                <Link to="/about" className="group inline-flex items-center px-4 py-2 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all duration-200">
+                  <Info className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform" />
+                  À propos
+                </Link>
+                
+                <Link to="/contact" className="group inline-flex items-center px-4 py-2 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all duration-200">
+                  <Mail className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform" />
+                  Contact
+                </Link>
+                
                 <Button 
                   variant="ghost" 
                   size="icon" 
