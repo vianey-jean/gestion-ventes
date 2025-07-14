@@ -750,16 +750,16 @@ const ProfitCalculator: React.FC<ProfitCalculatorProps> = ({
                 <TableBody>
                   {beneficesList.map((benefice) => (
                     <ModernTableRow key={benefice.id} className="hover:bg-purple-50/50 transition-colors">
-                      <ModernTableCell className="font-semibold text-purple-800 dark:text-purple-300">
+                      <ModernTableCell className="font-bold text-purple-800 dark:text-purple-300">
                         {benefice.productDescription}
                       </ModernTableCell>
-                      <ModernTableCell className="font-semibold text-emerald-700">
+                      <ModernTableCell className="font-bold text-emerald-700">
                         {formatEuro(benefice.prixAchat)}
                       </ModernTableCell>
-                      <ModernTableCell className="font-semibold text-blue-700">
+                      <ModernTableCell className="font-bold text-blue-700">
                         {formatEuro(benefice.coutTotal)}
                       </ModernTableCell>
-                      <ModernTableCell className="font-semibold text-indigo-700">
+                      <ModernTableCell className="font-bold text-indigo-700">
                         {formatEuro(benefice.prixVenteRecommande)}
                       </ModernTableCell>
                       <ModernTableCell className={cn("font-bold", 
@@ -795,7 +795,7 @@ const ProfitCalculator: React.FC<ProfitCalculatorProps> = ({
                     <Calculator className="h-12 w-12 text-purple-600" />
                   </div>
                   <div className="space-y-2">
-                    <p className="text-xl font-semibold text-gray-600 dark:text-gray-400">Aucun calcul de bénéfice enregistré</p>
+                    <p className="text-xl font-bold text-gray-600 dark:text-gray-400">Aucun calcul de bénéfice enregistré</p>
                     <p className="text-sm text-gray-500">Commencez par calculer et sauvegarder vos bénéfices premium</p>
                   </div>
                 </div>

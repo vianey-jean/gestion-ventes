@@ -149,7 +149,7 @@ const AdvancedDashboard: React.FC<AdvancedDashboardProps> = ({ className }) => {
                   <Target className="h-7 w-7 text-white" />
                 </div>
               </CardTitle>
-              <CardDescription className="text-lg text-purple-200 font-medium mt-4 max-w-4xl mx-auto leading-relaxed">
+              <CardDescription className="text-lg text-black-200 font-medium mt-4 max-w-4xl mx-auto leading-relaxed">
                 Propulsé par des algorithmes d'IA de dernière génération, notre système analyse vos données en temps réel 
                 pour vous fournir des recommandations ultra-précises et maximiser exponentiellement votre ROI.
               </CardDescription>
@@ -168,8 +168,11 @@ const AdvancedDashboard: React.FC<AdvancedDashboardProps> = ({ className }) => {
                   <TrendingUp className="h-7 w-7 text-white" />
                 </div>
                 Suite Financière Executive
+                <div className="p-3 rounded-full bg-gradient-to-r from-emerald-600 to-teal-600 shadow-xl">
+                  <TrendingUp className="h-7 w-7 text-white" />
+                </div>
               </CardTitle>
-              <CardDescription className="text-lg text-emerald-200 font-medium mt-4 max-w-4xl mx-auto leading-relaxed">
+              <CardDescription className="text-lg text-black-200 font-medium mt-4 max-w-4xl mx-auto leading-relaxed">
                 Outils financiers de niveau entreprise avec analyses prédictives, automatisation complète et 
                 tableaux de bord executives pour une gestion financière d'exception.
               </CardDescription>
@@ -188,8 +191,11 @@ const AdvancedDashboard: React.FC<AdvancedDashboardProps> = ({ className }) => {
                   <Package2 className="h-7 w-7 text-white" />
                 </div>
                 Système de Stock Intelligent
+                <div className="p-3 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 shadow-xl">
+                  <Package2 className="h-7 w-7 text-white" />
+                </div>
               </CardTitle>
-              <CardDescription className="text-lg text-blue-200 font-medium mt-4 max-w-4xl mx-auto leading-relaxed">
+              <CardDescription className="text-lg text-black-200 font-medium mt-4 max-w-4xl mx-auto leading-relaxed">
                 Technologie avancée d'optimisation des stocks avec IA prédictive, alertes intelligentes et 
                 recommandations personnalisées pour une rentabilité maximale.
               </CardDescription>
@@ -244,8 +250,11 @@ const AdvancedDashboard: React.FC<AdvancedDashboardProps> = ({ className }) => {
                   <FileSpreadsheet className="h-7 w-7 text-white" />
                 </div>
                 Analytics & Business Intelligence
+                 <div className="p-3 rounded-full bg-gradient-to-r from-orange-600 to-red-600 shadow-xl">
+                  <FileSpreadsheet className="h-7 w-7 text-white" />
+                </div>
               </CardTitle>
-              <CardDescription className="text-lg text-orange-200 font-medium mt-4 max-w-4xl mx-auto leading-relaxed">
+              <CardDescription className="text-lg text-black-200 font-medium mt-4 max-w-4xl mx-auto leading-relaxed">
                 Suite complète d'analytics avec visualisations interactives, exports automatisés et 
                 insights stratégiques pour propulser votre croissance business.
               </CardDescription>

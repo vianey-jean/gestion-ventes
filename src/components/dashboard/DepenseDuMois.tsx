@@ -455,16 +455,16 @@ const DepenseDuMois = () => {
                             {index + 1}
                           </span>
                         </div>
-                        <span className="font-medium text-gray-700 dark:text-gray-300">
+                        <span className="font-bold text-gray-700 dark:text-gray-300">
                           {formatDate(mouvement.date)}
                         </span>
                       </div>
                     </TableCell>
-                    <TableCell data-label="Description" className="font-medium text-gray-800 dark:text-gray-200">
+                    <TableCell data-label="Description" className="font-bold text-gray-800 dark:text-gray-200">
                       {mouvement.description}
                     </TableCell>
                     <TableCell data-label="Catégorie">
-                      <span className="bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30 px-3 py-1 rounded-full text-purple-700 dark:text-purple-300 font-medium text-sm">
+                      <span className="bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30 px-3 py-1 rounded-full text-purple-700 dark:text-purple-300 font-bold text-sm">
                         {mouvement.categorie}
                       </span>
                     </TableCell>

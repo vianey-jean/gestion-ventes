@@ -241,7 +241,7 @@ const SalesTable: React.FC<SalesTableProps> = ({ sales: initialSales, onRowClick
                         {index + 1}
                       </span>
                     </div>
-                    <span className="text-gray-700 dark:text-gray-300">{formatDate(sale.date)}</span>
+                    <span className="text-gray-700 font-bold dark:text-gray-300">{formatDate(sale.date)}</span>
                   </div>
                 </ModernTableCell>
                 <ModernTableCell className="font-medium">
@@ -264,7 +264,7 @@ const SalesTable: React.FC<SalesTableProps> = ({ sales: initialSales, onRowClick
                   </div>
                 </ModernTableCell>
                 <ModernTableCell className="text-right">
-                  <span className="text-gray-600 dark:text-gray-400 font-medium">
+                  <span className="text-gray-600 dark:text-gray-400 font-bold">
                     {formatCurrency(sale.purchasePrice)}
                   </span>
                 </ModernTableCell>

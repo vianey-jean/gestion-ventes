@@ -334,7 +334,7 @@ const PretFamilles: React.FC = () => {
                               {index + 1}
                             </span>
                           </div>
-                          <span className="font-semibold text-gray-800 dark:text-gray-200">{pret.nom}</span>
+                          <span className="font-bold text-gray-800 dark:text-gray-200">{pret.nom}</span>
                         </div>
                       </TableCell>
                       <TableCell className="text-right">
@@ -362,7 +362,7 @@ const PretFamilles: React.FC = () => {
                         </div>
                       </TableCell>
                       <TableCell className="text-right">
-                        <span className="text-gray-600 dark:text-gray-400 font-medium">{pret.dateRemboursement}</span>
+                        <span className="text-gray-600 dark:text-gray-400 font-bold">{pret.dateRemboursement}</span>
                       </TableCell>
                     </TableRow>
                   ))}
