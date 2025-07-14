@@ -31,7 +31,7 @@ const Footer: React.FC = () => {
             </p>
             <div className="flex items-center text-sm text-gray-400">
               <Heart className="h-4 w-4 text-red-400 mr-2" />
-              Fait avec passion à Paris
+              Fait avec passion à La Réunion
             </div>
           </div>
           
@@ -100,8 +100,9 @@ const Footer: React.FC = () => {
                 <div>
                   <p className="text-white font-medium">Notre siège</p>
                   <p className="text-gray-300 text-sm leading-relaxed">
-                    123 Rue de l'Innovation<br />
-                    75001 Paris, France
+                    10 Allée des Beryls Bleus<br />
+                    Bellepierre<br/>
+                    97400, Saint-Denis
                   </p>
                 </div>
               </div>
@@ -112,7 +113,7 @@ const Footer: React.FC = () => {
                 </div>
                 <div>
                   <p className="text-white font-medium">Email</p>
-                  <p className="text-gray-300 text-sm">hello@gestion-vente.com</p>
+                  <p className="text-gray-300 text-sm">contact@gestion-vente.com</p>
                 </div>
               </div>
               
@@ -122,7 +123,7 @@ const Footer: React.FC = () => {
                 </div>
                 <div>
                   <p className="text-white font-medium">Téléphone</p>
-                  <p className="text-gray-300 text-sm">+33 1 23 45 67 89</p>
+                  <p className="text-gray-300 text-sm">+262 6 92 84 23 70</p>
                 </div>
               </div>
             </div>
@@ -157,7 +158,7 @@ const Footer: React.FC = () => {
           <div className="mt-6 text-center">
             <div className="inline-flex items-center px-3 py-1 bg-white/5 backdrop-blur-sm rounded-full text-xs text-gray-400 border border-white/10">
               <div className="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></div>
-              Version 2.0 - Système opérationnel
+              Version 2.2 - Système opérationnel
             </div>
           </div>
         </div>

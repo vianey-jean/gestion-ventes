@@ -126,8 +126,9 @@ const ContactPage: React.FC = () => {
                     </div>
                   </div>
                   <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
-                    123 Rue de Commerce<br />
-                    75001 Paris, France
+                    10 Allée des Beryls Bleus<br />
+                    Bellepierre<br/>
+                    97400, saint-Denis
                   </p>
                 </div>
 
@@ -154,7 +155,7 @@ const ContactPage: React.FC = () => {
                       <p className="text-green-600 dark:text-green-400">Appelez-nous</p>
                     </div>
                   </div>
-                  <p className="text-gray-600 dark:text-gray-300">+33 1 23 45 67 89</p>
+                  <p className="text-gray-600 dark:text-gray-300">+262 6 92 84 23 70</p>
                 </div>
 
                 {/* Horaires */}
