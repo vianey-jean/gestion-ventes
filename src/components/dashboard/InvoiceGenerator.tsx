@@ -197,7 +197,7 @@ const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ isOpen, onClose }) 
     doc.text('0,00 €', totalsX + 15, totalsY + 10);
     doc.setFillColor(primaryBlue[0], primaryBlue[1], primaryBlue[2]);
     doc.rect(totalsX - 35, totalsY + 15, 75, 12, 'F');
-    doc.setTextColor(255, 255, 255);
+    doc.setTextColor(255, 0, 0);
     doc.setFontSize(12);
     doc.setFont('helvetica', 'bold');
     doc.text('Total TTC:', totalsX - 30, totalsY + 23);
