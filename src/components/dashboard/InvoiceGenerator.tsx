@@ -1,15 +1,27 @@
+// Résumé :
+// Ce composant React affiche une interface moderne pour générer des factures PDF à partir des ventes historiques.
+// Il permet de filtrer les ventes par année et par nom de client, d'afficher les détails d'une vente sélectionnée,
+// puis de générer une facture esthétique au format PDF en un clic.
+
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card, CardContent, CardHeader, CardTitle
+} from '@/components/ui/card';
 import { useApp } from '@/contexts/AppContext';
 import { Sale } from '@/types';
 import { useToast } from '@/hooks/use-toast';
-import { FileText, Search, Calendar, User, MapPin, Phone, CreditCard, Download, Eye, Sparkles } from 'lucide-react';
+import {
+  FileText, Search, Calendar, User, MapPin,
+  Phone, CreditCard, Download, Eye, Sparkles
+} from 'lucide-react';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import useCurrencyFormatter from '@/hooks/use-currency-formatter';
@@ -20,63 +32,42 @@ interface InvoiceGeneratorProps {
 }
 
 const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ isOpen, onClose }) => {
-  // Utiliser allSales au lieu de sales pour avoir TOUTES les ventes historiques
   const { allSales } = useApp();
   const { toast } = useToast();
   const { formatEuro } = useCurrencyFormatter();
-  
-  // Commencer avec 2025 puisque c'est l'année de vos données
+
   const [searchYear, setSearchYear] = useState('2025');
   const [searchName, setSearchName] = useState('');
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
   const [showSaleDetails, setShowSaleDetails] = useState(false);
 
-  // Debug: afficher toutes les ventes historiques et leurs dates
-  console.log('=== DEBUG FACTURES (TOUTES LES VENTES HISTORIQUES) ===');
-  console.log('Toutes les ventes historiques dans AppContext:', allSales.map(sale => ({
-    id: sale.id,
-    date: sale.date,
-    client: sale.clientName,
-    description: sale.description
-  })));
+  // === FILTRAGE DES VENTES ===
 
-  // Filtrer les ventes par année complète (du 1er janvier au 31 décembre de l'année sélectionnée)
-  const filteredSalesByYear = allSales.filter(sale => {
-    const saleDate = new Date(sale.date);
-    const saleYear = saleDate.getFullYear();
-    const selectedYear = parseInt(searchYear);
-    
-    console.log(`Vente ID ${sale.id}: date=${sale.date}, année extraite=${saleYear}, année recherchée=${selectedYear}, client=${sale.clientName}`);
-    
-    // Vérifier que la vente est dans l'année sélectionnée
-    return saleYear === selectedYear;
-  });
+  const filteredSalesByYear = allSales.filter(sale =>
+    new Date(sale.date).getFullYear().toString() === searchYear
+  );
 
-  console.log(`Total ventes historiques: ${allSales.length}, Ventes pour ${searchYear}: ${filteredSalesByYear.length}`);
-  console.log('Ventes filtrées par année:', filteredSalesByYear.map(sale => ({
-    id: sale.id,
-    date: sale.date,
-    client: sale.clientName
-  })));
-
-  // Filtrer les ventes par nom (à partir de 3 caractères)
-  const filteredSalesByName = searchName.length >= 3 
-    ? filteredSalesByYear.filter(sale => 
+  const filteredSalesByName = searchName.length >= 3
+    ? filteredSalesByYear.filter(sale =>
         sale.clientName?.toLowerCase().includes(searchName.toLowerCase())
       )
     : [];
+
+  // === SÉLECTION D'UNE VENTE ===
 
   const handleSaleSelect = (sale: Sale) => {
     setSelectedSale(sale);
     setShowSaleDetails(true);
   };
 
+  // === GÉNÉRATION DE LA FACTURE PDF ===
+
   const generateInvoicePDF = (sale: Sale) => {
     if (!sale.clientName) {
       toast({
-        title: "Erreur",
-        description: "Impossible de générer la facture : nom du client manquant",
-        variant: "destructive",
+        title: 'Erreur',
+        description: 'Nom du client manquant.',
+        variant: 'destructive',
       });
       return;
     }
@@ -84,204 +75,172 @@ const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ isOpen, onClose }) 
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.width;
     const pageHeight = doc.internal.pageSize.height;
-    
-    // Couleurs modernes inspirées de la photo
-    const primaryBlue = [51, 153, 204]; // Bleu cyan moderne
-    const lightGray = [248, 249, 250]; // Gris très clair
-    const darkGray = [52, 58, 64]; // Gris foncé pour le texte
-    const accentColor = [255, 193, 7]; // Jaune/doré pour les accents
-    
-    // En-tête avec style moderne - Fond coloré en haut
-    doc.setFillColor(primaryBlue[0], primaryBlue[1], primaryBlue[2]);
+
+    const primaryViolet = [153, 51, 204];
+    const primaryBlue = [51, 153, 204];
+    const lightGray = [248, 249, 250];
+    const darkGray = [52, 58, 64];
+
+    // === EN-TÊTE ===
+    doc.setFillColor(primaryViolet[0], primaryViolet[1], primaryViolet[2]);
+
     doc.rect(0, 0, pageWidth, 50, 'F');
-    
-    // Titre de l'entreprise - Style moderne
+
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(28);
     doc.setFont('helvetica', 'bold');
     doc.text('Riziky Beauté', 20, 25);
-    
-    // Sous-titre élégant
+
     doc.setFontSize(12);
     doc.setFont('helvetica', 'normal');
     doc.text('Votre partenaire beauté à La Réunion', 20, 35);
-    
-    // Informations de contact dans l'en-tête
-    doc.setFontSize(10);
-    doc.text('10 Allée des Beryls Bleus', 20, 45);
-    
-    // FACTURE en gros sur la droite
-    doc.setTextColor(255, 255, 255);
+    doc.text('10 Allée des Beryls Bleus, 97400 Saint Denis', 20, 45);
+
     doc.setFontSize(36);
     doc.setFont('helvetica', 'bold');
     doc.text('FACTURE', pageWidth - 85, 35);
-    
-    // Informations de l'entreprise - Section gauche
-    const companyInfoY = 65;
-    doc.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Riziky Beauté', 20, companyInfoY);
-    
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(10);
-    doc.text('10 Allée des Beryls Bleus', 20, companyInfoY + 8);
-    doc.text('97400 Saint-Denis, La Réunion', 20, companyInfoY + 16);
-    doc.text('Tél: 0692 19 87 01', 20, companyInfoY + 24);
-    
-    // Informations de facturation - Section droite
-    const invoiceInfoY = companyInfoY;
+
+    // === INFOS ENTREPRISE ===
+    const leftX = 20;
     const rightX = pageWidth - 80;
-    
+    const infoY = 65;
+
+    doc.setFontSize(11);
+    doc.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Riziky Beauté', leftX, infoY);
+    doc.setFont('helvetica', 'normal');
     doc.setFontSize(10);
+    doc.text('10 Allée des Beryls Bleus', leftX, infoY + 8);
+    doc.text('97400 Saint-Denis, La Réunion', leftX, infoY + 16);
+    doc.text('Tél: 0692 19 87 01', leftX, infoY + 24);
+
+    // === INFOS FACTURE À DROITE ===
+    const date = new Date(sale.date);
+    const invoiceNumber = `${date.getFullYear()}-${sale.id.toString().padStart(3, '0')}`;
+    const dueDate = new Date(date);
+    dueDate.setDate(dueDate.getDate() + 30);
+
     doc.setFont('helvetica', 'bold');
-    doc.text('Facture n°', rightX, invoiceInfoY);
+    doc.text('Facture n°', rightX, infoY);
     doc.setFont('helvetica', 'normal');
-    doc.text(`2024-${sale.id.toString().padStart(3, '0')}`, rightX, invoiceInfoY + 8);
-    
+    doc.text(invoiceNumber, rightX, infoY + 8);
+
     doc.setFont('helvetica', 'bold');
-    doc.text('Date:', rightX, invoiceInfoY + 20);
+    doc.text('Date :', rightX, infoY + 20);
     doc.setFont('helvetica', 'normal');
-    doc.text(new Date(sale.date).toLocaleDateString('fr-FR'), rightX, invoiceInfoY + 28);
-    
+    doc.text(date.toLocaleDateString('fr-FR'), rightX, infoY + 28);
+
     doc.setFont('helvetica', 'bold');
-    doc.text('Échéance:', rightX, invoiceInfoY + 40);
+    doc.text('Échéance :', rightX, infoY + 40);
     doc.setFont('helvetica', 'normal');
-    const echeanceDate = new Date(sale.date);
-    echeanceDate.setDate(echeanceDate.getDate() + 30);
-    doc.text(echeanceDate.toLocaleDateString('fr-FR'), rightX, invoiceInfoY + 48);
-    
-    // Section client avec bordure moderne
+    doc.text(dueDate.toLocaleDateString('fr-FR'), rightX, infoY + 48);
+
+    // === SECTION CLIENT ===
     const clientY = 125;
     doc.setFillColor(lightGray[0], lightGray[1], lightGray[2]);
     doc.rect(20, clientY, pageWidth - 40, 35, 'F');
     doc.setDrawColor(primaryBlue[0], primaryBlue[1], primaryBlue[2]);
     doc.setLineWidth(0.5);
     doc.rect(20, clientY, pageWidth - 40, 35, 'S');
-    
+
     doc.setTextColor(primaryBlue[0], primaryBlue[1], primaryBlue[2]);
     doc.setFontSize(12);
     doc.setFont('helvetica', 'bold');
     doc.text('Expédier à:', 25, clientY + 12);
-    
+
     doc.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
-    doc.setFontSize(11);
     doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11);
     doc.text(sale.clientName, 25, clientY + 22);
-    
+
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(10);
-    if (sale.clientAddress) {
-      doc.text(sale.clientAddress, 25, clientY + 30);
-    }
-    if (sale.clientPhone) {
-      doc.text(`Tél: ${sale.clientPhone}`, 120, clientY + 30);
-    }
-    
-    // Tableau des produits - Style moderne
+    if (sale.clientAddress) doc.text(sale.clientAddress, 25, clientY + 30);
+    if (sale.clientPhone) doc.text(`Tél: ${sale.clientPhone}`, 120, clientY + 30);
+
+    // === LIGNE PRODUIT ===
     const tableY = 180;
-    
-    // En-tête du tableau avec gradient simulé
     doc.setFillColor(primaryBlue[0], primaryBlue[1], primaryBlue[2]);
     doc.rect(20, tableY, pageWidth - 40, 12, 'F');
-    
     doc.setTextColor(255, 255, 255);
-    doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
     doc.text('DESCRIPTION', 25, tableY + 8);
     doc.text('QTÉ', 110, tableY + 8);
     doc.text('PRIX UNIT.', 130, tableY + 8);
     doc.text('MONTANT EUR', 160, tableY + 8);
-    
-    // Ligne de produit
+
     const rowY = tableY + 12;
     doc.setFillColor(255, 255, 255);
     doc.rect(20, rowY, pageWidth - 40, 15, 'F');
     doc.setDrawColor(220, 220, 220);
-    doc.setLineWidth(0.3);
     doc.rect(20, rowY, pageWidth - 40, 15, 'S');
-    
+
     doc.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
     doc.setFont('helvetica', 'normal');
     doc.text(sale.description, 25, rowY + 9);
     doc.text(sale.quantitySold.toString(), 115, rowY + 9);
-    
     const unitPrice = sale.quantitySold > 0 ? sale.sellingPrice / sale.quantitySold : sale.sellingPrice;
     doc.text(formatEuro(unitPrice), 135, rowY + 9);
     doc.text(formatEuro(sale.sellingPrice), 165, rowY + 9);
-    
-    // Section totaux - Style moderne
+
+    // === TOTALS ===
     const totalsY = rowY + 35;
     const totalsX = pageWidth - 100;
-    
-    // Sous-total
-    doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
     doc.text('Sous-total HT:', totalsX - 30, totalsY);
     doc.text(formatEuro(sale.sellingPrice), totalsX + 15, totalsY);
-    
-    // Ligne de séparation
-    doc.setDrawColor(220, 220, 220);
     doc.line(totalsX - 30, totalsY + 3, totalsX + 35, totalsY + 3);
-    
-    // TVA (si applicable)
     doc.text('TVA (0%):', totalsX - 30, totalsY + 10);
     doc.text('0,00 €', totalsX + 15, totalsY + 10);
-    
-    // Total TTC - Mis en évidence
     doc.setFillColor(primaryBlue[0], primaryBlue[1], primaryBlue[2]);
     doc.rect(totalsX - 35, totalsY + 15, 75, 12, 'F');
-    
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(12);
     doc.setFont('helvetica', 'bold');
     doc.text('Total TTC:', totalsX - 30, totalsY + 23);
     doc.text(formatEuro(sale.sellingPrice), totalsX + 15, totalsY + 23);
-    
-    // Informations de paiement
+
+    // === PAIEMENT & PIED DE PAGE ===
     const paymentY = totalsY + 45;
     doc.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
-    doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
     doc.text('Informations de paiement:', 20, paymentY);
-    
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(9);
     doc.text('Paiement à réception de facture', 20, paymentY + 8);
-    doc.text('Modes de paiement acceptés: Espèces, Virement, Carte bancaire', 20, paymentY + 16);
-    
-    // Pied de page élégant
+    doc.text('Modes acceptés : Espèces, Virement, Carte bancaire', 20, paymentY + 16);
+
     const footerY = pageHeight - 40;
     doc.setDrawColor(primaryBlue[0], primaryBlue[1], primaryBlue[2]);
     doc.setLineWidth(1);
     doc.line(20, footerY, pageWidth - 20, footerY);
-    
+    doc.setFont('helvetica', 'bold');
     doc.setTextColor(primaryBlue[0], primaryBlue[1], primaryBlue[2]);
     doc.setFontSize(10);
-    doc.setFont('helvetica', 'bold');
     doc.text('Merci de votre confiance !', pageWidth / 2, footerY + 10, { align: 'center' });
-    
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(8);
     doc.setTextColor(120, 120, 120);
     doc.text('Riziky Beauté - Votre partenaire beauté à La Réunion', pageWidth / 2, footerY + 20, { align: 'center' });
     doc.text('TVA non applicable - Article 293B du CGI', pageWidth / 2, footerY + 28, { align: 'center' });
-    
-    // Télécharger le PDF
+
     const fileName = `Facture_${sale.clientName?.replace(/\s+/g, '_')}_${sale.id}.pdf`;
     doc.save(fileName);
-    
+
     toast({
-      title: "Facture générée",
-      description: `La facture pour ${sale.clientName} a été générée avec succès`,
-      variant: "default",
-      className: "notification-success",
+      title: 'Facture générée',
+      description: `La facture pour ${sale.clientName} a été générée avec succès.`,
+      variant: 'default',
     });
   };
 
   return (
     <>
-      <Dialog open={isOpen} onOpenChange={onClose}>
+       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="sm:max-w-4xl">
           <DialogHeader className="text-center pb-6">
             <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent flex items-center justify-center gap-3">
