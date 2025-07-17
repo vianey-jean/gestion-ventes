@@ -116,7 +116,7 @@ const ExportSalesDialog: React.FC<ExportSalesDialogProps> = ({ isOpen, onClose }
     const doc = new jsPDF();
     
     // En-tête premium avec gradient simulé
-    doc.setFillColor(37, 99, 235); // Bleu premium 
+    doc.setFillColor(153, 51, 204); // Bleu premium 
     doc.rect(0, 0, 210, 35, 'F');
     
     // Titre principal en blanc
@@ -184,20 +184,20 @@ const ExportSalesDialog: React.FC<ExportSalesDialogProps> = ({ isOpen, onClose }
     // Tableau premium avec style moderne
     autoTable(doc, {
       startY: 50,
-      head: [['Date', 'Produit', 'Prix Achat', 'Quantité', 'Prix Vendu', 'Bénéfice']],
+      head: [['Date', 'Produit', 'Prix Achat', 'Qté', 'Prix Vendu', 'Bénéfice']],
       body: tableBody,
       theme: 'grid',
       headStyles: {
         fillColor: [37, 99, 235], // Bleu premium
         textColor: [255, 255, 255],
         fontStyle: 'bold',
-        fontSize: 11,
+        fontSize: 7,
         halign: 'center',
         valign: 'middle',
         cellPadding: 8,
       },
       bodyStyles: {
-        fontSize: 10,
+        fontSize: 8,
         cellPadding: 6,
         halign: 'center',
         valign: 'middle',
@@ -224,7 +224,7 @@ const ExportSalesDialog: React.FC<ExportSalesDialogProps> = ({ isOpen, onClose }
           data.cell.styles.fillColor = [220, 252, 231]; // Vert très clair
           data.cell.styles.textColor = [22, 101, 52];   // Vert foncé
           data.cell.styles.fontStyle = 'bold';
-          data.cell.styles.fontSize = 11;
+          data.cell.styles.fontSize = 8;
         }
       },
       margin: { top: 50, left: 20, right: 20 },
