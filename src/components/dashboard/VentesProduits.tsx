@@ -13,7 +13,7 @@ import AdvancedDashboard from '@/components/dashboard/AdvancedDashboard';
 import ModernContainer from '@/components/dashboard/forms/ModernContainer';
 import ModernActionButton from '@/components/dashboard/forms/ModernActionButton';
 import PremiumLoading from '@/components/ui/premium-loading';
-import { PlusCircle, Edit, ShoppingCart, Loader2, FileText, TrendingUp, Package, Warehouse, BarChart3, Receipt, Activity, Crown } from 'lucide-react';
+import { PlusCircle, Edit, ShoppingCart, Loader2, FileText, TrendingUp, Package, Warehouse, BarChart3, Receipt, Activity, Crown , DollarSign } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -60,6 +60,7 @@ const VentesProduits: React.FC = () => {
 
   const filteredSales = sales;
   const totalProfit = filteredSales.reduce((sum, sale) => sum + sale.profit, 0);
+  const totalSalesPrice = filteredSales.reduce((sum, sale) => sum + (sale.sellingPrice ), 0);
   const totalProductsSold = filteredSales.reduce((sum, sale) => sum + sale.quantitySold, 0);
   const availableProducts = products.filter(p => p.quantity > 0);
   const totalStock = products.reduce((sum, product) => sum + product.quantity, 0);
@@ -151,6 +152,19 @@ const VentesProduits: React.FC = () => {
         <TabsContent value="sales" className="space-y-8">
           {/* Statistiques modernisées */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {/**Affichage tota de ventes de mois */}
+            <ModernContainer gradient="blue" className="transform hover:scale-105 transition-all duration-300">
+              <div className="flex items-center space-x-4">
+                <div className="p-4 rounded-full bg-gradient-to-br from-cyan-500 to-cyan-600 text-white shadow-lg">
+                  <DollarSign className="h-8 w-8" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-cyan-600 dark:text-cyan-400">Total ventes du mois</p>
+                  <p className="text-3xl font-bold text-cyan-700 dark:text-cyan-300">{formatEuro(totalSalesPrice)}</p>
+                </div>
+              </div>
+            </ModernContainer>
+            {/**Affichage bénéfice du mois */}
             <ModernContainer gradient="green" className="transform hover:scale-105 transition-all duration-300">
               <div className="flex items-center space-x-4">
                 <div className="p-4 rounded-full bg-gradient-to-br from-green-500 to-green-600 text-white shadow-lg">
