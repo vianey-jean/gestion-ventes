@@ -122,7 +122,7 @@ const SalesTable: React.FC<SalesTableProps> = ({ sales: initialSales, onRowClick
   const totalQuantitySold = sales.reduce((sum, sale) => {
     return sum + (isAdvanceProduct(sale.description) ? 0 : sale.quantitySold);
   }, 0);
-  const totalPurchasePrice = sales.reduce((sum, sale) => sum + (sale.purchasePrice * sale.quantitySold), 0);
+  const totalPurchasePrice = sales.reduce((sum, sale) => sum + (sale.purchasePrice), 0);
   const totalProfit = sales.reduce((sum, sale) => sum + sale.profit, 0);
 
   const getCurrentMonthName = () => {
