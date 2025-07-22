@@ -1,4 +1,5 @@
 
+@import './styles/accessibility.css';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -7,79 +8,59 @@
   :root {
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
-
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
-
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-
-    --primary: 354 82% 57%;  /* Red color */
+    --primary: 221.2 83.2% 53.3%;
     --primary-foreground: 210 40% 98%;
-
-    --secondary: 195 82% 49%;  /* Blue color */
-    --secondary-foreground: 222.2 47.4% 11.2%;
-
-    --accent: 258 82% 75%;  /* Purple color */
-    --accent-foreground: 222.2 47.4% 11.2%;
-
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222.2 84% 4.9%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96%;
+    --accent-foreground: 222.2 84% 4.9%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
-
-    --success: 142 69% 58%;  /* Green color */
-
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 354 82% 57%;
-
-    --radius: 0.5rem;
-
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --ring: 221.2 83.2% 53.3%;
+    --radius: 0.75rem;
+    --chart-1: 12 76% 61%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+    --app-red: 0 84% 60%;
+    --app-blue: 221 83% 53%;
+    --app-purple: 262 83% 58%;
   }
 
   .dark {
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
-
     --card: 222.2 84% 4.9%;
     --card-foreground: 210 40% 98%;
-
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
-
-    --primary: 354 82% 57%;
-    --primary-foreground: 210 40% 98%;
-
-    --secondary: 195 82% 49%;
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 222.2 84% 4.9%;
+    --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
-
-    --accent: 258 82% 75%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
     --accent-foreground: 210 40% 98%;
-
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
-
-    --success: 142 69% 58%;
-
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 354 82% 57%;
-    
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --ring: 224.3 76.3% 94.1%;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
   }
 }
 
@@ -87,78 +68,150 @@
   * {
     @apply border-border;
   }
-
+  
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  
+  /* Amélioration de la lisibilité */
+  p, li, td, th {
+    line-height: 1.6;
+  }
+  
+  /* Focus visible pour tous les éléments interactifs */
+  button, a, input, textarea, select, [tabindex]:not([tabindex="-1"]) {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2;
+  }
+  
+  /* Skip link pour l'accessibilité */
+  .skip-link {
+    @apply absolute -top-10 left-2 bg-primary text-primary-foreground px-4 py-2 rounded z-50 transition-all;
+  }
+  
+  .skip-link:focus {
+    @apply top-2;
   }
 }
 
-/* Custom components */
 @layer components {
-  .btn-primary {
-    @apply bg-app-red hover:bg-opacity-90 text-white dark:bg-app-purple dark:hover:bg-opacity-90;
-  }
-  
-  .btn-success {
-    @apply bg-app-green hover:bg-opacity-90 text-white;
-  }
-  
-  .btn-accent {
-    @apply bg-app-purple hover:bg-opacity-90 text-white;
-  }
-  
-  .notification-success {
-    @apply bg-app-green text-white p-3 rounded-md shadow-md;
-  }
-  
-  .notification-error {
-    @apply bg-app-red text-white p-3 rounded-md shadow-md;
-  }
-
-  /* 3D Effects */
-  .btn-3d {
-    @apply transform transition-transform hover:translate-y-[-3px] hover:shadow-lg active:translate-y-[-1px];
-  }
-
+  /* Composants d'interface modernisés */
   .card-3d {
-    @apply transform transition-transform hover:translate-y-[-5px] hover:shadow-xl;
+    @apply shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1;
   }
-
-  .tab-3d {
-    @apply transform transition-transform hover:translate-y-[-2px];
+  
+  .btn-3d {
+    @apply shadow-md hover:shadow-lg active:shadow-sm transition-all duration-200 transform hover:-translate-y-0.5 active:translate-y-0;
+  }
+  
+  /* Animations personnalisées pour l'accessibilité */
+  .fade-in {
+    animation: fadeIn 0.3s ease-out;
+  }
+  
+  .slide-up {
+    animation: slideUp 0.4s ease-out;
+  }
+  
+  .scale-in {
+    animation: scaleIn 0.2s ease-out;
+  }
+  
+  /* Styles pour les graphiques accessibles */
+  .chart-accessible {
+    @apply rounded-lg border bg-card text-card-foreground shadow-sm;
+  }
+  
+  /* Styles pour les tableaux responsives */
+  .table-responsive {
+    @apply overflow-x-auto rounded-lg border;
+  }
+  
+  /* Styles pour les formulaires accessibles */
+  .form-group {
+    @apply space-y-2;
+  }
+  
+  .form-input {
+    @apply flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  
+  .form-label {
+    @apply text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70;
+  }
+  
+  .form-error {
+    @apply text-sm font-medium text-destructive;
   }
 }
 
-/* Responsive tables */
-@layer utilities {
-  .table-responsive {
-    @apply overflow-x-auto;
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
   }
-
-  .table-responsive table {
-    @apply min-w-full;
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
+}
 
-  @media (max-width: 640px) {
-    .table-responsive-stack {
-      @apply block;
-    }
-    
-    .table-responsive-stack thead {
-      @apply hidden;
-    }
-    
-    .table-responsive-stack tbody,
-    .table-responsive-stack tr {
-      @apply block w-full;
-    }
-    
-    .table-responsive-stack td {
-      @apply block text-right pl-16 relative border-b border-gray-200 py-2;
-    }
-    
-    .table-responsive-stack td::before {
-      @apply content-[attr(data-label)] absolute top-2 left-2 font-semibold text-left;
-    }
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Support pour le mode impression */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  .print-only {
+    display: block !important;
+  }
+  
+  * {
+    color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}
+
+/* Support pour les préférences utilisateur */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@media (prefers-contrast: high) {
+  :root {
+    --border: 0 0% 40%;
+    --input: 0 0% 40%;
+  }
+  
+  .dark {
+    --border: 0 0% 60%;
+    --input: 0 0% 60%;
   }
 }

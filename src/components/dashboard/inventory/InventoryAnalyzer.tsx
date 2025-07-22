@@ -130,11 +130,31 @@ const InventoryAnalyzer: React.FC = () => {
 
         {metrics && (
           <Tabs defaultValue="overview" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
-              <TabsTrigger value="performance">Performance</TabsTrigger>
-              <TabsTrigger value="alerts">Alertes</TabsTrigger>
-            </TabsList>
+           <TabsList className="grid w-full grid-cols-1 md:grid-cols-3 gap-2 h-auto p-2 rounded-xl bg-white/90 dark:bg-gray-800/90 shadow">
+  
+  <TabsTrigger
+    value="overview"
+    className="w-full h-12 flex items-center justify-center rounded-lg font-semibold hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+  >
+    Vue d'ensemble
+  </TabsTrigger>
+
+  <TabsTrigger
+    value="performance"
+    className="w-full h-12 flex items-center justify-center rounded-lg font-semibold hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+  >
+    Performance
+  </TabsTrigger>
+
+  <TabsTrigger
+    value="alerts"
+    className="w-full h-12 flex items-center justify-center rounded-lg font-semibold hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+  >
+    Alertes
+  </TabsTrigger>
+
+</TabsList>
+
             
             <TabsContent value="overview" className="space-y-4">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

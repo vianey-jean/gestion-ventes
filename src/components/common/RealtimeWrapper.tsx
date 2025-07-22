@@ -1,6 +1,5 @@
 
 import React, { useEffect } from 'react';
-import { useSSE } from '@/hooks/use-sse';
 import { useApp } from '@/contexts/AppContext';
 import { RealtimeStatus } from './RealtimeStatus';
 import { useToast } from '@/hooks/use-toast';
@@ -22,50 +21,37 @@ export const RealtimeWrapper: React.FC<RealtimeWrapperProps> = ({
   const [lastEvent, setLastEvent] = React.useState<any>(null);
 
   useEffect(() => {
-    console.log('🚀 RealtimeWrapper - Initialisation');
-    
     // Connexion au service temps réel
     realtimeService.connect();
     
     // Écouter les changements de données
     const unsubscribeData = realtimeService.addDataListener((data) => {
-      console.log('📊 Données reçues dans RealtimeWrapper:', data);
-      
       // Mettre à jour les données selon le type
       if (data.products) {
-        console.log('🛍️ Mise à jour des produits:', data.products);
         setProducts(data.products);
       }
       
       if (data.sales) {
-        console.log('💰 Mise à jour des ventes:', data.sales);
         setSales(data.sales);
       }
       
       setLastSync(new Date());
-      
-      // Notification discrète
-    
     });
     
     // Écouter les événements de sync
     const unsubscribeSync = realtimeService.addSyncListener((event) => {
-      console.log('📡 Événement sync reçu:', event);
       setLastEvent(event.data);
       
       switch (event.type) {
         case 'connected':
-          console.log('✅ Connexion SSE établie');
           setIsConnected(true);
           break;
           
         case 'data-changed':
-          console.log('🔄 Données changées:', event.data);
           setLastSync(new Date());
           break;
           
         case 'force-sync':
-          console.log('🚀 Synchronisation forcée');
           if (refreshData) {
             refreshData();
           }
@@ -81,7 +67,6 @@ export const RealtimeWrapper: React.FC<RealtimeWrapperProps> = ({
     }, 5000);
     
     return () => {
-      console.log('🔌 RealtimeWrapper - Nettoyage');
       unsubscribeData();
       unsubscribeSync();
       clearInterval(statusInterval);
