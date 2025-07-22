@@ -139,7 +139,7 @@ class DataOptimizationService {
     // Calculs purs sans effets de bord
     const calculations: OptimizedSalesCalculations = Object.freeze({
       totalProfit: sales.reduce((sum, sale) => sum + sale.profit, 0),
-      totalRevenue: sales.reduce((sum, sale) => sum + (sale.sellingPrice * sale.quantitySold), 0),
+      totalRevenue: sales.reduce((sum, sale) => sum + (sale.sellingPrice ), 0),
       totalQuantity: sales.reduce((sum, sale) => sum + sale.quantitySold, 0),
       averageProfit: sales.length > 0 ? sales.reduce((sum, sale) => sum + sale.profit, 0) / sales.length : 0,
       topProducts: this.getTopProducts(sales),

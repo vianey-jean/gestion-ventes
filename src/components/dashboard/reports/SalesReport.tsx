@@ -35,7 +35,7 @@ const SalesReport: React.FC = () => {
       }
 
       const monthData = monthlyData.get(monthKey);
-      monthData.revenue += sale.sellingPrice * sale.quantitySold;
+      monthData.revenue += sale.sellingPrice ;
       monthData.quantity += sale.quantitySold;
       monthData.profit += sale.profit || 0;
       monthData.sales += 1;
