@@ -320,29 +320,34 @@ const PretFamilles: React.FC = () => {
                   ))}
                   
                   {/* Ligne des totaux avec design premium */}
-                  <TableRow className="bg-gradient-to-r from-indigo-900 via-purple-900 to-pink-900 text-white border-none">
-                    <TableCell className="bg-transparent">
+                  <TableRow className="border-none">
+                    <TableCell className="bg-gradient-to-r from-indigo-900 via-purple-900 to-pink-900 text-white border-b border-white rounded-bl-3xl">
                       <div className="flex items-center space-x-2">
                         <Award className="h-5 w-5" />
                         <span className="font-bold text-lg">TOTAL</span>
                       </div>
                     </TableCell>
-                    <TableCell className="text-right bg-transparent">
-                      <div className="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full inline-block">
-                        <span className="font-bold text-lg text-blue-200">
-                          {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(totalPret)}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right bg-transparent">
-                      <div className="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full inline-block">
-                        <span className="font-bold text-lg text-red-200">
-                          {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(totalSolde)}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell colSpan={2} className="bg-transparent"></TableCell>
-                  </TableRow>
+
+                            <TableCell className="text-right bg-gradient-to-r from-indigo-900 via-purple-900 to-pink-900 text-white border-b border-white">
+                              <div className="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full inline-block">
+                                <span className="font-bold text-lg text-blue-200">
+                                  {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(totalPret)}
+                                </span>
+                              </div>
+                            </TableCell>
+
+                            <TableCell className="text-right bg-gradient-to-r from-indigo-900 via-purple-900 to-pink-900 text-white border-b border-white">
+                              <div className="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full inline-block">
+                                <span className="font-bold text-lg text-red-200">
+                                  {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(totalSolde)}
+                                </span>
+                              </div>
+                            </TableCell>
+
+                            <TableCell colSpan={2} className="bg-gradient-to-r from-indigo-900 via-purple-900 to-pink-900 text-white border-b border-white rounded-br-3xl">
+                            </TableCell>
+                          </TableRow>
+
                 </TableBody>
               </Table>
             </div>

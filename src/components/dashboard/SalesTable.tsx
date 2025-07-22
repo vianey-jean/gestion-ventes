@@ -302,7 +302,8 @@ const SalesTable: React.FC<SalesTableProps> = ({ sales: initialSales, onRowClick
         </TableBody>
         {sales.length > 0 && (
           <TableFooter>
-            <TableRow className="bg-gradient-to-r from-gray-900 via-purple-900 to-blue-900 text-white border-none">
+            <TableRow className="bg-gradient-to-r from-gray-900 via-purple-900 to-blue-900 text-white border-none hover:bg-indigo-900 hover:bg-none">
+
               <TableCell colSpan={2} className="text-right text-lg font-bold bg-transparent">
                 <div className="flex items-center justify-end space-x-2">
                   <Award className="h-5 w-5" />
