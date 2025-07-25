@@ -472,7 +472,7 @@ const Inventaire = () => {
                         <div className="text-2xl font-black text-gray-800 bg-gradient-to-r from-yellow-600 to-orange-600 bg-clip-text text-transparent">
                           {product.purchasePrice.toFixed(2)}
                         </div>
-                        <span className="text-sm font-semibold text-gray-500">€</span>
+                        <span className="text-xl font-black text-gray-800 bg-gradient-to-r from-yellow-600 to-orange-600 bg-clip-text text-transparent">€</span>
                       </div>
                     </td>
                     <td className="p-6">
