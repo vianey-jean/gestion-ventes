@@ -164,7 +164,7 @@ const ExportSalesDialog: React.FC<ExportSalesDialogProps> = ({ isOpen, onClose }
     const totalAchat = sales.reduce((sum, sale) => {
       const quantite = isAdvanceProduct(sale.description) ? 0 : (typeof sale.quantitySold === 'number' ? sale.quantitySold : 0);
       const prixAchat = typeof sale.purchasePrice === 'number' ? sale.purchasePrice : 0;
-      return sum + (prixAchat * quantite);
+      return sum + (prixAchat );
     }, 0);
     
     const totalProfit = sales.reduce((sum, sale) => {
