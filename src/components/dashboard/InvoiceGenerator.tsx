@@ -254,7 +254,7 @@ doc.line(20, footerY, pageWidth - 20, footerY);
   return (
     <>
        <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-4xl">
+        <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-hidden">
           <DialogHeader className="text-center pb-6">
             <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent flex items-center justify-center gap-3">
               <div className="p-2 bg-gradient-to-r from-pink-500 to-purple-500 rounded-lg">
@@ -264,6 +264,7 @@ doc.line(20, footerY, pageWidth - 20, footerY);
             </DialogTitle>
           </DialogHeader>
           
+           <ScrollArea className="h-[calc(90vh-100px)] pr-4"> 
           <div className="space-y-6">
             {/* Recherche par année */}
             <Card className="border-2 border-gradient-to-r from-blue-200 to-indigo-200">
@@ -346,7 +347,7 @@ doc.line(20, footerY, pageWidth - 20, footerY);
                 <CardHeader className="pb-3">
                   <CardTitle className="text-lg flex items-center gap-2 text-purple-700">
                     <User className="h-5 w-5" />
-                    Ventes de {searchName} en {searchYear}
+                    Ventes de : {searchName} en {searchYear}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -402,6 +403,7 @@ doc.line(20, footerY, pageWidth - 20, footerY);
               </Card>
             )}
           </div>
+           </ScrollArea>
         </DialogContent>
       </Dialog>
 
