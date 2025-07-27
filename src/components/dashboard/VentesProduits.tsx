@@ -10,6 +10,7 @@ import SalesOverviewSection from './sections/SalesOverviewSection';
 import SalesManagementSection from './sections/SalesManagementSection';
 import AdvancedDashboardSection from './sections/AdvancedDashboardSection';
 import { Crown, ShoppingCart } from 'lucide-react';
+import PremiumLoading from '../ui/premium-loading';
 
 /**
  * Composant principal optimisé pour la gestion des ventes
@@ -47,34 +48,27 @@ const VentesProduits: React.FC = React.memo(() => {
   // États de chargement (composants purs pour l'affichage)
   if (!isAuthenticated) {
     return (
-      <div 
-        className="flex justify-center items-center py-12"
-        role="status"
-        aria-live="polite"
-      >
-        <ProfessionalLoading 
+   
+        <PremiumLoading
           text="Authentification requise"
-          variant="spinner"
+          variant="ventes"
           size="lg"
         />
-      </div>
+
     );
   }
 
   if (appLoading || authLoading) {
     return (
-      <div 
-        className="flex justify-center items-center py-12"
-        role="status"
-        aria-live="polite"
-      >
-        <ProfessionalLoading 
-          text="Chargement des données de vente..."
-          variant="dots"
-          size="lg"
-        />
-      </div>
+   
+       <PremiumLoading 
+        text="Chargement des Ventes et Produits ...."
+        size="md"
+        variant="ventes"
+        showText={true}
+      />
     );
+
   }
 
   return (
