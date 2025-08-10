@@ -10,11 +10,13 @@ import { beneficeService } from '@/service/beneficeService';
 interface ProductSearchInputProps {
   onProductSelect: (product: Product) => void;
   selectedProduct?: Product | null;
+  context?: 'sale' | 'edit'; // 'sale' pour ajouter une vente, 'edit' pour modifier un produit
 }
 
 const ProductSearchInput: React.FC<ProductSearchInputProps> = ({ 
   onProductSelect,
-  selectedProduct 
+  selectedProduct,
+  context = 'sale' // Par défaut pour ajouter une vente
 }) => {
   const { products } = useApp();
   const [searchTerm, setSearchTerm] = useState('');
@@ -52,7 +54,7 @@ const ProductSearchInput: React.FC<ProductSearchInputProps> = ({
   }, []);
 
   useEffect(() => {
-    if (searchTerm.length >= 2) {
+    if (searchTerm.length >= 3) {
       // Filtrer les produits par terme de recherche
       let filtered = products.filter(product =>
         product.description.toLowerCase().includes(searchTerm.toLowerCase())
@@ -62,6 +64,20 @@ const ProductSearchInput: React.FC<ProductSearchInputProps> = ({
       filtered = filtered.filter(product => 
         !benefices.some(benefice => benefice.productId === product.id)
       );
+      
+      if (context === 'sale') {
+        // Pour ajouter une vente : exclure les produits avec stock = 0
+        filtered = filtered
+          .filter(product => product.quantity > 0)
+          .sort((a, b) => (b.quantity || 0) - (a.quantity || 0));
+      } else {
+        // Pour modifier un produit : montrer tous les produits mais stock > 0 en premier
+        filtered = filtered.sort((a, b) => {
+          if (a.quantity > 0 && b.quantity === 0) return -1;
+          if (a.quantity === 0 && b.quantity > 0) return 1;
+          return (b.quantity || 0) - (a.quantity || 0);
+        });
+      }
       
       setFilteredProducts(filtered);
       setShowDropdown(true);
@@ -149,7 +165,7 @@ const ProductSearchInput: React.FC<ProductSearchInputProps> = ({
       )}
       
       {/* Message si aucun résultat */}
-      {showDropdown && searchTerm.length >= 2 && filteredProducts.length === 0 && (
+      {showDropdown && searchTerm.length >= 3 && filteredProducts.length === 0 && (
         <div className="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg">
           <div className="px-4 py-3 text-sm text-gray-500">
             Aucun produit trouvé

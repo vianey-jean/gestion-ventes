@@ -116,6 +116,7 @@ const EditProductForm: React.FC<EditProductFormProps> = ({ isOpen, onClose }) =>
             <Label htmlFor="search">Rechercher un produit</Label>
             <ProductSearchInput
               onProductSelect={handleSelectProduct}
+              context="edit"
             />
           </div>
           
