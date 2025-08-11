@@ -261,7 +261,7 @@ const Inventaire = () => {
                 placeholder="🔍 Recherche premium... (min. 3 caractères)"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-12 pr-4 py-3 bg-gradient-to-r from-white to-gray-50 border-2 border-gray-200 focus:border-blue-500 focus:from-blue-50 focus:to-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 text-gray-800 placeholder:text-gray-500"
+                className="pl-12 pr-4 py-3 bg-gradient-to-r from-white to-gray-50 border-2 border-gray-200 focus:border-blue-500 focus:from-blue-50 focus:to-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300  placeholder:text-gray-500"
               />
               <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
                 <Sparkles className="h-4 w-4 text-blue-400" />
@@ -411,31 +411,31 @@ const Inventaire = () => {
           <table className="w-full">
             <thead>
               <tr className="bg-gradient-to-r from-gray-100 via-gray-50 to-gray-100 border-b-2 border-gray-200">
-                <th className="p-6 text-left font-black text-gray-800 uppercase tracking-wide">
+                <th className="p-6 text-left font-black  uppercase tracking-wide">
                   <div className="flex items-center gap-2">
                     <Package className="h-5 w-5 text-purple-600" />
                     Description
                   </div>
                 </th>
-                <th className="p-6 text-left font-black text-gray-800 uppercase tracking-wide">
+                <th className="p-6 text-left font-black uppercase tracking-wide">
                   <div className="flex items-center gap-2">
                     <Star className="h-5 w-5 text-yellow-500" />
                     Prix (€)
                   </div>
                 </th>
-                <th className="p-6 text-left font-black text-gray-800 uppercase tracking-wide">
+                <th className="p-6 text-left font-black  uppercase tracking-wide">
                   <div className="flex items-center gap-2">
                     <TrendingUp className="h-5 w-5 text-blue-600" />
                     Quantité
                   </div>
                 </th>
-                <th className="p-6 text-left font-black text-gray-800 uppercase tracking-wide">
+                <th className="p-6 text-left font-black  uppercase tracking-wide">
                   <div className="flex items-center gap-2">
                     <AlertTriangle className="h-5 w-5 text-orange-600" />
                     Priorité
                   </div>
                 </th>
-                <th className="p-6 text-left font-black text-gray-800 uppercase tracking-wide">
+                <th className="p-6 text-left font-black  uppercase tracking-wide">
                   <div className="flex items-center gap-2">
                     <Sparkles className="h-5 w-5 text-indigo-600" />
                     Actions
@@ -455,7 +455,7 @@ const Inventaire = () => {
                           <span className="font-bold text-gray-600 text-sm">{index + 1 + (currentPage - 1) * ITEMS_PER_PAGE}</span>
                         </div>
                         <div>
-                          <div className="font-bold text-gray-900 text-lg group-hover:text-blue-900 transition-colors">{product.description}</div>
+                          <div className="font-bold  text-lg group-hover:text-blue-900 transition-colors">{product.description}</div>
                           <Badge variant="outline" className="mt-2 bg-gradient-to-r from-gray-100 to-gray-200 border-0 text-gray-700 font-semibold">
                             <div className="flex items-center gap-1">
                               {categorizeProduct(product.description) === 'perruque' && <Crown className="h-3 w-3" />}
@@ -469,10 +469,10 @@ const Inventaire = () => {
                     </td>
                     <td className="p-6">
                       <div className="flex items-center gap-2">
-                        <div className="text-2xl font-black text-gray-800 bg-gradient-to-r from-yellow-600 to-orange-600 bg-clip-text text-transparent">
+                        <div className="text-2xl font-black  bg-gradient-to-r from-yellow-600 to-orange-600 bg-clip-text text-transparent">
                           {product.purchasePrice.toFixed(2)}
                         </div>
-                        <span className="text-xl font-black text-gray-800 bg-gradient-to-r from-yellow-600 to-orange-600 bg-clip-text text-transparent">€</span>
+                        <span className="text-xl font-black  bg-gradient-to-r from-yellow-600 to-orange-600 bg-clip-text text-transparent">€</span>
                       </div>
                     </td>
                     <td className="p-6">
