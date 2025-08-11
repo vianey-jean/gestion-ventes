@@ -34,7 +34,7 @@ export const useClientSync = () => {
   }, []);
 
   useEffect(() => {
-    console.log('🔌 Initialisation du hook useClientSync');
+    console.log('🔌 Initialisation du hook useClientSync avec synchronisation temps réel');
     
     // Chargement initial
     fetchClients();
@@ -43,13 +43,14 @@ export const useClientSync = () => {
     const token = localStorage.getItem('token');
     realtimeService.connect(token);
 
-    // Écouter les changements en temps réel
+    // Écouter les changements en temps réel pour les clients
     const unsubscribe = realtimeService.addDataListener((data) => {
       console.log('📡 Données reçues en temps réel:', data);
       
       if (data.clients) {
         console.log('👥 Mise à jour des clients en temps réel:', data.clients);
         setClients(data.clients);
+        setIsLoading(false);
       }
     });
 
@@ -63,29 +64,10 @@ export const useClientSync = () => {
       }
     });
 
-    // Vérifier la connexion périodiquement
-    const connectionCheckInterval = setInterval(() => {
-      const isConnected = realtimeService.getConnectionStatus();
-      console.log('🔗 Statut de connexion:', isConnected);
-      
-      if (!isConnected) {
-        console.log('🔄 Connexion perdue, tentative de reconnexion...');
-        realtimeService.connect(token);
-      }
-    }, 30000); // Vérifier toutes les 30 secondes
-
-    // Synchronisation de secours toutes les 2 minutes
-    const fallbackSyncInterval = setInterval(() => {
-      console.log('⏰ Synchronisation de secours');
-      fetchClients();
-    }, 120000); // 2 minutes
-
     return () => {
       console.log('🔌 Nettoyage du hook useClientSync');
       unsubscribe();
       unsubscribeSync();
-      clearInterval(connectionCheckInterval);
-      clearInterval(fallbackSyncInterval);
     };
   }, [fetchClients]);
 
