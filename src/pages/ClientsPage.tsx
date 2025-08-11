@@ -188,7 +188,7 @@ const ClientsPage: React.FC = () => {
             <div className="w-20 h-20 border-4 border-purple-200 dark:border-purple-800 border-t-purple-600 dark:border-t-purple-400 rounded-full animate-spin mx-auto"></div>
             <Diamond className="w-10 h-10 text-purple-600 dark:text-purple-400 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 animate-pulse" />
           </div>
-          <p className="mt-6 text-gray-700 dark:text-gray-200 font-semibold text-lg">Chargement de votre portefeuille premium...</p>
+          <p className="mt-6 text-gray-700 dark:text-gray-200 font-semibold text-lg">Chargement des Listes Clients premium...</p>
         </div>
       </div>
     );
@@ -221,7 +221,7 @@ const ClientsPage: React.FC = () => {
                 </div>
               </div>
               <h1 className="text-5xl md:text-7xl font-bold text-white bg-gradient-to-r from-white via-yellow-100 to-white bg-clip-text">
-                Portefeuille <span className="text-transparent bg-gradient-to-r from-yellow-300 via-orange-300 to-yellow-300 bg-clip-text animate-pulse">Élite</span>
+                Listes Clients <span className="text-transparent bg-gradient-to-r from-yellow-300 via-orange-300 to-yellow-300 bg-clip-text animate-pulse">Élite</span>
               </h1>
               <div className="relative">
                 <Diamond className="w-16 h-16 text-purple-200 animate-spin-slow" />
@@ -446,7 +446,7 @@ const ClientsPage: React.FC = () => {
           <DialogHeader>
             <DialogTitle>Confirmer l'ajout</DialogTitle>
             <DialogDescription>
-              Voulez-vous vraiment ajouter ce client à votre portefeuille ?
+              Voulez-vous vraiment ajouter ce client à votre base ?
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
