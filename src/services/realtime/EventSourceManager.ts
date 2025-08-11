@@ -1,3 +1,4 @@
+
 import { SyncEvent, ConnectionConfig } from './types';
 
 export class EventSourceManager {
@@ -36,17 +37,19 @@ export class EventSourceManager {
     this.clearConnectionTimeout();
 
     try {
-      const baseUrl = import.meta.env.VITE_API_BASE_URL;
+      // Utiliser toujours l'URL de production pour éviter les problèmes CORS
+      const baseUrl = import.meta.env.VITE_API_BASE_URL || 'https://server-gestion-ventes.onrender.com';
       const url = `${baseUrl}/api/sync/events`;
       
       this.eventSource = new EventSource(url, {
-        withCredentials: false
+        withCredentials: false // Désactiver les credentials pour éviter les problèmes CORS
       });
 
       this.setupConnectionTimeout();
       this.setupEventListeners();
 
     } catch (error) {
+      // Gérer silencieusement pour éviter le spam console
       this.handleConnectionError();
     }
   }
@@ -119,10 +122,11 @@ export class EventSourceManager {
     
     this.clearConnectionTimeout();
     
+    // Limiter les tentatives de reconnexion pour éviter le spam
     if (this.reconnectAttempts < this.config.maxReconnectAttempts) {
       const delay = Math.min(
-        this.config.reconnectInterval * Math.pow(1.5, this.reconnectAttempts), 
-        30000
+        this.config.reconnectInterval * Math.pow(2, this.reconnectAttempts), 
+        60000 // Maximum 1 minute
       );
       
       setTimeout(() => {

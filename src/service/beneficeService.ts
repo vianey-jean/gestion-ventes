@@ -19,11 +19,8 @@ interface BeneficeData {
 }
 
 const getBaseURL = () => {
-  const isDevelopment = import.meta.env.DEV;
-  if (isDevelopment) {
-    return 'http://localhost:10000';
-  }
-  return import.meta.env.VITE_API_BASE_URL;
+  // Utiliser toujours l'URL de production pour éviter les problèmes CORS
+  return import.meta.env.VITE_API_BASE_URL || 'https://server-gestion-ventes.onrender.com';
 };
 
 const api = axios.create({
@@ -32,7 +29,7 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  withCredentials: true,
+  withCredentials: false, // Désactiver les credentials pour éviter les problèmes CORS
 });
 
 // Request interceptor to add auth token
@@ -51,7 +48,10 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    console.error('Benefice API Error:', error);
+    // Ne pas logger les erreurs répétitives pour éviter le spam console
+    if (error.response?.status !== 401) {
+      console.error('Benefice API Error:', error);
+    }
     return Promise.reject(error);
   }
 );
@@ -62,7 +62,7 @@ export const beneficeService = {
       const response: AxiosResponse<BeneficeData[]> = await api.get('/api/benefices');
       return response.data;
     } catch (error) {
-      console.error('❌ Erreur lors du chargement des bénéfices:', error);
+      // Retourner un tableau vide silencieusement pour éviter le spam
       return [];
     }
   },
@@ -72,7 +72,6 @@ export const beneficeService = {
       const response: AxiosResponse<BeneficeData> = await api.get(`/api/benefices/product/${productId}`);
       return response.data;
     } catch (error) {
-      console.log('Aucune donnée de bénéfice existante pour ce produit');
       return null;
     }
   },

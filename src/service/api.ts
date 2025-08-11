@@ -4,14 +4,8 @@ import { Product, Sale, User, LoginCredentials, RegisterCredentials, PretFamille
 
 // Configuration de l'URL de base
 const getBaseURL = () => {
-  const isDevelopment = import.meta.env.DEV;
-  
-  if (isDevelopment) {
-    return import.meta.env.VITE_API_BASE_URL ;
-  }
-  
-  // En production, utiliser l'URL du serveur déployé
-  return import.meta.env.VITE_API_BASE_URL;
+  // Utiliser toujours l'URL de production pour éviter les problèmes CORS
+  return import.meta.env.VITE_API_BASE_URL || 'https://server-gestion-ventes.onrender.com';
 };
 
 // Create axios instance with base configuration
@@ -22,12 +16,12 @@ const createApiInstance = (): AxiosInstance => {
     headers: {
       'Content-Type': 'application/json',
     },
-    withCredentials: true,
+    withCredentials: false, // Désactiver les credentials pour éviter les problèmes CORS
   });
 
   // Configure retry logic
   axiosRetry(instance, {
-    retries: 3,
+    retries: 2, // Réduire le nombre de tentatives
     retryDelay: (retryCount) => Math.pow(2, retryCount) * 1000,
     retryCondition: (error) => {
       return axiosRetry.isNetworkOrIdempotentRequestError(error) || 
@@ -51,12 +45,13 @@ const createApiInstance = (): AxiosInstance => {
   instance.interceptors.response.use(
     (response) => response,
     (error) => {
-      console.error('API Error:', error);
-      
+      // Réduire le spam dans la console
       if (error.response?.status === 401) {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         window.location.href = '/login';
+      } else if (error.code !== 'ERR_NETWORK') {
+        console.error('API Error:', error);
       }
       
       return Promise.reject(error);
