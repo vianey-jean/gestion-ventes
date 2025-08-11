@@ -122,7 +122,7 @@ class OptimizedRealtimeService {
     console.log('🔌 Connexion SSE optimisée...');
 
     try {
-      const baseUrl = import.meta.env.VITE_API_BASE_URL;
+      const baseUrl = import.meta.env.VITE_API_BASE_URL || 'https://server-gestion-ventes.onrender.com';
       const url = `${baseUrl}/api/sync/events`;
       
       this.eventSource = new EventSource(url, {
@@ -352,13 +352,13 @@ class OptimizedRealtimeService {
       const currentMonth = currentDate.getMonth() + 1;
       const currentYear = currentDate.getFullYear();
       
-      // Requêtes parallèles avec gestion d'erreur individuelle
+      // Requêtes parallèles avec gestion d'erreur individuelle - Correction des URLs avec préfixe /api/
       const [products, sales, pretFamilles, pretProduits, depenses] = await Promise.allSettled([
-        api.get('/products'),
-        api.get(`/sales/by-month?month=${currentMonth}&year=${currentYear}`),
-        api.get('/pretfamilles'),
-        api.get('/pretproduits'),
-        api.get('/depenses/mouvements')
+        api.get('/api/products'),
+        api.get(`/api/sales/by-month?month=${currentMonth}&year=${currentYear}`),
+        api.get('/api/pretfamilles'),
+        api.get('/api/pretproduits'),
+        api.get('/api/depenses/mouvements')
       ]);
 
       const syncData: SyncData = {
@@ -427,7 +427,7 @@ class OptimizedRealtimeService {
   async forceSync(): Promise<void> {
     try {
       console.log('🚀 Force sync optimisée');
-      await api.post('/sync/force-sync');
+      await api.post('/api/sync/force-sync');
     } catch (error) {
       console.error('❌ Erreur force sync:', error);
       await this.syncCurrentMonthData();
