@@ -108,40 +108,52 @@ const ClientSearchInput: React.FC<ClientSearchInputProps> = ({
   };
 
   return (
-    <div className="relative">
-      <Label htmlFor="clientName">Nom du client</Label>
-      <Input
-        ref={inputRef}
-        id="clientName"
-        value={value}
-        onChange={handleInputChange}
-        onBlur={handleInputBlur}
-        placeholder="Saisir au moins 3 caractères pour rechercher..."
-        disabled={disabled}
-        autoComplete="off"
-      />
+<div className="relative">
+  {/* Label avec espace en bas */}
+  <Label htmlFor="clientName" className="mb-3 block">
+    Nom du client
+  </Label>
 
-      {isOpen && suggestions.length > 0 && (
-        <div
-          ref={dropdownRef}
-          className="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg max-h-60 overflow-auto"
+  {/* Champ de saisie */}
+  <Input
+    ref={inputRef}
+    id="clientName"
+    value={value}
+    onChange={handleInputChange}
+    onBlur={handleInputBlur}
+    placeholder="Saisir au moins 3 caractères pour rechercher..."
+    disabled={disabled}
+    autoComplete="off"
+  />
+
+  {/* Liste des suggestions */}
+  {isOpen && suggestions.length > 0 && (
+    <div
+      ref={dropdownRef}
+      className="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg max-h-60 overflow-auto"
+    >
+      {suggestions.map((client) => (
+        <button
+          key={client.id}
+          type="button"
+          className="w-full px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700 border-b border-gray-100 dark:border-gray-600 last:border-b-0 focus:bg-gray-50 dark:focus:bg-gray-700 focus:outline-none transition-colors"
+          onClick={() => handleClientSelect(client)}
+          onMouseDown={(e) => e.preventDefault()} // Empêche le blur de l'input
         >
-          {suggestions.map((client) => (
-            <button
-              key={client.id}
-              type="button"
-              className="w-full px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700 border-b border-gray-100 dark:border-gray-600 last:border-b-0 focus:bg-gray-50 dark:focus:bg-gray-700 focus:outline-none transition-colors"
-              onClick={() => handleClientSelect(client)}
-              onMouseDown={(e) => e.preventDefault()} // Empêche le blur de l'input
-            >
-              <div className="font-medium text-gray-900 dark:text-white">{client.nom}</div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">{client.phone}</div>
-              <div className="text-sm text-gray-500 dark:text-gray-500 truncate">{client.adresse}</div>
-            </button>
-          ))}
-        </div>
-      )}
+          <div className="font-medium text-gray-900 dark:text-white">
+            {client.nom}
+          </div>
+          <div className="text-sm text-gray-600 dark:text-gray-400">
+            {client.phone}
+          </div>
+          <div className="text-sm text-gray-500 dark:text-gray-500 truncate">
+            {client.adresse}
+          </div>
+        </button>
+      ))}
     </div>
+  )}
+</div>
   );
 };
 
