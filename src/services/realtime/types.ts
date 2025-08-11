@@ -5,11 +5,15 @@ export interface SyncData {
   pretFamilles: any[];
   pretProduits: any[];
   depenses: any[];
+  clients: any[];
 }
 
 export interface SyncEvent {
-  type: 'data-changed' | 'force-sync' | 'connected' | 'heartbeat';
-  data?: any;
+  type: 'data-changed' | 'force-sync' | 'connected' | 'disconnected' | 'heartbeat';
+  data?: {
+    type: string;
+    data: any;
+  };
   timestamp: number;
 }
 

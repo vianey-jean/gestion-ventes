@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -10,6 +9,7 @@ import ConfirmDeleteDialog from './forms/ConfirmDeleteDialog';
 import { useSaleForm } from './forms/hooks/useSaleForm';
 import { calculateSaleProfit } from './forms/utils/saleCalculations';
 import SaleFormFields from './forms/SaleFormFields';
+import axios from 'axios';
 
 interface AddSaleFormProps {
   isOpen: boolean;
@@ -41,6 +41,56 @@ const AddSaleForm: React.FC<AddSaleFormProps> = ({ isOpen, onClose, editSale }) 
     handleProductSelect,
     initializeForm
   } = useSaleForm(editSale, products, isOpen);
+
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:10000';
+
+  // Fonction pour créer ou récupérer un client
+  const handleClientData = async (clientName: string, clientPhone: string, clientAddress: string) => {
+    if (!clientName.trim()) return null;
+
+    try {
+      const token = localStorage.getItem('token');
+      
+      // Vérifier si le client existe déjà
+      const existingClientsResponse = await axios.get(`${API_BASE_URL}/api/clients`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      const existingClient = existingClientsResponse.data.find((client: any) => 
+        client.nom.toLowerCase() === clientName.toLowerCase()
+      );
+      
+      if (existingClient) {
+        console.log('Client existant trouvé:', existingClient);
+        return existingClient;
+      }
+      
+      // Créer un nouveau client si les informations sont complètes
+      if (clientPhone.trim() && clientAddress.trim()) {
+        const newClientResponse = await axios.post(`${API_BASE_URL}/api/clients`, {
+          nom: clientName,
+          phone: clientPhone,
+          adresse: clientAddress
+        }, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        console.log('Nouveau client créé:', newClientResponse.data);
+        toast({
+          title: "Client enregistré",
+          description: `Le client ${clientName} a été ajouté à votre base de données`,
+          className: "notification-success",
+        });
+        
+        return newClientResponse.data;
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Erreur lors de la gestion du client:', error);
+      return null;
+    }
+  };
 
   // Fonction pour calculer le profit selon la nouvelle logique
   const updateProfit = (priceUnit: string, quantity: string, purchasePriceUnit: string) => {
@@ -107,6 +157,11 @@ const AddSaleForm: React.FC<AddSaleFormProps> = ({ isOpen, onClose, editSale }) 
     setIsSubmitting(true);
 
     try {
+      // Gérer les données client (seulement pour les nouveaux ajouts)
+      if (!editSale && formData.clientName.trim()) {
+        await handleClientData(formData.clientName, formData.clientPhone, formData.clientAddress);
+      }
+
       const quantity = isAdvanceProduct ? 0 : Number(formData.quantitySold);
       const purchasePriceUnit = Number(formData.purchasePriceUnit);
       const sellingPriceUnit = Number(formData.sellingPriceUnit);
@@ -180,7 +235,6 @@ const AddSaleForm: React.FC<AddSaleFormProps> = ({ isOpen, onClose, editSale }) 
     }
   };
 
-  // Fonction pour gérer la suppression
   const handleDelete = async () => {
     if (!editSale || !deleteSale) return;
     

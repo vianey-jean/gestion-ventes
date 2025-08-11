@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Product, Sale } from '@/types';
 import ProductSearchInput from '../ProductSearchInput';
 import SaleQuantityInput from './SaleQuantityInput';
+import ClientSearchInput from '../ClientSearchInput';
 
 interface FormData {
   date: string;
@@ -48,6 +49,24 @@ const SaleFormFields: React.FC<SaleFormFieldsProps> = ({
   isAdvanceProduct,
   isProfitNegative
 }) => {
+  const handleClientSelect = (client: any) => {
+    if (client) {
+      setFormData(prev => ({
+        ...prev,
+        clientName: client.nom,
+        clientPhone: client.phone,
+        clientAddress: client.adresse
+      }));
+    } else {
+      // Si pas de client sélectionné, garder seulement le nom saisi
+      setFormData(prev => ({
+        ...prev,
+        clientPhone: '',
+        clientAddress: ''
+      }));
+    }
+  };
+
   return (
     <div className="grid gap-4 py-4">
       {/* Date de vente */}
@@ -69,39 +88,39 @@ const SaleFormFields: React.FC<SaleFormFieldsProps> = ({
           Informations Client
         </h3>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="clientName">Nom du client</Label>
-            <Input
-              id="clientName"
-              name="clientName"
+            <ClientSearchInput
               value={formData.clientName}
-              onChange={(e) => setFormData(prev => ({ ...prev, clientName: e.target.value }))}
-              placeholder="Nom complet du client"
+              onChange={(value) => setFormData(prev => ({ ...prev, clientName: value }))}
+              onClientSelect={handleClientSelect}
+              disabled={isSubmitting}
             />
           </div>
           
-          <div className="space-y-2">
-            <Label htmlFor="clientPhone">Numéro de téléphone</Label>
-            <Input
-              id="clientPhone"
-              name="clientPhone"
-              value={formData.clientPhone}
-              onChange={(e) => setFormData(prev => ({ ...prev, clientPhone: e.target.value }))}
-              placeholder="Ex: 0692123456"
-            />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="clientPhone">Numéro de téléphone</Label>
+              <Input
+                id="clientPhone"
+                name="clientPhone"
+                value={formData.clientPhone}
+                onChange={(e) => setFormData(prev => ({ ...prev, clientPhone: e.target.value }))}
+                placeholder="Ex: 0692123456"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="clientAddress">Adresse</Label>
+              <Input
+                id="clientAddress"
+                name="clientAddress"
+                value={formData.clientAddress}
+                onChange={(e) => setFormData(prev => ({ ...prev, clientAddress: e.target.value }))}
+                placeholder="Adresse complète du client"
+              />
+            </div>
           </div>
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="clientAddress">Adresse</Label>
-          <Input
-            id="clientAddress"
-            name="clientAddress"
-            value={formData.clientAddress}
-            onChange={(e) => setFormData(prev => ({ ...prev, clientAddress: e.target.value }))}
-            placeholder="Adresse complète du client"
-          />
         </div>
       </div>
       

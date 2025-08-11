@@ -1,9 +1,10 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
-import { Home, Info, Mail, LogIn, UserCircle, LogOut, LayoutDashboard, Moon, Sun, Sparkles, TrendingUp } from 'lucide-react';
+import { Home, Info, Mail, LogIn, UserCircle, LogOut, LayoutDashboard, Moon, Sun, Sparkles, TrendingUp, Users } from 'lucide-react';
 
 const Navbar: React.FC = () => {
   const { isAuthenticated, user, logout } = useAuth();
@@ -32,13 +33,6 @@ const Navbar: React.FC = () => {
             {/* Navigation links with modern styling */}
             <div className="flex items-center">
               <div className="hidden sm:ml-6 sm:flex sm:space-x-2">
-                {/* <Link to="/" className="group inline-flex items-center px-4 py-2 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all duration-200">
-                  <Home className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform" />
-                  Accueil
-                </Link> */}
-                
-                
-                
                 {isAuthenticated && (
                   <>
                     <Link to="/dashboard" className="group inline-flex items-center px-4 py-2 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all duration-200">
@@ -50,13 +44,20 @@ const Navbar: React.FC = () => {
                       <TrendingUp className="mr-2 h-4 w-4 text-emerald-600 group-hover:scale-110 transition-transform" />
                       <p className="text-emerald-600 bg-transparent">Tendances</p>
                     </Link>
+
+                    <Link to="/clients" className="group inline-flex items-center px-4 py-2 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all duration-200">
+                      <Users className="mr-2 h-4 w-4 text-purple-600 group-hover:scale-110 transition-transform" />
+                      <p className="text-purple-600 bg-transparent">Clients</p>
+                    </Link>
                   </>
                 )}
 
-                <Link to="/about" className="group inline-flex items-center px-4 py-2 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all duration-200">
-                  <Info className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform" />
-                  À propos
-                </Link>
+                {!isAuthenticated && (
+                  <Link to="/about" className="group inline-flex items-center px-4 py-2 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all duration-200">
+                    <Info className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform" />
+                    À propos
+                  </Link>
+                )}
                 
                 <Link to="/contact" className="group inline-flex items-center px-4 py-2 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all duration-200">
                   <Mail className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform" />
@@ -139,6 +140,16 @@ const Navbar: React.FC = () => {
                         className="h-10 w-10 p-0 rounded-xl border-2 border-emerald-200 text-emerald-600 hover:bg-emerald-500 hover:text-white hover:border-emerald-500"
                       >
                         <TrendingUp className="h-4 w-4" />
+                      </Button>
+                    </Link>
+
+                    <Link to="/clients">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="h-10 w-10 p-0 rounded-xl border-2 border-purple-200 text-purple-600 hover:bg-purple-500 hover:text-white hover:border-purple-500"
+                      >
+                        <Users className="h-4 w-4" />
                       </Button>
                     </Link>
                     

@@ -18,6 +18,7 @@ import RegisterPage from '@/pages/RegisterPage';
 import ResetPasswordPage from '@/pages/ResetPasswordPage';
 import DashboardPage from '@/pages/DashboardPage';
 import TendancesPage from '@/pages/TendancesPage';
+import ClientsPage from '@/pages/ClientsPage';
 import NotFound from '@/pages/NotFound';
 
 import './App.css';
@@ -58,6 +59,7 @@ function App() {
                           <Route path="/reset-password" element={<ResetPasswordPage />} />
                           <Route path="/dashboard" element={<DashboardPage />} />
                           <Route path="/tendances" element={<TendancesPage />} />
+                          <Route path="/clients" element={<ClientsPage />} />
                           <Route path="/404" element={<NotFound />} />
                           <Route path="*" element={<Navigate to="/404" replace />} />
                         </Routes>
