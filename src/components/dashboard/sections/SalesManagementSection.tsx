@@ -66,19 +66,19 @@ const SalesManagementSection: React.FC<SalesManagementSectionProps> = ({
       gradient: 'blue' as const,
       'aria-label': 'Ouvrir le formulaire de modification de produit'
     },
-    {
-      icon: ShoppingCart,
-      label: 'Ajouter une vente',
-      onClick: () => {
-        setSelectedSale(undefined);
-        setAddSaleDialogOpen(true);
-      },
-      gradient: 'green' as const,
-      'aria-label': 'Ouvrir le formulaire d\'ajout de vente'
-    },
+    // {
+    //   icon: ShoppingCart,
+    //   label: 'Ajouter une vente',
+    //   onClick: () => {
+    //     setSelectedSale(undefined);
+    //     setAddSaleDialogOpen(true);
+    //   },
+    //   gradient: 'green' as const,
+    //   'aria-label': 'Ouvrir le formulaire d\'ajout de vente'
+    // },
     {
       icon: Package,
-      label: 'Vente multi-produits',
+      label: 'Ajouter Vente un/multi-produits',
       onClick: () => setMultiProductSaleDialogOpen(true),
       gradient: 'orange' as const,
       'aria-label': 'Ouvrir le formulaire de vente avec plusieurs produits'

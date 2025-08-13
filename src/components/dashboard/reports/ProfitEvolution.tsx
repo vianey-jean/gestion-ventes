@@ -1,4 +1,3 @@
-
 import React, { useMemo } from 'react';
 import { TrendingUp, TrendingDown, DollarSign, Calculator, Target, Award } from 'lucide-react';
 import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ComposedChart, Bar } from 'recharts';
@@ -6,10 +5,33 @@ import { Badge } from '@/components/ui/badge';
 import ModernCard from '../forms/ModernCard';
 import { useApp } from '@/contexts/AppContext';
 import useCurrencyFormatter from '@/hooks/use-currency-formatter';
+import { Sale } from '@/types';
 
 const ProfitEvolution: React.FC = () => {
   const { allSales } = useApp();
   const { formatCurrency } = useCurrencyFormatter();
+
+  // Fonction utilitaire pour calculer les valeurs d'une vente
+  const getSaleValues = (sale: Sale) => {
+    // Nouveau format multi-produits
+    if (sale.products && Array.isArray(sale.products) && sale.products.length > 0) {
+      const revenue = sale.totalSellingPrice || sale.products.reduce((sum, p) => sum + (p.sellingPrice * p.quantitySold), 0);
+      const quantity = sale.products.reduce((sum, p) => sum + p.quantitySold, 0);
+      const profit = sale.totalProfit || sale.products.reduce((sum, p) => sum + p.profit, 0);
+      
+      return { revenue, quantity, profit };
+    }
+    // Ancien format single-produit
+    else if (sale.sellingPrice !== undefined && sale.quantitySold !== undefined) {
+      const revenue = sale.sellingPrice * sale.quantitySold;
+      const quantity = sale.quantitySold;
+      const profit = sale.profit || 0;
+      
+      return { revenue, quantity, profit };
+    }
+    // Fallback
+    return { revenue: 0, quantity: 0, profit: 0 };
+  };
 
   const profitData = useMemo(() => {
     const monthlyData = new Map();
@@ -23,6 +45,8 @@ const ProfitEvolution: React.FC = () => {
       const date = new Date(sale.date);
       const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
       const monthName = date.toLocaleDateString('fr-FR', { year: 'numeric', month: 'short' });
+      
+      const saleValues = getSaleValues(sale);
 
       if (!monthlyData.has(monthKey)) {
         monthlyData.set(monthKey, {
@@ -37,10 +61,10 @@ const ProfitEvolution: React.FC = () => {
       }
 
       const data = monthlyData.get(monthKey);
-      data.revenue += sale.sellingPrice * sale.quantitySold;
-      data.profit += sale.profit || 0;
+      data.revenue += saleValues.revenue;
+      data.profit += saleValues.profit;
       data.sales += 1;
-      totalProfit += sale.profit || 0;
+      totalProfit += saleValues.profit;
     });
 
     // Simuler quelques dépenses pour l'exemple
@@ -81,7 +105,7 @@ const ProfitEvolution: React.FC = () => {
         bestMonth,
         worstMonth,
         growthRate,
-        averageMargin: sortedData.reduce((acc, data) => acc + data.margin, 0) / sortedData.length
+        averageMargin: sortedData.length > 0 ? sortedData.reduce((acc, data) => acc + data.margin, 0) / sortedData.length : 0
       }
     };
   }, [allSales]);

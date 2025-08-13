@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo } from 'react';
 import Layout from '@/components/Layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,7 +18,12 @@ const TendancesPage = () => {
   const isMobile = useIsMobile();
 
   // Fonction pour déterminer la catégorie d'un produit (exclure les avances)
-  const getProductCategory = (description: string) => {
+  const getProductCategory = (description: string | undefined | null) => {
+    // Add null/undefined check
+    if (!description || typeof description !== 'string') {
+      return null;
+    }
+    
     const desc = description.toLowerCase();
     if (desc.includes('avance')) {
       return null; // Exclure les avances

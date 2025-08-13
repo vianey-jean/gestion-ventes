@@ -1,4 +1,3 @@
-
 import React, { useMemo } from 'react';
 import { BarChart3, TrendingUp, Calendar, DollarSign, Package, Users } from 'lucide-react';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
@@ -7,10 +6,33 @@ import { Badge } from '@/components/ui/badge';
 import ModernCard from '../forms/ModernCard';
 import { useApp } from '@/contexts/AppContext';
 import useCurrencyFormatter from '@/hooks/use-currency-formatter';
+import { Sale } from '@/types';
 
 const SalesReport: React.FC = () => {
   const { allSales, products } = useApp();
   const { formatCurrency } = useCurrencyFormatter();
+
+  // Fonction utilitaire pour calculer les valeurs d'une vente
+  const getSaleValues = (sale: Sale) => {
+    // Nouveau format multi-produits
+    if (sale.products && Array.isArray(sale.products) && sale.products.length > 0) {
+      const revenue = sale.totalSellingPrice || sale.products.reduce((sum, p) => sum + (p.sellingPrice * p.quantitySold), 0);
+      const quantity = sale.products.reduce((sum, p) => sum + p.quantitySold, 0);
+      const profit = sale.totalProfit || sale.products.reduce((sum, p) => sum + p.profit, 0);
+      
+      return { revenue, quantity, profit };
+    }
+    // Ancien format single-produit
+    else if (sale.sellingPrice !== undefined && sale.quantitySold !== undefined) {
+      const revenue = sale.sellingPrice * sale.quantitySold;
+      const quantity = sale.quantitySold;
+      const profit = sale.profit || 0;
+      
+      return { revenue, quantity, profit };
+    }
+    // Fallback
+    return { revenue: 0, quantity: 0, profit: 0 };
+  };
 
   const salesData = useMemo(() => {
     const monthlyData = new Map();
@@ -22,6 +44,8 @@ const SalesReport: React.FC = () => {
       const date = new Date(sale.date);
       const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
       const monthName = date.toLocaleDateString('fr-FR', { year: 'numeric', month: 'short' });
+      
+      const saleValues = getSaleValues(sale);
 
       // Données mensuelles
       if (!monthlyData.has(monthKey)) {
@@ -35,28 +59,48 @@ const SalesReport: React.FC = () => {
       }
 
       const monthData = monthlyData.get(monthKey);
-      monthData.revenue += sale.sellingPrice ;
-      monthData.quantity += sale.quantitySold;
-      monthData.profit += sale.profit || 0;
+      monthData.revenue += saleValues.revenue;
+      monthData.quantity += saleValues.quantity;
+      monthData.profit += saleValues.profit;
       monthData.sales += 1;
 
-      // Données par produit
-      if (!productData.has(sale.productId)) {
-        productData.set(sale.productId, {
-          name: sale.description,
-          revenue: 0,
-          quantity: 0,
-          sales: 0
+      // Données par produit pour nouveau format multi-produits
+      if (sale.products && Array.isArray(sale.products)) {
+        sale.products.forEach(product => {
+          if (!productData.has(product.productId)) {
+            productData.set(product.productId, {
+              name: product.description,
+              revenue: 0,
+              quantity: 0,
+              sales: 0
+            });
+          }
+          
+          const prodData = productData.get(product.productId);
+          prodData.revenue += product.sellingPrice * product.quantitySold;
+          prodData.quantity += product.quantitySold;
+          prodData.sales += 1;
         });
       }
+      // Ancien format single-produit
+      else if (sale.productId) {
+        if (!productData.has(sale.productId)) {
+          productData.set(sale.productId, {
+            name: sale.description || 'Produit inconnu',
+            revenue: 0,
+            quantity: 0,
+            sales: 0
+          });
+        }
 
-      const prodData = productData.get(sale.productId);
-      prodData.revenue += sale.sellingPrice * sale.quantitySold;
-      prodData.quantity += sale.quantitySold;
-      prodData.sales += 1;
+        const prodData = productData.get(sale.productId);
+        prodData.revenue += saleValues.revenue;
+        prodData.quantity += saleValues.quantity;
+        prodData.sales += 1;
+      }
 
-      totalRevenue += sale.sellingPrice * sale.quantitySold;
-      totalQuantity += sale.quantitySold;
+      totalRevenue += saleValues.revenue;
+      totalQuantity += saleValues.quantity;
     });
 
     return {

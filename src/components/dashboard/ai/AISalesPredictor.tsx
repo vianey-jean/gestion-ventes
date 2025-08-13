@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { TrendingUp, Calendar, DollarSign, Target, Sparkles } from 'lucide-react';
 import { useApp } from '@/contexts/AppContext';
 import useCurrencyFormatter from '@/hooks/use-currency-formatter';
+import { Sale } from '@/types';
 
 interface SalesPrediction {
   period: string;
@@ -21,6 +21,26 @@ const AISalesPredictor: React.FC = () => {
   const { formatEuro } = useCurrencyFormatter();
   const [predictions, setPredictions] = useState<SalesPrediction[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+
+  // Fonction utilitaire pour calculer les valeurs d'une vente
+  const getSaleValues = (sale: Sale) => {
+    // Nouveau format multi-produits
+    if (sale.products && Array.isArray(sale.products) && sale.products.length > 0) {
+      return {
+        revenue: sale.totalSellingPrice || sale.products.reduce((sum, p) => sum + (p.sellingPrice * p.quantitySold), 0),
+        quantity: sale.products.reduce((sum, p) => sum + p.quantitySold, 0)
+      };
+    }
+    // Ancien format single-produit
+    else if (sale.sellingPrice !== undefined && sale.quantitySold !== undefined) {
+      return {
+        revenue: sale.sellingPrice * sale.quantitySold,
+        quantity: sale.quantitySold
+      };
+    }
+    // Fallback
+    return { revenue: 0, quantity: 0 };
+  };
 
   const analyzeTrends = () => {
     setIsAnalyzing(true);
@@ -39,8 +59,15 @@ const AISalesPredictor: React.FC = () => {
           return saleDate >= monthDate && saleDate < nextMonth;
         });
         
-        const revenue = monthSales.reduce((sum, sale) => sum + sale.sellingPrice, 0);
-        const quantity = monthSales.reduce((sum, sale) => sum + sale.quantitySold, 0);
+        const revenue = monthSales.reduce((sum, sale) => {
+          const saleValue = getSaleValues(sale);
+          return sum + saleValue.revenue;
+        }, 0);
+        
+        const quantity = monthSales.reduce((sum, sale) => {
+          const saleValue = getSaleValues(sale);
+          return sum + saleValue.quantity;
+        }, 0);
         
         monthlyData.push({
           month: monthDate.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }),
@@ -51,12 +78,12 @@ const AISalesPredictor: React.FC = () => {
       }
       
       // Prédictions basées sur les tendances
-      const avgRevenue = monthlyData.reduce((sum, m) => sum + m.revenue, 0) / monthlyData.length;
-      const avgSales = monthlyData.reduce((sum, m) => sum + m.sales, 0) / monthlyData.length;
+      const avgRevenue = monthlyData.reduce((sum, m) => sum + m.revenue, 0) / (monthlyData.length || 1);
+      const avgSales = monthlyData.reduce((sum, m) => sum + m.sales, 0) / (monthlyData.length || 1);
       
       // Calcul de tendance simple
       const revenueGrowth = monthlyData.length > 1 ? 
-        (monthlyData[monthlyData.length - 1].revenue - monthlyData[0].revenue) / monthlyData[0].revenue : 0;
+        (monthlyData[monthlyData.length - 1].revenue - monthlyData[0].revenue) / (monthlyData[0].revenue || 1) : 0;
       
       const predictions: SalesPrediction[] = [
         {
