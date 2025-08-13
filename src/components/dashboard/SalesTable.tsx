@@ -118,12 +118,23 @@ const SalesTable: React.FC<SalesTableProps> = ({ sales: initialSales, onRowClick
   };
   
   // Calculer les totaux pour le mois en cours uniquement
-  const totalSellingPrice = sales.reduce((sum, sale) => sum + sale.sellingPrice, 0);
+  const totalSellingPrice = sales.reduce((sum, sale) => {
+    return sum + (sale.totalSellingPrice || sale.sellingPrice || 0);
+  }, 0);
   const totalQuantitySold = sales.reduce((sum, sale) => {
+    if (sale.products) {
+      return sum + sale.products.reduce((productSum, product) => {
+        return productSum + (isAdvanceProduct(product.description) ? 0 : product.quantitySold);
+      }, 0);
+    }
     return sum + (isAdvanceProduct(sale.description) ? 0 : sale.quantitySold);
   }, 0);
-  const totalPurchasePrice = sales.reduce((sum, sale) => sum + (sale.purchasePrice), 0);
-  const totalProfit = sales.reduce((sum, sale) => sum + sale.profit, 0);
+  const totalPurchasePrice = sales.reduce((sum, sale) => {
+    return sum + (sale.totalPurchasePrice || sale.purchasePrice || 0);
+  }, 0);
+  const totalProfit = sales.reduce((sum, sale) => {
+    return sum + (sale.totalProfit || sale.profit || 0);
+  }, 0);
 
   const getCurrentMonthName = () => {
     const now = new Date();
@@ -214,11 +225,14 @@ const SalesTable: React.FC<SalesTableProps> = ({ sales: initialSales, onRowClick
                 <div className="bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full p-1">
                   <Euro className="h-3 w-3 text-white" />
                 </div>
-                <span className='text-red-600 font-bold text-sm'>Prix de vente</span>
+                <span className='text-red-600 font-bold text-sm'>Produits</span>
               </div>
             </ModernTableHead>
             <ModernTableHead className="text-right bg-transparent">
-              <span className='text-red-600 font-bold text-sm'>Quantité</span>
+              <span className='text-red-600 font-bold text-sm'>Prix de vente</span>
+            </ModernTableHead>
+            <ModernTableHead className="text-right bg-transparent">
+              <span className='text-red-600 font-bold text-sm'>Quantités</span>
             </ModernTableHead>
             <ModernTableHead className="text-right bg-transparent">
               <span className='text-red-600 font-bold text-sm'>Prix d'achat</span>
@@ -266,33 +280,83 @@ const SalesTable: React.FC<SalesTableProps> = ({ sales: initialSales, onRowClick
                   </div>
                 </ModernTableCell>
                 <ModernTableCell className="font-medium">
-                  <div className="max-w-xs">
-                    <p className="font-semibold text-gray-800 dark:text-gray-200 truncate">{sale.description}</p>
+                  <div className="max-w-xs space-y-1">
+                    {sale.products ? (
+                      sale.products.map((product, idx) => (
+                        <p key={idx} className="font-semibold text-gray-800 dark:text-gray-200 truncate text-xs">
+                          {product.description}
+                        </p>
+                      ))
+                    ) : (
+                      <p className="font-semibold text-gray-800 dark:text-gray-200 truncate">
+                        {sale.description}
+                      </p>
+                    )}
                   </div>
                 </ModernTableCell>
                 <ModernTableCell className="text-right">
                   <div className="bg-gradient-to-r from-emerald-100 to-teal-100 dark:from-emerald-900/30 dark:to-teal-900/30 px-3 py-1 rounded-full inline-block">
                     <span className="font-bold text-emerald-700 dark:text-emerald-400">
-                      {formatCurrency(sale.sellingPrice)}
+                      {sale.products ? (
+                        <div className="space-y-1">
+                          {sale.products.map((product, idx) => (
+                            <div key={idx} className="text-xs">
+                              {formatCurrency(product.sellingPrice)}
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        formatCurrency(sale.sellingPrice)
+                      )}
                     </span>
                   </div>
                 </ModernTableCell>
                 <ModernTableCell className="text-right">
                   <div className="bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30 px-3 py-1 rounded-full inline-block">
                     <span className="font-semibold text-purple-700 dark:text-purple-400">
-                      {getDisplayQuantity(sale)}
+                      {sale.products ? (
+                        <div className="space-y-1">
+                          {sale.products.map((product, idx) => (
+                            <div key={idx} className="text-xs">
+                              {isAdvanceProduct(product.description) ? 0 : product.quantitySold}
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        getDisplayQuantity(sale)
+                      )}
                     </span>
                   </div>
                 </ModernTableCell>
                 <ModernTableCell className="text-right">
                   <span className="text-gray-600 dark:text-gray-400 font-bold">
-                    {formatCurrency(sale.purchasePrice)}
+                    {sale.products ? (
+                      <div className="space-y-1">
+                        {sale.products.map((product, idx) => (
+                          <div key={idx} className="text-xs">
+                            {formatCurrency(product.purchasePrice)}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      formatCurrency(sale.purchasePrice)
+                    )}
                   </span>
                 </ModernTableCell>
                 <ModernTableCell className="text-right">
                   <div className="bg-gradient-to-r from-yellow-100 to-orange-100 dark:from-yellow-900/30 dark:to-orange-900/30 px-3 py-1 rounded-full inline-block">
                     <span className="font-bold text-orange-700 dark:text-orange-400">
-                      {formatCurrency(sale.profit)}
+                      {sale.products ? (
+                        <div className="space-y-1">
+                          {sale.products.map((product, idx) => (
+                            <div key={idx} className="text-xs">
+                              {formatCurrency(product.profit)}
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        formatCurrency(sale.profit)
+                      )}
                     </span>
                   </div>
                 </ModernTableCell>

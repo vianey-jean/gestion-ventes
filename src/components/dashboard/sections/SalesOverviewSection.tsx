@@ -5,7 +5,7 @@ import { DollarSign, TrendingUp, Package, BarChart3, Warehouse } from 'lucide-re
 import useCurrencyFormatter from '@/hooks/use-currency-formatter';
 
 interface SalesOverviewSectionProps {
-  salesData: any;
+  sales: any[];
   productData: any;
   currentMonth: number;
   currentYear: number;
@@ -17,31 +17,54 @@ const monthNames = [
 ];
 
 const SalesOverviewSection: React.FC<SalesOverviewSectionProps> = ({
-  salesData,
+  sales,
   productData,
   currentMonth,
   currentYear
 }) => {
   const { formatEuro } = useCurrencyFormatter();
 
+  // Fonction pour vérifier si le produit est une avance
+  const isAdvanceProduct = (description: string) => {
+    return description.includes("Avance Perruque ou Tissages");
+  };
+
+  // Calculer les totaux comme dans SalesTable
+  const totalSellingPrice = sales.reduce((sum, sale) => {
+    return sum + (sale.totalSellingPrice || sale.sellingPrice || 0);
+  }, 0);
+
+  const totalQuantitySold = sales.reduce((sum, sale) => {
+    if (sale.products) {
+      return sum + sale.products.reduce((productSum, product) => {
+        return productSum + (isAdvanceProduct(product.description) ? 0 : product.quantitySold);
+      }, 0);
+    }
+    return sum + (isAdvanceProduct(sale.description) ? 0 : sale.quantitySold);
+  }, 0);
+
+  const totalProfit = sales.reduce((sum, sale) => {
+    return sum + (sale.totalProfit || sale.profit || 0);
+  }, 0);
+
   const stats = [
     {
       title: 'Total ventes du mois',
-      value: formatEuro(salesData.totalRevenue),
+      value: formatEuro(totalSellingPrice || 0),
       icon: DollarSign,
       gradient: 'blue',
       description: 'Chiffre d\'affaires total'
     },
     {
       title: 'Bénéfices du mois',
-      value: formatEuro(salesData.totalProfit),
+      value: formatEuro(totalProfit || 0),
       icon: TrendingUp,
       gradient: 'green',
       description: 'Profit net réalisé'
     },
     {
       title: 'Produits vendus',
-      value: salesData.totalQuantity.toString(),
+      value: (totalQuantitySold || 0).toString(),
       icon: Package,
       gradient: 'blue',
       description: 'Unités vendues ce mois'

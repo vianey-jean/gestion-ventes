@@ -124,7 +124,7 @@ const VentesProduits: React.FC = React.memo(() => {
 
         <TabsContent value="sales" className="space-y-8" role="tabpanel" aria-labelledby="sales-tab">
           <SalesOverviewSection 
-            salesData={optimizedSalesData}
+            sales={sales}
             productData={optimizedProductData}
             currentMonth={currentMonth}
             currentYear={currentYear}

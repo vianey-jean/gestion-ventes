@@ -40,20 +40,21 @@ export const useSaleForm = (editSale: Sale | undefined, products: Product[], isO
   const initializeForm = () => {
     if (editSale) {
       const product = products.find(p => p.id === editSale.productId);
-      const isAdvance = editSale.description.toLowerCase().includes('avance');
+      const description = editSale.description || '';
+      const isAdvance = description.toLowerCase().includes('avance');
       setIsAdvanceProduct(isAdvance);
       
-      const purchasePriceUnit = isAdvance ? editSale.purchasePrice : (editSale.purchasePrice / editSale.quantitySold);
-      const sellingPriceUnit = isAdvance ? editSale.sellingPrice : (editSale.sellingPrice / editSale.quantitySold);
+      const purchasePriceUnit = isAdvance ? (editSale.purchasePrice || 0) : ((editSale.purchasePrice || 0) / (editSale.quantitySold || 1));
+      const sellingPriceUnit = isAdvance ? (editSale.sellingPrice || 0) : ((editSale.sellingPrice || 0) / (editSale.quantitySold || 1));
       
       setFormData({
         date: new Date(editSale.date).toISOString().split('T')[0],
-        description: editSale.description,
-        productId: String(editSale.productId),
+        description: description,
+        productId: String(editSale.productId || ''),
         sellingPriceUnit: sellingPriceUnit.toString(),
-        quantitySold: editSale.quantitySold.toString(),
+        quantitySold: (editSale.quantitySold || 0).toString(),
         purchasePriceUnit: purchasePriceUnit.toString(),
-        profit: editSale.profit.toString(),
+        profit: (editSale.profit || 0).toString(),
         clientName: editSale.clientName || '',
         clientAddress: editSale.clientAddress || '',
         clientPhone: editSale.clientPhone || '',

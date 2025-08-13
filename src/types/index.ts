@@ -10,15 +10,30 @@ export interface User {
   phone?: string;
 }
 
-export interface Sale {
-  id: string;
+export interface SaleProduct {
   productId: string;
   description: string;
-  date: string;
   quantitySold: number;
   purchasePrice: number;
   sellingPrice: number;
   profit: number;
+}
+
+export interface Sale {
+  id: string;
+  date: string;
+  // Nouvelle structure multi-produits
+  products?: SaleProduct[];
+  totalPurchasePrice?: number;
+  totalSellingPrice?: number;
+  totalProfit?: number;
+  // Ancien format pour compatibilité
+  productId?: string;
+  description?: string;
+  quantitySold?: number;
+  purchasePrice?: number;
+  sellingPrice?: number;
+  profit?: number;
   // Nouvelles informations client pour la facturation
   clientName?: string;
   clientAddress?: string;

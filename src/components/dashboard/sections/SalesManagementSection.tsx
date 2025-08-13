@@ -5,12 +5,13 @@ import ModernContainer from '@/components/dashboard/forms/ModernContainer';
 import ModernActionButton from '@/components/dashboard/forms/ModernActionButton';
 import SalesTable from '@/components/dashboard/SalesTable';
 import AddSaleForm from '@/components/dashboard/AddSaleForm';
+import MultiProductSaleForm from '@/components/dashboard/forms/MultiProductSaleForm';
 import AddProductForm from '@/components/dashboard/AddProductForm';
 import EditProductForm from '@/components/dashboard/EditProductForm';
 import ExportSalesDialog from '@/components/dashboard/ExportSalesDialog';
 import InvoiceGenerator from '@/components/dashboard/InvoiceGenerator';
 import { AccessibleButton } from '@/components/accessibility/AccessibleButton';
-import { PlusCircle, Edit, ShoppingCart, FileText, Receipt } from 'lucide-react';
+import { PlusCircle, Edit, ShoppingCart, FileText, Receipt, Package } from 'lucide-react';
 
 interface SalesManagementSectionProps {
   sales: Sale[];
@@ -32,6 +33,7 @@ const SalesManagementSection: React.FC<SalesManagementSectionProps> = ({
 }) => {
   // États pour gérer les dialogues
   const [addSaleDialogOpen, setAddSaleDialogOpen] = useState(false);
+  const [multiProductSaleDialogOpen, setMultiProductSaleDialogOpen] = useState(false);
   const [addProductDialogOpen, setAddProductDialogOpen] = useState(false);
   const [editProductDialogOpen, setEditProductDialogOpen] = useState(false);
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
@@ -40,7 +42,13 @@ const SalesManagementSection: React.FC<SalesManagementSectionProps> = ({
 
   const handleRowClick = (sale: Sale) => {
     setSelectedSale(sale);
-    setAddSaleDialogOpen(true);
+    
+    // Vérifier si c'est une vente multi-produits
+    if (sale.products && sale.products.length > 0) {
+      setMultiProductSaleDialogOpen(true);
+    } else {
+      setAddSaleDialogOpen(true);
+    }
   };
 
   const actions = [
@@ -67,6 +75,13 @@ const SalesManagementSection: React.FC<SalesManagementSectionProps> = ({
       },
       gradient: 'green' as const,
       'aria-label': 'Ouvrir le formulaire d\'ajout de vente'
+    },
+    {
+      icon: Package,
+      label: 'Vente multi-produits',
+      onClick: () => setMultiProductSaleDialogOpen(true),
+      gradient: 'orange' as const,
+      'aria-label': 'Ouvrir le formulaire de vente avec plusieurs produits'
     },
     {
       icon: Receipt,
@@ -155,6 +170,17 @@ const SalesManagementSection: React.FC<SalesManagementSectionProps> = ({
           isOpen={addSaleDialogOpen} 
           onClose={() => {
             setAddSaleDialogOpen(false);
+            setSelectedSale(undefined);
+          }} 
+          editSale={selectedSale}
+        />
+      )}
+      
+      {multiProductSaleDialogOpen && (
+        <MultiProductSaleForm 
+          isOpen={multiProductSaleDialogOpen} 
+          onClose={() => {
+            setMultiProductSaleDialogOpen(false);
             setSelectedSale(undefined);
           }} 
           editSale={selectedSale}
