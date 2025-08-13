@@ -1,3 +1,4 @@
+
 // Résumé :
 // Ce composant React affiche une interface moderne pour générer des factures PDF à partir des ventes historiques.
 // Il permet de filtrer les ventes par année et par nom de client, d'afficher les détails d'une vente sélectionnée,
@@ -14,7 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Badge } from '@/components/ui/badge';
+//import { Badge } from '@/components/ui/badge';
 import {
   Card, CardContent, CardHeader, CardTitle
 } from '@/components/ui/card';
@@ -23,8 +24,8 @@ import { Sale, SaleProduct } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import {
   FileText, Search, Calendar, User, MapPin,
-  Phone, CreditCard, Download, Eye, Sparkles
-} from 'lucide-react';
+  Phone, CreditCard, Download, Eye, Sparkles,
+Badge} from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import useCurrencyFormatter from '@/hooks/use-currency-formatter';
