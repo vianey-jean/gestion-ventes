@@ -13,6 +13,7 @@ interface PeriodData {
   cost: number;
   profit: number;
   salesCount: number;
+  totalProductsSold: number;
   avgOrderValue: number;
 }
 
@@ -26,22 +27,25 @@ const ProfitLossStatement: React.FC = () => {
   const getSaleValues = (sale: Sale) => {
     // Nouveau format multi-produits
     if (sale.products && Array.isArray(sale.products) && sale.products.length > 0) {
-      const revenue = sale.totalSellingPrice || sale.products.reduce((sum, p) => sum + (p.sellingPrice * p.quantitySold), 0);
-      const cost = sale.totalPurchasePrice || sale.products.reduce((sum, p) => sum + (p.purchasePrice * p.quantitySold), 0);
-      const profit = sale.totalProfit || sale.products.reduce((sum, p) => sum + p.profit, 0);
+      // Pour les ventes multi-produits, utiliser les totaux pré-calculés ou calculer
+      const revenue = sale.totalSellingPrice || sale.products.reduce((sum, p) => sum + (p.sellingPrice || 0), 0);
+      const cost = sale.totalPurchasePrice || sale.products.reduce((sum, p) => sum + ((p.purchasePrice || 0)), 0);
+      const profit = sale.totalProfit || sale.products.reduce((sum, p) => sum + (p.profit || 0), 0);
+      const totalProductsSold = sale.products.reduce((sum, p) => sum + (p.quantitySold || 0), 0);
       
-      return { revenue, cost, profit };
+      return { revenue, cost, profit, totalProductsSold };
     }
     // Ancien format single-produit
     else if (sale.sellingPrice !== undefined && sale.quantitySold !== undefined && sale.purchasePrice !== undefined) {
-      const revenue = sale.sellingPrice * sale.quantitySold;
-      const cost = sale.purchasePrice * sale.quantitySold;
+      const revenue = (sale.sellingPrice || 0) ;
+      const cost = (sale.purchasePrice || 0) ;
       const profit = sale.profit || (revenue - cost);
+      const totalProductsSold = sale.quantitySold || 0;
       
-      return { revenue, cost, profit };
+      return { revenue, cost, profit, totalProductsSold };
     }
     // Fallback
-    return { revenue: 0, cost: 0, profit: 0 };
+    return { revenue: 0, cost: 0, profit: 0, totalProductsSold: 0 };
   };
 
   const calculatePeriodData = (period: string): PeriodData => {
@@ -76,12 +80,14 @@ const ProfitLossStatement: React.FC = () => {
     let totalRevenue = 0;
     let totalCost = 0;
     let totalProfit = 0;
+    let totalProductsSold = 0;
 
     periodSales.forEach(sale => {
       const saleValues = getSaleValues(sale);
       totalRevenue += saleValues.revenue;
       totalCost += saleValues.cost;
       totalProfit += saleValues.profit;
+      totalProductsSold += saleValues.totalProductsSold;
     });
 
     const salesCount = periodSales.length;
@@ -92,6 +98,7 @@ const ProfitLossStatement: React.FC = () => {
       cost: totalCost, 
       profit: totalProfit, 
       salesCount, 
+      totalProductsSold,
       avgOrderValue 
     };
   };
@@ -179,7 +186,7 @@ const ProfitLossStatement: React.FC = () => {
               {formatChange(revenueChange)}
             </div>
             <p className="text-2xl font-bold text-blue-900">{formatEuro(currentData.revenue)}</p>
-            <p className="text-xs text-blue-600">{currentData.salesCount} ventes</p>
+            <p className="text-xs text-blue-600">{currentData.totalProductsSold} produits vendus</p>
           </div>
 
           <div className="bg-red-50 p-4 rounded-lg">
@@ -217,10 +224,8 @@ const ProfitLossStatement: React.FC = () => {
                   <p className="text-lg font-semibold">{profitMargin.toFixed(1)}%</p>
                 </div>
                 <div className="text-center p-3 bg-gray-50 rounded">
-                  <p className="text-sm text-gray-600">Coût/Vente</p>
-                  <p className="text-lg font-semibold">
-                    {formatEuro(currentData.salesCount > 0 ? currentData.cost / currentData.salesCount : 0)}
-                  </p>
+                  <p className="text-sm text-gray-600">Nombre de Ventes</p>
+                  <p className="text-lg font-semibold">{currentData.salesCount}</p>
                 </div>
                 <div className="text-center p-3 bg-gray-50 rounded">
                   <p className="text-sm text-gray-600">Profit/Vente</p>

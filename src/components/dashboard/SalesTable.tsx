@@ -220,22 +220,32 @@ const SalesTable: React.FC<SalesTableProps> = ({ sales: initialSales, onRowClick
                 <span className='text-red-600 font-bold text-sm'>Description</span>
               </div>
             </ModernTableHead>
-            <ModernTableHead className="text-right bg-transparent">
+            {/* <ModernTableHead className="text-right bg-transparent">
               <div className="flex items-center justify-end space-x-2">
                 <div className="bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full p-1">
                   <Euro className="h-3 w-3 text-white" />
                 </div>
                 <span className='text-red-600 font-bold text-sm'>Produits</span>
               </div>
-            </ModernTableHead>
+            </ModernTableHead> */}
             <ModernTableHead className="text-right bg-transparent">
+               <div className="flex items-center justify-end space-x-2">
+                <div className="bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full p-1">
+                  <Euro className="h-3 w-3 text-white" />
+                </div>
               <span className='text-red-600 font-bold text-sm'>Prix de vente</span>
+              </div>
             </ModernTableHead>
             <ModernTableHead className="text-right bg-transparent">
               <span className='text-red-600 font-bold text-sm'>Quantités</span>
             </ModernTableHead>
             <ModernTableHead className="text-right bg-transparent">
+               <div className="flex items-center justify-end space-x-2">
+                <div className="bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full p-1">
+                  <Euro className="h-3 w-3 text-white" />
+                </div>
               <span className='text-red-600 font-bold text-sm'>Prix d'achat</span>
+              </div>
             </ModernTableHead>
             <ModernTableHead className="text-right bg-transparent">
               <div className="flex items-center justify-end space-x-2">
