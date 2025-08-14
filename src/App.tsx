@@ -12,6 +12,7 @@ import ResetPasswordPage from './pages/ResetPasswordPage';
 import DashboardPage from './pages/DashboardPage';
 import Produits from './pages/Produits';
 import Ventes from './pages/Ventes';
+import ClientsPage from './pages/ClientsPage';
 import PretFamilles from './pages/PretFamilles';
 import PretProduits from './pages/PretProduits';
 import Depenses from './pages/Depenses';
@@ -54,6 +55,11 @@ function App() {
                     <Route path="/ventes" element={
                       <ProtectedRoute>
                         <Ventes />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/clients" element={
+                      <ProtectedRoute>
+                        <ClientsPage />
                       </ProtectedRoute>
                     } />
                     <Route path="/pret-familles" element={
