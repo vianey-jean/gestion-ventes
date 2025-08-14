@@ -16,6 +16,8 @@ import ClientsPage from './pages/ClientsPage';
 import PretFamilles from './pages/PretFamilles';
 import PretProduits from './pages/PretProduits';
 import Depenses from './pages/Depenses';
+import Contact from './pages/ContactPage';
+import Apropos from './pages/AboutPage';
 import TendancesPage from './pages/TendancesPage';
 import Comptabilite from './pages/Comptabilite';
 import { Toaster } from './components/ui/sonner';
@@ -55,6 +57,16 @@ function App() {
                     <Route path="/ventes" element={
                       <ProtectedRoute>
                         <Ventes />
+                      </ProtectedRoute>
+                    } />
+                     <Route path="/contact" element={
+                      <ProtectedRoute>
+                        <Contact />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/about" element={
+                      <ProtectedRoute>
+                        <Apropos />
                       </ProtectedRoute>
                     } />
                     <Route path="/clients" element={
