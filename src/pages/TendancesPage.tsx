@@ -40,21 +40,87 @@ const TendancesPage = () => {
   // Filtrer les ventes pour exclure les avances
   const filteredSales = useMemo(() => {
     return allSales.filter(sale => {
-      const category = getProductCategory(sale.description);
-      return category !== null; // Exclure les ventes avec catégorie null (avances)
+      // Pour les nouvelles ventes multi-produits
+      if (sale.products && Array.isArray(sale.products) && sale.products.length > 0) {
+        // Exclure la vente si tous les produits sont des avances
+        return sale.products.some(product => {
+          const category = getProductCategory(product.description);
+          return category !== null;
+        });
+      }
+      // Pour les anciennes ventes single-produit
+      else {
+        const category = getProductCategory(sale.description);
+        return category !== null;
+      }
     });
   }, [allSales]);
+
+  // Fonction utilitaire pour calculer les valeurs d'une vente (CORRIGÉE)
+  const getSaleValues = (sale: any) => {
+    // Nouveau format multi-produits
+    if (sale.products && Array.isArray(sale.products) && sale.products.length > 0) {
+      let revenue = 0;
+      let quantity = 0;
+      let profit = 0;
+      
+      // Filtrer les produits non-avance
+      const validProducts = sale.products.filter(p => {
+        const category = getProductCategory(p.description);
+        return category !== null;
+      });
+      
+      validProducts.forEach(product => {
+        revenue += product.sellingPrice * product.quantitySold;
+        quantity += product.quantitySold;
+        profit += product.profit || 0;
+      });
+      
+      return { revenue, quantity, profit };
+    }
+    // Ancien format single-produit
+    else if (sale.sellingPrice !== undefined && sale.quantitySold !== undefined) {
+      const revenue = sale.sellingPrice ;
+      const quantity = sale.quantitySold;
+      const profit = sale.profit || 0;
+      
+      return { revenue, quantity, profit };
+    }
+    // Fallback
+    return { revenue: 0, quantity: 0, profit: 0 };
+  };
 
   // Analyse du stock critique et recommandations IA
   const stockAnalysis = useMemo(() => {
     const lowStockProducts = products.filter(product => product.quantity <= 10);
     
     const recommendations = lowStockProducts.map(product => {
-      const productSales = filteredSales.filter(sale => sale.productId === product.id);
-      const totalSold = productSales.reduce((sum, sale) => sum + sale.quantitySold, 0);
-      const averageProfit = productSales.length > 0 
-        ? productSales.reduce((sum, sale) => sum + sale.profit, 0) / productSales.length
-        : 0;
+      const productSales = filteredSales.filter(sale => {
+        // Pour les nouvelles ventes multi-produits  
+        if (sale.products && Array.isArray(sale.products)) {
+          return sale.products.some(p => p.productId === product.id);
+        }
+        // Pour les anciennes ventes
+        return sale.productId === product.id;
+      });
+      
+      let totalSold = 0;
+      let totalProfit = 0;
+      
+      productSales.forEach(sale => {
+        if (sale.products && Array.isArray(sale.products)) {
+          const matchingProducts = sale.products.filter(p => p.productId === product.id);
+          matchingProducts.forEach(p => {
+            totalSold += p.quantitySold;
+            totalProfit += p.profit || 0;
+          });
+        } else if (sale.productId === product.id) {
+          totalSold += sale.quantitySold;
+          totalProfit += sale.profit || 0;
+        }
+      });
+      
+      const averageProfit = productSales.length > 0 ? totalProfit / productSales.length : 0;
       
       return {
         ...product,
@@ -87,9 +153,11 @@ const TendancesPage = () => {
             quantite: 0
           };
         }
-        acc[day].ventes += sale.sellingPrice;
-        acc[day].benefice += sale.profit;
-        acc[day].quantite += sale.quantitySold;
+        
+        const saleValues = getSaleValues(sale);
+        acc[day].ventes += saleValues.revenue;
+        acc[day].benefice += saleValues.profit;
+        acc[day].quantite += saleValues.quantity;
       }
       return acc;
     }, {} as Record<number, any>);
@@ -97,64 +165,133 @@ const TendancesPage = () => {
     return Object.values(dailySales).sort((a, b) => a.jour - b.jour);
   }, [filteredSales]);
 
-  // Données pour les graphiques de ventes par produit (utiliser filteredSales)
+  // Données pour les graphiques de ventes par produit (CORRIGÉES)
   const salesByProduct = useMemo(() => {
-    const productSales = filteredSales.reduce((acc, sale) => {
-      const productName = sale.description.length > 50 ? 
-        sale.description.substring(0, 47) + '...' : 
-        sale.description;
-      
-      if (!acc[productName]) {
-        acc[productName] = {
-          name: productName,
-          fullName: sale.description,
-          ventes: 0,
-          benefice: 0,
-          quantite: 0,
-          prixAchat: 0,
-          category: getProductCategory(sale.description),
-          count: 0
-        };
+    const productSales = {} as Record<string, any>;
+    
+    filteredSales.forEach(sale => {
+      // Pour les nouvelles ventes multi-produits
+      if (sale.products && Array.isArray(sale.products)) {
+        sale.products.forEach(product => {
+          const category = getProductCategory(product.description);
+          if (category === null) return; // Ignorer les avances
+          
+          const productName = product.description.length > 50 ? 
+            product.description.substring(0, 47) + '...' : 
+            product.description;
+          
+          if (!productSales[productName]) {
+            productSales[productName] = {
+              name: productName,
+              fullName: product.description,
+              ventes: 0,
+              benefice: 0,
+              quantite: 0,
+              prixAchat: 0,
+              category: category,
+              count: 0
+            };
+          }
+          
+          const revenue = product.sellingPrice * product.quantitySold;
+          productSales[productName].ventes += revenue;
+          productSales[productName].benefice += product.profit || 0;
+          productSales[productName].quantite += product.quantitySold;
+          productSales[productName].prixAchat += (product.purchasePrice || 0) * product.quantitySold;
+          productSales[productName].count += 1;
+        });
       }
-      acc[productName].ventes += sale.sellingPrice;
-      acc[productName].benefice += sale.profit;
-      acc[productName].quantite += sale.quantitySold;
-      acc[productName].prixAchat += sale.purchasePrice;
-      acc[productName].count += 1;
-      return acc;
-    }, {} as Record<string, any>);
+      // Pour les anciennes ventes single-produit
+      else {
+        const category = getProductCategory(sale.description);
+        if (category === null) return; // Ignorer les avances
+        
+        const productName = sale.description.length > 50 ? 
+          sale.description.substring(0, 47) + '...' : 
+          sale.description;
+        
+        if (!productSales[productName]) {
+          productSales[productName] = {
+            name: productName,
+            fullName: sale.description,
+            ventes: 0,
+            benefice: 0,
+            quantite: 0,
+            prixAchat: 0,
+            category: category,
+            count: 0
+          };
+        }
+        
+        const revenue = sale.sellingPrice * sale.quantitySold;
+        productSales[productName].ventes += revenue;
+        productSales[productName].benefice += sale.profit || 0;
+        productSales[productName].quantite += sale.quantitySold;
+        productSales[productName].prixAchat += sale.purchasePrice * sale.quantitySold;
+        productSales[productName].count += 1;
+      }
+    });
 
     return Object.values(productSales)
       .sort((a, b) => b.benefice - a.benefice)
       .slice(0, 15); // Top 15 produits
   }, [filteredSales]);
 
-  // Données pour les graphiques par catégorie (utiliser filteredSales)
+  // Données pour les graphiques par catégorie (CORRIGÉES)
   const salesByCategory = useMemo(() => {
-    const categorySales = filteredSales.reduce((acc, sale) => {
-      const category = getProductCategory(sale.description);
-      if (category && !acc[category]) {
-        acc[category] = {
-          category,
-          ventes: 0,
-          benefice: 0,
-          quantite: 0,
-          count: 0
-        };
+    const categorySales = {} as Record<string, any>;
+    
+    filteredSales.forEach(sale => {
+      // Pour les nouvelles ventes multi-produits
+      if (sale.products && Array.isArray(sale.products)) {
+        sale.products.forEach(product => {
+          const category = getProductCategory(product.description);
+          if (!category) return; // Ignorer les avances
+          
+          if (!categorySales[category]) {
+            categorySales[category] = {
+              category,
+              ventes: 0,
+              benefice: 0,
+              quantite: 0,
+              count: 0
+            };
+          }
+          
+          const revenue = product.sellingPrice * product.quantitySold;
+          categorySales[category].ventes += revenue;
+          categorySales[category].benefice += product.profit || 0;
+          categorySales[category].quantite += product.quantitySold;
+          categorySales[category].count += 1;
+        });
       }
-      if (category) {
-        acc[category].ventes += sale.sellingPrice;
-        acc[category].benefice += sale.profit;
-        acc[category].quantite += sale.quantitySold;
-        acc[category].count += 1;
+      // Pour les anciennes ventes single-produit
+      else {
+        const category = getProductCategory(sale.description);
+        if (!category) return; // Ignorer les avances
+        
+        if (!categorySales[category]) {
+          categorySales[category] = {
+            category,
+            ventes: 0,
+            benefice: 0,
+            quantite: 0,
+            count: 0
+          };
+        }
+        
+        const revenue = sale.sellingPrice * sale.quantitySold;
+        categorySales[category].ventes += revenue;
+        categorySales[category].benefice += sale.profit || 0;
+        categorySales[category].quantite += sale.quantitySold;
+        categorySales[category].count += 1;
       }
-      return acc;
-    }, {} as Record<string, any>);
+    });
 
     return Object.values(categorySales);
   }, [filteredSales]);
 
-  // Données temporelles (par mois) (utiliser filteredSales)
+  // Données temporelles (par mois) (CORRIGÉES)
   const salesOverTime = useMemo(() => {
     const monthlySales = filteredSales.reduce((acc, sale) => {
       const date = new Date(sale.date);
@@ -170,13 +307,39 @@ const TendancesPage = () => {
           quantite: 0
         };
       }
-      acc[monthKey].ventes += sale.sellingPrice;
-      acc[monthKey].benefice += sale.profit;
-      acc[monthKey].quantite += sale.quantitySold;
+      
+      const saleValues = getSaleValues(sale);
+      acc[monthKey].ventes += saleValues.revenue;
+      acc[monthKey].benefice += saleValues.profit;
+      acc[monthKey].quantite += saleValues.quantity;
+      
       return acc;
     }, {} as Record<string, any>);
 
     return Object.values(monthlySales).sort((a, b) => a.mois.localeCompare(b.mois));
+  }, [filteredSales]);
+
+  // Données de totaux corrigées
+  const salesData = useMemo(() => {
+    let totalRevenue = 0;
+    let totalQuantity = 0;
+    let totalProfit = 0;
+
+    filteredSales.forEach(sale => {
+      const saleValues = getSaleValues(sale);
+      totalRevenue += saleValues.revenue;
+      totalQuantity += saleValues.quantity;
+      totalProfit += saleValues.profit;
+    });
+
+    return {
+      totals: { 
+        revenue: totalRevenue, 
+        quantity: totalQuantity, 
+        sales: filteredSales.length,
+        profit: totalProfit 
+      }
+    };
   }, [filteredSales]);
 
   // Produits les plus rentables
@@ -207,6 +370,13 @@ const TendancesPage = () => {
     'Tissages': '#06D6A0',
     'Accessoires': '#F59E0B',
     'Autres': '#6B7280'
+  };
+
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('fr-FR', { 
+      style: 'currency', 
+      currency: 'EUR' 
+    }).format(value);
   };
 
   const chartConfig = {
@@ -256,10 +426,10 @@ const TendancesPage = () => {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {filteredSales.reduce((sum, sale) => sum + sale.sellingPrice, 0).toLocaleString()} €
+                  {formatCurrency(salesData.totals.revenue)}
                 </div>
                 <p className="text-xs text-purple-100">
-                  +{filteredSales.length} transactions historiques
+                  +{salesData.totals.sales} transactions historiques
                 </p>
               </CardContent>
             </Card>
@@ -271,10 +441,10 @@ const TendancesPage = () => {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {filteredSales.reduce((sum, sale) => sum + sale.profit, 0).toLocaleString()} €
+                  {formatCurrency(salesData.totals.profit)}
                 </div>
                 <p className="text-xs text-emerald-100">
-                  Marge moyenne: {filteredSales.length > 0 ? ((filteredSales.reduce((sum, sale) => sum + sale.profit, 0) / filteredSales.reduce((sum, sale) => sum + sale.sellingPrice, 0)) * 100).toFixed(1) : 0}%
+                  Marge moyenne: {salesData.totals.revenue > 0 ? ((salesData.totals.profit / salesData.totals.revenue) * 100).toFixed(1) : 0}%
                 </p>
               </CardContent>
             </Card>
@@ -286,7 +456,7 @@ const TendancesPage = () => {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {filteredSales.reduce((sum, sale) => sum + sale.quantitySold, 0)}
+                  {salesData.totals.quantity}
                 </div>
                 <p className="text-xs text-orange-100">
                   {salesByProduct.length} produits différents
@@ -792,7 +962,7 @@ const TendancesPage = () => {
                         <ul className="text-sm space-y-1 text-gray-600">
                           <li>• Les ventes sont {dailySalesAnalysis.length > 15 ? 'plus élevées' : 'plus faibles'} en milieu de mois</li>
                           <li>• Catégorie la plus rentable: Perruques</li>
-                          <li>• Marge bénéficiaire moyenne: {filteredSales.length > 0 ? ((filteredSales.reduce((sum, sale) => sum + sale.profit, 0) / filteredSales.reduce((sum, sale) => sum + sale.sellingPrice, 0)) * 100).toFixed(1) : 0}%</li>
+                          <li>• Marge bénéficiaire moyenne: {salesData.totals.revenue > 0 ? ((salesData.totals.profit / salesData.totals.revenue) * 100).toFixed(1) : 0}%</li>
                         </ul>
                       </div>
                       
