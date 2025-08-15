@@ -121,14 +121,21 @@ const SalesTable: React.FC<SalesTableProps> = ({ sales: initialSales, onRowClick
   const totalSellingPrice = sales.reduce((sum, sale) => {
     return sum + (sale.totalSellingPrice || sale.sellingPrice || 0);
   }, 0);
-  const totalQuantitySold = sales.reduce((sum, sale) => {
+  
+  // Calculer le nombre total de produits vendus (pas le nombre de ventes)
+  const totalProductsSold = sales.reduce((sum, sale) => {
     if (sale.products) {
+      // Pour les ventes multi-produits, sommer toutes les quantités
       return sum + sale.products.reduce((productSum, product) => {
         return productSum + (isAdvanceProduct(product.description) ? 0 : product.quantitySold);
       }, 0);
     }
-    return sum + (isAdvanceProduct(sale.description) ? 0 : sale.quantitySold);
+    // Pour les ventes simples
+    return sum + (isAdvanceProduct(sale.description || '') ? 0 : (sale.quantitySold || 0));
   }, 0);
+  
+  const totalQuantitySold = totalProductsSold; // Alias pour compatibilité
+  
   const totalPurchasePrice = sales.reduce((sum, sale) => {
     return sum + (sale.totalPurchasePrice || sale.purchasePrice || 0);
   }, 0);
@@ -197,7 +204,7 @@ const SalesTable: React.FC<SalesTableProps> = ({ sales: initialSales, onRowClick
         
         {/* Informations de dernière mise à jour */}
         <div className="mt-2 text-xs text-white/60">
-          Dernière mise à jour: {lastUpdate.toLocaleTimeString('fr-FR')} • {sales.length} ventes ce mois
+          Dernière mise à jour: {lastUpdate.toLocaleTimeString('fr-FR')} • {totalProductsSold} produits vendus ce mois
         </div>
       </div>
 
@@ -220,14 +227,6 @@ const SalesTable: React.FC<SalesTableProps> = ({ sales: initialSales, onRowClick
                 <span className='text-red-600 font-bold text-sm'>Description</span>
               </div>
             </ModernTableHead>
-            {/* <ModernTableHead className="text-right bg-transparent">
-              <div className="flex items-center justify-end space-x-2">
-                <div className="bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full p-1">
-                  <Euro className="h-3 w-3 text-white" />
-                </div>
-                <span className='text-red-600 font-bold text-sm'>Produits</span>
-              </div>
-            </ModernTableHead> */}
             <ModernTableHead className="text-right bg-transparent">
                <div className="flex items-center justify-end space-x-2">
                 <div className="bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full p-1">
