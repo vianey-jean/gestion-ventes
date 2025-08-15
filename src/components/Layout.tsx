@@ -31,15 +31,6 @@ const Layout: React.FC<LayoutProps> = ({ children, requireAuth = false }) => {
   
   const content = (
     <div className="flex flex-col min-h-screen">
-      {/* Skip link pour l'accessibilité */}
-      {/* <a 
-        href="#main-content" 
-        className="skip-link"
-        onFocus={() => announceToScreenReader('Lien de navigation rapide vers le contenu principal')}
-      >
-        Aller au contenu principal
-      </a> */}
-      
       <Navbar />
       
       <main 

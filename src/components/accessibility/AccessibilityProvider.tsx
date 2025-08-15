@@ -37,27 +37,39 @@ export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({
   const [ariaLiveRegion, setAriaLiveRegion] = useState<string>('');
 
   useEffect(() => {
-    // Charger les préférences sauvegardées
-    const saved = localStorage.getItem('accessibility-settings');
-    if (saved) {
-      setSettings(JSON.parse(saved));
+    // Load saved preferences
+    try {
+      const saved = localStorage.getItem('accessibility-settings');
+      if (saved) {
+        setSettings(JSON.parse(saved));
+      }
+    } catch (error) {
+      console.warn('Failed to load accessibility settings:', error);
     }
 
-    // Détecter les préférences système
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      setSettings(prev => ({ ...prev, reducedMotion: true }));
-    }
+    // Detect system preferences
+    try {
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        setSettings(prev => ({ ...prev, reducedMotion: true }));
+      }
 
-    if (window.matchMedia('(prefers-contrast: high)').matches) {
-      setSettings(prev => ({ ...prev, highContrast: true }));
+      if (window.matchMedia('(prefers-contrast: high)').matches) {
+        setSettings(prev => ({ ...prev, highContrast: true }));
+      }
+    } catch (error) {
+      console.warn('Failed to detect system preferences:', error);
     }
   }, []);
 
   useEffect(() => {
-    // Sauvegarder les préférences
-    localStorage.setItem('accessibility-settings', JSON.stringify(settings));
+    // Save preferences
+    try {
+      localStorage.setItem('accessibility-settings', JSON.stringify(settings));
+    } catch (error) {
+      console.warn('Failed to save accessibility settings:', error);
+    }
 
-    // Appliquer les classes CSS
+    // Apply CSS classes
     const root = document.documentElement;
     root.classList.toggle('high-contrast', settings.highContrast);
     root.classList.toggle('large-text', settings.largeText);
@@ -77,7 +89,7 @@ export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({
   return (
     <AccessibilityContext.Provider value={{ settings, updateSetting, announceToScreenReader }}>
       {children}
-      {/* Région ARIA Live pour les annonces aux lecteurs d'écran */}
+      {/* ARIA Live region for screen reader announcements */}
       <div
         aria-live="polite"
         aria-atomic="true"

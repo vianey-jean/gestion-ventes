@@ -203,7 +203,7 @@ const SalesTable: React.FC<SalesTableProps> = ({ sales: initialSales, onRowClick
         </div>
         
         {/* Informations de dernière mise à jour */}
-        <div className="mt-2 text-x text-red-600 font-bold">
+        <div className="mt-2 text-xs text-white/60">
           Dernière mise à jour: {lastUpdate.toLocaleTimeString('fr-FR')} • {totalProductsSold} produits vendus ce mois
         </div>
       </div>

@@ -1,87 +1,52 @@
 
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ThemeProvider } from './contexts/ThemeContext';
-import { AuthProvider } from './contexts/AuthContext';
-import { AppProvider } from './contexts/AppContext';
-import { AccessibilityProvider } from './components/accessibility/AccessibilityProvider';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { AuthProvider } from '@/contexts/AuthContext';
+import { AppProvider } from '@/contexts/AppContext';
+import { ThemeProvider } from '@/contexts/ThemeContext';
+import { AccessibilityProvider } from '@/components/accessibility/AccessibilityProvider';
 import ProtectedRoute from './components/auth/ProtectedRoute';
-import LoginPage from './pages/LoginPage';
-import RegisterPage from './pages/RegisterPage';
-import ResetPasswordPage from './pages/ResetPasswordPage';
-import DashboardPage from './pages/DashboardPage';
-import Produits from './pages/Produits';
-import Ventes from './pages/Ventes';
-import ClientsPage from './pages/ClientsPage';
-import PretFamilles from './pages/PretFamilles';
-import PretProduits from './pages/PretProduits';
-import Depenses from './pages/Depenses';
-import Contact from './pages/ContactPage';
-import Apropos from './pages/AboutPage';
-import HomePage from './pages/HomePage';
-import TendancesPage from './pages/TendancesPage';
-import Comptabilite from './pages/Comptabilite';
-import { Toaster } from './components/ui/sonner';
+import { ErrorBoundary } from '@/components/common/ErrorBoundary';
+import { Toaster } from '@/components/ui/toaster';
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 1,
-      staleTime: 5 * 60 * 1000, // 5 minutes
-    },
-  },
-});
+// Pages
+import HomePage from '@/pages/HomePage';
+import AboutPage from '@/pages/AboutPage';
+import ContactPage from '@/pages/ContactPage';
+import LoginPage from '@/pages/LoginPage';
+import RegisterPage from '@/pages/RegisterPage';
+import ResetPasswordPage from '@/pages/ResetPasswordPage';
+import DashboardPage from '@/pages/DashboardPage';
+import TendancesPage from '@/pages/TendancesPage';
+import ClientsPage from '@/pages/ClientsPage';
+import MessagesPage from '@/pages/MessagesPage';
+import NotFound from '@/pages/NotFound';
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
+    <ErrorBoundary>
       <ThemeProvider>
         <AccessibilityProvider>
           <AuthProvider>
             <AppProvider>
               <Router>
-                <div className="min-h-screen bg-background">
-                  <Routes>
-                    <Route path="/" element={<HomePage />} />
-                    <Route path="/contact" element={<Contact />} />
-                    <Route path="/about" element={<Apropos />} />
-                    <Route path="/login" element={<LoginPage />} />
-                    <Route path="/register" element={<RegisterPage />} />
-                    <Route path="/forgot-password" element={<ResetPasswordPage />} />
-                    <Route path="/dashboard" element={
+                <Routes>
+                  {/* Routes publiques avec Layout standard */}
+                  
+                    <Route index element={<HomePage />} />
+                    <Route path="about" element={<AboutPage />} />
+                    <Route path="login" element={<LoginPage />} />
+                    <Route path="register" element={<RegisterPage />} />
+                    <Route path="reset-password" element={<ResetPasswordPage />} />
+
+                  {/* Page Contact sans navbar */}
+                  <Route path="/contact" element={<ContactPage />} />
+
+                  {/* Routes protégées avec Layout d'authentification */}
+               
+                   <Route path="/dashboard" element={
                       <ProtectedRoute>
                         <DashboardPage />
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/produits" element={
-                      <ProtectedRoute>
-                        <Produits />
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/ventes" element={
-                      <ProtectedRoute>
-                        <Ventes />
-                      </ProtectedRoute>
-                    } />
-                   
-                    <Route path="/clients" element={
-                      <ProtectedRoute>
-                        <ClientsPage />
-                      </ProtectedRoute>
-                    } />                 
-                    <Route path="/pret-familles" element={
-                      <ProtectedRoute>
-                        <PretFamilles />
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/pret-produits" element={
-                      <ProtectedRoute>
-                        <PretProduits />
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/depenses" element={
-                      <ProtectedRoute>
-                        <Depenses />
                       </ProtectedRoute>
                     } />
                     <Route path="/tendances" element={
@@ -89,21 +54,27 @@ function App() {
                         <TendancesPage />
                       </ProtectedRoute>
                     } />
-                    <Route path="/comptabilite" element={
+                    <Route path="/clients" element={
                       <ProtectedRoute>
-                        <Comptabilite />
+                        <ClientsPage />
                       </ProtectedRoute>
-                    } />
-                    <Route path="*" element={<Navigate to="/" replace />} />
-                  </Routes>
-                </div>
-                <Toaster />
+                    } /> 
+                    <Route path="/messages" element={
+                      <ProtectedRoute>
+                        <MessagesPage />
+                      </ProtectedRoute>
+                    } /> 
+                   
+                  {/* Route 404 */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
               </Router>
+              <Toaster />
             </AppProvider>
           </AuthProvider>
         </AccessibilityProvider>
       </ThemeProvider>
-    </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 

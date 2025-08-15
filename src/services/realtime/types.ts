@@ -6,6 +6,7 @@ export interface SyncData {
   pretProduits: any[];
   depenses: any[];
   clients: any[];
+  messages: any[];
 }
 
 export interface SyncEvent {

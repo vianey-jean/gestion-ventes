@@ -1,14 +1,38 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
-import { Home, Info, Mail, LogIn, UserCircle, LogOut, LayoutDashboard, Moon, Sun, Sparkles, TrendingUp, Users } from 'lucide-react';
+import { useMessages } from '@/hooks/use-messages';
+import { 
+  Home, 
+  Info, 
+  Mail, 
+  LogIn, 
+  UserCircle, 
+  LogOut, 
+  LayoutDashboard, 
+  Moon, 
+  Sun, 
+  Sparkles, 
+  TrendingUp, 
+  Users,
+  MessageSquare,
+  ChevronDown
+} from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Badge } from '@/components/ui/badge';
 
 const Navbar: React.FC = () => {
   const { isAuthenticated, user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const { unreadCount } = useMessages();
 
   return (
     <header className="sticky top-0 z-50 backdrop-blur-xl bg-white/80 dark:bg-gray-900/80 border-b border-gray-200/50 dark:border-gray-700/50">
@@ -78,12 +102,37 @@ const Navbar: React.FC = () => {
                 
                 {isAuthenticated ? (
                   <div className="flex items-center space-x-3 ml-4">
-                    <div className="flex items-center px-3 py-2 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl border border-purple-200/50 dark:border-purple-700/50">
-                      <UserCircle className="h-4 w-4 text-purple-600 dark:text-purple-400 mr-2" />
-                      <span className="text-sm font-semibold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                        {user?.firstName} {user?.lastName}
-                      </span>
-                    </div>
+                    {/* Menu déroulant utilisateur */}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button 
+                          variant="ghost" 
+                          className="flex items-center px-3 py-2 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl border border-purple-200/50 dark:border-purple-700/50 hover:bg-gradient-to-r hover:from-purple-100 hover:to-pink-100 dark:hover:from-purple-800/30 dark:hover:to-pink-800/30 transition-all duration-200"
+                        >
+                          <UserCircle className="h-4 w-4 text-purple-600 dark:text-purple-400 mr-2" />
+                          <span className="text-sm font-semibold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                            {user?.firstName} {user?.lastName}
+                          </span>
+                          <ChevronDown className="h-4 w-4 ml-1 text-purple-600 dark:text-purple-400" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg">
+                        <DropdownMenuItem asChild>
+                          <Link to="/messages" className="flex items-center w-full cursor-pointer">
+                            <MessageSquare className="mr-2 h-4 w-4 text-blue-600" />
+                            <span>Messages</span>
+                            {unreadCount > 0 && (
+                              <Badge 
+                                variant="destructive" 
+                                className="ml-auto text-xs px-1.5 py-0.5 min-w-[20px] h-5 flex items-center justify-center bg-red-500 text-white"
+                              >
+                                {unreadCount}
+                              </Badge>
+                            )}
+                          </Link>
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                     
                     <Button 
                       variant="outline" 
@@ -152,6 +201,24 @@ const Navbar: React.FC = () => {
                         <Users className="h-4 w-4" />
                       </Button>
                     </Link>
+
+                    <Link to="/messages" className="relative">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="h-10 w-10 p-0 rounded-xl border-2 border-blue-200 text-blue-600 hover:bg-blue-500 hover:text-white hover:border-blue-500"
+                      >
+                        <MessageSquare className="h-4 w-4" />
+                      </Button>
+                      {unreadCount > 0 && (
+                        <Badge 
+                          variant="destructive" 
+                          className="absolute -top-1 -right-1 text-xs px-1.5 py-0.5 min-w-[18px] h-4 flex items-center justify-center bg-red-500 text-white"
+                        >
+                          {unreadCount}
+                        </Badge>
+                      )}
+                    </Link>
                     
                     <div className="px-2 py-1 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-lg">
                       <span className="text-xs font-semibold text-purple-600 dark:text-purple-400">
@@ -169,7 +236,7 @@ const Navbar: React.FC = () => {
                     </Button>
                   </div>
                 ) : (
-                  <Link to="/login">
+                  <Link to="/">
                     <Button 
                       className="h-10 w-10 p-0 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-lg"
                     >
