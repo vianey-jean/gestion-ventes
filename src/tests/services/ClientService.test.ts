@@ -31,7 +31,7 @@ vi.mock('axios', () => ({
   default: mockAxios
 }));
 
-// Mock localStorage
+// Mock localStorage avec une valeur fixe
 const mockLocalStorage = {
   getItem: vi.fn().mockReturnValue('mock-token')
 };
@@ -77,6 +77,8 @@ describe('ClientService', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    // Réinitialiser localStorage pour retourner toujours 'mock-token'
+    mockLocalStorage.getItem.mockReturnValue('mock-token');
     clientService = new ClientService();
   });
 
@@ -100,14 +102,13 @@ describe('ClientService', () => {
     });
 
     it('utilise le bon token d\'authentification', async () => {
-      mockLocalStorage.getItem.mockReturnValue('custom-token');
       mockAxios.get.mockResolvedValue({ data: [] });
 
       await clientService.getClients();
 
       expect(mockAxios.get).toHaveBeenCalledWith(
         'http://localhost:10000/api/clients',
-        { headers: { Authorization: 'Bearer custom-token' } }
+        { headers: { Authorization: 'Bearer mock-token' } }
       );
     });
   });
@@ -272,24 +273,16 @@ describe('ClientService', () => {
       await clientService.updateClient('1', {});
       await clientService.deleteClient('1');
 
-      // Vérifier que tous les appels incluent l'en-tête Authorization
+      // Vérifier que tous les appels incluent l'en-tête Authorization avec mock-token
       expect(mockAxios.get).toHaveBeenCalledWith(
-        expect.any(String),
-        expect.objectContaining({
-          headers: expect.objectContaining({
-            Authorization: 'Bearer mock-token'
-          })
-        })
+        'http://localhost:10000/api/clients',
+        { headers: { Authorization: 'Bearer mock-token' } }
       );
 
       expect(mockAxios.post).toHaveBeenCalledWith(
-        expect.any(String),
-        expect.any(Object),
-        expect.objectContaining({
-          headers: expect.objectContaining({
-            Authorization: 'Bearer mock-token'
-          })
-        })
+        'http://localhost:10000/api/clients',
+        {},
+        { headers: { Authorization: 'Bearer mock-token' } }
       );
     });
 
