@@ -92,7 +92,7 @@ const ContactPage: React.FC = () => {
               Message Envoyé !
             </h2>
             <div className="text-slate-600 dark:text-slate-300 mb-8 text-lg leading-relaxed">
-              Merci pour votre message premium. Notre équipe d'experts vous répondra dans les plus brefs délais avec une attention particulière.
+              Merci pour votre message. Notre équipe d'experts vous répondra dans les plus brefs délais avec une attention particulière.
             </div>
             <Button 
               onClick={() => setIsSubmitted(false)} 
@@ -135,7 +135,7 @@ const ContactPage: React.FC = () => {
               </div>
               <div className="flex items-center gap-2">
                 <Sparkles className="h-4 w-4 text-purple-500" />
-                <span>Service Premium</span>
+                <span>Service </span>
               </div>
             </div>
           </div>
@@ -253,7 +253,7 @@ const ContactPage: React.FC = () => {
                     ) : (
                       <>
                         <Send className="mr-3 h-5 w-5" />
-                        Envoyer le message premium
+                        Envoyer le message
                       </>
                     )}
                   </Button>
@@ -279,8 +279,8 @@ const ContactPage: React.FC = () => {
                     <Mail className="h-5 w-5 text-white" />
                   </div>
                   <div>
-                    <div className="font-semibold text-slate-800 dark:text-slate-100 text-base">Email Premium</div>
-                    <div className="text-slate-600 dark:text-slate-300">contact@gestionvente.com</div>
+                    <div className="font-semibold text-slate-800 dark:text-slate-100 text-base">Email :</div>
+                    <div className="text-slate-600 dark:text-slate-300">vianey.jean@ymail.com</div>
                   </div>
                 </div>
                 
@@ -290,7 +290,7 @@ const ContactPage: React.FC = () => {
                   </div>
                   <div>
                     <div className="font-semibold text-slate-800 dark:text-slate-100 text-base">Ligne Directe</div>
-                    <div className="text-slate-600 dark:text-slate-300">+262 692 XX XX XX</div>
+                    <div className="text-slate-600 dark:text-slate-300">+262 692 84 23 70</div>
                   </div>
                 </div>
                 
@@ -300,7 +300,7 @@ const ContactPage: React.FC = () => {
                   </div>
                   <div>
                     <div className="font-semibold text-slate-800 dark:text-slate-100 text-base">Siège Social</div>
-                    <div className="text-slate-600 dark:text-slate-300">La Réunion, France</div>
+                    <div className="text-slate-600 dark:text-slate-300">10 Allée des Béryls Bleus, 97400 Saint Denis</div>
                   </div>
                 </div>
               </CardContent>
@@ -312,7 +312,7 @@ const ContactPage: React.FC = () => {
                   <div className="p-2 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl shadow-lg">
                     <Clock className="h-5 w-5 text-white" />
                   </div>
-                  Horaires Premium
+                  Horaires :
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -341,7 +341,7 @@ const ContactPage: React.FC = () => {
                   <Sparkles className="relative h-12 w-12 text-purple-600 mx-auto" />
                 </div>
                 <h3 className="text-lg font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
-                  Garantie Premium
+                  Garantie :
                 </h3>
                 <div className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed">
                   Réponse garantie sous 24h avec un suivi personnalisé par nos experts.

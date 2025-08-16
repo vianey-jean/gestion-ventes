@@ -237,7 +237,7 @@ const ClientsPage: React.FC = () => {
               <div className="bg-white/10 backdrop-blur-md rounded-2xl px-8 py-4 border border-white/20 shadow-2xl">
                 <div className="flex items-center gap-3">
                   <Users className="w-8 h-8 text-emerald-300" />
-                  <span className="text-white font-bold text-xl">{clients.length} Client{clients.length > 1 ? 's' : ''} Premium</span>
+                  <span className="text-white font-bold text-xl">{clients.length} Client{clients.length > 1 ? 's' : ''}</span>
                 </div>
               </div>
               
