@@ -1,7 +1,15 @@
+// Résumé :
+// Ce composant React affiche un tableau de bord avec indicateurs et graphiques
+// (CA, ventes, quantités, évolution mensuelle, top produits, performance).
+// Correction principale : tri chronologique des mois dans salesData.monthly
+// pour que l’évolution commence toujours du mois le plus ancien au plus récent.
+
 import React, { useMemo } from 'react';
-import { BarChart3, TrendingUp, Calendar, DollarSign, Package, Users } from 'lucide-react';
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { BarChart3, TrendingUp, DollarSign, Package } from 'lucide-react';
+import {
+  LineChart, Line, BarChart, Bar, XAxis, YAxis,
+  CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell
+} from 'recharts';
 import { Badge } from '@/components/ui/badge';
 import ModernCard from '../forms/ModernCard';
 import { useApp } from '@/contexts/AppContext';
@@ -9,25 +17,28 @@ import useCurrencyFormatter from '@/hooks/use-currency-formatter';
 import { Sale } from '@/types';
 
 const SalesReport: React.FC = () => {
-  const { allSales, products } = useApp();
+  const { allSales } = useApp();
   const { formatCurrency } = useCurrencyFormatter();
 
   // Fonction utilitaire pour calculer les valeurs d'une vente
   const getSaleValues = (sale: Sale) => {
     // Nouveau format multi-produits
     if (sale.products && Array.isArray(sale.products) && sale.products.length > 0) {
-      const revenue = sale.totalSellingPrice || sale.products.reduce((sum, p) => sum + (p.sellingPrice * p.quantitySold), 0);
+      const revenue =
+        sale.totalSellingPrice ||
+        sale.products.reduce((sum, p) => sum + p.sellingPrice * p.quantitySold, 0);
       const quantity = sale.products.reduce((sum, p) => sum + p.quantitySold, 0);
-      const profit = sale.totalProfit || sale.products.reduce((sum, p) => sum + p.profit, 0);
-      
+      const profit =
+        sale.totalProfit || sale.products.reduce((sum, p) => sum + p.profit, 0);
+
       return { revenue, quantity, profit };
     }
     // Ancien format single-produit
     else if (sale.sellingPrice !== undefined && sale.quantitySold !== undefined) {
-      const revenue = sale.sellingPrice ;
+      const revenue = sale.sellingPrice;
       const quantity = sale.quantitySold;
       const profit = sale.profit || 0;
-      
+
       return { revenue, quantity, profit };
     }
     // Fallback
@@ -40,21 +51,28 @@ const SalesReport: React.FC = () => {
     let totalRevenue = 0;
     let totalQuantity = 0;
 
-    allSales.forEach(sale => {
+    allSales.forEach((sale) => {
       const date = new Date(sale.date);
-      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-      const monthName = date.toLocaleDateString('fr-FR', { year: 'numeric', month: 'short' });
-      
+      // Clé numérique pour tri : YYYY-MM
+      const monthKey = `${date.getFullYear()}-${String(
+        date.getMonth() + 1
+      ).padStart(2, '0')}`;
+      const monthName = date.toLocaleDateString('fr-FR', {
+        year: 'numeric',
+        month: 'short',
+      });
+
       const saleValues = getSaleValues(sale);
 
       // Données mensuelles
       if (!monthlyData.has(monthKey)) {
         monthlyData.set(monthKey, {
+          key: monthKey, // clé numérique pour tri
           month: monthName,
           revenue: 0,
           quantity: 0,
           profit: 0,
-          sales: 0
+          sales: 0,
         });
       }
 
@@ -64,18 +82,18 @@ const SalesReport: React.FC = () => {
       monthData.profit += saleValues.profit;
       monthData.sales += 1;
 
-      // Données par produit pour nouveau format multi-produits
+      // Données par produit (nouveau format multi-produits)
       if (sale.products && Array.isArray(sale.products)) {
-        sale.products.forEach(product => {
+        sale.products.forEach((product) => {
           if (!productData.has(product.productId)) {
             productData.set(product.productId, {
               name: product.description,
               revenue: 0,
               quantity: 0,
-              sales: 0
+              sales: 0,
             });
           }
-          
+
           const prodData = productData.get(product.productId);
           prodData.revenue += product.sellingPrice * product.quantitySold;
           prodData.quantity += product.quantitySold;
@@ -89,7 +107,7 @@ const SalesReport: React.FC = () => {
             name: sale.description || 'Produit inconnu',
             revenue: 0,
             quantity: 0,
-            sales: 0
+            sales: 0,
           });
         }
 
@@ -104,9 +122,18 @@ const SalesReport: React.FC = () => {
     });
 
     return {
-      monthly: Array.from(monthlyData.values()).sort((a, b) => a.month.localeCompare(b.month)),
-      products: Array.from(productData.values()).sort((a, b) => b.revenue - a.revenue).slice(0, 5),
-      totals: { revenue: totalRevenue, quantity: totalQuantity, sales: allSales.length }
+      // Tri chronologique basé sur la clé YYYY-MM
+      monthly: Array.from(monthlyData.values()).sort((a, b) =>
+        a.key.localeCompare(b.key)
+      ),
+      products: Array.from(productData.values())
+        .sort((a, b) => b.revenue - a.revenue)
+        .slice(0, 5),
+      totals: {
+        revenue: totalRevenue,
+        quantity: totalQuantity,
+        sales: allSales.length,
+      },
     };
   }, [allSales]);
 
@@ -158,6 +185,7 @@ const SalesReport: React.FC = () => {
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Courbe mensuelle corrigée */}
         <ModernCard
           title="Évolution Mensuelle"
           icon={TrendingUp}
@@ -169,30 +197,36 @@ const SalesReport: React.FC = () => {
                 <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
                 <XAxis dataKey="month" className="text-xs" />
                 <YAxis className="text-xs" />
-                <Tooltip 
-                  contentStyle={{ 
+                <Tooltip
+                  contentStyle={{
                     backgroundColor: 'rgba(255, 255, 255, 0.95)',
                     border: 'none',
                     borderRadius: '12px',
-                    boxShadow: '0 10px 25px rgba(0,0,0,0.1)'
+                    boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
                   }}
                   formatter={(value, name) => [
-                    name === 'revenue' ? formatCurrency(value as number) : value,
-                    name === 'revenue' ? 'Revenus' : name === 'quantity' ? 'Quantité' : 'Ventes'
+                    name === 'revenue'
+                      ? formatCurrency(value as number)
+                      : value,
+                    name === 'revenue'
+                      ? 'Revenus'
+                      : name === 'quantity'
+                      ? 'Quantité'
+                      : 'Ventes',
                   ]}
                 />
-                <Line 
-                  type="monotone" 
-                  dataKey="revenue" 
-                  stroke="#10B981" 
+                <Line
+                  type="monotone"
+                  dataKey="revenue"
+                  stroke="#10B981"
                   strokeWidth={3}
                   dot={{ fill: '#10B981', strokeWidth: 0, r: 6 }}
                   activeDot={{ r: 8, fill: '#10B981' }}
                 />
-                <Line 
-                  type="monotone" 
-                  dataKey="quantity" 
-                  stroke="#8B5CF6" 
+                <Line
+                  type="monotone"
+                  dataKey="quantity"
+                  stroke="#8B5CF6"
                   strokeWidth={3}
                   dot={{ fill: '#8B5CF6', strokeWidth: 0, r: 6 }}
                   activeDot={{ r: 8, fill: '#8B5CF6' }}
@@ -202,10 +236,8 @@ const SalesReport: React.FC = () => {
           </div>
         </ModernCard>
 
-        <ModernCard
-          title="Top Produits"
-          icon={Package}
-        >
+        {/* Top produits */}
+        <ModernCard title="Top Produits" icon={Package}>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -219,10 +251,15 @@ const SalesReport: React.FC = () => {
                   dataKey="revenue"
                 >
                   {salesData.products.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={colors[index % colors.length]}
+                    />
                   ))}
                 </Pie>
-                <Tooltip formatter={(value) => formatCurrency(value as number)} />
+                <Tooltip
+                  formatter={(value) => formatCurrency(value as number)}
+                />
               </PieChart>
             </ResponsiveContainer>
           </div>
@@ -230,8 +267,8 @@ const SalesReport: React.FC = () => {
             {salesData.products.slice(0, 3).map((product, index) => (
               <div key={index} className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
-                  <div 
-                    className="w-3 h-3 rounded-full" 
+                  <div
+                    className="w-3 h-3 rounded-full"
                     style={{ backgroundColor: colors[index] }}
                   />
                   <span className="text-sm font-medium truncate">
@@ -246,34 +283,32 @@ const SalesReport: React.FC = () => {
           </div>
         </ModernCard>
 
-        <ModernCard
-          title="Performance Mensuelle"
-          icon={BarChart3}
-        >
+        {/* Performance mensuelle */}
+        <ModernCard title="Performance Mensuelle" icon={BarChart3}>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={salesData.monthly.slice(-6)}>
                 <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
                 <XAxis dataKey="month" className="text-xs" />
                 <YAxis className="text-xs" />
-                <Tooltip 
-                  contentStyle={{ 
+                <Tooltip
+                  contentStyle={{
                     backgroundColor: 'rgba(255, 255, 255, 0.95)',
                     border: 'none',
                     borderRadius: '12px',
-                    boxShadow: '0 10px 25px rgba(0,0,0,0.1)'
+                    boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
                   }}
                   formatter={(value) => [formatCurrency(value as number), 'Profit']}
                 />
-                <Bar 
-                  dataKey="profit" 
+                <Bar
+                  dataKey="profit"
                   fill="url(#profitGradient)"
                   radius={[8, 8, 0, 0]}
                 />
                 <defs>
                   <linearGradient id="profitGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#8B5CF6" stopOpacity={0.8}/>
-                    <stop offset="95%" stopColor="#8B5CF6" stopOpacity={0.3}/>
+                    <stop offset="5%" stopColor="#8B5CF6" stopOpacity={0.8} />
+                    <stop offset="95%" stopColor="#8B5CF6" stopOpacity={0.3} />
                   </linearGradient>
                 </defs>
               </BarChart>

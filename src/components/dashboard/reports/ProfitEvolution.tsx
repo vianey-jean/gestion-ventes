@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { TrendingUp, TrendingDown, DollarSign, Calculator, Target, Award } from 'lucide-react';
-import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ComposedChart, Bar } from 'recharts';
+import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ComposedChart } from 'recharts';
 import { Badge } from '@/components/ui/badge';
 import ModernCard from '../forms/ModernCard';
 import { useApp } from '@/contexts/AppContext';
@@ -13,23 +13,17 @@ const ProfitEvolution: React.FC = () => {
 
   // Fonction utilitaire pour calculer les valeurs d'une vente
   const getSaleValues = (sale: Sale) => {
-    // Nouveau format multi-produits
     if (sale.products && Array.isArray(sale.products) && sale.products.length > 0) {
       const revenue = sale.totalSellingPrice || sale.products.reduce((sum, p) => sum + (p.sellingPrice * p.quantitySold), 0);
       const quantity = sale.products.reduce((sum, p) => sum + p.quantitySold, 0);
       const profit = sale.totalProfit || sale.products.reduce((sum, p) => sum + p.profit, 0);
-      
       return { revenue, quantity, profit };
-    }
-    // Ancien format single-produit
-    else if (sale.sellingPrice !== undefined && sale.quantitySold !== undefined) {
+    } else if (sale.sellingPrice !== undefined && sale.quantitySold !== undefined) {
       const revenue = sale.sellingPrice * sale.quantitySold;
       const quantity = sale.quantitySold;
       const profit = sale.profit || 0;
-      
       return { revenue, quantity, profit };
     }
-    // Fallback
     return { revenue: 0, quantity: 0, profit: 0 };
   };
 
@@ -43,13 +37,16 @@ const ProfitEvolution: React.FC = () => {
     // Analyser les ventes et profits
     allSales.forEach(sale => {
       const date = new Date(sale.date);
-      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      const year = date.getFullYear();
+      const month = date.getMonth() + 1;
+      const monthKey = `${year}-${String(month).padStart(2, '0')}`;
       const monthName = date.toLocaleDateString('fr-FR', { year: 'numeric', month: 'short' });
-      
+
       const saleValues = getSaleValues(sale);
 
       if (!monthlyData.has(monthKey)) {
         monthlyData.set(monthKey, {
+          key: monthKey, // garder la clé pour trier correctement
           month: monthName,
           revenue: 0,
           profit: 0,
@@ -67,18 +64,18 @@ const ProfitEvolution: React.FC = () => {
       totalProfit += saleValues.profit;
     });
 
-    // Simuler quelques dépenses pour l'exemple
-    const mockExpenses = 500; // Dépenses mensuelles simulées
+    // Dépenses simulées
+    const mockExpenses = 500;
     Array.from(monthlyData.values()).forEach(data => {
       data.expenses = mockExpenses;
       totalExpenses += mockExpenses;
     });
 
-    // Calculer le profit net et les marges
+    // Calculer profit net + marges
     Array.from(monthlyData.values()).forEach(data => {
       data.netProfit = data.profit - data.expenses;
       data.margin = data.revenue > 0 ? (data.profit / data.revenue) * 100 : 0;
-      
+
       if (data.netProfit > bestMonth.profit) {
         bestMonth = { month: data.month, profit: data.netProfit };
       }
@@ -87,12 +84,15 @@ const ProfitEvolution: React.FC = () => {
       }
     });
 
-    const sortedData = Array.from(monthlyData.values()).sort((a, b) => a.month.localeCompare(b.month));
+    // TRIER correctement par ordre chronologique
+    const sortedData = Array.from(monthlyData.values()).sort((a, b) => a.key.localeCompare(b.key));
+
     const currentMonth = sortedData[sortedData.length - 1];
     const previousMonth = sortedData[sortedData.length - 2];
-    
-    const growthRate = previousMonth ? 
-      ((currentMonth?.netProfit - previousMonth.netProfit) / Math.abs(previousMonth.netProfit || 1)) * 100 : 0;
+
+    const growthRate = previousMonth
+      ? ((currentMonth?.netProfit - previousMonth.netProfit) / Math.abs(previousMonth.netProfit || 1)) * 100
+      : 0;
 
     return {
       monthly: sortedData,
@@ -105,7 +105,10 @@ const ProfitEvolution: React.FC = () => {
         bestMonth,
         worstMonth,
         growthRate,
-        averageMargin: sortedData.length > 0 ? sortedData.reduce((acc, data) => acc + data.margin, 0) / sortedData.length : 0
+        averageMargin:
+          sortedData.length > 0
+            ? sortedData.reduce((acc, data) => acc + data.margin, 0) / sortedData.length
+            : 0
       }
     };
   }, [allSales]);
