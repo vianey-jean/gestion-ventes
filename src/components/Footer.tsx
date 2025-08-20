@@ -158,7 +158,11 @@ const Footer: React.FC = () => {
           <div className="mt-6 text-center">
             <div className="inline-flex items-center px-3 py-1 bg-white/5 backdrop-blur-sm rounded-full text-xs text-gray-400 border border-white/10">
               <div className="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></div>
-              Version 3.2.0 - Système opérationnel
+              Version 3.2.0 - Système opérationnel 
+            </div>
+            <div className="inline-flex items-center px-3 py-1 bg-white/5 backdrop-blur-sm rounded-full text-xs text-gray-400 border border-white/10">
+              <div className="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></div>
+              Créer par Jean Rabemanalina
             </div>
           </div>
         </div>
