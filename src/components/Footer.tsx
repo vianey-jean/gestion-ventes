@@ -37,34 +37,68 @@ const Footer: React.FC = () => {
           
           {/* Quick links */}
           <div>
-            <h3 className="text-lg font-semibold mb-6 text-purple-300">Navigation</h3>
-            <ul className="space-y-4">
-              <li>
-                <Link to="/" className="text-gray-300 hover:text-white hover:translate-x-1 transition-all duration-200 inline-flex items-center group">
-                  <span className="w-1 h-1 bg-purple-400 rounded-full mr-3 group-hover:bg-pink-400 transition-colors"></span>
-                  Accueil
-                </Link>
-              </li>
-              <li>
-                <Link to="/about" className="text-gray-300 hover:text-white hover:translate-x-1 transition-all duration-200 inline-flex items-center group">
-                  <span className="w-1 h-1 bg-purple-400 rounded-full mr-3 group-hover:bg-pink-400 transition-colors"></span>
-                  À propos
-                </Link>
-              </li>
-              <li>
-                <Link to="/contact" className="text-gray-300 hover:text-white hover:translate-x-1 transition-all duration-200 inline-flex items-center group">
-                  <span className="w-1 h-1 bg-purple-400 rounded-full mr-3 group-hover:bg-pink-400 transition-colors"></span>
-                  Contact
-                </Link>
-              </li>
-              <li>
-                <Link to="/login" className="text-gray-300 hover:text-white hover:translate-x-1 transition-all duration-200 inline-flex items-center group">
-                  <span className="w-1 h-1 bg-purple-400 rounded-full mr-3 group-hover:bg-pink-400 transition-colors"></span>
-                  Connexion
-                </Link>
-              </li>
-            </ul>
-          </div>
+        <h3 className="text-lg font-semibold mb-6 text-purple-300">Navigation</h3>
+        <ul className="space-y-4">
+          
+          <li>
+            <Link 
+              to="/" 
+              className="text-gray-300 hover:text-white hover:translate-x-1 transition-all duration-200 inline-flex items-center group"
+            >
+              <span className="w-1 h-1 bg-purple-400 rounded-full mr-3 group-hover:bg-pink-400 transition-colors"></span>
+              <span className="relative after:content-[''] after:absolute after:left-0 after:-bottom-1 
+                              after:w-0 after:h-[3px] after:bg-red-500 after:transition-all after:duration-300 
+                              group-hover:after:w-full">
+                Accueil
+              </span>
+            </Link>
+          </li>
+
+          <li>
+            <Link 
+              to="/about" 
+              className="text-gray-300 hover:text-white hover:translate-x-1 transition-all duration-200 inline-flex items-center group"
+            >
+              <span className="w-1 h-1 bg-purple-400 rounded-full mr-3 group-hover:bg-pink-400 transition-colors"></span>
+              <span className="relative after:content-[''] after:absolute after:left-0 after:-bottom-1 
+                              after:w-0 after:h-[3px] after:bg-red-500 after:transition-all after:duration-300 
+                              group-hover:after:w-full">
+                À propos
+              </span>
+            </Link>
+          </li>
+
+          <li>
+            <Link 
+              to="/contact" 
+              className="text-gray-300 hover:text-white hover:translate-x-1 transition-all duration-200 inline-flex items-center group"
+            >
+              <span className="w-1 h-1 bg-purple-400 rounded-full mr-3 group-hover:bg-pink-400 transition-colors"></span>
+              <span className="relative after:content-[''] after:absolute after:left-0 after:-bottom-1 
+                              after:w-0 after:h-[3px] after:bg-red-500 after:transition-all after:duration-300 
+                              group-hover:after:w-full">
+                Contact
+              </span>
+            </Link>
+          </li>
+
+          <li>
+            <Link 
+              to="/login" 
+              className="text-gray-300 hover:text-white hover:translate-x-1 transition-all duration-200 inline-flex items-center group"
+            >
+              <span className="w-1 h-1 bg-purple-400 rounded-full mr-3 group-hover:bg-pink-400 transition-colors"></span>
+              <span className="relative after:content-[''] after:absolute after:left-0 after:-bottom-1 
+                              after:w-0 after:h-[3px] after:bg-red-500 after:transition-all after:duration-300 
+                              group-hover:after:w-full">
+                Connexion
+              </span>
+            </Link>
+          </li>
+
+        </ul>
+      </div>
+
           
           {/* Services */}
           <div>

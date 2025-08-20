@@ -49,7 +49,7 @@ function App() {
                 <Suspense
                   fallback={
                     <PremiumLoading
-                      text="Chargement en cours..."
+                      text="Chargement des données en cours..."
                       size="xl"
                       overlay={true}
                       variant="default"
