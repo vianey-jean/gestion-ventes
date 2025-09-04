@@ -135,40 +135,86 @@ const ExportSalesDialog: React.FC<ExportSalesDialogProps> = ({ isOpen, onClose }
     doc.setLineWidth(2);
     doc.line(20, 40, 190, 40);
 
-    // Préparer le corps du tableau
-    const tableBody = sales.map(sale => {
-      const achatPrice = typeof sale.purchasePrice === 'number' ? sale.purchasePrice : 0;
-      const quantity = isAdvanceProduct(sale.description) ? 0 : (typeof sale.quantitySold === 'number' ? sale.quantitySold : 0);
-      const ventePrice = typeof sale.sellingPrice === 'number' ? sale.sellingPrice : 0;
-      const profit = typeof sale.profit === 'number' ? sale.profit : 0;
+    // Préparer le corps du tableau - Gestion ventes multi-produits ET simples
+    const tableBody = [];
+    
+    sales.forEach(sale => {
+      const saleDate = new Date(sale.date).toLocaleDateString('fr-FR');
+      
+      if (sale.products && Array.isArray(sale.products)) {
+        // Vente multi-produits - chaque produit sur une ligne séparée
+        sale.products.forEach((product, idx) => {
+          const quantity = isAdvanceProduct(product.description) ? 0 : product.quantitySold;
+          
+          tableBody.push([
+            idx === 0 ? saleDate : '', // Date seulement sur la première ligne
+            product.description || 'Inconnu',
+            `${product.purchasePrice.toFixed(2)} €`,
+            quantity.toString(),
+            `${product.sellingPrice.toFixed(2)} €`,
+            `${product.profit.toFixed(2)} €`,
+          ]);
+        });
+      } else {
+        // Vente simple (ancien format)
+        const achatPrice = typeof sale.purchasePrice === 'number' ? sale.purchasePrice : 0;
+        const quantity = isAdvanceProduct(sale.description || '') ? 0 : (typeof sale.quantitySold === 'number' ? sale.quantitySold : 0);
+        const ventePrice = typeof sale.sellingPrice === 'number' ? sale.sellingPrice : 0;
+        const profit = typeof sale.profit === 'number' ? sale.profit : 0;
 
-      return [
-        new Date(sale.date).toLocaleDateString('fr-FR'),
-        sale.description || 'Inconnu',
-        `${achatPrice.toFixed(2)} €`,
-        quantity.toString(),
-        `${ventePrice.toFixed(2)} €`,
-        `${profit.toFixed(2)} €`,
-      ];
+        tableBody.push([
+          saleDate,
+          sale.description || 'Inconnu',
+          `${achatPrice.toFixed(2)} €`,
+          quantity.toString(),
+          `${ventePrice.toFixed(2)} €`,
+          `${profit.toFixed(2)} €`,
+        ]);
+      }
     });
 
-    // Calcul des totaux
+    // Calcul des totaux - Compatible avec ventes multi-produits ET simples
     const totalQuantite = sales.reduce((sum, sale) => {
-      return sum + (isAdvanceProduct(sale.description) ? 0 : (typeof sale.quantitySold === 'number' ? sale.quantitySold : 0));
+      if (sale.products && Array.isArray(sale.products)) {
+        // Vente multi-produits
+        return sum + sale.products.reduce((productSum, product) => {
+          return productSum + (isAdvanceProduct(product.description) ? 0 : product.quantitySold);
+        }, 0);
+      } else {
+        // Vente simple
+        return sum + (isAdvanceProduct(sale.description || '') ? 0 : (typeof sale.quantitySold === 'number' ? sale.quantitySold : 0));
+      }
     }, 0);
     
     const totalVente = sales.reduce((sum, sale) => {
-      return sum + (typeof sale.sellingPrice === 'number' ? sale.sellingPrice : 0);
+      if (sale.products && Array.isArray(sale.products)) {
+        // Vente multi-produits
+        return sum + sale.products.reduce((productSum, product) => productSum + product.sellingPrice, 0);
+      } else {
+        // Vente simple
+        return sum + (typeof sale.sellingPrice === 'number' ? sale.sellingPrice : 0);
+      }
     }, 0);
     
     const totalAchat = sales.reduce((sum, sale) => {
-      const quantite = isAdvanceProduct(sale.description) ? 0 : (typeof sale.quantitySold === 'number' ? sale.quantitySold : 0);
-      const prixAchat = typeof sale.purchasePrice === 'number' ? sale.purchasePrice : 0;
-      return sum + (prixAchat );
+      if (sale.products && Array.isArray(sale.products)) {
+        // Vente multi-produits
+        return sum + sale.products.reduce((productSum, product) => productSum + product.purchasePrice, 0);
+      } else {
+        // Vente simple
+        const prixAchat = typeof sale.purchasePrice === 'number' ? sale.purchasePrice : 0;
+        return sum + prixAchat;
+      }
     }, 0);
     
     const totalProfit = sales.reduce((sum, sale) => {
-      return sum + (typeof sale.profit === 'number' ? sale.profit : 0);
+      if (sale.products && Array.isArray(sale.products)) {
+        // Vente multi-produits
+        return sum + sale.products.reduce((productSum, product) => productSum + product.profit, 0);
+      } else {
+        // Vente simple
+        return sum + (typeof sale.profit === 'number' ? sale.profit : 0);
+      }
     }, 0);
 
     // Ligne de totaux premium
