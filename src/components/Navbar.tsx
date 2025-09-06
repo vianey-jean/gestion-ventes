@@ -29,7 +29,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
-import Logo from "@/assets/logo.png"
+
 
 const Navbar: React.FC = () => {
   const { isAuthenticated, user, logout } = useAuth();
@@ -51,9 +51,9 @@ const Navbar: React.FC = () => {
                 <div className="logo-container flex items-center p-2 rounded-2xl hover:bg-gradient-to-r hover:from-purple-500/10 hover:to-pink-500/10 transition-all duration-300">
                   {/* ✅ Logo image importé */}
                   <img
-                    src={Logo}
+                    src="/images/logo.ico"
                     alt="Logo Gestion & Ventes"
-                    className="h-20 w-40 object-contain" // ⬅️ largeur augmentée
+                    className="h-20 w-40 object-contain"
                   />
                 </div>
               </Link>

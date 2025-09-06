@@ -71,7 +71,7 @@ const TendancesPage = () => {
       });
       
       validProducts.forEach(product => {
-        revenue += product.sellingPrice * product.quantitySold;
+        revenue += product.sellingPrice 
         quantity += product.quantitySold;
         profit += product.profit || 0;
       });
