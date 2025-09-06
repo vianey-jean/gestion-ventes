@@ -29,6 +29,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
+import Logo from "@/assets/logo.png"
 
 const Navbar: React.FC = () => {
   const { isAuthenticated, user, logout } = useAuth();
@@ -48,16 +49,16 @@ const Navbar: React.FC = () => {
             <div className="flex items-center">
               <Link to="/" className="flex-shrink-0 flex items-center group">
                 <div className="logo-container flex items-center p-2 rounded-2xl hover:bg-gradient-to-r hover:from-purple-500/10 hover:to-pink-500/10 transition-all duration-300">
-                  <div className="relative">
-                    <Sparkles className="absolute -top-1 -right-1 h-3 w-3 text-purple-500 animate-pulse" />
-                    <span className="text-2xl font-extrabold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">G</span>
-                  </div>
-                  <span className="text-2xl font-light text-gray-700 dark:text-gray-200 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">estion</span>
-                  <span className="text-2xl font-extrabold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent ml-2">V</span>
-                  <span className="text-2xl font-light text-gray-700 dark:text-gray-200 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">ente</span>
+                  {/* ✅ Logo image importé */}
+                  <img
+                    src={Logo}
+                    alt="Logo Gestion & Ventes"
+                    className="h-20 w-40 object-contain" // ⬅️ largeur augmentée
+                  />
                 </div>
               </Link>
             </div>
+
 
             {/* Desktop Menu (texte + icônes) */}
             <div className="hidden md:flex md:items-center md:space-x-2">
