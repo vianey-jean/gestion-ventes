@@ -87,9 +87,16 @@ const SalesOverviewSection: React.FC<SalesOverviewSectionProps> = ({
 
   return (
     <section aria-labelledby="sales-overview-title">
-      <h2 id="sales-overview-title" className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">
-        Aperçu des Ventes - {monthNames[currentMonth - 1]} {currentYear}
-      </h2>
+        <h2
+          id="sales-overview-title"
+          className="text-2xl font-bold mb-6 text-gray-900 dark:text-white"
+        >
+          Aperçu des Ventes =
+          <span className="text-blue-500 font-bold">
+               &nbsp;{monthNames[currentMonth - 1]} {currentYear}
+          </span>
+        </h2>
+
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
         {stats.map((stat, index) => (

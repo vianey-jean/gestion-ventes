@@ -102,7 +102,7 @@ const SalesManagementSection: React.FC<SalesManagementSectionProps> = ({
           <div className="flex items-center space-x-4">
             <div className="text-right">
               <p className="text-sm text-gray-500">Mois en cours</p>
-              <p className="text-lg font-bold text-red-600">
+              <p className="text-lg font-bold text-blue-500">
                 {monthNames[currentMonth - 1]} {currentYear}
               </p>
             </div>
