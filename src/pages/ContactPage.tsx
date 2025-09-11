@@ -10,6 +10,7 @@ import { Mail, Phone, MapPin, Send, CheckCircle, Clock, Globe, Shield, Sparkles 
 import { useToast } from '@/hooks/use-toast';
 import Layout from '@/components/Layout';
 import { useMessages } from '@/hooks/use-messages';
+import { motion } from "framer-motion";
 
 const ContactPage: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -116,9 +117,18 @@ const ContactPage: React.FC = () => {
         <div className="text-center mb-16">
           <div className="relative inline-block mb-8">
             <div className="absolute inset-0 bg-gradient-to-r from-blue-500 via-purple-600 to-indigo-600 rounded-full blur-3xl opacity-20"></div>
-            <h1 className="relative text-6xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
-              Contactez-nous
-            </h1>
+           
+              <motion.h1
+                  initial={{ opacity: 0, y: 60, scale: 0.9 }}   // Apparition douce avec léger zoom
+                  animate={{ opacity: 1, y: 0, scale: 1 }}      // Monte + grossit légèrement
+                  transition={{ duration: 0.9, ease: "easeOut" }}
+                  className="text-5xl md:text-6xl font-extrabold 
+                            bg-gradient-to-r from-purple-600 via-red-600 to-indigo-600 
+                            bg-[length:200%_200%] animate-gradient 
+                            bg-clip-text text-transparent mb-6 text-center text-3d"
+                >
+                  Contactez-nous
+                </motion.h1>
           </div>
           <div className="max-w-3xl mx-auto">
             <div className="text-xl text-slate-600 dark:text-slate-300 leading-relaxed mb-8">

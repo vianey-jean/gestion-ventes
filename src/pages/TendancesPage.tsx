@@ -10,6 +10,7 @@ import { useApp } from '@/contexts/AppContext';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 import PremiumLoading from '@/components/ui/premium-loading';
+import { motion } from "framer-motion";
 
 const TendancesPage = () => {
   const { allSales, products, loading } = useApp();
@@ -409,9 +410,18 @@ const TendancesPage = () => {
               Analyse des tendances en temps réel
             </div>
             
-            <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-emerald-600 via-blue-600 to-purple-600 bg-clip-text text-transparent mb-4">
-              Tendances & Analytics
-            </h1>
+            
+             <motion.h1
+                              initial={{ opacity: 0, y: 60, scale: 0.9 }}   // Apparition douce avec léger zoom
+                              animate={{ opacity: 1, y: 0, scale: 1 }}      // Monte + grossit légèrement
+                              transition={{ duration: 0.9, ease: "easeOut" }}
+                              className="text-5xl md:text-6xl font-extrabold 
+                                        bg-gradient-to-r from-purple-600 via-red-600 to-indigo-600 
+                                        bg-[length:200%_200%] animate-gradient 
+                                        bg-clip-text text-transparent mb-6 text-center text-3d"
+                            >
+                               Tendances & Analytics
+                            </motion.h1>
             <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
               Découvrez vos performances, identifiez les opportunités et optimisez vos ventes
             </p>

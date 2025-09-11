@@ -10,6 +10,7 @@ import ProfitCalculator from '@/components/dashboard/ProfitCalculator';
 import Layout from '@/components/Layout';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { motion } from "framer-motion";
 import { ShoppingCart, Users, Package, CreditCard, TrendingUp, Sparkles, Archive, Calculator } from 'lucide-react';
 
 const DashboardPage = () => {
@@ -27,9 +28,17 @@ const DashboardPage = () => {
               Tableau de bord en temps réel
             </div>
             
-            <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600 bg-clip-text text-transparent mb-4">
-              Tableau de bord
-            </h1>
+                <motion.h1
+                  initial={{ opacity: 0, y: 60, scale: 0.9 }}   // Apparition douce avec léger zoom
+                  animate={{ opacity: 1, y: 0, scale: 1 }}      // Monte + grossit légèrement
+                  transition={{ duration: 0.9, ease: "easeOut" }}
+                  className="text-5xl md:text-6xl font-extrabold 
+                            bg-gradient-to-r from-purple-600 via-red-600 to-indigo-600 
+                            bg-[length:200%_200%] animate-gradient 
+                            bg-clip-text text-transparent mb-6 text-center text-3d"
+                >
+                  Tableau de bord
+                </motion.h1>
             <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
               Gérez efficacement vos ventes, inventaires et finances en un seul endroit
             </p>

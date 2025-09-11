@@ -5,6 +5,7 @@ import Layout from '@/components/Layout';
 import { useAuth } from '@/contexts/AuthContext';
 import PremiumLoading from '@/components/ui/premium-loading';
 import { ArrowRight, BarChart3, Shield, Zap, TrendingUp } from 'lucide-react';
+import { motion } from "framer-motion";
 
 const HomePage: React.FC = () => {
   const navigate = useNavigate();
@@ -52,14 +53,20 @@ const HomePage: React.FC = () => {
                 </span>
               </div>
               
-              <h1 className="text-4xl font-extrabold tracking-tight text-white sm:text-5xl md:text-7xl animate-in fade-in-50 duration-1000 delay-200">
-                <span className="block bg-gradient-to-r from-white via-purple-200 to-blue-200 bg-clip-text text-transparent">
+              <motion.h1
+                                initial={{ opacity: 0, y: 60, scale: 0.9 }}   // Apparition douce avec léger zoom
+                                animate={{ opacity: 1, y: 0, scale: 1 }}      // Monte + grossit légèrement
+                                transition={{ duration: 0.9, ease: "easeOut" }}
+                                className="text-5xl md:text-6xl font-extrabold 
+                                          bg-gradient-to-r from-purple-600 via-red-600 to-indigo-600 
+                                          bg-[length:200%_200%] animate-gradient 
+                                          bg-clip-text text-transparent mb-6 text-center text-3d"
+                              >
                   Gestion de vente
-                </span>
                 <span className="block bg-gradient-to-r from-pink-400 via-purple-400 to-indigo-400 bg-clip-text text-transparent mt-2">
                   Simplifiée et efficace
                 </span>
-              </h1>
+              </motion.h1>
               
               <p className="mt-6 max-w-2xl mx-auto text-xl text-white/80 leading-relaxed animate-in fade-in-50 duration-1000 delay-400">
                 Transformez votre façon de gérer les ventes avec notre plateforme moderne. 

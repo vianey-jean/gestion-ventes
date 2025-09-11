@@ -15,6 +15,7 @@ import ScrollToTop from '@/components/ScrollToTop';
 import ConfirmDeleteDialog from '@/components/dashboard/forms/ConfirmDeleteDialog';
 import Layout from '@/components/Layout';
 import PremiumLoading from '@/components/ui/premium-loading';
+import { motion } from "framer-motion";
 
 interface Client {
   id: string;
@@ -220,9 +221,18 @@ const ClientsPage: React.FC = () => {
                   <Star className="w-3 h-3 text-white" />
                 </div>
               </div>
-              <h1 className="text-5xl md:text-7xl font-bold text-white bg-gradient-to-r from-white via-yellow-100 to-white bg-clip-text">
-                Listes Clients <span className="text-transparent bg-gradient-to-r from-yellow-300 via-orange-300 to-yellow-300 bg-clip-text animate-pulse">Élite</span>
-              </h1>
+             
+              <motion.h1
+                                            initial={{ opacity: 0, y: 60, scale: 0.9 }}   // Apparition douce avec léger zoom
+                                            animate={{ opacity: 1, y: 0, scale: 1 }}      // Monte + grossit légèrement
+                                            transition={{ duration: 0.9, ease: "easeOut" }}
+                                            className="text-5xl md:text-6xl font-extrabold 
+                                                      bg-gradient-to-r from-purple-600 via-red-600 to-indigo-600 
+                                                      bg-[length:200%_200%] animate-gradient 
+                                                      bg-clip-text text-transparent mb-6 text-center text-3d"
+                                          >
+                                             Listes Clients <span className="text-transparent bg-gradient-to-r from-yellow-300 via-orange-300 to-yellow-300 bg-clip-text animate-pulse">Élite</span>
+                                          </motion.h1>
               <div className="relative">
                 <Diamond className="w-16 h-16 text-purple-200 animate-spin-slow" />
                 <div className="absolute inset-0 bg-gradient-to-r from-purple-400/20 to-pink-400/20 rounded-full blur-xl"></div>
