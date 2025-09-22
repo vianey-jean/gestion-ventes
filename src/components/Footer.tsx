@@ -1,9 +1,11 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Mail, Phone, MapPin, Heart, Sparkles } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext'; // ✅ On importe le contexte d'authentification
 
 const Footer: React.FC = () => {
+  const { user } = useAuth(); // ✅ Récupère l'utilisateur connecté (null si déconnecté)
+
   return (
     <footer className="relative bg-gradient-to-br from-gray-900 via-purple-900 to-indigo-900 text-white mt-auto overflow-hidden">
       {/* Background decorative elements */}
@@ -37,69 +39,72 @@ const Footer: React.FC = () => {
           
           {/* Quick links */}
           <div>
-        <h3 className="text-lg font-semibold mb-6 text-purple-300">Navigation</h3>
-        <ul className="space-y-4">
-          
-          <li>
-            <Link 
-              to="/" 
-              className="text-gray-300 hover:text-white hover:translate-x-1 transition-all duration-200 inline-flex items-center group"
-            >
-              <span className="w-1 h-1 bg-purple-400 rounded-full mr-3 group-hover:bg-pink-400 transition-colors"></span>
-              <span className="relative after:content-[''] after:absolute after:left-0 after:-bottom-1 
-                              after:w-0 after:h-[3px] after:bg-red-500 after:transition-all after:duration-300 
-                              group-hover:after:w-full">
-                Accueil
-              </span>
-            </Link>
-          </li>
+            <h3 className="text-lg font-semibold mb-6 text-purple-300">Navigation</h3>
+            <ul className="space-y-4">
+              <li>
+                <Link 
+                  to="/" 
+                  className="text-gray-300 hover:text-white hover:translate-x-1 transition-all duration-200 inline-flex items-center group"
+                >
+                  <span className="w-1 h-1 bg-purple-400 rounded-full mr-3 group-hover:bg-pink-400 transition-colors"></span>
+                  <span className="relative after:content-[''] after:absolute after:left-0 after:-bottom-1 
+                                  after:w-0 after:h-[3px] after:bg-red-500 after:transition-all after:duration-300 
+                                  group-hover:after:w-full">
+                    Accueil
+                  </span>
+                </Link>
+              </li>
 
-          <li>
-            <Link 
-              to="/about" 
-              className="text-gray-300 hover:text-white hover:translate-x-1 transition-all duration-200 inline-flex items-center group"
-            >
-              <span className="w-1 h-1 bg-purple-400 rounded-full mr-3 group-hover:bg-pink-400 transition-colors"></span>
-              <span className="relative after:content-[''] after:absolute after:left-0 after:-bottom-1 
-                              after:w-0 after:h-[3px] after:bg-red-500 after:transition-all after:duration-300 
-                              group-hover:after:w-full">
-                À propos
-              </span>
-            </Link>
-          </li>
+              <li>
+                <Link 
+                  to="/about" 
+                  className="text-gray-300 hover:text-white hover:translate-x-1 transition-all duration-200 inline-flex items-center group"
+                >
+                  <span className="w-1 h-1 bg-purple-400 rounded-full mr-3 group-hover:bg-pink-400 transition-colors"></span>
+                  <span className="relative after:content-[''] after:absolute after:left-0 after:-bottom-1 
+                                  after:w-0 after:h-[3px] after:bg-red-500 after:transition-all after:duration-300 
+                                  group-hover:after:w-full">
+                    À propos
+                  </span>
+                </Link>
+              </li>
 
-          <li>
-            <Link 
-              to="/contact" 
-              className="text-gray-300 hover:text-white hover:translate-x-1 transition-all duration-200 inline-flex items-center group"
-            >
-              <span className="w-1 h-1 bg-purple-400 rounded-full mr-3 group-hover:bg-pink-400 transition-colors"></span>
-              <span className="relative after:content-[''] after:absolute after:left-0 after:-bottom-1 
-                              after:w-0 after:h-[3px] after:bg-red-500 after:transition-all after:duration-300 
-                              group-hover:after:w-full">
-                Contact
-              </span>
-            </Link>
-          </li>
+              {/* ✅ Contact → visible uniquement si user est déconnecté */}
+              {!user && (
+                <li>
+                  <Link 
+                    to="/contact" 
+                    className="text-gray-300 hover:text-white hover:translate-x-1 transition-all duration-200 inline-flex items-center group"
+                  >
+                    <span className="w-1 h-1 bg-purple-400 rounded-full mr-3 group-hover:bg-pink-400 transition-colors"></span>
+                    <span className="relative after:content-[''] after:absolute after:left-0 after:-bottom-1 
+                                    after:w-0 after:h-[3px] after:bg-red-500 after:transition-all after:duration-300 
+                                    group-hover:after:w-full">
+                      Contact
+                    </span>
+                  </Link>
+                </li>
+              )}
 
-          <li>
-            <Link 
-              to="/login" 
-              className="text-gray-300 hover:text-white hover:translate-x-1 transition-all duration-200 inline-flex items-center group"
-            >
-              <span className="w-1 h-1 bg-purple-400 rounded-full mr-3 group-hover:bg-pink-400 transition-colors"></span>
-              <span className="relative after:content-[''] after:absolute after:left-0 after:-bottom-1 
-                              after:w-0 after:h-[3px] after:bg-red-500 after:transition-all after:duration-300 
-                              group-hover:after:w-full">
-                Connexion
-              </span>
-            </Link>
-          </li>
+              {/* ✅ Connexion → visible uniquement si user est déconnecté */}
+              {!user && (
+                <li>
+                  <Link 
+                    to="/login" 
+                    className="text-gray-300 hover:text-white hover:translate-x-1 transition-all duration-200 inline-flex items-center group"
+                  >
+                    <span className="w-1 h-1 bg-purple-400 rounded-full mr-3 group-hover:bg-pink-400 transition-colors"></span>
+                    <span className="relative after:content-[''] after:absolute after:left-0 after:-bottom-1 
+                                    after:w-0 after:h-[3px] after:bg-red-500 after:transition-all after:duration-300 
+                                    group-hover:after:w-full">
+                      Connexion
+                    </span>
+                  </Link>
+                </li>
+              )}
+            </ul>
+          </div>
 
-        </ul>
-      </div>
-
-          
           {/* Services */}
           <div>
             <h3 className="text-lg font-semibold mb-6 text-purple-300">Nos Services</h3>
@@ -189,14 +194,14 @@ const Footer: React.FC = () => {
           </div>
           
           {/* Version indicator */}
-          <div className="mt-6 text-center">
+          <div className="mt-6 text-center space-x-2">
             <div className="inline-flex items-center px-3 py-1 bg-white/5 backdrop-blur-sm rounded-full text-xs text-gray-400 border border-white/10">
               <div className="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></div>
               Version 3.2.0 - Système opérationnel 
             </div>
             <div className="inline-flex items-center px-3 py-1 bg-white/5 backdrop-blur-sm rounded-full text-xs text-gray-400 border border-white/10">
               <div className="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></div>
-              Créer par Jean Rabemanalina
+              Créé par Jean Rabemanalina
             </div>
           </div>
         </div>
