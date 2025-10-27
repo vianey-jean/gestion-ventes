@@ -642,7 +642,9 @@ const PretProduitsGrouped: React.FC = () => {
                       </p>
                       <p
                         className={`text-lg font-bold ${
-                          group.totalReste === 0 ? 'text-green-600' : 'text-red-600'
+                          group.totalReste === 0
+                            ? 'text-green-600 dark:text-green-400'   // ✅ Vert clair en mode sombre
+                            : 'text-red-600 dark:text-red-400'       // ✅ Rouge clair en mode sombre
                         }`}
                       >
                         {formatCurrency(group.totalReste)}
