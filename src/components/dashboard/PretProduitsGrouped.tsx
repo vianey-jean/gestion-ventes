@@ -637,7 +637,7 @@ const PretProduitsGrouped: React.FC = () => {
 
                   <div className="flex items-center gap-6">
                     <div className="text-right">
-                      <p className="text-sm text-gray-500 dark:text-gray-400">Total à payer</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">Total Reste à payer</p>
                       <p className="text-lg font-bold text-orange-600">{formatCurrency(group.totalReste)}</p>
                     </div>
                     
