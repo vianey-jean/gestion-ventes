@@ -637,14 +637,22 @@ const PretProduitsGrouped: React.FC = () => {
 
                   <div className="flex items-center gap-6">
                     <div className="text-right">
-                      <p className="text-sm text-gray-500 font-bold dark:text-gray-400">Total Reste à payer</p>
-                      <p className="text-lg font-bold text-orange-600">{formatCurrency(group.totalReste)}</p>
+                      <p className="text-sm text-gray-500 font-bold dark:text-gray-400">
+                        Total Reste à payer
+                      </p>
+                      <p
+                        className={`text-lg font-bold ${
+                          group.totalReste === 0 ? 'text-green-600' : 'text-red-600'
+                        }`}
+                      >
+                        {formatCurrency(group.totalReste)}
+                      </p>
                     </div>
                     
                     <span className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold ${
                       group.allPaid 
                         ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400' 
-                        : 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400'
+                        : 'bg-red-600 text-red-600 dark:bg-red-900/30 dark:text-red-400'
                     }`}>
                       {group.allPaid ? (
                         <>
