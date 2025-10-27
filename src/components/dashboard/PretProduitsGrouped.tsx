@@ -11,7 +11,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
-import { PlusCircle, Edit, CalendarIcon, Loader2, Trash2, Plus, CreditCard, TrendingUp, Wallet, CheckCircle, Clock, Search, Phone, ChevronDown, ChevronUp, ArrowRightLeft } from 'lucide-react';
+import { PlusCircle, Edit, CalendarIcon, Loader2, Trash2, Plus, CreditCard, TrendingUp, Wallet, CheckCircle, Clock, Search, Phone, ChevronDown, ChevronUp, ArrowRightLeft, UserPlus, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useApp } from '@/contexts/AppContext';
 import { Product, PretProduit } from '@/types';
@@ -54,6 +54,9 @@ const PretProduitsGrouped: React.FC = () => {
   const [selectedGroupForTransfer, setSelectedGroupForTransfer] = useState<GroupedPrets | null>(null);
   const [selectedPretsForTransfer, setSelectedPretsForTransfer] = useState<Set<string>>(new Set());
   const [transferTargetName, setTransferTargetName] = useState('');
+  const [isNewClient, setIsNewClient] = useState(true);
+  const [clientSearchQuery, setClientSearchQuery] = useState('');
+  const [clientSearchResults, setClientSearchResults] = useState<any[]>([]);
   const { products, searchProducts } = useApp();
   const { toast } = useToast();
 
@@ -345,6 +348,44 @@ const PretProduitsGrouped: React.FC = () => {
     setAvanceRecue('');
     setAjoutAvance('');
     setSelectedProduct(null);
+    setIsNewClient(true);
+    setClientSearchQuery('');
+    setClientSearchResults([]);
+  };
+
+  const handleClientSearch = (query: string) => {
+    setClientSearchQuery(query);
+    if (query.length >= 3) {
+      // Chercher dans les prêts produits existants
+      const queryLower = query.toLowerCase();
+      const matchingPrets = prets.filter(pret => 
+        pret.nom.toLowerCase().includes(queryLower)
+      );
+      
+      // Extraire les noms uniques avec leur téléphone
+      const uniqueClients = new Map<string, { id: string; nom: string; phone: string }>();
+      
+      matchingPrets.forEach(pret => {
+        if (!uniqueClients.has(pret.nom)) {
+          uniqueClients.set(pret.nom, {
+            id: pret.nom, // Utiliser le nom comme ID unique
+            nom: pret.nom,
+            phone: pret.phone || ''
+          });
+        }
+      });
+      
+      setClientSearchResults(Array.from(uniqueClients.values()));
+    } else {
+      setClientSearchResults([]);
+    }
+  };
+
+  const selectClient = (client: any) => {
+    setNom(client.nom);
+    setPhone(client.phone || '');
+    setClientSearchQuery('');
+    setClientSearchResults([]);
   };
 
   const resetTransferForm = () => {
@@ -728,13 +769,103 @@ const PretProduitsGrouped: React.FC = () => {
       
       {/* Dialog Nouveau Prêt */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-[600px] bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border border-white/20">
+        <DialogContent className="sm:max-w-[600px] bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border border-white/20 max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
               Ajouter un prêt de produit
             </DialogTitle>
           </DialogHeader>
           <div className="grid gap-6 py-6">
+            {/* Type de client */}
+            <div className="grid gap-4">
+              <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Type de client</Label>
+              <div className="grid grid-cols-2 gap-4">
+                <Button
+                  type="button"
+                  variant={isNewClient ? "default" : "outline"}
+                  onClick={() => {
+                    setIsNewClient(true);
+                    setNom('');
+                    setPhone('');
+                    setClientSearchQuery('');
+                    setClientSearchResults([]);
+                  }}
+                  className={cn(
+                    "w-full",
+                    isNewClient && "bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white"
+                  )}
+                >
+                  <UserPlus className="mr-2 h-4 w-4" />
+                  Nouveau client
+                </Button>
+                <Button
+                  type="button"
+                  variant={!isNewClient ? "default" : "outline"}
+                  onClick={() => {
+                    setIsNewClient(false);
+                    setNom('');
+                    setPhone('');
+                  }}
+                  className={cn(
+                    "w-full",
+                    !isNewClient && "bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white"
+                  )}
+                >
+                  <Users className="mr-2 h-4 w-4" />
+                  Client existant
+                </Button>
+              </div>
+            </div>
+
+            {/* Recherche client existant */}
+            {!isNewClient && (
+              <div className="grid gap-2">
+                <Label htmlFor="clientSearch" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  Rechercher un client (min. 3 caractères)
+                </Label>
+                <Input
+                  id="clientSearch"
+                  value={clientSearchQuery}
+                  onChange={(e) => handleClientSearch(e.target.value)}
+                  placeholder="Tapez le nom du client..."
+                  className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm border-gray-300 dark:border-gray-600"
+                />
+                {clientSearchQuery.length >= 3 && (
+                  <>
+                    {clientSearchResults.length > 0 ? (
+                      <div className="border rounded-md max-h-40 overflow-y-auto bg-white dark:bg-gray-800 z-50">
+                        {clientSearchResults.map((client) => (
+                          <div
+                            key={client.id}
+                            className="p-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 border-b last:border-b-0"
+                            onClick={() => selectClient(client)}
+                          >
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <div className="text-sm font-medium">{client.nom}</div>
+                                {client.phone && (
+                                  <div className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1 mt-1">
+                                    <Phone className="h-3 w-3" />
+                                    {client.phone}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="p-4 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-md">
+                        <p className="text-sm text-orange-700 dark:text-orange-400 text-center">
+                          Aucun client trouvé avec les caractères "{clientSearchQuery}"
+                        </p>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
+
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="datePret" className="text-sm font-semibold text-gray-700 dark:text-gray-300">Date de prêt</Label>
@@ -830,7 +961,8 @@ const PretProduitsGrouped: React.FC = () => {
                   value={nom}
                   onChange={(e) => setNom(e.target.value)}
                   placeholder="Nom du client"
-                  className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm border-gray-300 dark:border-gray-600"
+                  disabled={!isNewClient && nom !== ''}
+                  className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm border-gray-300 dark:border-gray-600 disabled:opacity-70"
                 />
               </div>
 
@@ -841,7 +973,8 @@ const PretProduitsGrouped: React.FC = () => {
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder="+262 692 123 456"
-                  className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm border-gray-300 dark:border-gray-600"
+                  disabled={!isNewClient && phone !== ''}
+                  className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm border-gray-300 dark:border-gray-600 disabled:opacity-70"
                 />
               </div>
             </div>
