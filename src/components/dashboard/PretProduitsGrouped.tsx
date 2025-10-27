@@ -652,7 +652,7 @@ const PretProduitsGrouped: React.FC = () => {
                     <span className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold ${
                       group.allPaid 
                         ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400' 
-                        : 'bg-red-600 text-red-600 dark:bg-red-900/30 dark:text-red-400'
+                        : 'bg-red-600 text-red-600 dark:bg-orange-900/30 dark:text-orange-400'
                     }`}>
                       {group.allPaid ? (
                         <>
