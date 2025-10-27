@@ -11,7 +11,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
-import { PlusCircle, Edit, CalendarIcon, Loader2, Trash2, Plus, CreditCard, TrendingUp, Wallet, CheckCircle, Clock, Search, Phone, ChevronDown, ChevronUp, ArrowRightLeft, UserPlus, Users } from 'lucide-react';
+import { PlusCircle, Edit, CalendarIcon, Loader2, Trash2, Plus, CreditCard, TrendingUp, Wallet, CheckCircle, Clock, Search, Phone, ChevronDown, ChevronUp, ArrowRightLeft, UserPlus, Users, Eye } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useApp } from '@/contexts/AppContext';
 import { Product, PretProduit } from '@/types';
@@ -40,6 +40,7 @@ const PretProduitsGrouped: React.FC = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [ajoutAvanceDialogOpen, setAjoutAvanceDialogOpen] = useState(false);
   const [transferDialogOpen, setTransferDialogOpen] = useState(false);
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [datePret, setDatePret] = useState<Date>(new Date());
   const [datePaiement, setDatePaiement] = useState<Date | undefined>();
   const [description, setDescription] = useState('');
@@ -95,8 +96,18 @@ const PretProduitsGrouped: React.FC = () => {
     try {
       setLoading(true);
       const data = await pretProduitService.getPretProduits();
-      setPrets(data);
-      groupPretsByPerson(data);
+      
+      // Initialiser le champ paiements pour les prêts qui n'en ont pas
+      const dataWithPaiements = data.map(pret => ({
+        ...pret,
+        paiements: pret.paiements || (pret.avanceRecue > 0 ? [{
+          date: pret.date,
+          montant: pret.avanceRecue
+        }] : [])
+      }));
+      
+      setPrets(dataWithPaiements);
+      groupPretsByPerson(dataWithPaiements);
     } catch (error) {
       console.error('Erreur lors du chargement des prêts produits', error);
       toast({
@@ -200,6 +211,19 @@ const PretProduitsGrouped: React.FC = () => {
 
     try {
       setLoading(true);
+      
+      // Créer l'historique des paiements avec la date actuelle du jour
+      const aujourdHui = new Date();
+      const dateAujourdhui = format(aujourdHui, 'yyyy-MM-dd');
+      
+      const paiements = [];
+      if (parseFloat(avanceRecue) > 0) {
+        paiements.push({
+          date: dateAujourdhui,
+          montant: parseFloat(avanceRecue)
+        });
+      }
+      
       const newPret: Omit<PretProduit, 'id'> = {
         date: format(datePret, 'yyyy-MM-dd'),
         datePaiement: datePaiement ? format(datePaiement, 'yyyy-MM-dd') : undefined,
@@ -210,7 +234,8 @@ const PretProduitsGrouped: React.FC = () => {
         avanceRecue: parseFloat(avanceRecue) || 0,
         reste,
         estPaye,
-        productId: selectedProduct?.id
+        productId: selectedProduct?.id,
+        paiements
       };
       await pretProduitService.addPretProduit(newPret);
       await fetchPrets();
@@ -263,15 +288,34 @@ const PretProduitsGrouped: React.FC = () => {
       const nouvelleAvanceRecue = selectedPret.avanceRecue + parseFloat(ajoutAvance);
       const nouveauReste = selectedPret.prixVente - nouvelleAvanceRecue;
       const nouveauEstPaye = nouveauReste <= 0;
+      
+      // Récupérer la date actuelle du jour depuis l'ordinateur
+      const aujourdHui = new Date();
+      const dateAujourdhui = format(aujourdHui, 'yyyy-MM-dd');
+      
+      // Ajouter le nouveau paiement à l'historique avec la date du jour
+      const nouveauPaiement = {
+        date: dateAujourdhui,
+        montant: parseFloat(ajoutAvance)
+      };
+      
+      // Initialiser le tableau de paiements s'il n'existe pas
+      const paiementsExistants = selectedPret.paiements || [];
+      const nouveauxPaiements = [...paiementsExistants, nouveauPaiement];
+      
       const updatedPret: PretProduit = { 
         ...selectedPret, 
         avanceRecue: nouvelleAvanceRecue, 
         reste: nouveauReste, 
-        estPaye: nouveauEstPaye 
+        estPaye: nouveauEstPaye,
+        paiements: nouveauxPaiements
       };
+      
+      console.log('Mise à jour du prêt avec les paiements:', updatedPret);
+      
       await pretProduitService.updatePretProduit(selectedPret.id, updatedPret);
       await fetchPrets();
-      toast({ title: 'Succès', description: 'Avance ajoutée avec succès', variant: 'default', className: 'notification-success' });
+      toast({ title: 'Succès', description: `Avance de ${formatCurrency(parseFloat(ajoutAvance))} ajoutée avec succès`, variant: 'default', className: 'notification-success' });
       setAjoutAvance('');
       setSelectedPret(null);
       setAjoutAvanceDialogOpen(false);
@@ -683,6 +727,18 @@ const PretProduitsGrouped: React.FC = () => {
                                     </>
                                   )}
                                 </span>
+
+                                <button 
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedPret(pret);
+                                    setDetailDialogOpen(true);
+                                  }} 
+                                  className="p-2 rounded-lg bg-purple-100 text-purple-600 hover:bg-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:hover:bg-purple-900/50 transition-colors"
+                                  title="Voir détails"
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </button>
 
                                 <button 
                                   onClick={(e) => {
@@ -1209,6 +1265,118 @@ const PretProduitsGrouped: React.FC = () => {
             <Button variant="destructive" onClick={handleDelete} disabled={loading}>
               {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
               Supprimer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog Détails du prêt */}
+      <Dialog open={detailDialogOpen} onOpenChange={setDetailDialogOpen}>
+        <DialogContent className="sm:max-w-[600px] bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border border-white/20">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+              <div className="flex items-center gap-2">
+                <Eye className="h-6 w-6 text-purple-600" />
+                Détails du prêt
+              </div>
+            </DialogTitle>
+          </DialogHeader>
+          
+          {selectedPret && (
+            <div className="py-4 space-y-4">
+              {/* Informations générales */}
+              <div className="p-4 bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Client</p>
+                    <p className="font-semibold text-gray-900 dark:text-gray-100">{selectedPret.nom || '-'}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Description</p>
+                    <p className="font-semibold text-gray-900 dark:text-gray-100">{selectedPret.description}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Date du prêt</p>
+                    <p className="font-semibold text-gray-900 dark:text-gray-100">
+                      {format(new Date(selectedPret.date), 'dd/MM/yyyy')}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Date prévue de paiement</p>
+                    <p className={getDatePaiementClass(selectedPret)}>
+                      {selectedPret.datePaiement ? format(new Date(selectedPret.datePaiement), 'dd/MM/yyyy') : '-'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Résumé financier */}
+              <div className="grid grid-cols-3 gap-3">
+                <div className="p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg text-center">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Prix total</p>
+                  <p className="text-lg font-bold text-emerald-600">{formatCurrency(selectedPret.prixVente)}</p>
+                </div>
+                <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-center">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Total payé</p>
+                  <p className="text-lg font-bold text-blue-600">{formatCurrency(selectedPret.avanceRecue)}</p>
+                </div>
+                <div className="p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg text-center">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Reste à payer</p>
+                  <p className="text-lg font-bold text-orange-600">{formatCurrency(selectedPret.reste)}</p>
+                </div>
+              </div>
+
+              {/* Historique des paiements */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                    Historique des paiements
+                  </Label>
+                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                    {selectedPret.paiements?.length || 0} paiement{(selectedPret.paiements?.length || 0) !== 1 ? 's' : ''}
+                  </span>
+                </div>
+                
+                {selectedPret.paiements && selectedPret.paiements.length > 0 ? (
+                  <div className="max-h-60 overflow-y-auto space-y-2 border rounded-lg p-3 bg-gray-50 dark:bg-gray-900/50">
+                    {selectedPret.paiements.map((paiement, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded-lg"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-full">
+                            <Wallet className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                              Avance {index + 1}
+                            </p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                              {format(new Date(paiement.date), 'dd/MM/yyyy')}
+                            </p>
+                          </div>
+                        </div>
+                        <p className="text-lg font-bold text-emerald-600">
+                          +{formatCurrency(paiement.montant)}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="p-6 bg-gray-50 dark:bg-gray-900/50 rounded-lg border border-dashed border-gray-300 dark:border-gray-700 text-center">
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      Aucun paiement enregistré pour ce prêt
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDetailDialogOpen(false)}>
+              Fermer
             </Button>
           </DialogFooter>
         </DialogContent>

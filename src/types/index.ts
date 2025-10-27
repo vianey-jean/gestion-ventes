@@ -58,6 +58,11 @@ export interface PretFamille {
   dateRemboursement: string;
 }
 
+export interface PaiementDetail {
+  date: string;
+  montant: number;
+}
+
 export interface PretProduit {
   id: string;
   description: string;
@@ -70,6 +75,7 @@ export interface PretProduit {
   reste: number;
   estPaye: boolean;
   productId?: string;
+  paiements?: PaiementDetail[]; // historique des paiements
 }
 
 export interface DepenseFixe {
