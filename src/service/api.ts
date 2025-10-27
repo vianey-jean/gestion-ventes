@@ -306,6 +306,15 @@ export const pretProduitService = {
     await api.delete(`/api/pretproduits/${id}`);
     return true;
   },
+
+  async transferPrets(fromName: string, toName: string, pretIds: string[]): Promise<{ message: string; transferred: number }> {
+    const response: AxiosResponse<{ message: string; transferred: number }> = await api.post('/api/pretproduits/transfer', {
+      fromName,
+      toName,
+      pretIds
+    });
+    return response.data;
+  },
 };
 
 // Benefice Service

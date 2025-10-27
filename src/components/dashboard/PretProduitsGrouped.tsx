@@ -6,10 +6,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
-import { PlusCircle, Edit, CalendarIcon, Loader2, Trash2, Plus, CreditCard, TrendingUp, Wallet, CheckCircle, Clock, Search, Phone, ChevronDown, ChevronUp } from 'lucide-react';
+import { PlusCircle, Edit, CalendarIcon, Loader2, Trash2, Plus, CreditCard, TrendingUp, Wallet, CheckCircle, Clock, Search, Phone, ChevronDown, ChevronUp, ArrowRightLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useApp } from '@/contexts/AppContext';
 import { Product, PretProduit } from '@/types';
@@ -37,6 +39,7 @@ const PretProduitsGrouped: React.FC = () => {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [ajoutAvanceDialogOpen, setAjoutAvanceDialogOpen] = useState(false);
+  const [transferDialogOpen, setTransferDialogOpen] = useState(false);
   const [datePret, setDatePret] = useState<Date>(new Date());
   const [datePaiement, setDatePaiement] = useState<Date | undefined>();
   const [description, setDescription] = useState('');
@@ -48,6 +51,9 @@ const PretProduitsGrouped: React.FC = () => {
   const [searchResults, setSearchResults] = useState<Product[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [selectedPret, setSelectedPret] = useState<PretProduit | null>(null);
+  const [selectedGroupForTransfer, setSelectedGroupForTransfer] = useState<GroupedPrets | null>(null);
+  const [selectedPretsForTransfer, setSelectedPretsForTransfer] = useState<Set<string>>(new Set());
+  const [transferTargetName, setTransferTargetName] = useState('');
   const { products, searchProducts } = useApp();
   const { toast } = useToast();
 
@@ -291,6 +297,43 @@ const PretProduitsGrouped: React.FC = () => {
     }
   };
 
+  const handleTransfer = async () => {
+    if (!selectedGroupForTransfer || selectedPretsForTransfer.size === 0) {
+      toast({ title: 'Erreur', description: 'Veuillez sélectionner au moins un prêt à transférer', variant: 'destructive' });
+      return;
+    }
+
+    if (!transferTargetName || transferTargetName.trim() === '') {
+      toast({ title: 'Erreur', description: 'Veuillez saisir le nom de la personne de destination', variant: 'destructive' });
+      return;
+    }
+
+    if (transferTargetName === selectedGroupForTransfer.nom) {
+      toast({ title: 'Erreur', description: 'La personne de destination doit être différente de la personne source', variant: 'destructive' });
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const pretIds = Array.from(selectedPretsForTransfer);
+      await pretProduitService.transferPrets(selectedGroupForTransfer.nom, transferTargetName, pretIds);
+      await fetchPrets();
+      toast({ 
+        title: 'Succès', 
+        description: `${pretIds.length} prêt${pretIds.length > 1 ? 's' : ''} transféré${pretIds.length > 1 ? 's' : ''} avec succès vers ${transferTargetName}`, 
+        variant: 'default', 
+        className: 'notification-success' 
+      });
+      resetTransferForm();
+      setTransferDialogOpen(false);
+    } catch (error) {
+      console.error('Erreur lors du transfert des prêts', error);
+      toast({ title: 'Erreur', description: 'Impossible de transférer les prêts', variant: 'destructive' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const resetForm = () => {
     setSelectedPret(null);
     setDatePret(new Date());
@@ -302,6 +345,27 @@ const PretProduitsGrouped: React.FC = () => {
     setAvanceRecue('');
     setAjoutAvance('');
     setSelectedProduct(null);
+  };
+
+  const resetTransferForm = () => {
+    setSelectedGroupForTransfer(null);
+    setSelectedPretsForTransfer(new Set());
+    setTransferTargetName('');
+  };
+
+  const togglePretSelection = (pretId: string) => {
+    const newSelection = new Set(selectedPretsForTransfer);
+    if (newSelection.has(pretId)) {
+      newSelection.delete(pretId);
+    } else {
+      newSelection.add(pretId);
+    }
+    setSelectedPretsForTransfer(newSelection);
+  };
+
+  const selectAllPrets = (group: GroupedPrets) => {
+    const allPretIds = group.prets.map(p => p.id);
+    setSelectedPretsForTransfer(new Set(allPretIds));
   };
 
   const formatCurrency = (amount: number) => {
@@ -620,18 +684,37 @@ const PretProduitsGrouped: React.FC = () => {
                         ))}
                       </div>
 
-                      <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 grid grid-cols-3 gap-4">
-                        <div className="text-center">
-                          <p className="text-xs text-gray-500 dark:text-gray-400">Total vente</p>
-                          <p className="text-lg font-bold text-emerald-600">{formatCurrency(group.totalPrixVente)}</p>
+                      <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                        <div className="grid grid-cols-3 gap-4 mb-4">
+                          <div className="text-center">
+                            <p className="text-xs text-gray-500 dark:text-gray-400">Total vente</p>
+                            <p className="text-lg font-bold text-emerald-600">{formatCurrency(group.totalPrixVente)}</p>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-xs text-gray-500 dark:text-gray-400">Total avances</p>
+                            <p className="text-lg font-bold text-blue-600">{formatCurrency(group.totalAvance)}</p>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-xs text-gray-500 dark:text-gray-400">Total reste</p>
+                            <p className="text-lg font-bold text-orange-600">{formatCurrency(group.totalReste)}</p>
+                          </div>
                         </div>
-                        <div className="text-center">
-                          <p className="text-xs text-gray-500 dark:text-gray-400">Total avances</p>
-                          <p className="text-lg font-bold text-blue-600">{formatCurrency(group.totalAvance)}</p>
-                        </div>
-                        <div className="text-center">
-                          <p className="text-xs text-gray-500 dark:text-gray-400">Total reste</p>
-                          <p className="text-lg font-bold text-orange-600">{formatCurrency(group.totalReste)}</p>
+                        
+                        <div className="flex justify-center">
+                          <Button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedGroupForTransfer(group);
+                              setSelectedPretsForTransfer(new Set());
+                              setTransferTargetName('');
+                              setTransferDialogOpen(true);
+                            }}
+                            variant="outline"
+                            className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white border-none shadow-md hover:shadow-lg transition-all duration-300"
+                          >
+                            <ArrowRightLeft className="mr-2 h-4 w-4" />
+                            Transférer les prêts
+                          </Button>
                         </div>
                       </div>
                     </div>
@@ -993,6 +1076,143 @@ const PretProduitsGrouped: React.FC = () => {
             <Button variant="destructive" onClick={handleDelete} disabled={loading}>
               {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
               Supprimer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog Transfert */}
+      <Dialog open={transferDialogOpen} onOpenChange={setTransferDialogOpen}>
+        <DialogContent className="sm:max-w-[700px] bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border border-white/20">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+              <div className="flex items-center gap-2">
+                <ArrowRightLeft className="h-6 w-6 text-indigo-600" />
+                Transférer des prêts
+              </div>
+            </DialogTitle>
+          </DialogHeader>
+          
+          {selectedGroupForTransfer && (
+            <div className="py-4 space-y-6">
+              <div className="p-4 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-lg border border-indigo-200 dark:border-indigo-800">
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Source</p>
+                <p className="text-lg font-bold text-indigo-600">{selectedGroupForTransfer.nom}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  {selectedGroupForTransfer.prets.length} prêt{selectedGroupForTransfer.prets.length > 1 ? 's' : ''} au total
+                </p>
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                    Sélectionnez les prêts à transférer
+                  </Label>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => selectAllPrets(selectedGroupForTransfer)}
+                    className="text-xs"
+                  >
+                    Tout sélectionner
+                  </Button>
+                </div>
+                
+                <div className="max-h-60 overflow-y-auto space-y-2 border rounded-lg p-3 bg-gray-50 dark:bg-gray-900/50">
+                  {selectedGroupForTransfer.prets.map((pret) => (
+                    <div
+                      key={pret.id}
+                      className="flex items-center gap-3 p-3 bg-white dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    >
+                      <Checkbox
+                        checked={selectedPretsForTransfer.has(pret.id)}
+                        onCheckedChange={() => togglePretSelection(pret.id)}
+                      />
+                      <div className="flex-1 grid grid-cols-3 gap-2 text-sm">
+                        <div>
+                          <p className="font-semibold text-gray-900 dark:text-gray-100">{pret.description}</p>
+                          <p className="text-xs text-gray-500">{format(new Date(pret.date), 'dd/MM/yyyy')}</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-gray-600 dark:text-gray-400">Prix</p>
+                          <p className="font-semibold">{formatCurrency(pret.prixVente)}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-gray-600 dark:text-gray-400">Reste</p>
+                          <p className="font-bold text-orange-600">{formatCurrency(pret.reste)}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  {selectedPretsForTransfer.size} prêt{selectedPretsForTransfer.size > 1 ? 's' : ''} sélectionné{selectedPretsForTransfer.size > 1 ? 's' : ''}
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="transferTarget" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  Nom de la personne de destination
+                </Label>
+                <div className="space-y-2">
+                  <Input
+                    id="transferTarget"
+                    value={transferTargetName}
+                    onChange={(e) => setTransferTargetName(e.target.value)}
+                    placeholder="Saisissez le nom de la personne..."
+                    className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm border-gray-300 dark:border-gray-600"
+                  />
+                  
+                  {groupedPrets.length > 0 && transferTargetName === '' && (
+                    <div className="space-y-1">
+                      <p className="text-xs text-gray-500 dark:text-gray-400">Personnes existantes:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {groupedPrets
+                          .filter(g => g.nom !== selectedGroupForTransfer.nom)
+                          .map(g => (
+                            <button
+                              key={g.nom}
+                              onClick={() => setTransferTargetName(g.nom)}
+                              className="px-3 py-1 text-xs bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 rounded-full hover:bg-indigo-200 dark:hover:bg-indigo-900/50 transition-colors"
+                            >
+                              {g.nom}
+                            </button>
+                          ))
+                        }
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {selectedPretsForTransfer.size > 0 && transferTargetName && (
+                <div className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Résumé du transfert:</p>
+                  <p className="text-base font-semibold text-gray-900 dark:text-gray-100 mt-1">
+                    {selectedPretsForTransfer.size} prêt{selectedPretsForTransfer.size > 1 ? 's' : ''} de{' '}
+                    <span className="text-indigo-600">{selectedGroupForTransfer.nom}</span> vers{' '}
+                    <span className="text-purple-600">{transferTargetName}</span>
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => {
+              setTransferDialogOpen(false);
+              resetTransferForm();
+            }}>
+              Annuler
+            </Button>
+            <Button 
+              onClick={handleTransfer} 
+              disabled={loading || selectedPretsForTransfer.size === 0 || !transferTargetName}
+              className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600"
+            >
+              {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <ArrowRightLeft className="h-4 w-4 mr-2" />}
+              Transférer
             </Button>
           </DialogFooter>
         </DialogContent>
