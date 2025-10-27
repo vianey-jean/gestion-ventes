@@ -625,12 +625,12 @@ const PretProduitsGrouped: React.FC = () => {
                     
                     {group.phone && (
                       <div className="flex items-center gap-1 text-gray-600 dark:text-gray-300">
-                        <Phone className="h-4 w-4" />
+                        <Phone className="h-4 w-4 text-blue-600" />
                         <span className="text-sm font-bold text-blue-600">{group.phone}</span>
                       </div>
                     )}
 
-                    <span className="text-sm  font-bold text-gray-500 dark:text-gray-400">
+                    <span className="text-sm  font-bold text-orange-500 dark:text-orange-400">
                       {group.prets.length} prêt{group.prets.length > 1 ? 's' : ''}
                     </span>
                   </div>
