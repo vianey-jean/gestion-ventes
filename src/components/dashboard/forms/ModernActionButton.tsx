@@ -12,7 +12,7 @@ interface ModernActionButtonProps extends Omit<ButtonProps, 'size' | 'variant'> 
   variant?: 'solid' | 'outline' | 'ghost';
 }
 
-const ModernActionButton: React.FC<ModernActionButtonProps> = ({
+const ModernActionButton = React.forwardRef<HTMLButtonElement, ModernActionButtonProps>(({
   icon: Icon,
   gradient = 'blue',
   isLoading = false,
@@ -21,7 +21,7 @@ const ModernActionButton: React.FC<ModernActionButtonProps> = ({
   children,
   className,
   ...props
-}) => {
+}, ref) => {
   const gradientClasses = {
     blue: 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-blue-500/25',
     green: 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 shadow-green-500/25',
@@ -58,6 +58,7 @@ const ModernActionButton: React.FC<ModernActionButtonProps> = ({
 
   return (
     <Button
+      ref={ref}
       size={buttonSize === 'sm' ? 'sm' : buttonSize === 'lg' ? 'lg' : 'default'}
       className={cn(
         'relative overflow-hidden font-semibold transition-all duration-300 transform',
@@ -82,6 +83,8 @@ const ModernActionButton: React.FC<ModernActionButtonProps> = ({
       </div>
     </Button>
   );
-};
+});
+
+ModernActionButton.displayName = 'ModernActionButton';
 
 export default ModernActionButton;

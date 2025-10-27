@@ -18,15 +18,14 @@ import PremiumLoading from '@/components/ui/premium-loading';
 
 type CategoryType = 'all' | 'perruque' | 'tissage' | 'autre';
 type SortOrder = 'asc' | 'desc';
-type SortType = 'name' | 'quantity';
 
 const Inventaire = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [category, setCategory] = useState<CategoryType>('all');
-  const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
-  const [sortType, setSortType] = useState<SortType>('quantity');
+  const [nameSortOrder, setNameSortOrder] = useState<SortOrder>('asc');
+  const [quantitySortOrder, setQuantitySortOrder] = useState<SortOrder>('asc');
   const [currentPage, setCurrentPage] = useState(1);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -90,18 +89,27 @@ const Inventaire = () => {
     if (category !== 'all') {
       filtered = filtered.filter(product => categorizeProduct(product.description) === category);
     }
+    // Appliquer les deux tris simultanément: d'abord par quantité, puis par nom
     filtered.sort((a, b) => {
-      if (sortType === 'quantity') {
-        return sortOrder === 'asc' ? a.quantity - b.quantity : b.quantity - a.quantity;
-      } else {
+      // Tri principal par quantité
+      const quantityDiff = quantitySortOrder === 'asc' 
+        ? a.quantity - b.quantity 
+        : b.quantity - a.quantity;
+      
+      // Si les quantités sont égales, trier par nom
+      if (quantityDiff === 0) {
         const aValue = a.description.toLowerCase();
         const bValue = b.description.toLowerCase();
-        return sortOrder === 'asc' ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
+        return nameSortOrder === 'asc' 
+          ? aValue.localeCompare(bValue) 
+          : bValue.localeCompare(aValue);
       }
+      
+      return quantityDiff;
     });
     setFilteredProducts(filtered);
     setCurrentPage(1);
-  }, [products, searchTerm, category, sortOrder, sortType]);
+  }, [products, searchTerm, category, nameSortOrder, quantitySortOrder]);
 
   const getStats = () => {
     const perruques = products.filter(p => categorizeProduct(p.description) === 'perruque').length;
@@ -315,16 +323,10 @@ const Inventaire = () => {
               variant="outline"
               gradient="indigo"
               icon={ArrowUpDown}
-              onClick={() => {
-                setSortType('name');
-                setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
-              }}
-              className={cn(
-                "bg-gradient-to-r from-white to-gray-50 border-2 rounded-xl shadow-lg hover:shadow-xl",
-                sortType === 'name' ? 'border-indigo-500' : 'border-gray-200'
-              )}
+              onClick={() => setNameSortOrder(nameSortOrder === 'asc' ? 'desc' : 'asc')}
+              className="bg-gradient-to-r from-white to-gray-50 border-2 border-gray-200 rounded-xl shadow-lg hover:shadow-xl"
             >
-              {sortOrder === 'asc' && sortType === 'name' ? 'A-Z' : sortType === 'name' ? 'Z-A' : 'A-Z'}
+              {nameSortOrder === 'asc' ? 'A-Z' : 'Z-A'}
             </ModernActionButton>
 
             {/* Tri par Quantité */}
@@ -332,16 +334,10 @@ const Inventaire = () => {
               variant="outline"
               gradient="blue"
               icon={TrendingUp}
-              onClick={() => {
-                setSortType('quantity');
-                setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
-              }}
-              className={cn(
-                "bg-gradient-to-r from-white to-gray-50 border-2 rounded-xl shadow-lg hover:shadow-xl",
-                sortType === 'quantity' ? 'border-blue-500' : 'border-gray-200'
-              )}
+              onClick={() => setQuantitySortOrder(quantitySortOrder === 'asc' ? 'desc' : 'asc')}
+              className="bg-gradient-to-r from-white to-gray-50 border-2 border-gray-200 rounded-xl shadow-lg hover:shadow-xl"
             >
-              {sortOrder === 'asc' && sortType === 'quantity' ? '0→9' : sortType === 'quantity' ? '9→0' : '0→9'}
+              {quantitySortOrder === 'asc' ? '0→9' : '9→0'}
             </ModernActionButton>
           </div>
 

@@ -18,16 +18,17 @@ interface ActionButtonProps extends ButtonProps {
   children: React.ReactNode;
 }
 
-const ActionButton: React.FC<ActionButtonProps> = ({ 
+const ActionButton = React.forwardRef<HTMLButtonElement, ActionButtonProps>(({ 
   icon: Icon,
   children, 
   variant = "default",
   className = "",
   onClick,
   ...props
-}) => {
+}, ref) => {
   return (
     <Button
+      ref={ref}
       variant={variant}
       className={`${className} card-3d`}
       onClick={onClick}
@@ -37,6 +38,8 @@ const ActionButton: React.FC<ActionButtonProps> = ({
       {children}
     </Button>
   );
-};
+});
+
+ActionButton.displayName = 'ActionButton';
 
 export default ActionButton;
