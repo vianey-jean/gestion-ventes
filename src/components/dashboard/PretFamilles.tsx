@@ -20,6 +20,7 @@ import { pretFamilleService } from '@/service/api';
 import { PretFamille } from '@/types';
 import PremiumLoading from '@/components/ui/premium-loading';
 import { realtimeService } from '@/services/realtimeService';
+import ConfirmDeleteDialog from '@/components/dashboard/forms/ConfirmDeleteDialog';
 
 const PretFamilles: React.FC = () => {
   const [prets, setPrets] = useState<PretFamille[]>([]);
@@ -28,6 +29,8 @@ const PretFamilles: React.FC = () => {
   const [demandePretDialogOpen, setDemandePretDialogOpen] = useState(false);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [editRemboursementDialogOpen, setEditRemboursementDialogOpen] = useState(false);
+  const [confirmDeleteDialogOpen, setConfirmDeleteDialogOpen] = useState(false);
+  const [remboursementIndexToDelete, setRemboursementIndexToDelete] = useState<number>(-1);
   const [searchText, setSearchText] = useState('');
   const [searchResults, setSearchResults] = useState<PretFamille[]>([]);
   const [selectedPret, setSelectedPret] = useState<PretFamille | null>(null);
@@ -354,15 +357,20 @@ const PretFamilles: React.FC = () => {
     }
   };
 
-  const handleDeleteRemboursement = async (remboursementIndex: number) => {
-    if (!selectedPretForDetail) return;
+  const openDeleteRemboursementDialog = (remboursementIndex: number) => {
+    setRemboursementIndexToDelete(remboursementIndex);
+    setConfirmDeleteDialogOpen(true);
+  };
+
+  const handleDeleteRemboursement = async () => {
+    if (!selectedPretForDetail || remboursementIndexToDelete < 0) return;
 
     try {
       setLoading(true);
       const remboursements = [...(selectedPretForDetail.remboursements || [])];
       
       // 1. Récupérer la valeur à supprimer depuis la base de données
-      const Valeur = remboursements[remboursementIndex].montant;
+      const Valeur = remboursements[remboursementIndexToDelete].montant;
       
       // 2. Récupérer le total remboursé actuel depuis la base de données
       const TotalRembourse = selectedPretForDetail.pretTotal - selectedPretForDetail.soldeRestant;
@@ -374,7 +382,7 @@ const PretFamilles: React.FC = () => {
       const nouveauResteAPayer = selectedPretForDetail.soldeRestant + Valeur;
       
       // 5. Supprimer le remboursement de l'historique
-      remboursements.splice(remboursementIndex, 1);
+      remboursements.splice(remboursementIndexToDelete, 1);
       
       const updatedPret: PretFamille = {
         ...selectedPretForDetail,
@@ -403,6 +411,9 @@ const PretFamilles: React.FC = () => {
         variant: 'default',
         className: 'notification-success'
       });
+      
+      setConfirmDeleteDialogOpen(false);
+      setRemboursementIndexToDelete(-1);
     } catch (error) {
       console.error('Erreur lors de la suppression du remboursement', error);
       toast({ 
@@ -715,7 +726,7 @@ const PretFamilles: React.FC = () => {
                               variant="ghost"
                               size="icon"
                               className="h-8 w-8 hover:bg-red-100 dark:hover:bg-red-900/30"
-                              onClick={() => handleDeleteRemboursement(index)}
+                              onClick={() => openDeleteRemboursementDialog(index)}
                             >
                               <Trash2 className="h-4 w-4 text-red-600 dark:text-red-400" />
                             </Button>
@@ -1052,6 +1063,25 @@ const PretFamilles: React.FC = () => {
           </div>
         </DialogContent>
       </Dialog>
+      
+      {/* Dialogue de confirmation de suppression */}
+      <ConfirmDeleteDialog
+        isOpen={confirmDeleteDialogOpen}
+        onClose={() => {
+          setConfirmDeleteDialogOpen(false);
+          setRemboursementIndexToDelete(-1);
+        }}
+        onConfirm={handleDeleteRemboursement}
+        title="Confirmer la suppression"
+        description={`Êtes-vous sûr de vouloir supprimer ce remboursement${
+          selectedPretForDetail && remboursementIndexToDelete >= 0
+            ? ` de ${new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(
+                selectedPretForDetail.remboursements?.[remboursementIndexToDelete]?.montant || 0
+              )}`
+            : ''
+        } ? Cette action est irréversible.`}
+        isSubmitting={loading}
+      />
     </div>
   );
 };
