@@ -43,6 +43,8 @@ const PretFamilles: React.FC = () => {
   const [nouvNom, setNouvNom] = useState('');
   const [nouvPretTotal, setNouvPretTotal] = useState('');
   const [nouvDate, setNouvDate] = useState<Date>(new Date());
+  const [nouvSearchResults, setNouvSearchResults] = useState<PretFamille[]>([]);
+  const [selectedFamilleForPret, setSelectedFamilleForPret] = useState<PretFamille | null>(null);
 
   const { toast } = useToast();
 
@@ -227,6 +229,29 @@ const PretFamilles: React.FC = () => {
     }
   };
 
+  const handleNouvNomSearch = async (text: string) => {
+    setNouvNom(text);
+    setSelectedFamilleForPret(null);
+    
+    if (text.length >= 3) {
+      try {
+        const results = await pretFamilleService.searchByName(text);
+        setNouvSearchResults(results);
+      } catch (error) {
+        console.error('Erreur lors de la recherche', error);
+        setNouvSearchResults([]);
+      }
+    } else {
+      setNouvSearchResults([]);
+    }
+  };
+
+  const selectFamilleForPret = (pret: PretFamille) => {
+    setSelectedFamilleForPret(pret);
+    setNouvNom(pret.nom);
+    setNouvSearchResults([]);
+  };
+
   const handleDemandePret = async () => {
     if (!nouvNom) {
       toast({ title: 'Erreur', description: 'Veuillez saisir un nom', variant: 'destructive' });
@@ -240,25 +265,43 @@ const PretFamilles: React.FC = () => {
     try {
       setLoading(true);
       const dateAujourdhui = format(nouvDate, 'yyyy-MM-dd');
-      const newPret: Omit<PretFamille, 'id'> = {
-        nom: nouvNom,
-        pretTotal: parseFloat(nouvPretTotal),
-        soldeRestant: parseFloat(nouvPretTotal),
-        dernierRemboursement: 0,
-        dateRemboursement: dateAujourdhui,
-        remboursements: []
-      };
-      await pretFamilleService.addPretFamille(newPret);
+      
+      // Si une famille existante a été sélectionnée, on ajoute au prêt existant
+      if (selectedFamilleForPret) {
+        const nouveauMontant = parseFloat(nouvPretTotal);
+        const updatedPret: PretFamille = {
+          ...selectedFamilleForPret,
+          pretTotal: selectedFamilleForPret.pretTotal + nouveauMontant,
+          soldeRestant: selectedFamilleForPret.soldeRestant + nouveauMontant,
+          dateRemboursement: dateAujourdhui
+        };
+        await pretFamilleService.updatePretFamille(selectedFamilleForPret.id, updatedPret);
+        toast({ title: 'Succès', description: `Prêt de ${nouveauMontant}€ ajouté à ${selectedFamilleForPret.nom}`, variant: 'default', className: 'notification-success' });
+      } else {
+        // Sinon, on crée un nouveau prêt
+        const newPret: Omit<PretFamille, 'id'> = {
+          nom: nouvNom,
+          pretTotal: parseFloat(nouvPretTotal),
+          soldeRestant: parseFloat(nouvPretTotal),
+          dernierRemboursement: 0,
+          dateRemboursement: dateAujourdhui,
+          remboursements: []
+        };
+        await pretFamilleService.addPretFamille(newPret);
+        toast({ title: 'Succès', description: 'Nouveau prêt créé', variant: 'default', className: 'notification-success' });
+      }
+      
       const updatedPrets = await pretFamilleService.getPretFamilles();
       const pretsWithRemboursements = updatedPrets.map(pret => ({
         ...pret,
         remboursements: pret.remboursements || []
       }));
       setPrets(pretsWithRemboursements);
-      toast({ title: 'Succès', description: 'Demande enregistrée', variant: 'default', className: 'notification-success' });
       setNouvNom('');
       setNouvPretTotal('');
       setNouvDate(new Date());
+      setSelectedFamilleForPret(null);
+      setNouvSearchResults([]);
       setDemandePretDialogOpen(false);
     } catch (error) {
       console.error('Erreur demande de prêt', error);
@@ -989,15 +1032,62 @@ const PretFamilles: React.FC = () => {
             </DialogTitle>
           </DialogHeader>
           <div className="grid gap-6 py-6">
-            <div className="grid gap-3">
-              <Label htmlFor="nouvNom" className="text-sm font-semibold text-gray-700 dark:text-gray-300">Nom de la famille</Label>
+            <div className="grid gap-3 relative">
+              <Label htmlFor="nouvNom" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                Nom de la famille
+                {selectedFamilleForPret && (
+                  <span className="ml-2 text-xs text-emerald-600 dark:text-emerald-400 font-normal">
+                    (Ajout au prêt existant)
+                  </span>
+                )}
+              </Label>
               <Input 
                 id="nouvNom" 
                 value={nouvNom} 
-                onChange={(e) => setNouvNom(e.target.value)}
-                placeholder="Nom de la famille"
+                onChange={(e) => handleNouvNomSearch(e.target.value)}
+                placeholder="Tapez au moins 3 caractères..."
                 className="bg-white/50 backdrop-blur-sm border border-gray-200/50 rounded-xl px-4 py-3 focus:ring-2 focus:ring-purple-500/20 transition-all duration-200"
               />
+              
+              {/* Liste d'autocomplétion */}
+              {nouvSearchResults.length > 0 && (
+                <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl z-50 max-h-48 overflow-y-auto">
+                  {nouvSearchResults.map((famille) => (
+                    <button
+                      key={famille.id}
+                      type="button"
+                      onClick={() => selectFamilleForPret(famille)}
+                      className="w-full text-left px-4 py-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors border-b border-gray-100 dark:border-gray-700 last:border-0"
+                    >
+                      <div className="flex justify-between items-center">
+                        <span className="font-medium text-gray-900 dark:text-gray-100">
+                          {famille.nom}
+                        </span>
+                        <span className="text-sm text-gray-500 dark:text-gray-400">
+                          Solde: {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(famille.soldeRestant)}
+                        </span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+              
+              {selectedFamilleForPret && (
+                <div className="bg-emerald-50 dark:bg-emerald-900/20 p-3 rounded-lg border border-emerald-200/50">
+                  <p className="text-sm text-gray-700 dark:text-gray-300">
+                    <span className="font-semibold">Prêt actuel:</span>{' '}
+                    <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                      {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(selectedFamilleForPret.pretTotal)}
+                    </span>
+                  </p>
+                  <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">
+                    <span className="font-semibold">Solde restant:</span>{' '}
+                    <span className="font-bold text-red-600 dark:text-red-400">
+                      {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(selectedFamilleForPret.soldeRestant)}
+                    </span>
+                  </p>
+                </div>
+              )}
             </div>
             
             <div className="grid gap-3">
