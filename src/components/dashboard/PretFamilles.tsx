@@ -31,6 +31,8 @@ const PretFamilles: React.FC = () => {
   const [editRemboursementDialogOpen, setEditRemboursementDialogOpen] = useState(false);
   const [confirmDeleteDialogOpen, setConfirmDeleteDialogOpen] = useState(false);
   const [remboursementIndexToDelete, setRemboursementIndexToDelete] = useState<number>(-1);
+  const [selectedPretToDelete, setSelectedPretToDelete] = useState<PretFamille | null>(null);
+  const [deletePretDialogOpen, setDeletePretDialogOpen] = useState(false);
   const [searchText, setSearchText] = useState('');
   const [searchResults, setSearchResults] = useState<PretFamille[]>([]);
   const [selectedPret, setSelectedPret] = useState<PretFamille | null>(null);
@@ -454,7 +456,7 @@ const PretFamilles: React.FC = () => {
         variant: 'default',
         className: 'notification-success'
       });
-      
+
       setConfirmDeleteDialogOpen(false);
       setRemboursementIndexToDelete(-1);
     } catch (error) {
@@ -462,6 +464,52 @@ const PretFamilles: React.FC = () => {
       toast({ 
         title: 'Erreur', 
         description: 'Impossible de supprimer le remboursement', 
+        variant: 'destructive' 
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const openDeletePretDialog = (pret: PretFamille) => {
+    setSelectedPretToDelete(pret);
+    setDeletePretDialogOpen(true);
+  };
+
+  const handleDeletePret = async () => {
+    if (!selectedPretToDelete) return;
+
+    try {
+      setLoading(true);
+      await pretFamilleService.deletePretFamille(selectedPretToDelete.id);
+      
+      const updatedPrets = await pretFamilleService.getPretFamilles();
+      const pretsWithRemboursements = updatedPrets.map(pret => ({
+        ...pret,
+        remboursements: pret.remboursements || []
+      }));
+      setPrets(pretsWithRemboursements);
+      
+      toast({ 
+        title: 'Succès', 
+        description: `Prêt de ${selectedPretToDelete.nom} supprimé avec succès`, 
+        variant: 'default',
+        className: 'notification-success'
+      });
+      
+      setDeletePretDialogOpen(false);
+      setSelectedPretToDelete(null);
+      
+      // Fermer le dialog de détails si c'était le prêt supprimé
+      if (selectedPretForDetail?.id === selectedPretToDelete.id) {
+        setDetailDialogOpen(false);
+        setSelectedPretForDetail(null);
+      }
+    } catch (error) {
+      console.error('Erreur lors de la suppression du prêt', error);
+      toast({ 
+        title: 'Erreur', 
+        description: 'Impossible de supprimer le prêt', 
         variant: 'destructive' 
       });
     } finally {
@@ -631,18 +679,29 @@ const PretFamilles: React.FC = () => {
                         <span className="text-gray-600 dark:text-gray-400 font-bold">{pret.dateRemboursement}</span>
                       </TableCell>
                       <TableCell className="text-center">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setSelectedPretForDetail(pret);
-                            setDetailDialogOpen(true);
-                          }}
-                          className="hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-200"
-                          title="Voir détails"
-                        >
-                          <Eye className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                        </Button>
+                        <div className="flex items-center justify-center gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedPretForDetail(pret);
+                              setDetailDialogOpen(true);
+                            }}
+                            className="hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-200"
+                            title="Voir détails"
+                          >
+                            <Eye className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => openDeletePretDialog(pret)}
+                            className="hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-200"
+                            title="Suppression prêt"
+                          >
+                            <Trash2 className="h-5 w-5 text-red-600 dark:text-red-400" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -1154,7 +1213,7 @@ const PretFamilles: React.FC = () => {
         </DialogContent>
       </Dialog>
       
-      {/* Dialogue de confirmation de suppression */}
+      {/* Dialogue de confirmation de suppression de remboursement */}
       <ConfirmDeleteDialog
         isOpen={confirmDeleteDialogOpen}
         onClose={() => {
@@ -1170,6 +1229,23 @@ const PretFamilles: React.FC = () => {
               )}`
             : ''
         } ? Cette action est irréversible.`}
+        isSubmitting={loading}
+      />
+
+      {/* Dialogue de confirmation de suppression de prêt */}
+      <ConfirmDeleteDialog
+        isOpen={deletePretDialogOpen}
+        onClose={() => {
+          setDeletePretDialogOpen(false);
+          setSelectedPretToDelete(null);
+        }}
+        onConfirm={handleDeletePret}
+        title="Confirmer la suppression du prêt"
+        description={`Êtes-vous sûr de vouloir supprimer le prêt de ${selectedPretToDelete?.nom || ''} (${
+          selectedPretToDelete 
+            ? new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(selectedPretToDelete.pretTotal)
+            : ''
+        }) ? Cette action supprimera également tout l'historique des remboursements et est irréversible.`}
         isSubmitting={loading}
       />
     </div>
