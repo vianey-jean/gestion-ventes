@@ -236,25 +236,29 @@ const PretFamilles: React.FC = () => {
 
     try {
       setLoading(true);
-      const newMontant = parseFloat(editMontantRemboursement);
+      const nouveauMontant = parseFloat(editMontantRemboursement);
       const remboursements = [...(selectedPretForDetail.remboursements || [])];
-      const oldMontant = remboursements[selectedRemboursementIndex].montant;
       
-      // Mettre à jour le montant du remboursement spécifique
+      // 1. Récupérer l'ancien montant à modifier
+      const ancienMontant = remboursements[selectedRemboursementIndex].montant;
+      
+      // 2. Calculer la différence entre ancien et nouveau montant
+      const difference = ancienMontant - nouveauMontant;
+      
+      // 3. Calculer le nouveau reste à payer
+      // Si différence positive (réduction du remboursement), on augmente le reste à payer
+      // Si différence négative (augmentation du remboursement), on diminue le reste à payer
+      const nouveauResteAPayer = selectedPretForDetail.soldeRestant + difference;
+      
+      // 4. Mettre à jour le montant du remboursement spécifique
       remboursements[selectedRemboursementIndex] = {
         ...remboursements[selectedRemboursementIndex],
-        montant: newMontant
+        montant: nouveauMontant
       };
-      
-      // Recalculer le total remboursé (somme de tous les remboursements)
-      const totalRembourse = remboursements.reduce((sum, r) => sum + r.montant, 0);
-      
-      // Calculer le nouveau solde restant à payer
-      const nouveauSolde = selectedPretForDetail.pretTotal - totalRembourse;
       
       const updatedPret: PretFamille = {
         ...selectedPretForDetail,
-        soldeRestant: nouveauSolde,
+        soldeRestant: nouveauResteAPayer,
         dernierRemboursement: remboursements.length > 0 ? remboursements[remboursements.length - 1].montant : 0,
         remboursements: remboursements
       };
@@ -302,24 +306,24 @@ const PretFamilles: React.FC = () => {
       setLoading(true);
       const remboursements = [...(selectedPretForDetail.remboursements || [])];
       
-      // Récupérer le montant du remboursement à supprimer
-      const montantSupprime = remboursements[remboursementIndex].montant;
+      // 1. Récupérer la valeur à supprimer depuis la base de données
+      const Valeur = remboursements[remboursementIndex].montant;
       
-      // Supprimer UNIQUEMENT le remboursement sélectionné à l'index spécifié
-      // Exemple: si on a [100, 300] et qu'on supprime l'index 1 (300), il reste [100]
+      // 2. Récupérer le total remboursé actuel depuis la base de données
+      const TotalRembourse = selectedPretForDetail.pretTotal - selectedPretForDetail.soldeRestant;
+      
+      // 3. Calculer le nouveau total remboursé
+      const Rembourse = TotalRembourse - Valeur;
+      
+      // 4. Calculer le nouveau reste à payer
+      const nouveauResteAPayer = selectedPretForDetail.soldeRestant + Valeur;
+      
+      // 5. Supprimer le remboursement de l'historique
       remboursements.splice(remboursementIndex, 1);
-      
-      // Recalculer le total remboursé = somme de tous les remboursements restants
-      // Exemple: si avant c'était 400 (100+300) et on a supprimé 300, maintenant c'est 100
-      const totalRembourse = remboursements.reduce((sum, r) => sum + r.montant, 0);
-      
-      // Calculer le nouveau solde restant = pretTotal - totalRembourse
-      // Exemple: si pretTotal=1000 et totalRembourse=100, alors soldeRestant=900
-      const nouveauSolde = selectedPretForDetail.pretTotal - totalRembourse;
       
       const updatedPret: PretFamille = {
         ...selectedPretForDetail,
-        soldeRestant: nouveauSolde,
+        soldeRestant: nouveauResteAPayer,
         dernierRemboursement: remboursements.length > 0 ? remboursements[remboursements.length - 1].montant : 0,
         remboursements: remboursements
       };
@@ -340,7 +344,7 @@ const PretFamilles: React.FC = () => {
       
       toast({ 
         title: 'Succès', 
-        description: `Remboursement de ${new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(montantSupprime)} supprimé avec succès`, 
+        description: `Remboursement de ${new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(Valeur)} supprimé avec succès`, 
         variant: 'default',
         className: 'notification-success'
       });
