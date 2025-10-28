@@ -35,6 +35,8 @@ const PretFamilles: React.FC = () => {
   const [selectedRemboursementIndex, setSelectedRemboursementIndex] = useState<number>(-1);
   const [editMontantRemboursement, setEditMontantRemboursement] = useState('');
   const [montantRemboursement, setMontantRemboursement] = useState('');
+  const [montantRemboursementError, setMontantRemboursementError] = useState('');
+  const [editMontantError, setEditMontantError] = useState('');
   const [nouvNom, setNouvNom] = useState('');
   const [nouvPretTotal, setNouvPretTotal] = useState('');
   const [nouvDate, setNouvDate] = useState<Date>(new Date());
@@ -117,6 +119,56 @@ const PretFamilles: React.FC = () => {
     setSelectedPret(pret);
     setSearchText(pret.nom);
     setSearchResults([]);
+    setMontantRemboursement('');
+    setMontantRemboursementError('');
+  };
+
+  // Validation du montant de remboursement
+  const validateMontantRemboursement = (montant: string) => {
+    if (!selectedPret) {
+      setMontantRemboursementError('');
+      return false;
+    }
+
+    const montantNum = parseFloat(montant);
+    if (isNaN(montantNum) || montantNum <= 0) {
+      setMontantRemboursementError('');
+      return false;
+    }
+
+    if (montantNum > selectedPret.soldeRestant) {
+      setMontantRemboursementError(`Ne dépasse pas ${new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(selectedPret.soldeRestant)}`);
+      return false;
+    }
+
+    setMontantRemboursementError('');
+    return true;
+  };
+
+  // Validation du montant de modification de remboursement
+  const validateEditMontant = (montant: string) => {
+    if (!selectedPretForDetail || selectedRemboursementIndex < 0) {
+      setEditMontantError('');
+      return false;
+    }
+
+    const montantNum = parseFloat(montant);
+    if (isNaN(montantNum) || montantNum < 0) {
+      setEditMontantError('');
+      return false;
+    }
+
+    const montantActuel = selectedPretForDetail.remboursements?.[selectedRemboursementIndex]?.montant || 0;
+    const resteAPayer = selectedPretForDetail.soldeRestant;
+    const maxMontant = resteAPayer + montantActuel;
+
+    if (montantNum > maxMontant) {
+      setEditMontantError(`Ne dépasse pas ${new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(maxMontant)}`);
+      return false;
+    }
+
+    setEditMontantError('');
+    return true;
   };
 
   const handleRemboursement = async () => {
@@ -129,15 +181,11 @@ const PretFamilles: React.FC = () => {
       return;
     }
 
-    const montant = parseFloat(montantRemboursement);
-    if (montant > selectedPret.soldeRestant) {
-      toast({
-        title: 'Erreur',
-        description: 'Le montant de remboursement ne peut pas être supérieur au solde restant',
-        variant: 'destructive',
-      });
+    if (!validateMontantRemboursement(montantRemboursement)) {
       return;
     }
+
+    const montant = parseFloat(montantRemboursement);
 
     try {
       setLoading(true);
@@ -166,6 +214,7 @@ const PretFamilles: React.FC = () => {
       setSelectedPret(null);
       setSearchText('');
       setMontantRemboursement('');
+      setMontantRemboursementError('');
       setRemboursementDialogOpen(false);
     } catch (error) {
       console.error('Erreur remboursement', error);
@@ -224,13 +273,18 @@ const PretFamilles: React.FC = () => {
     if (remboursement) {
       setEditMontantRemboursement(remboursement.montant.toString());
     }
+    setEditMontantError('');
     setEditRemboursementDialogOpen(true);
   };
 
   const handleEditRemboursement = async () => {
     if (!selectedPretForDetail || selectedRemboursementIndex < 0) return;
-    if (!editMontantRemboursement || parseFloat(editMontantRemboursement) <= 0) {
+    if (!editMontantRemboursement || parseFloat(editMontantRemboursement) < 0) {
       toast({ title: 'Erreur', description: 'Veuillez saisir un montant valide', variant: 'destructive' });
+      return;
+    }
+
+    if (!validateEditMontant(editMontantRemboursement)) {
       return;
     }
 
@@ -286,6 +340,7 @@ const PretFamilles: React.FC = () => {
       
       setEditRemboursementDialogOpen(false);
       setEditMontantRemboursement('');
+      setEditMontantError('');
       setSelectedRemboursementIndex(-1);
     } catch (error) {
       console.error('Erreur lors de la modification du remboursement', error);
@@ -711,8 +766,8 @@ const PretFamilles: React.FC = () => {
                         onClick={() => selectFamille(result)}
                       >
                         <div className="font-semibold text-gray-800 dark:text-gray-200">{result.nom}</div>
-                        <div className="text-sm text-gray-500 dark:text-gray-400">
-                          Solde: {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(result.soldeRestant)}
+                        <div className="text-sm text-emerald-600 dark:text-emerald-400 font-medium">
+                          Reste à payer: {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(result.soldeRestant)}
                         </div>
                       </div>
                     ))}
@@ -729,13 +784,36 @@ const PretFamilles: React.FC = () => {
                   id="montant" 
                   type="number" 
                   value={montantRemboursement} 
-                  onChange={(e) => setMontantRemboursement(e.target.value)}
+                  onChange={(e) => {
+                    setMontantRemboursement(e.target.value);
+                    validateMontantRemboursement(e.target.value);
+                  }}
                   placeholder="0.00"
                   min="0"
                   step="0.01"
-                  className="pl-12 bg-white/50 backdrop-blur-sm border border-gray-200/50 rounded-xl px-4 py-3 focus:ring-2 focus:ring-emerald-500/20 transition-all duration-200"
+                  className={cn(
+                    "pl-12 bg-white/50 backdrop-blur-sm border rounded-xl px-4 py-3 focus:ring-2 transition-all duration-200",
+                    montantRemboursementError 
+                      ? "border-red-500 focus:ring-red-500/20" 
+                      : "border-gray-200/50 focus:ring-emerald-500/20"
+                  )}
                 />
               </div>
+              {montantRemboursementError && (
+                <p className="text-sm text-red-600 dark:text-red-400 font-medium">
+                  {montantRemboursementError}
+                </p>
+              )}
+              {selectedPret && (
+                <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-200/50">
+                  <p className="text-sm text-gray-700 dark:text-gray-300">
+                    <span className="font-semibold">Solde actuel:</span>{' '}
+                    <span className="font-bold text-blue-600 dark:text-blue-400">
+                      {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(selectedPret.soldeRestant)}
+                    </span>
+                  </p>
+                </div>
+              )}
             </div>
             
             {selectedPret && (
@@ -761,8 +839,8 @@ const PretFamilles: React.FC = () => {
             
             <Button 
               onClick={handleRemboursement} 
-              disabled={loading || !selectedPret || !montantRemboursement || parseFloat(montantRemboursement) <= 0}
-              className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 hover:scale-105 shadow-lg"
+              disabled={loading || !selectedPret || !montantRemboursement || parseFloat(montantRemboursement) <= 0 || !!montantRemboursementError}
+              className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
             >
               {loading ? (
                 <>
@@ -802,13 +880,26 @@ const PretFamilles: React.FC = () => {
                   id="editMontant" 
                   type="number" 
                   value={editMontantRemboursement} 
-                  onChange={(e) => setEditMontantRemboursement(e.target.value)}
+                  onChange={(e) => {
+                    setEditMontantRemboursement(e.target.value);
+                    validateEditMontant(e.target.value);
+                  }}
                   placeholder="0.00"
                   min="0"
                   step="0.01"
-                  className="pl-12 bg-white/50 backdrop-blur-sm border border-gray-200/50 rounded-xl px-4 py-3 focus:ring-2 focus:ring-emerald-500/20 transition-all duration-200"
+                  className={cn(
+                    "pl-12 bg-white/50 backdrop-blur-sm border rounded-xl px-4 py-3 focus:ring-2 transition-all duration-200",
+                    editMontantError 
+                      ? "border-red-500 focus:ring-red-500/20" 
+                      : "border-gray-200/50 focus:ring-emerald-500/20"
+                  )}
                 />
               </div>
+              {editMontantError && (
+                <p className="text-sm text-red-600 dark:text-red-400 font-medium">
+                  {editMontantError}
+                </p>
+              )}
             </div>
             
             {selectedPretForDetail && selectedRemboursementIndex >= 0 && (
@@ -820,6 +911,12 @@ const PretFamilles: React.FC = () => {
                       {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(
                         selectedPretForDetail.remboursements?.[selectedRemboursementIndex]?.montant || 0
                       )}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="font-medium text-gray-700 dark:text-gray-300">Reste à payer:</span>
+                    <span className="font-bold text-lg text-red-600 dark:text-red-400">
+                      {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(selectedPretForDetail.soldeRestant)}
                     </span>
                   </div>
                   {editMontantRemboursement && !isNaN(parseFloat(editMontantRemboursement)) && (
@@ -835,9 +932,9 @@ const PretFamilles: React.FC = () => {
                           <span className="font-medium text-gray-700 dark:text-gray-300">Nouveau solde restant:</span>
                           <span className="font-bold text-lg text-blue-600 dark:text-blue-400">
                             {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(
-                              selectedPretForDetail.pretTotal - 
-                              ((selectedPretForDetail.remboursements || []).reduce((sum, r, idx) => 
-                                sum + (idx === selectedRemboursementIndex ? parseFloat(editMontantRemboursement) : r.montant), 0))
+                              selectedPretForDetail.soldeRestant + 
+                              (selectedPretForDetail.remboursements?.[selectedRemboursementIndex]?.montant || 0) - 
+                              parseFloat(editMontantRemboursement)
                             )}
                           </span>
                         </div>
@@ -850,8 +947,8 @@ const PretFamilles: React.FC = () => {
             
             <Button 
               onClick={handleEditRemboursement} 
-              disabled={loading || !editMontantRemboursement || parseFloat(editMontantRemboursement) <= 0}
-              className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 hover:scale-105 shadow-lg"
+              disabled={loading || !editMontantRemboursement || parseFloat(editMontantRemboursement) < 0 || !!editMontantError}
+              className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
             >
               {loading ? (
                 <>
