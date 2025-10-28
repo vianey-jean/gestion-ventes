@@ -12,12 +12,14 @@ import { fr } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
 import { 
   CalendarIcon, Loader2, Wallet, CreditCard, Plus, ArrowUp, ArrowDown,
-  Receipt, HandCoins, DollarSign, Sparkles, Award, Users, TrendingDown, TrendingUp, Eye
+  Receipt, HandCoins, DollarSign, Sparkles, Award, Users, TrendingDown, TrendingUp, Eye,
+  Edit2, Trash2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { pretFamilleService } from '@/service/api';
 import { PretFamille } from '@/types';
-import PremiumLoading from '@/components/ui/premium-loading'; // ✅ Import ajouté
+import PremiumLoading from '@/components/ui/premium-loading';
+import { realtimeService } from '@/services/realtimeService';
 
 const PretFamilles: React.FC = () => {
   const [prets, setPrets] = useState<PretFamille[]>([]);
@@ -25,10 +27,13 @@ const PretFamilles: React.FC = () => {
   const [remboursementDialogOpen, setRemboursementDialogOpen] = useState(false);
   const [demandePretDialogOpen, setDemandePretDialogOpen] = useState(false);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [editRemboursementDialogOpen, setEditRemboursementDialogOpen] = useState(false);
   const [searchText, setSearchText] = useState('');
   const [searchResults, setSearchResults] = useState<PretFamille[]>([]);
   const [selectedPret, setSelectedPret] = useState<PretFamille | null>(null);
   const [selectedPretForDetail, setSelectedPretForDetail] = useState<PretFamille | null>(null);
+  const [selectedRemboursementIndex, setSelectedRemboursementIndex] = useState<number>(-1);
+  const [editMontantRemboursement, setEditMontantRemboursement] = useState('');
   const [montantRemboursement, setMontantRemboursement] = useState('');
   const [nouvNom, setNouvNom] = useState('');
   const [nouvPretTotal, setNouvPretTotal] = useState('');
@@ -61,6 +66,34 @@ const PretFamilles: React.FC = () => {
 
     fetchPrets();
   }, [toast]);
+
+  // Synchronisation en temps réel pour les prêts familles
+  useEffect(() => {
+    const unsubscribe = realtimeService.addDataListener((data) => {
+      if (data.pretFamilles) {
+        console.log('📡 Mise à jour temps réel des prêts familles:', data.pretFamilles);
+        const pretsWithRemboursements = data.pretFamilles.map((pret: PretFamille) => ({
+          ...pret,
+          remboursements: pret.remboursements || []
+        }));
+        setPrets(pretsWithRemboursements);
+        
+        // Mettre à jour le prêt sélectionné pour les détails si nécessaire
+        if (selectedPretForDetail) {
+          const updatedSelectedPret = pretsWithRemboursements.find(
+            (p: PretFamille) => p.id === selectedPretForDetail.id
+          );
+          if (updatedSelectedPret) {
+            setSelectedPretForDetail(updatedSelectedPret);
+          }
+        }
+      }
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [selectedPretForDetail]);
 
   const totalPret = prets.reduce((sum, pret) => sum + pret.pretTotal, 0);
   const totalSolde = prets.reduce((sum, pret) => sum + pret.soldeRestant, 0);
@@ -178,6 +211,146 @@ const PretFamilles: React.FC = () => {
     } catch (error) {
       console.error('Erreur demande de prêt', error);
       toast({ title: 'Erreur', description: 'Impossible d\'enregistrer la demande de prêt', variant: 'destructive' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const openEditRemboursementDialog = (remboursementIndex: number) => {
+    if (!selectedPretForDetail) return;
+    
+    setSelectedRemboursementIndex(remboursementIndex);
+    const remboursement = selectedPretForDetail.remboursements?.[remboursementIndex];
+    if (remboursement) {
+      setEditMontantRemboursement(remboursement.montant.toString());
+    }
+    setEditRemboursementDialogOpen(true);
+  };
+
+  const handleEditRemboursement = async () => {
+    if (!selectedPretForDetail || selectedRemboursementIndex < 0) return;
+    if (!editMontantRemboursement || parseFloat(editMontantRemboursement) <= 0) {
+      toast({ title: 'Erreur', description: 'Veuillez saisir un montant valide', variant: 'destructive' });
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const newMontant = parseFloat(editMontantRemboursement);
+      const remboursements = [...(selectedPretForDetail.remboursements || [])];
+      const oldMontant = remboursements[selectedRemboursementIndex].montant;
+      
+      // Mettre à jour le montant du remboursement spécifique
+      remboursements[selectedRemboursementIndex] = {
+        ...remboursements[selectedRemboursementIndex],
+        montant: newMontant
+      };
+      
+      // Recalculer le total remboursé (somme de tous les remboursements)
+      const totalRembourse = remboursements.reduce((sum, r) => sum + r.montant, 0);
+      
+      // Calculer le nouveau solde restant à payer
+      const nouveauSolde = selectedPretForDetail.pretTotal - totalRembourse;
+      
+      const updatedPret: PretFamille = {
+        ...selectedPretForDetail,
+        soldeRestant: nouveauSolde,
+        dernierRemboursement: remboursements.length > 0 ? remboursements[remboursements.length - 1].montant : 0,
+        remboursements: remboursements
+      };
+      
+      await pretFamilleService.updatePretFamille(selectedPretForDetail.id, updatedPret);
+      const updatedPrets = await pretFamilleService.getPretFamilles();
+      const pretsWithRemboursements = updatedPrets.map(pret => ({
+        ...pret,
+        remboursements: pret.remboursements || []
+      }));
+      setPrets(pretsWithRemboursements);
+      
+      // Mettre à jour le prêt sélectionné pour les détails
+      const updatedSelectedPret = pretsWithRemboursements.find(p => p.id === selectedPretForDetail.id);
+      if (updatedSelectedPret) {
+        setSelectedPretForDetail(updatedSelectedPret);
+      }
+      
+      toast({ 
+        title: 'Succès', 
+        description: 'Remboursement modifié avec succès', 
+        variant: 'default',
+        className: 'notification-success'
+      });
+      
+      setEditRemboursementDialogOpen(false);
+      setEditMontantRemboursement('');
+      setSelectedRemboursementIndex(-1);
+    } catch (error) {
+      console.error('Erreur lors de la modification du remboursement', error);
+      toast({ 
+        title: 'Erreur', 
+        description: 'Impossible de modifier le remboursement', 
+        variant: 'destructive' 
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteRemboursement = async (remboursementIndex: number) => {
+    if (!selectedPretForDetail) return;
+
+    try {
+      setLoading(true);
+      const remboursements = [...(selectedPretForDetail.remboursements || [])];
+      
+      // Récupérer le montant du remboursement à supprimer
+      const montantSupprime = remboursements[remboursementIndex].montant;
+      
+      // Supprimer UNIQUEMENT le remboursement sélectionné à l'index spécifié
+      // Exemple: si on a [100, 300] et qu'on supprime l'index 1 (300), il reste [100]
+      remboursements.splice(remboursementIndex, 1);
+      
+      // Recalculer le total remboursé = somme de tous les remboursements restants
+      // Exemple: si avant c'était 400 (100+300) et on a supprimé 300, maintenant c'est 100
+      const totalRembourse = remboursements.reduce((sum, r) => sum + r.montant, 0);
+      
+      // Calculer le nouveau solde restant = pretTotal - totalRembourse
+      // Exemple: si pretTotal=1000 et totalRembourse=100, alors soldeRestant=900
+      const nouveauSolde = selectedPretForDetail.pretTotal - totalRembourse;
+      
+      const updatedPret: PretFamille = {
+        ...selectedPretForDetail,
+        soldeRestant: nouveauSolde,
+        dernierRemboursement: remboursements.length > 0 ? remboursements[remboursements.length - 1].montant : 0,
+        remboursements: remboursements
+      };
+      
+      await pretFamilleService.updatePretFamille(selectedPretForDetail.id, updatedPret);
+      const updatedPrets = await pretFamilleService.getPretFamilles();
+      const pretsWithRemboursements = updatedPrets.map(pret => ({
+        ...pret,
+        remboursements: pret.remboursements || []
+      }));
+      setPrets(pretsWithRemboursements);
+      
+      // Mettre à jour le prêt sélectionné pour les détails
+      const updatedSelectedPret = pretsWithRemboursements.find(p => p.id === selectedPretForDetail.id);
+      if (updatedSelectedPret) {
+        setSelectedPretForDetail(updatedSelectedPret);
+      }
+      
+      toast({ 
+        title: 'Succès', 
+        description: `Remboursement de ${new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(montantSupprime)} supprimé avec succès`, 
+        variant: 'default',
+        className: 'notification-success'
+      });
+    } catch (error) {
+      console.error('Erreur lors de la suppression du remboursement', error);
+      toast({ 
+        title: 'Erreur', 
+        description: 'Impossible de supprimer le remboursement', 
+        variant: 'destructive' 
+      });
     } finally {
       setLoading(false);
     }
@@ -458,7 +631,7 @@ const PretFamilles: React.FC = () => {
                     {selectedPretForDetail.remboursements.map((remboursement, index) => (
                       <div 
                         key={index}
-                        className="flex justify-between items-center bg-white/50 dark:bg-gray-800/50 p-3 rounded-lg"
+                        className="flex justify-between items-center bg-white/50 dark:bg-gray-800/50 p-3 rounded-lg group hover:bg-white/70 dark:hover:bg-gray-800/70 transition-all"
                       >
                         <div className="flex items-center gap-2">
                           <CalendarIcon className="h-4 w-4 text-purple-600 dark:text-purple-400" />
@@ -466,9 +639,29 @@ const PretFamilles: React.FC = () => {
                             {remboursement.date}
                           </span>
                         </div>
-                        <span className="font-bold text-emerald-600 dark:text-emerald-400">
-                          {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(remboursement.montant)}
-                        </span>
+                        <div className="flex items-center gap-3">
+                          <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                            {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(remboursement.montant)}
+                          </span>
+                          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 hover:bg-blue-100 dark:hover:bg-blue-900/30"
+                              onClick={() => openEditRemboursementDialog(index)}
+                            >
+                              <Edit2 className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 hover:bg-red-100 dark:hover:bg-red-900/30"
+                              onClick={() => handleDeleteRemboursement(index)}
+                            >
+                              <Trash2 className="h-4 w-4 text-red-600 dark:text-red-400" />
+                            </Button>
+                          </div>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -576,6 +769,95 @@ const PretFamilles: React.FC = () => {
                 <>
                   <Receipt className="h-5 w-5 mr-2" />
                   Enregistrer le remboursement
+                </>
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Dialog pour modifier un remboursement */}
+      <Dialog open={editRemboursementDialogOpen} onOpenChange={setEditRemboursementDialogOpen}>
+        <DialogContent className="sm:max-w-[500px] bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-800 border border-white/20 shadow-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-xl">
+              <div className="bg-gradient-to-r from-blue-500 to-purple-500 rounded-full p-2">
+                <Edit2 className="h-5 w-5 text-white" />
+              </div>
+              Modifier le remboursement
+            </DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-6 py-6">
+            <div className="grid gap-3">
+              <Label htmlFor="editMontant" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                Nouveau montant du remboursement
+              </Label>
+              <div className="relative">
+                <DollarSign className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-emerald-500" />
+                <Input 
+                  id="editMontant" 
+                  type="number" 
+                  value={editMontantRemboursement} 
+                  onChange={(e) => setEditMontantRemboursement(e.target.value)}
+                  placeholder="0.00"
+                  min="0"
+                  step="0.01"
+                  className="pl-12 bg-white/50 backdrop-blur-sm border border-gray-200/50 rounded-xl px-4 py-3 focus:ring-2 focus:ring-emerald-500/20 transition-all duration-200"
+                />
+              </div>
+            </div>
+            
+            {selectedPretForDetail && selectedRemboursementIndex >= 0 && (
+              <div className="bg-gradient-to-r from-gray-50 to-blue-50 dark:from-gray-800 dark:to-blue-900/20 p-6 rounded-2xl border border-gray-200/50">
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="font-medium text-gray-700 dark:text-gray-300">Montant actuel:</span>
+                    <span className="font-bold text-lg text-gray-800 dark:text-gray-200">
+                      {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(
+                        selectedPretForDetail.remboursements?.[selectedRemboursementIndex]?.montant || 0
+                      )}
+                    </span>
+                  </div>
+                  {editMontantRemboursement && !isNaN(parseFloat(editMontantRemboursement)) && (
+                    <>
+                      <div className="flex justify-between items-center">
+                        <span className="font-medium text-gray-700 dark:text-gray-300">Nouveau montant:</span>
+                        <span className="font-bold text-lg text-emerald-600 dark:text-emerald-400">
+                          {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(parseFloat(editMontantRemboursement))}
+                        </span>
+                      </div>
+                      <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
+                        <div className="flex justify-between items-center">
+                          <span className="font-medium text-gray-700 dark:text-gray-300">Nouveau solde restant:</span>
+                          <span className="font-bold text-lg text-blue-600 dark:text-blue-400">
+                            {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(
+                              selectedPretForDetail.pretTotal - 
+                              ((selectedPretForDetail.remboursements || []).reduce((sum, r, idx) => 
+                                sum + (idx === selectedRemboursementIndex ? parseFloat(editMontantRemboursement) : r.montant), 0))
+                            )}
+                          </span>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
+            
+            <Button 
+              onClick={handleEditRemboursement} 
+              disabled={loading || !editMontantRemboursement || parseFloat(editMontantRemboursement) <= 0}
+              className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 hover:scale-105 shadow-lg"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="h-5 w-5 animate-spin mr-2" />
+                  Traitement...
+                </>
+              ) : (
+                <>
+                  <Edit2 className="h-5 w-5 mr-2" />
+                  Modifier le remboursement
                 </>
               )}
             </Button>
