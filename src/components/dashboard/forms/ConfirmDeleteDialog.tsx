@@ -8,7 +8,7 @@ interface ConfirmDeleteDialogProps {
   onClose: () => void;
   onConfirm: () => Promise<void> | void;
   title: string;
-  description: string;
+  description: string | React.ReactNode;
   isSubmitting?: boolean; // Made optional
 }
 

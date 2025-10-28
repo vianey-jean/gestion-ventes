@@ -815,7 +815,7 @@ const PretFamilles: React.FC = () => {
                           <span className="font-bold text-emerald-600 dark:text-emerald-400">
                             {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(remboursement.montant)}
                           </span>
-                          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="flex gap-1">
                             <Button
                               variant="ghost"
                               size="icon"
@@ -833,6 +833,7 @@ const PretFamilles: React.FC = () => {
                               <Trash2 className="h-4 w-4 text-red-600 dark:text-red-400" />
                             </Button>
                           </div>
+
                         </div>
                       </div>
                     ))}
@@ -1222,32 +1223,57 @@ const PretFamilles: React.FC = () => {
         }}
         onConfirm={handleDeleteRemboursement}
         title="Confirmer la suppression"
-        description={`Êtes-vous sûr de vouloir supprimer ce remboursement${
-          selectedPretForDetail && remboursementIndexToDelete >= 0
-            ? ` de ${new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(
-                selectedPretForDetail.remboursements?.[remboursementIndexToDelete]?.montant || 0
-              )}`
-            : ''
-        } ? Cette action est irréversible.`}
+        description={
+  <>
+    Êtes-vous sûr de vouloir supprimer ce remboursement
+    {selectedPretForDetail && remboursementIndexToDelete >= 0 && (
+      <>
+        {' de '}
+        <span style={{ fontWeight: 'bold', color: 'red' }}>
+          {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(
+            selectedPretForDetail.remboursements?.[remboursementIndexToDelete]?.montant || 0
+          )}
+        </span>
+      </>
+    )}
+    {' ? Cette action est irréversible.'}
+  </>
+}
         isSubmitting={loading}
       />
 
       {/* Dialogue de confirmation de suppression de prêt */}
-      <ConfirmDeleteDialog
-        isOpen={deletePretDialogOpen}
-        onClose={() => {
-          setDeletePretDialogOpen(false);
-          setSelectedPretToDelete(null);
-        }}
-        onConfirm={handleDeletePret}
-        title="Confirmer la suppression du prêt"
-        description={`Êtes-vous sûr de vouloir supprimer le prêt de ${selectedPretToDelete?.nom || ''} (${
-          selectedPretToDelete 
-            ? new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(selectedPretToDelete.pretTotal)
-            : ''
-        }) ? Cette action supprimera également tout l'historique des remboursements et est irréversible.`}
-        isSubmitting={loading}
-      />
+    <ConfirmDeleteDialog
+  isOpen={deletePretDialogOpen}
+  onClose={() => {
+    setDeletePretDialogOpen(false);
+    setSelectedPretToDelete(null);
+  }}
+  onConfirm={handleDeletePret}
+  title="Confirmer la suppression du prêt"
+  description={
+    <>
+      Êtes-vous sûr de vouloir supprimer le prêt de{' '}
+      <span style={{ fontWeight: 'bold', color: 'green' }}>
+        {selectedPretToDelete?.nom || ''}
+      </span>{' '}
+      
+      <span style={{ fontWeight: 'bold', color: 'red' }}>
+        (
+        {selectedPretToDelete
+          ? new Intl.NumberFormat('fr-FR', {
+              style: 'currency',
+              currency: 'EUR',
+            }).format(selectedPretToDelete.pretTotal)
+          : ''}
+          )
+      </span>
+       ? Cette action supprimera également tout l'historique des remboursements et est irréversible.
+    </>
+  }
+  isSubmitting={loading}
+/>
+
     </div>
   );
 };
