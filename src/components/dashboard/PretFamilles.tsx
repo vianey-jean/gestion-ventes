@@ -12,7 +12,7 @@ import { fr } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
 import { 
   CalendarIcon, Loader2, Wallet, CreditCard, Plus, ArrowUp, ArrowDown,
-  Receipt, HandCoins, DollarSign, Sparkles, Award, Users, TrendingDown, TrendingUp
+  Receipt, HandCoins, DollarSign, Sparkles, Award, Users, TrendingDown, TrendingUp, Eye
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { pretFamilleService } from '@/service/api';
@@ -24,9 +24,11 @@ const PretFamilles: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [remboursementDialogOpen, setRemboursementDialogOpen] = useState(false);
   const [demandePretDialogOpen, setDemandePretDialogOpen] = useState(false);
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [searchText, setSearchText] = useState('');
   const [searchResults, setSearchResults] = useState<PretFamille[]>([]);
   const [selectedPret, setSelectedPret] = useState<PretFamille | null>(null);
+  const [selectedPretForDetail, setSelectedPretForDetail] = useState<PretFamille | null>(null);
   const [montantRemboursement, setMontantRemboursement] = useState('');
   const [nouvNom, setNouvNom] = useState('');
   const [nouvPretTotal, setNouvPretTotal] = useState('');
@@ -39,7 +41,12 @@ const PretFamilles: React.FC = () => {
       try {
         setLoading(true);
         const data = await pretFamilleService.getPretFamilles();
-        setPrets(data);
+        // Initialiser remboursements si non présent
+        const pretsWithRemboursements = data.map(pret => ({
+          ...pret,
+          remboursements: pret.remboursements || []
+        }));
+        setPrets(pretsWithRemboursements);
       } catch (error) {
         console.error('Erreur lors du chargement des prêts', error);
         toast({
@@ -101,15 +108,27 @@ const PretFamilles: React.FC = () => {
 
     try {
       setLoading(true);
+      const dateAujourdhui = new Date().toISOString().split('T')[0];
+      const nouveauRemboursement = {
+        date: dateAujourdhui,
+        montant: montant
+      };
+      
+      const rembourssementsActuels = selectedPret.remboursements || [];
       const updatedPret: PretFamille = {
         ...selectedPret,
         soldeRestant: selectedPret.soldeRestant - montant,
         dernierRemboursement: montant,
-        dateRemboursement: new Date().toISOString().split('T')[0],
+        dateRemboursement: dateAujourdhui,
+        remboursements: [...rembourssementsActuels, nouveauRemboursement]
       };
       await pretFamilleService.updatePretFamille(selectedPret.id, updatedPret);
       const updatedPrets = await pretFamilleService.getPretFamilles();
-      setPrets(updatedPrets);
+      const pretsWithRemboursements = updatedPrets.map(pret => ({
+        ...pret,
+        remboursements: pret.remboursements || []
+      }));
+      setPrets(pretsWithRemboursements);
       toast({ title: 'Succès', description: 'Remboursement enregistré', variant: 'default', className: 'notification-success' });
       setSelectedPret(null);
       setSearchText('');
@@ -135,16 +154,22 @@ const PretFamilles: React.FC = () => {
 
     try {
       setLoading(true);
+      const dateAujourdhui = format(nouvDate, 'yyyy-MM-dd');
       const newPret: Omit<PretFamille, 'id'> = {
         nom: nouvNom,
         pretTotal: parseFloat(nouvPretTotal),
         soldeRestant: parseFloat(nouvPretTotal),
         dernierRemboursement: 0,
-        dateRemboursement: format(nouvDate, 'yyyy-MM-dd'),
+        dateRemboursement: dateAujourdhui,
+        remboursements: []
       };
       await pretFamilleService.addPretFamille(newPret);
       const updatedPrets = await pretFamilleService.getPretFamilles();
-      setPrets(updatedPrets);
+      const pretsWithRemboursements = updatedPrets.map(pret => ({
+        ...pret,
+        remboursements: pret.remboursements || []
+      }));
+      setPrets(pretsWithRemboursements);
       toast({ title: 'Succès', description: 'Demande enregistrée', variant: 'default', className: 'notification-success' });
       setNouvNom('');
       setNouvPretTotal('');
@@ -271,6 +296,9 @@ const PretFamilles: React.FC = () => {
                         Date
                       </div>
                     </TableHead>
+                    <TableHead className="text-center font-bold text-indigo-600 dark:text-indigo-400">
+                      Détails
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -316,6 +344,20 @@ const PretFamilles: React.FC = () => {
                       <TableCell className="text-right">
                         <span className="text-gray-600 dark:text-gray-400 font-bold">{pret.dateRemboursement}</span>
                       </TableCell>
+                      <TableCell className="text-center">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedPretForDetail(pret);
+                            setDetailDialogOpen(true);
+                          }}
+                          className="hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-200"
+                          title="Voir détails"
+                        >
+                          <Eye className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                        </Button>
+                      </TableCell>
                     </TableRow>
                   ))}
                   
@@ -344,7 +386,7 @@ const PretFamilles: React.FC = () => {
                               </div>
                             </TableCell>
 
-                            <TableCell colSpan={2} className="bg-gradient-to-r from-indigo-900 via-purple-900 to-pink-900 text-white border-b border-white rounded-br-3xl">
+                            <TableCell colSpan={3} className="bg-gradient-to-r from-indigo-900 via-purple-900 to-pink-900 text-white border-b border-white rounded-br-3xl">
                             </TableCell>
                           </TableRow>
 
@@ -354,6 +396,92 @@ const PretFamilles: React.FC = () => {
           )}
         </div>
       </Card>
+
+      {/* Dialog pour voir les détails d'un prêt */}
+      <Dialog open={detailDialogOpen} onOpenChange={setDetailDialogOpen}>
+        <DialogContent className="sm:max-w-[600px] bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-800 border border-white/20 shadow-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-xl">
+              <div className="bg-gradient-to-r from-blue-500 to-purple-500 rounded-full p-2">
+                <Eye className="h-5 w-5 text-white" />
+              </div>
+              Détails du prêt
+            </DialogTitle>
+          </DialogHeader>
+          {selectedPretForDetail && (
+            <div className="space-y-6 py-4">
+              {/* Info générale */}
+              <div className="bg-gradient-to-r from-gray-50 to-blue-50 dark:from-gray-800 dark:to-blue-900/20 p-6 rounded-2xl border border-gray-200/50">
+                <h3 className="font-bold text-lg text-gray-800 dark:text-gray-200 mb-4">Informations générales</h3>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600 dark:text-gray-400">Famille:</span>
+                    <span className="font-bold text-gray-800 dark:text-gray-200">{selectedPretForDetail.nom}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600 dark:text-gray-400">Date de début:</span>
+                    <span className="font-bold text-gray-800 dark:text-gray-200">{selectedPretForDetail.dateRemboursement}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Résumé financier */}
+              <div className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 p-6 rounded-2xl border border-emerald-200/50">
+                <h3 className="font-bold text-lg text-gray-800 dark:text-gray-200 mb-4">Résumé financier</h3>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600 dark:text-gray-400">Montant total du prêt:</span>
+                    <span className="font-bold text-blue-600 dark:text-blue-400">
+                      {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(selectedPretForDetail.pretTotal)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600 dark:text-gray-400">Total remboursé:</span>
+                    <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                      {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(selectedPretForDetail.pretTotal - selectedPretForDetail.soldeRestant)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600 dark:text-gray-400">Reste à payer:</span>
+                    <span className="font-bold text-red-600 dark:text-red-400">
+                      {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(selectedPretForDetail.soldeRestant)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Historique des remboursements */}
+              <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 p-6 rounded-2xl border border-purple-200/50">
+                <h3 className="font-bold text-lg text-gray-800 dark:text-gray-200 mb-4">Historique des remboursements</h3>
+                {selectedPretForDetail.remboursements && selectedPretForDetail.remboursements.length > 0 ? (
+                  <div className="max-h-64 overflow-y-auto space-y-2">
+                    {selectedPretForDetail.remboursements.map((remboursement, index) => (
+                      <div 
+                        key={index}
+                        className="flex justify-between items-center bg-white/50 dark:bg-gray-800/50 p-3 rounded-lg"
+                      >
+                        <div className="flex items-center gap-2">
+                          <CalendarIcon className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                            {remboursement.date}
+                          </span>
+                        </div>
+                        <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                          {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(remboursement.montant)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-gray-500 dark:text-gray-400 text-center py-4">
+                    Aucun remboursement enregistré
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
       
       {/* Formulaire de remboursement */}
       <Dialog open={remboursementDialogOpen} onOpenChange={setRemboursementDialogOpen}>

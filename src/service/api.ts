@@ -280,7 +280,7 @@ export const pretFamilleService = {
   },
 
   async searchByName(name: string): Promise<PretFamille[]> {
-    const response: AxiosResponse<PretFamille[]> = await api.get(`/api/pretfamilles/search?name=${encodeURIComponent(name)}`);
+    const response: AxiosResponse<PretFamille[]> = await api.get(`/api/pretfamilles/search/nom?q=${encodeURIComponent(name)}`);
     return response.data;
   },
 };
