@@ -20,6 +20,7 @@ import {
 // Importer tous nos composants
 import AIStockManager from './ai/AIStockManager';
 import AISalesPredictor from './ai/AISalesPredictor';
+import AIMarketingAssistant from './ai/AIMarketingAssistant';
 import ProfitLossStatement from './accounting/ProfitLossStatement';
 import InventoryAnalyzer from './inventory/InventoryAnalyzer';
 import SalesReport from './reports/SalesReport';
@@ -134,6 +135,10 @@ const AdvancedDashboard: React.FC<AdvancedDashboardProps> = ({ className }) => {
 
 
         <TabsContent value="ai-tools" className="space-y-8 mt-10">
+          <div className="grid grid-cols-1 gap-8">
+            <AIMarketingAssistant />
+          </div>
+          
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <AIStockManager />
             <AISalesPredictor />

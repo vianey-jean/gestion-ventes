@@ -1,4 +1,5 @@
 
+
 /**
  * Types d'environnement pour TypeScript
  * Définit les types pour les variables d'environnement accessibles via import.meta.env

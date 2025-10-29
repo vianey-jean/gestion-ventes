@@ -378,6 +378,19 @@ export const beneficeService = {
   },
 };
 
+// Marketing Service
+export const marketingService = {
+  async generateDescription(productData: {
+    productDescription: string;
+    purchasePrice?: number;
+    sellingPrice?: number;
+    quantity?: number;
+  }): Promise<{ success: boolean; description?: string; error?: string }> {
+    const response: AxiosResponse<{ success: boolean; description?: string; error?: string }> = await api.post('/api/marketing/generate-description', productData);
+    return response.data;
+  }
+};
+
 // Export the api instance for direct use if needed
 export { api };
 export default api;
