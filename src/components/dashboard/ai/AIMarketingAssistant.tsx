@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { productService, salesService, marketingService } from '@/service/api';
 import { Product, Sale } from '@/types';
@@ -14,7 +15,8 @@ import {
   Zap,
   RefreshCw,
   Copy,
-  Check
+  Check,
+  Search
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -50,6 +52,7 @@ const AIMarketingAssistant: React.FC = () => {
   const [marketingDescriptions, setMarketingDescriptions] = useState<MarketingDescription[]>([]);
   const [generatingFor, setGeneratingFor] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     loadData();
@@ -365,12 +368,30 @@ const AIMarketingAssistant: React.FC = () => {
               <div className="space-y-6">
                 {/* Produits en stock */}
                 <div>
-                  <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-                    <Package className="h-5 w-5 text-emerald-600" />
-                    Produits en Stock
-                  </h3>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-bold flex items-center gap-2">
+                      <Package className="h-5 w-5 text-emerald-600" />
+                      Produits en Stock
+                    </h3>
+                    <div className="relative w-80">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                      <Input
+                        type="text"
+                        placeholder="Rechercher un produit (min. 3 caractères)..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="pl-10 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-emerald-200 focus:border-emerald-400 focus:ring-emerald-400"
+                      />
+                    </div>
+                  </div>
                   <div className="grid gap-4">
-                    {products.filter(p => p.quantity > 0).map(product => {
+                    {products
+                      .filter(p => p.quantity > 0)
+                      .filter(p => {
+                        if (searchQuery.length < 3) return true;
+                        return p.description.toLowerCase().includes(searchQuery.toLowerCase());
+                      })
+                      .map(product => {
                       const existingDescription = marketingDescriptions.find(d => d.productId === product.id);
                       
                       return (
@@ -463,66 +484,6 @@ const AIMarketingAssistant: React.FC = () => {
                     })}
                   </div>
                 </div>
-
-                {/* Descriptions générées */}
-                {marketingDescriptions.length > 0 && (
-                  <>
-                    <Separator className="my-6" />
-                    <div>
-                      <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-                        <Sparkles className="h-5 w-5 text-purple-600" />
-                        Descriptions Générées
-                      </h3>
-                      <div className="space-y-4">
-                        {marketingDescriptions.map(desc => (
-                          <Card 
-                            key={desc.productId}
-                            className="border-l-4 border-l-emerald-500 bg-gradient-to-br from-white to-emerald-50/30 dark:from-gray-900 dark:to-emerald-900/10"
-                          >
-                            <CardHeader>
-                              <div className="flex items-start justify-between gap-4">
-                                <div className="flex-1">
-                                  <CardTitle className="text-base font-bold text-emerald-900 dark:text-emerald-100">
-                                    {desc.description}
-                                  </CardTitle>
-                                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                    Généré le {new Date(desc.generatedAt).toLocaleDateString('fr-FR')} à{' '}
-                                    {new Date(desc.generatedAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
-                                  </p>
-                                </div>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => copyToClipboard(desc.marketingText, desc.productId)}
-                                  className="shrink-0"
-                                >
-                                  {copiedId === desc.productId ? (
-                                    <>
-                                      <Check className="h-4 w-4 mr-2 text-green-600" />
-                                      Copié
-                                    </>
-                                  ) : (
-                                    <>
-                                      <Copy className="h-4 w-4 mr-2" />
-                                      Copier
-                                    </>
-                                  )}
-                                </Button>
-                              </div>
-                            </CardHeader>
-                            <CardContent>
-                              <div className="p-4 rounded-lg bg-white/80 dark:bg-gray-800/80 border border-emerald-200 dark:border-emerald-800">
-                                <p className="text-sm leading-relaxed whitespace-pre-wrap text-gray-700 dark:text-gray-300">
-                                  {desc.marketingText}
-                                </p>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ))}
-                      </div>
-                    </div>
-                  </>
-                )}
               </div>
             </ScrollArea>
           </TabsContent>
