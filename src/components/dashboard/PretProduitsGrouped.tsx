@@ -143,7 +143,17 @@ const PretProduitsGrouped: React.FC = () => {
       return acc;
     }, {} as Record<string, GroupedPrets>);
 
-    setGroupedPrets(Object.values(grouped));
+    // Trier les groupes: "Tous payé" d'abord, puis "En cours", chacun par ordre alphabétique
+    const sortedGroups = Object.values(grouped).sort((a, b) => {
+      // Si les statuts sont différents, mettre "Tous payé" (allPaid = true) avant "En cours" (allPaid = false)
+      if (a.allPaid !== b.allPaid) {
+        return a.allPaid ? -1 : 1;
+      }
+      // Si les statuts sont identiques, trier par ordre alphabétique du nom
+      return a.nom.localeCompare(b.nom, 'fr', { sensitivity: 'base' });
+    });
+    
+    setGroupedPrets(sortedGroups);
   };
 
   useEffect(() => {
