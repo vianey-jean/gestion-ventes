@@ -274,35 +274,36 @@ const DepenseDuMois = () => {
       <MonthlyResetHandler />
       
       {/* Header luxueux avec gradient */}
-      <div className="bg-gradient-to-br from-cyan-600 via-blue-600 to-purple-600 rounded-3xl shadow-2xl p-8 border border-white/20">
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
-          <div className="flex items-center gap-4">
-            <div className="bg-white/20 backdrop-blur-sm rounded-full p-4">
-              <Wallet className="h-8 w-8 text-white" />
+      <div className="bg-gradient-to-br from-cyan-600 via-blue-600 to-purple-600 rounded-xl sm:rounded-2xl lg:rounded-3xl shadow-2xl p-4 sm:p-6 md:p-8 border border-white/20">
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 sm:gap-6">
+          <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
+            <div className="bg-white/20 backdrop-blur-sm rounded-full p-2 sm:p-3 md:p-4">
+              <Wallet className="h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8 text-white" />
             </div>
             <div>
-              <h2 className="text-3xl font-bold text-white mb-2">Dépenses du mois</h2>
-              <div className="flex items-center gap-2 text-white/90">
-                <Calendar className="h-5 w-5" />
-                <span className="text-xl font-semibold">
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-1 sm:mb-2">Dépenses du mois</h2>
+              <div className="flex items-center gap-1 sm:gap-2 text-white/90">
+                <Calendar className="h-3 w-3 sm:h-4 sm:w-4 md:h-5 md:w-5" />
+                <span className="text-xs sm:text-sm md:text-base lg:text-xl font-semibold">
                   {formatMonthInFrench(currentMonth)} {currentYear}
                 </span>
               </div>
             </div>
-            <Sparkles className="h-6 w-6 text-white animate-pulse" />
+            <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 text-white animate-pulse" />
           </div>
 
           {/* Boutons d'action modernisés */}
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-2 sm:gap-3 w-full lg:w-auto">
             <Button 
               onClick={() => setIsFixeDialogOpen(true)}
-              className="bg-white/20 hover:bg-white/30 text-white backdrop-blur-sm border border-white/30 transition-all duration-300 hover:scale-105 shadow-lg"
+              className="flex-1 sm:flex-none bg-white/20 hover:bg-white/30 text-white backdrop-blur-sm border border-white/30 transition-all duration-300 hover:scale-105 shadow-lg text-xs sm:text-sm px-2 sm:px-3 md:px-4 py-2"
             >
-              <CreditCard className="h-4 w-4 mr-2" />
-              Dépenses fixes
+              <CreditCard className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+              <span className="hidden xs:inline">Dépenses fixes</span>
+              <span className="xs:hidden">Fixes</span>
             </Button>
             <Button 
-              className="bg-emerald-500 hover:bg-emerald-600 text-white transition-all duration-300 hover:scale-105 shadow-lg" 
+              className="flex-1 sm:flex-none bg-emerald-500 hover:bg-emerald-600 text-white transition-all duration-300 hover:scale-105 shadow-lg text-xs sm:text-sm px-2 sm:px-3 md:px-4 py-2" 
               onClick={() => {
                 setEditMouvementId(null);
                 setNewMouvement({
@@ -315,15 +316,17 @@ const DepenseDuMois = () => {
                 setIsDialogOpen(true);
               }}
             >
-              <Plus className="h-4 w-4 mr-2" />
-              Ajouter
+              <Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+              <span className="hidden xs:inline">Ajouter</span>
+              <span className="xs:hidden">+</span>
             </Button>
             <Button 
               onClick={handleReset}
-              className="bg-red-500/80 hover:bg-red-600 text-white border border-red-400/50 transition-all duration-300 hover:scale-105 shadow-lg"
+              className="flex-1 sm:flex-none bg-red-500/80 hover:bg-red-600 text-white border border-red-400/50 transition-all duration-300 hover:scale-105 shadow-lg text-xs sm:text-sm px-2 sm:px-3 md:px-4 py-2"
             >
-              <RotateCcw className="h-4 w-4 mr-2" />
-              Réinitialiser
+              <RotateCcw className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">Réinitialiser</span>
+              <span className="sm:hidden">Reset</span>
             </Button>
           </div>
         </div>
@@ -362,47 +365,51 @@ const DepenseDuMois = () => {
       </div>
       
       {/* Tableau des mouvements modernisé */}
-      <div className="bg-gradient-to-br from-white/95 to-gray-50/95 dark:from-gray-900/95 dark:to-gray-800/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 overflow-hidden">
+      <div className="bg-gradient-to-br from-white/95 to-gray-50/95 dark:from-gray-900/95 dark:to-gray-800/95 backdrop-blur-xl rounded-xl sm:rounded-2xl lg:rounded-3xl shadow-2xl border border-white/20 overflow-hidden -mx-3 sm:mx-0">
         {/* Header du tableau */}
-        <div className="bg-gradient-to-r from-gray-50 to-white dark:from-gray-800 dark:to-gray-700 p-6 border-b border-gray-200/50 dark:border-gray-700/50">
-          <div className="flex items-center gap-3">
-            <div className="bg-gradient-to-r from-blue-500 to-purple-500 rounded-full p-2">
-              <Wallet className="h-5 w-5 text-white" />
+        <div className="bg-gradient-to-r from-gray-50 to-white dark:from-gray-800 dark:to-gray-700 p-3 sm:p-4 md:p-6 border-b border-gray-200/50 dark:border-gray-700/50">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="bg-gradient-to-r from-blue-500 to-purple-500 rounded-full p-1.5 sm:p-2">
+              <Wallet className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
             </div>
-            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200">Mouvements du mois</h3>
+            <h3 className="text-base sm:text-lg md:text-xl font-bold text-gray-800 dark:text-gray-200">Mouvements du mois</h3>
           </div>
         </div>
 
-        <div className="overflow-x-auto">
-          <Table className={isMobile ? "table-responsive-stack" : ""}>
+        <div className="overflow-x-auto -mx-3 sm:mx-0">
+          <Table className="text-xs sm:text-sm md:text-base">
             <TableHeader>
               <TableRow className="bg-gradient-to-r from-gray-50 to-white dark:from-gray-800 dark:to-gray-700 border-none hover:bg-gradient-to-r">
-                <TableHead className="font-bold text-indigo-600 dark:text-indigo-400">
-                  <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4" />
-                    Date
+                <TableHead className="font-bold text-indigo-600 dark:text-indigo-400 px-2 py-2 sm:px-3 sm:py-2.5 md:px-4 md:py-3">
+                  <div className="flex items-center gap-1 sm:gap-2">
+                    <Calendar className="h-3 w-3 sm:h-4 sm:w-4" />
+                    <span className="hidden xs:inline">Date</span>
                   </div>
                 </TableHead>
-                <TableHead className="font-bold text-indigo-600 dark:text-indigo-400">
-                  <div className="flex items-center gap-2">
-                    <Edit className="h-4 w-4" />
-                    Description
+                <TableHead className="font-bold text-indigo-600 dark:text-indigo-400 px-2 py-2 sm:px-3 sm:py-2.5 md:px-4 md:py-3">
+                  <div className="flex items-center gap-1 sm:gap-2">
+                    <Edit className="h-3 w-3 sm:h-4 sm:w-4" />
+                    <span className="hidden sm:inline">Description</span>
+                    <span className="sm:hidden">Desc.</span>
                   </div>
                 </TableHead>
-                <TableHead className="font-bold text-indigo-600 dark:text-indigo-400">Catégorie</TableHead>
-                <TableHead className="text-right font-bold text-indigo-600 dark:text-indigo-400">
-                  <div className="flex items-center justify-end gap-2">
-                    <ArrowDown className="h-4 w-4" />
-                    Débit
+                <TableHead className="font-bold text-indigo-600 dark:text-indigo-400 px-2 py-2 sm:px-3 sm:py-2.5 md:px-4 md:py-3 hidden md:table-cell">Catégorie</TableHead>
+                <TableHead className="text-right font-bold text-indigo-600 dark:text-indigo-400 px-2 py-2 sm:px-3 sm:py-2.5 md:px-4 md:py-3">
+                  <div className="flex items-center justify-end gap-1 sm:gap-2">
+                    <ArrowDown className="h-3 w-3 sm:h-4 sm:w-4" />
+                    <span className="hidden xs:inline">Débit</span>
                   </div>
                 </TableHead>
-                <TableHead className="text-right font-bold text-indigo-600 dark:text-indigo-400">
-                  <div className="flex items-center justify-end gap-2">
-                    <ArrowUp className="h-4 w-4" />
-                    Crédit
+                <TableHead className="text-right font-bold text-indigo-600 dark:text-indigo-400 px-2 py-2 sm:px-3 sm:py-2.5 md:px-4 md:py-3">
+                  <div className="flex items-center justify-end gap-1 sm:gap-2">
+                    <ArrowUp className="h-3 w-3 sm:h-4 sm:w-4" />
+                    <span className="hidden xs:inline">Crédit</span>
                   </div>
                 </TableHead>
-                <TableHead className="text-right font-bold text-indigo-600 dark:text-indigo-400">Actions</TableHead>
+                <TableHead className="text-right font-bold text-indigo-600 dark:text-indigo-400 px-2 py-2 sm:px-3 sm:py-2.5 md:px-4 md:py-3">
+                  <span className="hidden sm:inline">Actions</span>
+                  <span className="sm:hidden">...</span>
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

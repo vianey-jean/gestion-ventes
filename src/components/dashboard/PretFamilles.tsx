@@ -535,56 +535,58 @@ const PretFamilles: React.FC = () => {
   return (
        <div className="mt-6 space-y-6">
       {/* Header avec design luxueux */}
-      <div className="bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 rounded-3xl shadow-2xl p-8 border border-white/20">
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
-          <div className="flex items-center gap-4">
-            <div className="bg-white/20 backdrop-blur-sm rounded-full p-4">
-              <HandCoins className="h-8 w-8 text-white" />
+      <div className="bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 rounded-xl sm:rounded-2xl lg:rounded-3xl shadow-2xl p-4 sm:p-6 md:p-8 border border-white/20">
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 sm:gap-6">
+          <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
+            <div className="bg-white/20 backdrop-blur-sm rounded-full p-2 sm:p-3 md:p-4">
+              <HandCoins className="h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8 text-white" />
             </div>
             <div>
-              <h2 className="text-3xl font-bold text-white">Prêts aux Familles</h2>
-              <p className="text-white/80 text-lg">Gestion premium des prêts familiaux</p>
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white">Prêts aux Familles</h2>
+              <p className="text-white/80 text-xs sm:text-sm md:text-base lg:text-lg hidden sm:block">Gestion premium des prêts familiaux</p>
             </div>
-            <Sparkles className="h-6 w-6 text-white animate-pulse" />
+            <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 text-white animate-pulse" />
           </div>
 
           {/* Stats rapides */}
-          <div className="flex flex-wrap gap-4">
-            <div className="bg-white/20 backdrop-blur-sm rounded-2xl px-6 py-4 text-center">
-              <div className="text-2xl font-bold text-white">{prets.length}</div>
-              <div className="text-white/80 text-sm">Familles</div>
+          <div className="flex flex-wrap gap-2 sm:gap-3 md:gap-4">
+            <div className="bg-white/20 backdrop-blur-sm rounded-lg sm:rounded-xl md:rounded-2xl px-3 py-2 sm:px-4 sm:py-3 md:px-6 md:py-4 text-center">
+              <div className="text-lg sm:text-xl md:text-2xl font-bold text-white">{prets.length}</div>
+              <div className="text-white/80 text-xs sm:text-sm">Familles</div>
             </div>
-            <div className="bg-white/20 backdrop-blur-sm rounded-2xl px-6 py-4 text-center">
-              <div className="text-2xl font-bold text-emerald-200">
+            <div className="bg-white/20 backdrop-blur-sm rounded-lg sm:rounded-xl md:rounded-2xl px-3 py-2 sm:px-4 sm:py-3 md:px-6 md:py-4 text-center">
+              <div className="text-sm sm:text-base md:text-xl lg:text-2xl font-bold text-emerald-200">
                 {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(totalPret)}
               </div>
-              <div className="text-white/80 text-sm">Total prêté</div>
+              <div className="text-white/80 text-xs sm:text-sm">Total prêté</div>
             </div>
           </div>
 
           {/* Boutons d'action */}
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-row sm:flex-col gap-2 sm:gap-3 w-full sm:w-auto">
             <Button 
               onClick={() => setRemboursementDialogOpen(true)} 
-              className="bg-white/20 hover:bg-white/30 text-white backdrop-blur-sm border border-white/30 transition-all duration-300 hover:scale-105 shadow-lg"
+              className="flex-1 sm:flex-none bg-white/20 hover:bg-white/30 text-white backdrop-blur-sm border border-white/30 transition-all duration-300 hover:scale-105 shadow-lg text-xs sm:text-sm px-3 py-2 sm:px-4 sm:py-2"
             >
-              <Receipt className="h-4 w-4 mr-2" />
-              Remboursement
+              <Receipt className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+              <span className="hidden xs:inline">Remboursement</span>
+              <span className="xs:hidden">Rembours.</span>
             </Button>
             <Button 
               onClick={() => setDemandePretDialogOpen(true)} 
-              className="bg-emerald-500 hover:bg-emerald-600 text-white transition-all duration-300 hover:scale-105 shadow-lg"
+              className="flex-1 sm:flex-none bg-emerald-500 hover:bg-emerald-600 text-white transition-all duration-300 hover:scale-105 shadow-lg text-xs sm:text-sm px-3 py-2 sm:px-4 sm:py-2"
             >
-              <Plus className="h-4 w-4 mr-2" />
-              Nouveau Prêt
+              <Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+              <span className="hidden xs:inline">Nouveau Prêt</span>
+              <span className="xs:hidden">Nouveau</span>
             </Button>
           </div>
         </div>
       </div>
 
       {/* Tableau modernisé */}
-      <Card className="bg-gradient-to-br from-white/95 to-gray-50/95 dark:from-gray-900/95 dark:to-gray-800/95 backdrop-blur-xl shadow-2xl border border-white/20 rounded-3xl overflow-hidden">
-        <div className="p-6">
+      <Card className="bg-gradient-to-br from-white/95 to-gray-50/95 dark:from-gray-900/95 dark:to-gray-800/95 backdrop-blur-xl shadow-2xl border border-white/20 rounded-lg sm:rounded-xl md:rounded-2xl lg:rounded-3xl overflow-hidden -mx-3 sm:mx-0">
+        <div className="p-3 sm:p-4 md:p-6">
           {loading ? (
             <div className="flex justify-center items-center py-16">
               <div className="bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30 rounded-full p-6">
@@ -596,42 +598,45 @@ const PretFamilles: React.FC = () => {
               </div>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <Table className="w-full">
+            <div className="overflow-x-auto -mx-3 sm:mx-0">
+              <Table className="w-full text-xs sm:text-sm md:text-base">
                 <TableHeader>
                   <TableRow className="bg-gradient-to-r from-gray-50 to-white dark:from-gray-800 dark:to-gray-700 border-none hover:bg-gradient-to-r">
-                    <TableHead className="font-bold text-indigo-600 dark:text-indigo-400 text-center">
-                      <div className="flex items-center justify-center gap-2">
-                        <Users className="h-4 w-4" />
-                        Nom
+                    <TableHead className="font-bold text-indigo-600 dark:text-indigo-400 text-center px-2 py-2 sm:px-3 sm:py-2.5 md:px-4 md:py-3">
+                      <div className="flex items-center justify-center gap-1 sm:gap-2">
+                        <Users className="h-3 w-3 sm:h-4 sm:w-4" />
+                        <span className="hidden xs:inline">Nom</span>
                       </div>
                     </TableHead>
-                    <TableHead className="text-right font-bold text-indigo-600 dark:text-indigo-400">
-                      <div className="flex items-center justify-end gap-2">
-                        <CreditCard className="h-4 w-4" />
-                        Prêt Total
+                    <TableHead className="text-right font-bold text-indigo-600 dark:text-indigo-400 px-2 py-2 sm:px-3 sm:py-2.5 md:px-4 md:py-3">
+                      <div className="flex items-center justify-end gap-1 sm:gap-2">
+                        <CreditCard className="h-3 w-3 sm:h-4 sm:w-4" />
+                        <span className="hidden sm:inline">Prêt Total</span>
+                        <span className="sm:hidden">Total</span>
                       </div>
                     </TableHead>
-                    <TableHead className="text-right font-bold text-indigo-600 dark:text-indigo-400">
-                      <div className="flex items-center justify-end gap-2">
-                        <TrendingDown className="h-4 w-4" />
-                        Solde Restant
+                    <TableHead className="text-right font-bold text-indigo-600 dark:text-indigo-400 px-2 py-2 sm:px-3 sm:py-2.5 md:px-4 md:py-3">
+                      <div className="flex items-center justify-end gap-1 sm:gap-2">
+                        <TrendingDown className="h-3 w-3 sm:h-4 sm:w-4" />
+                        <span className="hidden sm:inline">Solde Restant</span>
+                        <span className="sm:hidden">Solde</span>
                       </div>
                     </TableHead>
-                    <TableHead className="text-right font-bold text-indigo-600 dark:text-indigo-400">
+                    <TableHead className="text-right font-bold text-indigo-600 dark:text-indigo-400 px-2 py-2 sm:px-3 sm:py-2.5 md:px-4 md:py-3 hidden md:table-cell">
                       <div className="flex items-center justify-end gap-2">
                         <TrendingUp className="h-4 w-4" />
                         Dernier Remboursement
                       </div>
                     </TableHead>
-                    <TableHead className="text-right font-bold text-indigo-600 dark:text-indigo-400">
+                    <TableHead className="text-right font-bold text-indigo-600 dark:text-indigo-400 px-2 py-2 sm:px-3 sm:py-2.5 md:px-4 md:py-3 hidden lg:table-cell">
                       <div className="flex items-center justify-end gap-2">
                         <CalendarIcon className="h-4 w-4" />
                         Date
                       </div>
                     </TableHead>
-                    <TableHead className="text-center font-bold text-indigo-600 dark:text-indigo-400">
-                      Détails
+                    <TableHead className="text-center font-bold text-indigo-600 dark:text-indigo-400 px-2 py-2 sm:px-3 sm:py-2.5 md:px-4 md:py-3">
+                      <span className="hidden sm:inline">Détails</span>
+                      <span className="sm:hidden">...</span>
                     </TableHead>
                   </TableRow>
                 </TableHeader>
@@ -641,45 +646,45 @@ const PretFamilles: React.FC = () => {
                       key={pret.id} 
                       className="hover:bg-gradient-to-r hover:from-purple-50/50 hover:to-pink-50/50 dark:hover:from-purple-900/20 dark:hover:to-pink-900/20 transition-all duration-300 border-b border-gray-100/50 dark:border-gray-700/50"
                     >
-                      <TableCell className="font-medium">
-                        <div className="flex items-center space-x-3">
-                          <div className="bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/30 dark:to-purple-900/30 rounded-full w-10 h-10 flex items-center justify-center">
-                            <span className="text-sm font-bold text-indigo-600 dark:text-indigo-400">
+                      <TableCell className="font-medium px-2 py-2 sm:px-3 sm:py-2.5 md:px-4 md:py-3">
+                        <div className="flex items-center space-x-2 sm:space-x-3">
+                          <div className="bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/30 dark:to-purple-900/30 rounded-full w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 flex items-center justify-center flex-shrink-0">
+                            <span className="text-xs sm:text-sm font-bold text-indigo-600 dark:text-indigo-400">
                               {index + 1}
                             </span>
                           </div>
-                          <span className="font-bold text-gray-800 dark:text-gray-200">{pret.nom}</span>
+                          <span className="font-bold text-gray-800 dark:text-gray-200 truncate">{pret.nom}</span>
                         </div>
                       </TableCell>
-                      <TableCell className="text-right">
-                        <div className="bg-gradient-to-r from-blue-100 to-cyan-100 dark:from-blue-900/30 dark:to-cyan-900/30 px-4 py-2 rounded-full inline-block">
-                          <CreditCard className="inline-block mr-2 h-4 w-4 text-blue-600 dark:text-blue-400" />
+                      <TableCell className="text-right px-2 py-2 sm:px-3 sm:py-2.5 md:px-4 md:py-3">
+                        <div className="bg-gradient-to-r from-blue-100 to-cyan-100 dark:from-blue-900/30 dark:to-cyan-900/30 px-2 py-1 sm:px-3 sm:py-1.5 md:px-4 md:py-2 rounded-full inline-block">
+                          <CreditCard className="inline-block mr-1 h-3 w-3 sm:h-4 sm:w-4 text-blue-600 dark:text-blue-400 hidden sm:inline" />
                           <span className="font-bold text-blue-700 dark:text-blue-300">
-                            {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(pret.pretTotal)}
+                            {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(pret.pretTotal)}
                           </span>
                         </div>
                       </TableCell>
-                      <TableCell className="text-right">
-                        <div className="bg-gradient-to-r from-red-100 to-orange-100 dark:from-red-900/30 dark:to-orange-900/30 px-4 py-2 rounded-full inline-block">
-                          <ArrowDown className="inline-block mr-2 h-4 w-4 text-red-600 dark:text-red-400" />
+                      <TableCell className="text-right px-2 py-2 sm:px-3 sm:py-2.5 md:px-4 md:py-3">
+                        <div className="bg-gradient-to-r from-red-100 to-orange-100 dark:from-red-900/30 dark:to-orange-900/30 px-2 py-1 sm:px-3 sm:py-1.5 md:px-4 md:py-2 rounded-full inline-block">
+                          <ArrowDown className="inline-block mr-1 h-3 w-3 sm:h-4 sm:w-4 text-red-600 dark:text-red-400 hidden sm:inline" />
                           <span className="font-bold text-red-700 dark:text-red-300">
-                            {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(pret.soldeRestant)}
+                            {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(pret.soldeRestant)}
                           </span>
                         </div>
                       </TableCell>
-                      <TableCell className="text-right">
-                        <div className="bg-gradient-to-r from-emerald-100 to-teal-100 dark:from-emerald-900/30 dark:to-teal-900/30 px-4 py-2 rounded-full inline-block">
+                      <TableCell className="text-right px-2 py-2 sm:px-3 sm:py-2.5 md:px-4 md:py-3 hidden md:table-cell">
+                        <div className="bg-gradient-to-r from-emerald-100 to-teal-100 dark:from-emerald-900/30 dark:to-teal-900/30 px-3 py-1.5 md:px-4 md:py-2 rounded-full inline-block">
                           <ArrowUp className="inline-block mr-2 h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                           <span className="font-bold text-emerald-700 dark:text-emerald-300">
-                            {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(pret.dernierRemboursement)}
+                            {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(pret.dernierRemboursement)}
                           </span>
                         </div>
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="text-right px-2 py-2 sm:px-3 sm:py-2.5 md:px-4 md:py-3 hidden lg:table-cell">
                         <span className="text-gray-600 dark:text-gray-400 font-bold">{pret.dateRemboursement}</span>
                       </TableCell>
-                      <TableCell className="text-center">
-                        <div className="flex items-center justify-center gap-2">
+                      <TableCell className="text-center px-2 py-2 sm:px-3 sm:py-2.5 md:px-4 md:py-3">
+                        <div className="flex items-center justify-center gap-1 sm:gap-2">
                           <Button
                             variant="ghost"
                             size="sm"
@@ -687,19 +692,19 @@ const PretFamilles: React.FC = () => {
                               setSelectedPretForDetail(pret);
                               setDetailDialogOpen(true);
                             }}
-                            className="hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-200"
+                            className="hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-200 p-1 sm:p-2"
                             title="Voir détails"
                           >
-                            <Eye className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                            <Eye className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 dark:text-blue-400" />
                           </Button>
                           <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => openDeletePretDialog(pret)}
-                            className="hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-200"
+                            className="hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-200 p-1 sm:p-2"
                             title="Suppression prêt"
                           >
-                            <Trash2 className="h-5 w-5 text-red-600 dark:text-red-400" />
+                            <Trash2 className="h-4 w-4 sm:h-5 sm:w-5 text-red-600 dark:text-red-400" />
                           </Button>
                         </div>
                       </TableCell>

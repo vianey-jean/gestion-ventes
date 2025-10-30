@@ -431,39 +431,41 @@ const Inventaire = () => {
       </ModernContainer>
 
       {/* Tableau des produits Premium */}
-      <ModernContainer gradient="neutral" className="card-3d overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
+      <ModernContainer gradient="neutral" className="card-3d overflow-hidden -mx-3 sm:mx-0">
+        <div className="overflow-x-auto -mx-3 sm:mx-0">
+          <table className="w-full text-xs sm:text-sm md:text-base">
             <thead>
               <tr className="bg-gradient-to-r from-gray-100 via-gray-50 to-gray-100 border-b-2 border-gray-200">
-                <th className="p-6 text-left font-black  uppercase tracking-wide">
-                  <div className="flex items-center gap-2">
-                    <Package className="h-5 w-5 text-purple-600" />
-                    Description
+                <th className="p-3 sm:p-4 md:p-6 text-left font-black uppercase tracking-wide">
+                  <div className="flex items-center gap-1 sm:gap-2">
+                    <Package className="h-3 w-3 sm:h-4 sm:w-4 md:h-5 md:w-5 text-purple-600" />
+                    <span className="hidden sm:inline">Description</span>
+                    <span className="sm:hidden">Prod.</span>
                   </div>
                 </th>
-                <th className="p-6 text-left font-black uppercase tracking-wide">
-                  <div className="flex items-center gap-2">
-                    <Star className="h-5 w-5 text-yellow-500" />
-                    Prix (€)
+                <th className="p-3 sm:p-4 md:p-6 text-left font-black uppercase tracking-wide">
+                  <div className="flex items-center gap-1 sm:gap-2">
+                    <Star className="h-3 w-3 sm:h-4 sm:w-4 md:h-5 md:w-5 text-yellow-500" />
+                    <span className="hidden xs:inline">Prix</span>
                   </div>
                 </th>
-                <th className="p-6 text-left font-black  uppercase tracking-wide">
-                  <div className="flex items-center gap-2">
-                    <TrendingUp className="h-5 w-5 text-blue-600" />
-                    Quantité
+                <th className="p-3 sm:p-4 md:p-6 text-left font-black uppercase tracking-wide">
+                  <div className="flex items-center gap-1 sm:gap-2">
+                    <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 md:h-5 md:w-5 text-blue-600" />
+                    <span className="hidden xs:inline">Qté</span>
                   </div>
                 </th>
-                <th className="p-6 text-left font-black  uppercase tracking-wide">
+                <th className="p-3 sm:p-4 md:p-6 text-left font-black uppercase tracking-wide hidden md:table-cell">
                   <div className="flex items-center gap-2">
                     <AlertTriangle className="h-5 w-5 text-orange-600" />
                     Priorité
                   </div>
                 </th>
-                <th className="p-6 text-left font-black  uppercase tracking-wide">
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="h-5 w-5 text-indigo-600" />
-                    Actions
+                <th className="p-3 sm:p-4 md:p-6 text-left font-black uppercase tracking-wide">
+                  <div className="flex items-center gap-1 sm:gap-2">
+                    <Sparkles className="h-3 w-3 sm:h-4 sm:w-4 md:h-5 md:w-5 text-indigo-600" />
+                    <span className="hidden sm:inline">Actions</span>
+                    <span className="sm:hidden">...</span>
                   </div>
                 </th>
               </tr>
@@ -474,14 +476,14 @@ const Inventaire = () => {
                 const PriorityIcon = priority.icon;
                 return (
                   <tr key={product.id} className="border-b border-gray-100 hover:bg-gradient-to-r hover:from-blue-50 hover:via-purple-50 hover:to-pink-50 transition-all duration-300 group">
-                    <td className="p-6">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl flex items-center justify-center shadow-lg group-hover:from-blue-100 group-hover:to-purple-100 transition-all duration-300">
-                          <span className="font-bold text-gray-600 text-sm">{index + 1 + (currentPage - 1) * ITEMS_PER_PAGE}</span>
+                    <td className="p-3 sm:p-4 md:p-6">
+                      <div className="flex items-center gap-2 sm:gap-3">
+                        <div className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg sm:rounded-xl flex items-center justify-center shadow-lg group-hover:from-blue-100 group-hover:to-purple-100 transition-all duration-300 flex-shrink-0">
+                          <span className="font-bold text-gray-600 text-xs sm:text-sm">{index + 1 + (currentPage - 1) * ITEMS_PER_PAGE}</span>
                         </div>
-                        <div>
-                          <div className="font-bold  text-lg group-hover:text-blue-900 transition-colors">{product.description}</div>
-                          <Badge variant="outline" className="mt-2 bg-gradient-to-r from-gray-100 to-gray-200 border-0 text-gray-700 font-semibold">
+                        <div className="min-w-0">
+                          <div className="font-bold text-sm sm:text-base md:text-lg group-hover:text-blue-900 transition-colors truncate">{product.description}</div>
+                          <Badge variant="outline" className="mt-1 sm:mt-2 bg-gradient-to-r from-gray-100 to-gray-200 border-0 text-gray-700 font-semibold text-xs hidden sm:inline-flex">
                             <div className="flex items-center gap-1">
                               {categorizeProduct(product.description) === 'perruque' && <Crown className="h-3 w-3" />}
                               {categorizeProduct(product.description) === 'tissage' && <Diamond className="h-3 w-3" />}
@@ -492,18 +494,18 @@ const Inventaire = () => {
                         </div>
                       </div>
                     </td>
-                    <td className="p-6">
-                      <div className="flex items-center gap-2">
-                        <div className="text-2xl font-black  bg-gradient-to-r from-yellow-600 to-orange-600 bg-clip-text text-transparent">
+                    <td className="p-3 sm:p-4 md:p-6">
+                      <div className="flex items-center gap-1">
+                        <div className="text-sm sm:text-lg md:text-2xl font-black bg-gradient-to-r from-yellow-600 to-orange-600 bg-clip-text text-transparent">
                           {product.purchasePrice.toFixed(2)}
                         </div>
-                        <span className="text-xl font-black  bg-gradient-to-r from-yellow-600 to-orange-600 bg-clip-text text-transparent">€</span>
+                        <span className="text-xs sm:text-base md:text-xl font-black bg-gradient-to-r from-yellow-600 to-orange-600 bg-clip-text text-transparent">€</span>
                       </div>
                     </td>
-                    <td className="p-6">
-                      <div className="flex items-center gap-3">
+                    <td className="p-3 sm:p-4 md:p-6">
+                      <div className="flex items-center gap-2 sm:gap-3">
                         <div className={cn(
-                          "w-12 h-12 rounded-xl flex items-center justify-center font-black text-xl shadow-lg",
+                          "w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-lg sm:rounded-xl flex items-center justify-center font-black text-base sm:text-lg md:text-xl shadow-lg",
                           product.quantity === 0 ? "bg-gradient-to-br from-red-500 to-red-600 text-white" :
                           product.quantity <= 2 ? "bg-gradient-to-br from-orange-500 to-orange-600 text-white" :
                           "bg-gradient-to-br from-green-500 to-green-600 text-white"
@@ -512,21 +514,21 @@ const Inventaire = () => {
                         </div>
                       </div>
                     </td>
-                    <td className="p-6">
-                      <Badge className={cn("font-bold text-sm px-4 py-2 rounded-xl shadow-lg flex items-center gap-2", priority.color)}>
-                        <PriorityIcon className="h-4 w-4" />
+                    <td className="p-3 sm:p-4 md:p-6 hidden md:table-cell">
+                      <Badge className={cn("font-bold text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl shadow-lg flex items-center gap-2 w-fit", priority.color)}>
+                        <PriorityIcon className="h-3 w-3 sm:h-4 sm:w-4" />
                         {priority.label}
                       </Badge>
                     </td>
-                    <td className="p-6">
-                      <div className="flex gap-3">
+                    <td className="p-3 sm:p-4 md:p-6">
+                      <div className="flex gap-1 sm:gap-2 md:gap-3">
                         <ModernActionButton
                           buttonSize="sm"
                           variant="outline"
                           gradient="blue"
                           icon={Edit}
                           onClick={() => setEditingProduct(product)}
-                          className="btn-3d hover:scale-110"
+                          className="btn-3d hover:scale-110 p-1 sm:p-2"
                         />
                         <ModernActionButton
                           buttonSize="sm"
@@ -534,7 +536,7 @@ const Inventaire = () => {
                           gradient="red"
                           icon={Trash2}
                           onClick={() => setDeletingProduct(product)}
-                          className="btn-3d hover:scale-110"
+                          className="btn-3d hover:scale-110 p-1 sm:p-2 hidden sm:flex"
                         />
                         <ModernActionButton
                           buttonSize="sm"
@@ -542,7 +544,7 @@ const Inventaire = () => {
                           gradient="purple"
                           icon={Eye}
                           onClick={() => setViewingProduct(product)}
-                          className="btn-3d hover:scale-110"
+                          className="btn-3d hover:scale-110 p-1 sm:p-2"
                         />
                       </div>
                     </td>

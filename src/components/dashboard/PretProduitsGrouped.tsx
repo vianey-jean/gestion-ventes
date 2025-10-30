@@ -703,40 +703,46 @@ const PretProduitsGrouped: React.FC = () => {
                             key={pret.id}
                             className="p-4 bg-gray-50 dark:bg-gray-900/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-900/70 transition-all"
                           >
-                            <div className="flex items-center justify-between">
-                              <div className="flex-1 grid grid-cols-5 gap-4">
-                                <div>
+                           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
+                              <div className="flex-1 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3 md:gap-4 w-full">
+                                <div className="col-span-2 sm:col-span-1">
                                   <p className="text-xs text-gray-500 dark:text-gray-400">Description</p>
-                                  <p className="font-semibold text-gray-900 dark:text-gray-100">{pret.description}</p>
+                                  <p className="font-semibold text-gray-900 dark:text-gray-100 text-sm truncate">{pret.description}</p>
                                 </div>
                                 
                                 <div>
                                   <p className="text-xs text-gray-500 dark:text-gray-400">Date prêt</p>
-                                  <p className="font-medium">{format(new Date(pret.date), 'dd/MM/yyyy')}</p>
+                                  <p className="font-medium text-sm">{format(new Date(pret.date), 'dd/MM/yyyy')}</p>
                                 </div>
 
-                                <div>
+                                <div className="hidden lg:block">
                                   <p className="text-xs text-gray-500 dark:text-gray-400">Date paiement</p>
-                                  <p className={getDatePaiementClass(pret)}>
+                                  <p className={`${getDatePaiementClass(pret)} text-sm`}>
                                     {pret.datePaiement ? format(new Date(pret.datePaiement), 'dd/MM/yyyy') : '-'}
                                   </p>
                                 </div>
 
                                 <div>
-                                  <p className="text-xs text-gray-500 dark:text-gray-400">Prix / Avance</p>
-                                  <p className="font-semibold">
-                                    {formatCurrency(pret.prixVente)} / {formatCurrency(pret.avanceRecue)}
+                                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                                    <span className="hidden sm:inline">Prix / Avance</span>
+                                    <span className="sm:hidden">Prix/Av.</span>
+                                  </p>
+                                  <p className="font-semibold text-xs sm:text-sm">
+                                    {formatCurrency(pret.prixVente).replace(',00', '')}
+                                    <span className="hidden sm:inline"> / </span>
+                                    <span className="sm:hidden">/</span>
+                                    {formatCurrency(pret.avanceRecue).replace(',00', '')}
                                   </p>
                                 </div>
 
                                 <div>
                                   <p className="text-xs text-gray-500 dark:text-gray-400">Reste</p>
-                                  <p className="font-bold text-orange-600">{formatCurrency(pret.reste)}</p>
+                                  <p className="font-bold text-orange-600 text-sm">{formatCurrency(pret.reste).replace(',00', '')}</p>
                                 </div>
                               </div>
 
-                              <div className="flex items-center gap-2 ml-4">
-                                <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
+                              <div className="flex items-center gap-1 sm:gap-2 ml-0 sm:ml-4 w-full sm:w-auto flex-wrap sm:flex-nowrap">
+                                <span className={`inline-flex items-center px-2 py-1 sm:px-3 rounded-full text-xs font-semibold ${
                                   pret.estPaye 
                                     ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400' 
                                     : 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400'
@@ -744,12 +750,12 @@ const PretProduitsGrouped: React.FC = () => {
                                   {pret.estPaye ? (
                                     <>
                                       <CheckCircle className="h-3 w-3 mr-1" />
-                                      Payé
+                                      <span className="hidden xs:inline">Payé</span>
                                     </>
                                   ) : (
                                     <>
                                       <Clock className="h-3 w-3 mr-1" />
-                                      En cours
+                                      <span className="hidden xs:inline">En cours</span>
                                     </>
                                   )}
                                 </span>
@@ -760,10 +766,10 @@ const PretProduitsGrouped: React.FC = () => {
                                     setSelectedPret(pret);
                                     setDetailDialogOpen(true);
                                   }} 
-                                  className="p-2 rounded-lg bg-purple-100 text-purple-600 hover:bg-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:hover:bg-purple-900/50 transition-colors"
+                                  className="p-1.5 sm:p-2 rounded-lg bg-purple-100 text-purple-600 hover:bg-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:hover:bg-purple-900/50 transition-colors"
                                   title="Voir détails"
                                 >
-                                  <Eye className="h-4 w-4" />
+                                  <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                                 </button>
 
                                 <button 
@@ -773,10 +779,10 @@ const PretProduitsGrouped: React.FC = () => {
                                     setAjoutAvance('');
                                     setAjoutAvanceDialogOpen(true);
                                   }} 
-                                  className="p-2 rounded-lg bg-emerald-100 text-emerald-600 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:hover:bg-emerald-900/50 transition-colors"
+                                  className="p-1.5 sm:p-2 rounded-lg bg-emerald-100 text-emerald-600 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:hover:bg-emerald-900/50 transition-colors"
                                   title="Ajouter une avance"
                                 >
-                                  <Plus className="h-4 w-4" />
+                                  <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                                 </button>
 
                                 <button 
@@ -784,7 +790,7 @@ const PretProduitsGrouped: React.FC = () => {
                                     e.stopPropagation();
                                     selectPretForEdit(pret);
                                   }} 
-                                  className="p-2 rounded-lg bg-blue-100 text-blue-600 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50 transition-colors"
+                                  className="p-1.5 sm:p-2 rounded-lg bg-blue-100 text-blue-600 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50 transition-colors hidden sm:block"
                                   title="Modifier"
                                 >
                                   <Edit className="h-4 w-4" />
@@ -796,10 +802,10 @@ const PretProduitsGrouped: React.FC = () => {
                                     setSelectedPret(pret);
                                     setDeleteDialogOpen(true);
                                   }} 
-                                  className="p-2 rounded-lg bg-red-100 text-red-600 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50 transition-colors"
+                                  className="p-1.5 sm:p-2 rounded-lg bg-red-100 text-red-600 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50 transition-colors"
                                   title="Supprimer"
                                 >
-                                  <Trash2 className="h-4 w-4" />
+                                  <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                                 </button>
                               </div>
                             </div>
