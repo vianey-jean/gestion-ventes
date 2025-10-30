@@ -26,12 +26,12 @@ const StatCard: React.FC<StatCardProps> = ({
 }) => {
   return (
     <Card className='card-3d'>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-lg">{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
+      <CardHeader className="pb-2 p-3 sm:p-4 md:p-6">
+        <CardTitle className="text-sm sm:text-base md:text-lg">{title}</CardTitle>
+        <CardDescription className="text-xs sm:text-sm">{description}</CardDescription>
       </CardHeader>
-      <CardContent>
-        <p className={`text-3xl font-bold ${valueClassName}`}>
+      <CardContent className="p-3 sm:p-4 md:p-6 pt-0">
+        <p className={`text-xl sm:text-2xl md:text-3xl font-bold ${valueClassName}`}>
           {value}
         </p>
       </CardContent>

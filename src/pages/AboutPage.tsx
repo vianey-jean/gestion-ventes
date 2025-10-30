@@ -31,17 +31,17 @@ const AboutPage: React.FC = () => {
     <Layout>
       <div className="relative overflow-hidden">
         {/* Hero section */}
-        <div className="relative bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 py-24">
+        <div className="relative bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 py-12 sm:py-16 md:py-24">
           <div className="absolute inset-0 overflow-hidden">
-            <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-float"></div>
-            <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-float" style={{animationDelay: '2s'}}></div>
+            <div className="absolute -top-20 sm:-top-40 -right-20 sm:-right-40 w-40 h-40 sm:w-80 sm:h-80 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-float"></div>
+            <div className="absolute -bottom-20 sm:-bottom-40 -left-20 sm:-left-40 w-40 h-40 sm:w-80 sm:h-80 bg-blue-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-float" style={{animationDelay: '2s'}}></div>
           </div>
           
-          <div className="relative container mx-auto px-4 text-center">
-            <span className="inline-block px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full text-white/90 text-sm font-medium mb-6 border border-white/20">
+          <div className="relative container mx-auto px-3 sm:px-4 md:px-6 text-center">
+            <span className="inline-block px-3 sm:px-4 py-1.5 sm:py-2 bg-white/10 backdrop-blur-sm rounded-full text-white/90 text-xs sm:text-sm font-medium mb-4 sm:mb-6 border border-white/20">
               🚀 Notre Histoire
             </span>
-            <h1 className="text-5xl md:text-7xl font-bold text-white mb-6">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold text-white mb-4 sm:mb-6">
               <span className="bg-gradient-to-r from-white via-purple-200 to-blue-200 bg-clip-text text-transparent">
                 À propos de
               </span>
@@ -50,7 +50,7 @@ const AboutPage: React.FC = () => {
                 Gestion Vente
               </span>
             </h1>
-            <p className="text-xl text-white/80 max-w-3xl mx-auto leading-relaxed">
+            <p className="text-base sm:text-lg md:text-xl text-white/80 max-w-3xl mx-auto leading-relaxed px-4">
               Nous révolutionnons la gestion commerciale avec des solutions innovantes, 
               intuitives et puissantes pour les entrepreneurs modernes.
             </p>
@@ -58,14 +58,14 @@ const AboutPage: React.FC = () => {
         </div>
 
         {/* Mission section */}
-        <div className="py-24 bg-gradient-to-b from-gray-50 to-white">
-          <div className="container mx-auto px-4">
+        <div className="py-12 sm:py-16 md:py-24 bg-gradient-to-b from-gray-50 to-white">
+          <div className="container mx-auto px-3 sm:px-4 md:px-6">
             <div className="max-w-6xl mx-auto">
-              <div className="text-center mb-20">
-                <span className="inline-block px-4 py-2 bg-purple-100 text-purple-800 rounded-full text-sm font-semibold mb-4">
+              <div className="text-center mb-12 sm:mb-16 md:mb-20">
+                <span className="inline-block px-3 sm:px-4 py-1.5 sm:py-2 bg-purple-100 text-purple-800 rounded-full text-xs sm:text-sm font-semibold mb-3 sm:mb-4">
                   Notre Mission
                 </span>
-                <h2 className="text-4xl font-bold text-gray-900 mb-6">
+                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-4 sm:mb-6 px-4">
                   Transformer la gestion commerciale
                 </h2>
               </div>

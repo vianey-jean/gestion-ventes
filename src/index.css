@@ -34,6 +34,39 @@
     --app-red: 0 84% 60%;
     --app-blue: 221 83% 53%;
     --app-purple: 262 83% 58%;
+    
+    /* Variables responsive pour espacement */
+    --spacing-page: 1rem;
+    --spacing-section: 1.5rem;
+    --spacing-card: 1rem;
+    
+    /* Variables pour tailles de texte responsive */
+    --text-xs: 0.75rem;
+    --text-sm: 0.875rem;
+    --text-base: 1rem;
+    --text-lg: 1.125rem;
+    --text-xl: 1.25rem;
+    --text-2xl: 1.5rem;
+    --text-3xl: 1.875rem;
+    --text-4xl: 2.25rem;
+  }
+  
+  @media (min-width: 640px) {
+    :root {
+      --spacing-page: 1.5rem;
+      --spacing-section: 2rem;
+      --spacing-card: 1.25rem;
+    }
+  }
+  
+  @media (min-width: 1024px) {
+    :root {
+      --spacing-page: 2rem;
+      --spacing-section: 2.5rem;
+      --spacing-card: 1.5rem;
+      --text-3xl: 2.25rem;
+      --text-4xl: 2.5rem;
+    }
   }
 
   .dark {
@@ -95,13 +128,15 @@
 }
 
 @layer components {
-  /* Composants d'interface modernisés */
+  /* Composants d'interface modernisés et responsives */
   .card-3d {
     @apply shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1;
+    @apply p-3 sm:p-4 md:p-6;
   }
   
   .btn-3d {
     @apply shadow-md hover:shadow-lg active:shadow-sm transition-all duration-200 transform hover:-translate-y-0.5 active:translate-y-0;
+    @apply px-3 py-2 text-sm sm:px-4 sm:py-2.5 sm:text-base;
   }
   
   /* Animations personnalisées pour l'accessibilité */
@@ -120,28 +155,92 @@
   /* Styles pour les graphiques accessibles */
   .chart-accessible {
     @apply rounded-lg border bg-card text-card-foreground shadow-sm;
+    @apply p-3 sm:p-4 md:p-6;
   }
   
   /* Styles pour les tableaux responsives */
   .table-responsive {
     @apply overflow-x-auto rounded-lg border;
+    @apply -mx-3 sm:mx-0;
   }
   
-  /* Styles pour les formulaires accessibles */
+  .table-responsive table {
+    @apply min-w-full;
+    @apply text-xs sm:text-sm md:text-base;
+  }
+  
+  .table-responsive th,
+  .table-responsive td {
+    @apply px-2 py-2 sm:px-3 sm:py-2.5 md:px-4 md:py-3;
+    @apply whitespace-nowrap;
+  }
+  
+  /* Styles pour les formulaires accessibles et responsives */
   .form-group {
     @apply space-y-2;
   }
   
   .form-input {
-    @apply flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+    @apply flex h-10 sm:h-11 w-full rounded-md border border-input bg-background;
+    @apply px-3 py-2 text-sm sm:text-base;
+    @apply ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium;
+    @apply placeholder:text-muted-foreground;
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
+    @apply disabled:cursor-not-allowed disabled:opacity-50;
   }
   
   .form-label {
-    @apply text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70;
+    @apply text-sm sm:text-base font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70;
   }
   
   .form-error {
-    @apply text-sm font-medium text-destructive;
+    @apply text-xs sm:text-sm font-medium text-destructive;
+  }
+  
+  /* Container responsive */
+  .responsive-container {
+    @apply px-3 sm:px-4 md:px-6 lg:px-8;
+    @apply py-4 sm:py-6 md:py-8;
+  }
+  
+  /* Grid responsive */
+  .responsive-grid {
+    @apply grid gap-3 sm:gap-4 md:gap-6;
+  }
+  
+  /* Card responsive */
+  .responsive-card {
+    @apply rounded-lg sm:rounded-xl;
+    @apply p-3 sm:p-4 md:p-6;
+  }
+  
+  /* Button group responsive */
+  .responsive-button-group {
+    @apply flex flex-col sm:flex-row gap-2 sm:gap-3;
+  }
+  
+  /* Dialog responsive */
+  .responsive-dialog {
+    @apply w-[95vw] sm:w-[90vw] md:w-[80vw] lg:w-[70vw];
+    @apply max-w-full sm:max-w-lg md:max-w-2xl lg:max-w-4xl;
+    @apply max-h-[90vh] overflow-y-auto;
+  }
+  
+  /* Heading responsive */
+  .responsive-h1 {
+    @apply text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold;
+  }
+  
+  .responsive-h2 {
+    @apply text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold;
+  }
+  
+  .responsive-h3 {
+    @apply text-lg sm:text-xl md:text-2xl lg:text-3xl font-semibold;
+  }
+  
+  .responsive-text {
+    @apply text-sm sm:text-base md:text-lg;
   }
 }
 

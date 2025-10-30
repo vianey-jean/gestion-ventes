@@ -9,8 +9,8 @@ interface ModernTableProps {
 
 const ModernTable: React.FC<ModernTableProps> = ({ children, className }) => {
   return (
-    <div className="rounded-xl border-0 shadow-lg overflow-hidden bg-white dark:bg-gray-900">
-      <Table className={cn("", className)}>
+    <div className="rounded-lg sm:rounded-xl border-0 shadow-lg overflow-hidden bg-white dark:bg-gray-900 -mx-3 sm:mx-0">
+      <Table className={cn("min-w-full", className)}>
         {children}
       </Table>
     </div>
@@ -43,7 +43,7 @@ const ModernTableRow: React.FC<{ children: React.ReactNode; onClick?: () => void
 
 const ModernTableHead: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className }) => (
   <TableHead className={cn(
-    "font-bold text-gray-700 dark:text-gray-300 bg-gradient-to-r from-transparent to-transparent",
+    "font-bold text-gray-700 dark:text-gray-300 bg-gradient-to-r from-transparent to-transparent text-xs sm:text-sm whitespace-nowrap",
     className
   )}>
     {children}
@@ -51,7 +51,7 @@ const ModernTableHead: React.FC<{ children: React.ReactNode; className?: string 
 );
 
 const ModernTableCell: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className }) => (
-  <TableCell className={cn("text-gray-600 dark:text-gray-400", className)}>
+  <TableCell className={cn("text-gray-600 dark:text-gray-400 text-xs sm:text-sm whitespace-nowrap", className)}>
     {children}
   </TableCell>
 );

@@ -112,10 +112,10 @@ const ContactPage: React.FC = () => {
   return (
      <Layout>
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-blue-900 dark:to-indigo-900">
-      <div className="container mx-auto px-6 py-16">
+      <div className="container mx-auto px-3 sm:px-4 md:px-6 py-8 sm:py-12 md:py-16">
         {/* Header Premium */}
-        <div className="text-center mb-16">
-          <div className="relative inline-block mb-8">
+        <div className="text-center mb-8 sm:mb-12 md:mb-16">
+          <div className="relative inline-block mb-4 sm:mb-6 md:mb-8">
             <div className="absolute inset-0 bg-gradient-to-r from-blue-500 via-purple-600 to-indigo-600 rounded-full blur-3xl opacity-20"></div>
            
               <motion.h1
@@ -130,41 +130,41 @@ const ContactPage: React.FC = () => {
                   Contactez-nous
                 </motion.h1>
           </div>
-          <div className="max-w-3xl mx-auto">
-            <div className="text-xl text-slate-600 dark:text-slate-300 leading-relaxed mb-8">
+          <div className="max-w-3xl mx-auto px-3 sm:px-4">
+            <div className="text-sm sm:text-base md:text-lg lg:text-xl text-slate-600 dark:text-slate-300 leading-relaxed mb-6 sm:mb-8">
               Une question ? Un projet ? Notre équipe d'experts est à votre disposition pour vous accompagner dans votre réussite.
             </div>
-            <div className="flex items-center justify-center gap-8 text-sm text-slate-500">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6 md:gap-8 text-xs sm:text-sm text-slate-500">
               <div className="flex items-center gap-2">
-                <Shield className="h-4 w-4 text-green-500" />
+                <Shield className="h-3 w-3 sm:h-4 sm:w-4 text-green-500 shrink-0" />
                 <span>Sécurisé & Confidentiel</span>
               </div>
               <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4 text-blue-500" />
+                <Clock className="h-3 w-3 sm:h-4 sm:w-4 text-blue-500 shrink-0" />
                 <span>Réponse sous 24h</span>
               </div>
               <div className="flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-purple-500" />
+                <Sparkles className="h-3 w-3 sm:h-4 sm:w-4 text-purple-500 shrink-0" />
                 <span>Service </span>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-12 max-w-7xl mx-auto">
+        <div className="grid lg:grid-cols-3 gap-6 sm:gap-8 md:gap-12 max-w-7xl mx-auto">
           {/* Formulaire de contact premium */}
           <div className="lg:col-span-2">
             <Card className="shadow-2xl border-0 bg-white/90 dark:bg-slate-800/90 backdrop-blur-2xl">
-              <CardHeader className="pb-8">
-                <CardTitle className="flex items-center gap-4 text-2xl">
-                  <div className="p-3 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl shadow-lg">
-                    <Mail className="h-6 w-6 text-white" />
+              <CardHeader className="pb-4 sm:pb-6 md:pb-8 p-4 sm:p-6">
+                <CardTitle className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 text-lg sm:text-xl md:text-2xl">
+                  <div className="p-2 sm:p-3 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl sm:rounded-2xl shadow-lg shrink-0">
+                    <Mail className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 text-white" />
                   </div>
                   <span className="bg-gradient-to-r from-slate-800 to-slate-600 dark:from-white dark:to-slate-200 bg-clip-text text-transparent">
                     Envoyez-nous un message
                   </span>
                 </CardTitle>
-                <CardDescription className="text-lg text-slate-600 dark:text-slate-300 mt-3">
+                <CardDescription className="text-sm sm:text-base md:text-lg text-slate-600 dark:text-slate-300 mt-2 sm:mt-3">
                   Remplissez le formulaire ci-dessous. Chaque message est traité avec soin par notre équipe dédiée.
                 </CardDescription>
               </CardHeader>
