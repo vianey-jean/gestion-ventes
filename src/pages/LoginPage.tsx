@@ -205,7 +205,7 @@ const LoginPage: React.FC = () => {
                 )}
               </CardContent>
               
-              <CardFooter className="flex flex-col space-y-6 px-8 pb-10">
+              {/* <CardFooter className="flex flex-col space-y-6 px-8 pb-10">
                 <Button
                   type="submit"
                   className="w-full h-14 bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 hover:from-purple-700 hover:via-pink-700 hover:to-blue-700 text-white font-bold text-lg rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center gap-3"
@@ -231,16 +231,61 @@ const LoginPage: React.FC = () => {
                 
                 <div className="text-center">
                   <p className="text-gray-600 dark:text-gray-300">
-                    Nouveau sur notre plateforme?{" "}
+                    Nouveau sur  plateforme?{" "}
+                  </p>
+                  <p>
                     <Link 
                       to="/register" 
-                      className="text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 font-semibold hover:underline transition-colors"
+                      className="h-5 w-5 text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 font-semibold hover:underline transition-colors"
                     >
                       Créer un compte
                     </Link>
                   </p>
                 </div>
-              </CardFooter>
+              </CardFooter> */}
+ <CardFooter className="flex flex-row space-x-4 px-8 pb-10">
+  {/* Bouton principal - Connexion */}
+  <Button
+    type="submit"
+    className="w-1/2 h-14 bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 
+               hover:from-purple-700 hover:via-pink-700 hover:to-blue-700 
+               text-white font-bold text-lg rounded-xl shadow-lg 
+               hover:shadow-xl transform hover:scale-105 
+               transition-all duration-300 flex items-center justify-center gap-3"
+    disabled={isCheckingEmail || (showPasswordField && !isPasswordValid)}
+  >
+    {isCheckingEmail ? (
+      <>
+        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+        Vérification...
+      </>
+    ) : showPasswordField ? (
+      <>
+        <Lock className="h-5 w-5" />
+        Se connecter
+      </>
+    ) : (
+      <>
+        <ArrowRight className="h-5 w-5" />
+        Continuer
+      </>
+    )}
+  </Button>
+
+  {/* Bouton secondaire - Créer un compte */}
+  <Link to="/register" className="w-1/2">
+    <Button
+      className="w-full h-14 bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 
+                 hover:from-purple-700 hover:via-pink-700 hover:to-blue-700 
+                 text-white hover:text-black font-bold text-lg rounded-xl shadow-lg 
+                 hover:shadow-xl transform hover:scale-105 ">
+      Créer un compte
+    </Button>
+  </Link>
+</CardFooter>
+
+
+
             </form>
           </Card>
         </div>

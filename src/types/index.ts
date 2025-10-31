@@ -49,6 +49,11 @@ export interface Product {
   profit?: number;
 }
 
+export interface PretDetail {
+  date: string;
+  montant: number;
+}
+
 export interface PretFamille {
   id: string;
   nom: string;
@@ -57,6 +62,7 @@ export interface PretFamille {
   dernierRemboursement: number;
   dateRemboursement: string;
   remboursements?: PaiementDetail[];
+  prets?: PretDetail[]; // Historique des prêts
 }
 
 export interface PaiementDetail {
