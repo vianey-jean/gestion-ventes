@@ -306,17 +306,7 @@ const SalesTable: React.FC<SalesTableProps> = ({ sales: initialSales, onRowClick
                 <ModernTableCell className="text-right">
                   <div className="bg-gradient-to-r from-emerald-100 to-teal-100 dark:from-emerald-900/30 dark:to-teal-900/30 px-3 py-1 rounded-full inline-block">
                     <span className="font-bold text-emerald-700 dark:text-emerald-400">
-                      {sale.products ? (
-                        <div className="space-y-1">
-                          {sale.products.map((product, idx) => (
-                            <div key={idx} className="text-xs">
-                              {formatCurrency(product.sellingPrice)}
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        formatCurrency(sale.sellingPrice)
-                      )}
+                      {formatCurrency(sale.totalSellingPrice || sale.sellingPrice)}
                     </span>
                   </div>
                 </ModernTableCell>

@@ -55,61 +55,108 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<{ type: 'sale' | 'product', index?: number } | null>(null);
+  
+  // États pour la fonctionnalité Avance
+  const [showAdvanceSection, setShowAdvanceSection] = useState(false);
+  const [avancePrice, setAvancePrice] = useState('');
+  const [reste, setReste] = useState('');
+  const [nextPaymentDate, setNextPaymentDate] = useState('');
 
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:10000';
 
   // Réinitialiser le formulaire quand il s'ouvre ou charger les données d'édition
   useEffect(() => {
-    if (isOpen) {
-      if (editSale) {
-        // Mode édition - charger les données existantes
-        setDate(new Date(editSale.date).toISOString().split('T')[0]);
-        setClientName(editSale.clientName || '');
-        setClientPhone(editSale.clientPhone || '');
-        setClientAddress(editSale.clientAddress || '');
-        
-        // Charger les produits existants
-        if (editSale.products && editSale.products.length > 0) {
-          const loadedProducts = editSale.products.map(saleProduct => {
-            const product = products.find(p => p.id === saleProduct.productId);
-            const isAdvance = saleProduct.description.toLowerCase().includes('avance');
+    const loadSaleData = async () => {
+      if (isOpen) {
+        if (editSale) {
+          // Mode édition - charger les données existantes
+          setDate(new Date(editSale.date).toISOString().split('T')[0]);
+          setClientName(editSale.clientName || '');
+          setClientPhone(editSale.clientPhone || '');
+          setClientAddress(editSale.clientAddress || '');
+          
+          // Charger les données d'avance si elles existent
+          const hasReste = editSale.reste && editSale.reste > 0;
+          if (hasReste) {
+            setShowAdvanceSection(true);
+            // Le prix d'avance est stocké dans totalSellingPrice de la vente
+            setAvancePrice(editSale.totalSellingPrice?.toString() || '0');
+            setReste(editSale.reste.toString());
             
-            const purchasePriceUnit = isAdvance ? saleProduct.purchasePrice : (saleProduct.purchasePrice / saleProduct.quantitySold);
-            const sellingPriceUnit = isAdvance ? saleProduct.sellingPrice : (saleProduct.sellingPrice / saleProduct.quantitySold);
-            
-            return {
-              productId: saleProduct.productId,
-              description: saleProduct.description,
-              sellingPriceUnit: sellingPriceUnit.toString(),
-              quantitySold: saleProduct.quantitySold.toString(),
-              purchasePriceUnit: purchasePriceUnit.toString(),
-              profit: saleProduct.profit.toString(),
-              selectedProduct: product || null,
-              maxQuantity: product ? (product.quantity || 0) + saleProduct.quantitySold : 0,
-              isAdvanceProduct: isAdvance
-            };
-          });
-          setFormProducts(loadedProducts);
+            // Charger la date de prochaine paiement depuis pretproduits
+            try {
+              const token = localStorage.getItem('token');
+              const response = await axios.get(`${API_BASE_URL}/api/pretproduits`, {
+                headers: { Authorization: `Bearer ${token}` }
+              });
+              
+              const pretProduit = response.data.find((p: any) => 
+                p.nom === editSale.clientName && p.date === editSale.date
+              );
+              
+              if (pretProduit && pretProduit.datePaiement) {
+                setNextPaymentDate(new Date(pretProduit.datePaiement).toISOString().split('T')[0]);
+              }
+            } catch (error) {
+              console.error('Erreur lors du chargement de la date de paiement:', error);
+            }
+          } else {
+            setShowAdvanceSection(false);
+            setAvancePrice('');
+            setReste('');
+            setNextPaymentDate('');
+          }
+          
+          // Charger les produits existants
+          if (editSale.products && editSale.products.length > 0) {
+            const loadedProducts = editSale.products.map(saleProduct => {
+              const product = products.find(p => p.id === saleProduct.productId);
+              const isAdvance = saleProduct.description.toLowerCase().includes('avance');
+              
+              const purchasePriceUnit = isAdvance ? saleProduct.purchasePrice : (saleProduct.purchasePrice / saleProduct.quantitySold);
+              const sellingPriceUnit = isAdvance ? saleProduct.sellingPrice : (saleProduct.sellingPrice / saleProduct.quantitySold);
+              
+              return {
+                productId: saleProduct.productId,
+                description: saleProduct.description,
+                sellingPriceUnit: sellingPriceUnit.toString(),
+                quantitySold: saleProduct.quantitySold.toString(),
+                purchasePriceUnit: purchasePriceUnit.toString(),
+                profit: saleProduct.profit.toString(),
+                selectedProduct: product || null,
+                maxQuantity: product ? (product.quantity || 0) + saleProduct.quantitySold : 0,
+                isAdvanceProduct: isAdvance
+              };
+            });
+            setFormProducts(loadedProducts);
+          }
+        } else {
+          // Mode création - réinitialiser
+          setDate(new Date().toISOString().split('T')[0]);
+          setClientName('');
+          setClientPhone('');
+          setClientAddress('');
+          setFormProducts([{
+            productId: '',
+            description: '',
+            sellingPriceUnit: '',
+            quantitySold: '1',
+            purchasePriceUnit: '',
+            profit: '',
+            selectedProduct: null,
+            maxQuantity: 0,
+            isAdvanceProduct: false
+          }]);
+          // Réinitialiser les champs avance
+          setShowAdvanceSection(false);
+          setAvancePrice('');
+          setReste('');
+          setNextPaymentDate('');
         }
-      } else {
-        // Mode création - réinitialiser
-        setDate(new Date().toISOString().split('T')[0]);
-        setClientName('');
-        setClientPhone('');
-        setClientAddress('');
-        setFormProducts([{
-          productId: '',
-          description: '',
-          sellingPriceUnit: '',
-          quantitySold: '1',
-          purchasePriceUnit: '',
-          profit: '',
-          selectedProduct: null,
-          maxQuantity: 0,
-          isAdvanceProduct: false
-        }]);
       }
-    }
+    };
+    
+    loadSaleData();
   }, [isOpen, editSale, products]);
 
   // Gestion du client
@@ -342,6 +389,15 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
     }, { totalPurchasePrice: 0, totalSellingPrice: 0, totalProfit: 0 });
   };
 
+  // Calculer automatiquement le reste quand l'avance change
+  const handleAvancePriceChange = (value: string) => {
+    setAvancePrice(value);
+    const totals = getTotals();
+    const avance = Number(value) || 0;
+    const resteCalculated = totals.totalSellingPrice - avance;
+    setReste(resteCalculated >= 0 ? resteCalculated.toFixed(2) : '0');
+  };
+
   // Soumission du formulaire
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -392,26 +448,119 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
 
       const totals = getTotals();
       
+      // Déterminer le prix de vente à enregistrer
+      const avancePriceValue = Number(avancePrice) || 0;
+      const finalSellingPrice = avancePriceValue > 0 ? avancePriceValue : totals.totalSellingPrice;
+      const resteValue = avancePriceValue > 0 ? Number(reste) : 0;
+      
       const saleData = {
         date,
         products: saleProducts,
         totalPurchasePrice: totals.totalPurchasePrice,
-        totalSellingPrice: totals.totalSellingPrice,
+        totalSellingPrice: finalSellingPrice,
         totalProfit: totals.totalProfit,
         clientName: clientName || null,
         clientAddress: clientAddress || null,
         clientPhone: clientPhone || null,
+        reste: resteValue,
+        nextPaymentDate: avancePriceValue > 0 ? nextPaymentDate : null,
       };
 
       let success;
       
       if (editSale) {
         success = await updateSale({ ...saleData, id: editSale.id });
+        
+        // Si c'est une modification avec avance, mettre à jour pretproduits
+        if (success && avancePriceValue > 0 && nextPaymentDate) {
+          try {
+            const token = localStorage.getItem('token');
+            
+            // Chercher le pretproduit existant par nom et date
+            const pretProduitsResponse = await axios.get(`${API_BASE_URL}/api/pretproduits`, {
+              headers: { Authorization: `Bearer ${token}` }
+            });
+            
+            const existingPretProduit = pretProduitsResponse.data.find((p: any) => 
+              p.nom === clientName && p.date === date
+            );
+            
+            const productsDescription = validProducts.map(p => p.description).join(', ');
+            
+            const pretProduitData = {
+              date: date,
+              datePaiement: nextPaymentDate,
+              phone: clientPhone || '',
+              description: productsDescription,
+              nom: clientName,
+              prixVente: totals.totalSellingPrice,
+              avanceRecue: avancePriceValue,
+              reste: resteValue,
+              estPaye: resteValue === 0,
+              productId: validProducts.length === 1 ? validProducts[0].productId : undefined,
+            };
+            
+            if (existingPretProduit) {
+              // Mettre à jour le pretproduit existant
+              await axios.put(`${API_BASE_URL}/api/pretproduits/${existingPretProduit.id}`, pretProduitData, {
+                headers: { Authorization: `Bearer ${token}` }
+              });
+            } else {
+              // Créer un nouveau pretproduit
+              await axios.post(`${API_BASE_URL}/api/pretproduits`, pretProduitData, {
+                headers: { Authorization: `Bearer ${token}` }
+              });
+            }
+          } catch (error) {
+            console.error('Erreur lors de la mise à jour du prêt produit:', error);
+          }
+        }
       } else {
         success = await addSale(saleData);
+        
+        // Si avance est remplie, enregistrer aussi dans pretproduits
+        if (success && avancePriceValue > 0 && nextPaymentDate) {
+          try {
+            const token = localStorage.getItem('token');
+            
+            // Créer la description des produits
+            const productsDescription = validProducts.map(p => p.description).join(', ');
+            
+            const pretProduitData = {
+              date: date,
+              datePaiement: nextPaymentDate,
+              phone: clientPhone || '',
+              description: productsDescription,
+              nom: clientName,
+              prixVente: totals.totalSellingPrice,
+              avanceRecue: avancePriceValue,
+              reste: resteValue,
+              estPaye: resteValue === 0,
+              productId: validProducts.length === 1 ? validProducts[0].productId : undefined,
+            };
+
+            await axios.post(`${API_BASE_URL}/api/pretproduits`, pretProduitData, {
+              headers: { Authorization: `Bearer ${token}` }
+            });
+
+            toast({
+              title: "Succès",
+              description: `Vente enregistrée et prêt produit créé avec succès`,
+              variant: "default",
+              className: "notification-success",
+            });
+          } catch (error) {
+            console.error('Erreur lors de l\'enregistrement du prêt produit:', error);
+            toast({
+              title: "Attention",
+              description: "Vente enregistrée mais erreur lors de la création du prêt produit",
+              variant: "destructive",
+            });
+          }
+        }
       }
       
-      if (success) {
+      if (success && !(avancePriceValue > 0 && nextPaymentDate)) {
         toast({
           title: "Succès",
           description: editSale 
@@ -420,6 +569,9 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
           variant: "default",
           className: "notification-success",
         });
+      }
+      
+      if (success) {
         onClose();
       }
     } catch (error) {
@@ -636,48 +788,126 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
 
       {/* Totaux */}
       {formProducts.some((p) => p.selectedProduct) && (
-        <Card className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-green-200 dark:border-green-800">
-          <CardHeader>
-            <CardTitle className="text-sm text-green-700 dark:text-green-300 flex items-center gap-2">
-              <Euro className="h-4 w-4" />
-              Totaux de la vente
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-3 gap-4 text-center">
-              <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Prix d'achat total
-                </p>
-                <p className="text-lg font-bold text-gray-800 dark:text-gray-200">
-                  {totals.totalPurchasePrice.toFixed(2)} €
-                </p>
+        <>
+          <Card className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-green-200 dark:border-green-800">
+            <CardHeader>
+              <CardTitle className="text-sm text-green-700 dark:text-green-300 flex items-center gap-2">
+                <Euro className="h-4 w-4" />
+                Totaux de la vente
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-3 gap-4 text-center">
+                <div>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Prix d'achat total
+                  </p>
+                  <p className="text-lg font-bold text-gray-800 dark:text-gray-200">
+                    {totals.totalPurchasePrice.toFixed(2)} €
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Prix de vente total
+                  </p>
+                  <p className="text-lg font-bold text-green-600">
+                    {totals.totalSellingPrice.toFixed(2)} €
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Bénéfice total
+                  </p>
+                  <p
+                    className={`text-lg font-bold ${
+                      totals.totalProfit >= 0
+                        ? 'text-green-600'
+                        : 'text-red-600'
+                    }`}
+                  >
+                    {totals.totalProfit.toFixed(2)} €
+                  </p>
+                </div>
               </div>
-              <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Prix de vente total
-                </p>
-                <p className="text-lg font-bold text-green-600">
-                  {totals.totalSellingPrice.toFixed(2)} €
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Bénéfice total
-                </p>
-                <p
-                  className={`text-lg font-bold ${
-                    totals.totalProfit >= 0
-                      ? 'text-green-600'
-                      : 'text-red-600'
-                  }`}
-                >
-                  {totals.totalProfit.toFixed(2)} €
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+
+          {/* Bouton Avance */}
+          <div className="text-center">
+            <Button
+              type="button"
+              onClick={() => setShowAdvanceSection(!showAdvanceSection)}
+              variant="outline"
+              className="text-blue-600 border-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:border-blue-400 dark:hover:bg-blue-900/20"
+            >
+              {showAdvanceSection ? 'Masquer Avance' : 'Avance'}
+            </Button>
+          </div>
+
+          {/* Section Avance */}
+          {showAdvanceSection && (
+            <Card className="bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 border-blue-200 dark:border-blue-800">
+              <CardHeader>
+                <CardTitle className="text-sm text-blue-700 dark:text-blue-300">
+                  Paiement avec Avance
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {/* Prix Avance */}
+                  <div className="space-y-2">
+                    <Label htmlFor="avancePrice">Prix Avance (€)</Label>
+                    <Input
+                      id="avancePrice"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      max={totals.totalSellingPrice}
+                      value={avancePrice}
+                      onChange={(e) => handleAvancePriceChange(e.target.value)}
+                      placeholder="Entrer l'avance"
+                      disabled={isSubmitting}
+                    />
+                  </div>
+
+                  {/* Reste (calculé automatiquement) */}
+                  <div className="space-y-2">
+                    <Label htmlFor="reste">Reste (€)</Label>
+                    <Input
+                      id="reste"
+                      type="number"
+                      step="0.01"
+                      value={reste}
+                      readOnly
+                      disabled
+                      className="bg-gray-100 dark:bg-gray-800"
+                    />
+                  </div>
+
+                  {/* Date prochaine Paiement */}
+                  <div className="space-y-2">
+                    <Label htmlFor="nextPaymentDate">Date prochaine Paiement</Label>
+                    <Input
+                      id="nextPaymentDate"
+                      type="date"
+                      value={nextPaymentDate}
+                      onChange={(e) => setNextPaymentDate(e.target.value)}
+                      disabled={isSubmitting}
+                    />
+                  </div>
+                </div>
+
+                {avancePrice && Number(avancePrice) > 0 && (
+                  <div className="text-sm text-blue-700 dark:text-blue-300 bg-blue-100 dark:bg-blue-900/30 p-3 rounded">
+                    <p className="font-semibold">Information:</p>
+                    <p>Cette vente sera enregistrée avec un prix de vente de {Number(avancePrice).toFixed(2)} € (avance) et un reste de {reste} € sera enregistré.</p>
+                    <p className="mt-2">Un prêt produit sera automatiquement créé dans votre base de données.</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+        </>
       )}
 
       <DialogFooter>
