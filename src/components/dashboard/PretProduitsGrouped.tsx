@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Calendar } from '@/components/ui/calendar';
@@ -11,7 +12,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
-import { PlusCircle, Edit, CalendarIcon, Loader2, Trash2, Plus, CreditCard, TrendingUp, Wallet, CheckCircle, Clock, Search, Phone, ChevronDown, ChevronUp, ArrowRightLeft, UserPlus, Users, Eye } from 'lucide-react';
+import { PlusCircle, Edit, CalendarIcon, Loader2, Trash2, Plus, CreditCard, TrendingUp, Wallet, CheckCircle, Clock, Search, Phone, ChevronDown, ChevronUp, ArrowRightLeft, UserPlus, Users, Eye, Pencil, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useApp } from '@/contexts/AppContext';
 import { Product, PretProduit } from '@/types';
@@ -58,6 +59,10 @@ const PretProduitsGrouped: React.FC = () => {
   const [isNewClient, setIsNewClient] = useState(true);
   const [clientSearchQuery, setClientSearchQuery] = useState('');
   const [clientSearchResults, setClientSearchResults] = useState<any[]>([]);
+  const [editPaiementDialogOpen, setEditPaiementDialogOpen] = useState(false);
+  const [deletePaiementDialogOpen, setDeletePaiementDialogOpen] = useState(false);
+  const [selectedPaiementIndex, setSelectedPaiementIndex] = useState<number | null>(null);
+  const [editPaiementMontant, setEditPaiementMontant] = useState('');
   const { products, searchProducts } = useApp();
   const { toast } = useToast();
 
@@ -74,6 +79,10 @@ const PretProduitsGrouped: React.FC = () => {
     const nouvelleAvance = parseFloat(ajoutAvance) || 0;
     return prix - (avanceActuelle + nouvelleAvance);
   }, [selectedPret, ajoutAvance]);
+
+  const montantDepasse = React.useMemo(() => {
+    return nouveauReste < 0;
+  }, [nouveauReste]);
 
   const estPaye = reste <= 0;
 
@@ -446,6 +455,119 @@ const PretProduitsGrouped: React.FC = () => {
     setSelectedGroupForTransfer(null);
     setSelectedPretsForTransfer(new Set());
     setTransferTargetName('');
+  };
+
+  const openEditPaiementDialog = (index: number, montant: number) => {
+    setSelectedPaiementIndex(index);
+    setEditPaiementMontant(montant.toString());
+    setEditPaiementDialogOpen(true);
+  };
+
+  const openDeletePaiementDialog = (index: number) => {
+    setSelectedPaiementIndex(index);
+    setDeletePaiementDialogOpen(true);
+  };
+
+  const handleEditPaiement = async () => {
+    if (!selectedPret || selectedPaiementIndex === null) return;
+    
+    const newMontant = parseFloat(editPaiementMontant);
+    if (isNaN(newMontant) || newMontant <= 0) {
+      toast({ title: 'Erreur', description: 'Veuillez saisir un montant valide', variant: 'destructive' });
+      return;
+    }
+
+    try {
+      setLoading(true);
+      
+      const paiementsUpdated = [...(selectedPret.paiements || [])];
+      const oldMontant = paiementsUpdated[selectedPaiementIndex].montant;
+      paiementsUpdated[selectedPaiementIndex] = {
+        ...paiementsUpdated[selectedPaiementIndex],
+        montant: newMontant
+      };
+
+      // Recalculer le total payé
+      const nouvelleAvanceRecue = paiementsUpdated.reduce((sum, p) => sum + p.montant, 0);
+      const nouveauReste = selectedPret.prixVente - nouvelleAvanceRecue;
+      const nouveauEstPaye = nouveauReste <= 0;
+
+      const updatedPret: PretProduit = {
+        ...selectedPret,
+        paiements: paiementsUpdated,
+        avanceRecue: nouvelleAvanceRecue,
+        reste: nouveauReste,
+        estPaye: nouveauEstPaye
+      };
+
+      await pretProduitService.updatePretProduit(selectedPret.id, updatedPret);
+      await fetchPrets();
+      
+      // Mettre à jour le prêt sélectionné pour le dialog
+      setSelectedPret(updatedPret);
+      
+      toast({ 
+        title: 'Succès', 
+        description: `Paiement modifié de ${formatCurrency(oldMontant)} à ${formatCurrency(newMontant)}`, 
+        variant: 'default', 
+        className: 'notification-success' 
+      });
+      
+      setEditPaiementDialogOpen(false);
+      setSelectedPaiementIndex(null);
+      setEditPaiementMontant('');
+    } catch (error) {
+      console.error('Erreur lors de la modification du paiement', error);
+      toast({ title: 'Erreur', description: 'Impossible de modifier le paiement', variant: 'destructive' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeletePaiement = async () => {
+    if (!selectedPret || selectedPaiementIndex === null) return;
+
+    try {
+      setLoading(true);
+      
+      const paiementsUpdated = [...(selectedPret.paiements || [])];
+      const deletedMontant = paiementsUpdated[selectedPaiementIndex].montant;
+      paiementsUpdated.splice(selectedPaiementIndex, 1);
+
+      // Recalculer le total payé
+      const nouvelleAvanceRecue = paiementsUpdated.reduce((sum, p) => sum + p.montant, 0);
+      const nouveauReste = selectedPret.prixVente - nouvelleAvanceRecue;
+      const nouveauEstPaye = nouveauReste <= 0;
+
+      const updatedPret: PretProduit = {
+        ...selectedPret,
+        paiements: paiementsUpdated,
+        avanceRecue: nouvelleAvanceRecue,
+        reste: nouveauReste,
+        estPaye: nouveauEstPaye
+      };
+
+      await pretProduitService.updatePretProduit(selectedPret.id, updatedPret);
+      await fetchPrets();
+      
+      // Mettre à jour le prêt sélectionné pour le dialog
+      setSelectedPret(updatedPret);
+      
+      toast({ 
+        title: 'Succès', 
+        description: `Paiement de ${formatCurrency(deletedMontant)} supprimé avec succès`, 
+        variant: 'default', 
+        className: 'notification-success' 
+      });
+      
+      setDeletePaiementDialogOpen(false);
+      setSelectedPaiementIndex(null);
+    } catch (error) {
+      console.error('Erreur lors de la suppression du paiement', error);
+      toast({ title: 'Erreur', description: 'Impossible de supprimer le paiement', variant: 'destructive' });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const togglePretSelection = (pretId: string) => {
@@ -1250,9 +1372,20 @@ const PretProduitsGrouped: React.FC = () => {
                     value={ajoutAvance}
                     onChange={(e) => setAjoutAvance(e.target.value)}
                     placeholder="0.00"
+                    className={montantDepasse ? 'border-red-500 focus-visible:ring-red-500' : ''}
                   />
                 </div>
-                {ajoutAvance && (
+                {ajoutAvance && montantDepasse && (
+                  <div className="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-300 dark:border-red-700">
+                    <p className="text-sm font-semibold text-red-600 dark:text-red-400">
+                      ⚠️ Vous avez ajouté beaucoup trop de montant
+                    </p>
+                    <p className="text-xs text-red-500 dark:text-red-400 mt-1">
+                      Vous ne devez pas dépasser : <span className="font-bold">{formatCurrency(selectedPret.reste)}</span>
+                    </p>
+                  </div>
+                )}
+                {ajoutAvance && !montantDepasse && (
                   <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
                     <div className="flex justify-between items-center">
                       <span className="font-semibold">Nouveau reste:</span>
@@ -1269,7 +1402,7 @@ const PretProduitsGrouped: React.FC = () => {
             <Button variant="outline" onClick={() => setAjoutAvanceDialogOpen(false)}>
               Annuler
             </Button>
-            <Button onClick={handleAjoutAvance} disabled={loading}>
+            <Button onClick={handleAjoutAvance} disabled={loading || montantDepasse || !ajoutAvance || parseFloat(ajoutAvance) <= 0}>
               {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
               Ajouter
             </Button>
@@ -1370,28 +1503,48 @@ const PretProduitsGrouped: React.FC = () => {
                 </div>
                 
                 {selectedPret.paiements && selectedPret.paiements.length > 0 ? (
-                  <div className="max-h-60 overflow-y-auto space-y-2 border rounded-lg p-3 bg-gray-50 dark:bg-gray-900/50">
+                  <div className="max-h-60 overflow-y-auto space-y-2 border rounded-lg p-2 sm:p-3 bg-gray-50 dark:bg-gray-900/50">
                     {selectedPret.paiements.map((paiement, index) => (
                       <div
                         key={index}
-                        className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded-lg"
+                        className="flex items-center justify-between gap-2 p-2 sm:p-3 bg-white dark:bg-gray-800 rounded-lg"
                       >
-                        <div className="flex items-center gap-3">
-                          <div className="p-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-full">
-                            <Wallet className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                        <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+                          <div className="p-1.5 sm:p-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex-shrink-0">
+                            <Wallet className="h-3 w-3 sm:h-4 sm:w-4 text-emerald-600 dark:text-emerald-400" />
                           </div>
-                          <div>
-                            <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs sm:text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">
                               Avance {index + 1}
                             </p>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                            <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">
                               {format(new Date(paiement.date), 'dd/MM/yyyy')}
                             </p>
                           </div>
                         </div>
-                        <p className="text-lg font-bold text-emerald-600">
-                          +{formatCurrency(paiement.montant)}
-                        </p>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <p className="text-sm sm:text-lg font-bold text-emerald-600 whitespace-nowrap">
+                            +{formatCurrency(paiement.montant)}
+                          </p>
+                          <div className="flex gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 sm:h-8 sm:w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                              onClick={() => openEditPaiementDialog(index, paiement.montant)}
+                            >
+                              <Pencil className="h-3 w-3 sm:h-4 sm:w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 sm:h-8 sm:w-8 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+                              onClick={() => openDeletePaiementDialog(index)}
+                            >
+                              <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
+                            </Button>
+                          </div>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -1413,6 +1566,87 @@ const PretProduitsGrouped: React.FC = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* AlertDialog Modifier Paiement */}
+      <AlertDialog open={editPaiementDialogOpen} onOpenChange={setEditPaiementDialogOpen}>
+        <AlertDialogContent className="sm:max-w-[450px]">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Pencil className="h-5 w-5 text-blue-600" />
+              Modifier le paiement
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Modifiez le montant de ce paiement. Le total payé et le reste à payer seront automatiquement recalculés.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          
+          <div className="py-4">
+            <Label htmlFor="editMontant" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+              Nouveau montant (€)
+            </Label>
+            <Input
+              id="editMontant"
+              type="number"
+              step="0.01"
+              value={editPaiementMontant}
+              onChange={(e) => setEditPaiementMontant(e.target.value)}
+              className="mt-2"
+              placeholder="Saisissez le nouveau montant"
+            />
+          </div>
+
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => {
+              setEditPaiementDialogOpen(false);
+              setSelectedPaiementIndex(null);
+              setEditPaiementMontant('');
+            }}>
+              Annuler
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleEditPaiement}
+              disabled={loading}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              Confirmer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* AlertDialog Supprimer Paiement */}
+      <AlertDialog open={deletePaiementDialogOpen} onOpenChange={setDeletePaiementDialogOpen}>
+        <AlertDialogContent className="sm:max-w-[450px]">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-red-600">
+              <Trash2 className="h-5 w-5" />
+              Supprimer le paiement
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Êtes-vous sûr de vouloir supprimer ce paiement ? Cette action est irréversible. 
+              Le total payé et le reste à payer seront automatiquement recalculés.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => {
+              setDeletePaiementDialogOpen(false);
+              setSelectedPaiementIndex(null);
+            }}>
+              Annuler
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeletePaiement}
+              disabled={loading}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Dialog Transfert */}
       <Dialog open={transferDialogOpen} onOpenChange={setTransferDialogOpen}>
