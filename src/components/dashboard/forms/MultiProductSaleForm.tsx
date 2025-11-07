@@ -252,6 +252,7 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
       const newPurchasePriceUnit = purchasePriceUnit.toString();
       const newSellingPriceUnit = isAdvance ? '' : suggestedSellingPrice;
       
+      // Pour les produits "Avance", le bénéfice est toujours 0
       let initialProfit = '0';
       if (!isAdvance && suggestedSellingPrice) {
         const A = Number(newPurchasePriceUnit) * Number(newQuantity);
@@ -280,10 +281,10 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
   const updateProfit = (index: number, priceUnit: string, quantity: string, purchasePriceUnit: string) => {
     const product = formProducts[index];
     if (product.isAdvanceProduct) {
-      const profit = Number(priceUnit || 0) - Number(purchasePriceUnit || 0);
+      // Pour les produits "Avance", le bénéfice est toujours 0
       setFormProducts(prev => {
         const newProducts = [...prev];
-        newProducts[index] = { ...newProducts[index], profit: profit.toFixed(2) };
+        newProducts[index] = { ...newProducts[index], profit: '0' };
         return newProducts;
       });
     } else {
