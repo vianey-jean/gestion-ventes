@@ -22,7 +22,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { LoadingSpinner } from '@/components/ui/loading';
+import PremiumLoading from '@/components/ui/premium-loading';
 
 interface WeeklySalesAnalysis {
   productId: string;
@@ -216,7 +216,7 @@ const AIMarketingAssistant: React.FC = () => {
     return (
       <Card className="w-full">
         <CardContent className="flex items-center justify-center py-12">
-          <LoadingSpinner size="lg" />
+          <PremiumLoading size="lg" text="Chargement de l'assistant marketing..." />
         </CardContent>
       </Card>
     );
