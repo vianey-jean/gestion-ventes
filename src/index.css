@@ -97,6 +97,11 @@
   }
 }
 
+.notification-success {
+  background-color: #16a34a; /* Vert Tailwind 600 */
+  color: white;
+  font-weight: bold;
+}
 @layer base {
   * {
     @apply border-border;
