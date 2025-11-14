@@ -259,6 +259,7 @@ const AddSaleForm: React.FC<AddSaleFormProps> = ({ isOpen, onClose, editSale }) 
         title: "Erreur",
         description: "Veuillez sélectionner un produit.",
         variant: "destructive",
+         className: "notification-erreur",
       });
       return;
     }
@@ -269,6 +270,7 @@ const AddSaleForm: React.FC<AddSaleFormProps> = ({ isOpen, onClose, editSale }) 
         title: "Erreur",
         description: "Stock épuisé. Impossible d'ajouter cette vente.",
         variant: "destructive",
+         className: "notification-erreur",
       });
       return;
     }
@@ -356,6 +358,7 @@ const AddSaleForm: React.FC<AddSaleFormProps> = ({ isOpen, onClose, editSale }) 
         title: "Erreur",
         description: "Une erreur est survenue lors de l'enregistrement",
         variant: "destructive",
+         className: "notification-erreur",
       });
     } finally {
       setIsSubmitting(false);
@@ -391,6 +394,7 @@ const AddSaleForm: React.FC<AddSaleFormProps> = ({ isOpen, onClose, editSale }) 
         title: "Erreur",
         description: "Une erreur est survenue lors de la suppression",
         variant: "destructive",
+         className: "notification-erreur",
       });
     } finally {
       setIsSubmitting(false);

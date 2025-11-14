@@ -174,13 +174,13 @@ const ProfitCalculator: React.FC<ProfitCalculatorProps> = ({
 
   const handleSave = async () => {
     if (!selectedProduct) {
-      toast({ title: "Erreur", description: "Veuillez sélectionner un produit avant de sauvegarder.", variant: "destructive" });
+      toast({ title: "Erreur", description: "Veuillez sélectionner un produit avant de sauvegarder.", variant: "destructive" , className: "notification-erreur",});
       return;
     }
 
     const existingBenefice = beneficesList.find(b => b.productId === selectedProduct.id);
     if (existingBenefice) {
-      toast({ title: "Erreur", description: "Ce produit a déjà un calcul de bénéfice enregistré.", variant: "destructive" });
+      toast({ title: "Erreur", description: "Ce produit a déjà un calcul de bénéfice enregistré.", variant: "destructive" , className: "notification-erreur",});
       return;
     }
 
@@ -207,7 +207,7 @@ const ProfitCalculator: React.FC<ProfitCalculatorProps> = ({
         tauxMarge: 0
       });
     } catch (error) {
-      toast({ title: "Erreur", description: "Impossible de sauvegarder le calcul de bénéfice.", variant: "destructive" });
+      toast({ title: "Erreur", description: "Impossible de sauvegarder le calcul de bénéfice.", variant: "destructive", className: "notification-erreur", });
     } finally {
       setIsLoading(false);
     }
@@ -220,7 +220,7 @@ const ProfitCalculator: React.FC<ProfitCalculatorProps> = ({
       await loadBeneficesData();
       setTimeout(() => window.dispatchEvent(new CustomEvent('benefice-deleted')), 100);
     } catch (error) {
-      toast({ title: "Erreur", description: "Impossible de supprimer le calcul de bénéfice.", variant: "destructive" });
+      toast({ title: "Erreur", description: "Impossible de supprimer le calcul de bénéfice.", variant: "destructive", className: "notification-erreur", });
     }
   };
 

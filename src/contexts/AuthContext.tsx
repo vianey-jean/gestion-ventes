@@ -61,7 +61,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       toast({
         title: "Erreur",
         description: "Une erreur s'est produite lors de la connexion",
-        variant: "destructive",
+        variant: "destructive", className: "notification-erreur",
       });
       return false;
     } finally {
@@ -117,7 +117,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       toast({
         title: "Erreur",
         description: "Une erreur s'est produite lors de l'inscription",
-        variant: "destructive",
+        variant: "destructive", className: "notification-erreur",
       });
       return false;
     } finally {
@@ -152,7 +152,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       toast({
         title: "Erreur",
         description: "Une erreur s'est produite lors de la réinitialisation",
-        variant: "destructive",
+        variant: "destructive", className: "notification-erreur",
       });
       return false;
     } finally {
@@ -184,7 +184,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       toast({
         title: "Erreur",
         description: "Une erreur s'est produite lors de la réinitialisation",
-        variant: "destructive",
+        variant: "destructive", className: "notification-erreur",
       });
       return false;
     } finally {

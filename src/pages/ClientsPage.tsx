@@ -85,7 +85,7 @@ const ClientsPage: React.FC = () => {
       toast({
         title: "Erreur",
         description: "Tous les champs sont obligatoires",
-        variant: "destructive",
+        variant: "destructive", className: "notification-erreur",
       });
       return;
     }
@@ -120,7 +120,7 @@ const ClientsPage: React.FC = () => {
       toast({
         title: "Erreur",
         description: "Une erreur est survenue lors de l'ajout",
-        variant: "destructive",
+        variant: "destructive", className: "notification-erreur",
       });
     } finally {
       setIsSubmitting(false);
@@ -152,7 +152,7 @@ const ClientsPage: React.FC = () => {
       toast({
         title: "Erreur",
         description: "Une erreur est survenue lors de la modification",
-        variant: "destructive",
+        variant: "destructive", className: "notification-erreur",
       });
     } finally {
       setIsSubmitting(false);
@@ -187,7 +187,7 @@ const ClientsPage: React.FC = () => {
       toast({
         title: "Erreur",
         description: "Erreur lors de la suppression",
-        variant: "destructive",
+        variant: "destructive", className: "notification-erreur",
       });
     } finally {
       setIsSubmitting(false);

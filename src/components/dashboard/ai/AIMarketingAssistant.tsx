@@ -73,7 +73,7 @@ const AIMarketingAssistant: React.FC = () => {
       toast({
         title: 'Erreur',
         description: 'Impossible de charger les données',
-        variant: 'destructive',
+        variant: 'destructive', className: "notification-erreur",
       });
     } finally {
       setLoading(false);
@@ -182,6 +182,7 @@ const AIMarketingAssistant: React.FC = () => {
         title: 'Erreur',
         description: error.message || 'Impossible de générer la description',
         variant: 'destructive',
+         className: "notification-erreur",
       });
     } finally {
       setGeneratingFor(null);
@@ -202,6 +203,7 @@ const AIMarketingAssistant: React.FC = () => {
         title: 'Erreur',
         description: 'Impossible de copier le texte',
         variant: 'destructive',
+         className: "notification-erreur",
       });
     }
   };

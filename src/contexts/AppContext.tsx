@@ -113,7 +113,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       toast({
         title: "Erreur de chargement",
         description: "Impossible de charger les produits.",
-        variant: "destructive",
+        variant: "destructive",  className: "notification-erreur",
       });
     } finally {
       setLoading(false);
@@ -145,7 +145,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       toast({
         title: "Erreur de chargement",
         description: "Impossible de charger les ventes.",
-        variant: "destructive",
+        variant: "destructive", className: "notification-erreur", 
       });
     } finally {
       setLoading(false);
@@ -173,7 +173,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       toast({
         title: "Erreur de chargement",
         description: "Impossible de charger les données historiques.",
-        variant: "destructive",
+        variant: "destructive", className: "notification-erreur",
       });
     } finally {
       setLoading(false);

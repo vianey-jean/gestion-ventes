@@ -53,7 +53,7 @@ export const ErrorBoundaryProvider: React.FC<{ children: React.ReactNode }> = ({
       toast({
         title: 'Erreur détectée',
         description: error.message,
-        variant: 'destructive'
+        variant: 'destructive', className: "notification-erreur",
       });
     }
 

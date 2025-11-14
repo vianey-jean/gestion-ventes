@@ -60,7 +60,8 @@ const EditProductForm: React.FC<EditProductFormProps> = ({ isOpen, onClose }) =>
       toast({
         title: "Erreur",
         description: "Veuillez sélectionner un produit d'abord",
-        variant: "destructive"
+        variant: "destructive",
+         className: "notification-erreur",
       });
       return;
     }
@@ -96,7 +97,8 @@ const EditProductForm: React.FC<EditProductFormProps> = ({ isOpen, onClose }) =>
       toast({
         title: "Erreur",
         description: "Une erreur s'est produite lors de la modification du produit",
-        variant: "destructive"
+        variant: "destructive",
+         className: "notification-erreur",
       });
       console.error("Error updating product:", error);
     } finally {

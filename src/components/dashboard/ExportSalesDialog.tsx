@@ -92,13 +92,15 @@ const ExportSalesDialog: React.FC<ExportSalesDialogProps> = ({ isOpen, onClose }
       toast({
         title: "Export réussi",
         description: `Les ventes de ${monthNames[selectedMonth]} ${selectedYear} ont été exportées.`,
+      className: "notification-success",
       });
     } catch (error) {
       console.error("Error exporting sales:", error);
       toast({
         title: "Erreur d'export",
         description: "Une erreur s'est produite lors de l'exportation des ventes.",
-        variant: "destructive"
+        variant: "destructive",
+        className: "notification-erreur",
       });
     } finally {
       setIsLoading(false);

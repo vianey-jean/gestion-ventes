@@ -66,6 +66,7 @@ const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ isOpen, onClose }) 
         title: 'Erreur',
         description: 'Nom du client manquant.',
         variant: 'destructive',
+         className: "notification-erreur",
       });
       return;
     }

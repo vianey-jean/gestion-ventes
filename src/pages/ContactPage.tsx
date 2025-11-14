@@ -43,7 +43,7 @@ const ContactPage: React.FC = () => {
       toast({
         title: "Erreur",
         description: "Veuillez remplir tous les champs obligatoires.",
-        variant: "destructive"
+        variant: "destructive", className: "notification-erreur",
       });
       return;
     }
@@ -72,7 +72,7 @@ const ContactPage: React.FC = () => {
       toast({
         title: "Erreur",
         description: "Une erreur s'est produite lors de l'envoi du message. Veuillez réessayer.",
-        variant: "destructive"
+        variant: "destructive", className: "notification-erreur",
       });
     } finally {
       setIsSubmitting(false);

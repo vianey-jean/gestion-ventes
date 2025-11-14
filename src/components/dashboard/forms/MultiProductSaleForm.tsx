@@ -231,6 +231,7 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
         title: "Erreur",
         description: "Une erreur est survenue lors de la suppression",
         variant: "destructive",
+         className: "notification-erreur",
       });
     } finally {
       setIsSubmitting(false);
@@ -408,7 +409,7 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
       toast({
         title: "Erreur",
         description: "Veuillez ajouter au moins un produit avec un prix de vente.",
-        variant: "destructive",
+        variant: "destructive", className: "notification-erreur",
       });
       return;
     }
@@ -579,7 +580,7 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
       toast({
         title: "Erreur",
         description: "Une erreur est survenue lors de l'enregistrement",
-        variant: "destructive",
+        variant: "destructive", className: "notification-erreur",
       });
     } finally {
       setIsSubmitting(false);

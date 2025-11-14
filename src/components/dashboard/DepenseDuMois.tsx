@@ -72,6 +72,7 @@ const DepenseDuMois = () => {
         title: "Erreur",
         description: "Impossible de récupérer les mouvements",
         variant: "destructive",
+         className: "notification-erreur",
       });
       setMouvements([]);
     } finally {
@@ -95,6 +96,7 @@ const DepenseDuMois = () => {
         title: "Erreur",
         description: "Impossible de récupérer les dépenses fixes",
         variant: "destructive",
+         className: "notification-erreur",
       });
     }
   };
@@ -106,6 +108,7 @@ const DepenseDuMois = () => {
         title: "Erreur",
         description: "Veuillez remplir tous les champs obligatoires",
         variant: "destructive",
+         className: "notification-erreur",
       });
       return;
     }
@@ -168,6 +171,7 @@ const DepenseDuMois = () => {
         title: "Erreur",
         description: "Impossible de supprimer le mouvement",
         variant: "destructive",
+         className: "notification-erreur",
       });
     }
   };
@@ -206,6 +210,7 @@ const DepenseDuMois = () => {
         title: "Erreur",
         description: "Impossible de mettre à jour les dépenses fixes",
         variant: "destructive",
+         className: "notification-erreur",
       });
     }
   };
@@ -230,6 +235,7 @@ const DepenseDuMois = () => {
         title: "Erreur",
         description: "Impossible de réinitialiser les mouvements",
         variant: "destructive",
+         className: "notification-erreur",
       });
     }
   };

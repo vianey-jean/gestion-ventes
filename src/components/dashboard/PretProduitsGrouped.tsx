@@ -122,7 +122,7 @@ const PretProduitsGrouped: React.FC = () => {
       toast({
         title: 'Erreur',
         description: 'Impossible de charger les prêts produits',
-        variant: 'destructive',
+        variant: 'destructive', className: "notification-erreur",
       });
     } finally {
       setLoading(false);
@@ -219,12 +219,12 @@ const PretProduitsGrouped: React.FC = () => {
 
   const handleSubmit = async () => {
     if (!description) {
-      toast({ title: 'Erreur', description: 'Veuillez saisir une description', variant: 'destructive' });
+      toast({ title: 'Erreur', description: 'Veuillez saisir une description', variant: 'destructive', className: "notification-erreur", });
       return;
     }
 
     if (!prixVente || parseFloat(prixVente) <= 0) {
-      toast({ title: 'Erreur', description: 'Veuillez saisir un prix de vente valide', variant: 'destructive' });
+      toast({ title: 'Erreur', description: 'Veuillez saisir un prix de vente valide', variant: 'destructive', className: "notification-erreur", });
       return;
     }
 
@@ -263,7 +263,7 @@ const PretProduitsGrouped: React.FC = () => {
       setDialogOpen(false);
     } catch (error) {
       console.error('Erreur lors de l\'enregistrement du prêt', error);
-      toast({ title: 'Erreur', description: 'Impossible d\'enregistrer le prêt', variant: 'destructive' });
+      toast({ title: 'Erreur', description: 'Impossible d\'enregistrer le prêt', variant: 'destructive', className: "notification-erreur", });
     } finally {
       setLoading(false);
     }
@@ -289,7 +289,7 @@ const PretProduitsGrouped: React.FC = () => {
       setEditDialogOpen(false);
     } catch (error) {
       console.error('Erreur lors de la mise à jour du prêt', error);
-      toast({ title: 'Erreur', description: 'Impossible de mettre à jour le prêt', variant: 'destructive' });
+      toast({ title: 'Erreur', description: 'Impossible de mettre à jour le prêt', variant: 'destructive', className: "notification-erreur", });
     } finally {
       setLoading(false);
     }
@@ -298,7 +298,7 @@ const PretProduitsGrouped: React.FC = () => {
   const handleAjoutAvance = async () => {
     if (!selectedPret) return;
     if (!ajoutAvance || parseFloat(ajoutAvance) <= 0) {
-      toast({ title: 'Erreur', description: 'Veuillez saisir un montant valide', variant: 'destructive' });
+      toast({ title: 'Erreur', description: 'Veuillez saisir un montant valide', variant: 'destructive', className: "notification-erreur", });
       return;
     }
 
@@ -340,7 +340,7 @@ const PretProduitsGrouped: React.FC = () => {
       setAjoutAvanceDialogOpen(false);
     } catch (error) {
       console.error('Erreur lors de l\'ajout de l\'avance', error);
-      toast({ title: 'Erreur', description: 'Impossible d\'ajouter l\'avance', variant: 'destructive' });
+      toast({ title: 'Erreur', description: 'Impossible d\'ajouter l\'avance', variant: 'destructive' , className: "notification-erreur",});
     } finally {
       setLoading(false);
     }
@@ -357,7 +357,7 @@ const PretProduitsGrouped: React.FC = () => {
       setDeleteDialogOpen(false);
     } catch (error) {
       console.error('Erreur lors de la suppression du prêt', error);
-      toast({ title: 'Erreur', description: 'Impossible de supprimer le prêt', variant: 'destructive' });
+      toast({ title: 'Erreur', description: 'Impossible de supprimer le prêt', variant: 'destructive', className: "notification-erreur", });
     } finally {
       setLoading(false);
     }
@@ -365,17 +365,17 @@ const PretProduitsGrouped: React.FC = () => {
 
   const handleTransfer = async () => {
     if (!selectedGroupForTransfer || selectedPretsForTransfer.size === 0) {
-      toast({ title: 'Erreur', description: 'Veuillez sélectionner au moins un prêt à transférer', variant: 'destructive' });
+      toast({ title: 'Erreur', description: 'Veuillez sélectionner au moins un prêt à transférer', variant: 'destructive', className: "notification-erreur", });
       return;
     }
 
     if (!transferTargetName || transferTargetName.trim() === '') {
-      toast({ title: 'Erreur', description: 'Veuillez saisir le nom de la personne de destination', variant: 'destructive' });
+      toast({ title: 'Erreur', description: 'Veuillez saisir le nom de la personne de destination', variant: 'destructive', className: "notification-erreur", });
       return;
     }
 
     if (transferTargetName === selectedGroupForTransfer.nom) {
-      toast({ title: 'Erreur', description: 'La personne de destination doit être différente de la personne source', variant: 'destructive' });
+      toast({ title: 'Erreur', description: 'La personne de destination doit être différente de la personne source', variant: 'destructive', className: "notification-erreur", });
       return;
     }
 
@@ -394,7 +394,7 @@ const PretProduitsGrouped: React.FC = () => {
       setTransferDialogOpen(false);
     } catch (error) {
       console.error('Erreur lors du transfert des prêts', error);
-      toast({ title: 'Erreur', description: 'Impossible de transférer les prêts', variant: 'destructive' });
+      toast({ title: 'Erreur', description: 'Impossible de transférer les prêts', variant: 'destructive', className: "notification-erreur", });
     } finally {
       setLoading(false);
     }
@@ -473,7 +473,7 @@ const PretProduitsGrouped: React.FC = () => {
     
     const newMontant = parseFloat(editPaiementMontant);
     if (isNaN(newMontant) || newMontant <= 0) {
-      toast({ title: 'Erreur', description: 'Veuillez saisir un montant valide', variant: 'destructive' });
+      toast({ title: 'Erreur', description: 'Veuillez saisir un montant valide', variant: 'destructive', className: "notification-erreur", });
       return;
     }
 
@@ -518,7 +518,7 @@ const PretProduitsGrouped: React.FC = () => {
       setEditPaiementMontant('');
     } catch (error) {
       console.error('Erreur lors de la modification du paiement', error);
-      toast({ title: 'Erreur', description: 'Impossible de modifier le paiement', variant: 'destructive' });
+      toast({ title: 'Erreur', description: 'Impossible de modifier le paiement', variant: 'destructive', className: "notification-erreur", });
     } finally {
       setLoading(false);
     }
@@ -564,7 +564,7 @@ const PretProduitsGrouped: React.FC = () => {
       setSelectedPaiementIndex(null);
     } catch (error) {
       console.error('Erreur lors de la suppression du paiement', error);
-      toast({ title: 'Erreur', description: 'Impossible de supprimer le paiement', variant: 'destructive' });
+      toast({ title: 'Erreur', description: 'Impossible de supprimer le paiement', variant: 'destructive', className: "notification-erreur", });
     } finally {
       setLoading(false);
     }

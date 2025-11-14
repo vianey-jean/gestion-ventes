@@ -71,6 +71,7 @@ const Inventaire = () => {
         title: "Erreur",
         description: "Impossible de charger les produits.",
         variant: "destructive",
+         className: "notification-erreur",
       });
     } finally {
       setLoading(false);
@@ -128,6 +129,7 @@ const Inventaire = () => {
         title: "Erreur",
         description: "La description est requise.",
         variant: "destructive",
+         className: "notification-erreur",
       });
       return;
     }
@@ -146,6 +148,7 @@ const Inventaire = () => {
         title: "Erreur",
         description: "Impossible d'ajouter le produit.",
         variant: "destructive",
+         className: "notification-erreur",
       });
     }
   };
@@ -166,6 +169,7 @@ const Inventaire = () => {
         title: "Erreur",
         description: "Impossible de modifier le produit.",
         variant: "destructive",
+         className: "notification-erreur",
       });
     }
   };
@@ -186,6 +190,7 @@ const Inventaire = () => {
         title: "Erreur",
         description: "Impossible de supprimer le produit.",
         variant: "destructive",
+         className: "notification-erreur",
       });
     }
   };

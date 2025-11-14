@@ -75,6 +75,7 @@ const PretFamilles: React.FC = () => {
           title: 'Erreur',
           description: 'Impossible de charger les prêts familles',
           variant: 'destructive',
+           className: "notification-erreur",
         });
       } finally {
         setLoading(false);
@@ -189,11 +190,11 @@ const PretFamilles: React.FC = () => {
 
   const handleRemboursement = async () => {
     if (!selectedPret) {
-      toast({ title: 'Erreur', description: 'Veuillez sélectionner une famille', variant: 'destructive' });
+      toast({ title: 'Erreur', description: 'Veuillez sélectionner une famille', variant: 'destructive', className: "notification-erreur", });
       return;
     }
     if (!montantRemboursement || parseFloat(montantRemboursement) <= 0) {
-      toast({ title: 'Erreur', description: 'Veuillez saisir un montant valide', variant: 'destructive' });
+      toast({ title: 'Erreur', description: 'Veuillez saisir un montant valide', variant: 'destructive', className: "notification-erreur", });
       return;
     }
 
@@ -235,7 +236,7 @@ const PretFamilles: React.FC = () => {
       setRemboursementDialogOpen(false);
     } catch (error) {
       console.error('Erreur remboursement', error);
-      toast({ title: 'Erreur', description: 'Impossible d\'enregistrer le remboursement', variant: 'destructive' });
+      toast({ title: 'Erreur', description: 'Impossible d\'enregistrer le remboursement', variant: 'destructive', className: "notification-erreur", });
     } finally {
       setLoading(false);
     }
@@ -266,11 +267,11 @@ const PretFamilles: React.FC = () => {
 
   const handleDemandePret = async () => {
     if (!nouvNom) {
-      toast({ title: 'Erreur', description: 'Veuillez saisir un nom', variant: 'destructive' });
+      toast({ title: 'Erreur', description: 'Veuillez saisir un nom', variant: 'destructive', className: "notification-erreur", });
       return;
     }
     if (!nouvPretTotal || parseFloat(nouvPretTotal) <= 0) {
-      toast({ title: 'Erreur', description: 'Veuillez saisir un montant valide', variant: 'destructive' });
+      toast({ title: 'Erreur', description: 'Veuillez saisir un montant valide', variant: 'destructive', className: "notification-erreur", });
       return;
     }
 
@@ -329,7 +330,7 @@ const PretFamilles: React.FC = () => {
       setDemandePretDialogOpen(false);
     } catch (error) {
       console.error('Erreur demande de prêt', error);
-      toast({ title: 'Erreur', description: 'Impossible d\'enregistrer la demande de prêt', variant: 'destructive' });
+      toast({ title: 'Erreur', description: 'Impossible d\'enregistrer la demande de prêt', variant: 'destructive' , className: "notification-erreur",});
     } finally {
       setLoading(false);
     }
@@ -351,7 +352,7 @@ const PretFamilles: React.FC = () => {
   const handleEditRemboursement = async () => {
     if (!selectedPretForDetail || selectedRemboursementIndex < 0) return;
     if (!editMontantRemboursement || parseFloat(editMontantRemboursement) < 0) {
-      toast({ title: 'Erreur', description: 'Veuillez saisir un montant valide', variant: 'destructive' });
+      toast({ title: 'Erreur', description: 'Veuillez saisir un montant valide', variant: 'destructive', className: "notification-erreur", });
       return;
     }
 
@@ -421,7 +422,8 @@ const PretFamilles: React.FC = () => {
       toast({ 
         title: 'Erreur', 
         description: 'Impossible de modifier le remboursement', 
-        variant: 'destructive' 
+        variant: 'destructive' ,
+         className: "notification-erreur",
       });
     } finally {
       setLoading(false);
@@ -491,7 +493,8 @@ const PretFamilles: React.FC = () => {
       toast({ 
         title: 'Erreur', 
         description: 'Impossible de supprimer le remboursement', 
-        variant: 'destructive' 
+        variant: 'destructive' ,
+         className: "notification-erreur",
       });
     } finally {
       setLoading(false);
@@ -538,7 +541,8 @@ const PretFamilles: React.FC = () => {
       toast({ 
         title: 'Erreur', 
         description: 'Impossible de supprimer le prêt', 
-        variant: 'destructive' 
+        variant: 'destructive' ,
+         className: "notification-erreur",
       });
     } finally {
       setLoading(false);
@@ -562,7 +566,7 @@ const PretFamilles: React.FC = () => {
   const handleEditPret = async () => {
     if (!selectedPretForDetail || selectedPretIndex < 0) return;
     if (!editMontantPret || parseFloat(editMontantPret) <= 0) {
-      toast({ title: 'Erreur', description: 'Veuillez saisir un montant valide', variant: 'destructive' });
+      toast({ title: 'Erreur', description: 'Veuillez saisir un montant valide', variant: 'destructive' , className: "notification-erreur",});
       return;
     }
 
@@ -621,7 +625,8 @@ const PretFamilles: React.FC = () => {
       toast({ 
         title: 'Erreur', 
         description: 'Impossible de modifier le prêt', 
-        variant: 'destructive' 
+        variant: 'destructive' ,
+         className: "notification-erreur",
       });
     } finally {
       setLoading(false);
@@ -684,7 +689,8 @@ const PretFamilles: React.FC = () => {
       toast({ 
         title: 'Erreur', 
         description: 'Impossible de supprimer le prêt', 
-        variant: 'destructive' 
+        variant: 'destructive' ,
+         className: "notification-erreur",
       });
     } finally {
       setLoading(false);
