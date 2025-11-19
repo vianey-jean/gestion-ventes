@@ -13,6 +13,7 @@ import SaleQuantityInput from './SaleQuantityInput';
 import ClientSearchInput from '../ClientSearchInput';
 import { calculateSaleProfit } from './utils/saleCalculations';
 import ConfirmDeleteDialog from './ConfirmDeleteDialog';
+import AdvancePaymentModal from './AdvancePaymentModal';
 import axios from 'axios';
 
 interface MultiProductSaleFormProps {
@@ -61,6 +62,10 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
   const [avancePrice, setAvancePrice] = useState('');
   const [reste, setReste] = useState('');
   const [nextPaymentDate, setNextPaymentDate] = useState('');
+  
+  // États pour la modale de paiement d'avance sur prêts existants
+  const [advancePaymentModalOpen, setAdvancePaymentModalOpen] = useState(false);
+  const [currentAdvanceProductIndex, setCurrentAdvanceProductIndex] = useState<number | null>(null);
 
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:10000';
 
@@ -247,6 +252,36 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
     const purchasePriceUnit = product.purchasePrice;
     const suggestedSellingPrice = isAdvance ? '' : (product.purchasePrice * 1.2).toFixed(2);
 
+    // Vérifier si c'est "Avance Perruque ou Tissages"
+    const isAdvancePerruqueOuTissages = product.description.toLowerCase().includes('avance') && 
+                                         (product.description.toLowerCase().includes('perruque') || 
+                                          product.description.toLowerCase().includes('tissage'));
+
+    if (isAdvancePerruqueOuTissages) {
+      // Ouvrir la modale pour sélectionner les prêts existants
+      setCurrentAdvanceProductIndex(index);
+      setAdvancePaymentModalOpen(true);
+      
+      // Préremplir les données de base du produit
+      setFormProducts(prev => {
+        const newProducts = [...prev];
+        newProducts[index] = {
+          ...newProducts[index],
+          productId: String(product.id),
+          description: product.description,
+          selectedProduct: product,
+          maxQuantity: productQuantity,
+          isAdvanceProduct: true,
+          purchasePriceUnit: purchasePriceUnit.toString(),
+          sellingPriceUnit: '', // Sera rempli après la modale
+          quantitySold: '0',
+          profit: '0',
+        };
+        return newProducts;
+      });
+      return;
+    }
+
     setFormProducts(prev => {
       const newProducts = [...prev];
       const newQuantity = isAdvance ? '0' : '1';
@@ -276,6 +311,27 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
       
       return newProducts;
     });
+  };
+
+  // Gérer la confirmation de la modale d'avance sur prêts existants
+  const handleAdvancePaymentConfirm = (totalAdvance: number) => {
+    if (currentAdvanceProductIndex !== null) {
+      setFormProducts(prev => {
+        const newProducts = [...prev];
+        newProducts[currentAdvanceProductIndex] = {
+          ...newProducts[currentAdvanceProductIndex],
+          sellingPriceUnit: totalAdvance.toString(),
+          profit: '0', // Les avances n'ont pas de bénéfice
+        };
+        return newProducts;
+      });
+      
+      setCurrentAdvanceProductIndex(null);
+      toast({
+        title: 'Succès',
+        description: `Avance de ${totalAdvance.toLocaleString('fr-FR')} € ajoutée au produit`,
+      });
+    }
   };
 
   // Mise à jour du profit
@@ -954,6 +1010,16 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
       </DialogFooter>
     </form>
   </DialogContent>
+
+  {/* Modale de paiement d'avance sur prêts existants */}
+  <AdvancePaymentModal
+    isOpen={advancePaymentModalOpen}
+    onClose={() => {
+      setAdvancePaymentModalOpen(false);
+      setCurrentAdvanceProductIndex(null);
+    }}
+    onConfirm={handleAdvancePaymentConfirm}
+  />
 
   {/* Dialog de confirmation de suppression */}
   <ConfirmDeleteDialog
