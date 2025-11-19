@@ -165,6 +165,7 @@ const AdvancePaymentModal: React.FC<AdvancePaymentModalProps> = ({ isOpen, onClo
       toast({
         title: 'Succès',
         description: `Avances appliquées avec succès. Total: ${totalAdvance.toLocaleString('fr-FR')} €`,
+        className: "notification-success",
       });
       
       // Réinitialiser
