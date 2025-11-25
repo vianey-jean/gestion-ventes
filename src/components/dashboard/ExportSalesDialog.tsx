@@ -147,6 +147,7 @@ const ExportSalesDialog: React.FC<ExportSalesDialogProps> = ({ isOpen, onClose }
         // Vente multi-produits - chaque produit sur une ligne séparée
         sale.products.forEach((product, idx) => {
           const quantity = isAdvanceProduct(product.description) ? 0 : product.quantitySold;
+          const deliveryFee = product.deliveryFee || 0;
           
           tableBody.push([
             idx === 0 ? saleDate : '', // Date seulement sur la première ligne
@@ -154,6 +155,7 @@ const ExportSalesDialog: React.FC<ExportSalesDialogProps> = ({ isOpen, onClose }
             `${product.purchasePrice.toFixed(2)} €`,
             quantity.toString(),
             `${product.sellingPrice.toFixed(2)} €`,
+            `${deliveryFee.toFixed(2)} €`,
             `${product.profit.toFixed(2)} €`,
           ]);
         });
@@ -162,6 +164,7 @@ const ExportSalesDialog: React.FC<ExportSalesDialogProps> = ({ isOpen, onClose }
         const achatPrice = typeof sale.purchasePrice === 'number' ? sale.purchasePrice : 0;
         const quantity = isAdvanceProduct(sale.description || '') ? 0 : (typeof sale.quantitySold === 'number' ? sale.quantitySold : 0);
         const ventePrice = typeof sale.sellingPrice === 'number' ? sale.sellingPrice : 0;
+        const deliveryFee = typeof sale.deliveryFee === 'number' ? sale.deliveryFee : 0;
         const profit = typeof sale.profit === 'number' ? sale.profit : 0;
 
         tableBody.push([
@@ -170,6 +173,7 @@ const ExportSalesDialog: React.FC<ExportSalesDialogProps> = ({ isOpen, onClose }
           `${achatPrice.toFixed(2)} €`,
           quantity.toString(),
           `${ventePrice.toFixed(2)} €`,
+          `${deliveryFee.toFixed(2)} €`,
           `${profit.toFixed(2)} €`,
         ]);
       }
@@ -209,6 +213,18 @@ const ExportSalesDialog: React.FC<ExportSalesDialogProps> = ({ isOpen, onClose }
       }
     }, 0);
     
+    const totalDeliveryFee = sales.reduce((sum, sale) => {
+      if (sale.products && Array.isArray(sale.products)) {
+        // Vente multi-produits
+        return sum + sale.products.reduce((productSum, product) => {
+          return productSum + (product.deliveryFee || 0);
+        }, 0);
+      } else {
+        // Vente simple
+        return sum + (typeof sale.deliveryFee === 'number' ? sale.deliveryFee : 0);
+      }
+    }, 0);
+    
     const totalProfit = sales.reduce((sum, sale) => {
       if (sale.products && Array.isArray(sale.products)) {
         // Vente multi-produits
@@ -226,13 +242,14 @@ const ExportSalesDialog: React.FC<ExportSalesDialogProps> = ({ isOpen, onClose }
       `${totalAchat.toFixed(2)} €`,
       totalQuantite.toString(),
       `${totalVente.toFixed(2)} €`,
+      `${totalDeliveryFee.toFixed(2)} €`,
       `${totalProfit.toFixed(2)} €`,
     ]);
 
     // Tableau premium avec style moderne
     autoTable(doc, {
       startY: 50,
-      head: [['Date', 'Produit', 'Prix Achat', 'Qté', 'Prix Vendu', 'Bénéfice']],
+      head: [['Date', 'Produit', 'Prix Achat', 'Qté', 'Prix Vendu', 'Frais livr.', 'Bénéfice']],
       body: tableBody,
       theme: 'grid',
       headStyles: {
@@ -242,11 +259,11 @@ const ExportSalesDialog: React.FC<ExportSalesDialogProps> = ({ isOpen, onClose }
         fontSize: 7,
         halign: 'center',
         valign: 'middle',
-        cellPadding: 8,
+        cellPadding: 6,
       },
       bodyStyles: {
-        fontSize: 8,
-        cellPadding: 6,
+        fontSize: 7,
+        cellPadding: 4,
         halign: 'center',
         valign: 'middle',
       },
@@ -259,12 +276,13 @@ const ExportSalesDialog: React.FC<ExportSalesDialogProps> = ({ isOpen, onClose }
         font: 'helvetica',
       },
       columnStyles: {
-        0: { halign: 'center', cellWidth: 25 }, // Date
-        1: { halign: 'left', cellWidth: 50 },   // Produit
-        2: { halign: 'right', cellWidth: 25 },  // Prix Achat
-        3: { halign: 'center', cellWidth: 20 }, // Quantité
-        4: { halign: 'right', cellWidth: 25 },  // Prix Vendu
-        5: { halign: 'right', cellWidth: 25 },  // Bénéfice
+        0: { halign: 'center', cellWidth: 22 }, // Date
+        1: { halign: 'left', cellWidth: 45 },   // Produit
+        2: { halign: 'right', cellWidth: 22 },  // Prix Achat
+        3: { halign: 'center', cellWidth: 15 }, // Quantité
+        4: { halign: 'right', cellWidth: 22 },  // Prix Vendu
+        5: { halign: 'right', cellWidth: 20 },  // Frais livraison
+        6: { halign: 'right', cellWidth: 24 },  // Bénéfice
       },
       didParseCell: (data) => {
         // Styling spécial pour la ligne de totaux

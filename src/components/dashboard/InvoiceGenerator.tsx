@@ -165,19 +165,21 @@ const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ isOpen, onClose }) 
         : [{
             description: sale.description || '',
             quantitySold: sale.quantitySold || 0,
-            sellingPrice: sale.sellingPrice || 0
+            sellingPrice: sale.sellingPrice || 0,
+            deliveryFee: sale.deliveryFee || 0
           } as SaleProduct];
 
     const tableData = products.map(prod => [
       prod.description || '',
       (prod.quantitySold || 0).toString(),
       formatEuro(prod.quantitySold ? (prod.sellingPrice || 0) / prod.quantitySold : 0),
-      formatEuro(prod.sellingPrice || 0)
+      formatEuro(prod.sellingPrice || 0),
+      formatEuro(prod.deliveryFee || 0)
     ]);
 
     autoTable(doc, {
       startY: 170,
-      head: [['DESCRIPTION', 'QTÉ', 'PRIX UNIT.', 'MONTANT EUR']],
+      head: [['DESCRIPTION', 'QTÉ', 'PRIX UNIT.', 'MONTANT EUR', 'FRAIS LIVR.']],
       body: tableData,
       theme: 'grid',
       headStyles: { fillColor: primaryBlue, textColor: 255, fontStyle: 'bold', halign: 'center' },
@@ -185,7 +187,7 @@ const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ isOpen, onClose }) 
       alternateRowStyles: { fillColor: [245, 245, 245] },
       styles: { overflow: 'linebreak', cellWidth: 'wrap', halign: 'center' },
       columnStyles: {
-        0: { halign: 'left', cellWidth: 80 }
+        0: { halign: 'left', cellWidth: 60 }
       }
     });
 
@@ -193,19 +195,24 @@ const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ isOpen, onClose }) 
 
     const totalAmount = products.reduce((sum: number, product: SaleProduct) =>
       sum + (product.sellingPrice || 0), 0);
+    
+    const totalDeliveryFee = products.reduce((sum: number, product: SaleProduct) =>
+      sum + (product.deliveryFee || 0), 0);
 
     // === TOTAUX ===
     const totalsX = pageWidth - 100;
     doc.setFontSize(10).setTextColor(...darkGray);
     doc.text('Sous-total HT:', totalsX - 30, finalY);
     doc.text(formatEuro(totalAmount), totalsX + 15, finalY);
-    doc.text('TVA (0%):', totalsX - 30, finalY + 10);
-    doc.text('0,00 €', totalsX + 15, finalY + 10);
+    doc.text('Frais livraison:', totalsX - 30, finalY + 10);
+    doc.text(formatEuro(totalDeliveryFee), totalsX + 15, finalY + 10);
+    doc.text('TVA (0%):', totalsX - 30, finalY + 20);
+    doc.text('0,00 €', totalsX + 15, finalY + 20);
 
-    doc.setFillColor(...primaryBlue).rect(totalsX - 35, finalY + 15, 75, 12, 'F');
+    doc.setFillColor(...primaryBlue).rect(totalsX - 35, finalY + 25, 75, 12, 'F');
     doc.setTextColor(255, 0, 0).setFontSize(12).setFont('helvetica', 'bold');
-    doc.text('Total TTC:', totalsX - 30, finalY + 23);
-    doc.text(formatEuro(totalAmount), totalsX + 15, finalY + 23);
+    doc.text('Total TTC:', totalsX - 30, finalY + 33);
+    doc.text(formatEuro(totalAmount + totalDeliveryFee), totalsX + 15, finalY + 33);
 
     // === PIED DE PAGE ===
     const footerStartY = pageHeight - 40;

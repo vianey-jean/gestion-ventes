@@ -17,6 +17,8 @@ export interface SaleProduct {
   purchasePrice: number;
   sellingPrice: number;
   profit: number;
+  deliveryFee?: number; // Frais de livraison
+  deliveryLocation?: string; // Ville de livraison
 }
 
 export interface Sale {
@@ -27,6 +29,7 @@ export interface Sale {
   totalPurchasePrice?: number;
   totalSellingPrice?: number;
   totalProfit?: number;
+  totalDeliveryFee?: number; // Total des frais de livraison
   // Ancien format pour compatibilité
   productId?: string;
   description?: string;
@@ -34,6 +37,7 @@ export interface Sale {
   purchasePrice?: number;
   sellingPrice?: number;
   profit?: number;
+  deliveryFee?: number; // Frais de livraison (ancien format)
   // Nouvelles informations client pour la facturation
   clientName?: string;
   clientAddress?: string;

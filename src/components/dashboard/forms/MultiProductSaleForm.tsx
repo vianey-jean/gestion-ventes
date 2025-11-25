@@ -32,6 +32,8 @@ interface FormProduct {
   selectedProduct: Product | null;
   maxQuantity: number;
   isAdvanceProduct: boolean;
+  deliveryLocation: string;
+  deliveryFee: string;
 }
 
 const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onClose, editSale }) => {
@@ -51,7 +53,9 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
     profit: '',
     selectedProduct: null,
     maxQuantity: 0,
-    isAdvanceProduct: false
+    isAdvanceProduct: false,
+    deliveryLocation: 'Saint-Denis',
+    deliveryFee: '0'
   }]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -130,7 +134,9 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
                 profit: saleProduct.profit.toString(),
                 selectedProduct: product || null,
                 maxQuantity: product ? (product.quantity || 0) + saleProduct.quantitySold : 0,
-                isAdvanceProduct: isAdvance
+                isAdvanceProduct: isAdvance,
+                deliveryLocation: saleProduct.deliveryLocation || 'Saint-Denis',
+                deliveryFee: (saleProduct.deliveryFee || 0).toString()
               };
             });
             setFormProducts(loadedProducts);
@@ -150,7 +156,9 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
             profit: '',
             selectedProduct: null,
             maxQuantity: 0,
-            isAdvanceProduct: false
+            isAdvanceProduct: false,
+            deliveryLocation: 'Saint-Denis',
+            deliveryFee: '0'
           }]);
           // Réinitialiser les champs avance
           setShowAdvanceSection(false);
@@ -187,7 +195,9 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
       profit: '',
       selectedProduct: null,
       maxQuantity: 0,
-      isAdvanceProduct: false
+      isAdvanceProduct: false,
+      deliveryLocation: 'Saint-Denis',
+      deliveryFee: '0'
     }]);
   };
 
@@ -428,6 +438,7 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
       const quantity = product.isAdvanceProduct ? 0 : Number(product.quantitySold || 0);
       const purchasePriceUnit = Number(product.purchasePriceUnit || 0);
       const sellingPriceUnit = Number(product.sellingPriceUnit || 0);
+      const deliveryFee = Number(product.deliveryFee || 0);
       
       let purchasePrice, sellingPrice;
       
@@ -441,10 +452,11 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
       
       return {
         totalPurchasePrice: totals.totalPurchasePrice + purchasePrice,
-        totalSellingPrice: totals.totalSellingPrice + sellingPrice,
-        totalProfit: totals.totalProfit + Number(product.profit || 0)
+        totalSellingPrice: totals.totalSellingPrice + sellingPrice + deliveryFee,
+        totalProfit: totals.totalProfit + Number(product.profit || 0),
+        totalDeliveryFee: totals.totalDeliveryFee + deliveryFee
       };
-    }, { totalPurchasePrice: 0, totalSellingPrice: 0, totalProfit: 0 });
+    }, { totalPurchasePrice: 0, totalSellingPrice: 0, totalProfit: 0, totalDeliveryFee: 0 });
   };
 
   // Calculer automatiquement le reste quand l'avance change
@@ -483,6 +495,7 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
         const quantity = product.isAdvanceProduct ? 0 : Number(product.quantitySold);
         const purchasePriceUnit = Number(product.purchasePriceUnit);
         const sellingPriceUnit = Number(product.sellingPriceUnit);
+        const deliveryFee = Number(product.deliveryFee || 0);
         
         let purchasePrice, sellingPrice;
         
@@ -500,7 +513,9 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
           quantitySold: quantity,
           purchasePrice: purchasePrice,
           sellingPrice: sellingPrice,
-          profit: Number(product.profit)
+          profit: Number(product.profit),
+          deliveryFee: deliveryFee,
+          deliveryLocation: product.deliveryLocation
         };
       });
 
@@ -517,6 +532,7 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
         totalPurchasePrice: totals.totalPurchasePrice,
         totalSellingPrice: finalSellingPrice,
         totalProfit: totals.totalProfit,
+        totalDeliveryFee: totals.totalDeliveryFee,
         clientName: clientName || null,
         clientAddress: clientAddress || null,
         clientPhone: clientPhone || null,
@@ -808,8 +824,82 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
                     showAvailableStock={!product.isAdvanceProduct}
                   />
 
+                  {/* Frais de livraison */}
+                  <div className="space-y-2 col-span-2">
+                    <Label>Frais de livraison</Label>
+                    <select
+                      value={product.deliveryLocation}
+                      onChange={(e) => {
+                        const location = e.target.value;
+                        let fee = '0';
+                        
+                        if (['Saint-Suzanne', 'Sainte-Marie', 'Saint-Denis', 'La Possession', 'Le Port', 'Saint-Paul'].includes(location)) {
+                          fee = '0';
+                        } else if (['Saint-André', 'Saint-Benoît', 'Saint-Leu'].includes(location)) {
+                          fee = '10';
+                        } else if (['Saint-Louis', 'Saint-Pierre', 'Le Tampon', 'Saint-Joseph'].includes(location)) {
+                          fee = '20';
+                        } else if (location === 'Exonération') {
+                          fee = '0';
+                        }
+                        
+                        setFormProducts(prev => {
+                          const newProducts = [...prev];
+                          newProducts[index] = {
+                            ...newProducts[index],
+                            deliveryLocation: location,
+                            deliveryFee: fee
+                          };
+                          return newProducts;
+                        });
+                      }}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      disabled={isSubmitting}
+                    >
+                      <option value="Saint-Suzanne">Saint-Suzanne: gratuit</option>
+                      <option value="Sainte-Marie">Sainte-Marie: gratuit</option>
+                      <option value="Saint-Denis">Saint-Denis: gratuit</option>
+                      <option value="La Possession">La Possession: gratuit</option>
+                      <option value="Le Port">Le Port: gratuit</option>
+                      <option value="Saint-Paul">Saint-Paul: gratuit</option>
+                      <option value="Saint-André">Saint-André: 10€</option>
+                      <option value="Saint-Benoît">Saint-Benoît: 10€</option>
+                      <option value="Saint-Leu">Saint-Leu: 10€</option>
+                      <option value="Saint-Louis">Saint-Louis: 20€</option>
+                      <option value="Saint-Pierre">Saint-Pierre: 20€</option>
+                      <option value="Le Tampon">Le Tampon: 20€</option>
+                      <option value="Saint-Joseph">Saint-Joseph: 20€</option>
+                      <option value="Autres">Autres: montant personnalisé</option>
+                      <option value="Exonération">Exonération: 0€</option>
+                    </select>
+                    {product.deliveryLocation === 'Autres' && (
+                      <Input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={product.deliveryFee}
+                        onChange={(e) => {
+                          setFormProducts(prev => {
+                            const newProducts = [...prev];
+                            newProducts[index] = {
+                              ...newProducts[index],
+                              deliveryFee: e.target.value
+                            };
+                            return newProducts;
+                          });
+                        }}
+                        placeholder="Montant personnalisé"
+                        className="mt-2"
+                        disabled={isSubmitting}
+                      />
+                    )}
+                    <p className="text-sm text-gray-500">
+                      Frais: {Number(product.deliveryFee).toFixed(2)} €
+                    </p>
+                  </div>
+
                   {/* Bénéfice */}
-                  <div className="space-y-2">
+                  <div className="space-y-2 col-span-2">
                     <Label>Bénéfice (€)</Label>
                     <Input
                       type="number"
@@ -855,13 +945,21 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-3 gap-4 text-center">
+              <div className="grid grid-cols-4 gap-4 text-center">
                 <div>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
                     Prix d'achat total
                   </p>
                   <p className="text-lg font-bold text-gray-800 dark:text-gray-200">
                     {totals.totalPurchasePrice.toFixed(2)} €
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Frais de livraison
+                  </p>
+                  <p className="text-lg font-bold text-blue-600">
+                    {totals.totalDeliveryFee.toFixed(2)} €
                   </p>
                 </div>
                 <div>

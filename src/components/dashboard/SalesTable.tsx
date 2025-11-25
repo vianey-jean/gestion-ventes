@@ -139,6 +139,16 @@ const SalesTable: React.FC<SalesTableProps> = ({ sales: initialSales, onRowClick
   const totalPurchasePrice = sales.reduce((sum, sale) => {
     return sum + (sale.totalPurchasePrice || sale.purchasePrice || 0);
   }, 0);
+  
+  const totalDeliveryFee = sales.reduce((sum, sale) => {
+    if (sale.products) {
+      return sum + sale.products.reduce((feeSum, product) => {
+        return feeSum + (product.deliveryFee || 0);
+      }, 0);
+    }
+    return sum + (sale.deliveryFee || 0);
+  }, 0);
+  
   const totalProfit = sales.reduce((sum, sale) => {
     return sum + (sale.totalProfit || sale.profit || 0);
   }, 0);
@@ -248,6 +258,14 @@ const SalesTable: React.FC<SalesTableProps> = ({ sales: initialSales, onRowClick
             </ModernTableHead>
             <ModernTableHead className="text-right bg-transparent">
               <div className="flex items-center justify-end space-x-2">
+                <div className="bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full p-1">
+                  <Euro className="h-3 w-3 text-white" />
+                </div>
+                <span className='text-red-600 font-bold text-sm'>Frais livraison</span>
+              </div>
+            </ModernTableHead>
+            <ModernTableHead className="text-right bg-transparent">
+              <div className="flex items-center justify-end space-x-2">
                 <div className="bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full p-1">
                   <TrendingUp className="h-3 w-3 text-white" />
                 </div>
@@ -259,7 +277,7 @@ const SalesTable: React.FC<SalesTableProps> = ({ sales: initialSales, onRowClick
         <TableBody>
           {sales.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={6} className="text-center py-12 bg-gradient-to-br from-gray-50 to-white dark:from-gray-800 dark:to-gray-700">
+              <TableCell colSpan={7} className="text-center py-12 bg-gradient-to-br from-gray-50 to-white dark:from-gray-800 dark:to-gray-700">
                 <div className="flex flex-col items-center space-y-4">
                   <div className="bg-gradient-to-br from-purple-100 to-blue-100 dark:from-purple-900/30 dark:to-blue-900/30 rounded-full p-6">
                     <Package className="h-12 w-12 text-purple-500" />
@@ -343,6 +361,23 @@ const SalesTable: React.FC<SalesTableProps> = ({ sales: initialSales, onRowClick
                   </span>
                 </ModernTableCell>
                 <ModernTableCell className="text-right">
+                  <div className="bg-gradient-to-r from-blue-100 to-cyan-100 dark:from-blue-900/30 dark:to-cyan-900/30 px-3 py-1 rounded-full inline-block">
+                    <span className="font-bold text-blue-700 dark:text-blue-400">
+                      {sale.products ? (
+                        <div className="space-y-1">
+                          {sale.products.map((product, idx) => (
+                            <div key={idx} className="text-xs">
+                              {formatCurrency(product.deliveryFee || 0)}
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        formatCurrency(sale.deliveryFee || 0)
+                      )}
+                    </span>
+                  </div>
+                </ModernTableCell>
+                <ModernTableCell className="text-right">
                   <div className="bg-gradient-to-r from-yellow-100 to-orange-100 dark:from-yellow-900/30 dark:to-orange-900/30 px-3 py-1 rounded-full inline-block">
                     <span className="font-bold text-orange-700 dark:text-orange-400">
                       {sale.products ? (
@@ -391,6 +426,13 @@ const SalesTable: React.FC<SalesTableProps> = ({ sales: initialSales, onRowClick
                 <span className="text-lg font-bold text-gray-200">
                   {formatCurrency(totalPurchasePrice)}
                 </span>
+              </TableCell>
+              <TableCell className="text-right bg-transparent">
+                <div className="bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full inline-block">
+                  <span className="text-lg font-bold text-blue-200">
+                    {formatCurrency(totalDeliveryFee)}
+                  </span>
+                </div>
               </TableCell>
               <TableCell className="text-right bg-transparent">
                 <div className="bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full inline-block">
