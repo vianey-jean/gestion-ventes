@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useClientSync } from '@/hooks/useClientSync';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -42,6 +42,10 @@ const ClientsPage: React.FC = () => {
   // État pour la recherche
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 20;
+
   // Dialogues de confirmation
   const [showAddConfirm, setShowAddConfirm] = useState(false);
   const [showEditConfirm, setShowEditConfirm] = useState(false);
@@ -58,6 +62,25 @@ const ClientsPage: React.FC = () => {
         client.adresse.toLowerCase().includes(searchQuery.toLowerCase())
       )
     : clients;
+
+  const totalPages = Math.max(1, Math.ceil(filteredClients.length / itemsPerPage));
+
+  // Réinitialiser la page courante quand la recherche change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
+
+  // Ajuster la page si le nombre de pages diminue
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
+
+  const paginatedClients = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredClients.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredClients, currentPage, itemsPerPage]);
 
   const resetForm = () => {
     setFormData({ nom: '', phone: '', adresse: '' });
@@ -326,7 +349,7 @@ const ClientsPage: React.FC = () => {
 
         {/* Clients Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 md:gap-8">
-          {filteredClients.map((client, index) => (
+          {paginatedClients.map((client, index) => (
             <Card 
               key={client.id} 
               className="group hover:shadow-2xl transition-all duration-700 transform hover:-translate-y-4 hover:rotate-1 bg-gradient-to-br from-white via-gray-50 to-purple-50/30 dark:from-gray-800 dark:via-gray-900 dark:to-purple-900/30 backdrop-blur-sm border-0 shadow-xl hover:shadow-purple-500/25 relative overflow-hidden"
@@ -421,6 +444,49 @@ const ClientsPage: React.FC = () => {
               className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white px-8 py-4 rounded-xl"
             >
               Effacer la recherche
+            </Button>
+          </div>
+        )}
+
+        {/* Pagination */}
+        {filteredClients.length > 0 && totalPages > 1 && (
+          <div className="flex justify-center items-center gap-2 mt-12 mb-8">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+              disabled={currentPage === 1}
+              className="border-2 border-purple-300 dark:border-purple-700 hover:bg-purple-100 dark:hover:bg-purple-900/30 disabled:opacity-50"
+            >
+              ← Précédent
+            </Button>
+            
+            <div className="flex gap-2">
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
+                <Button
+                  key={pageNum}
+                  variant={currentPage === pageNum ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setCurrentPage(pageNum)}
+                  className={`min-w-[40px] ${
+                    currentPage === pageNum
+                      ? 'bg-gradient-to-r from-purple-600 via-violet-600 to-indigo-600 text-white shadow-lg scale-110'
+                      : 'border-2 border-purple-300 dark:border-purple-700 hover:bg-purple-100 dark:hover:bg-purple-900/30'
+                  }`}
+                >
+                  {pageNum}
+                </Button>
+              ))}
+            </div>
+            
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+              disabled={currentPage === totalPages}
+              className="border-2 border-purple-300 dark:border-purple-700 hover:bg-purple-100 dark:hover:bg-purple-900/30 disabled:opacity-50"
+            >
+              Suivant →
             </Button>
           </div>
         )}

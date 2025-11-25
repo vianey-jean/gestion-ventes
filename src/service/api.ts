@@ -391,6 +391,62 @@ export const marketingService = {
   }
 };
 
+// Commandes Service
+export const commandeService = {
+  async getCommandes(): Promise<any[]> {
+    const response: AxiosResponse<any[]> = await api.get('/api/commandes');
+    return response.data;
+  },
+
+  async getCommandeById(id: string): Promise<any> {
+    const response: AxiosResponse<any> = await api.get(`/api/commandes/${id}`);
+    return response.data;
+  },
+
+  async createCommande(commande: any): Promise<any> {
+    const response: AxiosResponse<any> = await api.post('/api/commandes', commande);
+    return response.data;
+  },
+
+  async updateCommande(id: string, commande: any): Promise<any> {
+    const response: AxiosResponse<any> = await api.put(`/api/commandes/${id}`, commande);
+    return response.data;
+  },
+
+  async deleteCommande(id: string): Promise<boolean> {
+    await api.delete(`/api/commandes/${id}`);
+    return true;
+  },
+};
+
+// Clients Service
+export const clientService = {
+  async getClients(): Promise<any[]> {
+    const response: AxiosResponse<any[]> = await api.get('/api/clients');
+    return response.data;
+  },
+
+  async getClientById(id: string): Promise<any> {
+    const response: AxiosResponse<any> = await api.get(`/api/clients/${id}`);
+    return response.data;
+  },
+
+  async createClient(client: any): Promise<any> {
+    const response: AxiosResponse<any> = await api.post('/api/clients', client);
+    return response.data;
+  },
+
+  async updateClient(id: string, client: any): Promise<any> {
+    const response: AxiosResponse<any> = await api.put(`/api/clients/${id}`, client);
+    return response.data;
+  },
+
+  async deleteClient(id: string): Promise<boolean> {
+    await api.delete(`/api/clients/${id}`);
+    return true;
+  },
+};
+
 // Export the api instance for direct use if needed
 export { api };
 export default api;

@@ -20,7 +20,8 @@ import {
   MessageSquare,
   Menu,
   X,
-  ChevronDown
+  ChevronDown,
+  Package
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -68,6 +69,11 @@ const Navbar: React.FC = () => {
                     <LayoutDashboard className="mr-1.5 lg:mr-2 h-3 w-3 lg:h-4 lg:w-4 text-blue-600 group-hover:scale-110 transition-transform" />
                     <span className="hidden lg:inline">Tableau de Bord</span>
                     <span className="lg:hidden">Dashboard</span>
+                  </Link>
+                  <Link to="/commandes" className="group inline-flex items-center px-2 lg:px-4 py-2 rounded-lg lg:rounded-xl text-xs lg:text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-all duration-200">
+                    <Package className="mr-1.5 lg:mr-2 h-3 w-3 lg:h-4 lg:w-4 text-indigo-600 group-hover:scale-110 transition-transform" />
+                    <span className="hidden lg:inline">Commandes</span>
+                    <span className="lg:hidden">Commandes</span>
                   </Link>
                   <Link to="/tendances" className="group inline-flex items-center px-2 lg:px-4 py-2 rounded-lg lg:rounded-xl text-xs lg:text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-all duration-200">
                     <TrendingUp className="mr-1.5 lg:mr-2 h-3 w-3 lg:h-4 lg:w-4 text-emerald-600 group-hover:scale-110 transition-transform" />
@@ -175,6 +181,11 @@ const Navbar: React.FC = () => {
                   <Link to="/dashboard" className="w-full">
                     <Button variant="outline" size="icon" className="w-full h-10 sm:h-12 p-0 rounded-lg sm:rounded-xl border-2 border-green-200 text-green-600 hover:bg-green-500 hover:text-white hover:border-green-500">
                       <LayoutDashboard className="h-4 w-4 sm:h-5 sm:w-5" />
+                    </Button>
+                  </Link>
+                  <Link to="/commandes" className="w-full">
+                    <Button variant="outline" size="icon" className="w-full h-10 sm:h-12 p-0 rounded-lg sm:rounded-xl border-2 border-indigo-200 text-indigo-600 hover:bg-indigo-500 hover:text-white hover:border-indigo-500">
+                      <Package className="h-4 w-4 sm:h-5 sm:w-5" />
                     </Button>
                   </Link>
                   <Link to="/tendances" className="w-full">

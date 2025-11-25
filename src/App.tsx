@@ -35,6 +35,7 @@ const DashboardPage = lazy(() => import('@/pages/DashboardPage'));
 const TendancesPage = lazy(() => import('@/pages/TendancesPage'));
 const ClientsPage = lazy(() => import('@/pages/ClientsPage'));
 const MessagesPage = lazy(() => import('@/pages/MessagesPage'));
+const CommandesPage = lazy(() => import('@/pages/CommandesPage'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
 
 function App() {
@@ -95,6 +96,14 @@ function App() {
                       element={
                         <ProtectedRoute>
                           <MessagesPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/commandes"
+                      element={
+                        <ProtectedRoute>
+                          <CommandesPage />
                         </ProtectedRoute>
                       }
                     />
