@@ -7,7 +7,7 @@ import { ModernTable, ModernTableHeader, ModernTableRow, ModernTableHead, Modern
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
-import { Package, Plus, Trash2, Edit, ShoppingCart } from 'lucide-react';
+import { Package, Plus, Trash2, Edit, ShoppingCart, TrendingUp } from 'lucide-react';
 import { Commande, CommandeProduit } from '@/types/commande';
 import api from '@/service/api';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -15,6 +15,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import Layout from '@/components/Layout';
 import PremiumLoading from '@/components/ui/premium-loading';
 import SaleQuantityInput from '@/components/dashboard/forms/SaleQuantityInput';
+import { motion } from 'framer-motion';
 
 interface Client {
   id: string;
@@ -443,8 +444,32 @@ export default function CommandesPage() {
 
   return (
     <Layout>
+       {/* Hero Header */}
+                  <div className="text-center mb-6 sm:mb-8 md:mb-12">
+                    <div className="inline-flex items-center px-3 sm:px-4 py-1.5 sm:py-2 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-full text-purple-600 dark:text-purple-400 text-xs sm:text-sm font-medium mb-4 sm:mb-6 border border-purple-200 dark:border-purple-800">
+                      <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                      <span className="hidden xs:inline">Commandes ou Reservation</span>
+                      <span className="xs:hidden">Temps réel</span>
+                    </div>
+                    
+                        <motion.h1
+                          initial={{ opacity: 0, y: 60, scale: 0.9 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          transition={{ duration: 0.9, ease: "easeOut" }}
+                          className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold 
+                                    bg-gradient-to-r from-purple-600 via-red-600 to-indigo-600 
+                                    bg-[length:200%_200%] animate-gradient 
+                                    bg-clip-text text-transparent mb-4 sm:mb-6 text-center text-3d px-2"
+                        >
+                          Commandes ou Reservation
+                        </motion.h1>
+                    <p className="text-sm sm:text-base md:text-lg lg:text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto px-4">
+                      Gérez efficacement vos commandes ou reservations
+                    </p>
+                  </div>
       <div className="container mx-auto p-4 md:p-6 lg:p-8 space-y-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        
         <div>
           <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
             Commandes & Réservations
