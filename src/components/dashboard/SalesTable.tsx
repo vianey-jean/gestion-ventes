@@ -2,9 +2,10 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { TableBody, TableCell, TableFooter, TableRow } from '@/components/ui/table';
 import { ModernTable, ModernTableHeader, ModernTableRow, ModernTableHead, ModernTableCell } from '@/components/dashboard/forms/ModernTable';
 import { Sale } from '@/types';
-import { TrendingUp, Package, Euro, Calendar, Sparkles, Award, Clock } from 'lucide-react';
+import { TrendingUp, Package, Euro, Calendar, Sparkles, Award, Clock, ArrowUp, ArrowDown } from 'lucide-react';
 import { realtimeService } from '@/services/realtimeService';
 import PremiumLoading from '@/components/ui/premium-loading';
+import { Button } from '@/components/ui/button';
 
 interface SalesTableProps {
   sales: Sale[];
@@ -20,6 +21,7 @@ const SalesTable: React.FC<SalesTableProps> = ({ sales: initialSales, onRowClick
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
   const [isRealtimeActive, setIsRealtimeActive] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc'); // Par défaut: plus petit vers plus grand
 
   // Fonction pour filtrer les ventes du mois en cours
   const filterCurrentMonthSales = (salesData: Sale[]) => {
@@ -89,6 +91,20 @@ const SalesTable: React.FC<SalesTableProps> = ({ sales: initialSales, onRowClick
     setSales(filtered);
   }, [initialSales]);
 
+  // Fonction pour trier les ventes par date
+  const toggleSortOrder = () => {
+    setSortOrder(prevOrder => prevOrder === 'asc' ? 'desc' : 'asc');
+  };
+
+  // Trier les ventes par date selon l'ordre
+  const sortedSales = useMemo(() => {
+    return [...sales].sort((a, b) => {
+      const dateA = new Date(a.date).getTime();
+      const dateB = new Date(b.date).getTime();
+      return sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
+    });
+  }, [sales, sortOrder]);
+
   // Formater une date au format local
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -118,12 +134,12 @@ const SalesTable: React.FC<SalesTableProps> = ({ sales: initialSales, onRowClick
   };
   
   // Calculer les totaux pour le mois en cours uniquement
-  const totalSellingPrice = sales.reduce((sum, sale) => {
+  const totalSellingPrice = sortedSales.reduce((sum, sale) => {
     return sum + (sale.totalSellingPrice || sale.sellingPrice || 0);
   }, 0);
   
   // Calculer le nombre total de produits vendus (pas le nombre de ventes)
-  const totalProductsSold = sales.reduce((sum, sale) => {
+  const totalProductsSold = sortedSales.reduce((sum, sale) => {
     if (sale.products) {
       // Pour les ventes multi-produits, sommer toutes les quantités
       return sum + sale.products.reduce((productSum, product) => {
@@ -136,11 +152,11 @@ const SalesTable: React.FC<SalesTableProps> = ({ sales: initialSales, onRowClick
   
   const totalQuantitySold = totalProductsSold; // Alias pour compatibilité
   
-  const totalPurchasePrice = sales.reduce((sum, sale) => {
+  const totalPurchasePrice = sortedSales.reduce((sum, sale) => {
     return sum + (sale.totalPurchasePrice || sale.purchasePrice || 0);
   }, 0);
   
-  const totalDeliveryFee = sales.reduce((sum, sale) => {
+  const totalDeliveryFee = sortedSales.reduce((sum, sale) => {
     if (sale.products) {
       return sum + sale.products.reduce((feeSum, product) => {
         return feeSum + (product.deliveryFee || 0);
@@ -149,7 +165,7 @@ const SalesTable: React.FC<SalesTableProps> = ({ sales: initialSales, onRowClick
     return sum + (sale.deliveryFee || 0);
   }, 0);
   
-  const totalProfit = sales.reduce((sum, sale) => {
+  const totalProfit = sortedSales.reduce((sum, sale) => {
     return sum + (sale.totalProfit || sale.profit || 0);
   }, 0);
 
@@ -227,6 +243,19 @@ const SalesTable: React.FC<SalesTableProps> = ({ sales: initialSales, onRowClick
                   <Calendar className="h-3 w-3 text-white" />
                 </div>
                 <span className='text-red-600 font-bold text-sm'>Date</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={toggleSortOrder}
+                  className="h-6 w-6 p-0 hover:bg-red-100 dark:hover:bg-red-900/20"
+                  aria-label={`Trier par date ${sortOrder === 'asc' ? 'décroissant' : 'croissant'}`}
+                >
+                  {sortOrder === 'asc' ? (
+                    <ArrowUp className="h-3 w-3 text-red-600" />
+                  ) : (
+                    <ArrowDown className="h-3 w-3 text-red-600" />
+                  )}
+                </Button>
               </div>
             </ModernTableHead>
             <ModernTableHead className="bg-transparent">
@@ -275,7 +304,7 @@ const SalesTable: React.FC<SalesTableProps> = ({ sales: initialSales, onRowClick
           </TableRow>
         </ModernTableHeader>
         <TableBody>
-          {sales.length === 0 ? (
+          {sortedSales.length === 0 ? (
             <TableRow>
               <TableCell colSpan={7} className="text-center py-12 bg-gradient-to-br from-gray-50 to-white dark:from-gray-800 dark:to-gray-700">
                 <div className="flex flex-col items-center space-y-4">
@@ -290,7 +319,7 @@ const SalesTable: React.FC<SalesTableProps> = ({ sales: initialSales, onRowClick
               </TableCell>
             </TableRow>
           ) : (
-            sales.map((sale, index) => (
+            sortedSales.map((sale, index) => (
               <ModernTableRow 
                 key={sale.id} 
                 onClick={() => onRowClick(sale)}
@@ -398,7 +427,7 @@ const SalesTable: React.FC<SalesTableProps> = ({ sales: initialSales, onRowClick
             ))
           )}
         </TableBody>
-        {sales.length > 0 && (
+        {sortedSales.length > 0 && (
           <TableFooter>
             <TableRow className="bg-gradient-to-r from-gray-900 via-purple-900 to-blue-900 text-white border-none hover:bg-indigo-900 hover:bg-none">
 
