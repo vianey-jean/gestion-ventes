@@ -7,7 +7,7 @@ import { ModernTable, ModernTableHeader, ModernTableRow, ModernTableHead, Modern
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
-import { Package, Plus, Trash2, Edit, ShoppingCart, TrendingUp, Sparkles, Crown, Star, Gift, Award, Zap, Diamond } from 'lucide-react';
+import { Package, Plus, Trash2, Edit, ShoppingCart, TrendingUp, Sparkles, Crown, Star, Gift, Award, Zap, Diamond, ArrowUp, ArrowDown } from 'lucide-react';
 import { Commande, CommandeProduit } from '@/types/commande';
 import api from '@/service/api';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -62,6 +62,9 @@ export default function CommandesPage() {
   const [productSearch, setProductSearch] = useState('');
   const [showClientSuggestions, setShowClientSuggestions] = useState(false);
   const [showProductSuggestions, setShowProductSuggestions] = useState(false);
+  
+  // État pour gérer l'ordre de tri par date
+  const [sortDateAsc, setSortDateAsc] = useState(true); // true = du plus proche au plus loin
 
   useEffect(() => {
     const loadData = async () => {
@@ -91,6 +94,22 @@ export default function CommandesPage() {
       });
     }
   };
+
+  // Tri des commandes par date (échéance ou arrivage)
+  const sortedCommandes = useMemo(() => {
+    return [...commandes].sort((a, b) => {
+      const dateA = new Date(a.type === 'commande' ? a.dateArrivagePrevue || '' : a.dateEcheance || '');
+      const dateB = new Date(b.type === 'commande' ? b.dateArrivagePrevue || '' : b.dateEcheance || '');
+      
+      if (sortDateAsc) {
+        // Du plus proche au plus loin
+        return dateA.getTime() - dateB.getTime();
+      } else {
+        // Du plus loin au plus proche
+        return dateB.getTime() - dateA.getTime();
+      }
+    });
+  }, [commandes, sortDateAsc]);
 
   const fetchClients = async () => {
     try {
@@ -911,16 +930,7 @@ export default function CommandesPage() {
             <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-purple-500 via-pink-500 to-indigo-500 text-white shadow-2xl">
               <Gift className="h-7 w-7" />
             </span>
-            <div className="flex flex-col">
-              <span className="bg-gradient-to-r from-purple-600 via-pink-600 to-indigo-600 bg-clip-text text-transparent">
-                Liste des Commandes Premium
-              </span>
-              <span className="text-sm font-medium text-muted-foreground flex items-center gap-2 mt-1">
-                <Sparkles className="h-4 w-4 text-yellow-500" />
-                Expérience de luxe
-              </span>
-            </div>
-            {/* <span>Liste des Commandes et Réservations</span> */}
+            <span>Liste des Commandes et Réservations</span>
           </CardTitle>
           <CardDescription className="mt-1 text-sm md:text-base text-muted-foreground">
             Total: {commandes.length} {commandes.length > 1 ? 'commandes' : 'commande'}
@@ -936,14 +946,27 @@ export default function CommandesPage() {
                 <ModernTableHead>Produit</ModernTableHead>
                 <ModernTableHead>Prix</ModernTableHead>
                 <ModernTableHead>Type</ModernTableHead>
-                <ModernTableHead>Date</ModernTableHead>
+                <ModernTableHead>
+                  <button
+                    onClick={() => setSortDateAsc(!sortDateAsc)}
+                    className="flex items-center gap-2 hover:text-primary transition-colors"
+                    title={sortDateAsc ? "Trier du plus loin au plus proche" : "Trier du plus proche au plus loin"}
+                  >
+                    Date
+                    {sortDateAsc ? (
+                      <ArrowDown className="h-4 w-4 text-purple-600" />
+                    ) : (
+                      <ArrowUp className="h-4 w-4 text-purple-600" />
+                    )}
+                  </button>
+                </ModernTableHead>
                 <ModernTableHead>Statut</ModernTableHead>
                 <ModernTableHead>Actions</ModernTableHead>
               </ModernTableRow>
             </ModernTableHeader>
 
               <TableBody>
-                {commandes.map((commande) => (
+                {sortedCommandes.map((commande) => (
                   <ModernTableRow
                     key={commande.id}
                     className="bg-background/40 hover:bg-primary/5 transition-colors"
