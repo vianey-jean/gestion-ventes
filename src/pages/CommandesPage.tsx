@@ -419,11 +419,11 @@ export default function CommandesPage() {
   const getStatusBadge = (statut: string) => {
     switch (statut) {
       case 'arrive':
-        return <Badge className="bg-green-500">Arrivé</Badge>;
+        return <Badge className="text-green-600 font-semibold">Arrivé</Badge>;
       case 'en_route':
-        return <Badge className="bg-blue-500">En route</Badge>;
+        return <Badge className="text-purple-600 font-semibold">En route</Badge>;
       case 'en_attente':
-        return <Badge className="bg-yellow-500">En attente</Badge>;
+        return <Badge className="text-red-600 font-semibold">En attente</Badge>;
       default:
         return <Badge>{statut}</Badge>;
     }
@@ -831,18 +831,19 @@ export default function CommandesPage() {
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <ModernTable className="min-w-full">
-              <ModernTableHeader>
-                <ModernTableRow>
-                  <ModernTableHead>Client</ModernTableHead>
-                  <ModernTableHead>Contact</ModernTableHead>
-                  <ModernTableHead>Produit</ModernTableHead>
-                  <ModernTableHead>Prix</ModernTableHead>
-                  <ModernTableHead>Type</ModernTableHead>
-                  <ModernTableHead>Date</ModernTableHead>
-                  <ModernTableHead>Statut</ModernTableHead>
-                  <ModernTableHead>Actions</ModernTableHead>
-                </ModernTableRow>
-              </ModernTableHeader>
+            <ModernTableHeader>
+              <ModernTableRow >
+                <ModernTableHead>Client</ModernTableHead>
+                <ModernTableHead>Contact</ModernTableHead>
+                <ModernTableHead>Produit</ModernTableHead>
+                <ModernTableHead>Prix</ModernTableHead>
+                <ModernTableHead>Type</ModernTableHead>
+                <ModernTableHead>Date</ModernTableHead>
+                <ModernTableHead>Statut</ModernTableHead>
+                <ModernTableHead>Actions</ModernTableHead>
+              </ModernTableRow>
+            </ModernTableHeader>
+
               <TableBody>
                 {commandes.map((commande) => (
                   <ModernTableRow
@@ -879,10 +880,14 @@ export default function CommandesPage() {
                       ))}
                     </ModernTableCell>
                     <ModernTableCell className="align-top">
-                      <Badge variant={commande.type === 'commande' ? 'default' : 'secondary'}>
+                      <Badge
+                        className="bg-blue-600 text-white hover:bg-blue-700"
+                        variant={commande.type === 'commande' ? 'default' : 'secondary'}
+                      >
                         {commande.type === 'commande' ? 'Commande' : 'Réservation'}
                       </Badge>
                     </ModernTableCell>
+
                     <ModernTableCell className="align-top text-sm">
                       {commande.type === 'commande' ? (
                         <div>
@@ -906,9 +911,21 @@ export default function CommandesPage() {
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="en_route">En route</SelectItem>
-                            <SelectItem value="arrive">Arrivé</SelectItem>
-                          </SelectContent>
+                          <SelectItem 
+                            value="en_route" 
+                            className="text-purple-600 font-semibold"
+                          >
+                            En route
+                          </SelectItem>
+
+                          <SelectItem 
+                            value="arrive" 
+                            className="text-green-600 font-semibold"
+                          >
+                            Arrivé
+                          </SelectItem>
+                        </SelectContent>
+
                         </Select>
                       ) : (
                         getStatusBadge(commande.statut)
@@ -922,7 +939,7 @@ export default function CommandesPage() {
                           onClick={() => handleEdit(commande)}
                           className="hover:bg-primary/10"
                         >
-                          <Edit className="h-4 w-4" />
+                          <Edit className="h-4 w-4 text-green-500" />
                         </Button>
                         <Button
                           variant="ghost"
