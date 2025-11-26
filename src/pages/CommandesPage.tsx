@@ -65,6 +65,12 @@ export default function CommandesPage() {
   
   // État pour gérer l'ordre de tri par date
   const [sortDateAsc, setSortDateAsc] = useState(true); // true = du plus proche au plus loin
+  
+  // État pour la recherche de commandes
+  const [commandeSearch, setCommandeSearch] = useState('');
+  
+  // État pour la confirmation de validation
+  const [validatingId, setValidatingId] = useState<string | null>(null);
 
   useEffect(() => {
     const loadData = async () => {
@@ -95,9 +101,26 @@ export default function CommandesPage() {
     }
   };
 
-  // Tri des commandes par date (échéance ou arrivage)
-  const sortedCommandes = useMemo(() => {
-    return [...commandes].sort((a, b) => {
+  // Filtrer et trier les commandes selon la recherche
+  const filteredCommandes = useMemo(() => {
+    // Si recherche active (3+ caractères), montrer TOUTES les commandes (même validées)
+    const commandesToFilter = commandeSearch.length >= 3 
+      ? commandes 
+      : commandes.filter(c => c.statut !== 'valide');
+    
+    // Appliquer la recherche si >= 3 caractères
+    let filtered = commandesToFilter;
+    if (commandeSearch.length >= 3) {
+      const searchLower = commandeSearch.toLowerCase();
+      filtered = commandesToFilter.filter(commande => 
+        commande.clientNom.toLowerCase().includes(searchLower) ||
+        commande.clientPhone.includes(searchLower) ||
+        commande.produits.some(p => p.nom.toLowerCase().includes(searchLower))
+      );
+    }
+    
+    // Trier par date (échéance ou arrivage)
+    return [...filtered].sort((a, b) => {
       const dateA = new Date(a.type === 'commande' ? a.dateArrivagePrevue || '' : a.dateEcheance || '');
       const dateB = new Date(b.type === 'commande' ? b.dateArrivagePrevue || '' : b.dateEcheance || '');
       
@@ -109,7 +132,7 @@ export default function CommandesPage() {
         return dateB.getTime() - dateA.getTime();
       }
     });
-  }, [commandes, sortDateAsc]);
+  }, [commandes, commandeSearch, sortDateAsc]);
 
   const fetchClients = async () => {
     try {
@@ -440,7 +463,13 @@ export default function CommandesPage() {
     }
   };
 
-  const handleStatusChange = async (id: string, newStatus: 'en_route' | 'arrive' | 'en_attente') => {
+  const handleStatusChange = async (id: string, newStatus: 'en_route' | 'arrive' | 'en_attente' | 'valide') => {
+    // Si on passe à "valide", demander confirmation
+    if (newStatus === 'valide') {
+      setValidatingId(id);
+      return;
+    }
+    
     try {
       await api.put(`/api/commandes/${id}`, { statut: newStatus });
       toast({
@@ -460,6 +489,29 @@ export default function CommandesPage() {
     }
   };
 
+  const confirmValidation = async () => {
+    if (!validatingId) return;
+    
+    try {
+      await api.put(`/api/commandes/${validatingId}`, { statut: 'valide' });
+      toast({
+        title: 'Succès',
+        description: 'Commande validée avec succès',
+        className: "bg-app-green text-white",
+      });
+      fetchCommandes();
+      setValidatingId(null);
+    } catch (error) {
+      console.error('Error validating:', error);
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de valider la commande',
+        className: "bg-app-red text-white",
+        variant: 'destructive',
+      });
+    }
+  };
+
   const getStatusBadge = (statut: string) => {
     switch (statut) {
       case 'arrive':
@@ -468,8 +520,25 @@ export default function CommandesPage() {
         return <Badge className="text-purple-600 font-semibold">En route</Badge>;
       case 'en_attente':
         return <Badge className="text-red-600 font-semibold">En attente</Badge>;
+      case 'valide':
+        return <Badge className="text-blue-600 font-semibold">Validé</Badge>;
       default:
         return <Badge>{statut}</Badge>;
+    }
+  };
+
+  const getStatusOptions = (type: 'commande' | 'reservation') => {
+    if (type === 'commande') {
+      return [
+        { value: 'en_route', label: 'En route' },
+        { value: 'arrive', label: 'Arrivé' },
+        { value: 'valide', label: 'Validé' }
+      ];
+    } else {
+      return [
+        { value: 'en_attente', label: 'En attente' },
+        { value: 'valide', label: 'Validé' }
+      ];
     }
   };
 
@@ -542,16 +611,32 @@ export default function CommandesPage() {
           </div>
         </div>
         
-        <Dialog open={isDialogOpen} onOpenChange={(open) => {
-          setIsDialogOpen(open);
-          if (!open) resetForm();
-        }}>
-          <DialogTrigger asChild>
-            <Button className="w-full md:w-auto bg-gradient-to-r from-purple-600 via-pink-600 to-indigo-600 hover:from-purple-700 hover:via-pink-700 hover:to-indigo-700 text-white shadow-2xl hover:shadow-purple-500/50 border-0" size="lg">
-              <Zap className="mr-2 h-5 w-5" />
-              Nouvelle Commande Elite
-            </Button>
-          </DialogTrigger>
+        <div className="flex flex-col md:flex-row gap-4 items-center">
+          {/* Barre de recherche */}
+          <div className="relative w-full md:flex-1">
+            <Input
+              value={commandeSearch}
+              onChange={(e) => setCommandeSearch(e.target.value)}
+              placeholder="🔍 Rechercher une commande (min. 3 caractères)..."
+              className="border-2 border-purple-300 dark:border-purple-700 focus:border-purple-500 dark:focus:border-purple-500 bg-white dark:bg-gray-900 shadow-lg pl-4"
+            />
+            {commandeSearch.length > 0 && commandeSearch.length < 3 && (
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                {3 - commandeSearch.length} caractère(s) restant(s)
+              </div>
+            )}
+          </div>
+          
+          <Dialog open={isDialogOpen} onOpenChange={(open) => {
+            setIsDialogOpen(open);
+            if (!open) resetForm();
+          }}>
+            <DialogTrigger asChild>
+              <Button className="w-full md:w-auto bg-gradient-to-r from-purple-600 via-pink-600 to-indigo-600 hover:from-purple-700 hover:via-pink-700 hover:to-indigo-700 text-white shadow-2xl hover:shadow-purple-500/50 border-0" size="lg">
+                <Zap className="mr-2 h-5 w-5" />
+                Nouvelle Commande Elite
+              </Button>
+            </DialogTrigger>
           <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-white via-purple-50/40 to-pink-50/40 dark:from-gray-900 dark:via-purple-900/30 dark:to-pink-900/30 backdrop-blur-2xl border-2 border-purple-300/50 dark:border-purple-600/50 shadow-[0_20px_70px_rgba(168,85,247,0.4)]">
             <DialogHeader className="border-b-2 border-gradient-to-r from-purple-300 via-pink-300 to-indigo-300 dark:from-purple-700 dark:via-pink-700 dark:to-indigo-700 pb-6">
               <div className="flex items-center justify-center gap-3 mb-2">
@@ -923,6 +1008,7 @@ export default function CommandesPage() {
           </DialogContent>
         </Dialog>
       </div>
+      </div>
 
       <Card className="border-2 border-purple-200/50 dark:border-purple-700/50 shadow-[0_20px_70px_rgba(168,85,247,0.3)] bg-gradient-to-br from-white via-purple-50/20 to-pink-50/20 dark:from-gray-900 dark:via-purple-900/10 dark:to-pink-900/10 rounded-3xl overflow-hidden backdrop-blur-sm">
         <CardHeader className="border-b-2 border-gradient-to-r from-purple-300 via-pink-300 to-indigo-300 dark:from-purple-700 dark:via-pink-700 dark:to-indigo-700 bg-gradient-to-r from-purple-50/50 via-pink-50/50 to-indigo-50/50 dark:from-purple-900/20 dark:via-pink-900/20 dark:to-indigo-900/20 pb-6">
@@ -933,7 +1019,12 @@ export default function CommandesPage() {
             <span>Liste des Commandes et Réservations</span>
           </CardTitle>
           <CardDescription className="mt-1 text-sm md:text-base text-muted-foreground">
-            Total: {commandes.length} {commandes.length > 1 ? 'commandes' : 'commande'}
+            Total: {filteredCommandes.length} {filteredCommandes.length > 1 ? 'commandes' : 'commande'}
+            {commandeSearch.length >= 3 && (
+              <span className="ml-2 text-purple-600 dark:text-purple-400 font-semibold">
+                (sur {commandes.filter(c => c.statut !== 'valide').length} non validées)
+              </span>
+            )}
           </CardDescription>
         </CardHeader>
         <CardContent className="p-0">
@@ -966,7 +1057,7 @@ export default function CommandesPage() {
             </ModernTableHeader>
 
               <TableBody>
-                {sortedCommandes.map((commande) => (
+                {filteredCommandes.map((commande) => (
                   <ModernTableRow
                     key={commande.id}
                     className="bg-background/40 hover:bg-primary/5 transition-colors"
@@ -1035,34 +1126,31 @@ export default function CommandesPage() {
                       )}
                     </ModernTableCell>
                     <ModernTableCell className="align-top">
-                      {commande.type === 'commande' ? (
-                        <Select
-                          value={commande.statut}
-                          onValueChange={(value) => handleStatusChange(commande.id, value as any)}
-                        >
-                          <SelectTrigger className="w-32">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                          <SelectItem 
-                            value="en_route" 
-                            className="text-purple-600 font-semibold"
-                          >
-                            En route
-                          </SelectItem>
-
-                          <SelectItem 
-                            value="arrive" 
-                            className="text-green-600 font-semibold"
-                          >
-                            Arrivé
-                          </SelectItem>
+                      <Select
+                        value={commande.statut}
+                        onValueChange={(value) => handleStatusChange(commande.id, value as any)}
+                      >
+                        <SelectTrigger className="w-36">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {getStatusOptions(commande.type).map((option) => (
+                            <SelectItem 
+                              key={option.value}
+                              value={option.value}
+                              className={
+                                option.value === 'en_route' ? 'text-purple-600 font-semibold' :
+                                option.value === 'arrive' ? 'text-green-600 font-semibold' :
+                                option.value === 'en_attente' ? 'text-red-600 font-semibold' :
+                                option.value === 'valide' ? 'text-blue-600 font-semibold' :
+                                ''
+                              }
+                            >
+                              {option.label}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
-
-                        </Select>
-                      ) : (
-                        getStatusBadge(commande.statut)
-                      )}
+                      </Select>
                     </ModernTableCell>
                     <ModernTableCell className="align-top">
                       <div className="flex gap-2">
@@ -1093,6 +1181,24 @@ export default function CommandesPage() {
           </div>
         </CardContent>
       </Card>
+
+      <AlertDialog open={!!validatingId} onOpenChange={(open) => !open && setValidatingId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmer la validation</AlertDialogTitle>
+            <AlertDialogDescription>
+              Êtes-vous sûr de vouloir valider cette commande/réservation ? 
+              Une fois validée, elle sera retirée de la liste.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmValidation} className="bg-blue-600 hover:bg-blue-700">
+              Valider
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
         <AlertDialogContent>
