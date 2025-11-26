@@ -984,9 +984,10 @@ export default function CommandesPage() {
                       {commande.produits.map((p, idx) => (
                         <div key={idx} className="text-sm space-y-0.5">
                           <div className="font-medium">{p.nom}</div>
-                          <div className="text-xs text-muted-foreground">
-                            Qté: {p.quantite}
-                          </div>
+                         <div className="text-xs text-muted-foreground">
+                          Qté: <span className="font-bold text-red-600">{p.quantite}</span>
+                        </div>
+
                         </div>
                       ))}
                     </ModernTableCell>
@@ -1007,12 +1008,17 @@ export default function CommandesPage() {
                       </div>
                     </ModernTableCell>
                     <ModernTableCell className="align-top">
-                      <Badge
-                        className="bg-blue-600 text-white hover:bg-blue-700"
-                        variant={commande.type === 'commande' ? 'default' : 'secondary'}
-                      >
-                        {commande.type === 'commande' ? 'Commande' : 'Réservation'}
-                      </Badge>
+                     <Badge
+                      className={
+                        commande.type === 'commande'
+                          ? "bg-purple-600 text-white hover:bg-purple-700"   // violet
+                          : "bg-blue-600 text-white hover:bg-blue-700"       // bleu
+                      }
+                      variant={commande.type === 'commande' ? 'default' : 'secondary'}
+                    >
+                      {commande.type === 'commande' ? 'Commande' : 'Réservation'}
+                    </Badge>
+
                     </ModernTableCell>
 
                     <ModernTableCell className="align-top text-sm">
