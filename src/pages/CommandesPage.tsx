@@ -7,7 +7,7 @@ import { ModernTable, ModernTableHeader, ModernTableRow, ModernTableHead, Modern
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
-import { Package, Plus, Trash2, Edit, ShoppingCart, TrendingUp } from 'lucide-react';
+import { Package, Plus, Trash2, Edit, ShoppingCart, TrendingUp, Sparkles, Crown, Star, Gift, Award, Zap, Diamond } from 'lucide-react';
 import { Commande, CommandeProduit } from '@/types/commande';
 import api from '@/service/api';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -86,6 +86,7 @@ export default function CommandesPage() {
       toast({
         title: 'Erreur',
         description: 'Impossible de charger les commandes',
+        className: "bg-app-red text-white",
         variant: 'destructive',
       });
     }
@@ -150,13 +151,28 @@ export default function CommandesPage() {
     );
   }, [clientSearch, clients]);
 
-  // Filter products based on search
+  // Filter products based on search - exclude products already used in other orders/reservations
   const filteredProducts = useMemo(() => {
     if (productSearch.length < 3) return [];
-    return products.filter(product => 
-      product.description.toLowerCase().includes(productSearch.toLowerCase())
-    );
-  }, [productSearch, products]);
+    
+    // Get all product names that are already used in other orders/reservations
+    const usedProductNames = new Set<string>();
+    commandes.forEach(commande => {
+      // Skip if we're editing this specific order (allow same products)
+      if (editingCommande && commande.id === editingCommande.id) return;
+      
+      commande.produits.forEach(produit => {
+        usedProductNames.add(produit.nom.toLowerCase());
+      });
+    });
+    
+    // Filter out products that are already used
+    return products.filter(product => {
+      const matchesSearch = product.description.toLowerCase().includes(productSearch.toLowerCase());
+      const isNotUsed = !usedProductNames.has(product.description.toLowerCase());
+      return matchesSearch && isNotUsed;
+    });
+  }, [productSearch, products, commandes, editingCommande]);
 
   const handleClientSelect = (client: Client) => {
     setClientNom(client.nom);
@@ -214,6 +230,7 @@ export default function CommandesPage() {
       toast({
         title: 'Erreur',
         description: 'Veuillez remplir tous les champs du produit',
+        className: "bg-app-red text-white",
         variant: 'destructive',
       });
       return;
@@ -291,6 +308,7 @@ export default function CommandesPage() {
       toast({
         title: 'Erreur',
         description: 'Veuillez remplir tous les champs et ajouter au moins un produit',
+        className: "bg-app-red text-white",
         variant: 'destructive',
       });
       return;
@@ -342,12 +360,14 @@ export default function CommandesPage() {
         toast({
           title: 'Succès',
           description: 'Commande modifiée avec succès',
+          className: "bg-app-green text-white",
         });
       } else {
         await api.post('/api/commandes', commandeData);
         toast({
           title: 'Succès',
           description: 'Commande ajoutée avec succès',
+          className: "bg-app-green text-white",
         });
       }
       fetchCommandes();
@@ -358,6 +378,7 @@ export default function CommandesPage() {
       toast({
         title: 'Erreur',
         description: 'Impossible de sauvegarder la commande',
+        className: "bg-app-red text-white",
         variant: 'destructive',
       });
     }
@@ -385,6 +406,7 @@ export default function CommandesPage() {
       toast({
         title: 'Succès',
         description: 'Commande supprimée avec succès',
+        className: "bg-app-green text-white",
       });
       fetchCommandes();
       setDeleteId(null);
@@ -393,6 +415,7 @@ export default function CommandesPage() {
       toast({
         title: 'Erreur',
         description: 'Impossible de supprimer la commande',
+        className: "bg-app-red text-white",
         variant: 'destructive',
       });
     }
@@ -404,6 +427,7 @@ export default function CommandesPage() {
       toast({
         title: 'Succès',
         description: 'Statut mis à jour',
+        className: "bg-app-green text-white",
       });
       fetchCommandes();
     } catch (error) {
@@ -411,6 +435,7 @@ export default function CommandesPage() {
       toast({
         title: 'Erreur',
         description: 'Impossible de mettre à jour le statut',
+        className: "bg-app-red text-white",
         variant: 'destructive',
       });
     }
@@ -444,39 +469,58 @@ export default function CommandesPage() {
 
   return (
     <Layout>
-       {/* Hero Header */}
-                  <div className="text-center mb-6 sm:mb-8 md:mb-12">
-                    <div className="inline-flex items-center px-3 sm:px-4 py-1.5 sm:py-2 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-full text-purple-600 dark:text-purple-400 text-xs sm:text-sm font-medium mb-4 sm:mb-6 border border-purple-200 dark:border-purple-800">
-                      <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                      <span className="hidden xs:inline">Commandes ou Reservation</span>
-                      <span className="xs:hidden">Temps réel</span>
+       {/* Hero Header Premium */}
+                  <div className="text-center mb-6 sm:mb-8 md:mb-12 relative">
+                    {/* Decorative elements */}
+                    <div className="absolute inset-0 -z-10 overflow-hidden">
+                      <div className="absolute top-0 left-1/4 w-72 h-72 bg-purple-300/20 dark:bg-purple-600/10 rounded-full blur-3xl"></div>
+                      <div className="absolute top-0 right-1/4 w-72 h-72 bg-pink-300/20 dark:bg-pink-600/10 rounded-full blur-3xl"></div>
+                    </div>
+                    
+                    <div className="inline-flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-purple-500/10 via-pink-500/10 to-indigo-500/10 dark:from-purple-500/20 dark:via-pink-500/20 dark:to-indigo-500/20 backdrop-blur-xl rounded-full text-purple-700 dark:text-purple-300 text-xs sm:text-sm font-bold mb-4 sm:mb-6 border-2 border-purple-300/50 dark:border-purple-600/50 shadow-2xl">
+                      <Crown className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-500" />
+                      <span className="hidden xs:inline">Gestion Premium</span>
+                      <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-pink-500" />
                     </div>
                     
                         <motion.h1
                           initial={{ opacity: 0, y: 60, scale: 0.9 }}
                           animate={{ opacity: 1, y: 0, scale: 1 }}
                           transition={{ duration: 0.9, ease: "easeOut" }}
-                          className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold 
-                                    bg-gradient-to-r from-purple-600 via-red-600 to-indigo-600 
+                          className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black 
+                                    bg-gradient-to-r from-purple-600 via-pink-600 to-indigo-600 
                                     bg-[length:200%_200%] animate-gradient 
-                                    bg-clip-text text-transparent mb-4 sm:mb-6 text-center text-3d px-2"
+                                    bg-clip-text text-transparent mb-4 sm:mb-6 text-center px-2
+                                    drop-shadow-2xl"
                         >
-                          Commandes ou Reservation
+                          <span className="inline-flex items-center gap-3">
+                            <Diamond className="h-8 w-8 sm:h-12 sm:w-12 text-purple-600" />
+                            Commandes & Réservations
+                            <Star className="h-8 w-8 sm:h-12 sm:w-12 text-pink-600" />
+                          </span>
                         </motion.h1>
-                    <p className="text-sm sm:text-base md:text-lg lg:text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto px-4">
-                      Gérez efficacement vos commandes ou reservations
+                    <p className="text-sm sm:text-base md:text-lg lg:text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto px-4 font-medium">
+                      Une expérience de gestion <span className="font-bold text-purple-600 dark:text-purple-400">ultra-premium</span> pour vos commandes d'élite
                     </p>
                   </div>
       <div className="container mx-auto p-4 md:p-6 lg:p-8 space-y-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         
-        <div>
-          <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-            Commandes & Réservations
-          </h1>
-          <p className="text-muted-foreground mt-2">
-            Gérez vos commandes et réservations clients
-          </p>
+        <div className="space-y-2">
+          <div className="flex items-center gap-3">
+            <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-purple-500 via-pink-500 to-indigo-500 flex items-center justify-center shadow-2xl">
+              <Award className="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-3xl md:text-4xl font-black bg-gradient-to-r from-purple-600 via-pink-600 to-indigo-600 bg-clip-text text-transparent">
+                Commandes Premium
+              </h1>
+              <p className="text-muted-foreground mt-1 flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-yellow-500" />
+                Gestion d'élite de vos commandes
+              </p>
+            </div>
+          </div>
         </div>
         
         <Dialog open={isDialogOpen} onOpenChange={(open) => {
@@ -484,27 +528,46 @@ export default function CommandesPage() {
           if (!open) resetForm();
         }}>
           <DialogTrigger asChild>
-            <Button className="w-full md:w-auto" size="lg">
-              <Plus className="mr-2 h-4 w-4" />
-              Nouvelle Commande/Réservation
+            <Button className="w-full md:w-auto bg-gradient-to-r from-purple-600 via-pink-600 to-indigo-600 hover:from-purple-700 hover:via-pink-700 hover:to-indigo-700 text-white shadow-2xl hover:shadow-purple-500/50 border-0" size="lg">
+              <Zap className="mr-2 h-5 w-5" />
+              Nouvelle Commande Elite
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-white via-purple-50/30 to-indigo-50/30 dark:from-gray-900 dark:via-purple-900/20 dark:to-indigo-900/20 backdrop-blur-xl border-2 border-purple-200/50 dark:border-purple-700/50 shadow-2xl">
-            <DialogHeader className="border-b border-purple-200 dark:border-purple-800 pb-4">
-              <DialogTitle className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-purple-600 via-violet-600 to-indigo-600 bg-clip-text text-transparent">
-                {editingCommande ? '✨ Modifier' : '🎯 Nouvelle'} Commande Premium
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-white via-purple-50/40 to-pink-50/40 dark:from-gray-900 dark:via-purple-900/30 dark:to-pink-900/30 backdrop-blur-2xl border-2 border-purple-300/50 dark:border-purple-600/50 shadow-[0_20px_70px_rgba(168,85,247,0.4)]">
+            <DialogHeader className="border-b-2 border-gradient-to-r from-purple-300 via-pink-300 to-indigo-300 dark:from-purple-700 dark:via-pink-700 dark:to-indigo-700 pb-6">
+              <div className="flex items-center justify-center gap-3 mb-2">
+                <Crown className="h-8 w-8 text-yellow-500 animate-pulse" />
+                <Sparkles className="h-6 w-6 text-pink-500" />
+              </div>
+              <DialogTitle className="text-2xl md:text-3xl font-black bg-gradient-to-r from-purple-600 via-pink-600 to-indigo-600 bg-clip-text text-transparent text-center">
+                {editingCommande ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <Edit className="h-6 w-6 text-purple-600" />
+                    Modifier Commande Premium
+                  </span>
+                ) : (
+                  <span className="flex items-center justify-center gap-2">
+                    <Gift className="h-6 w-6 text-pink-600" />
+                    Nouvelle Commande Elite
+                  </span>
+                )}
               </DialogTitle>
-              <DialogDescription className="text-base text-muted-foreground mt-2">
-                Remplissez tous les champs pour créer votre commande d'élite
+              <DialogDescription className="text-base text-muted-foreground mt-3 text-center font-medium">
+                ✨ Créez une expérience d'achat exclusive et luxueuse ✨
               </DialogDescription>
             </DialogHeader>
             
             <form onSubmit={handleSubmit} className="space-y-6 mt-6">
-              {/* Section Client */}
-              <div className="space-y-4 p-5 rounded-xl bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-blue-900/20 dark:via-indigo-900/20 dark:to-purple-900/20 border-2 border-blue-200 dark:border-blue-800 shadow-lg">
-                <h3 className="font-bold text-xl flex items-center gap-2 text-blue-700 dark:text-blue-300">
-                  <span className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 flex items-center justify-center text-white text-sm">1</span>
-                  Informations Client
+              {/* Section Client Premium */}
+              <div className="space-y-4 p-6 rounded-2xl bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-blue-900/30 dark:via-indigo-900/30 dark:to-purple-900/30 border-2 border-blue-300 dark:border-blue-700 shadow-[0_8px_30px_rgba(59,130,246,0.3)]">
+                <h3 className="font-black text-xl flex items-center gap-3 text-blue-700 dark:text-blue-300">
+                  <span className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 flex items-center justify-center text-white text-sm shadow-lg">
+                    <Crown className="h-5 w-5" />
+                  </span>
+                  <span className="flex items-center gap-2">
+                    Client Premium
+                    <Star className="h-5 w-5 text-yellow-500" />
+                  </span>
                 </h3>
                 
                 <div className="relative">
@@ -572,11 +635,16 @@ export default function CommandesPage() {
                 </div>
               </div>
 
-              {/* Section Produit */}
-              <div className="space-y-4 p-5 rounded-xl bg-gradient-to-br from-purple-50 via-pink-50 to-rose-50 dark:from-purple-900/20 dark:via-pink-900/20 dark:to-rose-900/20 border-2 border-purple-200 dark:border-purple-800 shadow-lg">
-                <h3 className="font-bold text-xl flex items-center gap-2 text-purple-700 dark:text-purple-300">
-                  <span className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center text-white text-sm">2</span>
-                  Informations Produit
+              {/* Section Produit Premium */}
+              <div className="space-y-4 p-6 rounded-2xl bg-gradient-to-br from-purple-50 via-pink-50 to-rose-50 dark:from-purple-900/30 dark:via-pink-900/30 dark:to-rose-900/30 border-2 border-purple-300 dark:border-purple-700 shadow-[0_8px_30px_rgba(168,85,247,0.3)]">
+                <h3 className="font-black text-xl flex items-center gap-3 text-purple-700 dark:text-purple-300">
+                  <span className="w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center text-white text-sm shadow-lg">
+                    <Diamond className="h-5 w-5" />
+                  </span>
+                  <span className="flex items-center gap-2">
+                    Produit Luxe
+                    <Sparkles className="h-5 w-5 text-pink-500" />
+                  </span>
                 </h3>
                 
                 <div className="relative">
@@ -673,17 +741,19 @@ export default function CommandesPage() {
                   <Button
                     type="button"
                     onClick={handleAddProduit}
-                    className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-lg"
+                    className="bg-gradient-to-r from-purple-600 via-pink-600 to-indigo-600 hover:from-purple-700 hover:via-pink-700 hover:to-indigo-700 text-white shadow-2xl hover:shadow-purple-500/50 transform hover:-translate-y-1 transition-all duration-300 rounded-xl font-bold"
                   >
                     {editingProductIndex !== null ? (
                       <>
-                        <Edit className="mr-2 h-4 w-4" />
-                        Modifier ce produit
+                        <Edit className="mr-2 h-5 w-5" />
+                        Modifier Produit Elite
+                        <Sparkles className="ml-2 h-5 w-5" />
                       </>
                     ) : (
                       <>
-                        <Plus className="mr-2 h-4 w-4" />
-                        Ajouter ce produit
+                        <Plus className="mr-2 h-5 w-5" />
+                        Ajouter Produit Luxe
+                        <Diamond className="ml-2 h-5 w-5" />
                       </>
                     )}
                   </Button>
@@ -725,20 +795,20 @@ export default function CommandesPage() {
                               variant="ghost"
                               size="sm"
                               onClick={() => handleEditProduit(index)}
-                              className="hover:bg-purple-100 dark:hover:bg-purple-900/20"
+                              className="hover:bg-gradient-to-r hover:from-green-100 hover:to-emerald-100 dark:hover:from-green-900/30 dark:hover:to-emerald-900/30 rounded-xl transition-all duration-300"
                               title="Modifier ce produit"
                             >
-                              <Edit className="h-4 w-4 text-green-500" />
+                              <Edit className="h-5 w-5 text-green-600 dark:text-green-400" />
                             </Button>
                             <Button
                               type="button"
                               variant="ghost"
                               size="sm"
                               onClick={() => handleRemoveProduit(index)}
-                              className="hover:bg-red-100 dark:hover:bg-red-900/20"
+                              className="hover:bg-gradient-to-r hover:from-red-100 hover:to-rose-100 dark:hover:from-red-900/30 dark:hover:to-rose-900/30 rounded-xl transition-all duration-300"
                               title="Supprimer ce produit"
                             >
-                              <Trash2 className="h-9 w-9 text-red-500" />
+                              <Trash2 className="h-5 w-5 text-red-600 dark:text-red-400" />
                             </Button>
                           </div>
                         </div>
@@ -751,11 +821,16 @@ export default function CommandesPage() {
                 )}
               </div>
 
-              {/* Section Détails */}
-              <div className="space-y-4 p-5 rounded-xl bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 dark:from-amber-900/20 dark:via-orange-900/20 dark:to-yellow-900/20 border-2 border-amber-200 dark:border-amber-800 shadow-lg">
-                <h3 className="font-bold text-xl flex items-center gap-2 text-amber-700 dark:text-amber-300">
-                  <span className="w-8 h-8 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 flex items-center justify-center text-white text-sm">3</span>
-                  Détails de la Commande
+              {/* Section Détails Premium */}
+              <div className="space-y-4 p-6 rounded-2xl bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 dark:from-amber-900/30 dark:via-orange-900/30 dark:to-yellow-900/30 border-2 border-amber-300 dark:border-amber-700 shadow-[0_8px_30px_rgba(251,146,60,0.3)]">
+                <h3 className="font-black text-xl flex items-center gap-3 text-amber-700 dark:text-amber-300">
+                  <span className="w-10 h-10 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 flex items-center justify-center text-white text-sm shadow-lg">
+                    <Award className="h-5 w-5" />
+                  </span>
+                  <span className="flex items-center gap-2">
+                    Détails Elite
+                    <Zap className="h-5 w-5 text-orange-500" />
+                  </span>
                 </h3>
                 
                 <div>
@@ -806,23 +881,46 @@ export default function CommandesPage() {
 
               <Button 
                 type="submit" 
-                className="w-full h-14 text-lg font-bold bg-gradient-to-r from-purple-600 via-violet-600 to-indigo-600 hover:from-purple-700 hover:via-violet-700 hover:to-indigo-700 text-white shadow-2xl hover:shadow-purple-500/50 transform hover:-translate-y-1 transition-all duration-300 rounded-xl" 
+                className="w-full h-16 text-xl font-black bg-gradient-to-r from-purple-600 via-pink-600 to-indigo-600 hover:from-purple-700 hover:via-pink-700 hover:to-indigo-700 text-white shadow-[0_20px_60px_rgba(168,85,247,0.5)] hover:shadow-[0_20px_70px_rgba(236,72,153,0.6)] transform hover:-translate-y-2 hover:scale-105 transition-all duration-500 rounded-2xl border-2 border-white/20" 
                 disabled={!isFormValid()}
               >
-                {editingCommande ? '✅ Modifier la Commande' : '✨ Créer la Commande Premium'}
+                <span className="flex items-center justify-center gap-3">
+                  {editingCommande ? (
+                    <>
+                      <Edit className="h-6 w-6" />
+                      Modifier la Commande Elite
+                      <Sparkles className="h-6 w-6" />
+                    </>
+                  ) : (
+                    <>
+                      <Crown className="h-6 w-6 animate-pulse" />
+                      Créer Commande Premium
+                      <Star className="h-6 w-6" />
+                    </>
+                  )}
+                </span>
               </Button>
             </form>
           </DialogContent>
         </Dialog>
       </div>
 
-      <Card className="border-0 shadow-2xl bg-gradient-to-br from-background via-background/95 to-primary/10 dark:from-background dark:via-background/95 dark:to-primary/20 rounded-2xl overflow-hidden">
-        <CardHeader className="border-b border-border/40 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent">
-          <CardTitle className="flex items-center gap-3 text-xl md:text-2xl font-bold tracking-tight">
-            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary shadow-md">
-              <Package className="h-5 w-5" />
+      <Card className="border-2 border-purple-200/50 dark:border-purple-700/50 shadow-[0_20px_70px_rgba(168,85,247,0.3)] bg-gradient-to-br from-white via-purple-50/20 to-pink-50/20 dark:from-gray-900 dark:via-purple-900/10 dark:to-pink-900/10 rounded-3xl overflow-hidden backdrop-blur-sm">
+        <CardHeader className="border-b-2 border-gradient-to-r from-purple-300 via-pink-300 to-indigo-300 dark:from-purple-700 dark:via-pink-700 dark:to-indigo-700 bg-gradient-to-r from-purple-50/50 via-pink-50/50 to-indigo-50/50 dark:from-purple-900/20 dark:via-pink-900/20 dark:to-indigo-900/20 pb-6">
+          <CardTitle className="flex items-center gap-4 text-xl md:text-2xl font-black tracking-tight">
+            <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-purple-500 via-pink-500 to-indigo-500 text-white shadow-2xl">
+              <Gift className="h-7 w-7" />
             </span>
-            <span>Liste des Commandes et Réservations</span>
+            <div className="flex flex-col">
+              <span className="bg-gradient-to-r from-purple-600 via-pink-600 to-indigo-600 bg-clip-text text-transparent">
+                Liste des Commandes Premium
+              </span>
+              <span className="text-sm font-medium text-muted-foreground flex items-center gap-2 mt-1">
+                <Sparkles className="h-4 w-4 text-yellow-500" />
+                Expérience de luxe
+              </span>
+            </div>
+            {/* <span>Liste des Commandes et Réservations</span> */}
           </CardTitle>
           <CardDescription className="mt-1 text-sm md:text-base text-muted-foreground">
             Total: {commandes.length} {commandes.length > 1 ? 'commandes' : 'commande'}
@@ -937,17 +1035,19 @@ export default function CommandesPage() {
                           variant="ghost"
                           size="sm"
                           onClick={() => handleEdit(commande)}
-                          className="hover:bg-primary/10"
+                          className="hover:bg-gradient-to-r hover:from-green-100 hover:to-emerald-100 dark:hover:from-green-900/30 dark:hover:to-emerald-900/30 rounded-xl transition-all duration-300"
+                          title="Modifier"
                         >
-                          <Edit className="h-4 w-4 text-green-500" />
+                          <Edit className="h-5 w-5 text-green-600 dark:text-green-400" />
                         </Button>
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => setDeleteId(commande.id)}
-                          className="hover:bg-destructive/10"
+                          className="hover:bg-gradient-to-r hover:from-red-100 hover:to-rose-100 dark:hover:from-red-900/30 dark:hover:to-rose-900/30 rounded-xl transition-all duration-300"
+                          title="Supprimer"
                         >
-                          <Trash2 className="h-4 w-4 text-destructive" />
+                          <Trash2 className="h-5 w-5 text-red-600 dark:text-red-400" />
                         </Button>
                       </div>
                     </ModernTableCell>
