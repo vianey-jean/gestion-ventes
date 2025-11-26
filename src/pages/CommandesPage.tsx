@@ -999,6 +999,12 @@ export default function CommandesPage() {
                           </div>
                         </div>
                       ))}
+                      {/* Prix total en gras et rouge */}
+                      <div className="mt-3 pt-3 border-t-2 border-red-300 dark:border-red-700">
+                        <div className="text-base font-black text-red-600 dark:text-red-500">
+                          Prix Total: {commande.produits.reduce((sum, p) => sum + (p.prixVente * p.quantite), 0).toFixed(2)}€
+                        </div>
+                      </div>
                     </ModernTableCell>
                     <ModernTableCell className="align-top">
                       <Badge
