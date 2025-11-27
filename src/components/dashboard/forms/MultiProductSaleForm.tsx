@@ -14,6 +14,7 @@ import ClientSearchInput from '../ClientSearchInput';
 import { calculateSaleProfit } from './utils/saleCalculations';
 import ConfirmDeleteDialog from './ConfirmDeleteDialog';
 import AdvancePaymentModal from './AdvancePaymentModal';
+import PretProduitFromSaleModal from './PretProduitFromSaleModal';
 import axios from 'axios';
 
 interface MultiProductSaleFormProps {
@@ -32,8 +33,10 @@ interface FormProduct {
   selectedProduct: Product | null;
   maxQuantity: number;
   isAdvanceProduct: boolean;
+  isPretProduit: boolean;
   deliveryLocation: string;
   deliveryFee: string;
+  avancePretProduit: string;
 }
 
 const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onClose, editSale }) => {
@@ -54,8 +57,10 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
     selectedProduct: null,
     maxQuantity: 0,
     isAdvanceProduct: false,
+    isPretProduit: false,
     deliveryLocation: 'Saint-Denis',
-    deliveryFee: '0'
+    deliveryFee: '0',
+    avancePretProduit: ''
   }]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -70,6 +75,10 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
   // États pour la modale de paiement d'avance sur prêts existants
   const [advancePaymentModalOpen, setAdvancePaymentModalOpen] = useState(false);
   const [currentAdvanceProductIndex, setCurrentAdvanceProductIndex] = useState<number | null>(null);
+  
+  // États pour la modale de création de prêt produit
+  const [pretProduitModalOpen, setPretProduitModalOpen] = useState(false);
+  const [currentPretProductIndex, setCurrentPretProductIndex] = useState<number | null>(null);
 
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:10000';
 
@@ -125,6 +134,9 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
               const purchasePriceUnit = isAdvance ? saleProduct.purchasePrice : (saleProduct.purchasePrice / saleProduct.quantitySold);
               const sellingPriceUnit = isAdvance ? saleProduct.sellingPrice : (saleProduct.sellingPrice / saleProduct.quantitySold);
               
+              const isPret = saleProduct.description.toLowerCase().includes('prêt') || 
+                             saleProduct.description.toLowerCase().includes('pret');
+              
               return {
                 productId: saleProduct.productId,
                 description: saleProduct.description,
@@ -135,8 +147,10 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
                 selectedProduct: product || null,
                 maxQuantity: product ? (product.quantity || 0) + saleProduct.quantitySold : 0,
                 isAdvanceProduct: isAdvance,
+                isPretProduit: isPret,
                 deliveryLocation: saleProduct.deliveryLocation || 'Saint-Denis',
-                deliveryFee: (saleProduct.deliveryFee || 0).toString()
+                deliveryFee: (saleProduct.deliveryFee || 0).toString(),
+                avancePretProduit: isPret && saleProduct.sellingPrice > 0 ? saleProduct.sellingPrice.toString() : ''
               };
             });
             setFormProducts(loadedProducts);
@@ -157,8 +171,10 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
             selectedProduct: null,
             maxQuantity: 0,
             isAdvanceProduct: false,
+            isPretProduit: false,
             deliveryLocation: 'Saint-Denis',
-            deliveryFee: '0'
+            deliveryFee: '0',
+            avancePretProduit: ''
           }]);
           // Réinitialiser les champs avance
           setShowAdvanceSection(false);
@@ -196,8 +212,10 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
       selectedProduct: null,
       maxQuantity: 0,
       isAdvanceProduct: false,
+      isPretProduit: false,
       deliveryLocation: 'Saint-Denis',
-      deliveryFee: '0'
+      deliveryFee: '0',
+      avancePretProduit: ''
     }]);
   };
 
@@ -262,6 +280,17 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
     const purchasePriceUnit = product.purchasePrice;
     const suggestedSellingPrice = isAdvance ? '' : (product.purchasePrice * 1.2).toFixed(2);
 
+    // Vérifier si c'est "Prêt Produit" - nouveau comportement
+    const isPretProduit = product.description.toLowerCase().includes('prêt') || 
+                          product.description.toLowerCase().includes('pret');
+
+    if (isPretProduit) {
+      // Ouvrir la modale pour créer un nouveau prêt produit
+      setCurrentPretProductIndex(index);
+      setPretProduitModalOpen(true);
+      return;
+    }
+
     // Vérifier si c'est "Avance Perruque ou Tissages"
     const isAdvancePerruqueOuTissages = product.description.toLowerCase().includes('avance') && 
                                          (product.description.toLowerCase().includes('perruque') || 
@@ -282,6 +311,7 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
           selectedProduct: product,
           maxQuantity: productQuantity,
           isAdvanceProduct: true,
+          isPretProduit: false,
           purchasePriceUnit: purchasePriceUnit.toString(),
           sellingPriceUnit: '', // Sera rempli après la modale
           quantitySold: '0',
@@ -313,6 +343,7 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
         selectedProduct: product,
         maxQuantity: productQuantity,
         isAdvanceProduct: isAdvance,
+        isPretProduit: false,
         purchasePriceUnit: newPurchasePriceUnit,
         sellingPriceUnit: newSellingPriceUnit,
         quantitySold: newQuantity,
@@ -340,6 +371,37 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
       toast({
         title: 'Succès',
         description: `Avance de ${totalAdvance.toLocaleString('fr-FR')} € ajoutée au produit`,
+      });
+    }
+  };
+
+  // Gérer la création d'un prêt produit depuis la modale
+  const handlePretProduitCreated = (pretProduit: any, product: Product) => {
+    if (currentPretProductIndex !== null) {
+      setFormProducts(prev => {
+        const newProducts = [...prev];
+        newProducts[currentPretProductIndex] = {
+          ...newProducts[currentPretProductIndex],
+          productId: String(product.id),
+          description: `Prêt - ${pretProduit.description}`,
+          selectedProduct: product,
+          maxQuantity: product.quantity || 0,
+          isAdvanceProduct: false,
+          isPretProduit: true,
+          purchasePriceUnit: product.purchasePrice.toString(),
+          sellingPriceUnit: '',
+          quantitySold: '1',
+          profit: '0',
+          avancePretProduit: ''
+        };
+        return newProducts;
+      });
+      
+      setCurrentPretProductIndex(null);
+      toast({
+        title: 'Succès',
+        description: `Prêt produit ajouté - veuillez entrer le prix de vente`,
+        className: "notification-success",
       });
     }
   };
@@ -497,11 +559,22 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
         const sellingPriceUnit = Number(product.sellingPriceUnit);
         const deliveryFee = Number(product.deliveryFee || 0);
         
+        // Détecter automatiquement si c'est un prêt produit
+        const isPretProduit = product.isPretProduit || 
+                              product.description.toLowerCase().includes('prêt') || 
+                              product.description.toLowerCase().includes('pret');
+        
         let purchasePrice, sellingPrice;
         
         if (product.isAdvanceProduct) {
           purchasePrice = purchasePriceUnit;
           sellingPrice = sellingPriceUnit;
+        } else if (isPretProduit) {
+          // Pour les prêts produits, sellingPrice = avance si rempli, sinon 0
+          purchasePrice = purchasePriceUnit * quantity;
+          // Si avance est vide ou 0, sellingPrice = 0, sinon sellingPrice = montant avance
+          const avanceValue = product.avancePretProduit?.trim();
+          sellingPrice = avanceValue && Number(avanceValue) > 0 ? Number(avanceValue) : 0;
         } else {
           purchasePrice = purchasePriceUnit * quantity;
           sellingPrice = sellingPriceUnit * quantity;
@@ -824,6 +897,35 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
                     showAvailableStock={!product.isAdvanceProduct}
                   />
 
+                  {/* Avance (visible uniquement pour les prêts produits) */}
+                  {product.isPretProduit && (
+                    <div className="space-y-2">
+                      <Label>Avance (€)</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={product.avancePretProduit}
+                        onChange={(e) => {
+                          const avanceValue = e.target.value;
+                          setFormProducts(prev => {
+                            const newProducts = [...prev];
+                            newProducts[index] = {
+                              ...newProducts[index],
+                              avancePretProduit: avanceValue
+                            };
+                            return newProducts;
+                          });
+                        }}
+                        placeholder="Montant de l'avance"
+                        disabled={isSubmitting}
+                      />
+                      <p className="text-xs text-gray-500">
+                        Facultatif - Si vide, le prix de vente sera 0
+                      </p>
+                    </div>
+                  )}
+
                   {/* Frais de livraison */}
                   <div className="space-y-2 col-span-2">
                     <Label>Frais de livraison</Label>
@@ -1117,6 +1219,16 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
       setCurrentAdvanceProductIndex(null);
     }}
     onConfirm={handleAdvancePaymentConfirm}
+  />
+
+  {/* Modale de création de prêt produit */}
+  <PretProduitFromSaleModal
+    isOpen={pretProduitModalOpen}
+    onClose={() => {
+      setPretProduitModalOpen(false);
+      setCurrentPretProductIndex(null);
+    }}
+    onPretCreated={handlePretProduitCreated}
   />
 
   {/* Dialog de confirmation de suppression */}
