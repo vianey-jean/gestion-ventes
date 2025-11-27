@@ -103,10 +103,10 @@ export default function CommandesPage() {
 
   // Filtrer et trier les commandes selon la recherche
   const filteredCommandes = useMemo(() => {
-    // Si recherche active (3+ caractères), montrer TOUTES les commandes (même validées)
+    // Si recherche active (3+ caractères), montrer TOUTES les commandes (même validées/annulées)
     const commandesToFilter = commandeSearch.length >= 3 
       ? commandes 
-      : commandes.filter(c => c.statut !== 'valide');
+      : commandes.filter(c => c.statut !== 'valide' && c.statut !== 'annule');
     
     // Appliquer la recherche si >= 3 caractères
     let filtered = commandesToFilter;
@@ -463,10 +463,19 @@ export default function CommandesPage() {
     }
   };
 
-  const handleStatusChange = async (id: string, newStatus: 'en_route' | 'arrive' | 'en_attente' | 'valide') => {
+  // État pour la confirmation d'annulation
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
+
+  const handleStatusChange = async (id: string, newStatus: 'en_route' | 'arrive' | 'en_attente' | 'valide' | 'annule') => {
     // Si on passe à "valide", demander confirmation
     if (newStatus === 'valide') {
       setValidatingId(id);
+      return;
+    }
+    
+    // Si on passe à "annule", demander confirmation
+    if (newStatus === 'annule') {
+      setCancellingId(id);
       return;
     }
     
@@ -489,20 +498,116 @@ export default function CommandesPage() {
     }
   };
 
-  const confirmValidation = async () => {
-    if (!validatingId) return;
+  const confirmCancellation = async () => {
+    if (!cancellingId) return;
     
     try {
-      await api.put(`/api/commandes/${validatingId}`, { statut: 'valide' });
+      await api.put(`/api/commandes/${cancellingId}`, { statut: 'annule' });
       toast({
         title: 'Succès',
-        description: 'Commande validée avec succès',
+        description: 'Commande annulée avec succès',
         className: "bg-app-green text-white",
       });
       fetchCommandes();
+      setCancellingId(null);
+    } catch (error) {
+      console.error('Error cancelling:', error);
+      toast({
+        title: 'Erreur',
+        description: 'Impossible d\'annuler la commande',
+        className: "bg-app-red text-white",
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const confirmValidation = async () => {
+    if (!validatingId) return;
+    
+    // Trouver la commande à valider
+    const commandeToValidate = commandes.find(c => c.id === validatingId);
+    if (!commandeToValidate) return;
+    
+    try {
+      // 1. Mettre à jour le statut de la commande
+      await api.put(`/api/commandes/${validatingId}`, { statut: 'valide' });
+      
+      // 2. Enregistrer la vente dans sales.json
+      const today = new Date().toISOString().split('T')[0];
+      
+      // Créer ou trouver les produits et construire saleProducts
+      const saleProducts = [];
+      for (const p of commandeToValidate.produits) {
+        // Chercher le produit dans la liste existante
+        let product = products.find(prod => prod.description.toLowerCase() === p.nom.toLowerCase());
+        
+        // Si le produit n'existe pas, le créer
+        if (!product) {
+          const newProductResponse = await api.post('/api/products', {
+            description: p.nom,
+            purchasePrice: p.prixUnitaire,
+            quantity: 0 // Quantité 0 car c'est une commande/réservation
+          });
+          product = newProductResponse.data;
+        }
+        
+        // Dans sales.json, on enregistre les prix TOTAUX (comme le formulaire de ventes) :
+        // - purchasePrice = prixUnitaire * quantite (prix total d'achat)
+        // - sellingPrice = prixVente * quantite (prix total de vente)
+        // - quantitySold = quantite
+        // - profit = (prixVente - prixUnitaire) * quantite
+        const productProfit = (p.prixVente - p.prixUnitaire) * p.quantite;
+        const totalPurchasePrice = p.prixUnitaire * p.quantite;
+        const totalSellingPrice = p.prixVente * p.quantite;
+        
+        // Ajouter le produit au format attendu par l'API
+        saleProducts.push({
+          productId: product.id,
+          description: p.nom,
+          quantitySold: p.quantite,
+          purchasePrice: totalPurchasePrice,  // Prix TOTAL d'achat (prixUnitaire * quantite)
+          sellingPrice: totalSellingPrice,    // Prix TOTAL de vente (prixVente * quantite)
+          profit: productProfit,              // Profit = (prixVente - prixUnitaire) * quantite
+          deliveryFee: 0,
+          deliveryLocation: "Saint-Denis"
+        });
+      }
+      
+      // Calculer les totaux pour sales.json :
+      // - totalPurchasePrice = somme de tous (prixUnitaire * quantité)
+      // - totalSellingPrice = somme de tous (prixVente * quantité)
+      // - totalProfit = totalSellingPrice - totalPurchasePrice
+      const totalPurchasePrice = commandeToValidate.produits.reduce((sum, p) => sum + (p.prixUnitaire * p.quantite), 0);
+      const totalSellingPrice = commandeToValidate.produits.reduce((sum, p) => sum + (p.prixVente * p.quantite), 0);
+      const totalProfit = totalSellingPrice - totalPurchasePrice;
+      
+      const saleData = {
+        date: today,
+        products: saleProducts,
+        totalPurchasePrice,   // Somme de (prixUnitaire * quantité) de tous les produits
+        totalSellingPrice,    // Somme de (prixVente * quantité) de tous les produits
+        totalProfit,          // totalSellingPrice - totalPurchasePrice
+        clientName: commandeToValidate.clientNom,
+        clientAddress: commandeToValidate.clientAddress,
+        clientPhone: commandeToValidate.clientPhone,
+        reste: 0,
+        nextPaymentDate: null
+      };
+      
+      console.log('✅ Validation commande - Données à enregistrer dans sales.json:', saleData);
+      await api.post('/api/sales', saleData);
+      
+      toast({
+        title: 'Succès',
+        description: 'Commande validée et enregistrée comme vente',
+        className: "bg-app-green text-white",
+      });
+      
+      // Rafraîchir les données
+      await Promise.all([fetchCommandes(), fetchProducts()]);
       setValidatingId(null);
     } catch (error) {
-      console.error('Error validating:', error);
+      console.error('❌ Error validating:', error);
       toast({
         title: 'Erreur',
         description: 'Impossible de valider la commande',
@@ -522,6 +627,8 @@ export default function CommandesPage() {
         return <Badge className="text-red-600 font-semibold">En attente</Badge>;
       case 'valide':
         return <Badge className="text-blue-600 font-semibold">Validé</Badge>;
+      case 'annule':
+        return <Badge className="text-gray-600 font-semibold">Annulé</Badge>;
       default:
         return <Badge>{statut}</Badge>;
     }
@@ -532,12 +639,14 @@ export default function CommandesPage() {
       return [
         { value: 'en_route', label: 'En route' },
         { value: 'arrive', label: 'Arrivé' },
-        { value: 'valide', label: 'Validé' }
+        { value: 'valide', label: 'Validé' },
+        { value: 'annule', label: 'Annulé' }
       ];
     } else {
       return [
         { value: 'en_attente', label: 'En attente' },
-        { value: 'valide', label: 'Validé' }
+        { value: 'valide', label: 'Validé' },
+        { value: 'annule', label: 'Annulé' }
       ];
     }
   };
@@ -1022,7 +1131,7 @@ export default function CommandesPage() {
             Total: {filteredCommandes.length} {filteredCommandes.length > 1 ? 'commandes' : 'commande'}
             {commandeSearch.length >= 3 && (
               <span className="ml-2 text-purple-600 dark:text-purple-400 font-semibold">
-                (sur {commandes.filter(c => c.statut !== 'valide').length} non validées)
+                (sur {commandes.filter(c => c.statut !== 'valide' && c.statut !== 'annule').length} actives)
               </span>
             )}
           </CardDescription>
@@ -1143,6 +1252,7 @@ export default function CommandesPage() {
                                 option.value === 'arrive' ? 'text-green-600 font-semibold' :
                                 option.value === 'en_attente' ? 'text-red-600 font-semibold' :
                                 option.value === 'valide' ? 'text-blue-600 font-semibold' :
+                                option.value === 'annule' ? 'text-gray-600 font-semibold' :
                                 ''
                               }
                             >
@@ -1212,6 +1322,25 @@ export default function CommandesPage() {
             <AlertDialogCancel>Annuler</AlertDialogCancel>
             <AlertDialogAction onClick={() => deleteId && handleDelete(deleteId)}>
               Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Dialog confirmation annulation */}
+      <AlertDialog open={!!cancellingId} onOpenChange={(open) => !open && setCancellingId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmer l'annulation</AlertDialogTitle>
+            <AlertDialogDescription>
+              Êtes-vous sûr de vouloir annuler cette commande/réservation ? 
+              Elle sera retirée de la liste mais conservée dans la base de données.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Retour</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmCancellation} className="bg-gray-600 hover:bg-gray-700">
+              Annuler la commande
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
