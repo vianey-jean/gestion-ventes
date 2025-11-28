@@ -50,6 +50,7 @@ export default function CommandesPage() {
   const [prixVente, setPrixVente] = useState('');
   const [dateArrivagePrevue, setDateArrivagePrevue] = useState('');
   const [dateEcheance, setDateEcheance] = useState('');
+  const [horaire, setHoraire] = useState('');
   
   // Liste des produits ajoutés au panier
   const [produitsListe, setProduitsListe] = useState<CommandeProduit[]>([]);
@@ -251,6 +252,7 @@ export default function CommandesPage() {
     setPrixVente('');
     setDateArrivagePrevue('');
     setDateEcheance('');
+    setHoraire('');
     setType('commande');
     setClientSearch('');
     setProductSearch('');
@@ -371,6 +373,10 @@ export default function CommandesPage() {
     } else {
       commandeData.dateEcheance = dateEcheance;
     }
+    
+    if (horaire) {
+      commandeData.horaire = horaire;
+    }
 
     try {
       // Créer le client s'il n'existe pas
@@ -438,6 +444,7 @@ export default function CommandesPage() {
     
     setDateArrivagePrevue(commande.dateArrivagePrevue || '');
     setDateEcheance(commande.dateEcheance || '');
+    setHoraire(commande.horaire || '');
     setClientSearch(commande.clientNom);
     setIsDialogOpen(true);
   };
@@ -1090,6 +1097,19 @@ export default function CommandesPage() {
                     />
                   </div>
                 )}
+                
+                <div>
+                  <Label htmlFor="horaire" className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">
+                    🕐 Horaire (facultatif)
+                  </Label>
+                  <Input
+                    id="horaire"
+                    type="time"
+                    value={horaire}
+                    onChange={(e) => setHoraire(e.target.value)}
+                    className="border-2 border-amber-300 dark:border-amber-700 focus:border-amber-500 dark:focus:border-amber-500 bg-white dark:bg-gray-900 shadow-sm"
+                  />
+                </div>
               </div>
 
               <Button 
@@ -1226,12 +1246,54 @@ export default function CommandesPage() {
                         <div>
                           <div className="text-xs text-muted-foreground">Arrivage:</div>
                           <div>{new Date(commande.dateArrivagePrevue || '').toLocaleDateString()}</div>
+                          {commande.horaire && (
+                            <div className="text-xs text-muted-foreground mt-1">
+                              Horaire: {commande.horaire}
+                            </div>
+                          )}
                         </div>
                       ) : (
-                        <div>
-                          <div className="text-xs text-muted-foreground">Échéance:</div>
-                          <div>{new Date(commande.dateEcheance || '').toLocaleDateString()}</div>
-                        </div>
+                        (() => {
+                          const echeance = new Date(commande.dateEcheance || '');
+                          const today = new Date();
+                          today.setHours(0, 0, 0, 0);
+                          const echeanceDate = new Date(echeance);
+                          echeanceDate.setHours(0, 0, 0, 0);
+                          
+                          const diffTime = echeanceDate.getTime() - today.getTime();
+                          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                          
+                          // Si la date est dépassée (diffDays < 0), clignoter en rouge
+                          // Si la date est dans 2 jours ou moins (0 <= diffDays <= 2), clignoter en vert
+                          const isOverdue = diffDays < 0;
+                          const isNearDeadline = diffDays >= 0 && diffDays <= 2;
+                          
+                          return (
+                            <div>
+                              <div className="text-xs text-muted-foreground">Échéance:</div>
+                              <div className={
+                                isOverdue 
+                                  ? "animate-pulse text-red-600 dark:text-red-500 font-bold"
+                                  : isNearDeadline 
+                                  ? "animate-pulse text-green-600 dark:text-green-500 font-bold"
+                                  : ""
+                              }>
+                                {echeance.toLocaleDateString()}
+                              </div>
+                              {commande.horaire && (
+                                <div className={`text-xs mt-1 ${
+                                  isOverdue 
+                                    ? "animate-pulse text-red-600 dark:text-red-500 font-semibold"
+                                    : isNearDeadline 
+                                    ? "animate-pulse text-green-600 dark:text-green-500 font-semibold"
+                                    : "text-muted-foreground"
+                                }`}>
+                                  Horaire: {commande.horaire}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })()
                       )}
                     </ModernTableCell>
                     <ModernTableCell className="align-top">
