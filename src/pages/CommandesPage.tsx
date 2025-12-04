@@ -7,7 +7,9 @@ import { ModernTable, ModernTableHeader, ModernTableRow, ModernTableHead, Modern
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
-import { Package, Plus, Trash2, Edit, ShoppingCart, TrendingUp, Sparkles, Crown, Star, Gift, Award, Zap, Diamond, ArrowUp, ArrowDown } from 'lucide-react';
+import { Package, Plus, Trash2, Edit, ShoppingCart, TrendingUp, Sparkles, Crown, Star, Gift, Award, Zap, Diamond, ArrowUp, ArrowDown, Printer, Calendar } from 'lucide-react';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import { Commande, CommandeProduit } from '@/types/commande';
 import api from '@/service/api';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -72,6 +74,10 @@ export default function CommandesPage() {
   
   // État pour la confirmation de validation
   const [validatingId, setValidatingId] = useState<string | null>(null);
+  
+  // État pour l'export PDF
+  const [exportDialogOpen, setExportDialogOpen] = useState(false);
+  const [exportDate, setExportDate] = useState('');
 
   useEffect(() => {
     const loadData = async () => {
@@ -120,18 +126,28 @@ export default function CommandesPage() {
       );
     }
     
-    // Trier par date (échéance ou arrivage)
+    // Trier par date (échéance ou arrivage) puis par horaire
     return [...filtered].sort((a, b) => {
-      const dateA = new Date(a.type === 'commande' ? a.dateArrivagePrevue || '' : a.dateEcheance || '');
-      const dateB = new Date(b.type === 'commande' ? b.dateArrivagePrevue || '' : b.dateEcheance || '');
+      const dateStrA = a.type === 'commande' ? a.dateArrivagePrevue || '' : a.dateEcheance || '';
+      const dateStrB = b.type === 'commande' ? b.dateArrivagePrevue || '' : b.dateEcheance || '';
+      const dateA = new Date(dateStrA);
+      const dateB = new Date(dateStrB);
       
-      if (sortDateAsc) {
-        // Du plus proche au plus loin
-        return dateA.getTime() - dateB.getTime();
-      } else {
-        // Du plus loin au plus proche
-        return dateB.getTime() - dateA.getTime();
+      // Comparer d'abord par date
+      const dateDiff = sortDateAsc 
+        ? dateA.getTime() - dateB.getTime()
+        : dateB.getTime() - dateA.getTime();
+      
+      // Si même date, trier par horaire
+      if (dateDiff === 0) {
+        const horaireA = a.horaire || '23:59';
+        const horaireB = b.horaire || '23:59';
+        return sortDateAsc 
+          ? horaireA.localeCompare(horaireB)
+          : horaireB.localeCompare(horaireA);
       }
+      
+      return dateDiff;
     });
   }, [commandes, commandeSearch, sortDateAsc]);
 
@@ -658,6 +674,107 @@ export default function CommandesPage() {
     }
   };
 
+  // Filtrer les commandes par date pour l'export
+  const commandesForExportDate = useMemo(() => {
+    if (!exportDate) return [];
+    return commandes.filter(c => {
+      const dateStr = c.type === 'commande' ? c.dateArrivagePrevue : c.dateEcheance;
+      return dateStr === exportDate;
+    }).sort((a, b) => {
+      const horaireA = a.horaire || '23:59';
+      const horaireB = b.horaire || '23:59';
+      return horaireA.localeCompare(horaireB);
+    });
+  }, [commandes, exportDate]);
+
+  // Export PDF
+  const handleExportPDF = () => {
+    if (commandesForExportDate.length === 0) {
+      toast({
+        title: 'Aucune donnée',
+        description: `Cette date: ${new Date(exportDate).toLocaleDateString('fr-FR')} n'a aucune réservation ou commande`,
+        className: "bg-app-red text-white",
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const doc = new jsPDF('portrait', 'mm', 'a4');
+    const dateFormatted = new Date(exportDate).toLocaleDateString('fr-FR', { 
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
+    });
+
+    // Titre
+    doc.setFontSize(18);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Commandes & Réservations', 105, 20, { align: 'center' });
+    
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Date: ${dateFormatted}`, 105, 28, { align: 'center' });
+    doc.text(`Total: ${commandesForExportDate.length} commande(s)/réservation(s)`, 105, 35, { align: 'center' });
+
+    // Préparer les données du tableau
+    const tableData = commandesForExportDate.map(c => {
+      const produits = c.produits.map(p => `${p.nom} (Qté: ${p.quantite})`).join('\n');
+      const prixDetail = c.produits.map(p => `${p.prixVente}€ x ${p.quantite}`).join('\n');
+      const total = c.produits.reduce((sum, p) => sum + (p.prixVente * p.quantite), 0).toFixed(2);
+      const dateEch = c.type === 'commande' 
+        ? new Date(c.dateArrivagePrevue || '').toLocaleDateString('fr-FR')
+        : new Date(c.dateEcheance || '').toLocaleDateString('fr-FR');
+      const horaire = c.horaire || '-';
+      
+      return [
+        `${c.clientNom}\n${c.clientAddress}`,
+        c.clientPhone,
+        produits,
+        `${prixDetail}\n\nTotal: ${total}€`,
+        `${dateEch}\n${horaire}`
+      ];
+    });
+
+    autoTable(doc, {
+      startY: 42,
+      head: [['Client', 'Contact', 'Produit', 'Prix', 'Date/Horaire']],
+      body: tableData,
+      styles: {
+        fontSize: 9,
+        cellPadding: 3,
+        overflow: 'linebreak',
+        valign: 'top'
+      },
+      headStyles: {
+        fillColor: [147, 51, 234],
+        textColor: 255,
+        fontStyle: 'bold',
+        halign: 'center'
+      },
+      columnStyles: {
+        0: { cellWidth: 45 },
+        1: { cellWidth: 25 },
+        2: { cellWidth: 45 },
+        3: { cellWidth: 35 },
+        4: { cellWidth: 30 }
+      },
+      alternateRowStyles: {
+        fillColor: [245, 243, 255]
+      }
+    });
+
+    // Télécharger
+    const fileName = `commandes_${exportDate}.pdf`;
+    doc.save(fileName);
+
+    toast({
+      title: 'Succès',
+      description: `L'exportation a été effectuée avec succès`,
+      className: "bg-app-green text-white",
+    });
+    
+    setExportDialogOpen(false);
+    setExportDate('');
+  };
+
   if (isLoading) {
     return (
       <Layout>
@@ -742,6 +859,70 @@ export default function CommandesPage() {
               </div>
             )}
           </div>
+          
+          {/* Bouton Imprimer */}
+          <Dialog open={exportDialogOpen} onOpenChange={(open) => {
+            setExportDialogOpen(open);
+            if (!open) setExportDate('');
+          }}>
+            <DialogTrigger asChild>
+              <Button className="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white shadow-lg" size="lg">
+                <Printer className="mr-2 h-5 w-5" />
+                Imprimer
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-md bg-gradient-to-br from-white via-blue-50/40 to-indigo-50/40 dark:from-gray-900 dark:via-blue-900/30 dark:to-indigo-900/30 backdrop-blur-2xl border-2 border-blue-300/50 dark:border-blue-600/50">
+              <DialogHeader>
+                <DialogTitle className="text-xl font-bold flex items-center gap-2">
+                  <Calendar className="h-5 w-5 text-blue-600" />
+                  Exporter les commandes
+                </DialogTitle>
+                <DialogDescription>
+                  Sélectionnez une date pour exporter les commandes/réservations en PDF
+                </DialogDescription>
+              </DialogHeader>
+              
+              <div className="space-y-4 mt-4">
+                <div>
+                  <Label htmlFor="exportDate" className="text-sm font-semibold mb-2 block">
+                    📅 Date à exporter
+                  </Label>
+                  <Input
+                    id="exportDate"
+                    type="date"
+                    value={exportDate}
+                    onChange={(e) => setExportDate(e.target.value)}
+                    className="border-2 border-blue-300 dark:border-blue-700 focus:border-blue-500"
+                  />
+                </div>
+                
+                {exportDate && (
+                  <div className="p-4 rounded-lg bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700">
+                    <p className="text-sm">
+                      <span className="font-semibold">Date sélectionnée:</span>{' '}
+                      {new Date(exportDate).toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                    </p>
+                    <p className="text-sm mt-2">
+                      <span className="font-semibold">Nombre de commandes/réservations:</span>{' '}
+                      <span className={commandesForExportDate.length > 0 ? "text-green-600 font-bold" : "text-red-600 font-bold"}>
+                        {commandesForExportDate.length}
+                      </span>
+                    </p>
+                  </div>
+                )}
+                
+                {exportDate && commandesForExportDate.length > 0 && (
+                  <Button 
+                    onClick={handleExportPDF}
+                    className="w-full bg-green-600 hover:bg-green-700 text-white"
+                  >
+                    <Printer className="mr-2 h-4 w-4" />
+                    Exporter en PDF
+                  </Button>
+                )}
+              </div>
+            </DialogContent>
+          </Dialog>
           
           <Dialog open={isDialogOpen} onOpenChange={(open) => {
             setIsDialogOpen(open);
