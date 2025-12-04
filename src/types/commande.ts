@@ -13,6 +13,7 @@ export interface Commande {
   notificationEnvoyee?: boolean;
   createdAt?: string;
   updatedAt?: string;
+  saleId?: string; // ID de la vente liée quand statut = 'valide'
 }
 
 export interface CommandeProduit {

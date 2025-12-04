@@ -304,10 +304,39 @@ export default function CommandesPage() {
       return;
     }
 
+    const quantiteInt = parseInt(quantite);
+    
+    // Vérifier si le produit existe dans products.json
+    const existingProduct = products.find(p => p.description.toLowerCase() === produitNom.toLowerCase());
+    
+    if (existingProduct) {
+      // Vérifier que la quantité en stock est supérieure à 0
+      if (existingProduct.quantity <= 0) {
+        toast({
+          title: 'Stock insuffisant',
+          description: `${produitNom} n'a plus de stock disponible (stock: ${existingProduct.quantity})`,
+          className: "bg-app-red text-white",
+          variant: 'destructive',
+        });
+        return;
+      }
+      
+      // Vérifier que la quantité demandée ne dépasse pas le stock disponible
+      if (quantiteInt > existingProduct.quantity) {
+        toast({
+          title: 'Quantité insuffisante',
+          description: `Stock disponible pour ${produitNom}: ${existingProduct.quantity} unités`,
+          className: "bg-app-red text-white",
+          variant: 'destructive',
+        });
+        return;
+      }
+    }
+
     const nouveauProduit: CommandeProduit = {
       nom: produitNom,
       prixUnitaire: parseFloat(prixUnitaire),
-      quantite: parseInt(quantite),
+      quantite: quantiteInt,
       prixVente: parseFloat(prixVente),
     };
 
@@ -502,6 +531,10 @@ export default function CommandesPage() {
   const [cancellingId, setCancellingId] = useState<string | null>(null);
 
   const handleStatusChange = async (id: string, newStatus: 'en_route' | 'arrive' | 'en_attente' | 'valide' | 'annule') => {
+    // Trouver la commande concernée
+    const commande = commandes.find(c => c.id === id);
+    if (!commande) return;
+    
     // Si on passe à "valide", demander confirmation
     if (newStatus === 'valide') {
       setValidatingId(id);
@@ -512,6 +545,37 @@ export default function CommandesPage() {
     if (newStatus === 'annule') {
       setCancellingId(id);
       return;
+    }
+    
+    // Si la commande était "valide" et on change vers un autre statut (sauf annule qui a sa propre confirmation)
+    // => Supprimer la vente dans sales.json et restaurer la quantité
+    if (commande.statut === 'valide' && commande.saleId) {
+      try {
+        // Supprimer la vente (le backend restaure automatiquement la quantité)
+        await api.delete(`/api/sales/${commande.saleId}`);
+        console.log('✅ Vente supprimée de sales.json, quantité restaurée');
+        
+        // Mettre à jour le statut et supprimer le saleId
+        await api.put(`/api/commandes/${id}`, { statut: newStatus, saleId: null });
+        
+        toast({
+          title: 'Succès',
+          description: 'Statut mis à jour et vente annulée',
+          className: "bg-app-green text-white",
+        });
+        
+        await Promise.all([fetchCommandes(), fetchProducts()]);
+        return;
+      } catch (error) {
+        console.error('Error reverting validation:', error);
+        toast({
+          title: 'Erreur',
+          description: 'Impossible de mettre à jour le statut',
+          className: "bg-app-red text-white",
+          variant: 'destructive',
+        });
+        return;
+      }
     }
     
     try {
@@ -536,14 +600,23 @@ export default function CommandesPage() {
   const confirmCancellation = async () => {
     if (!cancellingId) return;
     
+    // Trouver la commande concernée
+    const commande = commandes.find(c => c.id === cancellingId);
+    
     try {
-      await api.put(`/api/commandes/${cancellingId}`, { statut: 'annule' });
+      // Si la commande était validée, supprimer la vente d'abord
+      if (commande && commande.statut === 'valide' && commande.saleId) {
+        await api.delete(`/api/sales/${commande.saleId}`);
+        console.log('✅ Vente supprimée de sales.json lors de l\'annulation');
+      }
+      
+      await api.put(`/api/commandes/${cancellingId}`, { statut: 'annule', saleId: null });
       toast({
         title: 'Succès',
         description: 'Commande annulée avec succès',
         className: "bg-app-green text-white",
       });
-      fetchCommandes();
+      await Promise.all([fetchCommandes(), fetchProducts()]);
       setCancellingId(null);
     } catch (error) {
       console.error('Error cancelling:', error);
@@ -564,8 +637,19 @@ export default function CommandesPage() {
     if (!commandeToValidate) return;
     
     try {
-      // 1. Mettre à jour le statut de la commande
-      await api.put(`/api/commandes/${validatingId}`, { statut: 'valide' });
+      // 1. Vérifier que tous les produits ont un stock suffisant
+      for (const p of commandeToValidate.produits) {
+        const existingProduct = products.find(prod => prod.description.toLowerCase() === p.nom.toLowerCase());
+        if (existingProduct && existingProduct.quantity < p.quantite) {
+          toast({
+            title: 'Stock insuffisant',
+            description: `Stock disponible pour ${p.nom}: ${existingProduct.quantity} unités (demandé: ${p.quantite})`,
+            className: "bg-app-red text-white",
+            variant: 'destructive',
+          });
+          return;
+        }
+      }
       
       // 2. Enregistrer la vente dans sales.json
       const today = new Date().toISOString().split('T')[0];
@@ -576,12 +660,12 @@ export default function CommandesPage() {
         // Chercher le produit dans la liste existante
         let product = products.find(prod => prod.description.toLowerCase() === p.nom.toLowerCase());
         
-        // Si le produit n'existe pas, le créer
+        // Si le produit n'existe pas, le créer avec la quantité nécessaire
         if (!product) {
           const newProductResponse = await api.post('/api/products', {
             description: p.nom,
             purchasePrice: p.prixUnitaire,
-            quantity: 0 // Quantité 0 car c'est une commande/réservation
+            quantity: p.quantite // Créer avec la quantité de la commande pour permettre la vente
           });
           product = newProductResponse.data;
         }
@@ -630,7 +714,14 @@ export default function CommandesPage() {
       };
       
       console.log('✅ Validation commande - Données à enregistrer dans sales.json:', saleData);
-      await api.post('/api/sales', saleData);
+      const saleResponse = await api.post('/api/sales', saleData);
+      const createdSale = saleResponse.data;
+      
+      // 2. Mettre à jour le statut de la commande avec le saleId
+      await api.put(`/api/commandes/${validatingId}`, { 
+        statut: 'valide',
+        saleId: createdSale.id // Stocker l'ID de la vente pour pouvoir la supprimer si on annule
+      });
       
       toast({
         title: 'Succès',

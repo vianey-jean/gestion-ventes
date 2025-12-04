@@ -114,7 +114,7 @@ const isFormValid = () => {
 - Les champs individuels du formulaire "Informations Produit" ne sont PAS obligatoires si le panier contient déjà des produits
 - Date obligatoire selon le type (arrivage pour commande, échéance pour réservation)
 
-### 2. **Ajout/Modification de produit dans le panier**
+### 2. **Ajout/Modification de produit dans le panier (avec validation de stock)**
 ```typescript
 const handleAddProduit = () => {
   // Validation des champs produit
@@ -123,10 +123,37 @@ const handleAddProduit = () => {
     return;
   }
 
+  const quantiteInt = parseInt(quantite);
+  
+  // Vérifier si le produit existe dans products.json
+  const existingProduct = products.find(p => p.description.toLowerCase() === produitNom.toLowerCase());
+  
+  if (existingProduct) {
+    // Vérifier que la quantité en stock est supérieure à 0
+    if (existingProduct.quantity <= 0) {
+      toast({
+        title: 'Stock insuffisant',
+        description: `${produitNom} n'a plus de stock disponible`,
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    // Vérifier que la quantité demandée ne dépasse pas le stock disponible
+    if (quantiteInt > existingProduct.quantity) {
+      toast({
+        title: 'Quantité insuffisante',
+        description: `Stock disponible: ${existingProduct.quantity} unités`,
+        variant: 'destructive',
+      });
+      return;
+    }
+  }
+
   const nouveauProduit: CommandeProduit = {
     nom: produitNom,
     prixUnitaire: parseFloat(prixUnitaire),
-    quantite: parseInt(quantite),
+    quantite: quantiteInt,
     prixVente: parseFloat(prixVente),
   };
 
@@ -143,6 +170,10 @@ const handleAddProduit = () => {
   resetProductFields();
 };
 ```
+**Règles de validation du stock** :
+- Pour les produits existants dans products.json, la quantité en stock doit être > 0
+- La quantité de la commande/réservation ne peut pas dépasser le stock disponible
+- Les produits qui n'existent pas encore dans products.json peuvent être ajoutés (ils seront créés lors de la validation)
 
 ### 3. **Filtrage des produits disponibles**
 ```typescript
@@ -257,6 +288,61 @@ const sortedCommandes = useMemo(() => {
 - Compare `dateArrivagePrevue` pour les commandes
 - Compare `dateEcheance` pour les réservations
 - Tri ascendant (proche→loin) ou descendant (loin→proche)
+
+### 7. **Synchronisation Validation/Ventes (confirmValidation)**
+Lors de la validation d'une commande/réservation :
+```typescript
+const confirmValidation = async () => {
+  // 1. Vérifier le stock disponible pour chaque produit
+  for (const p of commandeToValidate.produits) {
+    const existingProduct = products.find(prod => prod.description.toLowerCase() === p.nom.toLowerCase());
+    if (existingProduct && existingProduct.quantity < p.quantite) {
+      // Erreur : stock insuffisant
+      return;
+    }
+  }
+  
+  // 2. Créer les produits qui n'existent pas (avec la quantité nécessaire)
+  // 3. Enregistrer la vente dans sales.json
+  const saleData = {
+    date: today,
+    products: saleProducts,
+    totalPurchasePrice,
+    totalSellingPrice,
+    totalProfit,
+    clientName, clientAddress, clientPhone
+  };
+  
+  const saleResponse = await api.post('/api/sales', saleData);
+  
+  // 4. Mettre à jour la commande avec statut 'valide' et saleId
+  await api.put(`/api/commandes/${validatingId}`, { 
+    statut: 'valide',
+    saleId: createdSale.id
+  });
+};
+```
+
+### 8. **Annulation/Changement de statut (handleStatusChange)**
+Lorsqu'une commande validée change de statut :
+```typescript
+const handleStatusChange = async (id, newStatus) => {
+  const commande = commandes.find(c => c.id === id);
+  
+  // Si la commande était "valide" et on change vers un autre statut
+  if (commande.statut === 'valide' && commande.saleId) {
+    // Supprimer la vente (le backend restaure automatiquement la quantité)
+    await api.delete(`/api/sales/${commande.saleId}`);
+    
+    // Mettre à jour le statut et supprimer le saleId
+    await api.put(`/api/commandes/${id}`, { statut: newStatus, saleId: null });
+  }
+};
+```
+**Comportement** :
+- Une commande validée crée une vente dans `sales.json` et stocke le `saleId`
+- Si le statut change de "validé" vers autre chose, la vente est supprimée et les quantités sont restaurées
+- Le champ `saleId` maintient la relation entre commande et vente
 
 ---
 
