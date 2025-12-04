@@ -30,6 +30,7 @@ interface Product {
   id: string;
   description: string;
   purchasePrice: number;
+  quantity: number;
 }
 
 export default function CommandesPage() {
@@ -65,6 +66,7 @@ export default function CommandesPage() {
   const [productSearch, setProductSearch] = useState('');
   const [showClientSuggestions, setShowClientSuggestions] = useState(false);
   const [showProductSuggestions, setShowProductSuggestions] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   
   // État pour gérer l'ordre de tri par date
   const [sortDateAsc, setSortDateAsc] = useState(true); // true = du plus proche au plus loin
@@ -210,26 +212,29 @@ export default function CommandesPage() {
     );
   }, [clientSearch, clients]);
 
-  // Filter products based on search - exclude products already used in other orders/reservations
+  // Filter products based on search - exclude products already used in other orders/reservations and with quantity = 0
   const filteredProducts = useMemo(() => {
     if (productSearch.length < 3) return [];
     
-    // Get all product names that are already used in other orders/reservations
+    // Get all product names that are already used in other orders/reservations (non validées/annulées)
     const usedProductNames = new Set<string>();
     commandes.forEach(commande => {
       // Skip if we're editing this specific order (allow same products)
       if (editingCommande && commande.id === editingCommande.id) return;
+      // Skip validated or cancelled orders
+      if (commande.statut === 'valide' || commande.statut === 'annule') return;
       
       commande.produits.forEach(produit => {
         usedProductNames.add(produit.nom.toLowerCase());
       });
     });
     
-    // Filter out products that are already used
+    // Filter out products that are already used or have quantity = 0
     return products.filter(product => {
       const matchesSearch = product.description.toLowerCase().includes(productSearch.toLowerCase());
       const isNotUsed = !usedProductNames.has(product.description.toLowerCase());
-      return matchesSearch && isNotUsed;
+      const hasStock = product.quantity > 0;
+      return matchesSearch && isNotUsed && hasStock;
     });
   }, [productSearch, products, commandes, editingCommande]);
 
@@ -246,6 +251,7 @@ export default function CommandesPage() {
     setPrixUnitaire(product.purchasePrice.toString());
     setProductSearch(product.description);
     setShowProductSuggestions(false);
+    setSelectedProduct(product);
   };
 
   const isFormValid = () => {
@@ -274,6 +280,7 @@ export default function CommandesPage() {
     setProductSearch('');
     setProduitsListe([]);
     setEditingCommande(null);
+    setSelectedProduct(null);
   };
 
   const resetProductFields = () => {
@@ -283,6 +290,7 @@ export default function CommandesPage() {
     setPrixVente('');
     setProductSearch('');
     setEditingProductIndex(null);
+    setSelectedProduct(null);
   };
 
   const handleAddProduit = () => {
@@ -335,6 +343,10 @@ export default function CommandesPage() {
     setPrixVente(produit.prixVente.toString());
     setProductSearch(produit.nom);
     setEditingProductIndex(index);
+    
+    // Trouver le produit dans la liste des produits pour obtenir la quantité en stock
+    const productFromList = products.find(p => p.description.toLowerCase() === produit.nom.toLowerCase());
+    setSelectedProduct(productFromList || null);
     
     toast({
       title: 'Mode édition',
@@ -1072,8 +1084,11 @@ export default function CommandesPage() {
                           onClick={() => handleProductSelect(product)}
                         >
                           <div className="font-semibold text-gray-900 dark:text-white">{product.description}</div>
-                          <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                            💰 Prix: {product.purchasePrice}€
+                          <div className="text-sm text-gray-600 dark:text-gray-400 mt-1 flex items-center gap-3">
+                            <span>💰 Prix: {product.purchasePrice}€</span>
+                            <span className="bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 px-2 py-0.5 rounded-full text-xs font-medium">
+                              📦 Stock: {product.quantity}
+                            </span>
                           </div>
                         </div>
                       ))}
@@ -1100,9 +1115,9 @@ export default function CommandesPage() {
                   <div>
                     <SaleQuantityInput
                       quantity={quantite}
-                      maxQuantity={1000}
+                      maxQuantity={selectedProduct ? selectedProduct.quantity : 1000}
                       onChange={setQuantite}
-                      showAvailableStock={false}
+                      showAvailableStock={selectedProduct ? true : false}
                     />
                   </div>
 
