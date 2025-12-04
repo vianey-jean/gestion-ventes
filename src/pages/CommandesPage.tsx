@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -33,7 +33,7 @@ interface Product {
   quantity: number;
 }
 
-export default function CommandesPage() {
+const CommandesPage: React.FC = () =>  {
   const [commandes, setCommandes] = useState<Commande[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
@@ -1698,3 +1698,5 @@ export default function CommandesPage() {
     </Layout>
   );
 }
+
+export default CommandesPage;
