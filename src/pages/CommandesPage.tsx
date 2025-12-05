@@ -80,6 +80,12 @@ const CommandesPage: React.FC = () =>  {
   // État pour l'export PDF
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
   const [exportDate, setExportDate] = useState('');
+  
+  // État pour la modale Reporter
+  const [reporterModalOpen, setReporterModalOpen] = useState(false);
+  const [reporterCommandeId, setReporterCommandeId] = useState<string | null>(null);
+  const [reporterDate, setReporterDate] = useState('');
+  const [reporterHoraire, setReporterHoraire] = useState('');
 
   useEffect(() => {
     const loadData = async () => {
@@ -530,7 +536,7 @@ const CommandesPage: React.FC = () =>  {
   // État pour la confirmation d'annulation
   const [cancellingId, setCancellingId] = useState<string | null>(null);
 
-  const handleStatusChange = async (id: string, newStatus: 'en_route' | 'arrive' | 'en_attente' | 'valide' | 'annule') => {
+  const handleStatusChange = async (id: string, newStatus: 'en_route' | 'arrive' | 'en_attente' | 'valide' | 'annule' | 'reporter') => {
     // Trouver la commande concernée
     const commande = commandes.find(c => c.id === id);
     if (!commande) return;
@@ -544,6 +550,17 @@ const CommandesPage: React.FC = () =>  {
     // Si on passe à "annule", demander confirmation
     if (newStatus === 'annule') {
       setCancellingId(id);
+      return;
+    }
+    
+    // Si on passe à "reporter", ouvrir la modale date/horaire
+    if (newStatus === 'reporter') {
+      // Préremplir avec la date et horaire actuels
+      const currentDate = commande.type === 'commande' ? commande.dateArrivagePrevue : commande.dateEcheance;
+      setReporterDate(currentDate || '');
+      setReporterHoraire(commande.horaire || '');
+      setReporterCommandeId(id);
+      setReporterModalOpen(true);
       return;
     }
     
@@ -755,6 +772,8 @@ const CommandesPage: React.FC = () =>  {
         return <Badge className="text-blue-600 font-semibold">Validé</Badge>;
       case 'annule':
         return <Badge className="text-gray-600 font-semibold">Annulé</Badge>;
+      case 'reporter':
+        return <Badge className="text-blue-500 font-semibold">Reporté</Badge>;
       default:
         return <Badge>{statut}</Badge>;
     }
@@ -765,12 +784,14 @@ const CommandesPage: React.FC = () =>  {
       return [
         { value: 'en_route', label: 'En route' },
         { value: 'arrive', label: 'Arrivé' },
+        { value: 'reporter', label: 'Reporter' },
         { value: 'valide', label: 'Validé' },
         { value: 'annule', label: 'Annulé' }
       ];
     } else {
       return [
         { value: 'en_attente', label: 'En attente' },
+        { value: 'reporter', label: 'Reporter' },
         { value: 'valide', label: 'Validé' },
         { value: 'annule', label: 'Annulé' }
       ];
@@ -1447,10 +1468,10 @@ const CommandesPage: React.FC = () =>  {
           <div className="overflow-x-auto">
             <ModernTable className="min-w-full">
             <ModernTableHeader>
-              <ModernTableRow >
-                <ModernTableHead>Client</ModernTableHead>
+              <ModernTableRow>
+                <ModernTableHead className="w-52">Client</ModernTableHead>
                 <ModernTableHead>Contact</ModernTableHead>
-                <ModernTableHead>Produit</ModernTableHead>
+                <ModernTableHead className="w-52">Produit</ModernTableHead>
                 <ModernTableHead>Prix</ModernTableHead>
                 <ModernTableHead>Type</ModernTableHead>
                 <ModernTableHead>
@@ -1478,23 +1499,22 @@ const CommandesPage: React.FC = () =>  {
                     key={commande.id}
                     className="bg-background/40 hover:bg-primary/5 transition-colors"
                   >
-                    <ModernTableCell className="align-top">
-                      <div className="font-medium">{commande.clientNom}</div>
-                      <div className="text-xs text-muted-foreground">
+                    <ModernTableCell className="align-top w-52">
+                      <div className="font-medium whitespace-normal break-words">{commande.clientNom}</div>
+                      <div className="text-xs text-muted-foreground whitespace-normal break-words">
                         {commande.clientAddress}
                       </div>
                     </ModernTableCell>
                     <ModernTableCell className="align-top">
-                      <span className="text-sm">{commande.clientPhone}</span>
+                      <span className="text-sm whitespace-normal break-words">{commande.clientPhone}</span>
                     </ModernTableCell>
-                    <ModernTableCell className="align-top">
+                    <ModernTableCell className="align-top w-52">
                       {commande.produits.map((p, idx) => (
                         <div key={idx} className="text-sm space-y-0.5">
-                          <div className="font-medium">{p.nom}</div>
-                         <div className="text-xs text-muted-foreground">
-                          Qté: <span className="font-bold text-red-600">{p.quantite}</span>
-                        </div>
-
+                          <div className="font-medium whitespace-normal break-words">{p.nom}</div>
+                          <div className="text-xs text-muted-foreground">
+                            Qté: <span className="font-bold text-red-600">{p.quantite}</span>
+                          </div>
                         </div>
                       ))}
                     </ModernTableCell>
@@ -1602,6 +1622,7 @@ const CommandesPage: React.FC = () =>  {
                                 option.value === 'en_attente' ? 'text-red-600 font-semibold' :
                                 option.value === 'valide' ? 'text-blue-600 font-semibold' :
                                 option.value === 'annule' ? 'text-gray-600 font-semibold' :
+                                option.value === 'reporter' ? 'text-blue-500 font-semibold' :
                                 ''
                               }
                             >
@@ -1694,6 +1715,125 @@ const CommandesPage: React.FC = () =>  {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Dialog Reporter - Date et Horaire */}
+      <Dialog open={reporterModalOpen} onOpenChange={(open) => {
+        if (!open) {
+          setReporterModalOpen(false);
+          setReporterCommandeId(null);
+          setReporterDate('');
+          setReporterHoraire('');
+        }
+      }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-blue-600">
+              <Calendar className="h-5 w-5" />
+              Reporter la date d'échéance
+            </DialogTitle>
+            <DialogDescription>
+              Modifiez la date et l'horaire pour reporter cette commande/réservation.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div>
+              <Label htmlFor="reporterDate" className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">
+                📅 Nouvelle date d'échéance
+              </Label>
+              <Input
+                id="reporterDate"
+                type="date"
+                value={reporterDate}
+                onChange={(e) => setReporterDate(e.target.value)}
+                className="border-2 border-blue-300 dark:border-blue-700 focus:border-blue-500 dark:focus:border-blue-500 bg-white dark:bg-gray-900 shadow-sm"
+                required
+              />
+            </div>
+            <div>
+              <Label htmlFor="reporterHoraire" className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">
+                🕐 Horaire
+              </Label>
+              <Input
+                id="reporterHoraire"
+                type="time"
+                value={reporterHoraire}
+                onChange={(e) => setReporterHoraire(e.target.value)}
+                className="border-2 border-blue-300 dark:border-blue-700 focus:border-blue-500 dark:focus:border-blue-500 bg-white dark:bg-gray-900 shadow-sm"
+              />
+            </div>
+          </div>
+          <div className="flex justify-end gap-3">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setReporterModalOpen(false);
+                setReporterCommandeId(null);
+                setReporterDate('');
+                setReporterHoraire('');
+              }}
+            >
+              Annuler
+            </Button>
+            <Button
+              onClick={async () => {
+                if (!reporterCommandeId || !reporterDate) {
+                  toast({
+                    title: 'Erreur',
+                    description: 'Veuillez sélectionner une date',
+                    className: "bg-app-red text-white",
+                    variant: 'destructive',
+                  });
+                  return;
+                }
+                
+                try {
+                  // Trouver la commande pour déterminer le type
+                  const commande = commandes.find(c => c.id === reporterCommandeId);
+                  if (!commande) return;
+                  
+                  // Préparer les données à mettre à jour
+                  const updateData: any = {
+                    statut: 'reporter',
+                    horaire: reporterHoraire || undefined
+                  };
+                  
+                  // Mettre à jour la bonne date selon le type
+                  if (commande.type === 'commande') {
+                    updateData.dateArrivagePrevue = reporterDate;
+                  } else {
+                    updateData.dateEcheance = reporterDate;
+                  }
+                  
+                  await api.put(`/api/commandes/${reporterCommandeId}`, updateData);
+                  
+                  toast({
+                    title: 'Succès',
+                    description: `La date a été reportée au ${new Date(reporterDate).toLocaleDateString('fr-FR')}${reporterHoraire ? ' à ' + reporterHoraire : ''}`,
+                    className: "bg-app-green text-white",
+                  });
+                  
+                  fetchCommandes();
+                  setReporterModalOpen(false);
+                  setReporterCommandeId(null);
+                  setReporterDate('');
+                  setReporterHoraire('');
+                } catch (error) {
+                  console.error('Error updating date:', error);
+                  toast({
+                    title: 'Erreur',
+                    description: 'Impossible de reporter la date',
+                    className: "bg-app-red text-white",
+                    variant: 'destructive',
+                  });
+                }
+              }}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              Enregistrer
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
       </div>
     </Layout>
   );

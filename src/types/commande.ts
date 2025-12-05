@@ -9,7 +9,7 @@ export interface Commande {
   dateArrivagePrevue?: string;
   dateEcheance?: string;
   horaire?: string;
-  statut: 'en_route' | 'arrive' | 'en_attente' | 'valide' | 'annule';
+  statut: 'en_route' | 'arrive' | 'en_attente' | 'valide' | 'annule' | 'reporter';
   notificationEnvoyee?: boolean;
   createdAt?: string;
   updatedAt?: string;
