@@ -1,149 +1,58 @@
-// Types pour l'application
+// Export centralisé de tous les types
 
-export interface User {
-  id: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  gender?: string;
-  address?: string;
-  phone?: string;
-}
+// Types d'authentification
+export type {
+  User,
+  LoginCredentials,
+  RegisterCredentials,
+  RegistrationData,
+  PasswordResetRequest,
+  PasswordResetData,
+  AuthResponse,
+} from './auth';
 
-export interface SaleProduct {
-  productId: string;
-  description: string;
-  quantitySold: number;
-  purchasePrice: number;
-  sellingPrice: number;
-  profit: number;
-  deliveryFee?: number; // Frais de livraison
-  deliveryLocation?: string; // Ville de livraison
-}
+// Types de clients
+export type {
+  Client,
+  ClientFormData,
+  ClientSearchResult,
+} from './client';
 
-export interface Sale {
-  id: string;
-  date: string;
-  // Nouvelle structure multi-produits
-  products?: SaleProduct[];
-  totalPurchasePrice?: number;
-  totalSellingPrice?: number;
-  totalProfit?: number;
-  totalDeliveryFee?: number; // Total des frais de livraison
-  // Ancien format pour compatibilité
-  productId?: string;
-  description?: string;
-  quantitySold?: number;
-  purchasePrice?: number;
-  sellingPrice?: number;
-  profit?: number;
-  deliveryFee?: number; // Frais de livraison (ancien format)
-  // Nouvelles informations client pour la facturation
-  clientName?: string;
-  clientAddress?: string;
-  clientPhone?: string;
-  // Informations d'avance
-  reste?: number;
-  nextPaymentDate?: string;
-}
+// Types de produits
+export type {
+  Product,
+  ProductFormData,
+} from './product';
 
-export interface Product {
-  id: string;
-  description: string;
-  purchasePrice: number;
-  quantity: number;
-  sellingPrice?: number;
-  profit?: number;
-}
+// Types de ventes
+export type {
+  Sale,
+  SaleProduct,
+  SaleFormData,
+} from './sale';
 
-export interface PretDetail {
-  date: string;
-  montant: number;
-}
+// Types de prêts
+export type {
+  PretDetail,
+  PaiementDetail,
+  PretFamille,
+  PretProduit,
+  PretFamilleFormData,
+  PretProduitFormData,
+} from './pret';
 
-export interface PretFamille {
-  id: string;
-  nom: string;
-  pretTotal: number;
-  soldeRestant: number;
-  dernierRemboursement: number;
-  dateRemboursement: string;
-  remboursements?: PaiementDetail[];
-  prets?: PretDetail[]; // Historique des prêts
-}
+// Types de dépenses
+export type {
+  DepenseFixe,
+  DepenseDuMois,
+  DepenseFormData,
+} from './depense';
 
-export interface PaiementDetail {
-  date: string;
-  montant: number;
-}
-
-export interface PretProduit {
-  id: string;
-  description: string;
-  nom?: string;
-  date: string; // date de prêt
-  datePaiement?: string; // nouvelle date de paiement
-  phone?: string; // nouveau numéro de téléphone
-  prixVente: number;
-  avanceRecue: number;
-  reste: number;
-  estPaye: boolean;
-  productId?: string;
-  paiements?: PaiementDetail[]; // historique des paiements
-}
-
-export interface DepenseFixe {
-  free: number;
-  internetZeop: number;
-  assuranceVoiture: number;
-  autreDepense: number;
-  assuranceVie: number;
-  total: number;
-}
-
-export interface DepenseDuMois {
-  id: string;
-  description: string;
-  categorie: string;
-  date: string;
-  debit: string;
-  credit: string;
-  solde: number;
-}
-
-export interface LoginCredentials {
-  email: string;
-  password: string;
-}
-
-export interface RegisterCredentials {
-  email: string;
-  password: string;
-  firstName: string;
-  lastName: string;
-  gender: 'male' | 'female' | 'other';
-  address: string;
-  phone: string;
-}
-
-export interface RegistrationData {
-  email: string;
-  password: string;
-  confirmPassword: string;
-  firstName: string;
-  lastName: string;
-  gender: 'male' | 'female' | 'other';
-  address: string;
-  phone: string;
-  acceptTerms: boolean;
-}
-
-export interface PasswordResetRequest {
-  email: string;
-}
-
-export interface PasswordResetData {
-  email: string;
-  newPassword: string;
-  confirmPassword: string;
-}
+// Types de commandes
+export type {
+  Commande,
+  CommandeProduit,
+  CommandeType,
+  CommandeStatut,
+  CommandeFormData,
+} from './commande';
