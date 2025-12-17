@@ -7,7 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Edit, Trash2, Phone, MapPin, Users, Sparkles, Crown, Star, Diamond } from 'lucide-react';
+import { Plus, Edit, Trash2, Phone, MapPin, Users, Sparkles, Crown, Star, Diamond, MessageSquare, PhoneCall } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 import axios from 'axios';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -29,6 +30,7 @@ const ClientsPage: React.FC = () => {
   const { isAuthenticated } = useAuth();
   const { clients, isLoading, refetch } = useClientSync();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
@@ -51,6 +53,35 @@ const ClientsPage: React.FC = () => {
   const [showEditConfirm, setShowEditConfirm] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [clientToDelete, setClientToDelete] = useState<Client | null>(null);
+
+  // État pour la modale d'action téléphone
+  const [phoneActionOpen, setPhoneActionOpen] = useState(false);
+  const [selectedPhone, setSelectedPhone] = useState<string>('');
+
+  const handlePhoneClick = (phone: string) => {
+    setSelectedPhone(phone);
+    setPhoneActionOpen(true);
+  };
+
+  const handleCall = () => {
+    window.location.href = `tel:${selectedPhone}`;
+    setPhoneActionOpen(false);
+  };
+
+  const handleMessage = () => {
+    if (isMobile) {
+      // Sur mobile, ouvrir l'app SMS
+      window.location.href = `sms:${selectedPhone}`;
+    } else {
+      // Sur desktop, naviguer vers la page messages (ou autre action)
+      toast({
+        title: "Message",
+        description: `Préparez un message pour ${selectedPhone}`,
+        className: "notification-success",
+      });
+    }
+    setPhoneActionOpen(false);
+  };
 
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:10000';
 
@@ -405,11 +436,14 @@ const ClientsPage: React.FC = () => {
               
               <CardContent className="relative z-10">
                 <div className="space-y-4">
-                  <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-green-50 via-emerald-50 to-teal-50 dark:from-green-900/30 dark:via-emerald-900/30 dark:to-teal-900/30 rounded-xl border border-green-200/50 dark:border-green-800/50 backdrop-blur-sm">
+                  <div 
+                    onClick={() => handlePhoneClick(client.phone)}
+                    className="flex items-center gap-4 p-4 bg-gradient-to-r from-green-50 via-emerald-50 to-teal-50 dark:from-green-900/30 dark:via-emerald-900/30 dark:to-teal-900/30 rounded-xl border border-green-200/50 dark:border-green-800/50 backdrop-blur-sm cursor-pointer hover:scale-[1.02] transition-transform duration-200"
+                  >
                     <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full shadow-lg">
                       <Phone className="w-5 h-5 text-white" />
                     </div>
-                    <span className="text-gray-700 dark:text-gray-200 font-semibold">{client.phone}</span>
+                    <span className="text-gray-700 dark:text-gray-200 font-semibold hover:text-green-600 dark:hover:text-green-400 transition-colors">{client.phone}</span>
                   </div>
                   
                   <div className="flex items-start gap-4 p-4 bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 dark:from-blue-900/30 dark:via-indigo-900/30 dark:to-purple-900/30 rounded-xl border border-blue-200/50 dark:border-blue-800/50 backdrop-blur-sm">
@@ -648,6 +682,51 @@ const ClientsPage: React.FC = () => {
         description={`Voulez-vous vraiment supprimer ${clientToDelete?.nom} de votre portefeuille ?`}
         isSubmitting={isSubmitting}
       />
+
+      {/* Modale d'action téléphone */}
+      <Dialog open={phoneActionOpen} onOpenChange={setPhoneActionOpen}>
+        <DialogContent className="sm:max-w-md bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm border-0 shadow-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
+              <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full">
+                <Phone className="w-5 h-5 text-white" />
+              </div>
+              {selectedPhone}
+            </DialogTitle>
+            <DialogDescription className="text-gray-600 dark:text-gray-400">
+              Que souhaitez-vous faire ?
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid gap-4 py-4">
+            <Button
+              onClick={handleCall}
+              className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white py-6 text-lg font-semibold rounded-xl shadow-lg hover:shadow-green-500/30 transition-all duration-300"
+            >
+              <PhoneCall className="w-6 h-6" />
+              Appeler ce numéro
+            </Button>
+            
+            <Button
+              onClick={handleMessage}
+              className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white py-6 text-lg font-semibold rounded-xl shadow-lg hover:shadow-blue-500/30 transition-all duration-300"
+            >
+              <MessageSquare className="w-6 h-6" />
+              {isMobile ? 'Envoyer un SMS à ce numéro' : 'Envoyer un message'}
+            </Button>
+          </div>
+          
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setPhoneActionOpen(false)}
+              className="w-full border-gray-300 hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-800"
+            >
+              Annuler
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
