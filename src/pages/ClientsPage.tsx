@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Edit, Trash2, Phone, MapPin, Users, Sparkles, Crown, Star, Diamond, MessageSquare, PhoneCall } from 'lucide-react';
+import { Plus, Edit, Trash2, Phone, MapPin, Users, Sparkles, Crown, Star, Diamond, MessageSquare, PhoneCall, Navigation } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import axios from 'axios';
 import Navbar from '@/components/Navbar';
@@ -58,6 +58,10 @@ const ClientsPage: React.FC = () => {
   const [phoneActionOpen, setPhoneActionOpen] = useState(false);
   const [selectedPhone, setSelectedPhone] = useState<string>('');
 
+  // État pour la modale d'action adresse (maps)
+  const [addressActionOpen, setAddressActionOpen] = useState(false);
+  const [selectedAddress, setSelectedAddress] = useState<string>('');
+
   const handlePhoneClick = (phone: string) => {
     setSelectedPhone(phone);
     setPhoneActionOpen(true);
@@ -81,6 +85,36 @@ const ClientsPage: React.FC = () => {
       });
     }
     setPhoneActionOpen(false);
+  };
+
+  const handleAddressClick = (address: string) => {
+    if (isMobile) {
+      // Sur mobile, afficher la modale pour choisir l'app
+      setSelectedAddress(address);
+      setAddressActionOpen(true);
+    } else {
+      // Sur desktop, ouvrir directement Google Maps
+      const encodedAddress = encodeURIComponent(address);
+      window.open(`https://www.google.com/maps/search/?api=1&query=${encodedAddress}`, '_blank');
+    }
+  };
+
+  const openGoogleMaps = () => {
+    const encodedAddress = encodeURIComponent(selectedAddress);
+    window.open(`https://www.google.com/maps/search/?api=1&query=${encodedAddress}`, '_blank');
+    setAddressActionOpen(false);
+  };
+
+  const openWaze = () => {
+    const encodedAddress = encodeURIComponent(selectedAddress);
+    window.open(`https://waze.com/ul?q=${encodedAddress}`, '_blank');
+    setAddressActionOpen(false);
+  };
+
+  const openAppleMaps = () => {
+    const encodedAddress = encodeURIComponent(selectedAddress);
+    window.open(`https://maps.apple.com/?q=${encodedAddress}`, '_blank');
+    setAddressActionOpen(false);
   };
 
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:10000';
@@ -446,11 +480,14 @@ const ClientsPage: React.FC = () => {
                     <span className="text-gray-700 dark:text-gray-200 font-semibold hover:text-green-600 dark:hover:text-green-400 transition-colors">{client.phone}</span>
                   </div>
                   
-                  <div className="flex items-start gap-4 p-4 bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 dark:from-blue-900/30 dark:via-indigo-900/30 dark:to-purple-900/30 rounded-xl border border-blue-200/50 dark:border-blue-800/50 backdrop-blur-sm">
+                  <div 
+                    onClick={() => handleAddressClick(client.adresse)}
+                    className="flex items-start gap-4 p-4 bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 dark:from-blue-900/30 dark:via-indigo-900/30 dark:to-purple-900/30 rounded-xl border border-blue-200/50 dark:border-blue-800/50 backdrop-blur-sm cursor-pointer hover:scale-[1.02] transition-transform duration-200"
+                  >
                     <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-r from-blue-400 to-indigo-500 rounded-full shadow-lg mt-0.5">
                       <MapPin className="w-5 h-5 text-white" />
                     </div>
-                    <span className="text-gray-700 dark:text-gray-200 leading-relaxed line-clamp-2">{client.adresse}</span>
+                    <span className="text-gray-700 dark:text-gray-200 leading-relaxed line-clamp-2 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">{client.adresse}</span>
                   </div>
                 </div>
               </CardContent>
@@ -720,6 +757,59 @@ const ClientsPage: React.FC = () => {
             <Button
               variant="outline"
               onClick={() => setPhoneActionOpen(false)}
+              className="w-full border-gray-300 hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-800"
+            >
+              Annuler
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modale d'action adresse (maps) - uniquement sur mobile */}
+      <Dialog open={addressActionOpen} onOpenChange={setAddressActionOpen}>
+        <DialogContent className="sm:max-w-md bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm border-0 shadow-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
+              <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-r from-blue-400 to-indigo-500 rounded-full">
+                <Navigation className="w-5 h-5 text-white" />
+              </div>
+              Navigation
+            </DialogTitle>
+            <DialogDescription className="text-gray-600 dark:text-gray-400">
+              Ouvrir l'adresse dans quelle application ?
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid gap-4 py-4">
+            <Button
+              onClick={openGoogleMaps}
+              className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white py-6 text-lg font-semibold rounded-xl shadow-lg hover:shadow-blue-500/30 transition-all duration-300"
+            >
+              <MapPin className="w-6 h-6" />
+              Google Maps
+            </Button>
+            
+            <Button
+              onClick={openWaze}
+              className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-cyan-500 to-teal-600 hover:from-cyan-600 hover:to-teal-700 text-white py-6 text-lg font-semibold rounded-xl shadow-lg hover:shadow-cyan-500/30 transition-all duration-300"
+            >
+              <Navigation className="w-6 h-6" />
+              Waze
+            </Button>
+            
+            <Button
+              onClick={openAppleMaps}
+              className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-gray-600 to-gray-800 hover:from-gray-700 hover:to-gray-900 text-white py-6 text-lg font-semibold rounded-xl shadow-lg hover:shadow-gray-500/30 transition-all duration-300"
+            >
+              <MapPin className="w-6 h-6" />
+              Apple Maps
+            </Button>
+          </div>
+          
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setAddressActionOpen(false)}
               className="w-full border-gray-300 hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-800"
             >
               Annuler
