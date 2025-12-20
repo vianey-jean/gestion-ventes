@@ -273,10 +273,10 @@ const RegisterPage: React.FC = () => {
                         } focus:ring-4 focus:ring-purple-500/20`}
                       />
                       {errors.firstName && (
-                        <p className="text-sm text-red-500 flex items-center gap-2">
-                          <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                        <span className="text-sm text-red-500 flex items-center gap-2">
+                          <span className="w-2 h-2 bg-red-500 rounded-full inline-block"></span>
                           {errors.firstName}
-                        </p>
+                        </span>
                       )}
                     </div>
 
@@ -295,10 +295,10 @@ const RegisterPage: React.FC = () => {
                         } focus:ring-4 focus:ring-purple-500/20`}
                       />
                       {errors.lastName && (
-                        <p className="text-sm text-red-500 flex items-center gap-2">
-                          <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                        <span className="text-sm text-red-500 flex items-center gap-2">
+                          <span className="w-2 h-2 bg-red-500 rounded-full inline-block"></span>
                           {errors.lastName}
-                        </p>
+                        </span>
                       )}
                     </div>
                   </div>
@@ -322,16 +322,16 @@ const RegisterPage: React.FC = () => {
                       } focus:ring-4 focus:ring-purple-500/20`}
                     />
                     {errors.email && (
-                      <p className="text-sm text-red-500 flex items-center gap-2">
-                        <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                      <span className="text-sm text-red-500 flex items-center gap-2">
+                        <span className="w-2 h-2 bg-red-500 rounded-full inline-block"></span>
                         {errors.email}
-                      </p>
+                      </span>
                     )}
                     {isEmailChecking && (
-                      <p className="text-sm text-purple-600 flex items-center gap-2">
-                        <div className="w-4 h-4 border-2 border-purple-600/30 border-t-purple-600 rounded-full animate-spin"></div>
+                      <span className="text-sm text-purple-600 flex items-center gap-2">
+                        <span className="w-4 h-4 border-2 border-purple-600/30 border-t-purple-600 rounded-full animate-spin inline-block"></span>
                         Vérification de l'email...
-                      </p>
+                      </span>
                     )}
                   </div>
 
@@ -356,10 +356,10 @@ const RegisterPage: React.FC = () => {
                         </SelectContent>
                       </Select>
                       {errors.gender && (
-                        <p className="text-sm text-red-500 flex items-center gap-2">
-                          <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                        <span className="text-sm text-red-500 flex items-center gap-2">
+                          <span className="w-2 h-2 bg-red-500 rounded-full inline-block"></span>
                           {errors.gender}
-                        </p>
+                        </span>
                       )}
                     </div>
 
@@ -379,10 +379,10 @@ const RegisterPage: React.FC = () => {
                         } focus:ring-4 focus:ring-purple-500/20`}
                       />
                       {errors.phone && (
-                        <p className="text-sm text-red-500 flex items-center gap-2">
-                          <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                        <span className="text-sm text-red-500 flex items-center gap-2">
+                          <span className="w-2 h-2 bg-red-500 rounded-full inline-block"></span>
                           {errors.phone}
-                        </p>
+                        </span>
                       )}
                     </div>
                   </div>
@@ -403,10 +403,10 @@ const RegisterPage: React.FC = () => {
                       } focus:ring-4 focus:ring-purple-500/20`}
                     />
                     {errors.address && (
-                      <p className="text-sm text-red-500 flex items-center gap-2">
-                        <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                      <span className="text-sm text-red-500 flex items-center gap-2">
+                        <span className="w-2 h-2 bg-red-500 rounded-full inline-block"></span>
                         {errors.address}
-                      </p>
+                      </span>
                     )}
                   </div>
                 </div>
@@ -487,10 +487,10 @@ const RegisterPage: React.FC = () => {
                     </Label>
                   </div>
                   {errors.acceptTerms && (
-                    <p className="text-sm text-red-500 flex items-center gap-2">
-                      <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                    <span className="text-sm text-red-500 flex items-center gap-2">
+                      <span className="w-2 h-2 bg-red-500 rounded-full inline-block"></span>
                       {errors.acceptTerms}
-                    </p>
+                    </span>
                   )}
                 </div>
               </CardContent>

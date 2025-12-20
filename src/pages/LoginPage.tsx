@@ -12,7 +12,7 @@ import PremiumLoading from '@/components/ui/premium-loading';
 import { Lock, Mail, ArrowRight, Sparkles } from 'lucide-react';
 import axios from 'axios';
 
-const AUTH_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const AUTH_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://server-gestion-ventes.onrender.com';
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
