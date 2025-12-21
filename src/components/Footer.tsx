@@ -68,6 +68,19 @@ const Footer: React.FC = () => {
                   </span>
                 </Link>
               </li>
+                 <li>
+                <Link 
+                  to="/contact" 
+                  className="text-gray-300 hover:text-white hover:translate-x-1 transition-all duration-200 inline-flex items-center group"
+                >
+                  <span className="w-1 h-1 bg-purple-400 rounded-full mr-3 group-hover:bg-pink-400 transition-colors"></span>
+                  <span className="relative after:content-[''] after:absolute after:left-0 after:-bottom-1 
+                                  after:w-0 after:h-[3px] after:bg-red-500 after:transition-all after:duration-300 
+                                  group-hover:after:w-full">
+                    Contact
+                  </span>
+                </Link>
+              </li>
 
               {/* ✅ Contact → visible uniquement si user est déconnecté */}
               {!user && (
@@ -87,7 +100,7 @@ const Footer: React.FC = () => {
               )}
 
               {/* ✅ Connexion → visible uniquement si user est déconnecté */}
-              {!user && (
+              {/* {!user && (
                 <li>
                   <Link 
                     to="/login" 
@@ -101,7 +114,7 @@ const Footer: React.FC = () => {
                     </span>
                   </Link>
                 </li>
-              )}
+              )} */}
             </ul>
           </div>
 

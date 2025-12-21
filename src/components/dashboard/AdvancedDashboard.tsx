@@ -3,24 +3,17 @@ import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
-  Sparkles, 
   TrendingUp, 
   Package2, 
   BarChart4, 
   FileSpreadsheet,
   Zap,
-  Cpu,
-  Rocket,
-  Target,
   Crown,
   Gem,
   Star
 } from 'lucide-react';
 
 // Importer tous nos composants
-import AIStockManager from './ai/AIStockManager';
-import AISalesPredictor from './ai/AISalesPredictor';
-import AIMarketingAssistant from './ai/AIMarketingAssistant';
 import ProfitLossStatement from './accounting/ProfitLossStatement';
 import InventoryAnalyzer from './inventory/InventoryAnalyzer';
 import SalesReport from './reports/SalesReport';
@@ -32,7 +25,7 @@ interface AdvancedDashboardProps {
 }
 
 const AdvancedDashboard: React.FC<AdvancedDashboardProps> = ({ className }) => {
-  const [activeTab, setActiveTab] = useState('ai-tools');
+  const [activeTab, setActiveTab] = useState('accounting');
 
   return (
     <div className={`space-y-4 sm:space-y-6 md:space-y-8 ${className}`}>
@@ -63,10 +56,10 @@ const AdvancedDashboard: React.FC<AdvancedDashboardProps> = ({ className }) => {
           
           <CardDescription className="text-sm sm:text-base md:text-lg lg:text-xl text-gray-300 font-medium max-w-4xl mx-auto leading-relaxed px-2">
             <span className="inline-flex items-center gap-1 sm:gap-2 bg-white/10 backdrop-blur-sm px-3 sm:px-4 md:px-6 py-2 sm:py-3 rounded-full border border-white/20 text-xs sm:text-sm md:text-base">
-              <Sparkles className="h-3 w-3 sm:h-4 sm:w-4 md:h-5 md:w-5 text-yellow-400 shrink-0" />
-              <span className="hidden sm:inline">Intelligence Artificielle de Nouvelle Génération</span>
-              <span className="sm:hidden">IA Nouvelle Génération</span>
-              <Rocket className="h-3 w-3 sm:h-4 sm:w-4 md:h-5 md:w-5 text-blue-400 shrink-0" />
+              <Star className="h-3 w-3 sm:h-4 sm:w-4 md:h-5 md:w-5 text-yellow-400 shrink-0" />
+              <span className="hidden sm:inline">Tableau de Bord Executive Premium</span>
+              <span className="sm:hidden">Dashboard Premium</span>
+              <Gem className="h-3 w-3 sm:h-4 sm:w-4 md:h-5 md:w-5 text-blue-400 shrink-0" />
             </span>
           </CardDescription>
         </CardHeader>
@@ -74,21 +67,8 @@ const AdvancedDashboard: React.FC<AdvancedDashboardProps> = ({ className }) => {
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         {/* Navigation ultra-moderne */}
-        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-1.5 sm:gap-2 h-auto bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-xl rounded-xl sm:rounded-2xl border border-gray-200/50 dark:border-gray-700/50 p-1.5 sm:p-2">
+        <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 md:grid-cols-3 gap-1.5 sm:gap-2 h-auto bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-xl rounded-xl sm:rounded-2xl border border-gray-200/50 dark:border-gray-700/50 p-1.5 sm:p-2">
   
-  <TabsTrigger
-    value="ai-tools"
-    className="group relative flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2 md:gap-3 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:via-pink-600 data-[state=active]:to-purple-600 data-[state=active]:text-white transition-all duration-500 hover:shadow-xl rounded-lg sm:rounded-xl overflow-hidden w-full h-14 sm:h-16 md:h-16 py-2 px-2"
-  >
-    <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-pink-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-    <div className="relative z-10 flex flex-col sm:flex-row items-center gap-1 sm:gap-2">
-      <div className="p-1.5 sm:p-2 rounded-md sm:rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 group-data-[state=active]:bg-white/20 shrink-0">
-        <Cpu className="h-3 w-3 sm:h-4 sm:w-4 md:h-5 md:w-5" />
-      </div>
-      <span className="font-bold text-[10px] xs:text-xs sm:text-sm text-center leading-tight">IA<span className="hidden md:inline"> & Prédictions</span></span>
-    </div>
-  </TabsTrigger>
-
   <TabsTrigger
     value="accounting"
     className="group relative flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2 md:gap-3 data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-600 data-[state=active]:via-teal-600 data-[state=active]:to-emerald-600 data-[state=active]:text-white transition-all duration-500 hover:shadow-xl rounded-lg sm:rounded-xl overflow-hidden w-full h-14 sm:h-16 md:h-16 py-2 px-2"
@@ -131,36 +111,6 @@ const AdvancedDashboard: React.FC<AdvancedDashboardProps> = ({ className }) => {
 </TabsList>
 
 
-        <TabsContent value="ai-tools" className="space-y-4 sm:space-y-6 md:space-y-8 mt-4 sm:mt-6 md:mt-10">
-          <div className="grid grid-cols-1 gap-4 sm:gap-6 md:gap-8">
-            <AIMarketingAssistant />
-          </div>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 md:gap-8">
-            <AIStockManager />
-            <AISalesPredictor />
-          </div>
-          
-          {/* Card d'information premium */}
-          <Card className="relative overflow-hidden bg-gradient-to-br from-purple-900/30 via-pink-900/30 to-rose-900/30 border-purple-500/30 shadow-2xl backdrop-blur-sm">
-            <div className="absolute inset-0 bg-gradient-to-r from-purple-500/5 via-pink-500/5 to-rose-500/5"></div>
-            <CardHeader className="relative text-center py-4 sm:py-6 md:py-8 px-3 sm:px-4">
-              <CardTitle className="text-base sm:text-lg md:text-xl lg:text-2xl font-black text-transparent bg-gradient-to-r from-purple-400 via-pink-400 to-rose-400 bg-clip-text flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 md:gap-4">
-                <div className="p-2 sm:p-2.5 md:p-3 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 shadow-xl shrink-0">
-                  <Zap className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 lg:h-7 lg:w-7 text-white" />
-                </div>
-                <span className="text-center">Intelligence Artificielle Ultra-Avancée</span>
-                <div className="p-2 sm:p-2.5 md:p-3 rounded-full bg-gradient-to-r from-pink-600 to-rose-600 shadow-xl shrink-0">
-                  <Target className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 lg:h-7 lg:w-7 text-white" />
-                </div>
-              </CardTitle>
-              <CardDescription className="text-xs sm:text-sm md:text-base lg:text-lg text-gray-200 dark:text-gray-300 font-medium mt-3 sm:mt-4 max-w-4xl mx-auto leading-relaxed px-2">
-                Propulsé par des algorithmes d'IA de dernière génération, notre système analyse vos données en temps réel 
-                pour vous fournir des recommandations ultra-précises et maximiser exponentiellement votre ROI.
-              </CardDescription>
-            </CardHeader>
-          </Card>
-        </TabsContent>
 
         <TabsContent value="accounting" className="space-y-4 sm:space-y-6 md:space-y-8 mt-4 sm:mt-6 md:mt-10">
           <ProfitLossStatement />
