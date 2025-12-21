@@ -535,8 +535,8 @@ const RdvPage: React.FC = () => {
                   exit={{ opacity: 0, y: -10 }}
                   className="absolute top-full left-0 right-0 mt-2 bg-background border-2 border-primary/20 rounded-xl shadow-2xl z-50 p-6 text-center"
                 >
-                  <CalendarX className="h-12 w-12 mx-auto text-muted-foreground/50 mb-2" />
-                  <p className="text-muted-foreground">Aucun rendez-vous trouvé pour "{searchQuery}"</p>
+                  <CalendarX className="h-12 w-12 mx-auto text-red-800 mb-2 font-bold" />
+                  <p className="text-red-800 font-bold">Aucun rendez-vous trouvé pour "{searchQuery}"</p>
                 </motion.div>
               )}
             </AnimatePresence>

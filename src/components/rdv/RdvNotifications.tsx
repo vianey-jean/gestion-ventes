@@ -256,7 +256,7 @@ const RdvNotifications: React.FC<RdvNotificationsProps> = ({
                             <p className="font-medium truncate">{notification.rdvTitre}</p>
                             <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
                               <span>{notification.rdvClientNom}</span>
-                              <span>•</span>
+                              <span>:</span>
                               <span>{notification.rdvHeureDebut} - {notification.rdvHeureFin}</span>
                             </div>
                             <Badge variant="outline" className="mt-1 text-xs">

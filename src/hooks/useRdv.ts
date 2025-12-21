@@ -33,12 +33,14 @@ export function useRdv() {
       toast({
         title: 'Succès',
         description: 'Rendez-vous créé avec succès',
+        className: "bg-app-green text-white",
       });
       return newRdv;
     } catch (err) {
       toast({
         title: 'Erreur',
         description: 'Impossible de créer le rendez-vous',
+        className: "bg-app-red text-white",
         variant: 'destructive',
       });
       return null;
@@ -56,12 +58,14 @@ export function useRdv() {
       toast({
         title: 'Succès',
         description: 'Rendez-vous modifié avec succès',
+          className: "bg-app-green text-white",
       });
       return updatedRdv;
     } catch (err) {
       toast({
         title: 'Erreur',
         description: 'Impossible de modifier le rendez-vous',
+          className: "bg-app-red text-white",
         variant: 'destructive',
       });
       return null;
@@ -79,12 +83,14 @@ export function useRdv() {
       toast({
         title: 'Succès',
         description: 'Rendez-vous supprimé avec succès',
+          className: "bg-app-green text-white",
       });
       return true;
     } catch (err) {
       toast({
         title: 'Erreur',
         description: 'Impossible de supprimer le rendez-vous',
+          className: "bg-app-red text-white",
         variant: 'destructive',
       });
       return false;

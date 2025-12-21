@@ -496,6 +496,7 @@ const CommandesPage: React.FC = () =>  {
             toast({
               title: '📅 Rendez-vous créé',
               description: `Un RDV a été automatiquement créé pour le ${dateEcheance} à ${horaire}`,
+              className: "bg-app-green text-white",
             });
           } catch (err) {
             console.error('Erreur création RDV:', err);

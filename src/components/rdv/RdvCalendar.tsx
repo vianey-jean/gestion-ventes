@@ -249,17 +249,17 @@ const RdvCalendar: React.FC<RdvCalendarProps> = ({
               variant="outline" 
               size="sm" 
               onClick={goToToday}
-              className="border-primary/30 hover:bg-primary/10"
+              className="border-blue-800 hover:bg-primary/10"
             >
               Aujourd'hui
             </Button>
-            <Button variant="outline" size="icon" onClick={() => navigateWeek('prev')} className="border-primary/30">
+            <Button variant="outline" size="icon" onClick={() => navigateWeek('prev')} className="border-red-800">
               <ChevronLeft className="h-4 w-4" />
             </Button>
             <span className="text-sm font-semibold min-w-[200px] text-center px-3 py-2 bg-primary/10 rounded-lg">
               {format(weekDays[0], 'd MMM', { locale: fr })} - {format(weekDays[6], 'd MMM yyyy', { locale: fr })}
             </span>
-            <Button variant="outline" size="icon" onClick={() => navigateWeek('next')} className="border-primary/30">
+            <Button variant="outline" size="icon" onClick={() => navigateWeek('next')} className="border-green-800">
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
