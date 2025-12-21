@@ -40,6 +40,8 @@ const Navbar: React.FC = () => {
     <header className="sticky top-0 z-50 backdrop-blur-xl bg-white/80 dark:bg-gray-900/80 border-b">
       <nav>
         <div className="max-w-7xl mx-auto px-4">
+
+          {/* ================= TOP BAR ================= */}
           <div className="flex justify-between h-16 items-center">
 
             {/* Logo */}
@@ -51,7 +53,7 @@ const Navbar: React.FC = () => {
               />
             </Link>
 
-            {/* ===== Desktop Menu ===== */}
+            {/* ================= DESKTOP MENU ================= */}
             <div className="hidden md:flex items-center space-x-2">
 
               {isAuthenticated && (
@@ -103,6 +105,7 @@ const Navbar: React.FC = () => {
                 </Button>
               </Link>
 
+              {/* 🔔 Notifications Desktop */}
               {isAuthenticated && <RdvNotifications />}
 
               {/* Theme */}
@@ -153,15 +156,29 @@ const Navbar: React.FC = () => {
               )}
             </div>
 
-            {/* ===== Mobile Toggle ===== */}
-            <div className="md:hidden">
-              <Button variant="ghost" size="icon" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
+            {/* ================= MOBILE / TABLET BAR ================= */}
+            <div className="md:hidden flex items-center gap-2">
+
+              {/* 🔔 Notifications MOBILE */}
+              {isAuthenticated && <RdvNotifications />}
+
+              {/* Theme */}
+              <Button variant="ghost" size="icon" onClick={toggleTheme}>
+                {theme === 'dark' ? <Sun /> : <Moon />}
+              </Button>
+
+              {/* Menu toggle */}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              >
                 {isMobileMenuOpen ? <X /> : <Menu />}
               </Button>
             </div>
           </div>
 
-          {/* ===== Mobile Menu ===== */}
+          {/* ================= MOBILE MENU ================= */}
           {isMobileMenuOpen && (
             <div className="md:hidden grid grid-cols-2 gap-2 pb-4">
 
@@ -193,7 +210,7 @@ const Navbar: React.FC = () => {
                 </>
               )}
 
-              {/* ✅ RDV Mobile (AJOUTÉ) */}
+              {/* RDV Mobile */}
               <Link to="/rdv">
                 <Button
                   variant="outline"

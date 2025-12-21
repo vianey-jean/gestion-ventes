@@ -89,7 +89,7 @@ const RdvNotifications: React.FC<RdvNotificationsProps> = ({
         toast({
           title: '🔔 Nouvelles notifications',
           description: `${result.created} rendez-vous dans moins de 24h`,
-          duration: 5000,
+          duration: 800,
         });
         await loadNotifications();
       }
