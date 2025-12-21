@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import PremiumLoading from '@/components/ui/premium-loading';
 import { 
   Plus, 
   Calendar, 
@@ -25,7 +26,11 @@ import {
   Phone,
   MapPin,
   Edit,
-  Trash2
+  Trash2,
+  Sparkles,
+  Crown,
+  TrendingUp,
+  CalendarDays
 } from 'lucide-react';
 import { format, isToday, isTomorrow, parseISO, startOfMonth, endOfMonth, isSameMonth } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -87,20 +92,28 @@ const RdvPage: React.FC = () => {
     setSearchParams(searchParams, { replace: true });
   }, [searchParams, setSearchParams]);
 
-  // Stats
+  // Stats du mois en cours uniquement (réinitialisé chaque mois)
   const stats = useMemo(() => {
-    const today = new Date().toISOString().split('T')[0];
-    const todayRdvs = rdvs.filter(r => r.date === today);
-    const confirmedRdvs = rdvs.filter(r => r.statut === 'confirme');
-    const pendingRdvs = rdvs.filter(r => r.statut === 'planifie');
-    const cancelledRdvs = rdvs.filter(r => r.statut === 'annule');
+    const now = new Date();
+    const today = now.toISOString().split('T')[0];
+    
+    // Filtrer uniquement les RDV du mois en cours
+    const currentMonthOnly = rdvs.filter(rdv => {
+      const rdvDate = parseISO(rdv.date);
+      return isSameMonth(rdvDate, now);
+    });
+    
+    const todayRdvs = currentMonthOnly.filter(r => r.date === today);
+    const confirmedRdvs = currentMonthOnly.filter(r => r.statut === 'confirme');
+    const pendingRdvs = currentMonthOnly.filter(r => r.statut === 'planifie');
+    const cancelledRdvs = currentMonthOnly.filter(r => r.statut === 'annule');
 
     return {
       today: todayRdvs.length,
       confirmed: confirmedRdvs.length,
       pending: pendingRdvs.length,
       cancelled: cancelledRdvs.length,
-      total: rdvs.length,
+      total: currentMonthOnly.length,
     };
   }, [rdvs]);
 
@@ -261,27 +274,57 @@ const RdvPage: React.FC = () => {
     termine: 'Terminé',
   };
 
+  if (loading) {
+    return (
+      <Layout>
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-amber-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-purple-900/20">
+          <PremiumLoading 
+            text="Chargement des rendez-vous..." 
+            size="xl" 
+            variant="dashboard"
+          />
+        </div>
+      </Layout>
+    );
+  }
+
   return (
     <Layout>
-      <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
-        {/* Hero Section */}
+      <div className="min-h-screen bg-gradient-to-br from-amber-50/50 via-white to-purple-50/50 dark:from-gray-900 dark:via-gray-800 dark:to-purple-900/20">
+        {/* Hero Section Premium */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent py-8 px-4 mb-6"
+          className="relative overflow-hidden bg-gradient-to-r from-amber-500/10 via-purple-500/10 to-blue-500/10 py-10 px-4 mb-8 border-b border-amber-200/50 dark:border-amber-700/30"
         >
-          <div className="max-w-7xl mx-auto">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          {/* Background decoration */}
+          <div className="absolute inset-0 overflow-hidden">
+            <div className="absolute -top-20 -right-20 w-60 h-60 bg-gradient-to-br from-amber-400/20 to-purple-400/20 rounded-full blur-3xl"></div>
+            <div className="absolute -bottom-20 -left-20 w-60 h-60 bg-gradient-to-tr from-purple-400/20 to-blue-400/20 rounded-full blur-3xl"></div>
+          </div>
+          
+          <div className="relative max-w-7xl mx-auto">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
               <div>
-                <h1 className="text-3xl font-bold flex items-center gap-3">
-                  <Calendar className="h-8 w-8 text-primary" />
-                  Gestion des Rendez-vous
-                </h1>
-                <p className="text-muted-foreground mt-1">
-                  Planifiez et gérez vos rendez-vous clients - {format(new Date(), 'MMMM yyyy', { locale: fr })}
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="p-3 bg-gradient-to-br from-amber-500 to-purple-600 rounded-2xl shadow-xl shadow-amber-500/30">
+                    <Crown className="h-8 w-8 text-white" />
+                  </div>
+                  <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-amber-600 via-purple-600 to-blue-600 bg-clip-text text-transparent">
+                    Gestion des Rendez-vous
+                  </h1>
+                  <Sparkles className="h-6 w-6 text-amber-500 animate-pulse" />
+                </div>
+                <p className="text-muted-foreground mt-2 flex items-center gap-2">
+                  <CalendarDays className="h-4 w-4" />
+                  Planifiez et gérez vos rendez-vous clients - <span className="text-red-600 font-bold capitalize">{format(new Date(), 'MMMM yyyy', { locale: fr })}</span>
                 </p>
               </div>
-              <Button onClick={() => handleOpenForm()} size="lg" className="shadow-lg">
+              <Button 
+                onClick={() => handleOpenForm()} 
+                size="lg" 
+                className="bg-gradient-to-r from-amber-500 via-purple-500 to-blue-500 hover:from-amber-600 hover:via-purple-600 hover:to-blue-600 text-white shadow-xl shadow-purple-500/30 border-0 font-semibold"
+              >
                 <Plus className="h-5 w-5 mr-2" />
                 Nouveau rendez-vous
               </Button>
@@ -290,21 +333,25 @@ const RdvPage: React.FC = () => {
         </motion.div>
 
         <div className="max-w-7xl mx-auto px-4 pb-8">
-          {/* Stats Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          {/* Stats Cards Premium */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-8">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
+              whileHover={{ scale: 1.02, y: -5 }}
             >
-              <Card className="bg-gradient-to-br from-blue-500/10 to-blue-600/5 border-blue-200/50">
-                <CardContent className="p-4">
+              <Card className="relative overflow-hidden bg-gradient-to-br from-blue-500/15 via-blue-400/10 to-blue-600/5 border-blue-300/50 dark:border-blue-700/50 shadow-lg hover:shadow-xl transition-all duration-300">
+                <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-blue-400/20 to-transparent rounded-bl-full"></div>
+                <CardContent className="p-5 relative">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-muted-foreground">Aujourd'hui</p>
-                      <p className="text-2xl font-bold text-blue-600">{stats.today}</p>
+                      <p className="text-sm font-medium text-blue-600/80 dark:text-blue-400">Aujourd'hui</p>
+                      <p className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">{stats.today}</p>
                     </div>
-                    <Clock className="h-8 w-8 text-blue-500/50" />
+                    <div className="p-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg shadow-blue-500/30">
+                      <Clock className="h-6 w-6 text-white" />
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -314,15 +361,19 @@ const RdvPage: React.FC = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
+              whileHover={{ scale: 1.02, y: -5 }}
             >
-              <Card className="bg-gradient-to-br from-green-500/10 to-green-600/5 border-green-200/50">
-                <CardContent className="p-4">
+              <Card className="relative overflow-hidden bg-gradient-to-br from-emerald-500/15 via-emerald-400/10 to-emerald-600/5 border-emerald-300/50 dark:border-emerald-700/50 shadow-lg hover:shadow-xl transition-all duration-300">
+                <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-emerald-400/20 to-transparent rounded-bl-full"></div>
+                <CardContent className="p-5 relative">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-muted-foreground">Ce mois</p>
-                      <p className="text-2xl font-bold text-green-600">{currentMonthRdvs.length}</p>
+                      <p className="text-sm font-medium text-emerald-600/80 dark:text-emerald-400">Ce mois</p>
+                      <p className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-emerald-800 bg-clip-text text-transparent">{currentMonthRdvs.length}</p>
                     </div>
-                    <CalendarCheck className="h-8 w-8 text-green-500/50" />
+                    <div className="p-3 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl shadow-lg shadow-emerald-500/30">
+                      <TrendingUp className="h-6 w-6 text-white" />
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -332,15 +383,19 @@ const RdvPage: React.FC = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
+              whileHover={{ scale: 1.02, y: -5 }}
             >
-              <Card className="bg-gradient-to-br from-orange-500/10 to-orange-600/5 border-orange-200/50">
-                <CardContent className="p-4">
+              <Card className="relative overflow-hidden bg-gradient-to-br from-amber-500/15 via-amber-400/10 to-orange-600/5 border-amber-300/50 dark:border-amber-700/50 shadow-lg hover:shadow-xl transition-all duration-300">
+                <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-amber-400/20 to-transparent rounded-bl-full"></div>
+                <CardContent className="p-5 relative">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-muted-foreground">En attente</p>
-                      <p className="text-2xl font-bold text-orange-600">{stats.pending}</p>
+                      <p className="text-sm font-medium text-amber-600/80 dark:text-amber-400">En attente</p>
+                      <p className="text-3xl font-bold bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">{stats.pending}</p>
                     </div>
-                    <Calendar className="h-8 w-8 text-orange-500/50" />
+                    <div className="p-3 bg-gradient-to-br from-amber-500 to-orange-500 rounded-xl shadow-lg shadow-amber-500/30">
+                      <CalendarCheck className="h-6 w-6 text-white" />
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -350,15 +405,19 @@ const RdvPage: React.FC = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
+              whileHover={{ scale: 1.02, y: -5 }}
             >
-              <Card className="bg-gradient-to-br from-purple-500/10 to-purple-600/5 border-purple-200/50">
-                <CardContent className="p-4">
+              <Card className="relative overflow-hidden bg-gradient-to-br from-purple-500/15 via-purple-400/10 to-purple-600/5 border-purple-300/50 dark:border-purple-700/50 shadow-lg hover:shadow-xl transition-all duration-300">
+                <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-purple-400/20 to-transparent rounded-bl-full"></div>
+                <CardContent className="p-5 relative">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-muted-foreground">Total</p>
-                      <p className="text-2xl font-bold text-purple-600">{stats.total}</p>
+                      <p className="text-sm font-medium text-purple-600/80 dark:text-purple-400">Total du mois</p>
+                      <p className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-purple-800 bg-clip-text text-transparent">{stats.total}</p>
                     </div>
-                    <CheckCircle className="h-8 w-8 text-purple-500/50" />
+                    <div className="p-3 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg shadow-purple-500/30">
+                      <Crown className="h-6 w-6 text-white" />
+                    </div>
                   </div>
                 </CardContent>
               </Card>

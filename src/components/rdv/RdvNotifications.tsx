@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -47,10 +47,14 @@ const RdvNotifications: React.FC<RdvNotificationsProps> = ({
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const eventSourceRef = useRef<EventSource | null>(null);
+  const previousCountRef = useRef<number>(0);
   
   // Modal pour voir le détail d'un RDV
   const [selectedNotification, setSelectedNotification] = useState<RdvNotification | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
+
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://server-gestion-ventes.onrender.com';
 
   // Charger les notifications
   const loadNotifications = useCallback(async () => {
@@ -58,13 +62,24 @@ const RdvNotifications: React.FC<RdvNotificationsProps> = ({
       setLoading(true);
       const data = await rdvNotificationsApi.getUnread();
       setNotifications(data);
+      
+      // Vérifier si le nombre a augmenté pour afficher un toast
+      if (data.length > previousCountRef.current && previousCountRef.current > 0) {
+        toast({
+          title: '🔔 Nouvelle notification RDV',
+          description: `${data.length - previousCountRef.current} nouveau(x) rendez-vous`,
+          duration: 5000,
+        });
+      }
+      
+      previousCountRef.current = data.length;
       setUnreadCount(data.length);
     } catch (error) {
       console.error('Erreur chargement notifications:', error);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [toast]);
 
   // Vérifier et créer des notifications pour les RDV dans 24h
   const checkAndCreateNotifications = useCallback(async () => {
@@ -83,18 +98,60 @@ const RdvNotifications: React.FC<RdvNotificationsProps> = ({
     }
   }, [toast, loadNotifications]);
 
-  // Charger au montage et vérifier périodiquement
+  // Configurer SSE pour la synchronisation en temps réel
   useEffect(() => {
     loadNotifications();
     checkAndCreateNotifications();
     
-    // Vérifier toutes les 5 minutes
+    // Configurer SSE pour les mises à jour en temps réel
+    const setupSSE = () => {
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close();
+      }
+
+      const eventSource = new EventSource(`${API_BASE_URL}/api/sync/events`);
+      eventSourceRef.current = eventSource;
+
+      eventSource.onopen = () => {
+        console.log('SSE RDV Notifications connecté');
+      };
+
+      eventSource.addEventListener('data-changed', (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          
+          // Écouter les changements sur rdvNotifications et rdv
+          if (data.type === 'rdvNotifications' || data.type === 'rdv') {
+            // Recharger les notifications
+            loadNotifications();
+          }
+        } catch (error) {
+          console.error('Erreur parsing SSE:', error);
+        }
+      });
+
+      eventSource.onerror = (error) => {
+        console.error('SSE error:', error);
+        eventSource.close();
+        // Reconnecter après 5 secondes
+        setTimeout(setupSSE, 5000);
+      };
+    };
+
+    setupSSE();
+    
+    // Vérifier toutes les 5 minutes (backup si SSE ne fonctionne pas)
     const interval = setInterval(() => {
       checkAndCreateNotifications();
     }, 5 * 60 * 1000);
     
-    return () => clearInterval(interval);
-  }, [loadNotifications, checkAndCreateNotifications]);
+    return () => {
+      clearInterval(interval);
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close();
+      }
+    };
+  }, [loadNotifications, checkAndCreateNotifications, API_BASE_URL]);
 
   // Quand on clique sur une notification, afficher le détail et marquer comme lu
   const handleNotificationClick = async (notification: RdvNotification) => {
