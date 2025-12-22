@@ -28,26 +28,29 @@ class RealtimeService {
     );
   }
 
+  private fallbackInterval: NodeJS.Timeout | null = null;
+
   private handleConnectionChange(connected: boolean) {
     this.isConnected = connected;
-    console.log('🔗 Changement de statut de connexion:', connected);
     
-    if (!connected) {
+    // Démarrer le polling si non connecté
+    if (!connected && !this.fallbackInterval) {
       this.startFallbackSync();
     }
   }
 
   private startFallbackSync() {
-    console.log('🔄 Démarrage du mode de synchronisation de secours');
+    // Éviter les intervalles multiples
+    if (this.fallbackInterval) {
+      return;
+    }
     
-    const fallbackInterval = setInterval(async () => {
-      if (!this.isConnected) {
-        console.log('📡 Sync de secours en cours...');
-        await this.syncCurrentMonthData();
-      } else {
-        console.log('✅ Connexion rétablie, arrêt du mode de secours');
-        clearInterval(fallbackInterval);
-      }
+    // Sync initial silencieux
+    this.syncCurrentMonthData();
+    
+    // Polling périodique silencieux
+    this.fallbackInterval = setInterval(async () => {
+      await this.syncCurrentMonthData();
     }, this.config.fallbackSyncInterval);
   }
 
@@ -135,19 +138,19 @@ class RealtimeService {
 
   // Public API methods
   connect(token?: string) {
-    console.log('🔌 Connexion au service en temps réel');
     this.eventSourceManager.connect(token);
   }
 
   disconnect() {
-    console.log('🔌 Déconnexion du service en temps réel');
+    if (this.fallbackInterval) {
+      clearInterval(this.fallbackInterval);
+      this.fallbackInterval = null;
+    }
     this.eventSourceManager.disconnect();
   }
 
   async syncCurrentMonthData(): Promise<SyncData | null> {
     try {
-      console.log('🔄 Synchronisation complète des données...');
-      
       const currentDate = new Date();
       const currentMonth = currentDate.getMonth() + 1;
       const currentYear = currentDate.getFullYear();
@@ -163,16 +166,14 @@ class RealtimeService {
       ]).catch(() => [{ data: [] }, { data: [] }, { data: [] }, { data: [] }, { data: [] }, { data: [] }, { data: [] }]);
 
       const syncData: SyncData = {
-        products: products.data,
-        sales: sales.data,
-        pretFamilles: pretFamilles.data,
-        pretProduits: pretProduits.data,
-        depenses: depenses.data,
-        clients: clients.data,
-        messages: messages.data
+        products: products.data || [],
+        sales: sales.data || [],
+        pretFamilles: pretFamilles.data || [],
+        pretProduits: pretProduits.data || [],
+        depenses: depenses.data || [],
+        clients: clients.data || [],
+        messages: messages.data || []
       };
-
-      console.log('📊 Données synchronisées:', syncData);
 
       // Mettre à jour le cache
       this.dataCacheManager.updateCache('products', products.data);

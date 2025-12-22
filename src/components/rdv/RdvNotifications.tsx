@@ -47,14 +47,11 @@ const RdvNotifications: React.FC<RdvNotificationsProps> = ({
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const eventSourceRef = useRef<EventSource | null>(null);
   const previousCountRef = useRef<number>(0);
   
   // Modal pour voir le détail d'un RDV
   const [selectedNotification, setSelectedNotification] = useState<RdvNotification | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
-
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://server-gestion-ventes.onrender.com';
 
   // Charger les notifications
   const loadNotifications = useCallback(async () => {
@@ -98,72 +95,20 @@ const RdvNotifications: React.FC<RdvNotificationsProps> = ({
     }
   }, [toast, loadNotifications]);
 
-  // Configurer SSE pour la synchronisation en temps réel
+  // Polling pour la synchronisation (SSE désactivé pour éviter erreurs CORS)
   useEffect(() => {
     loadNotifications();
     checkAndCreateNotifications();
 
-    const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    const reconnectAttemptsRef = { current: 0 };
-
-    // Configurer SSE pour les mises à jour en temps réel
-    const setupSSE = () => {
-      if (isDev) {
-        // En dev local, éviter le spam CORS/SSE (polling seulement)
-        return;
-      }
-
-      if (eventSourceRef.current) {
-        eventSourceRef.current.close();
-      }
-
-      const eventSource = new EventSource(`${API_BASE_URL}/api/sync/events`);
-      eventSourceRef.current = eventSource;
-
-      eventSource.onopen = () => {
-        reconnectAttemptsRef.current = 0;
-        console.log('SSE RDV Notifications connecté');
-      };
-
-      eventSource.addEventListener('data-changed', (event) => {
-        try {
-          const data = JSON.parse((event as MessageEvent).data);
-
-          // Écouter les changements sur rdvNotifications et rdv
-          if (data.type === 'rdvNotifications' || data.type === 'rdv') {
-            loadNotifications();
-          }
-        } catch (error) {
-          console.error('Erreur parsing SSE:', error);
-        }
-      });
-
-      eventSource.onerror = (error) => {
-        console.error('SSE error:', error);
-        eventSource.close();
-
-        // Limiter les reconnexions pour éviter 429/spam console
-        if (reconnectAttemptsRef.current < 3) {
-          reconnectAttemptsRef.current += 1;
-          setTimeout(setupSSE, 5000);
-        }
-      };
-    };
-
-    setupSSE();
-
-    // Vérifier toutes les 5 minutes (backup si SSE ne fonctionne pas)
+    // Polling toutes les 5 minutes (SSE désactivé pour éviter CORS)
     const interval = setInterval(() => {
       checkAndCreateNotifications();
     }, 5 * 60 * 1000);
 
     return () => {
       clearInterval(interval);
-      if (eventSourceRef.current) {
-        eventSourceRef.current.close();
-      }
     };
-  }, [loadNotifications, checkAndCreateNotifications, API_BASE_URL]);
+  }, [loadNotifications, checkAndCreateNotifications]);
 
   // Quand on clique sur une notification, afficher le détail et marquer comme lu
   const handleNotificationClick = async (notification: RdvNotification) => {
