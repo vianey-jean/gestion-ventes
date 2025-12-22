@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { RDV } from '@/types/rdv';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,7 +13,8 @@ import {
   Phone,
   Edit,
   Trash2,
-  X
+  X,
+  AlertTriangle
 } from 'lucide-react';
 import { format, addDays, startOfWeek, isSameDay, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -29,8 +30,12 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { motion } from 'framer-motion';
 import { ConfirmDialog } from '@/components/shared';
+import axios from 'axios';
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://server-gestion-ventes.onrender.com';
 
 interface RdvCalendarProps {
   rdvs: RDV[];
@@ -80,6 +85,11 @@ const RdvCalendar: React.FC<RdvCalendarProps> = ({
   const [pendingDrop, setPendingDrop] = useState<{ rdv: RDV; date: string; time: string } | null>(null);
   const [newTime, setNewTime] = useState('09:00');
   const [newDate, setNewDate] = useState('');
+  
+  // Drop conflict checking
+  const [dropConflicts, setDropConflicts] = useState<RDV[]>([]);
+  const [isCheckingDropConflict, setIsCheckingDropConflict] = useState(false);
+  const [hasDropConflict, setHasDropConflict] = useState(false);
   
   // RDV Detail Modal
   const [selectedRdvDetail, setSelectedRdvDetail] = useState<RDV | null>(null);
@@ -139,6 +149,55 @@ const RdvCalendar: React.FC<RdvCalendarProps> = ({
     }
   }, [blinkingRdvId, blinkCount, onHighlightComplete]);
 
+  // Check for drop conflicts when newDate or newTime changes in dialog
+  useEffect(() => {
+    const checkDropConflict = async () => {
+      if (!showTimeDialog || !newDate || !newTime || !pendingDrop) {
+        setDropConflicts([]);
+        setHasDropConflict(false);
+        return;
+      }
+
+      // Calculate end time (same duration as original rdv)
+      const originalStart = pendingDrop.rdv.heureDebut.split(':').map(Number);
+      const originalEnd = pendingDrop.rdv.heureFin.split(':').map(Number);
+      const durationMinutes = (originalEnd[0] * 60 + originalEnd[1]) - (originalStart[0] * 60 + originalStart[1]);
+      
+      const newStartParts = newTime.split(':').map(Number);
+      const newEndMinutes = newStartParts[0] * 60 + newStartParts[1] + durationMinutes;
+      const newEndHour = Math.floor(newEndMinutes / 60) % 24;
+      const newEndMin = newEndMinutes % 60;
+      const newHeureFin = `${newEndHour.toString().padStart(2, '0')}:${newEndMin.toString().padStart(2, '0')}`;
+
+      setIsCheckingDropConflict(true);
+      try {
+        const token = localStorage.getItem('token');
+        const params = new URLSearchParams({
+          date: newDate,
+          heureDebut: newTime,
+          heureFin: newHeureFin,
+          excludeId: pendingDrop.rdv.id // Exclude the rdv being moved
+        });
+        
+        const response = await axios.get(`${API_BASE_URL}/api/rdv/conflicts?${params.toString()}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        setDropConflicts(response.data);
+        setHasDropConflict(response.data.length > 0);
+      } catch (error) {
+        console.error('Error checking drop conflicts:', error);
+        setDropConflicts([]);
+        setHasDropConflict(false);
+      } finally {
+        setIsCheckingDropConflict(false);
+      }
+    };
+
+    const debounce = setTimeout(checkDropConflict, 300);
+    return () => clearTimeout(debounce);
+  }, [showTimeDialog, newDate, newTime, pendingDrop]);
+
   const navigateWeek = (direction: 'prev' | 'next') => {
     setCurrentDate(prev => addDays(prev, direction === 'prev' ? -7 : 7));
   };
@@ -168,6 +227,8 @@ const RdvCalendar: React.FC<RdvCalendarProps> = ({
       setPendingDrop({ rdv: draggedRdv, date, time: timeStr });
       setNewDate(date);
       setNewTime(timeStr);
+      setDropConflicts([]);
+      setHasDropConflict(false);
       setShowTimeDialog(true);
     }
     setDraggedRdv(null);
@@ -175,6 +236,8 @@ const RdvCalendar: React.FC<RdvCalendarProps> = ({
   };
 
   const confirmTimeChange = () => {
+    if (hasDropConflict) return; // Prevent if there's a conflict
+    
     if (pendingDrop && onOpenFormWithDateTime) {
       // Ouvrir le formulaire avec les nouvelles valeurs pré-remplies
       onOpenFormWithDateTime(pendingDrop.rdv, newDate, newTime);
@@ -184,6 +247,8 @@ const RdvCalendar: React.FC<RdvCalendarProps> = ({
     }
     setShowTimeDialog(false);
     setPendingDrop(null);
+    setDropConflicts([]);
+    setHasDropConflict(false);
   };
 
   const handleRdvClick = (e: React.MouseEvent, rdv: RDV) => {
@@ -392,9 +457,43 @@ const RdvCalendar: React.FC<RdvCalendarProps> = ({
               Modifier la date et l'horaire
             </DialogTitle>
             <DialogDescription>
-              Vous déplacez "{pendingDrop?.rdv.titre}". Ajustez la date et l'heure avant d'enregistrer.
+              {pendingDrop?.rdv?.titre && (
+                <span className="text-green-600 font-bold">
+                  {pendingDrop.rdv.titre.toUpperCase()}
+                </span>
+              )}
             </DialogDescription>
           </DialogHeader>
+          
+          {/* Conflict Alert */}
+          {hasDropConflict && dropConflicts.length > 0 && (
+            <Alert variant="destructive" className="border-red-500/50 bg-red-500/10">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                <span className="font-bold">Cette horaire de cette date est déjà prise !</span>
+                <div className="mt-2 space-y-1">
+                  {dropConflicts.map(c => (
+                    <div key={c.id} className="text-sm font-medium flex items-center gap-2">
+                      <span className="w-2 h-2 bg-red-500 rounded-full"></span>
+                      {c.titre} - {c.clientNom} ({c.heureDebut} - {c.heureFin})
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-2 text-xs">
+                  Veuillez choisir une autre date ou un autre horaire.
+                </div>
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {/* Checking conflict indicator */}
+          {isCheckingDropConflict && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <div className="h-4 w-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+              Vérification de la disponibilité...
+            </div>
+          )}
+
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="newDate">Nouvelle date</Label>
@@ -403,7 +502,7 @@ const RdvCalendar: React.FC<RdvCalendarProps> = ({
                 type="date"
                 value={newDate}
                 onChange={(e) => setNewDate(e.target.value)}
-                className="h-12"
+                className="h-12 text-blue-800 font-bold"
               />
             </div>
             <div className="space-y-2">
@@ -413,7 +512,7 @@ const RdvCalendar: React.FC<RdvCalendarProps> = ({
                 type="time"
                 value={newTime}
                 onChange={(e) => setNewTime(e.target.value)}
-                className="h-12"
+                className="h-12 text-red-800 font-bold"
               />
             </div>
           </div>
@@ -421,8 +520,24 @@ const RdvCalendar: React.FC<RdvCalendarProps> = ({
             <Button variant="outline" onClick={() => setShowTimeDialog(false)}>
               Annuler
             </Button>
-            <Button onClick={confirmTimeChange} className="bg-gradient-to-r from-primary to-primary/80">
-              Ouvrir le formulaire
+            <Button 
+              onClick={confirmTimeChange} 
+              disabled={hasDropConflict || isCheckingDropConflict}
+              className={cn(
+                "transition-all",
+                hasDropConflict 
+                  ? "bg-gray-400 cursor-not-allowed" 
+                  : "bg-gradient-to-r from-primary to-primary/80"
+              )}
+            >
+              {hasDropConflict ? (
+                <span className="flex items-center gap-2">
+                  <AlertTriangle className="h-4 w-4" />
+                  Créneau non disponible
+                </span>
+              ) : (
+                "Porter ce RDV"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -22,6 +22,7 @@ import { AlertTriangle, Calendar, Clock, User, MapPin, Phone, Search, CheckCircl
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
+import { cn } from '@/lib/utils';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://server-gestion-ventes.onrender.com';
 
@@ -74,6 +75,11 @@ const RdvForm: React.FC<RdvFormProps> = ({
   const [isSearching, setIsSearching] = useState(false);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [noClientFound, setNoClientFound] = useState(false);
+
+  // Conflict checking
+  const [timeConflicts, setTimeConflicts] = useState<RDV[]>([]);
+  const [isCheckingConflict, setIsCheckingConflict] = useState(false);
+  const [hasConflict, setHasConflict] = useState(false);
 
   useEffect(() => {
     if (rdv) {
@@ -153,6 +159,47 @@ const RdvForm: React.FC<RdvFormProps> = ({
     return () => clearTimeout(debounce);
   }, [clientSearch, selectedClient]);
 
+  // Check for time conflicts when date, heureDebut, or heureFin changes
+  useEffect(() => {
+    const checkTimeConflict = async () => {
+      if (!formData.date || !formData.heureDebut || !formData.heureFin) {
+        setTimeConflicts([]);
+        setHasConflict(false);
+        return;
+      }
+
+      setIsCheckingConflict(true);
+      try {
+        const token = localStorage.getItem('token');
+        const params = new URLSearchParams({
+          date: formData.date,
+          heureDebut: formData.heureDebut,
+          heureFin: formData.heureFin,
+        });
+        // Exclude current RDV when editing
+        if (rdv?.id) {
+          params.append('excludeId', rdv.id);
+        }
+        
+        const response = await axios.get(`${API_BASE_URL}/api/rdv/conflicts?${params.toString()}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        setTimeConflicts(response.data);
+        setHasConflict(response.data.length > 0);
+      } catch (error) {
+        console.error('Error checking conflicts:', error);
+        setTimeConflicts([]);
+        setHasConflict(false);
+      } finally {
+        setIsCheckingConflict(false);
+      }
+    };
+
+    const debounce = setTimeout(checkTimeConflict, 300);
+    return () => clearTimeout(debounce);
+  }, [formData.date, formData.heureDebut, formData.heureFin, rdv?.id]);
+
   function addHour(time: string): string {
     const [hours, minutes] = time.split(':').map(Number);
     const newHours = (hours + 1) % 24;
@@ -211,6 +258,43 @@ const RdvForm: React.FC<RdvFormProps> = ({
             {!viewOnly && <Sparkles className="h-5 w-5 text-amber-500 animate-pulse" />}
           </DialogTitle>
         </DialogHeader>
+
+        {/* Real-time conflict detection */}
+        <AnimatePresence>
+          {hasConflict && timeConflicts.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+            >
+              <Alert variant="destructive" className="mb-4 border-red-500/50 bg-red-500/10">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription>
+                  <span className="font-bold">Cette horaire de cette date est déjà prise !</span>
+                  <div className="mt-2 space-y-1">
+                    {timeConflicts.map(c => (
+                      <div key={c.id} className="text-sm font-medium flex items-center gap-2">
+                        <span className="w-2 h-2 bg-red-500 rounded-full"></span>
+                        {c.titre} - {c.clientNom} ({c.heureDebut} - {c.heureFin})
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-2 text-xs">
+                    Veuillez choisir une autre date ou un autre horaire.
+                  </div>
+                </AlertDescription>
+              </Alert>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Checking conflict indicator */}
+        {isCheckingConflict && (
+          <div className="mb-4 flex items-center gap-2 text-sm text-muted-foreground">
+            <div className="h-4 w-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+            Vérification de la disponibilité...
+          </div>
+        )}
 
         {conflicts.length > 0 && (
           <Alert variant="destructive" className="mb-4 border-red-500/50 bg-red-500/10">
@@ -472,13 +556,23 @@ const RdvForm: React.FC<RdvFormProps> = ({
             {!viewOnly && (
               <Button 
                 type="submit" 
-                disabled={isSubmitting}
-                className="h-12 px-8 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg"
+                disabled={isSubmitting || hasConflict || isCheckingConflict}
+                className={cn(
+                  "h-12 px-8 shadow-lg transition-all",
+                  hasConflict 
+                    ? "bg-gray-400 cursor-not-allowed" 
+                    : "bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
+                )}
               >
                 {isSubmitting ? (
                   <span className="flex items-center gap-2">
                     <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                     Enregistrement...
+                  </span>
+                ) : hasConflict ? (
+                  <span className="flex items-center gap-2">
+                    <AlertTriangle className="h-4 w-4" />
+                    Créneau non disponible
                   </span>
                 ) : (
                   <span className="flex items-center gap-2">
