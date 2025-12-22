@@ -36,14 +36,22 @@ export class EventSourceManager {
 
     this.clearConnectionTimeout();
 
+    // Vérifier si le navigateur supporte EventSource et si on n'est pas en mode développement
+    const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    
+    // En mode développement, désactiver SSE car CORS pose problème
+    // Utiliser uniquement le mode fallback polling
+    if (isDev) {
+      console.log('🔧 Mode développement détecté - SSE désactivé, utilisation du polling');
+      this.handleConnectionError();
+      return;
+    }
+
     try {
-      // Utiliser toujours l'URL de production pour éviter les problèmes CORS
       const baseUrl = import.meta.env.VITE_API_BASE_URL || 'https://server-gestion-ventes.onrender.com';
       const url = `${baseUrl}/api/sync/events`;
       
-      this.eventSource = new EventSource(url, {
-        withCredentials: false // Désactiver les credentials pour éviter les problèmes CORS
-      });
+      this.eventSource = new EventSource(url);
 
       this.setupConnectionTimeout();
       this.setupEventListeners();

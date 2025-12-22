@@ -102,9 +102,17 @@ const RdvNotifications: React.FC<RdvNotificationsProps> = ({
   useEffect(() => {
     loadNotifications();
     checkAndCreateNotifications();
-    
+
+    const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const reconnectAttemptsRef = { current: 0 };
+
     // Configurer SSE pour les mises à jour en temps réel
     const setupSSE = () => {
+      if (isDev) {
+        // En dev local, éviter le spam CORS/SSE (polling seulement)
+        return;
+      }
+
       if (eventSourceRef.current) {
         eventSourceRef.current.close();
       }
@@ -113,16 +121,16 @@ const RdvNotifications: React.FC<RdvNotificationsProps> = ({
       eventSourceRef.current = eventSource;
 
       eventSource.onopen = () => {
+        reconnectAttemptsRef.current = 0;
         console.log('SSE RDV Notifications connecté');
       };
 
       eventSource.addEventListener('data-changed', (event) => {
         try {
-          const data = JSON.parse(event.data);
-          
+          const data = JSON.parse((event as MessageEvent).data);
+
           // Écouter les changements sur rdvNotifications et rdv
           if (data.type === 'rdvNotifications' || data.type === 'rdv') {
-            // Recharger les notifications
             loadNotifications();
           }
         } catch (error) {
@@ -133,18 +141,22 @@ const RdvNotifications: React.FC<RdvNotificationsProps> = ({
       eventSource.onerror = (error) => {
         console.error('SSE error:', error);
         eventSource.close();
-        // Reconnecter après 5 secondes
-        setTimeout(setupSSE, 5000);
+
+        // Limiter les reconnexions pour éviter 429/spam console
+        if (reconnectAttemptsRef.current < 3) {
+          reconnectAttemptsRef.current += 1;
+          setTimeout(setupSSE, 5000);
+        }
       };
     };
 
     setupSSE();
-    
+
     // Vérifier toutes les 5 minutes (backup si SSE ne fonctionne pas)
     const interval = setInterval(() => {
       checkAndCreateNotifications();
     }, 5 * 60 * 1000);
-    
+
     return () => {
       clearInterval(interval);
       if (eventSourceRef.current) {

@@ -153,14 +153,14 @@ class RealtimeService {
       const currentYear = currentDate.getFullYear();
       
       const [products, sales, pretFamilles, pretProduits, depenses, clients, messages] = await Promise.all([
-        api.get('/products').catch(() => ({ data: [] })),
-        api.get(`/sales/by-month?month=${currentMonth}&year=${currentYear}`).catch(() => ({ data: [] })),
-        api.get('/pretfamilles').catch(() => ({ data: [] })),
-        api.get('/pretproduits').catch(() => ({ data: [] })),
-        api.get('/depenses/mouvements').catch(() => ({ data: [] })),
-        api.get('/clients').catch(() => ({ data: [] })),
-        api.get('/messages').catch(() => ({ data: [] }))
-      ]);
+        api.get('/api/products').catch(() => ({ data: [] })),
+        api.get(`/api/sales/by-month?month=${currentMonth}&year=${currentYear}`).catch(() => ({ data: [] })),
+        api.get('/api/pretfamilles').catch(() => ({ data: [] })),
+        api.get('/api/pretproduits').catch(() => ({ data: [] })),
+        api.get('/api/depenses/mouvements').catch(() => ({ data: [] })),
+        api.get('/api/clients').catch(() => ({ data: [] })),
+        api.get('/api/messages').catch(() => ({ data: [] }))
+      ]).catch(() => [{ data: [] }, { data: [] }, { data: [] }, { data: [] }, { data: [] }, { data: [] }, { data: [] }]);
 
       const syncData: SyncData = {
         products: products.data,
@@ -246,7 +246,7 @@ class RealtimeService {
   async forceSync(): Promise<void> {
     try {
       console.log('🚀 Force sync demandé via API');
-      await api.post('/sync/force-sync');
+      await api.post('/api/sync/force-sync');
     } catch (error) {
       console.error('❌ Erreur lors du force sync, fallback vers sync local');
       await this.syncCurrentMonthData();

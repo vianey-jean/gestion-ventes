@@ -73,6 +73,7 @@ const RdvForm: React.FC<RdvFormProps> = ({
   const [showResults, setShowResults] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  const [noClientFound, setNoClientFound] = useState(false);
 
   useEffect(() => {
     if (rdv) {
@@ -120,6 +121,7 @@ const RdvForm: React.FC<RdvFormProps> = ({
       if (clientSearch.length < 3) {
         setSearchResults([]);
         setShowResults(false);
+        setNoClientFound(false);
         return;
       }
 
@@ -128,6 +130,7 @@ const RdvForm: React.FC<RdvFormProps> = ({
       }
 
       setIsSearching(true);
+      setNoClientFound(false);
       try {
         const token = localStorage.getItem('token');
         const response = await axios.get(`${API_BASE_URL}/api/rdv/search-clients`, {
@@ -136,9 +139,11 @@ const RdvForm: React.FC<RdvFormProps> = ({
         });
         setSearchResults(response.data);
         setShowResults(response.data.length > 0);
+        setNoClientFound(response.data.length === 0);
       } catch (error) {
         console.error('Error searching clients:', error);
         setSearchResults([]);
+        setNoClientFound(true);
       } finally {
         setIsSearching(false);
       }
@@ -155,7 +160,14 @@ const RdvForm: React.FC<RdvFormProps> = ({
   }
 
   const handleChange = (field: keyof RDVFormData, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData(prev => {
+      const updated = { ...prev, [field]: value };
+      // Auto-fill heureFin when heureDebut changes
+      if (field === 'heureDebut' && value) {
+        updated.heureFin = addHour(value);
+      }
+      return updated;
+    });
   };
 
   const handleClientSelect = (client: Client) => {
@@ -264,6 +276,22 @@ const RdvForm: React.FC<RdvFormProps> = ({
                 </div>
               )}
             </div>
+
+            {/* No client found notification */}
+            <AnimatePresence>
+              {noClientFound && clientSearch.length >= 3 && !selectedClient && !viewOnly && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="mt-2 p-3 rounded-lg bg-destructive/10 border border-destructive/30"
+                >
+                  <p className="text-destructive font-bold text-sm">
+                    Aucun client trouvé sur "{clientSearch}"
+                  </p>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* Search Results Dropdown */}
             <AnimatePresence>
