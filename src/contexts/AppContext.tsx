@@ -4,6 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Product, Sale } from '@/types';
 import { productService, salesService } from '@/service/api';
 import { useAuth } from '@/contexts/AuthContext';
+import { isFormProtected } from '@/hooks/use-realtime-sync';
 
 interface AppContextType {
   products: Product[];
@@ -181,8 +182,15 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   }, [toast, isAuthenticated, authLoading]);
 
   // Fonction de rafraîchissement pour la synchronisation temps réel
+  // NE PAS rafraîchir si un formulaire est actif
   const refreshData = useCallback(async () => {
     if (!isAuthenticated || authLoading) return;
+    
+    // Vérifier si un formulaire est actif - ne pas rafraîchir pour éviter la perte de données
+    if (isFormProtected()) {
+      console.log('Rafraîchissement bloqué - formulaire actif');
+      return;
+    }
     
     try {
       await Promise.all([

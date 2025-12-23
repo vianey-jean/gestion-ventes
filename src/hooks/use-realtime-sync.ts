@@ -8,6 +8,31 @@ interface RealtimeSyncOptions {
   debounceMs?: number;
 }
 
+// Variable globale pour bloquer la synchronisation pendant la saisie de formulaire
+let globalFormProtection = false;
+let formProtectionTimeout: NodeJS.Timeout | null = null;
+
+export const setFormProtection = (active: boolean) => {
+  globalFormProtection = active;
+  
+  // Clear any existing timeout
+  if (formProtectionTimeout) {
+    clearTimeout(formProtectionTimeout);
+    formProtectionTimeout = null;
+  }
+  
+  // Si on active la protection, on la désactive automatiquement après 2 heures max
+  // pour éviter des blocages infinis
+  if (active) {
+    formProtectionTimeout = setTimeout(() => {
+      globalFormProtection = false;
+      console.log('Protection formulaire désactivée automatiquement après timeout');
+    }, 2 * 60 * 60 * 1000); // 2 heures
+  }
+};
+
+export const isFormProtected = () => globalFormProtection;
+
 export const useRealtimeSync = (options: RealtimeSyncOptions = {}) => {
   const { enabled = true, interval = 5000, debounceMs = 1000 } = options;
   const { refreshData } = useApp();
@@ -16,8 +41,14 @@ export const useRealtimeSync = (options: RealtimeSyncOptions = {}) => {
   const lastSyncRef = useRef<number>(0);
   const isActiveRef = useRef<boolean>(true);
 
-  // Fonction de synchronisation avec debounce
+  // Fonction de synchronisation avec debounce - VÉRIFIE la protection formulaire
   const debouncedSync = useCallback(async () => {
+    // NE PAS synchroniser si un formulaire est actif
+    if (globalFormProtection) {
+      console.log('Synchronisation bloquée - formulaire actif');
+      return;
+    }
+    
     if (!enabled || !refreshData || !isActiveRef.current) return;
 
     // Annuler le précédent timeout si il existe
@@ -26,6 +57,12 @@ export const useRealtimeSync = (options: RealtimeSyncOptions = {}) => {
     }
 
     debounceRef.current = setTimeout(async () => {
+      // Double vérification avant la sync
+      if (globalFormProtection) {
+        console.log('Synchronisation annulée - formulaire actif');
+        return;
+      }
+      
       try {
         const now = Date.now();
         // Éviter les appels trop fréquents
@@ -40,8 +77,14 @@ export const useRealtimeSync = (options: RealtimeSyncOptions = {}) => {
     }, debounceMs);
   }, [enabled, refreshData, debounceMs]);
 
-  // Fonction de synchronisation forcée
+  // Fonction de synchronisation forcée - VÉRIFIE aussi la protection
   const forceSync = useCallback(async () => {
+    // NE PAS synchroniser si un formulaire est actif
+    if (globalFormProtection) {
+      console.log('Synchronisation forcée bloquée - formulaire actif');
+      return;
+    }
+    
     if (!refreshData) return;
     
     try {
@@ -59,7 +102,8 @@ export const useRealtimeSync = (options: RealtimeSyncOptions = {}) => {
       isActiveRef.current = !document.hidden;
       
       // Synchroniser immédiatement quand l'onglet redevient actif
-      if (!document.hidden && enabled) {
+      // SAUF si un formulaire est actif
+      if (!document.hidden && enabled && !globalFormProtection) {
         forceSync();
       }
     };
@@ -74,12 +118,14 @@ export const useRealtimeSync = (options: RealtimeSyncOptions = {}) => {
   useEffect(() => {
     if (!enabled || !refreshData) return;
 
-    // Synchronisation initiale
-    forceSync();
+    // Synchronisation initiale seulement si pas de formulaire actif
+    if (!globalFormProtection) {
+      forceSync();
+    }
 
-    // Synchronisation périodique seulement si l'onglet est actif
+    // Synchronisation périodique seulement si l'onglet est actif ET pas de formulaire actif
     intervalRef.current = setInterval(() => {
-      if (isActiveRef.current) {
+      if (isActiveRef.current && !globalFormProtection) {
         debouncedSync();
       }
     }, interval);
@@ -94,5 +140,5 @@ export const useRealtimeSync = (options: RealtimeSyncOptions = {}) => {
     };
   }, [enabled, interval, refreshData, debouncedSync, forceSync]);
 
-  return { forceSync };
+  return { forceSync, setFormProtection, isFormProtected };
 };

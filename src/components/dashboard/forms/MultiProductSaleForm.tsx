@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,6 +16,7 @@ import ConfirmDeleteDialog from './ConfirmDeleteDialog';
 import AdvancePaymentModal from './AdvancePaymentModal';
 import PretProduitFromSaleModal from './PretProduitFromSaleModal';
 import axios from 'axios';
+import { setFormProtection } from '@/hooks/use-realtime-sync';
 
 interface MultiProductSaleFormProps {
   isOpen: boolean;
@@ -82,111 +83,146 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
 
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:10000';
 
-  // Réinitialiser le formulaire quand il s'ouvre ou charger les données d'édition
+  // Référence pour éviter les réinitialisations multiples
+  const isInitializedRef = useRef(false);
+  const lastEditSaleIdRef = useRef<string | null>(null);
+
+  // Activer/désactiver la protection de synchronisation quand le formulaire s'ouvre/ferme
+  useEffect(() => {
+    if (isOpen) {
+      // Activer la protection - bloquer toute synchronisation
+      setFormProtection(true);
+      console.log('Protection formulaire activée - synchronisation bloquée');
+    } else {
+      // Désactiver la protection quand le formulaire se ferme
+      setFormProtection(false);
+      console.log('Protection formulaire désactivée - synchronisation autorisée');
+      // Réinitialiser les refs quand le formulaire se ferme
+      isInitializedRef.current = false;
+      lastEditSaleIdRef.current = null;
+    }
+
+    // Cleanup: toujours désactiver la protection à la destruction du composant
+    return () => {
+      setFormProtection(false);
+    };
+  }, [isOpen]);
+
+  // Réinitialiser le formulaire UNIQUEMENT à l'ouverture initiale ou changement de vente
   useEffect(() => {
     const loadSaleData = async () => {
-      if (isOpen) {
-        if (editSale) {
-          // Mode édition - charger les données existantes
-          setDate(new Date(editSale.date).toISOString().split('T')[0]);
-          setClientName(editSale.clientName || '');
-          setClientPhone(editSale.clientPhone || '');
-          setClientAddress(editSale.clientAddress || '');
+      // Ne charger que si le formulaire vient de s'ouvrir et n'est pas déjà initialisé
+      // OU si on change de vente en édition
+      const editSaleId = editSale?.id || null;
+      const shouldInitialize = isOpen && (!isInitializedRef.current || lastEditSaleIdRef.current !== editSaleId);
+      
+      if (!shouldInitialize) {
+        return; // Ne pas réinitialiser si déjà initialisé
+      }
+
+      isInitializedRef.current = true;
+      lastEditSaleIdRef.current = editSaleId;
+
+      if (editSale) {
+        // Mode édition - charger les données existantes
+        setDate(new Date(editSale.date).toISOString().split('T')[0]);
+        setClientName(editSale.clientName || '');
+        setClientPhone(editSale.clientPhone || '');
+        setClientAddress(editSale.clientAddress || '');
+        
+        // Charger les données d'avance si elles existent
+        const hasReste = editSale.reste && editSale.reste > 0;
+        if (hasReste) {
+          setShowAdvanceSection(true);
+          // Le prix d'avance est stocké dans totalSellingPrice de la vente
+          setAvancePrice(editSale.totalSellingPrice?.toString() || '0');
+          setReste(editSale.reste.toString());
           
-          // Charger les données d'avance si elles existent
-          const hasReste = editSale.reste && editSale.reste > 0;
-          if (hasReste) {
-            setShowAdvanceSection(true);
-            // Le prix d'avance est stocké dans totalSellingPrice de la vente
-            setAvancePrice(editSale.totalSellingPrice?.toString() || '0');
-            setReste(editSale.reste.toString());
-            
-            // Charger la date de prochaine paiement depuis pretproduits
-            try {
-              const token = localStorage.getItem('token');
-              const response = await axios.get(`${API_BASE_URL}/api/pretproduits`, {
-                headers: { Authorization: `Bearer ${token}` }
-              });
-              
-              const pretProduit = response.data.find((p: any) => 
-                p.nom === editSale.clientName && p.date === editSale.date
-              );
-              
-              if (pretProduit && pretProduit.datePaiement) {
-                setNextPaymentDate(new Date(pretProduit.datePaiement).toISOString().split('T')[0]);
-              }
-            } catch (error) {
-              console.error('Erreur lors du chargement de la date de paiement:', error);
-            }
-          } else {
-            setShowAdvanceSection(false);
-            setAvancePrice('');
-            setReste('');
-            setNextPaymentDate('');
-          }
-          
-          // Charger les produits existants
-          if (editSale.products && editSale.products.length > 0) {
-            const loadedProducts = editSale.products.map(saleProduct => {
-              const product = products.find(p => p.id === saleProduct.productId);
-              const isAdvance = saleProduct.description.toLowerCase().includes('avance');
-              
-              const purchasePriceUnit = isAdvance ? saleProduct.purchasePrice : (saleProduct.purchasePrice / saleProduct.quantitySold);
-              const sellingPriceUnit = isAdvance ? saleProduct.sellingPrice : (saleProduct.sellingPrice / saleProduct.quantitySold);
-              
-              const isPret = saleProduct.description.toLowerCase().includes('prêt') || 
-                             saleProduct.description.toLowerCase().includes('pret');
-              
-              return {
-                productId: saleProduct.productId,
-                description: saleProduct.description,
-                sellingPriceUnit: sellingPriceUnit.toString(),
-                quantitySold: saleProduct.quantitySold.toString(),
-                purchasePriceUnit: purchasePriceUnit.toString(),
-                profit: saleProduct.profit.toString(),
-                selectedProduct: product || null,
-                maxQuantity: product ? (product.quantity || 0) + saleProduct.quantitySold : 0,
-                isAdvanceProduct: isAdvance,
-                isPretProduit: isPret,
-                deliveryLocation: saleProduct.deliveryLocation || 'Saint-Denis',
-                deliveryFee: (saleProduct.deliveryFee || 0).toString(),
-                avancePretProduit: isPret && saleProduct.sellingPrice > 0 ? saleProduct.sellingPrice.toString() : ''
-              };
+          // Charger la date de prochaine paiement depuis pretproduits
+          try {
+            const token = localStorage.getItem('token');
+            const response = await axios.get(`${API_BASE_URL}/api/pretproduits`, {
+              headers: { Authorization: `Bearer ${token}` }
             });
-            setFormProducts(loadedProducts);
+            
+            const pretProduit = response.data.find((p: any) => 
+              p.nom === editSale.clientName && p.date === editSale.date
+            );
+            
+            if (pretProduit && pretProduit.datePaiement) {
+              setNextPaymentDate(new Date(pretProduit.datePaiement).toISOString().split('T')[0]);
+            }
+          } catch (error) {
+            console.error('Erreur lors du chargement de la date de paiement:', error);
           }
         } else {
-          // Mode création - réinitialiser
-          setDate(new Date().toISOString().split('T')[0]);
-          setClientName('');
-          setClientPhone('');
-          setClientAddress('');
-          setFormProducts([{
-            productId: '',
-            description: '',
-            sellingPriceUnit: '',
-            quantitySold: '1',
-            purchasePriceUnit: '',
-            profit: '',
-            selectedProduct: null,
-            maxQuantity: 0,
-            isAdvanceProduct: false,
-            isPretProduit: false,
-            deliveryLocation: 'Saint-Denis',
-            deliveryFee: '0',
-            avancePretProduit: ''
-          }]);
-          // Réinitialiser les champs avance
           setShowAdvanceSection(false);
           setAvancePrice('');
           setReste('');
           setNextPaymentDate('');
         }
+        
+        // Charger les produits existants
+        if (editSale.products && editSale.products.length > 0) {
+          const loadedProducts = editSale.products.map(saleProduct => {
+            const product = products.find(p => p.id === saleProduct.productId);
+            const isAdvance = saleProduct.description.toLowerCase().includes('avance');
+            
+            const purchasePriceUnit = isAdvance ? saleProduct.purchasePrice : (saleProduct.purchasePrice / saleProduct.quantitySold);
+            const sellingPriceUnit = isAdvance ? saleProduct.sellingPrice : (saleProduct.sellingPrice / saleProduct.quantitySold);
+            
+            const isPret = saleProduct.description.toLowerCase().includes('prêt') || 
+                           saleProduct.description.toLowerCase().includes('pret');
+            
+            return {
+              productId: saleProduct.productId,
+              description: saleProduct.description,
+              sellingPriceUnit: sellingPriceUnit.toString(),
+              quantitySold: saleProduct.quantitySold.toString(),
+              purchasePriceUnit: purchasePriceUnit.toString(),
+              profit: saleProduct.profit.toString(),
+              selectedProduct: product || null,
+              maxQuantity: product ? (product.quantity || 0) + saleProduct.quantitySold : 0,
+              isAdvanceProduct: isAdvance,
+              isPretProduit: isPret,
+              deliveryLocation: saleProduct.deliveryLocation || 'Saint-Denis',
+              deliveryFee: (saleProduct.deliveryFee || 0).toString(),
+              avancePretProduit: isPret && saleProduct.sellingPrice > 0 ? saleProduct.sellingPrice.toString() : ''
+            };
+          });
+          setFormProducts(loadedProducts);
+        }
+      } else {
+        // Mode création - réinitialiser
+        setDate(new Date().toISOString().split('T')[0]);
+        setClientName('');
+        setClientPhone('');
+        setClientAddress('');
+        setFormProducts([{
+          productId: '',
+          description: '',
+          sellingPriceUnit: '',
+          quantitySold: '1',
+          purchasePriceUnit: '',
+          profit: '',
+          selectedProduct: null,
+          maxQuantity: 0,
+          isAdvanceProduct: false,
+          isPretProduit: false,
+          deliveryLocation: 'Saint-Denis',
+          deliveryFee: '0',
+          avancePretProduit: ''
+        }]);
+        // Réinitialiser les champs avance
+        setShowAdvanceSection(false);
+        setAvancePrice('');
+        setReste('');
+        setNextPaymentDate('');
       }
     };
     
     loadSaleData();
-  }, [isOpen, editSale, products]);
+  }, [isOpen, editSale]); // Retiré 'products' des dépendances pour éviter les réinitialisations
 
   // Gestion du client
   const handleClientSelect = (client: any) => {
