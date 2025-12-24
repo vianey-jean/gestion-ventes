@@ -77,12 +77,12 @@ const Navbar: React.FC = () => {
                   </Button>
                 </Link>
 
-                <Link to="/clients">
+                {/* <Link to="/clients">
                   <Button variant="ghost">
                     <Users className="mr-2 h-4 w-4" />
                     Clients
                   </Button>
-                </Link>
+                </Link> */}
               </>
             )}
 
@@ -130,6 +130,12 @@ const Navbar: React.FC = () => {
                       <TrendingUp className="mr-2 h-4 w-4" />
                       Tendances
                     </Link>
+                  </DropdownMenuItem>
+                   <DropdownMenuItem asChild>
+                    <Link to="/Clients" className="flex items-center w-full">
+                      <Users  className="mr-2 h-4 w-4" />
+                      Client
+                </Link>
                   </DropdownMenuItem>
 
                 </DropdownMenuContent>

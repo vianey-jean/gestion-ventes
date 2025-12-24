@@ -98,20 +98,20 @@ const ObjectifIndicator: React.FC = () => {
       <Target className="h-3.5 w-3.5 text-primary hidden sm:block" />
       
       {/* Total Ventes */}
-      <span className={`font-bold text-xl sm:text-sm ${getProgressColor()}`}>
+      <span className={`font-bold text-xs sm:text-sm ${getProgressColor()}`}>
         {formatCurrency(data.totalVentesMois)}
       </span>
       
-      <span className="font-bold text-muted-foreground text-xl">|</span>
+      <span className="font-bold text-muted-foreground text-xl text-red-800">|</span>
       
       {/* Objectif - Editable */}
       {isEditing ? (
-        <div className="font-bold text-xl flex items-center gap-1">
+        <div className="flex items-center gap-1">
           <Input
             type="number"
             value={editValue}
             onChange={(e) => setEditValue(e.target.value)}
-            className="h-6 w-16 text-xs px-1"
+            className="font-bold h-6 w-16 text-xs px-1"
             autoFocus
           />
           <Button
@@ -134,10 +134,10 @@ const ObjectifIndicator: React.FC = () => {
       ) : (
         <button
           onClick={handleEditStart}
-          className="font-bold text-xl sm:text-sm text-primary hover:underline cursor-pointer flex items-center gap-0.5"
+          className="font-bold text-xs sm:text-sm text-primary hover:underline cursor-pointer flex items-center gap-0.5"
         >
           {formatCurrency(data.objectif)}
-          <Edit2 className="font-bold h-4 w-4 opacity-50 text-green-800" />
+          <Edit2 className="font-bold h-3.5 w-3.5 opacity-50 text-red-800" />
         </button>
       )}
       
@@ -149,7 +149,7 @@ const ObjectifIndicator: React.FC = () => {
             size="icon"
             className="h-6 w-6 rounded-full bg-primary/20 hover:bg-primary/30"
           >
-            <Plus className="h-4 w-4 text- font-bold" />
+            <Plus className="h-3.5 w-3.5 text-primary" />
           </Button>
         </DialogTrigger>
         <DialogContent className="sm:max-w-md">
