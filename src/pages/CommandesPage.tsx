@@ -1,3 +1,27 @@
+/**
+ * =============================================================================
+ * Page de gestion des Commandes et Réservations
+ * =============================================================================
+ * 
+ * Cette page permet de gérer les commandes et réservations clients.
+ * Elle intègre la synchronisation automatique avec les rendez-vous.
+ * 
+ * FONCTIONNALITÉS PRINCIPALES:
+ * - Création/modification/suppression de commandes et réservations
+ * - Gestion des statuts avec synchronisation RDV automatique
+ * - Export PDF des commandes par date
+ * - Création de RDV depuis une réservation avec modal premium
+ * - Validation des commandes avec enregistrement en vente
+ * 
+ * SYNCHRONISATION RDV:
+ * - Lors d'un changement de statut de réservation, le RDV lié est mis à jour
+ * - Mapping des statuts: voir reservationRdvSyncService
+ * 
+ * @module CommandesPage
+ * @author Système de gestion des ventes
+ * @version 2.0.0
+ */
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,9 +34,14 @@ import { toast } from '@/hooks/use-toast';
 import { Package, Plus, Trash2, Edit, ShoppingCart, TrendingUp, Sparkles, Crown, Star, Gift, Award, Zap, Diamond, ArrowUp, ArrowDown, Printer, Calendar, CalendarPlus } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { Commande, CommandeProduit } from '@/types/commande';
+import { Commande, CommandeProduit, CommandeStatut } from '@/types/commande';
 import api from '@/service/api';
 import { rdvFromReservationService } from '@/services/rdvFromReservationService';
+// Import du service de synchronisation Réservation ↔ Rendez-vous
+import { reservationRdvSyncService } from '@/services/reservationRdvSyncService';
+// Import du modal premium pour création de RDV
+import RdvCreationModal from '@/components/commandes/RdvCreationModal';
+import RdvConfirmationModal from '@/components/commandes/RdvConfirmationModal';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import Layout from '@/components/Layout';
@@ -87,6 +116,16 @@ const CommandesPage: React.FC = () =>  {
   const [reporterCommandeId, setReporterCommandeId] = useState<string | null>(null);
   const [reporterDate, setReporterDate] = useState('');
   const [reporterHoraire, setReporterHoraire] = useState('');
+  
+  // État pour la confirmation de création RDV depuis réservation
+  const [showRdvConfirmDialog, setShowRdvConfirmDialog] = useState(false);
+  const [showRdvFormModal, setShowRdvFormModal] = useState(false);
+  const [pendingReservationForRdv, setPendingReservationForRdv] = useState<Commande | null>(null);
+  // États temporaires pour compatibilité (gérés par le modal premium)
+  const [rdvTitre, setRdvTitre] = useState('');
+  const [rdvDescription, setRdvDescription] = useState('');
+  // État de chargement pour le modal RDV premium
+  const [isRdvLoading, setIsRdvLoading] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
@@ -489,18 +528,12 @@ const CommandesPage: React.FC = () =>  {
         const response = await api.post('/api/commandes', commandeData);
         const newCommande = response.data as Commande;
         
-        // Créer automatiquement un RDV si c'est une réservation avec date et horaire
+        // Si c'est une réservation avec date et horaire, demander confirmation pour créer un RDV
         if (type === 'reservation' && dateEcheance && horaire) {
-          try {
-            await rdvFromReservationService.createRdvFromCommande(newCommande);
-            toast({
-              title: '📅 Rendez-vous créé',
-              description: `Un RDV a été automatiquement créé pour le ${dateEcheance} à ${horaire}`,
-              className: "bg-app-green text-white",
-            });
-          } catch (err) {
-            console.error('Erreur création RDV:', err);
-          }
+          setPendingReservationForRdv(newCommande);
+          setRdvTitre('');
+          setRdvDescription('');
+          setShowRdvConfirmDialog(true);
         }
         
         toast({
@@ -632,6 +665,13 @@ const CommandesPage: React.FC = () =>  {
     
     try {
       await api.put(`/api/commandes/${id}`, { statut: newStatus });
+      
+      // ✅ SYNCHRONISATION: Si c'est une réservation, synchroniser le statut du RDV lié
+      if (commande.type === 'reservation') {
+        await reservationRdvSyncService.syncRdvStatus(id, newStatus as CommandeStatut);
+        console.log(`✅ Sync RDV: Réservation ${id} → Statut ${newStatus}`);
+      }
+      
       toast({
         title: 'Succès',
         description: 'Statut mis à jour',
@@ -779,14 +819,31 @@ const CommandesPage: React.FC = () =>  {
       };
       
       console.log('✅ Validation commande - Données à enregistrer dans sales.json:', saleData);
+      
+      // ✅ ÉTAPE 1: SYNCHRONISATION RDV EN PREMIER - Si c'est une réservation, mettre à jour le RDV lié AVANT d'enregistrer la vente
+      if (commandeToValidate.type === 'reservation') {
+        try {
+          await api.put(`/api/rdv/by-commande/${validatingId}`, {
+            statut: 'confirme'
+          });
+          console.log('✅ ÉTAPE 1 - RDV synchronisé: statut confirme (avant enregistrement vente)');
+        } catch (rdvError) {
+          console.log('RDV non trouvé ou erreur sync:', rdvError);
+          // On continue quand même avec la vente même si pas de RDV lié
+        }
+      }
+      
+      // ✅ ÉTAPE 2: Enregistrer la vente dans sales.json APRÈS la synchronisation RDV
       const saleResponse = await api.post('/api/sales', saleData);
       const createdSale = saleResponse.data;
+      console.log('✅ ÉTAPE 2 - Vente enregistrée dans sales.json');
       
-      // 2. Mettre à jour le statut de la commande avec le saleId
+      // ✅ ÉTAPE 3: Mettre à jour le statut de la commande avec le saleId
       await api.put(`/api/commandes/${validatingId}`, { 
         statut: 'valide',
         saleId: createdSale.id // Stocker l'ID de la vente pour pouvoir la supprimer si on annule
       });
+      console.log('✅ ÉTAPE 3 - Commande marquée comme validée');
       
       toast({
         title: 'Succès',
@@ -806,6 +863,101 @@ const CommandesPage: React.FC = () =>  {
         variant: 'destructive',
       });
     }
+  };
+
+  /**
+   * Handler pour créer un RDV depuis une réservation via le modal premium
+   * Cette fonction est appelée par le composant RdvCreationModal après validation
+   * 
+   * @param titre - Titre du rendez-vous saisi par l'utilisateur
+   * @param description - Description optionnelle du rendez-vous
+   */
+  const handleCreateRdvFromReservation = async (titre: string, description: string) => {
+    if (!pendingReservationForRdv) return;
+    
+    setIsRdvLoading(true);
+    
+    try {
+      // Calculer l'heure de fin (1 heure après le début)
+      const heureDebut = pendingReservationForRdv.horaire || '09:00';
+      const [hours, minutes] = heureDebut.split(':').map(Number);
+      const endHours = (hours + 1) % 24;
+      const heureFin = `${endHours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+      
+      // Construire les données du RDV avec titre et description personnalisés
+      const rdvData = {
+        titre: titre || `Réservation pour ${pendingReservationForRdv.clientNom}`,
+        description: description || '',
+        clientNom: pendingReservationForRdv.clientNom,
+        clientTelephone: pendingReservationForRdv.clientPhone,
+        clientAdresse: pendingReservationForRdv.clientAddress,
+        date: pendingReservationForRdv.dateEcheance,
+        heureDebut,
+        heureFin,
+        lieu: pendingReservationForRdv.clientAddress,
+        statut: 'planifie',
+        notes: `Créé depuis une réservation`,
+        produits: pendingReservationForRdv.produits.map(p => ({
+          nom: p.nom,
+          quantite: p.quantite,
+          prixUnitaire: p.prixUnitaire,
+          prixVente: p.prixVente,
+        })),
+        commandeId: pendingReservationForRdv.id,
+      };
+      
+      await api.post('/api/rdv', rdvData);
+      
+      toast({
+        title: '📅 Rendez-vous créé',
+        description: `Le RDV "${rdvData.titre}" a été créé pour le ${pendingReservationForRdv.dateEcheance} à ${heureDebut}`,
+        className: "bg-app-green text-white",
+      });
+    } catch (err) {
+      console.error('Erreur création RDV:', err);
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de créer le rendez-vous',
+        className: "bg-app-red text-white",
+        variant: 'destructive',
+      });
+    } finally {
+      setIsRdvLoading(false);
+      setShowRdvFormModal(false);
+      setPendingReservationForRdv(null);
+      setRdvTitre('');
+      setRdvDescription('');
+    }
+  };
+
+  /**
+   * Handler appelé quand l'utilisateur refuse de créer un RDV
+   * Ferme les dialogs et réinitialise les états
+   */
+  const handleDeclineRdv = () => {
+    setShowRdvConfirmDialog(false);
+    setPendingReservationForRdv(null);
+    setRdvTitre('');
+    setRdvDescription('');
+  };
+
+  /**
+   * Handler appelé quand l'utilisateur accepte de créer un RDV
+   * Ferme le dialog de confirmation et ouvre le modal premium
+   */
+  const handleAcceptRdv = () => {
+    setShowRdvConfirmDialog(false);
+    setShowRdvFormModal(true);
+  };
+
+  /**
+   * Handler pour fermer le modal RDV premium
+   */
+  const handleCloseRdvModal = () => {
+    setShowRdvFormModal(false);
+    setPendingReservationForRdv(null);
+    setRdvTitre('');
+    setRdvDescription('');
   };
 
   const getStatusBadge = (statut: string) => {
@@ -1867,9 +2019,9 @@ const CommandesPage: React.FC = () =>  {
                         date: reporterDate,
                         heureDebut,
                         heureFin,
-                        statut: 'planifie' // Réactiver le RDV
+                        statut: 'reporte' // Synchroniser le statut avec la réservation reportée
                       });
-                      console.log('✅ RDV mis à jour avec nouvelle date et horaire');
+                      console.log('✅ RDV synchronisé: statut reporte, nouvelle date et horaire');
                     } catch (rdvError) {
                       console.log('RDV non trouvé ou erreur:', rdvError);
                     }
@@ -1903,6 +2055,36 @@ const CommandesPage: React.FC = () =>  {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Modale Premium de confirmation pour créer un RDV */}
+      <RdvConfirmationModal
+        isOpen={showRdvConfirmDialog}
+        onClose={handleDeclineRdv}
+        onConfirm={handleAcceptRdv}
+        reservation={pendingReservationForRdv ? {
+          clientNom: pendingReservationForRdv.clientNom,
+          dateEcheance: pendingReservationForRdv.dateEcheance || '',
+          horaire: pendingReservationForRdv.horaire || '',
+          clientAddress: pendingReservationForRdv.clientAddress,
+        } : null}
+      />
+
+      {/* Modal Premium pour création de RDV depuis une réservation */}
+      <RdvCreationModal
+        isOpen={showRdvFormModal}
+        onClose={handleCloseRdvModal}
+        onConfirm={handleCreateRdvFromReservation}
+        reservation={pendingReservationForRdv ? {
+          id: pendingReservationForRdv.id,
+          clientNom: pendingReservationForRdv.clientNom,
+          clientPhone: pendingReservationForRdv.clientPhone,
+          clientAddress: pendingReservationForRdv.clientAddress,
+          dateEcheance: pendingReservationForRdv.dateEcheance || '',
+          horaire: pendingReservationForRdv.horaire || '',
+          produits: pendingReservationForRdv.produits,
+        } : null}
+        isLoading={isRdvLoading}
+      />
       </div>
     </Layout>
   );

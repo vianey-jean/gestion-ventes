@@ -650,7 +650,14 @@ const RdvCalendar: React.FC<RdvCalendarProps> = ({
             </Button>
             <Button 
               onClick={handleEditFromDetail}
-              className="bg-gradient-to-r from-primary to-primary/80 gap-2"
+              className={cn(
+                "gap-2",
+                selectedRdvDetail?.statut === 'confirme'
+                  ? "bg-gray-400 cursor-not-allowed opacity-50"
+                  : "bg-gradient-to-r from-primary to-primary/80"
+              )}
+              disabled={selectedRdvDetail?.statut === 'confirme'}
+              title={selectedRdvDetail?.statut === 'confirme' ? "Impossible de modifier un rendez-vous confirmé" : "Modifier le rendez-vous"}
             >
               <Edit className="h-4 w-4" />
               Modifier

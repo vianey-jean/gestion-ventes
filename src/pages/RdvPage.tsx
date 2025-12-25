@@ -497,11 +497,20 @@ const RdvPage: React.FC = () => {
                             <Button
                               size="icon"
                               variant="ghost"
-                              className="h-8 w-8 text-blue-600 hover:bg-blue-100"
+                              className={cn(
+                                "h-8 w-8",
+                                rdv.statut === 'confirme' 
+                                  ? "text-gray-400 cursor-not-allowed opacity-50" 
+                                  : "text-blue-600 hover:bg-blue-100"
+                              )}
                               onClick={(e) => {
                                 e.stopPropagation();
-                                handleOpenForm(rdv);
+                                if (rdv.statut !== 'confirme') {
+                                  handleOpenForm(rdv);
+                                }
                               }}
+                              disabled={rdv.statut === 'confirme'}
+                              title={rdv.statut === 'confirme' ? "Impossible de modifier un rendez-vous confirmé" : "Modifier"}
                             >
                               <Edit className="h-4 w-4" />
                             </Button>
@@ -557,7 +566,7 @@ const RdvPage: React.FC = () => {
 
             <TabsContent value="calendar">
               <RdvCalendar
-                rdvs={upcomingRdvs}
+                rdvs={rdvs}
                 onRdvClick={(rdv) => handleOpenForm(rdv)}
                 onSlotClick={(date, time) => handleOpenForm(undefined, date, time)}
                 onRdvDrop={handleRdvDrop}
@@ -660,11 +669,20 @@ const RdvPage: React.FC = () => {
                                   <Button
                                     size="sm"
                                     variant="outline"
-                                    className="flex-1 text-blue-600 border-blue-200 hover:bg-blue-50"
+                                    className={cn(
+                                      "flex-1",
+                                      rdv.statut === 'confirme' 
+                                        ? "text-gray-400 border-gray-200 cursor-not-allowed opacity-50" 
+                                        : "text-blue-600 border-blue-200 hover:bg-blue-50"
+                                    )}
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      handleOpenForm(rdv);
+                                      if (rdv.statut !== 'confirme') {
+                                        handleOpenForm(rdv);
+                                      }
                                     }}
+                                    disabled={rdv.statut === 'confirme'}
+                                    title={rdv.statut === 'confirme' ? "Impossible de modifier un rendez-vous confirmé" : "Modifier le rendez-vous"}
                                   >
                                     <Edit className="h-3 w-3 mr-1" />
                                     Modifier
