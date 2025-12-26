@@ -14,7 +14,8 @@ import {
   Edit,
   Trash2,
   X,
-  AlertTriangle
+  AlertTriangle,
+  Lock
 } from 'lucide-react';
 import { format, addDays, startOfWeek, isSameDay, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -34,6 +35,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { motion } from 'framer-motion';
 import { ConfirmDialog } from '@/components/shared';
 import axios from 'axios';
+import { toast } from 'sonner';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://server-gestion-ventes.onrender.com';
 
@@ -205,6 +207,12 @@ const RdvCalendar: React.FC<RdvCalendarProps> = ({
   const goToToday = () => setCurrentDate(new Date());
 
   const handleDragStart = (e: React.DragEvent, rdv: RDV) => {
+    // Bloquer le drag pour les RDV créés depuis la page Commandes (synchronisés)
+    if (rdv.commandeId) {
+      e.preventDefault();
+      toast.error("Ce rendez-vous ne peut pas être déplacé par la page Commandes");
+      return;
+    }
     setDraggedRdv(rdv);
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/plain', rdv.id);
@@ -403,16 +411,20 @@ const RdvCalendar: React.FC<RdvCalendarProps> = ({
                 const isBlinking = blinkingRdvId === rdv.id;
                 const showRedBlink = isBlinking && blinkCount % 2 === 0;
                 
+                // Vérifier si le RDV est créé depuis Commandes (non déplaçable)
+                const isFromCommande = !!rdv.commandeId;
+                
                 return (
                   <motion.div
                     key={rdv.id}
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    draggable
+                    draggable={!isFromCommande}
                     onDragStart={(e) => handleDragStart(e as any, rdv)}
                     onClick={(e) => handleRdvClick(e, rdv)}
                     className={cn(
-                      "absolute rounded-lg border-l-4 px-2 py-1.5 cursor-grab active:cursor-grabbing",
+                      "absolute rounded-lg border-l-4 px-2 py-1.5",
+                      isFromCommande ? "cursor-not-allowed" : "cursor-grab active:cursor-grabbing",
                       "text-white text-xs overflow-hidden shadow-lg",
                       "transition-all duration-200 hover:shadow-xl hover:z-20 hover:scale-[1.02]",
                       showRedBlink ? "bg-gradient-to-r from-red-600 to-red-700 border-red-400" : colors.bg,
@@ -427,7 +439,11 @@ const RdvCalendar: React.FC<RdvCalendarProps> = ({
                     }}
                   >
                     <div className="flex items-center gap-1">
-                      <GripVertical className="h-3 w-3 opacity-60 flex-shrink-0" />
+                      {isFromCommande ? (
+                        <Lock className="h-3 w-3 opacity-60 flex-shrink-0" />
+                      ) : (
+                        <GripVertical className="h-3 w-3 opacity-60 flex-shrink-0" />
+                      )}
                       <span className="font-semibold truncate">{rdv.titre}</span>
                     </div>
                     <div className="flex items-center gap-1 mt-0.5 opacity-90">
