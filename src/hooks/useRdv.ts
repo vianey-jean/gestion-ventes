@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { RDV, RDVFormData } from '@/types/rdv';
 import rdvApiService from '@/services/api/rdvApi';
+import { rdvNotificationsApi } from '@/services/api/rdvNotificationsApi';
 import { useToast } from '@/hooks/use-toast';
 
 export function useRdv() {
@@ -30,6 +31,9 @@ export function useRdv() {
     try {
       const newRdv = await rdvApiService.create(data);
       setRdvs(prev => [...prev, newRdv]);
+      
+      // La notification est créée automatiquement côté serveur
+      
       toast({
         title: 'Succès',
         description: 'Rendez-vous créé avec succès',
@@ -55,17 +59,20 @@ export function useRdv() {
     try {
       const updatedRdv = await rdvApiService.update(id, data);
       setRdvs(prev => prev.map(rdv => rdv.id === id ? updatedRdv : rdv));
+      
+      // La synchronisation notification est gérée côté serveur
+      
       toast({
         title: 'Succès',
         description: 'Rendez-vous modifié avec succès',
-          className: "bg-app-green text-white",
+        className: "bg-app-green text-white",
       });
       return updatedRdv;
     } catch (err) {
       toast({
         title: 'Erreur',
         description: 'Impossible de modifier le rendez-vous',
-          className: "bg-app-red text-white",
+        className: "bg-app-red text-white",
         variant: 'destructive',
       });
       return null;
@@ -78,19 +85,20 @@ export function useRdv() {
   const deleteRdv = useCallback(async (id: string): Promise<boolean> => {
     setLoading(true);
     try {
+      // La notification est supprimée automatiquement côté serveur
       await rdvApiService.delete(id);
       setRdvs(prev => prev.filter(rdv => rdv.id !== id));
       toast({
         title: 'Succès',
         description: 'Rendez-vous supprimé avec succès',
-          className: "bg-app-green text-white",
+        className: "bg-app-green text-white",
       });
       return true;
     } catch (err) {
       toast({
         title: 'Erreur',
         description: 'Impossible de supprimer le rendez-vous',
-          className: "bg-app-red text-white",
+        className: "bg-app-red text-white",
         variant: 'destructive',
       });
       return false;

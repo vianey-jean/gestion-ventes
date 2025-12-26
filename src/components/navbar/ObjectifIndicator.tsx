@@ -57,13 +57,23 @@ const ObjectifIndicator: React.FC = () => {
       return;
     }
 
+    // Vérification côté client: l'objectif doit être supérieur à l'actuel
+    if (data && value <= data.objectif) {
+      toast.error('Le nouvel objectif doit être supérieur à l\'objectif actuel (' + formatCurrency(data.objectif) + ')');
+      return;
+    }
+
     try {
       await updateObjectif(value);
       setNewObjectif('');
       setIsDialogOpen(false);
       toast.success('Objectif mis à jour');
-    } catch {
-      toast.error('Erreur lors de la mise à jour');
+    } catch (error: any) {
+      if (error?.response?.data?.message === 'OBJECTIF_MUST_INCREASE') {
+        toast.error('Le nouvel objectif doit être strictement supérieur à l\'objectif actuel');
+      } else {
+        toast.error('Erreur lors de la mise à jour');
+      }
     }
   };
 
@@ -81,12 +91,22 @@ const ObjectifIndicator: React.FC = () => {
       return;
     }
 
+    // Vérification côté client: l'objectif doit être supérieur à l'actuel
+    if (data && value <= data.objectif) {
+      toast.error('Le nouvel objectif doit être supérieur à l\'objectif actuel (' + formatCurrency(data.objectif) + ')');
+      return;
+    }
+
     try {
       await updateObjectif(value);
       setIsEditing(false);
       toast.success('Objectif mis à jour');
-    } catch {
-      toast.error('Erreur lors de la mise à jour');
+    } catch (error: any) {
+      if (error?.response?.data?.message === 'OBJECTIF_MUST_INCREASE') {
+        toast.error('Le nouvel objectif doit être strictement supérieur à l\'objectif actuel');
+      } else {
+        toast.error('Erreur lors de la mise à jour');
+      }
     }
   };
 

@@ -31,7 +31,9 @@ export interface RdvNotification {
   rdvLieu: string;
   message: string;
   read: boolean;
+  statut: 'actif' | 'reporte' | 'valide' | 'annule';
   createdAt: string;
+  updatedAt?: string;
 }
 
 export const rdvNotificationsApi = {
@@ -78,6 +80,36 @@ export const rdvNotificationsApi = {
       return response.data;
     } catch {
       return null;
+    }
+  },
+
+  // Mettre à jour le statut de la notification (validation/annulation/report)
+  async updateStatus(rdvId: string, status: string): Promise<boolean> {
+    try {
+      const response = await api.put(`/api/rdv-notifications/status/${rdvId}`, { status });
+      return response.data.success;
+    } catch {
+      return false;
+    }
+  },
+
+  // Mettre à jour la notification par rdv ID (pour report)
+  async updateByRdvId(rdvId: string, data: Partial<RdvNotification>): Promise<RdvNotification | null> {
+    try {
+      const response = await api.put(`/api/rdv-notifications/by-rdv/${rdvId}`, data);
+      return response.data;
+    } catch {
+      return null;
+    }
+  },
+
+  // Supprimer notification par rdv ID
+  async deleteByRdvId(rdvId: string): Promise<boolean> {
+    try {
+      const response = await api.delete(`/api/rdv-notifications/by-rdv/${rdvId}`);
+      return response.data.success;
+    } catch {
+      return false;
     }
   }
 };
