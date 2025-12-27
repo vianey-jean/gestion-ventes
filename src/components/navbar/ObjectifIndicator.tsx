@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { Plus, Target, Edit2, Check, X, Sparkles } from 'lucide-react';
+import React, { useState } from 'react';
+import { Plus, Target, Edit2, Check, X, Sparkles, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -14,128 +14,91 @@ import { toast } from 'sonner';
 import ObjectifStatsModal from './ObjectifStatsModal';
 import { cn } from '@/lib/utils';
 
-// Composant animation célébration
-const Celebration: React.FC<{ show: boolean }> = ({ show }) => {
-  if (!show) return null;
-
-  const confettiCount = 40;
-  const fireworksCount = 20;
-
-  return (
-    <div className="absolute inset-0 z-50 pointer-events-none">
-      {/* Feux d'artifice */}
-      {[...Array(fireworksCount)].map((_, i) => {
-        const angle = Math.random() * 360;
-        const distance = 40 + Math.random() * 80;
-        const duration = 0.8 + Math.random() * 0.7;
-        const delay = Math.random() * 1;
-        const colorChoices = ['#f87171', '#fb7185', '#f43f5e', '#ef4444', '#dc2626'];
-        const color = colorChoices[Math.floor(Math.random() * colorChoices.length)];
-
-        return (
-          <span
-            key={`firework-${i}`}
-            className="absolute block w-2 h-2 rounded-full animate-firework"
-            style={{
-              backgroundColor: color,
-              transform: `rotate(${angle}deg) translateY(0)`,
-              animationDelay: `${delay}s`,
-              animationDuration: `${duration}s`,
-            }}
-          />
-        );
-      })}
-
-      {/* Confettis ballon éclaté */}
-      {[...Array(confettiCount)].map((_, i) => {
-        const size = 3 + Math.random() * 3;
-        const left = Math.random() * 100;
-        const delay = Math.random();
-        const duration = 1.5 + Math.random() * 1;
-        const colors = ['#f87171', '#fb7185', '#facc15', '#22c55e', '#3b82f6', '#f97316'];
-        const color = colors[Math.floor(Math.random() * colors.length)];
-        return (
-          <span
-            key={`confetti-${i}`}
-            className="absolute w-1 h-2 rounded-sm"
-            style={{
-              left: `${left}%`,
-              top: `10%`,
-              backgroundColor: color,
-              animation: `confetti-fall ${duration}s linear ${delay}s infinite`,
-            }}
-          />
-        );
-      })}
-
-      <style jsx>{`
-        @keyframes firework {
-          0% { transform: translateY(0) scale(0.5); opacity: 1; }
-          50% { transform: translateY(-80px) scale(1.2); opacity: 1; }
-          100% { transform: translateY(-120px) scale(0); opacity: 0; }
-        }
-        .animate-firework { animation: firework linear infinite; }
-
-        @keyframes confetti-fall {
-          0% { transform: translateY(0) rotate(0deg); opacity: 1; }
-          100% { transform: translateY(300px) rotate(360deg); opacity: 0; }
-        }
-      `}</style>
-    </div>
-  );
-};
-
 const ObjectifIndicator: React.FC = () => {
   const { data, loading, updateObjectif } = useObjectif();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [newObjectif, setNewObjectif] = useState('');
   const [editValue, setEditValue] = useState('');
-  const [celebrationActive, setCelebrationActive] = useState(false);
 
-  const formatCurrency = (value: number) =>
-    new Intl.NumberFormat('fr-FR', {
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('fr-FR', {
       style: 'currency',
       currency: 'EUR',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(value);
+  };
 
   const getProgressColor = () => {
     if (!data) return 'text-muted-foreground';
+    
     const percentage = (data.totalVentesMois / data.objectif) * 100;
+    
     if (percentage >= 100) return 'text-emerald-500';
     if (percentage >= 50) return 'text-amber-500';
     return 'text-rose-500';
   };
 
-  const refuseDecrease = () => {
-    toast.error('❌ On ne peut pas diminuer un objectif');
-    setIsDialogOpen(false);
-    setIsEditing(false);
+  const getProgressGradient = () => {
+    if (!data) return 'from-slate-500 to-slate-600';
+    
+    const percentage = (data.totalVentesMois / data.objectif) * 100;
+    
+    if (percentage >= 100) return 'from-emerald-500 to-teal-500';
+    if (percentage >= 50) return 'from-amber-500 to-orange-500';
+    return 'from-rose-500 to-pink-500';
+  };
+
+  // Validation centralisée - retourne true si valide, false sinon
+  const validateObjectif = (value: number): boolean => {
+    // Vérification valeur valide
+    if (isNaN(value) || value <= 0) {
+      toast.error('Veuillez entrer une valeur valide');
+      return false;
+    }
+
+    // Vérification: on ne peut pas baisser un objectif
+    if (data && value < data.objectif) {
+      toast.error('On ne peut pas baisser un objectif.');
+      return false;
+    }
+
+    return true;
   };
 
   const handleAddObjectif = async () => {
     const value = parseFloat(newObjectif);
-    if (isNaN(value) || value <= 0) {
-      toast.error('Veuillez entrer une valeur valide');
+    
+    // Validation centralisée avant tout appel API
+    if (!validateObjectif(value)) {
+      // Fermer la modal et réinitialiser
+      setNewObjectif('');
+      setIsDialogOpen(false);
       return;
     }
-    if (data && value <= data.objectif) {
-      refuseDecrease();
+
+    // Si la valeur est égale à l'actuel, rien à faire
+    if (data && value === data.objectif) {
+      setNewObjectif('');
+      setIsDialogOpen(false);
       return;
     }
+
     try {
       await updateObjectif(value);
       setNewObjectif('');
       setIsDialogOpen(false);
-      toast.success('Objectif mis à jour 🎯');
-
-      if (data && value > data.totalVentesMois) {
-        setCelebrationActive(false); // Stop animations si nouvel objectif > ventes
-      }
+      toast.success('Objectif mis à jour');
     } catch (error: any) {
-      toast.error('Erreur lors de la mise à jour');
+      // Fermer la modal en cas d'erreur aussi
+      setNewObjectif('');
+      setIsDialogOpen(false);
+      if (error?.response?.data?.message === 'OBJECTIF_MUST_INCREASE') {
+        toast.error('On ne peut pas baisser un objectif.');
+      } else {
+        toast.error('Erreur lors de la mise à jour');
+      }
     }
   };
 
@@ -148,23 +111,36 @@ const ObjectifIndicator: React.FC = () => {
 
   const handleEditSave = async () => {
     const value = parseFloat(editValue);
-    if (isNaN(value) || value <= 0) {
-      toast.error('Veuillez entrer une valeur valide');
+    
+    // Validation centralisée avant tout appel API
+    if (!validateObjectif(value)) {
+      // Annuler le mode édition immédiatement
+      setIsEditing(false);
+      setEditValue('');
       return;
     }
-    if (data && value <= data.objectif) {
-      refuseDecrease();
+
+    // Si la valeur est égale à l'actuel, juste fermer l'édition
+    if (data && value === data.objectif) {
+      setIsEditing(false);
+      setEditValue('');
       return;
     }
+
     try {
       await updateObjectif(value);
       setIsEditing(false);
-      toast.success('Objectif mis à jour 🎯');
-      if (data && value > data.totalVentesMois) {
-        setCelebrationActive(false);
-      }
+      setEditValue('');
+      toast.success('Objectif mis à jour');
     } catch (error: any) {
-      toast.error('Erreur lors de la mise à jour');
+      // Annuler le mode édition en cas d'erreur
+      setIsEditing(false);
+      setEditValue('');
+      if (error?.response?.data?.message === 'OBJECTIF_MUST_INCREASE') {
+        toast.error('On ne peut pas baisser un objectif.');
+      } else {
+        toast.error('Erreur lors de la mise à jour');
+      }
     }
   };
 
@@ -172,14 +148,6 @@ const ObjectifIndicator: React.FC = () => {
     setIsEditing(false);
     setEditValue('');
   };
-
-  // Activation automatique de la célébration
-  useEffect(() => {
-    if (!data) return;
-    if (data.totalVentesMois >= data.objectif) {
-      setCelebrationActive(true);
-    }
-  }, [data]);
 
   if (loading) {
     return (
@@ -191,32 +159,25 @@ const ObjectifIndicator: React.FC = () => {
 
   if (!data) return null;
 
-  const celebrate = celebrationActive;
+  const percentage = Math.round((data.totalVentesMois / data.objectif) * 100);
 
   return (
-    <div
-      className={cn(
-        'relative flex items-center gap-2 px-3 py-2 rounded-2xl border shadow-lg backdrop-blur-xl',
-        'bg-gradient-to-r from-slate-50 via-white to-violet-50 dark:from-slate-900 dark:via-slate-800 dark:to-violet-950',
-        celebrate && 'ring-2 ring-emerald-400/40 animate-pulse'
-      )}
-    >
-      {/* Célébration complète */}
-      <Celebration show={celebrate} />
-
+    <div className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-gradient-to-r from-slate-50 via-white to-violet-50 dark:from-slate-900 dark:via-slate-800 dark:to-violet-950 border border-slate-200/50 dark:border-slate-700/50 shadow-lg shadow-violet-500/5 backdrop-blur-xl">
+      {/* Icon */}
+     
       {/* Total Ventes */}
       <div className="flex flex-col">
         <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium hidden sm:block">
           Ventes
         </span>
-        <span className={cn('font-bold text-sm', getProgressColor())}>
+        <span className={cn("font-bold text-sm", getProgressColor())}>
           {formatCurrency(data.totalVentesMois)}
         </span>
       </div>
-
+      
       {/* Separator */}
       <div className="h-8 w-px bg-gradient-to-b from-transparent via-slate-300 dark:via-slate-600 to-transparent" />
-
+      
       {/* Objectif - Editable */}
       <div className="flex flex-col">
         <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium hidden sm:block">
@@ -259,6 +220,22 @@ const ObjectifIndicator: React.FC = () => {
         )}
       </div>
 
+      {/* Mini Progress */}
+      {/* <div className="hidden md:flex flex-col gap-1">
+        <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
+          {percentage}%
+        </span>
+        <div className="w-16 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+          <div
+            className={cn("h-full rounded-full bg-gradient-to-r transition-all duration-500", getProgressGradient())}
+            style={{ width: `${Math.min(percentage, 100)}%` }}
+          />
+        </div>
+      </div> */}
+
+      {/* Stats Modal Button */}
+     
+      
       {/* Add New Objectif Button */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogTrigger asChild>
@@ -282,7 +259,7 @@ const ObjectifIndicator: React.FC = () => {
               <Sparkles className="h-4 w-4 text-amber-500 animate-pulse" />
             </DialogTitle>
           </DialogHeader>
-
+          
           <div className="space-y-5 py-4">
             <div className="space-y-2">
               <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
@@ -296,7 +273,7 @@ const ObjectifIndicator: React.FC = () => {
                 className="text-lg h-12 rounded-xl border-slate-200/50 dark:border-slate-700/50 focus:ring-2 focus:ring-violet-500/30"
               />
             </div>
-
+            
             <div className="p-4 rounded-xl bg-slate-100/50 dark:bg-slate-800/50 space-y-2">
               <p className="text-sm text-slate-600 dark:text-slate-400">
                 Objectif actuel: <strong className="text-violet-600 dark:text-violet-400">{formatCurrency(data.objectif)}</strong>
@@ -305,9 +282,9 @@ const ObjectifIndicator: React.FC = () => {
                 Ventes ce mois: <strong className={getProgressColor()}>{formatCurrency(data.totalVentesMois)}</strong>
               </p>
             </div>
-
-            <Button
-              onClick={handleAddObjectif}
+            
+            <Button 
+              onClick={handleAddObjectif} 
               className="w-full h-12 rounded-xl bg-gradient-to-r from-violet-500 to-fuchsia-500 hover:from-violet-600 hover:to-fuchsia-600 shadow-lg shadow-violet-500/30 transition-all duration-300 hover:scale-[1.02]"
             >
               <Target className="mr-2 h-5 w-5" />
@@ -316,7 +293,7 @@ const ObjectifIndicator: React.FC = () => {
           </div>
         </DialogContent>
       </Dialog>
-      <ObjectifStatsModal />
+       <ObjectifStatsModal />
     </div>
   );
 };

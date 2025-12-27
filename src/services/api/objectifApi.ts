@@ -15,9 +15,26 @@ export interface MonthlyData {
   pourcentage: number;
 }
 
+export interface ObjectifChange {
+  date: string;
+  ancienObjectif: number;
+  nouveauObjectif: number;
+  mois: number;
+  annee: number;
+}
+
+export interface BeneficeMensuel {
+  mois: number;
+  annee: number;
+  totalBenefice: number;
+  updatedAt: string;
+}
+
 export interface ObjectifHistorique {
   currentData: ObjectifData;
   historique: MonthlyData[];
+  objectifChanges: ObjectifChange[];
+  beneficesHistorique: BeneficeMensuel[];
   annee: number;
 }
 
