@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Plus, Target, Edit2, Check, X, Sparkles, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -58,9 +58,9 @@ const ObjectifIndicator: React.FC = () => {
       return false;
     }
 
-    // Vérification: on ne peut pas baisser un objectif
-    if (data && value < data.objectif) {
-      toast.error('On ne peut pas baisser un objectif.');
+    // Vérification: seule une augmentation stricte est autorisée (pas de diminution ni égalité)
+    if (data && value <= data.objectif) {
+      toast.error('L\'objectif doit être strictement supérieur à l\'actuel.');
       return false;
     }
 
