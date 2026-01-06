@@ -27,26 +27,53 @@ const ProfitEvolution: React.FC = () => {
     return { revenue: 0, quantity: 0, profit: 0 };
   };
 
+  // Année en cours
+  const currentYear = new Date().getFullYear();
+
   const profitData = useMemo(() => {
-    const monthlyData = new Map();
+    const monthlyData = new Map<string, {
+      key: string;
+      month: string;
+      revenue: number;
+      profit: number;
+      expenses: number;
+      netProfit: number;
+      margin: number;
+      sales: number;
+    }>();
+    
     let totalProfit = 0;
     let totalExpenses = 0;
-    let bestMonth = { month: '', profit: 0 };
+    let bestMonth = { month: '', profit: -Infinity };
     let worstMonth = { month: '', profit: Infinity };
 
-    // Analyser les ventes et profits
-    allSales.forEach(sale => {
-      const date = new Date(sale.date);
-      const year = date.getFullYear();
-      const month = date.getMonth() + 1;
-      const monthKey = `${year}-${String(month).padStart(2, '0')}`;
-      const monthName = date.toLocaleDateString('fr-FR', { year: 'numeric', month: 'short' });
+    // Filtrer uniquement les ventes de l'année en cours
+    const currentYearSales = allSales.filter(sale => {
+      const saleDate = new Date(sale.date);
+      return saleDate.getFullYear() === currentYear;
+    });
 
+    // Analyser les ventes et profits de l'année en cours uniquement
+    currentYearSales.forEach(sale => {
+      const date = new Date(sale.date);
+      const month = date.getMonth() + 1;
+      const monthKey = `${currentYear}-${String(month).padStart(2, '0')}`;
+      const monthName = date.toLocaleDateString('fr-FR', { month: 'short' });
+
+      // Calcul des valeurs de la vente
       const saleValues = getSaleValues(sale);
+      
+      // Calcul des dépenses réelles : coût d'achat des produits vendus
+      let saleExpenses = 0;
+      if (sale.products && Array.isArray(sale.products) && sale.products.length > 0) {
+        saleExpenses = sale.totalPurchasePrice || sale.products.reduce((sum, p) => sum + (p.purchasePrice * p.quantitySold), 0);
+      } else if (sale.purchasePrice !== undefined && sale.quantitySold !== undefined) {
+        saleExpenses = sale.purchasePrice * sale.quantitySold;
+      }
 
       if (!monthlyData.has(monthKey)) {
         monthlyData.set(monthKey, {
-          key: monthKey, // garder la clé pour trier correctement
+          key: monthKey,
           month: monthName,
           revenue: 0,
           profit: 0,
@@ -57,25 +84,22 @@ const ProfitEvolution: React.FC = () => {
         });
       }
 
-      const data = monthlyData.get(monthKey);
+      const data = monthlyData.get(monthKey)!;
       data.revenue += saleValues.revenue;
       data.profit += saleValues.profit;
+      data.expenses += saleExpenses;
       data.sales += 1;
+      
       totalProfit += saleValues.profit;
+      totalExpenses += saleExpenses;
     });
 
-    // Dépenses simulées
-    const mockExpenses = 500;
+    // Calculer profit net et marges pour chaque mois
     Array.from(monthlyData.values()).forEach(data => {
-      data.expenses = mockExpenses;
-      totalExpenses += mockExpenses;
-    });
-
-    // Calculer profit net + marges
-    Array.from(monthlyData.values()).forEach(data => {
-      data.netProfit = data.profit - data.expenses;
+      data.netProfit = data.profit;
       data.margin = data.revenue > 0 ? (data.profit / data.revenue) * 100 : 0;
 
+      // Déterminer le meilleur et pire mois
       if (data.netProfit > bestMonth.profit) {
         bestMonth = { month: data.month, profit: data.netProfit };
       }
@@ -84,14 +108,34 @@ const ProfitEvolution: React.FC = () => {
       }
     });
 
-    // TRIER correctement par ordre chronologique
+    // Trier par ordre chronologique
     const sortedData = Array.from(monthlyData.values()).sort((a, b) => a.key.localeCompare(b.key));
 
-    const currentMonth = sortedData[sortedData.length - 1];
-    const previousMonth = sortedData[sortedData.length - 2];
+    // Si aucune donnée, réinitialiser bestMonth et worstMonth
+    if (sortedData.length === 0) {
+      bestMonth = { month: '-', profit: 0 };
+      worstMonth = { month: '-', profit: 0 };
+    } else if (worstMonth.profit === Infinity) {
+      worstMonth = bestMonth;
+    }
 
-    const growthRate = previousMonth
-      ? ((currentMonth?.netProfit - previousMonth.netProfit) / Math.abs(previousMonth.netProfit || 1)) * 100
+    // Calcul de la croissance mensuelle (mois actuel vs mois précédent)
+    const currentMonthData = sortedData[sortedData.length - 1];
+    const previousMonthData = sortedData[sortedData.length - 2];
+
+    let growthRate = 0;
+    if (currentMonthData && previousMonthData) {
+      const previousProfit = previousMonthData.netProfit;
+      if (previousProfit !== 0) {
+        growthRate = ((currentMonthData.netProfit - previousProfit) / Math.abs(previousProfit)) * 100;
+      } else if (currentMonthData.netProfit > 0) {
+        growthRate = 100;
+      }
+    }
+
+    // Marge moyenne annuelle
+    const averageMargin = sortedData.length > 0
+      ? sortedData.reduce((acc, data) => acc + data.margin, 0) / sortedData.length
       : 0;
 
     return {
@@ -99,19 +143,17 @@ const ProfitEvolution: React.FC = () => {
       totals: {
         profit: totalProfit,
         expenses: totalExpenses,
-        netProfit: totalProfit - totalExpenses
+        netProfit: totalProfit
       },
       insights: {
         bestMonth,
         worstMonth,
         growthRate,
-        averageMargin:
-          sortedData.length > 0
-            ? sortedData.reduce((acc, data) => acc + data.margin, 0) / sortedData.length
-            : 0
-      }
+        averageMargin
+      },
+      year: currentYear
     };
-  }, [allSales]);
+  }, [allSales, currentYear]);
 
   const getGrowthColor = (rate: number) => {
     if (rate > 0) return 'text-emerald-600 dark:text-emerald-400';
@@ -125,6 +167,16 @@ const ProfitEvolution: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {/* Titre avec année en cours */}
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-xl font-bold text-foreground">
+          Évolution des Profits - {profitData.year}
+        </h2>
+        <Badge variant="outline" className="text-sm">
+          Année {profitData.year}
+        </Badge>
+      </div>
+
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <ModernCard
