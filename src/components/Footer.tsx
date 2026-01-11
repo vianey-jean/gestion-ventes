@@ -210,7 +210,7 @@ const Footer: React.FC = () => {
           <div className="mt-4 sm:mt-6 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3">
             <div className="inline-flex items-center px-2 sm:px-3 py-1 bg-white/5 backdrop-blur-sm rounded-full text-[10px] sm:text-xs text-gray-400 border border-white/10">
               <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-400 rounded-full mr-1.5 sm:mr-2 animate-pulse shrink-0"></div>
-              <span className="whitespace-nowrap">Version 3.2.0 - Système opérationnel</span>
+              <span className="whitespace-nowrap">Version 4.0.0 - Système opérationnel</span>
             </div>
             <div className="inline-flex items-center px-2 sm:px-3 py-1 bg-white/5 backdrop-blur-sm rounded-full text-[10px] sm:text-xs text-gray-400 border border-white/10">
               <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-400 rounded-full mr-1.5 sm:mr-2 animate-pulse shrink-0"></div>
