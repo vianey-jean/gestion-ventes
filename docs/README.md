@@ -1,63 +1,80 @@
-
-# Documentation du Projet - Système de Gestion Commerciale
+# 📚 Documentation du Projet - Système de Gestion Commerciale
 
 ## Vue d'ensemble
 
-Ce projet est un système de gestion commerciale complet développé avec React/TypeScript en frontend et Node.js/Express en backend.
+Application web complète de gestion commerciale développée avec React/TypeScript en frontend et Node.js/Express en backend.
 
-## Structure de la documentation
+## Documentation principale
 
-- [Architecture](./ARCHITECTURE.md) - Architecture générale du système
-- [API Documentation](./API_DOCUMENTATION.md) - Documentation complète de l'API
-- [Frontend Guide](./FRONTEND_GUIDE.md) - Guide du développement frontend
-- [Backend Guide](./BACKEND_GUIDE.md) - Guide du développement backend
-- [Tests Guide](./TESTS_GUIDE.md) - Guide des tests et stratégies de test
-- [Deployment](./DEPLOYMENT.md) - Guide de déploiement
-- [Security](./SECURITY.md) - Guide de sécurité
-- [Performance](./PERFORMANCE.md) - Guide d'optimisation des performances
+👉 **[DOCUMENTATION_PROJET.md](./DOCUMENTATION_PROJET.md)** - Documentation complète et professionnelle
+
+## Fichiers de documentation
+
+| Fichier | Description |
+|---------|-------------|
+| [DOCUMENTATION_PROJET.md](./DOCUMENTATION_PROJET.md) | Documentation principale complète |
+| [API_DOCUMENTATION.md](./API_DOCUMENTATION.md) | Documentation API REST |
+| [ARCHITECTURE.md](./ARCHITECTURE.md) | Architecture technique |
+| [FRONTEND_GUIDE.md](./FRONTEND_GUIDE.md) | Guide développement frontend |
+| [BACKEND_GUIDE.md](./BACKEND_GUIDE.md) | Guide développement backend |
+| [TESTS_GUIDE.md](./TESTS_GUIDE.md) | Guide des tests |
+| [DEPLOYMENT.md](./DEPLOYMENT.md) | Guide de déploiement |
+| [SECURITY.md](./SECURITY.md) | Guide de sécurité |
 
 ## Technologies utilisées
 
 ### Frontend
-- React 18.3.1 avec TypeScript
+- React 19 avec TypeScript
 - Vite pour le build
 - Tailwind CSS + Shadcn/UI
-- React Context pour la gestion d'état
+- React Context pour l'état global
 - React Router pour la navigation
 - Framer Motion pour les animations
 
 ### Backend
 - Node.js avec Express.js
-- JSON pour le stockage de données (développement)
+- JSON pour le stockage (développement)
 - JWT pour l'authentification
-- Bcrypt pour le hachage des mots de passe
-- CORS pour la sécurité
-- Multer pour l'upload de fichiers
+- Bcrypt pour le hachage
+- CORS + Rate Limiting pour la sécurité
 
 ### Tests
 - Vitest pour les tests unitaires
-- React Testing Library pour les tests de composants
-- Jest DOM pour les assertions
-- Playwright pour les tests E2E (mock)
+- React Testing Library pour les composants
+- Tests E2E et intégration
 
 ## Démarrage rapide
 
-1. Installation des dépendances : `npm install`
-2. Démarrage du développement : `npm run dev`
-3. Lancement des tests : `npm test`
-4. Build de production : `npm run build`
+```bash
+# Frontend
+npm install
+npm run dev
+
+# Backend (dans /server)
+cd server
+npm install
+npm run dev
+```
 
 ## Structure du projet
 
 ```
 src/
-├── components/          # Composants React
-│   ├── ui/             # Composants UI de base
-│   ├── dashboard/      # Composants du tableau de bord
-│   └── forms/          # Composants de formulaires
-├── contexts/           # Contextes React
-├── hooks/              # Hooks personnalisés
-├── services/           # Services métier
-├── types/              # Définitions TypeScript
-└── tests/              # Tests unitaires et d'intégration
+├── components/     # Composants React
+├── contexts/       # Contextes React  
+├── hooks/          # Hooks personnalisés
+├── pages/          # Pages de l'application
+├── services/       # Services métier et API
+├── types/          # Définitions TypeScript
+└── tests/          # Tests
+
+server/
+├── routes/         # Routes API
+├── middleware/     # Middlewares
+├── models/         # Modèles de données
+└── db/             # Fichiers JSON (base de données)
 ```
+
+---
+
+*Documentation mise à jour - Janvier 2026*
