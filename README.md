@@ -1,51 +1,51 @@
+Voici la traduction en français, en conservant le **même modèle et la même mise en forme** :
 
+---
 
-
-Follow these steps:
+Suivez ces étapes :
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
+# Étape 1 : Cloner le dépôt en utilisant l’URL Git du projet.
 git clone <YOUR_GIT_URL>
 
-# Step 2: Navigate to the project directory.
+# Étape 2 : Accéder au répertoire du projet.
 cd <YOUR_PROJECT_NAME>
 
-# Step 3: Install the necessary dependencies.
+# Étape 3 : Installer les dépendances nécessaires.
 npm i
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Étape 4 : Démarrer le serveur de développement avec rechargement automatique et aperçu instantané.
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+**Modifier un fichier directement sur GitHub**
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+* Accédez au(x) fichier(s) souhaité(s).
+* Cliquez sur le bouton « Edit » (icône crayon) en haut à droite de la vue du fichier.
+* Effectuez vos modifications puis validez (commit) les changements.
 
-**Use GitHub Codespaces**
+**Utiliser GitHub Codespaces**
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+* Accédez à la page principale de votre dépôt.
+* Cliquez sur le bouton « Code » (bouton vert) en haut à droite.
+* Sélectionnez l’onglet « Codespaces ».
+* Cliquez sur « New codespace » pour lancer un nouvel environnement Codespace.
+* Modifiez les fichiers directement dans le Codespace, puis validez et poussez (commit & push) vos changements une fois terminé.
 
-## What technologies are used for this project?
+## Quelles technologies sont utilisées pour ce projet ?
 
-This project is built with .
+Ce projet est construit avec :
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+* Vite
+* TypeScript
+* React
+* shadcn-ui
+* Tailwind CSS
 
-## How can I deploy this project?
+## Comment puis-je déployer ce projet ?
 
+## Je souhaite utiliser un nom de domaine personnalisé – est-ce possible ?
 
-## I want to use a custom domain - is that possible?
+Nous ne prenons pas encore en charge les noms de domaine personnalisés. Si vous souhaitez déployer votre projet sous votre propre domaine, nous vous recommandons d’utiliser Netlify. Consultez notre documentation pour plus de détails : [Custom domains]
 
-We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains]# Riziky-gestion Ventes
-# gestion-ventes
-# gestion-ventes
+# Riziky-gestion Ventes
