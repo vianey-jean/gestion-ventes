@@ -34,6 +34,7 @@ interface GroupedPrets {
 const PretProduitsGrouped: React.FC = () => {
   const [prets, setPrets] = useState<PretProduit[]>([]);
   const [groupedPrets, setGroupedPrets] = useState<GroupedPrets[]>([]);
+  const [expandedSection, setExpandedSection] = useState<'paid' | 'pending' | null>(null);
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -178,6 +179,19 @@ const PretProduitsGrouped: React.FC = () => {
     }
     setExpandedGroups(newExpanded);
   };
+
+  const toggleSection = (section: 'paid' | 'pending') => {
+    if (expandedSection === section) {
+      setExpandedSection(null);
+      setExpandedGroups(new Set());
+    } else {
+      setExpandedSection(section);
+      setExpandedGroups(new Set());
+    }
+  };
+
+  const paidGroups = groupedPrets.filter(g => g.allPaid);
+  const pendingGroups = groupedPrets.filter(g => !g.allPaid);
 
   const totalReste = prets.reduce((sum, pret) => sum + pret.reste, 0);
   const totalAvances = prets.reduce((sum, pret) => sum + pret.avanceRecue, 0);
@@ -729,251 +743,473 @@ const PretProduitsGrouped: React.FC = () => {
           </Button>
         </motion.div>
         
-        {/* Grouped Prets */}
+        {/* Section Headers - Tous payés / En cours */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6, duration: 0.5 }}
           className="space-y-4"
         >
-          {groupedPrets.map((group, index) => (
-            <Card key={group.nom} className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl border border-white/20 shadow-xl overflow-hidden">
-              <div 
-                className="p-6 cursor-pointer hover:bg-purple-50/50 dark:hover:bg-purple-900/20 transition-all"
-                onClick={() => toggleGroup(group.nom)}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4 flex-1">
-                    <div className="flex items-center gap-2">
-                      {expandedGroups.has(group.nom) ? (
-                        <ChevronUp className="h-5 w-5 text-purple-600" />
-                      ) : (
-                        <ChevronDown className="h-5 w-5 text-purple-600" />
-                      )}
-                      <h3 className="text-xl font-bold text-purple-600 dark:text-purple-400">
-                        {group.nom}
-                      </h3>
+          {/* Section "Tous payés" */}
+          <Card className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl border border-white/20 shadow-xl overflow-hidden">
+            <div 
+              className="p-6 cursor-pointer hover:bg-emerald-50/50 dark:hover:bg-emerald-900/20 transition-all"
+              onClick={() => toggleSection('paid')}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  {expandedSection === 'paid' ? (
+                    <ChevronUp className="h-6 w-6 text-emerald-600" />
+                  ) : (
+                    <ChevronDown className="h-6 w-6 text-emerald-600" />
+                  )}
+                  <div className="flex items-center gap-3">
+                    <div className="p-3 bg-emerald-100 dark:bg-emerald-900/30 rounded-xl">
+                      <CheckCircle className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
                     </div>
-                    
-                    {group.phone && (
-                      <div className="flex items-center gap-1 text-gray-600 dark:text-gray-300">
-                        <Phone className="h-4 w-4 text-blue-600" />
-                        <span className="text-sm font-bold text-blue-600">{group.phone}</span>
-                      </div>
-                    )}
-
-                    <span className="text-sm  font-bold text-orange-500 dark:text-orange-400">
-                      {group.prets.length} prêt{group.prets.length > 1 ? 's' : ''}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-6">
-                    <motion.div className="text-right">
-                    <p className="text-sm text-gray-500 font-bold dark:text-gray-400">
-                      Total Reste à payer
-                    </p>
-                    <motion.p
-                      key={group.totalReste}
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ duration: 0.7, ease: "easeOut" }}
-                      className={`text-lg font-bold ${
-                        group.totalReste === 0
-                          ? 'text-green-600 dark:text-green-400'
-                          : group.totalReste > 0
-                          ? 'text-red-600 dark:text-red-400'
-                          : 'text-orange-600 dark:text-orange-400'
-                      }`}
-                    >
-                      {formatCurrency(group.totalReste)}
-                    </motion.p>
-                  </motion.div>
-                    
-                    <span className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold ${
-                      group.allPaid 
-                        ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400' 
-                        : 'bg-red-300 text-red-800 dark:bg-red-900/30 dark:text-red-600'
-                    }`}>
-                      {group.allPaid ? (
-                        <>
-                          <CheckCircle className="h-4 w-4 mr-1" />
-                          Tous payés
-                        </>
-                      ) : (
-                        <>
-                          <Clock className="h-4 w-4 mr-1" />
-                          En cours
-                        </>
-                      )}
-                    </span>
+                    <h2 className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+                      Tous payés
+                    </h2>
                   </div>
                 </div>
+                <span className="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400">
+                  {paidGroups.length} personne{paidGroups.length > 1 ? 's' : ''}
+                </span>
               </div>
+            </div>
 
-              <AnimatePresence>
-                {expandedGroups.has(group.nom) && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <div className="px-6 pb-6 border-t border-gray-200 dark:border-gray-700">
-                      <div className="mt-4 space-y-3">
-                        {group.prets.map((pret) => (
+            <AnimatePresence>
+              {expandedSection === 'paid' && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <div className="px-6 pb-6 border-t border-gray-200 dark:border-gray-700 space-y-4 mt-4">
+                    {paidGroups.length === 0 ? (
+                      <p className="text-center text-gray-500 dark:text-gray-400 py-8">Aucune personne avec tous les prêts payés</p>
+                    ) : (
+                      paidGroups.map((group) => (
+                        <Card key={group.nom} className="bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 overflow-hidden">
                           <div 
-                            key={pret.id}
-                            className="p-4 bg-gray-50 dark:bg-gray-900/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-900/70 transition-all"
+                            className="p-4 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800/50 transition-all"
+                            onClick={() => toggleGroup(group.nom)}
                           >
-                           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
-                              <div className="flex-1 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3 md:gap-4 w-full">
-                                <div className="col-span-2 sm:col-span-1">
-                                  <p className="text-xs text-gray-500 dark:text-gray-400">Description</p>
-                                  <p className="font-semibold text-gray-900 dark:text-gray-100 text-sm truncate">{pret.description}</p>
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-4 flex-1">
+                                <div className="flex items-center gap-2">
+                                  {expandedGroups.has(group.nom) ? (
+                                    <ChevronUp className="h-5 w-5 text-purple-600" />
+                                  ) : (
+                                    <ChevronDown className="h-5 w-5 text-purple-600" />
+                                  )}
+                                  <h3 className="text-xl font-bold text-purple-600 dark:text-purple-400">
+                                    {group.nom}
+                                  </h3>
                                 </div>
                                 
-                                <div>
-                                  <p className="text-xs text-gray-500 dark:text-gray-400">Date prêt</p>
-                                  <p className="font-medium text-sm">{format(new Date(pret.date), 'dd/MM/yyyy')}</p>
-                                </div>
+                                {group.phone && (
+                                  <div className="flex items-center gap-1 text-gray-600 dark:text-gray-300">
+                                    <Phone className="h-4 w-4 text-blue-600" />
+                                    <span className="text-sm font-bold text-blue-600">{group.phone}</span>
+                                  </div>
+                                )}
 
-                                <div className="hidden lg:block">
-                                  <p className="text-xs text-gray-500 dark:text-gray-400">Date paiement</p>
-                                  <p className={`${getDatePaiementClass(pret)} text-sm`}>
-                                    {pret.datePaiement ? format(new Date(pret.datePaiement), 'dd/MM/yyyy') : '-'}
-                                  </p>
-                                </div>
-
-                                <div>
-                                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                                    <span className="hidden sm:inline">Prix / Avance</span>
-                                    <span className="sm:hidden">Prix/Av.</span>
-                                  </p>
-                                  <p className="font-semibold text-xs sm:text-sm">
-                                    {formatCurrency(pret.prixVente).replace(',00', '')}
-                                    <span className="hidden sm:inline"> / </span>
-                                    <span className="sm:hidden">/</span>
-                                    {formatCurrency(pret.avanceRecue).replace(',00', '')}
-                                  </p>
-                                </div>
-
-                                <div>
-                                  <p className="text-xs text-gray-500 dark:text-gray-400">Reste</p>
-                                  <p className="font-bold text-orange-600 text-sm">{formatCurrency(pret.reste).replace(',00', '')}</p>
-                                </div>
+                                <span className="text-sm font-bold text-orange-500 dark:text-orange-400">
+                                  {group.prets.length} prêt{group.prets.length > 1 ? 's' : ''}
+                                </span>
                               </div>
 
-                              <div className="flex items-center gap-1 sm:gap-2 ml-0 sm:ml-4 w-full sm:w-auto flex-wrap sm:flex-nowrap">
-                                <span className={`inline-flex items-center px-2 py-1 sm:px-3 rounded-full text-xs font-semibold ${
-                                  pret.estPaye 
-                                    ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400' 
-                                    : 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400'
-                                }`}>
-                                  {pret.estPaye ? (
-                                    <>
-                                      <CheckCircle className="h-3 w-3 mr-1" />
-                                      <span className="hidden xs:inline">Payé</span>
-                                    </>
+                              <span className="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400">
+                                <CheckCircle className="h-4 w-4 mr-1" />
+                                Déjà fini
+                              </span>
+                            </div>
+                          </div>
+
+                          <AnimatePresence>
+                            {expandedGroups.has(group.nom) && (
+                              <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: 'auto', opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                transition={{ duration: 0.3 }}
+                              >
+                                <div className="px-4 pb-4 border-t border-gray-200 dark:border-gray-700">
+                                  <div className="mt-4 space-y-3">
+                                    {group.prets.map((pret) => (
+                                      <div 
+                                        key={pret.id}
+                                        className="p-4 bg-white dark:bg-gray-800 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-all"
+                                      >
+                                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
+                                          <div className="flex-1 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3 md:gap-4 w-full">
+                                            <div className="col-span-2 sm:col-span-1">
+                                              <p className="text-xs text-gray-500 dark:text-gray-400">Description</p>
+                                              <p className="font-semibold text-gray-900 dark:text-gray-100 text-sm truncate">{pret.description}</p>
+                                            </div>
+                                            
+                                            <div>
+                                              <p className="text-xs text-gray-500 dark:text-gray-400">Date prêt</p>
+                                              <p className="font-medium text-sm">{format(new Date(pret.date), 'dd/MM/yyyy')}</p>
+                                            </div>
+
+                                            <div className="hidden lg:block">
+                                              <p className="text-xs text-gray-500 dark:text-gray-400">Date paiement</p>
+                                              <p className={`${getDatePaiementClass(pret)} text-sm`}>
+                                                {pret.datePaiement ? format(new Date(pret.datePaiement), 'dd/MM/yyyy') : '-'}
+                                              </p>
+                                            </div>
+
+                                            <div>
+                                              <p className="text-xs text-gray-500 dark:text-gray-400">
+                                                <span className="hidden sm:inline">Prix / Avance</span>
+                                                <span className="sm:hidden">Prix/Av.</span>
+                                              </p>
+                                              <p className="font-semibold text-xs sm:text-sm">
+                                                {formatCurrency(pret.prixVente).replace(',00', '')}
+                                                <span className="hidden sm:inline"> / </span>
+                                                <span className="sm:hidden">/</span>
+                                                {formatCurrency(pret.avanceRecue).replace(',00', '')}
+                                              </p>
+                                            </div>
+
+                                            <div>
+                                              <p className="text-xs text-gray-500 dark:text-gray-400">Reste</p>
+                                              <p className="font-bold text-emerald-600 text-sm">{formatCurrency(pret.reste).replace(',00', '')}</p>
+                                            </div>
+                                          </div>
+
+                                          <div className="flex items-center gap-1 sm:gap-2 ml-0 sm:ml-4 w-full sm:w-auto flex-wrap sm:flex-nowrap">
+                                            <span className="inline-flex items-center px-2 py-1 sm:px-3 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400">
+                                              <CheckCircle className="h-3 w-3 mr-1" />
+                                              <span className="hidden xs:inline">Déjà fini</span>
+                                            </span>
+
+                                            <button 
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                setSelectedPret(pret);
+                                                setDetailDialogOpen(true);
+                                              }} 
+                                              className="p-1.5 sm:p-2 rounded-lg bg-purple-100 text-purple-600 hover:bg-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:hover:bg-purple-900/50 transition-colors"
+                                              title="Voir détails"
+                                            >
+                                              <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                                            </button>
+
+                                            <button 
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                setSelectedPret(pret);
+                                                setDeleteDialogOpen(true);
+                                              }} 
+                                              className="p-1.5 sm:p-2 rounded-lg bg-red-100 text-red-600 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50 transition-colors"
+                                              title="Supprimer"
+                                            >
+                                              <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                                            </button>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+
+                                  <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                                    <div className="grid grid-cols-3 gap-4">
+                                      <div className="text-center">
+                                        <p className="text-xs text-gray-500 dark:text-gray-400">Total vente</p>
+                                        <p className="text-lg font-bold text-emerald-600">{formatCurrency(group.totalPrixVente)}</p>
+                                      </div>
+                                      <div className="text-center">
+                                        <p className="text-xs text-gray-500 dark:text-gray-400">Total avances</p>
+                                        <p className="text-lg font-bold text-blue-600">{formatCurrency(group.totalAvance)}</p>
+                                      </div>
+                                      <div className="text-center">
+                                        <p className="text-xs text-gray-500 dark:text-gray-400">Total reste</p>
+                                        <p className="text-lg font-bold text-emerald-600">{formatCurrency(group.totalReste)}</p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </Card>
+                      ))
+                    )}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </Card>
+
+          {/* Section "En cours" */}
+          <Card className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl border border-white/20 shadow-xl overflow-hidden">
+            <div 
+              className="p-6 cursor-pointer hover:bg-orange-50/50 dark:hover:bg-orange-900/20 transition-all"
+              onClick={() => toggleSection('pending')}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  {expandedSection === 'pending' ? (
+                    <ChevronUp className="h-6 w-6 text-orange-600" />
+                  ) : (
+                    <ChevronDown className="h-6 w-6 text-orange-600" />
+                  )}
+                  <div className="flex items-center gap-3">
+                    <div className="p-3 bg-orange-100 dark:bg-orange-900/30 rounded-xl">
+                      <Clock className="h-6 w-6 text-orange-600 dark:text-orange-400" />
+                    </div>
+                    <h2 className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+                      En cours
+                    </h2>
+                  </div>
+                </div>
+                <span className="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400">
+                  {pendingGroups.length} personne{pendingGroups.length > 1 ? 's' : ''}
+                </span>
+              </div>
+            </div>
+
+            <AnimatePresence>
+              {expandedSection === 'pending' && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <div className="px-6 pb-6 border-t border-gray-200 dark:border-gray-700 space-y-4 mt-4">
+                    {pendingGroups.length === 0 ? (
+                      <p className="text-center text-gray-500 dark:text-gray-400 py-8">Aucune personne avec des prêts en cours</p>
+                    ) : (
+                      pendingGroups.map((group) => (
+                        <Card key={group.nom} className="bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 overflow-hidden">
+                          <div 
+                            className="p-4 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800/50 transition-all"
+                            onClick={() => toggleGroup(group.nom)}
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-4 flex-1">
+                                <div className="flex items-center gap-2">
+                                  {expandedGroups.has(group.nom) ? (
+                                    <ChevronUp className="h-5 w-5 text-purple-600" />
                                   ) : (
-                                    <>
-                                      <Clock className="h-3 w-3 mr-1" />
-                                      <span className="hidden xs:inline">En cours</span>
-                                    </>
+                                    <ChevronDown className="h-5 w-5 text-purple-600" />
                                   )}
+                                  <h3 className="text-xl font-bold text-purple-600 dark:text-purple-400">
+                                    {group.nom}
+                                  </h3>
+                                </div>
+                                
+                                {group.phone && (
+                                  <div className="flex items-center gap-1 text-gray-600 dark:text-gray-300">
+                                    <Phone className="h-4 w-4 text-blue-600" />
+                                    <span className="text-sm font-bold text-blue-600">{group.phone}</span>
+                                  </div>
+                                )}
+
+                                <span className="text-sm font-bold text-orange-500 dark:text-orange-400">
+                                  {group.prets.length} prêt{group.prets.length > 1 ? 's' : ''}
                                 </span>
+                              </div>
 
-                                <button 
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setSelectedPret(pret);
-                                    setDetailDialogOpen(true);
-                                  }} 
-                                  className="p-1.5 sm:p-2 rounded-lg bg-purple-100 text-purple-600 hover:bg-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:hover:bg-purple-900/50 transition-colors"
-                                  title="Voir détails"
-                                >
-                                  <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                                </button>
-
-                                <button 
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setSelectedPret(pret);
-                                    setAjoutAvance('');
-                                    setAjoutAvanceDialogOpen(true);
-                                  }} 
-                                  className="p-1.5 sm:p-2 rounded-lg bg-emerald-100 text-emerald-600 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:hover:bg-emerald-900/50 transition-colors"
-                                  title="Ajouter une avance"
-                                >
-                                  <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                                </button>
-
-                                <button 
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    selectPretForEdit(pret);
-                                  }} 
-                                  className="p-1.5 sm:p-2 rounded-lg bg-blue-100 text-blue-600 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50 transition-colors hidden sm:block"
-                                  title="Modifier"
-                                >
-                                  <Edit className="h-4 w-4" />
-                                </button>
-
-                                <button 
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setSelectedPret(pret);
-                                    setDeleteDialogOpen(true);
-                                  }} 
-                                  className="p-1.5 sm:p-2 rounded-lg bg-red-100 text-red-600 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50 transition-colors"
-                                  title="Supprimer"
-                                >
-                                  <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                                </button>
+                              <div className="flex items-center gap-6">
+                                <motion.div className="text-right">
+                                  <p className="text-sm text-gray-500 font-bold dark:text-gray-400">
+                                    Total Reste à payer
+                                  </p>
+                                  <motion.p
+                                    key={group.totalReste}
+                                    initial={{ opacity: 0, scale: 0.9 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    transition={{ duration: 0.7, ease: "easeOut" }}
+                                    className="text-lg font-bold text-red-600 dark:text-red-400"
+                                  >
+                                    {formatCurrency(group.totalReste)}
+                                  </motion.p>
+                                </motion.div>
+                                
+                                <span className="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold bg-red-300 text-red-800 dark:bg-red-900/30 dark:text-red-600">
+                                  <Clock className="h-4 w-4 mr-1" />
+                                  En cours
+                                </span>
                               </div>
                             </div>
                           </div>
-                        ))}
-                      </div>
 
-                      <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                        <div className="grid grid-cols-3 gap-4 mb-4">
-                          <div className="text-center">
-                            <p className="text-xs text-gray-500 dark:text-gray-400">Total vente</p>
-                            <p className="text-lg font-bold text-emerald-600">{formatCurrency(group.totalPrixVente)}</p>
-                          </div>
-                          <div className="text-center">
-                            <p className="text-xs text-gray-500 dark:text-gray-400">Total avances</p>
-                            <p className="text-lg font-bold text-blue-600">{formatCurrency(group.totalAvance)}</p>
-                          </div>
-                          <div className="text-center">
-                            <p className="text-xs text-gray-500 dark:text-gray-400">Total reste</p>
-                            <p className="text-lg font-bold text-orange-600">{formatCurrency(group.totalReste)}</p>
-                          </div>
-                        </div>
-                        
-                        <div className="flex justify-center">
-                          <Button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSelectedGroupForTransfer(group);
-                              setSelectedPretsForTransfer(new Set());
-                              setTransferTargetName('');
-                              setTransferDialogOpen(true);
-                            }}
-                            variant="outline"
-                            className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white border-none shadow-md hover:shadow-lg transition-all duration-300"
-                          >
-                            <ArrowRightLeft className="mr-2 h-4 w-4" />
-                            Transférer les prêts
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </Card>
-          ))}
+                          <AnimatePresence>
+                            {expandedGroups.has(group.nom) && (
+                              <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: 'auto', opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                transition={{ duration: 0.3 }}
+                              >
+                                <div className="px-4 pb-4 border-t border-gray-200 dark:border-gray-700">
+                                  <div className="mt-4 space-y-3">
+                                    {group.prets.map((pret) => (
+                                      <div 
+                                        key={pret.id}
+                                        className="p-4 bg-white dark:bg-gray-800 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-all"
+                                      >
+                                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
+                                          <div className="flex-1 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3 md:gap-4 w-full">
+                                            <div className="col-span-2 sm:col-span-1">
+                                              <p className="text-xs text-gray-500 dark:text-gray-400">Description</p>
+                                              <p className="font-semibold text-gray-900 dark:text-gray-100 text-sm truncate">{pret.description}</p>
+                                            </div>
+                                            
+                                            <div>
+                                              <p className="text-xs text-gray-500 dark:text-gray-400">Date prêt</p>
+                                              <p className="font-medium text-sm">{format(new Date(pret.date), 'dd/MM/yyyy')}</p>
+                                            </div>
+
+                                            <div className="hidden lg:block">
+                                              <p className="text-xs text-gray-500 dark:text-gray-400">Date paiement</p>
+                                              <p className={`${getDatePaiementClass(pret)} text-sm`}>
+                                                {pret.datePaiement ? format(new Date(pret.datePaiement), 'dd/MM/yyyy') : '-'}
+                                              </p>
+                                            </div>
+
+                                            <div>
+                                              <p className="text-xs text-gray-500 dark:text-gray-400">
+                                                <span className="hidden sm:inline">Prix / Avance</span>
+                                                <span className="sm:hidden">Prix/Av.</span>
+                                              </p>
+                                              <p className="font-semibold text-xs sm:text-sm">
+                                                {formatCurrency(pret.prixVente).replace(',00', '')}
+                                                <span className="hidden sm:inline"> / </span>
+                                                <span className="sm:hidden">/</span>
+                                                {formatCurrency(pret.avanceRecue).replace(',00', '')}
+                                              </p>
+                                            </div>
+
+                                            <div>
+                                              <p className="text-xs text-gray-500 dark:text-gray-400">Reste</p>
+                                              <p className="font-bold text-orange-600 text-sm">{formatCurrency(pret.reste).replace(',00', '')}</p>
+                                            </div>
+                                          </div>
+
+                                          <div className="flex items-center gap-1 sm:gap-2 ml-0 sm:ml-4 w-full sm:w-auto flex-wrap sm:flex-nowrap">
+                                            <span className={`inline-flex items-center px-2 py-1 sm:px-3 rounded-full text-xs font-semibold ${
+                                              pret.estPaye 
+                                                ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400' 
+                                                : 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400'
+                                            }`}>
+                                              {pret.estPaye ? (
+                                                <>
+                                                  <CheckCircle className="h-3 w-3 mr-1" />
+                                                  <span className="hidden xs:inline">Payé</span>
+                                                </>
+                                              ) : (
+                                                <>
+                                                  <Clock className="h-3 w-3 mr-1" />
+                                                  <span className="hidden xs:inline">En cours</span>
+                                                </>
+                                              )}
+                                            </span>
+
+                                            <button 
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                setSelectedPret(pret);
+                                                setDetailDialogOpen(true);
+                                              }} 
+                                              className="p-1.5 sm:p-2 rounded-lg bg-purple-100 text-purple-600 hover:bg-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:hover:bg-purple-900/50 transition-colors"
+                                              title="Voir détails"
+                                            >
+                                              <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                                            </button>
+
+                                            <button 
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                setSelectedPret(pret);
+                                                setAjoutAvance('');
+                                                setAjoutAvanceDialogOpen(true);
+                                              }} 
+                                              className="p-1.5 sm:p-2 rounded-lg bg-emerald-100 text-emerald-600 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:hover:bg-emerald-900/50 transition-colors"
+                                              title="Ajouter une avance"
+                                            >
+                                              <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                                            </button>
+
+                                            <button 
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                selectPretForEdit(pret);
+                                              }} 
+                                              className="p-1.5 sm:p-2 rounded-lg bg-blue-100 text-blue-600 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50 transition-colors hidden sm:block"
+                                              title="Modifier"
+                                            >
+                                              <Edit className="h-4 w-4" />
+                                            </button>
+
+                                            <button 
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                setSelectedPret(pret);
+                                                setDeleteDialogOpen(true);
+                                              }} 
+                                              className="p-1.5 sm:p-2 rounded-lg bg-red-100 text-red-600 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50 transition-colors"
+                                              title="Supprimer"
+                                            >
+                                              <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                                            </button>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+
+                                  <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                                    <div className="grid grid-cols-3 gap-4 mb-4">
+                                      <div className="text-center">
+                                        <p className="text-xs text-gray-500 dark:text-gray-400">Total vente</p>
+                                        <p className="text-lg font-bold text-emerald-600">{formatCurrency(group.totalPrixVente)}</p>
+                                      </div>
+                                      <div className="text-center">
+                                        <p className="text-xs text-gray-500 dark:text-gray-400">Total avances</p>
+                                        <p className="text-lg font-bold text-blue-600">{formatCurrency(group.totalAvance)}</p>
+                                      </div>
+                                      <div className="text-center">
+                                        <p className="text-xs text-gray-500 dark:text-gray-400">Total reste</p>
+                                        <p className="text-lg font-bold text-orange-600">{formatCurrency(group.totalReste)}</p>
+                                      </div>
+                                    </div>
+                                    
+                                    <div className="flex justify-center">
+                                      <Button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setSelectedGroupForTransfer(group);
+                                          setSelectedPretsForTransfer(new Set());
+                                          setTransferTargetName('');
+                                          setTransferDialogOpen(true);
+                                        }}
+                                        variant="outline"
+                                        className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white border-none shadow-md hover:shadow-lg transition-all duration-300"
+                                      >
+                                        <ArrowRightLeft className="mr-2 h-4 w-4" />
+                                        Transférer les prêts
+                                      </Button>
+                                    </div>
+                                  </div>
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </Card>
+                      ))
+                    )}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </Card>
         </motion.div>
       </motion.div>
       
