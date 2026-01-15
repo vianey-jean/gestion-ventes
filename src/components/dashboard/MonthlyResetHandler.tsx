@@ -1,5 +1,4 @@
-
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import axios from 'axios';
 
@@ -7,43 +6,39 @@ const AUTH_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const MonthlyResetHandler: React.FC = () => {
   const { user } = useAuth();
+  const hasChecked = useRef(false);
 
   useEffect(() => {
-    const checkAndResetMonthlyData = async () => {
-      if (!user) return;
+    const checkMonthEntry = async () => {
+      // Éviter les vérifications multiples
+      if (!user || hasChecked.current) return;
+      hasChecked.current = true;
 
       try {
-        const currentDate = new Date();
-        const currentMonth = currentDate.getMonth();
-        const currentYear = currentDate.getFullYear();
-        
-        const lastResetKey = `lastReset_${user.id}`;
-        const lastReset = localStorage.getItem(lastResetKey);
-        
-        if (lastReset) {
-          const lastResetDate = new Date(lastReset);
-          const lastResetMonth = lastResetDate.getMonth();
-          const lastResetYear = lastResetDate.getFullYear();
-          
-          if (currentMonth !== lastResetMonth || currentYear !== lastResetYear) {
-            await axios.post(`${AUTH_BASE_URL}/api/depenses/reset-monthly`, {}, {
-              headers: {
-                Authorization: `Bearer ${localStorage.getItem('token')}`
-              }
-            });
-            
-            localStorage.setItem(lastResetKey, currentDate.toISOString());
+        // Appeler la route qui vérifie si une entrée existe pour le mois en cours
+        // et la crée si elle n'existe pas (sans supprimer les données précédentes)
+        const response = await axios.get(`${AUTH_BASE_URL}/api/depenses/check-month`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
           }
-        } else {
-          localStorage.setItem(lastResetKey, currentDate.toISOString());
+        });
+        
+        if (response.data.created) {
+          console.log('Nouvelle entrée créée pour le mois:', response.data.message);
         }
       } catch (error) {
-        console.error('Erreur lors du reset mensuel:', error);
+        console.error('Erreur lors de la vérification du mois:', error);
+        hasChecked.current = false;
       }
     };
 
-    checkAndResetMonthlyData();
+    checkMonthEntry();
   }, [user]);
+
+  // Reset le flag quand l'utilisateur change
+  useEffect(() => {
+    hasChecked.current = false;
+  }, [user?.id]);
 
   return null;
 };
