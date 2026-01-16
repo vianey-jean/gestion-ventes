@@ -46,7 +46,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         toast({
           title: "Connexion réussie",
           description: `Bienvenue ${result.user.firstName} ${result.user.lastName}`,
-          className: "bg-green-500 text-white",
+          className: "bg-green-600 text-white border-red-600",
         });
         return true;
       } else {
@@ -73,10 +73,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(null);
     setToken(null);
     authService.setCurrentUser(null);
-    toast({
-      title: "Déconnexion réussie",
-      description: "Vous avez été déconnecté avec succès",
-    });
+   toast({
+  title: "Déconnexion réussie",
+  description: "Vous avez été déconnecté avec succès",
+  className: "bg-red-800 text-white border-red-800",
+});
+
     // Redirect to login page after logout
     window.location.href = '/login';
   };
