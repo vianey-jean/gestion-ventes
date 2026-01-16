@@ -167,7 +167,7 @@ const ProductSearchInput: React.FC<ProductSearchInputProps> = ({
       {/* Message si aucun résultat */}
       {showDropdown && searchTerm.length >= 3 && filteredProducts.length === 0 && (
         <div className="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg">
-          <div className="px-4 py-3 text-sm text-gray-500">
+          <div className="px-4 py-3 text-sm text-red-600 font-bold">
             Aucun produit trouvé
           </div>
         </div>

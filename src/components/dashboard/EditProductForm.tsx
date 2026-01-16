@@ -19,11 +19,13 @@ import {
   AlertDialogCancel,
   AlertDialogAction,
 } from '@/components/ui/alert-dialog';
-import { Pencil, XCircle } from 'lucide-react';
+import { Pencil, XCircle, CheckCircle2, Package, Euro, Hash, Sparkles, Search, Plus, Trash2, AlertTriangle } from 'lucide-react';
 import { productService } from '@/service/api';
 import { Product } from '@/types';
 import { useToast } from '@/components/ui/use-toast';
 import ProductSearchInput from './ProductSearchInput';
+import { cn } from '@/lib/utils';
+import { useApp } from '@/contexts/AppContext';
 
 interface EditProductFormProps {
   isOpen: boolean;
@@ -32,6 +34,7 @@ interface EditProductFormProps {
 
 const EditProductForm: React.FC<EditProductFormProps> = ({ isOpen, onClose }) => {
   const { toast } = useToast();
+  const { fetchProducts } = useApp();
 
   const [formData, setFormData] = useState({
     id: '',
@@ -44,6 +47,8 @@ const EditProductForm: React.FC<EditProductFormProps> = ({ isOpen, onClose }) =>
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [openConfirm, setOpenConfirm] = useState(false);
+  const [openDeleteConfirm, setOpenDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     if (selectedProduct) {
@@ -82,7 +87,6 @@ const EditProductForm: React.FC<EditProductFormProps> = ({ isOpen, onClose }) =>
       return;
     }
 
-    // 👉 Ouvre la confirmation premium
     setOpenConfirm(true);
   };
 
@@ -106,6 +110,9 @@ const EditProductForm: React.FC<EditProductFormProps> = ({ isOpen, onClose }) =>
       });
 
       setOpenConfirm(false);
+      if (fetchProducts) {
+        await fetchProducts();
+      }
       onClose();
     } catch (error) {
       toast({
@@ -120,72 +127,181 @@ const EditProductForm: React.FC<EditProductFormProps> = ({ isOpen, onClose }) =>
     }
   };
 
+  const handleDeleteClick = () => {
+    if (!formData.id) {
+      toast({
+        title: 'Erreur',
+        description: "Veuillez sélectionner un produit d'abord",
+        variant: 'destructive',
+        className: 'notification-erreur',
+      });
+      return;
+    }
+    setOpenDeleteConfirm(true);
+  };
+
+  const confirmDelete = async () => {
+    try {
+      setIsDeleting(true);
+
+      await productService.deleteProduct(formData.id);
+
+      toast({
+        title: '✅ Produit supprimé',
+        description: `Le produit "${formData.description}" a été supprimé définitivement`,
+        className: 'notification-success',
+      });
+
+      setOpenDeleteConfirm(false);
+      setSelectedProduct(null);
+      setFormData({
+        id: '',
+        description: '',
+        purchasePrice: 0,
+        quantity: 0,
+        additionalQuantity: 0,
+      });
+      
+      if (fetchProducts) {
+        await fetchProducts();
+      }
+      onClose();
+    } catch (error) {
+      toast({
+        title: 'Erreur',
+        description: "Une erreur s'est produite lors de la suppression du produit",
+        variant: 'destructive',
+        className: 'notification-erreur',
+      });
+      console.error(error);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return (
     <>
       <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Modifier un produit</DialogTitle>
+        <DialogContent
+          className="sm:max-w-2xl bg-gradient-to-br from-white via-blue-50/30 to-indigo-50/50
+          backdrop-blur-xl border-0 shadow-2xl rounded-3xl
+          max-h-[85vh] overflow-y-auto"
+        >
+          {/* Decorative background */}
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute -top-24 -right-24 w-48 h-48 bg-blue-200/20 rounded-full blur-3xl" />
+            <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-indigo-200/20 rounded-full blur-3xl" />
+          </div>
+
+          <DialogHeader className="relative text-center space-y-4 pb-2">
+            <div className="mx-auto w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-xl">
+              <Pencil className="h-8 w-8 text-white" />
+            </div>
+
+            <DialogTitle className="text-2xl font-black bg-gradient-to-r from-blue-600 to-purple-700 bg-clip-text text-transparent">
+              ✏️ Modifier Produit Premium
+            </DialogTitle>
           </DialogHeader>
 
-          <form onSubmit={handleSubmit} className="space-y-4 py-4">
+          <form onSubmit={handleSubmit} className="space-y-5 py-4">
             <div className="space-y-2">
-              <Label>Rechercher un produit</Label>
+              <Label className="flex items-center gap-2 font-bold">
+                <Search className="h-4 w-4 text-blue-600" />
+                Rechercher un produit
+              </Label>
               <ProductSearchInput onProductSelect={handleSelectProduct} context="edit" />
             </div>
 
             {selectedProduct && (
               <>
                 <div className="space-y-2">
-                  <Label>Description</Label>
-                  <Input
-                    name="description"
-                    value={formData.description}
+                  <Label className="flex items-center gap-2 font-bold">
+                    <Package className="h-4 w-4 text-indigo-600" />
+                    Description
+                  </Label>
+                  <Input 
+                    name="description" 
+                    value={formData.description} 
                     onChange={handleChange}
+                    className="border-2 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 rounded-xl transition-all duration-300"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Prix d'achat</Label>
-                  <Input
-                    name="purchasePrice"
-                    type="number"
-                    step="0.01"
-                    value={formData.purchasePrice}
+                  <Label className="flex items-center gap-2 font-bold">
+                    <Euro className="h-4 w-4 text-amber-600" />
+                    Prix d'achat (€)
+                  </Label>
+                  <Input 
+                    name="purchasePrice" 
+                    type="number" 
+                    value={formData.purchasePrice} 
                     onChange={handleChange}
+                    className="border-2 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 rounded-xl transition-all duration-300"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Quantité actuelle</Label>
-                  <Input value={formData.quantity} readOnly className="bg-gray-100" />
+                  <Label className="flex items-center gap-2 font-bold">
+                    <Hash className="h-4 w-4" />
+                    Quantité actuelle
+                  </Label>
+                  <Input 
+                    value={formData.quantity} 
+                    readOnly 
+                    className="bg-gray-50 border-2 border-gray-200 rounded-xl"
+                  />
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Ajouter quantité</Label>
+                  <Label className="flex items-center gap-2 font-bold">
+                    <Plus className="h-4 w-4 text-green-600" />
+                    Ajouter quantité
+                  </Label>
                   <Input
                     name="additionalQuantity"
                     type="number"
                     value={formData.additionalQuantity}
                     onChange={handleChange}
+                    className="border-2 border-gray-200 focus:border-green-500 focus:ring-2 focus:ring-green-200 rounded-xl transition-all duration-300"
                   />
                   <p className="text-sm text-gray-500">
-                    Quantité totale après modification :{' '}
-                    {formData.quantity + formData.additionalQuantity}
+                    <Sparkles className="inline h-4 w-4 mr-1 text-blue-500" />
+                    Quantité finale : <b>{formData.quantity + formData.additionalQuantity}</b>
                   </p>
                 </div>
               </>
             )}
 
-            <DialogFooter>
-              <Button variant="outline" onClick={onClose} disabled={isLoading}>
+            <DialogFooter className="flex flex-col sm:flex-row gap-3 pt-6">
+              <Button 
+                type="button"
+                variant="outline" 
+                onClick={onClose}
+                className="order-3 sm:order-1 rounded-xl border-2 hover:bg-gray-50 transition-all duration-300"
+              >
+                <XCircle className="mr-2 h-5 w-5" />
                 Annuler
               </Button>
-              <Button
+              
+              {selectedProduct && (
+                <Button 
+                  type="button"
+                  onClick={handleDeleteClick}
+                  disabled={isDeleting}
+                  className="order-2 rounded-xl font-bold bg-gradient-to-r from-red-500 via-red-600 to-rose-600 hover:from-red-600 hover:via-red-700 hover:to-rose-700 text-white border-0 shadow-lg shadow-red-500/25 hover:shadow-xl hover:shadow-red-500/40 transition-all duration-300 transform hover:-translate-y-0.5"
+                >
+                  <Trash2 className="mr-2 h-5 w-5" />
+                  Supprimer ce produit
+                </Button>
+              )}
+              
+              <Button 
                 type="submit"
-                className="bg-app-blue hover:bg-opacity-90"
                 disabled={!selectedProduct || isLoading}
+                className="order-1 sm:order-3 rounded-xl font-bold bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 hover:from-blue-600 hover:via-blue-700 hover:to-indigo-700 text-white border-0 shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/40 transition-all duration-300 transform hover:-translate-y-0.5"
               >
+                <Pencil className="mr-2 h-5 w-5" />
                 Modifier le produit
               </Button>
             </DialogFooter>
@@ -193,30 +309,70 @@ const EditProductForm: React.FC<EditProductFormProps> = ({ isOpen, onClose }) =>
         </DialogContent>
       </Dialog>
 
-      {/* 🔥 CONFIRMATION PREMIUM */}
+      {/* Confirmation dialog modification */}
       <AlertDialog open={openConfirm} onOpenChange={setOpenConfirm}>
-        <AlertDialogContent className="rounded-2xl shadow-2xl">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2 text-lg">
-              <Pencil className="w-5 h-5 text-blue-600" />
+        <AlertDialogContent className="bg-gradient-to-br from-white via-blue-50/30 to-indigo-50/50 backdrop-blur-xl border-0 shadow-2xl rounded-3xl">
+          <AlertDialogHeader className="text-center space-y-4">
+            <div className="mx-auto w-14 h-14 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-xl">
+              <CheckCircle2 className="h-7 w-7 text-white" />
+            </div>
+            <AlertDialogTitle className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-700 bg-clip-text text-transparent">
               Confirmer la modification
             </AlertDialogTitle>
-            <AlertDialogDescription>
-              Cette action mettra à jour définitivement les informations du produit.
+            <AlertDialogDescription className="text-white">
+              Êtes-vous sûr de vouloir modifier ce produit ? Cette action mettra à jour les informations du produit.
             </AlertDialogDescription>
           </AlertDialogHeader>
-
-          <AlertDialogFooter className="gap-3">
-            <AlertDialogCancel className="rounded-xl flex items-center gap-2">
-              <XCircle className="w-4 h-4" />
+          <AlertDialogFooter className="flex gap-3 pt-4">
+            <AlertDialogCancel className="rounded-xl border-2 hover:bg-gray-50 transition-all duration-300">
               Annuler
             </AlertDialogCancel>
-            <AlertDialogAction
+            <AlertDialogAction 
               onClick={confirmUpdate}
-              className="rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white flex items-center gap-2"
+              disabled={isLoading}
+              className="rounded-xl font-bold bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg shadow-blue-500/25 transition-all duration-300"
             >
-              <Pencil className="w-4 h-4" />
-              Confirmer
+              {isLoading ? 'Modification...' : 'Confirmer'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Confirmation dialog suppression PREMIUM */}
+      <AlertDialog open={openDeleteConfirm} onOpenChange={setOpenDeleteConfirm}>
+        <AlertDialogContent className="bg-gradient-to-br from-white via-red-50/30 to-rose-50/50 backdrop-blur-xl border-0 shadow-2xl rounded-3xl">
+          <AlertDialogHeader className="text-center space-y-4">
+            <div className="mx-auto w-16 h-16 bg-gradient-to-br from-red-500 via-red-600 to-rose-600 rounded-2xl flex items-center justify-center shadow-xl shadow-red-500/30 animate-pulse">
+              <AlertTriangle className="h-8 w-8 text-white" />
+            </div>
+            <AlertDialogTitle className="text-2xl font-black bg-gradient-to-r from-red-600 via-red-700 to-rose-700 bg-clip-text text-transparent">
+              ⚠️ Supprimer ce produit ?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-gray-600 space-y-2">
+              <p className="font-semibold text-red-600">
+                Vous êtes sur le point de supprimer définitivement :
+              </p>
+              <p className="text-lg font-bold text-gray-800 bg-red-100/50 px-4 py-2 rounded-xl">
+                "{formData.description}"
+              </p>
+              <p className="text-sm text-red-500 mt-4">
+                ⚠️ Cette action est <span className="font-bold">irréversible</span>. 
+                Toutes les données associées seront perdues.
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex gap-3 pt-6">
+            <AlertDialogCancel className="flex-1 rounded-xl border-2 border-gray-300 hover:bg-gray-50 font-semibold transition-all duration-300">
+              <XCircle className="mr-2 h-5 w-5" />
+              Annuler
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmDelete}
+              disabled={isDeleting}
+              className="flex-1 rounded-xl font-bold bg-gradient-to-r from-red-500 via-red-600 to-rose-600 hover:from-red-600 hover:via-red-700 hover:to-rose-700 text-white border-0 shadow-lg shadow-red-500/30 hover:shadow-xl hover:shadow-red-500/50 transition-all duration-300 transform hover:-translate-y-0.5"
+            >
+              <Trash2 className="mr-2 h-5 w-5" />
+              {isDeleting ? 'Suppression...' : 'Confirmer la suppression'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

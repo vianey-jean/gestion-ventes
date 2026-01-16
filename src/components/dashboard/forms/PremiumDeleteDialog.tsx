@@ -12,24 +12,26 @@ import {
 import { Trash2, AlertTriangle, XCircle, ShieldAlert } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-interface ConfirmDeleteDialogProps {
+interface PremiumDeleteDialogProps {
   isOpen: boolean;
   onClose: () => void;
   onConfirm: () => Promise<void> | void;
   title: string;
   description: string | React.ReactNode;
+  itemName?: string;
   isSubmitting?: boolean;
 }
 
 /**
- * Dialog de confirmation de suppression premium
+ * Dialog de suppression premium avec design luxueux
  */
-const ConfirmDeleteDialog: React.FC<ConfirmDeleteDialogProps> = ({
+const PremiumDeleteDialog: React.FC<PremiumDeleteDialogProps> = ({
   isOpen,
   onClose,
   onConfirm,
   title,
   description,
+  itemName,
   isSubmitting = false,
 }) => {
   return (
@@ -58,6 +60,17 @@ const ConfirmDeleteDialog: React.FC<ConfirmDeleteDialogProps> = ({
           <AlertDialogDescription asChild>
             <div className="text-gray-600 text-center font-medium space-y-4">
               <div className="text-sm leading-relaxed">{description}</div>
+              
+              {itemName && (
+                <div className="p-4 bg-gradient-to-r from-red-50 to-rose-50 rounded-2xl border-2 border-red-100 shadow-inner">
+                  <div className="flex items-center gap-3 justify-center">
+                    <div className="p-2 bg-red-100 rounded-xl">
+                      <AlertTriangle className="h-5 w-5 text-red-600" />
+                    </div>
+                    <span className="text-red-800 font-bold text-base">{itemName}</span>
+                  </div>
+                </div>
+              )}
               
               <div className="flex items-center justify-center gap-2 text-sm text-red-600 font-semibold">
                 <AlertTriangle className="h-4 w-4" />
@@ -107,4 +120,4 @@ const ConfirmDeleteDialog: React.FC<ConfirmDeleteDialogProps> = ({
   );
 };
 
-export default ConfirmDeleteDialog;
+export default PremiumDeleteDialog;

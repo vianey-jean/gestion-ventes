@@ -772,15 +772,17 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
 
   return (
 <Dialog open={isOpen} onOpenChange={onClose}>
-  <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+  <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto bg-gray-400">
     <DialogHeader>
       <DialogTitle>
         {editSale ? 'Modifier la vente multi-produits' : 'Ajouter une vente multi-produits'}
       </DialogTitle>
       <DialogDescription>
-        {editSale
-          ? 'Modifiez les détails de cette vente avec plusieurs produits.'
-          : 'Enregistrez une vente avec un ou plusieurs produits.'}
+       <p className="text-white">
+  {editSale
+    ? 'Modifiez les détails de cette vente avec plusieurs produits.'
+    : 'Enregistrez une vente avec un ou plusieurs produits.'}
+</p>
       </DialogDescription>
     </DialogHeader>
 
@@ -798,14 +800,21 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
         </div>
       </div>
 
-      {/* Informations client */}
-      <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-blue-200 dark:border-blue-800">
-        <CardHeader>
-          <CardTitle className="text-sm text-blue-700 dark:text-blue-300">
+      {/* Informations client - Premium Design */}
+      <Card className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-indigo-50/50 to-purple-50/30 dark:from-blue-900/30 dark:via-indigo-900/20 dark:to-purple-900/10 border-0 shadow-xl shadow-blue-500/10 rounded-2xl">
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute -top-16 -right-16 w-32 h-32 bg-blue-300/20 rounded-full blur-2xl" />
+          <div className="absolute -bottom-8 -left-8 w-24 h-24 bg-indigo-300/20 rounded-full blur-2xl" />
+        </div>
+        <CardHeader className="relative pb-2">
+          <CardTitle className="text-base font-bold bg-gradient-to-r from-blue-600 to-indigo-700 bg-clip-text text-transparent flex items-center gap-2">
+            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg">
+              <Package className="h-4 w-4 text-white" />
+            </div>
             Informations Client
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="relative space-y-4">
           <ClientSearchInput
             value={clientName}
             onChange={setClientName}
@@ -815,22 +824,24 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="clientPhone">Numéro de téléphone</Label>
+              <Label htmlFor="clientPhone" className="font-semibold text-gray-700 dark:text-gray-300">Numéro de téléphone</Label>
               <Input
                 id="clientPhone"
                 value={clientPhone}
                 onChange={(e) => setClientPhone(e.target.value)}
                 placeholder="Ex: 0692123456"
+                className="border-2 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 rounded-xl transition-all duration-300"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="clientAddress">Adresse</Label>
+              <Label htmlFor="clientAddress" className="font-semibold text-gray-700 dark:text-gray-300">Adresse</Label>
               <Input
                 id="clientAddress"
                 value={clientAddress}
                 onChange={(e) => setClientAddress(e.target.value)}
                 placeholder="Adresse complète du client"
+                className="border-2 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 rounded-xl transition-all duration-300"
               />
             </div>
           </div>
@@ -855,25 +866,32 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
         {formProducts.map((product, index) => (
           <Card
             key={index}
-            className="border-2 border-gray-200 dark:border-gray-700"
+            className="relative overflow-hidden border-0 shadow-lg shadow-gray-200/50 dark:shadow-gray-900/30 rounded-2xl bg-gradient-to-br from-white via-gray-50/50 to-blue-50/30 dark:from-gray-800 dark:via-gray-800/80 dark:to-blue-900/20"
           >
-            <CardHeader className="pb-3">
+            <div className="absolute inset-0 pointer-events-none">
+              <div className="absolute -top-12 -right-12 w-24 h-24 bg-blue-200/10 rounded-full blur-2xl" />
+            </div>
+            <CardHeader className="relative pb-3">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-sm flex items-center gap-2">
-                  <Package className="h-4 w-4" />
-                  Produit {index + 1}
+                <CardTitle className="text-sm font-bold flex items-center gap-2">
+                  <div className="w-7 h-7 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center shadow-md">
+                    <Package className="h-3.5 w-3.5 text-white" />
+                  </div>
+                  <span className="bg-gradient-to-r from-indigo-600 to-purple-700 bg-clip-text text-transparent">
+                    Produit {index + 1}
+                  </span>
                   {product.isAdvanceProduct && (
-                    <span className="text-xs bg-amber-100 text-amber-800 px-2 py-1 rounded-full">
-                      Avance
+                    <span className="text-xs bg-gradient-to-r from-amber-100 to-orange-100 text-amber-800 px-3 py-1 rounded-full font-semibold shadow-sm">
+                      ⭐ Avance
                     </span>
                   )}
                 </CardTitle>
                 {formProducts.length > 1 && (
                   <Button
                     type="button"
-                    variant="destructive"
                     size="sm"
                     onClick={() => handleDeleteProduct(index)}
+                    className="h-9 px-3 rounded-xl font-bold text-sm bg-gradient-to-r from-red-500 via-red-600 to-rose-600 hover:from-red-600 hover:via-red-700 hover:to-rose-700 text-white border-0 shadow-lg shadow-red-500/20 hover:shadow-xl hover:shadow-red-500/30 transition-all duration-300 transform hover:-translate-y-0.5"
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -1059,15 +1077,14 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
         ))}
       </div>
 
-      {/* Bouton ajouté juste avant les totaux */}
+      {/* Bouton premium pour ajouter un produit */}
       <div className="text-center py-4">
         <Button
           type="button"
           onClick={addNewProduct}
-          variant="outline"
-          className="text-green-600 border-green-600 hover:bg-green-50"
+          className="rounded-xl font-bold bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 hover:from-green-600 hover:via-emerald-600 hover:to-teal-600 text-white border-0 shadow-lg shadow-green-500/25 hover:shadow-xl hover:shadow-green-500/40 transition-all duration-300 transform hover:-translate-y-0.5 px-6"
         >
-          <Plus className="h-4 w-4 mr-2" />
+          <Plus className="h-5 w-5 mr-2" />
           Ajouter un autre produit
         </Button>
       </div>
@@ -1075,48 +1092,54 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
       {/* Totaux */}
       {formProducts.some((p) => p.selectedProduct) && (
         <>
-          <Card className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-green-200 dark:border-green-800">
-            <CardHeader>
-              <CardTitle className="text-sm text-green-700 dark:text-green-300 flex items-center gap-2">
-                <Euro className="h-4 w-4" />
+          <Card className="relative overflow-hidden bg-gradient-to-br from-green-50 via-emerald-50/50 to-teal-50/30 dark:from-green-900/30 dark:via-emerald-900/20 dark:to-teal-900/10 border-0 shadow-xl shadow-green-500/10 rounded-2xl">
+            <div className="absolute inset-0 pointer-events-none">
+              <div className="absolute -top-16 -right-16 w-32 h-32 bg-green-300/20 rounded-full blur-2xl" />
+              <div className="absolute -bottom-8 -left-8 w-24 h-24 bg-emerald-300/20 rounded-full blur-2xl" />
+            </div>
+            <CardHeader className="relative pb-2">
+              <CardTitle className="text-base font-bold bg-gradient-to-r from-green-600 to-emerald-700 bg-clip-text text-transparent flex items-center gap-2">
+                <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center shadow-lg">
+                  <Euro className="h-4 w-4 text-white" />
+                </div>
                 Totaux de la vente
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-4 gap-4 text-center">
-                <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
+            <CardContent className="relative">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                <div className="bg-white/60 dark:bg-gray-800/40 rounded-xl p-3 shadow-sm">
+                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
                     Prix d'achat total
                   </p>
-                  <p className="text-lg font-bold text-gray-800 dark:text-gray-200">
+                  <p className="text-lg font-black text-gray-800 dark:text-gray-200">
                     {totals.totalPurchasePrice.toFixed(2)} €
                   </p>
                 </div>
-                <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                <div className="bg-white/60 dark:bg-gray-800/40 rounded-xl p-3 shadow-sm">
+                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
                     Frais de livraison
                   </p>
-                  <p className="text-lg font-bold text-blue-600">
+                  <p className="text-lg font-black bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
                     {totals.totalDeliveryFee.toFixed(2)} €
                   </p>
                 </div>
-                <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                <div className="bg-white/60 dark:bg-gray-800/40 rounded-xl p-3 shadow-sm">
+                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
                     Prix de vente total
                   </p>
-                  <p className="text-lg font-bold text-green-600">
+                  <p className="text-lg font-black bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
                     {totals.totalSellingPrice.toFixed(2)} €
                   </p>
                 </div>
-                <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                <div className="bg-white/60 dark:bg-gray-800/40 rounded-xl p-3 shadow-sm">
+                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
                     Bénéfice total
                   </p>
                   <p
-                    className={`text-lg font-bold ${
+                    className={`text-lg font-black ${
                       totals.totalProfit >= 0
-                        ? 'text-green-600'
-                        : 'text-red-600'
+                        ? 'bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent'
+                        : 'bg-gradient-to-r from-red-600 to-rose-600 bg-clip-text text-transparent'
                     }`}
                   >
                     {totals.totalProfit.toFixed(2)} €
@@ -1126,15 +1149,14 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
             </CardContent>
           </Card>
 
-          {/* Bouton Avance */}
+          {/* Bouton Avance Premium */}
           <div className="text-center">
             <Button
               type="button"
               onClick={() => setShowAdvanceSection(!showAdvanceSection)}
-              variant="outline"
-              className="text-blue-600 border-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:border-blue-400 dark:hover:bg-blue-900/20"
+              className="rounded-xl font-bold bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 hover:from-blue-600 hover:via-indigo-600 hover:to-purple-600 text-white border-0 shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/40 transition-all duration-300 transform hover:-translate-y-0.5 px-6"
             >
-              {showAdvanceSection ? 'Masquer Avance' : 'Avance'}
+              {showAdvanceSection ? '✕ Masquer Avance' : '💳 Avance'}
             </Button>
           </div>
 
@@ -1204,14 +1226,13 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
         </>
       )}
 
-      <DialogFooter>
+      <DialogFooter className="flex flex-col sm:flex-row gap-3 pt-4">
         {editSale && (
           <Button
             type="button"
-            variant="destructive"
             onClick={handleDeleteSale}
             disabled={isSubmitting}
-            className="mr-auto"
+            className="sm:mr-auto rounded-xl font-bold bg-gradient-to-r from-red-500 via-red-600 to-rose-600 hover:from-red-600 hover:via-red-700 hover:to-rose-700 text-white border-0 shadow-lg shadow-red-500/20 hover:shadow-xl hover:shadow-red-500/30 transition-all duration-300 transform hover:-translate-y-0.5"
           >
             <Trash2 className="h-4 w-4 mr-2" />
             Supprimer toute la vente
@@ -1223,25 +1244,26 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
           variant="outline"
           onClick={onClose}
           disabled={isSubmitting}
+          className="rounded-xl border-2 border-gray-300 hover:bg-gray-50 font-semibold transition-all duration-300"
         >
           Annuler
         </Button>
 
         <Button
           type="submit"
-          className="bg-app-green hover:bg-opacity-90"
           disabled={
             isSubmitting ||
             formProducts.filter(
               (p) => p.selectedProduct && p.sellingPriceUnit
             ).length === 0
           }
+          className="rounded-xl font-bold bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 hover:from-green-600 hover:via-emerald-600 hover:to-teal-600 text-white border-0 shadow-lg shadow-green-500/25 hover:shadow-xl hover:shadow-green-500/40 transition-all duration-300 transform hover:-translate-y-0.5"
         >
           {isSubmitting
             ? 'Enregistrement...'
             : editSale
-            ? 'Mettre à jour'
-            : 'Ajouter la vente'}
+            ? '✓ Mettre à jour'
+            : '✓ Ajouter la vente'}
         </Button>
       </DialogFooter>
     </form>

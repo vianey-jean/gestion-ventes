@@ -20,8 +20,9 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { PackagePlus, XCircle, CheckCircle2 } from 'lucide-react';
+import { PackagePlus, XCircle, CheckCircle2, Package, Euro, Hash, Sparkles } from 'lucide-react';
 import { useApp } from '@/contexts/AppContext';
+import { cn } from '@/lib/utils';
 
 interface AddProductFormProps {
   isOpen: boolean;
@@ -81,7 +82,6 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ isOpen, onClose }) => {
       return;
     }
 
-    // 👉 Ouvre la confirmation luxe
     setOpenConfirm(true);
   };
 
@@ -111,33 +111,71 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ isOpen, onClose }) => {
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Ajouter un produit</DialogTitle>
-            <DialogDescription>
-              Ajoutez un nouveau produit à votre inventaire.
+        <DialogContent className="sm:max-w-lg bg-gradient-to-br from-white via-emerald-50/30 to-green-50/50 backdrop-blur-xl border-0 shadow-2xl rounded-3xl overflow-hidden">
+          {/* Decorative background elements */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div className="absolute -top-24 -right-24 w-48 h-48 bg-gradient-to-br from-emerald-200/20 to-green-200/20 rounded-full blur-3xl" />
+            <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-gradient-to-br from-green-200/20 to-teal-200/20 rounded-full blur-3xl" />
+          </div>
+
+          <DialogHeader className="relative text-center space-y-4 pb-2">
+            {/* Premium icon */}
+            <div className="mx-auto relative">
+              <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 via-green-600 to-teal-600 rounded-2xl flex items-center justify-center shadow-xl shadow-emerald-500/30 transform hover:scale-105 transition-transform duration-300">
+                <PackagePlus className="h-8 w-8 text-white drop-shadow-lg" />
+              </div>
+              <div className="absolute inset-0 bg-gradient-to-br from-emerald-400 to-green-500 rounded-2xl blur-xl opacity-40 -z-10 scale-110" />
+            </div>
+
+            <DialogTitle className="text-2xl font-black bg-gradient-to-r from-emerald-600 via-green-700 to-teal-700 bg-clip-text text-transparent">
+              ✨ Nouveau Produit Premium
+            </DialogTitle>
+            <DialogDescription className="text-white font-medium">
+              Ajoutez un nouveau produit à votre inventaire de luxe
             </DialogDescription>
           </DialogHeader>
 
-          <form onSubmit={handleSubmit}>
-            <div className="grid gap-4 py-4">
-              <div className="space-y-2">
-                <Label>Description</Label>
+          <form onSubmit={handleSubmit} className="relative space-y-5 py-4">
+            {/* Description Field */}
+            <div className="space-y-2">
+              <Label className="text-sm font-bold text-gray-700 flex items-center gap-2">
+                <Package className="h-4 w-4 text-emerald-600" />
+                Description du produit
+              </Label>
+              <div className="relative group">
                 <Input
                   name="description"
-                  placeholder="Nom du produit"
+                  placeholder="Nom du produit premium..."
                   value={formData.description}
                   onChange={handleChange}
-                  className={errors.description ? 'border-red-500' : ''}
+                  className={cn(
+                    "h-12 px-4 bg-gradient-to-r from-white to-gray-50/80",
+                    "border-2 border-gray-200 hover:border-emerald-300",
+                    "focus:border-emerald-500 focus:from-emerald-50/50 focus:to-white",
+                    "rounded-xl shadow-sm hover:shadow-md focus:shadow-lg",
+                    "transition-all duration-300",
+                    "placeholder:text-gray-400 text-gray-900 font-medium",
+                    errors.description && "border-red-300 focus:border-red-500 bg-red-50/30"
+                  )}
                 />
-                {errors.description && (
-                  <p className="text-sm text-red-500">{errors.description}</p>
-                )}
+                <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-emerald-500/10 to-green-500/5 opacity-0 group-focus-within:opacity-100 transition-opacity duration-300 pointer-events-none -z-10 blur-sm scale-105" />
               </div>
+              {errors.description && (
+                <p className="text-sm font-medium text-red-500 flex items-center gap-1">
+                  <span className="inline-block w-1 h-1 rounded-full bg-red-500" />
+                  {errors.description}
+                </p>
+              )}
+            </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Prix d'achat (€)</Label>
+            <div className="grid grid-cols-2 gap-4">
+              {/* Purchase Price Field */}
+              <div className="space-y-2">
+                <Label className="text-sm font-bold text-gray-700 flex items-center gap-2">
+                  <Euro className="h-4 w-4 text-amber-600" />
+                  Prix d'achat (€)
+                </Label>
+                <div className="relative group">
                   <Input
                     name="purchasePrice"
                     type="number"
@@ -145,15 +183,32 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ isOpen, onClose }) => {
                     placeholder="0.00"
                     value={formData.purchasePrice}
                     onChange={handleChange}
-                    className={errors.purchasePrice ? 'border-red-500' : ''}
+                    className={cn(
+                      "h-12 px-4 bg-gradient-to-r from-white to-gray-50/80",
+                      "border-2 border-gray-200 hover:border-amber-300",
+                      "focus:border-amber-500 focus:from-amber-50/50 focus:to-white",
+                      "rounded-xl shadow-sm hover:shadow-md focus:shadow-lg",
+                      "transition-all duration-300",
+                      "placeholder:text-gray-400 text-gray-900 font-medium",
+                      errors.purchasePrice && "border-red-300 focus:border-red-500 bg-red-50/30"
+                    )}
                   />
-                  {errors.purchasePrice && (
-                    <p className="text-sm text-red-500">{errors.purchasePrice}</p>
-                  )}
                 </div>
+                {errors.purchasePrice && (
+                  <p className="text-sm font-medium text-red-500 flex items-center gap-1">
+                    <span className="inline-block w-1 h-1 rounded-full bg-red-500" />
+                    {errors.purchasePrice}
+                  </p>
+                )}
+              </div>
 
-                <div className="space-y-2">
-                  <Label>Quantité</Label>
+              {/* Quantity Field */}
+              <div className="space-y-2">
+                <Label className="text-sm font-bold text-gray-700 flex items-center gap-2">
+                  <Hash className="h-4 w-4 text-blue-600" />
+                  Quantité
+                </Label>
+                <div className="relative group">
                   <Input
                     name="quantity"
                     type="number"
@@ -161,24 +216,57 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ isOpen, onClose }) => {
                     placeholder="0"
                     value={formData.quantity}
                     onChange={handleChange}
-                    className={errors.quantity ? 'border-red-500' : ''}
+                    className={cn(
+                      "h-12 px-4 bg-gradient-to-r from-white to-gray-50/80",
+                      "border-2 border-gray-200 hover:border-blue-300",
+                      "focus:border-blue-500 focus:from-blue-50/50 focus:to-white",
+                      "rounded-xl shadow-sm hover:shadow-md focus:shadow-lg",
+                      "transition-all duration-300",
+                      "placeholder:text-gray-400 text-gray-900 font-medium",
+                      errors.quantity && "border-red-300 focus:border-red-500 bg-red-50/30"
+                    )}
                   />
-                  {errors.quantity && (
-                    <p className="text-sm text-red-500">{errors.quantity}</p>
-                  )}
                 </div>
+                {errors.quantity && (
+                  <p className="text-sm font-medium text-red-500 flex items-center gap-1">
+                    <span className="inline-block w-1 h-1 rounded-full bg-red-500" />
+                    {errors.quantity}
+                  </p>
+                )}
               </div>
             </div>
 
-            <DialogFooter>
-              <Button variant="outline" onClick={onClose} disabled={isSubmitting}>
+            <DialogFooter className="flex gap-3 pt-4 sm:flex-row">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onClose}
+                disabled={isSubmitting}
+                className={cn(
+                  "flex-1 h-12 rounded-xl font-bold",
+                  "bg-gradient-to-r from-gray-100 to-gray-50 hover:from-gray-200 hover:to-gray-100",
+                  "border-2 border-gray-200 hover:border-gray-300",
+                  "text-gray-700 hover:text-gray-900",
+                  "shadow-lg hover:shadow-xl",
+                  "transition-all duration-300 transform hover:-translate-y-0.5"
+                )}
+              >
+                <XCircle className="h-5 w-5 mr-2" />
                 Annuler
               </Button>
               <Button
                 type="submit"
-                className="bg-app-red hover:bg-opacity-90"
                 disabled={isSubmitting}
+                className={cn(
+                  "flex-1 h-12 rounded-xl font-bold",
+                  "bg-gradient-to-r from-emerald-500 via-green-600 to-teal-600",
+                  "hover:from-emerald-600 hover:via-green-700 hover:to-teal-700",
+                  "text-white border-0",
+                  "shadow-lg shadow-emerald-500/30 hover:shadow-xl hover:shadow-emerald-500/40",
+                  "transition-all duration-300 transform hover:-translate-y-0.5"
+                )}
               >
+                <Sparkles className="h-5 w-5 mr-2" />
                 Ajouter le produit
               </Button>
             </DialogFooter>
@@ -186,31 +274,78 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ isOpen, onClose }) => {
         </DialogContent>
       </Dialog>
 
-      {/* 🔥 CONFIRMATION PREMIUM */}
+      {/* Premium Confirmation Dialog */}
       <AlertDialog open={openConfirm} onOpenChange={setOpenConfirm}>
-        <AlertDialogContent className="rounded-2xl shadow-2xl">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2 text-lg">
-              <PackagePlus className="w-5 h-5 text-emerald-600" />
-              Confirmer l’ajout du produit
+        <AlertDialogContent className="bg-gradient-to-br from-white via-emerald-50/30 to-green-50/50 backdrop-blur-xl border-0 shadow-2xl rounded-3xl overflow-hidden">
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div className="absolute -top-24 -right-24 w-48 h-48 bg-gradient-to-br from-emerald-200/20 to-green-200/20 rounded-full blur-3xl" />
+          </div>
+
+          <AlertDialogHeader className="relative text-center space-y-4">
+            <div className="mx-auto relative">
+              <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-green-600 rounded-2xl flex items-center justify-center shadow-xl shadow-emerald-500/30">
+                <PackagePlus className="h-8 w-8 text-white" />
+              </div>
+              <div className="absolute inset-0 bg-gradient-to-br from-emerald-400 to-green-500 rounded-2xl blur-xl opacity-40 -z-10 scale-110" />
+            </div>
+
+            <AlertDialogTitle className="text-xl font-black bg-gradient-to-r from-emerald-600 to-green-700 bg-clip-text text-transparent">
+              ✨ Confirmer l'ajout
             </AlertDialogTitle>
-            <AlertDialogDescription>
-              Voulez-vous vraiment ajouter ce produit à votre inventaire ?
+            <AlertDialogDescription className="text-gray-600 font-medium">
+              Voulez-vous vraiment ajouter ce produit à votre inventaire premium ?
             </AlertDialogDescription>
+
+            {/* Product Preview */}
+            <div className="p-4 bg-gradient-to-r from-emerald-50 to-green-50 rounded-2xl border-2 border-emerald-100">
+              <div className="text-left space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-gray-500 text-sm">Produit:</span>
+                  <span className="font-bold text-gray-900">{formData.description}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500 text-sm">Prix d'achat:</span>
+                  <span className="font-bold text-amber-600">{formData.purchasePrice} €</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500 text-sm">Quantité:</span>
+                  <span className="font-bold text-blue-600">{formData.quantity}</span>
+                </div>
+              </div>
+            </div>
           </AlertDialogHeader>
 
-          <AlertDialogFooter className="gap-3">
-            <AlertDialogCancel className="rounded-xl flex items-center gap-2">
-              <XCircle className="w-4 h-4" />
+          <AlertDialogFooter className="relative flex gap-3 pt-4 sm:flex-row">
+            <AlertDialogCancel
+              className={cn(
+                "flex-1 h-12 rounded-xl font-bold",
+                "bg-gradient-to-r from-gray-100 to-gray-50 hover:from-gray-200 hover:to-gray-100",
+                "border-2 border-gray-200 hover:border-gray-300",
+                "text-gray-700 hover:text-gray-900",
+                "shadow-lg hover:shadow-xl",
+                "transition-all duration-300 transform hover:-translate-y-0.5",
+                "flex items-center justify-center gap-2"
+              )}
+            >
+              <XCircle className="h-5 w-5" />
               Annuler
             </AlertDialogCancel>
 
             <AlertDialogAction
               onClick={confirmAddProduct}
-              className="rounded-xl bg-gradient-to-r from-emerald-600 to-green-600 text-white flex items-center gap-2"
+              disabled={isSubmitting}
+              className={cn(
+                "flex-1 h-12 rounded-xl font-bold",
+                "bg-gradient-to-r from-emerald-500 via-green-600 to-teal-600",
+                "hover:from-emerald-600 hover:via-green-700 hover:to-teal-700",
+                "text-white border-0",
+                "shadow-lg shadow-emerald-500/30 hover:shadow-xl hover:shadow-emerald-500/40",
+                "transition-all duration-300 transform hover:-translate-y-0.5",
+                "flex items-center justify-center gap-2"
+              )}
             >
-              <CheckCircle2 className="w-4 h-4" />
-              Confirmer
+              <CheckCircle2 className="h-5 w-5" />
+              {isSubmitting ? "Ajout en cours..." : "Confirmer"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
