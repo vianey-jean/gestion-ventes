@@ -466,8 +466,8 @@ const ComptabiliteModule: React.FC<ComptabiliteModuleProps> = ({ className }) =>
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-green-400 font-medium">Total Crédit</p>
-                <p className="text-2xl font-bold text-green-300">{formatEuro(comptabiliteData.totalCredit)}</p>
+                <p className="text-sm text-green-600 font-medium">Total Crédit</p>
+                <p className="text-2xl font-bold text-green-500">{formatEuro(comptabiliteData.totalCredit)}</p>
                 <p className="text-xs text-green-400/70">Argent entrant</p>
               </div>
               <ArrowUpCircle className="h-10 w-10 text-green-400" />
@@ -479,8 +479,8 @@ const ComptabiliteModule: React.FC<ComptabiliteModuleProps> = ({ className }) =>
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-red-400 font-medium">Total Débit</p>
-                <p className="text-2xl font-bold text-red-300">{formatEuro(comptabiliteData.totalDebit)}</p>
+                <p className="text-sm text-red-600 font-medium">Total Débit</p>
+                <p className="text-2xl font-bold text-red-500">{formatEuro(comptabiliteData.totalDebit)}</p>
                 <p className="text-xs text-red-400/70">Argent sortant</p>
               </div>
               <ArrowDownCircle className="h-10 w-10 text-red-400" />
@@ -492,8 +492,8 @@ const ComptabiliteModule: React.FC<ComptabiliteModuleProps> = ({ className }) =>
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-blue-400 font-medium">Bénéfice Ventes</p>
-                <p className="text-2xl font-bold text-blue-300">{formatEuro(comptabiliteData.salesProfit)}</p>
+                <p className="text-sm text-blue-600 font-medium">Bénéfice Ventes</p>
+                <p className="text-2xl font-bold text-blue-500">{formatEuro(comptabiliteData.salesProfit)}</p>
                 <p className="text-xs text-blue-400/70">{comptabiliteData.salesCount} ventes</p>
               </div>
               <TrendingUp className="h-10 w-10 text-blue-400" />
@@ -505,8 +505,8 @@ const ComptabiliteModule: React.FC<ComptabiliteModuleProps> = ({ className }) =>
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className={`text-sm ${comptabiliteData.beneficeReel >= 0 ? 'text-emerald-400' : 'text-red-400'} font-medium`}>Bénéfice Réel</p>
-                <p className={`text-2xl font-bold ${comptabiliteData.beneficeReel >= 0 ? 'text-emerald-300' : 'text-red-300'}`}>
+                <p className={`text-sm ${comptabiliteData.beneficeReel >= 0 ? 'text-emerald-600' : 'text-red-600'} font-medium`}>Bénéfice Réel</p>
+                <p className={`text-2xl font-bold ${comptabiliteData.beneficeReel >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
                   {formatEuro(comptabiliteData.beneficeReel)}
                 </p>
                 <p className={`text-xs ${comptabiliteData.beneficeReel >= 0 ? 'text-emerald-400/70' : 'text-red-400/70'}`}>Après dépenses</p>
@@ -523,8 +523,8 @@ const ComptabiliteModule: React.FC<ComptabiliteModuleProps> = ({ className }) =>
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-indigo-400 font-medium">Achats Produits</p>
-                <p className="text-xl font-bold text-indigo-300">{formatEuro(comptabiliteData.achatsTotal)}</p>
+                <p className="text-sm text-indigo-600 font-medium">Achats Produits</p>
+                <p className="text-xl font-bold text-indigo-500">{formatEuro(comptabiliteData.achatsTotal)}</p>
               </div>
               <Package className="h-8 w-8 text-indigo-400" />
             </div>
@@ -535,8 +535,8 @@ const ComptabiliteModule: React.FC<ComptabiliteModuleProps> = ({ className }) =>
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-orange-400 font-medium">Autres Dépenses</p>
-                <p className="text-xl font-bold text-orange-300">{formatEuro(comptabiliteData.depensesTotal)}</p>
+                <p className="text-sm text-orange-600 font-medium">Autres Dépenses</p>
+                <p className="text-xl font-bold text-orange-500">{formatEuro(comptabiliteData.depensesTotal)}</p>
               </div>
               <Receipt className="h-8 w-8 text-orange-400" />
             </div>
@@ -560,20 +560,87 @@ const ComptabiliteModule: React.FC<ComptabiliteModuleProps> = ({ className }) =>
 
       {/* Graphiques - Ordre: Historique, Répartition Dépenses, Évolution Mensuelle */}
       <Tabs defaultValue="historique" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 gap-2 bg-white/90 dark:bg-gray-800/90 shadow-xl rounded-xl h-auto p-2">
-          <TabsTrigger value="historique" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-pink-600 data-[state=active]:text-white transition-all duration-300 rounded-lg font-bold h-12">
-            <Receipt className="h-4 w-4 mr-2" />
-            Historique
-          </TabsTrigger>
-          <TabsTrigger value="repartition" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-indigo-600 data-[state=active]:text-white transition-all duration-300 rounded-lg font-bold h-12">
-            <Calculator className="h-4 w-4 mr-2" />
-            Répartition Dépenses
-          </TabsTrigger>
-          <TabsTrigger value="evolution" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-600 data-[state=active]:to-teal-600 data-[state=active]:text-white transition-all duration-300 rounded-lg font-bold h-12">
-            <BarChart3 className="h-4 w-4 mr-2" />
-            Évolution Mensuelle
-          </TabsTrigger>
-        </TabsList>
+<TabsList
+  className="
+    grid w-full
+    grid-cols-1
+    sm:grid-cols-2
+    md:grid-cols-3
+    gap-3
+    bg-white/90 dark:bg-gray-800/90
+    shadow-xl
+    rounded-xl
+    h-auto
+    p-2
+    sm:p-3
+  "
+>
+  <TabsTrigger
+    value="historique"
+    className="
+      flex items-center justify-center
+      gap-2
+      h-12 sm:h-14
+      px-3
+      data-[state=active]:bg-gradient-to-r
+      data-[state=active]:from-purple-600
+      data-[state=active]:to-pink-600
+      data-[state=active]:text-white
+      transition-all duration-300
+      rounded-lg
+      font-bold
+      text-sm sm:text-base
+    "
+  >
+    <Receipt className="h-4 w-4 shrink-0" />
+    <span className="text-center">Historique</span>
+  </TabsTrigger>
+
+  <TabsTrigger
+    value="repartition"
+    className="
+      flex items-center justify-center
+      gap-2
+      h-12 sm:h-14
+      px-3
+      data-[state=active]:bg-gradient-to-r
+      data-[state=active]:from-blue-600
+      data-[state=active]:to-indigo-600
+      data-[state=active]:text-white
+      transition-all duration-300
+      rounded-lg
+      font-bold
+      text-sm sm:text-base
+      text-center
+    "
+  >
+    <Calculator className="h-4 w-4 shrink-0" />
+    <span className="text-center">Répartition Dépenses</span>
+  </TabsTrigger>
+
+  <TabsTrigger
+    value="evolution"
+    className="
+      flex items-center justify-center
+      gap-2
+      h-12 sm:h-14
+      px-3
+      data-[state=active]:bg-gradient-to-r
+      data-[state=active]:from-emerald-600
+      data-[state=active]:to-teal-600
+      data-[state=active]:text-white
+      transition-all duration-300
+      rounded-lg
+      font-bold
+      text-sm sm:text-base
+      text-center
+    "
+  >
+    <BarChart3 className="h-4 w-4 shrink-0" />
+    <span className="text-center">Évolution Mensuelle</span>
+  </TabsTrigger>
+</TabsList>
+
 
         {/* Historique - Affiche uniquement le mois en cours */}
         <TabsContent value="historique" className="mt-6">
