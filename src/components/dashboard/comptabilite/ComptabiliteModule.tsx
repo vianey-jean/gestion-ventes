@@ -311,12 +311,18 @@ const ComptabiliteModule: React.FC<ComptabiliteModuleProps> = ({ className }) =>
       
       // Message de succès incluant info sur le changement de nom
       const nameChanged = selectedProduct && achatForm.productDescription !== selectedProduct.description;
-      toast({
-        title: 'Succès',
-        description: selectedProduct 
-          ? `Stock mis à jour: +${achatForm.quantity} unités${achatForm.purchasePrice > 0 ? `, nouveau prix: ${formatEuro(achatForm.purchasePrice)}` : ''}${nameChanged ? `, nom modifié` : ''}`
-          : 'Achat enregistré avec succès'
-      });
+     toast({
+  title: 'Succès',
+  description: selectedProduct 
+    ? `Stock mis à jour: +${achatForm.quantity} unités${
+        achatForm.purchasePrice > 0
+          ? `, nouveau prix: ${formatEuro(achatForm.purchasePrice)}`
+          : ''
+      }${nameChanged ? `, nom modifié` : ''}`
+    : 'Achat enregistré avec succès',
+  className: 'bg-green-600 text-white border-green-700'
+});
+
       
       setAchatForm({
         productDescription: '',
@@ -356,10 +362,12 @@ const ComptabiliteModule: React.FC<ComptabiliteModuleProps> = ({ className }) =>
 
       await nouvelleAchatApiService.addDepense(depenseForm);
       
-      toast({
-        title: 'Succès',
-        description: 'Dépense enregistrée avec succès'
-      });
+     toast({
+  title: 'Succès',
+  description: 'Dépense enregistrée avec succès',
+  className: 'bg-green-600 text-white border-green-700'
+})
+
       
       setDepenseForm({
         description: '',
@@ -367,6 +375,9 @@ const ComptabiliteModule: React.FC<ComptabiliteModuleProps> = ({ className }) =>
         type: 'autre_depense',
         categorie: 'divers'
       });
+
+      // ✅ FERMETURE DE LA MODALE
+    setShowDepenseForm(false);
       // Garder le formulaire ouvert pour permettre des saisies multiples
       // L'utilisateur peut fermer manuellement avec le bouton "Annuler" ou "X"
       
