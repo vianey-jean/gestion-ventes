@@ -27,7 +27,7 @@ interface AdvancedDashboardProps {
 }
 
 const AdvancedDashboard: React.FC<AdvancedDashboardProps> = ({ className }) => {
-  const [activeTab, setActiveTab] = useState('accounting');
+  const [activeTab, setActiveTab] = useState('inventory');
 
   return (
     <div className={`space-y-4 sm:space-y-6 md:space-y-8 ${className}`}>
@@ -128,7 +128,28 @@ const AdvancedDashboard: React.FC<AdvancedDashboardProps> = ({ className }) => {
 
 </TabsList>
 
-
+       <TabsContent value="inventory" className="space-y-8 mt-10">
+          <ComptabiliteModule />
+          
+          <Card className="relative overflow-hidden bg-gradient-to-br from-blue-900/30 via-indigo-900/30 to-cyan-900/30 border-blue-500/30 shadow-2xl backdrop-blur-sm">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-indigo-500/5 to-cyan-500/5"></div>
+            <CardHeader className="relative text-center py-8">
+              <CardTitle className="text-2xl font-black text-transparent bg-gradient-to-r from-blue-400 via-indigo-400 to-cyan-400 bg-clip-text flex items-center justify-center gap-4">
+                <div className="p-3 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 shadow-xl">
+                  <Calculator className="h-7 w-7 text-white" />
+                </div>
+                Module Comptabilité Intelligent
+                <div className="p-3 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 shadow-xl">
+                  <Calculator className="h-7 w-7 text-white" />
+                </div>
+              </CardTitle>
+              <CardDescription className="text-lg text-black-200 font-medium mt-4 max-w-4xl mx-auto leading-relaxed">
+                Gestion complète des achats, dépenses et analyse de rentabilité avec graphiques avancés 
+                pour une vision financière optimale de votre activité.
+              </CardDescription>
+            </CardHeader>
+          </Card>
+        </TabsContent>
 
         <TabsContent value="accounting" className="space-y-4 sm:space-y-6 md:space-y-8 mt-4 sm:mt-6 md:mt-10">
           <ProfitLossStatement />
@@ -153,28 +174,7 @@ const AdvancedDashboard: React.FC<AdvancedDashboardProps> = ({ className }) => {
           </Card>
         </TabsContent>
 
-        <TabsContent value="inventory" className="space-y-8 mt-10">
-          <ComptabiliteModule />
-          
-          <Card className="relative overflow-hidden bg-gradient-to-br from-blue-900/30 via-indigo-900/30 to-cyan-900/30 border-blue-500/30 shadow-2xl backdrop-blur-sm">
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-indigo-500/5 to-cyan-500/5"></div>
-            <CardHeader className="relative text-center py-8">
-              <CardTitle className="text-2xl font-black text-transparent bg-gradient-to-r from-blue-400 via-indigo-400 to-cyan-400 bg-clip-text flex items-center justify-center gap-4">
-                <div className="p-3 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 shadow-xl">
-                  <Calculator className="h-7 w-7 text-white" />
-                </div>
-                Module Comptabilité Intelligent
-                <div className="p-3 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 shadow-xl">
-                  <Calculator className="h-7 w-7 text-white" />
-                </div>
-              </CardTitle>
-              <CardDescription className="text-lg text-black-200 font-medium mt-4 max-w-4xl mx-auto leading-relaxed">
-                Gestion complète des achats, dépenses et analyse de rentabilité avec graphiques avancés 
-                pour une vision financière optimale de votre activité.
-              </CardDescription>
-            </CardHeader>
-          </Card>
-        </TabsContent>
+       
 
         <TabsContent value="reports" className="space-y-8 mt-10">
           <Tabs defaultValue="sales" className="w-full">
