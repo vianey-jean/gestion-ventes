@@ -62,6 +62,12 @@ const ComptabiliteModule: React.FC<ComptabiliteModuleProps> = ({ className }) =>
   const [showAchatForm, setShowAchatForm] = useState(false);
   const [showDepenseForm, setShowDepenseForm] = useState(false);
   
+  // États des modales de détails pour les cartes cliquables
+  const [showCreditModal, setShowCreditModal] = useState(false);
+  const [showDebitModal, setShowDebitModal] = useState(false);
+  const [showBeneficeVentesModal, setShowBeneficeVentesModal] = useState(false);
+  const [showBeneficeReelModal, setShowBeneficeReelModal] = useState(false);
+  
   // États du formulaire d'achat
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -114,14 +120,16 @@ const ComptabiliteModule: React.FC<ComptabiliteModuleProps> = ({ className }) =>
     loadAchats();
   }, [loadAchats]);
 
-  // Calculer les statistiques de comptabilité - mémorisé avec référence stable
-  const comptabiliteData = useMemo<ComptabiliteData>(() => {
-    // Ventes du mois
-    const monthlySales = allSales.filter(sale => {
+  // Ventes du mois - mémorisé pour réutilisation dans les modales
+  const monthlySales = useMemo(() => {
+    return allSales.filter(sale => {
       const date = new Date(sale.date);
       return date.getMonth() + 1 === selectedMonth && date.getFullYear() === selectedYear;
     });
+  }, [allSales, selectedMonth, selectedYear]);
 
+  // Calculer les statistiques de comptabilité - mémorisé avec référence stable
+  const comptabiliteData = useMemo<ComptabiliteData>(() => {
     const salesTotal = monthlySales.reduce((sum, sale) => {
       if (sale.products && Array.isArray(sale.products)) {
         return sum + (sale.totalSellingPrice || 0);
@@ -172,7 +180,7 @@ const ComptabiliteModule: React.FC<ComptabiliteModuleProps> = ({ className }) =>
       totalCredit,
       soldeNet
     };
-  }, [allSales, achats, selectedMonth, selectedYear]);
+  }, [monthlySales, achats]);
 
   // Sauvegarder les données de comptabilité dans la base de données
   const saveComptaData = useCallback(async () => {
@@ -460,9 +468,12 @@ const ComptabiliteModule: React.FC<ComptabiliteModuleProps> = ({ className }) =>
         </CardContent>
       </Card>
 
-      {/* Cartes de statistiques */}
+      {/* Cartes de statistiques - Cliquables */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="bg-gradient-to-br from-green-500/20 to-emerald-600/20 border-green-500/30 shadow-xl">
+        <Card 
+          className="bg-gradient-to-br from-green-500/20 to-emerald-600/20 border-green-500/30 shadow-xl cursor-pointer hover:scale-105 hover:shadow-2xl transition-all duration-300"
+          onClick={() => setShowCreditModal(true)}
+        >
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
@@ -475,7 +486,10 @@ const ComptabiliteModule: React.FC<ComptabiliteModuleProps> = ({ className }) =>
           </CardContent>
         </Card>
         
-        <Card className="bg-gradient-to-br from-red-500/20 to-rose-600/20 border-red-500/30 shadow-xl">
+        <Card 
+          className="bg-gradient-to-br from-red-500/20 to-rose-600/20 border-red-500/30 shadow-xl cursor-pointer hover:scale-105 hover:shadow-2xl transition-all duration-300"
+          onClick={() => setShowDebitModal(true)}
+        >
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
@@ -488,7 +502,10 @@ const ComptabiliteModule: React.FC<ComptabiliteModuleProps> = ({ className }) =>
           </CardContent>
         </Card>
         
-        <Card className="bg-gradient-to-br from-blue-500/20 to-indigo-600/20 border-blue-500/30 shadow-xl">
+        <Card 
+          className="bg-gradient-to-br from-blue-500/20 to-indigo-600/20 border-blue-500/30 shadow-xl cursor-pointer hover:scale-105 hover:shadow-2xl transition-all duration-300"
+          onClick={() => setShowBeneficeVentesModal(true)}
+        >
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
@@ -501,7 +518,10 @@ const ComptabiliteModule: React.FC<ComptabiliteModuleProps> = ({ className }) =>
           </CardContent>
         </Card>
         
-        <Card className={`bg-gradient-to-br ${comptabiliteData.beneficeReel >= 0 ? 'from-emerald-500/20 to-teal-600/20 border-emerald-500/30' : 'from-red-500/20 to-rose-600/20 border-red-500/30'} shadow-xl`}>
+        <Card 
+          className={`bg-gradient-to-br ${comptabiliteData.beneficeReel >= 0 ? 'from-emerald-500/20 to-teal-600/20 border-emerald-500/30' : 'from-red-500/20 to-rose-600/20 border-red-500/30'} shadow-xl cursor-pointer hover:scale-105 hover:shadow-2xl transition-all duration-300`}
+          onClick={() => setShowBeneficeReelModal(true)}
+        >
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
@@ -516,6 +536,187 @@ const ComptabiliteModule: React.FC<ComptabiliteModuleProps> = ({ className }) =>
           </CardContent>
         </Card>
       </div>
+
+      {/* Modal Total Crédit */}
+      <Dialog open={showCreditModal} onOpenChange={setShowCreditModal}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-green-600">
+              <ArrowUpCircle className="h-6 w-6" />
+              Détails Crédit - {MONTHS[selectedMonth - 1]} {selectedYear}
+            </DialogTitle>
+            <DialogDescription>
+              Total: {formatEuro(comptabiliteData.totalCredit)} ({monthlySales.length} ventes)
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 mt-4">
+            {monthlySales.length > 0 ? (
+              monthlySales.map((sale) => (
+                <div key={sale.id} className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                  <div>
+                    <p className="font-medium text-gray-800 dark:text-white">
+                      {sale.products && Array.isArray(sale.products) 
+                        ? sale.products.map((p: any) => p.description).join(', ')
+                        : sale.description}
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      {new Date(sale.date).toLocaleDateString('fr-FR')}
+                      {sale.clientName && ` - ${sale.clientName}`}
+                    </p>
+                  </div>
+                  <p className="text-lg font-bold text-green-600">
+                    {formatEuro(sale.products && Array.isArray(sale.products) 
+                      ? (sale.totalSellingPrice || 0) 
+                      : (sale.sellingPrice * sale.quantitySold))}
+                  </p>
+                </div>
+              ))
+            ) : (
+              <p className="text-center text-gray-500 py-8">Aucune vente ce mois</p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal Total Débit */}
+      <Dialog open={showDebitModal} onOpenChange={setShowDebitModal}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <ArrowDownCircle className="h-6 w-6" />
+              Détails Débit - {MONTHS[selectedMonth - 1]} {selectedYear}
+            </DialogTitle>
+            <DialogDescription>
+              Total: {formatEuro(comptabiliteData.totalDebit)} ({achats.length} opérations)
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 mt-4">
+            {achats.length > 0 ? (
+              achats.map((achat) => (
+                <div key={achat.id} className="flex items-center justify-between p-3 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
+                  <div className="flex items-center gap-3">
+                    <div className={`p-2 rounded-lg ${
+                      achat.type === 'achat_produit' ? 'bg-blue-500/20' :
+                      achat.type === 'taxes' ? 'bg-red-500/20' :
+                      achat.type === 'carburant' ? 'bg-orange-500/20' : 'bg-purple-500/20'
+                    }`}>
+                      {achat.type === 'achat_produit' ? <Package className="h-4 w-4 text-blue-400" /> :
+                       achat.type === 'taxes' ? <Receipt className="h-4 w-4 text-red-400" /> :
+                       achat.type === 'carburant' ? <Fuel className="h-4 w-4 text-orange-400" /> :
+                       <DollarSign className="h-4 w-4 text-purple-400" />}
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-800 dark:text-white">
+                        {achat.productDescription || achat.description}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        {new Date(achat.date).toLocaleDateString('fr-FR')}
+                        {achat.type === 'achat_produit' && ` - Qté: ${achat.quantity}`}
+                      </p>
+                    </div>
+                  </div>
+                  <p className="text-lg font-bold text-red-600">
+                    {formatEuro(achat.totalCost)}
+                  </p>
+                </div>
+              ))
+            ) : (
+              <p className="text-center text-gray-500 py-8">Aucun débit ce mois</p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal Bénéfice Ventes */}
+      <Dialog open={showBeneficeVentesModal} onOpenChange={setShowBeneficeVentesModal}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-blue-600">
+              <TrendingUp className="h-6 w-6" />
+              Détails Bénéfice Ventes - {MONTHS[selectedMonth - 1]} {selectedYear}
+            </DialogTitle>
+            <DialogDescription>
+              Total: {formatEuro(comptabiliteData.salesProfit)} ({comptabiliteData.salesCount} ventes)
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 mt-4">
+            {monthlySales.length > 0 ? (
+              monthlySales.map((sale) => {
+                const profit = sale.products && Array.isArray(sale.products) 
+                  ? (sale.totalProfit || 0) 
+                  : sale.profit;
+                return (
+                  <div key={sale.id} className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                    <div>
+                      <p className="font-medium text-gray-800 dark:text-white">
+                        {sale.products && Array.isArray(sale.products) 
+                          ? sale.products.map((p: any) => p.description).join(', ')
+                          : sale.description}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        {new Date(sale.date).toLocaleDateString('fr-FR')}
+                        {sale.clientName && ` - ${sale.clientName}`}
+                      </p>
+                    </div>
+                    <p className={`text-lg font-bold ${profit >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
+                      {formatEuro(profit)}
+                    </p>
+                  </div>
+                );
+              })
+            ) : (
+              <p className="text-center text-gray-500 py-8">Aucune vente ce mois</p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal Bénéfice Réel */}
+      <Dialog open={showBeneficeReelModal} onOpenChange={setShowBeneficeReelModal}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className={`flex items-center gap-2 ${comptabiliteData.beneficeReel >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+              <Wallet className="h-6 w-6" />
+              Détails Bénéfice Réel - {MONTHS[selectedMonth - 1]} {selectedYear}
+            </DialogTitle>
+            <DialogDescription>
+              Bénéfice Réel = Bénéfice Ventes - (Achats + Dépenses)
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 mt-4">
+            {/* Résumé */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-center">
+                <p className="text-sm text-blue-600 font-medium">Bénéfice Ventes</p>
+                <p className="text-xl font-bold text-blue-700">{formatEuro(comptabiliteData.salesProfit)}</p>
+              </div>
+              <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg text-center">
+                <p className="text-sm text-red-600 font-medium">Total Dépenses</p>
+                <p className="text-xl font-bold text-red-700">{formatEuro(comptabiliteData.achatsTotal + comptabiliteData.depensesTotal)}</p>
+              </div>
+              <div className={`p-4 rounded-lg text-center ${comptabiliteData.beneficeReel >= 0 ? 'bg-emerald-50 dark:bg-emerald-900/20' : 'bg-red-50 dark:bg-red-900/20'}`}>
+                <p className={`text-sm font-medium ${comptabiliteData.beneficeReel >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>Bénéfice Réel</p>
+                <p className={`text-xl font-bold ${comptabiliteData.beneficeReel >= 0 ? 'text-emerald-700' : 'text-red-700'}`}>{formatEuro(comptabiliteData.beneficeReel)}</p>
+              </div>
+            </div>
+
+            {/* Détails des dépenses */}
+            <div className="border-t pt-4">
+              <p className="font-semibold text-gray-700 dark:text-gray-300 mb-3">Détail des dépenses</p>
+              <div className="space-y-2">
+                <div className="flex justify-between p-2 bg-indigo-50 dark:bg-indigo-900/20 rounded">
+                  <span className="text-indigo-700 dark:text-indigo-300">Achats Produits</span>
+                  <span className="font-bold text-indigo-800 dark:text-indigo-200">{formatEuro(comptabiliteData.achatsTotal)}</span>
+                </div>
+                <div className="flex justify-between p-2 bg-orange-50 dark:bg-orange-900/20 rounded">
+                  <span className="text-orange-700 dark:text-orange-300">Autres Dépenses</span>
+                  <span className="font-bold text-orange-800 dark:text-orange-200">{formatEuro(comptabiliteData.depensesTotal)}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Détails des dépenses */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
