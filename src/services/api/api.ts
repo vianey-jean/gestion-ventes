@@ -2,10 +2,9 @@
 import axios, { AxiosInstance } from 'axios';
 import axiosRetry from 'axios-retry';
 
-// Configuration de l'URL de base avec préfixe /api
+// Configuration de l'URL de base - sans préfixe /api pour éviter le doublement
 const getBaseURL = () => {
-  const base = import.meta.env.VITE_API_BASE_URL || 'https://server-gestion-ventes.onrender.com';
-  return `${base}/api`;
+  return import.meta.env.VITE_API_BASE_URL || 'https://server-gestion-ventes.onrender.com';
 };
 
 // Create axios instance with base configuration

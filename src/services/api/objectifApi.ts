@@ -40,27 +40,27 @@ export interface ObjectifHistorique {
 
 export const objectifApi = {
   get: async (): Promise<ObjectifData> => {
-    const response = await api.get('/objectif');
+    const response = await api.get('/api/objectif');
     return response.data;
   },
   
   updateObjectif: async (objectif: number): Promise<ObjectifData> => {
-    const response = await api.put('/objectif/objectif', { objectif });
+    const response = await api.put('/api/objectif/objectif', { objectif });
     return response.data;
   },
   
   recalculate: async (): Promise<ObjectifData> => {
-    const response = await api.post('/objectif/recalculate');
+    const response = await api.post('/api/objectif/recalculate');
     return response.data;
   },
 
   getHistorique: async (): Promise<ObjectifHistorique> => {
-    const response = await api.get('/objectif/historique');
+    const response = await api.get('/api/objectif/historique');
     return response.data;
   },
 
   saveMonthlyData: async (): Promise<ObjectifHistorique> => {
-    const response = await api.post('/objectif/save-monthly');
+    const response = await api.post('/api/objectif/save-monthly');
     return response.data;
   }
 };

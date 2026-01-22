@@ -24,7 +24,7 @@ export const productApiService = {
   },
 
   async update(id: string, data: Partial<ProductFormData>): Promise<Product> {
-    console.log('📝 Updating product:', data);
+    console.log('📝 Updating product:', id, data);
     const response: AxiosResponse<Product> = await api.put(`/api/products/${id}`, data);
     console.log('✅ Product updated successfully:', response.data);
     return response.data;
