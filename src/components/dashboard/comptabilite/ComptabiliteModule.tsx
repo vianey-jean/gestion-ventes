@@ -25,7 +25,8 @@ import {
   ArrowUpCircle,
   ArrowDownCircle,
   Wallet,
-  Sparkles
+  Sparkles,
+  FileDown
 } from 'lucide-react';
 import { useApp } from '@/contexts/AppContext';
 import useCurrencyFormatter from '@/hooks/use-currency-formatter';
@@ -36,6 +37,8 @@ import comptaApiService from '@/services/api/comptaApi';
 import { NouvelleAchat, NouvelleAchatFormData, DepenseFormData, ComptabiliteData } from '@/types/comptabilite';
 import { Product } from '@/types/product';
 import { toast } from '@/hooks/use-toast';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 // Import des composants de graphiques stables
 import { StableBarChart, StablePieChart } from './StableCharts';
@@ -61,6 +64,9 @@ const ComptabiliteModule: React.FC<ComptabiliteModuleProps> = ({ className }) =>
   const [loading, setLoading] = useState(false);
   const [showAchatForm, setShowAchatForm] = useState(false);
   const [showDepenseForm, setShowDepenseForm] = useState(false);
+  const [showExportDialog, setShowExportDialog] = useState(false);
+  const [exportMonth, setExportMonth] = useState(new Date().getMonth() + 1);
+  const [exportYear, setExportYear] = useState(new Date().getFullYear());
   
   // États des modales de détails pour les cartes cliquables
   const [showCreditModal, setShowCreditModal] = useState(false);
@@ -265,9 +271,30 @@ const ComptabiliteModule: React.FC<ComptabiliteModuleProps> = ({ className }) =>
     }));
   }, []);
 
+  /**
+   * handleSubmitAchat - Gère la soumission du formulaire de nouvel achat
+   * 
+   * Logique de fonctionnement :
+   * 1. Validation : description et quantité obligatoires, prix optionnel
+   * 2. Si produit existant sélectionné (selectedProduct) : mise à jour du stock dans products.json
+   * 3. Si NOUVEAU produit (selectedProduct est null) : création du produit dans products.json
+   * 4. Dans tous les cas : enregistrement de l'achat dans nouvelle_achat.json
+   * 
+   * @returns {Promise<void>}
+   */
+  /**
+   * handleSubmitAchat - Gère la soumission du formulaire de nouvel achat
+   * 
+   * CORRECTION DU BUG DE DOUBLE QUANTITÉ :
+   * Le backend (NouvelleAchat.create) gère TOUTE la logique de création/mise à jour du produit.
+   * Le frontend envoie seulement les données de l'achat.
+   * Cela évite la double incrémentation de la quantité.
+   */
   const handleSubmitAchat = useCallback(async () => {
     try {
-      // Validation: description et quantité obligatoires, prix optionnel
+      // ========================================
+      // ÉTAPE 1: Validation des champs obligatoires
+      // ========================================
       if (!achatForm.productDescription || achatForm.quantity <= 0) {
         toast({
           title: 'Erreur',
@@ -277,53 +304,53 @@ const ComptabiliteModule: React.FC<ComptabiliteModuleProps> = ({ className }) =>
         return;
       }
 
-      // Déterminer le prix d'achat final
+      // ========================================
+      // ÉTAPE 2: Déterminer le prix d'achat final
+      // ========================================
       const finalPurchasePrice = achatForm.purchasePrice > 0 
         ? achatForm.purchasePrice 
         : (selectedProduct?.purchasePrice || 0);
 
-      // Si un produit existant est sélectionné, mettre à jour products.json
+      // ========================================
+      // ÉTAPE 3: Envoyer l'achat au backend
+      // Le backend gère la création/mise à jour du produit dans products.json
+      // ET l'enregistrement de l'achat dans nouvelle_achat.json
+      // ========================================
+      await nouvelleAchatApiService.create({
+        productId: selectedProduct?.id, // ID du produit existant ou undefined pour nouveau
+        productDescription: achatForm.productDescription,
+        purchasePrice: finalPurchasePrice,
+        quantity: achatForm.quantity,
+        fournisseur: achatForm.fournisseur,
+        caracteristiques: achatForm.caracteristiques
+      });
+      console.log('✅ Achat enregistré - le backend gère le produit');
+      
+      // ========================================
+      // ÉTAPE 4: Message de succès
+      // ========================================
       if (selectedProduct) {
-        const updateData: Partial<ProductFormData> = {
-          quantity: selectedProduct.quantity + achatForm.quantity // Ajouter la nouvelle quantité
-        };
-        
-        // Si un nouveau prix est saisi, l'enregistrer aussi
-        if (achatForm.purchasePrice > 0) {
-          updateData.purchasePrice = achatForm.purchasePrice;
-        }
-        
-        // Si le nom du produit a été modifié, mettre à jour la description
-        if (achatForm.productDescription !== selectedProduct.description) {
-          updateData.description = achatForm.productDescription;
-          console.log('📝 Product name changed from:', selectedProduct.description, 'to:', achatForm.productDescription);
-        }
-        
-        await productApiService.update(selectedProduct.id, updateData);
-        console.log('✅ Product updated in products.json:', updateData);
+        const nameChanged = achatForm.productDescription !== selectedProduct.description;
+        toast({
+          title: 'Succès',
+          description: `Stock mis à jour: +${achatForm.quantity} unités${
+            achatForm.purchasePrice > 0
+              ? `, nouveau prix: ${formatEuro(achatForm.purchasePrice)}`
+              : ''
+          }${nameChanged ? `, nom modifié` : ''}`,
+          className: 'bg-green-600 text-white border-green-700'
+        });
+      } else {
+        toast({
+          title: '🆕 Nouveau produit créé',
+          description: `"${achatForm.productDescription}" ajouté à l'inventaire avec ${achatForm.quantity} unités`,
+          className: 'bg-blue-600 text-white border-blue-700'
+        });
       }
 
-      // Créer l'entrée dans nouvelle_achat.json avec le nom (modifié ou non)
-      await nouvelleAchatApiService.create({
-        ...achatForm,
-        purchasePrice: finalPurchasePrice
-      });
-      
-      // Message de succès incluant info sur le changement de nom
-      const nameChanged = selectedProduct && achatForm.productDescription !== selectedProduct.description;
-     toast({
-  title: 'Succès',
-  description: selectedProduct 
-    ? `Stock mis à jour: +${achatForm.quantity} unités${
-        achatForm.purchasePrice > 0
-          ? `, nouveau prix: ${formatEuro(achatForm.purchasePrice)}`
-          : ''
-      }${nameChanged ? `, nom modifié` : ''}`
-    : 'Achat enregistré avec succès',
-  className: 'bg-green-600 text-white border-green-700'
-});
-
-      
+      // ========================================
+      // ÉTAPE 5: Réinitialiser le formulaire
+      // ========================================
       setAchatForm({
         productDescription: '',
         purchasePrice: 0,
@@ -334,13 +361,15 @@ const ComptabiliteModule: React.FC<ComptabiliteModuleProps> = ({ className }) =>
       setSelectedProduct(null);
       setSearchTerm('');
       setShowProductList(false);
-      // Garder le formulaire ouvert pour permettre des saisies multiples
-      // L'utilisateur peut fermer manuellement avec le bouton "Annuler" ou "X"
+      setShowAchatForm(false);
       
+      // ========================================
+      // ÉTAPE 6: Rafraîchir les données
+      // ========================================
       loadAchats();
       fetchProducts();
     } catch (error) {
-      console.error('Erreur:', error);
+      console.error('❌ Erreur lors de l\'enregistrement de l\'achat:', error);
       toast({
         title: 'Erreur',
         description: 'Impossible d\'enregistrer l\'achat',
@@ -418,6 +447,196 @@ const ComptabiliteModule: React.FC<ComptabiliteModuleProps> = ({ className }) =>
     setDepenseForm(prev => ({ ...prev, [field]: value }));
   }, []);
 
+  // ========================================
+  // FONCTION D'EXPORT PDF
+  // ========================================
+  const handleExportPDF = useCallback(async () => {
+    try {
+      // Récupérer les données du mois/année sélectionnés pour l'export
+      const exportAchats = await nouvelleAchatApiService.getByMonthYear(exportYear, exportMonth);
+      
+      // Filtrer les ventes du mois/année sélectionnés
+      const exportSales = allSales.filter(sale => {
+        const date = new Date(sale.date);
+        return date.getMonth() + 1 === exportMonth && date.getFullYear() === exportYear;
+      });
+
+      // Calculs
+      const salesTotal = exportSales.reduce((sum, sale) => {
+        if (sale.products && Array.isArray(sale.products)) {
+          return sum + (sale.totalSellingPrice || 0);
+        }
+        return sum + (sale.sellingPrice * sale.quantitySold);
+      }, 0);
+
+      const salesProfit = exportSales.reduce((sum, sale) => {
+        if (sale.products && Array.isArray(sale.products)) {
+          return sum + (sale.totalProfit || 0);
+        }
+        return sum + sale.profit;
+      }, 0);
+
+      const achatsProducts = exportAchats.filter(a => a.type === 'achat_produit');
+      const depenses = exportAchats.filter(a => a.type !== 'achat_produit');
+
+      const achatsTotal = achatsProducts.reduce((sum, a) => sum + a.totalCost, 0);
+      const depensesTotal = depenses.reduce((sum, a) => sum + a.totalCost, 0);
+      const beneficeReel = salesProfit - (achatsTotal + depensesTotal);
+
+      // Créer le PDF
+      const doc = new jsPDF();
+      const monthName = MONTHS[exportMonth - 1];
+      
+      // Titre
+      doc.setFontSize(20);
+      doc.setTextColor(0, 128, 0);
+      doc.text(`Comptabilité - ${monthName} ${exportYear}`, 105, 20, { align: 'center' });
+      
+      doc.setFontSize(10);
+      doc.setTextColor(100, 100, 100);
+      doc.text(`Généré le ${new Date().toLocaleDateString('fr-FR')}`, 105, 28, { align: 'center' });
+
+      let yPosition = 40;
+
+      // ========== SECTION VENTES ==========
+      doc.setFontSize(14);
+      doc.setTextColor(0, 100, 0);
+      doc.text('Produits Vendus', 14, yPosition);
+      yPosition += 5;
+
+      if (exportSales.length > 0) {
+        const salesData = exportSales.map(sale => {
+          const productName = sale.products && Array.isArray(sale.products) 
+            ? sale.products.map(p => p.description).join(', ')
+            : sale.description || 'Produit';
+          const qty = sale.products && Array.isArray(sale.products)
+            ? sale.products.reduce((sum, p) => sum + (p.quantitySold || 0), 0)
+            : (sale.quantitySold || 0);
+          const total = sale.products && Array.isArray(sale.products)
+            ? sale.totalSellingPrice || 0
+            : ((sale.sellingPrice || 0) * (sale.quantitySold || 0));
+          const profit = sale.products && Array.isArray(sale.products)
+            ? sale.totalProfit || 0
+            : (sale.profit || 0);
+          
+          return [
+            new Date(sale.date).toLocaleDateString('fr-FR'),
+            productName.substring(0, 30),
+            qty.toString(),
+            `${total.toFixed(2)} €`,
+            `${profit.toFixed(2)} €`
+          ];
+        });
+
+        autoTable(doc, {
+          startY: yPosition,
+          head: [['Date', 'Produit', 'Qté', 'Total', 'Bénéfice']],
+          body: salesData,
+          theme: 'striped',
+          headStyles: { fillColor: [34, 139, 34] },
+          styles: { fontSize: 8 }
+        });
+
+        yPosition = (doc as any).lastAutoTable.finalY + 10;
+      } else {
+        doc.setFontSize(10);
+        doc.setTextColor(100, 100, 100);
+        doc.text('Aucune vente ce mois', 14, yPosition + 5);
+        yPosition += 15;
+      }
+
+      // ========== SECTION DÉPENSES ==========
+      doc.setFontSize(14);
+      doc.setTextColor(200, 0, 0);
+      doc.text('Dépenses', 14, yPosition);
+      yPosition += 5;
+
+      const allExpenses = [...achatsProducts, ...depenses];
+      if (allExpenses.length > 0) {
+        const expenseData = allExpenses.map(expense => {
+          const typeLabel = expense.type === 'achat_produit' ? 'Achat' :
+                           expense.type === 'taxes' ? 'Taxes' :
+                           expense.type === 'carburant' ? 'Carburant' : 'Autre';
+          return [
+            new Date(expense.date).toLocaleDateString('fr-FR'),
+            typeLabel,
+            (expense.productDescription || expense.description || '').substring(0, 35),
+            `${expense.totalCost.toFixed(2)} €`
+          ];
+        });
+
+        autoTable(doc, {
+          startY: yPosition,
+          head: [['Date', 'Type', 'Description', 'Montant']],
+          body: expenseData,
+          theme: 'striped',
+          headStyles: { fillColor: [220, 53, 69] },
+          styles: { fontSize: 8 }
+        });
+
+        yPosition = (doc as any).lastAutoTable.finalY + 10;
+      } else {
+        doc.setFontSize(10);
+        doc.setTextColor(100, 100, 100);
+        doc.text('Aucune dépense ce mois', 14, yPosition + 5);
+        yPosition += 15;
+      }
+
+      // ========== SECTION TOTAUX ==========
+      if (yPosition > 250) {
+        doc.addPage();
+        yPosition = 20;
+      }
+
+      doc.setFontSize(14);
+      doc.setTextColor(0, 0, 139);
+      doc.text('Résumé Financier', 14, yPosition);
+      yPosition += 5;
+
+      autoTable(doc, {
+        startY: yPosition,
+        head: [['Description', 'Montant']],
+        body: [
+          ['Total Ventes', `${salesTotal.toFixed(2)} €`],
+          ['Bénéfice brut des ventes', `${salesProfit.toFixed(2)} €`],
+          ['Total Achats produits', `- ${achatsTotal.toFixed(2)} €`],
+          ['Total Autres dépenses', `- ${depensesTotal.toFixed(2)} €`],
+          ['Total Dépenses', `- ${(achatsTotal + depensesTotal).toFixed(2)} €`],
+          ['BÉNÉFICE RÉEL', `${beneficeReel.toFixed(2)} €`]
+        ],
+        theme: 'grid',
+        headStyles: { fillColor: [0, 0, 139] },
+        styles: { fontSize: 10 },
+        bodyStyles: { fontStyle: 'normal' },
+        didParseCell: (data) => {
+          // Mettre en gras et colorer la dernière ligne
+          if (data.row.index === 5) {
+            data.cell.styles.fontStyle = 'bold';
+            data.cell.styles.fillColor = beneficeReel >= 0 ? [200, 250, 200] : [255, 200, 200];
+            data.cell.styles.textColor = beneficeReel >= 0 ? [0, 100, 0] : [150, 0, 0];
+          }
+        }
+      });
+
+      // Sauvegarder le PDF
+      doc.save(`comptabilite_${monthName}_${exportYear}.pdf`);
+      
+      setShowExportDialog(false);
+      toast({
+        title: 'Export réussi',
+        description: `Le PDF de ${monthName} ${exportYear} a été téléchargé`,
+        className: 'bg-green-600 text-white border-green-700'
+      });
+    } catch (error) {
+      console.error('Erreur lors de l\'export PDF:', error);
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de générer le PDF',
+        variant: 'destructive'
+      });
+    }
+  }, [exportMonth, exportYear, allSales]);
+
   return (
     <div className={`space-y-6 ${className}`}>
       {/* En-tête avec sélection de période */}
@@ -474,6 +693,14 @@ const ComptabiliteModule: React.FC<ComptabiliteModuleProps> = ({ className }) =>
             >
               <Receipt className="h-4 w-4 mr-2" />
               Nouvelle Dépense
+            </Button>
+            
+            <Button
+              onClick={() => setShowExportDialog(true)}
+              className="bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-700 hover:to-fuchsia-700 text-white shadow-xl"
+            >
+              <FileDown className="h-4 w-4 mr-2" />
+              Exporter
             </Button>
           </div>
         </CardContent>
@@ -1316,6 +1543,81 @@ const ComptabiliteModule: React.FC<ComptabiliteModuleProps> = ({ className }) =>
             >
               <Plus className="h-4 w-4 mr-2" />
               Enregistrer la dépense
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modale d'export PDF */}
+      <Dialog open={showExportDialog} onOpenChange={setShowExportDialog}>
+        <DialogContent className="sm:max-w-md bg-gradient-to-br from-white via-purple-50/30 to-fuchsia-50/50 dark:from-gray-900 dark:via-purple-900/20 dark:to-fuchsia-900/20 backdrop-blur-xl border-0 shadow-2xl rounded-3xl">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-black bg-gradient-to-r from-purple-600 via-fuchsia-600 to-pink-600 bg-clip-text text-transparent flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-gradient-to-r from-purple-600 to-fuchsia-600 shadow-lg">
+                <FileDown className="h-6 w-6 text-white" />
+              </div>
+              Exporter la Comptabilité
+            </DialogTitle>
+            <DialogDescription className="text-gray-600 dark:text-gray-300">
+              Sélectionnez le mois et l'année à exporter en PDF
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-6 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="text-sm font-bold text-gray-700 dark:text-gray-200">Mois</Label>
+                <Select value={exportMonth.toString()} onValueChange={(v) => setExportMonth(parseInt(v))}>
+                  <SelectTrigger className="bg-white dark:bg-gray-800 border-2 border-gray-200">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {MONTHS.map((month, index) => (
+                      <SelectItem key={index} value={(index + 1).toString()}>{month}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <Label className="text-sm font-bold text-gray-700 dark:text-gray-200">Année</Label>
+                <Select value={exportYear.toString()} onValueChange={(v) => setExportYear(parseInt(v))}>
+                  <SelectTrigger className="bg-white dark:bg-gray-800 border-2 border-gray-200">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[2023, 2024, 2025, 2026].map(year => (
+                      <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <Card className="bg-gradient-to-r from-purple-500/10 via-fuchsia-500/10 to-pink-500/10 border-purple-500/30">
+              <CardContent className="pt-4 pb-4">
+                <p className="text-sm text-gray-700 dark:text-gray-300">
+                  <strong>Le PDF contiendra :</strong>
+                </p>
+                <ul className="text-sm text-gray-600 dark:text-gray-400 mt-2 space-y-1">
+                  <li>📦 Liste des produits vendus</li>
+                  <li>💸 Liste des dépenses</li>
+                  <li>📊 Totaux et bénéfice réel</li>
+                </ul>
+              </CardContent>
+            </Card>
+          </div>
+
+          <DialogFooter className="gap-3">
+            <Button variant="outline" onClick={() => setShowExportDialog(false)}>
+              Annuler
+            </Button>
+            <Button
+              onClick={handleExportPDF}
+              className="bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-700 hover:to-fuchsia-700 text-white shadow-xl"
+            >
+              <FileDown className="h-4 w-4 mr-2" />
+              Télécharger PDF
             </Button>
           </DialogFooter>
         </DialogContent>
