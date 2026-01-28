@@ -703,6 +703,76 @@ const handleExportPDF = useCallback(async () => {
     });
 
     // =====================
+// MENTIONS LÉGALES & SIGNATURE COMPTABLE
+// =====================
+
+// Toujours sur la dernière page
+const pageHeight = doc.internal.pageSize.getHeight();
+const pageWidth = doc.internal.pageSize.getWidth();
+
+// ---- CONFIDENTIALITÉ ----
+doc.setFontSize(8);
+doc.setTextColor(120, 120, 120);
+doc.text(
+  'Document comptable strictement confidentiel.\n' +
+    'Réservé exclusivement à un usage interne.\n' +
+    'Toute diffusion, reproduction ou transmission à des tiers\n' +
+    'sans autorisation écrite est formellement interdite.',
+  14,
+  pageHeight - 40
+);
+
+// ---- SIGNATURE ----
+const signatureY = pageHeight - 30;
+const signatureX = pageWidth - 20;
+
+// Titre
+doc.setFontSize(9);
+doc.setTextColor(90, 90, 90);
+doc.text(
+  'Responsable Comptable',
+  signatureX,
+  signatureY - 8,
+  { align: 'right' }
+);
+
+// Nom / Signature
+doc.setFontSize(12);
+doc.setTextColor(160, 0, 0);
+doc.text(
+  'La Direction',
+  signatureX,
+  signatureY,
+  { align: 'right' }
+);
+
+// Ligne de signature
+const signText = 'La Direction';
+const signWidth =
+  (doc.getStringUnitWidth(signText) *
+    doc.getFontSize()) /
+  doc.internal.scaleFactor;
+
+doc.setDrawColor(160, 0, 0);
+doc.line(
+  signatureX - signWidth,
+  signatureY + 1,
+  signatureX,
+  signatureY + 1
+);
+
+// Date
+doc.setFontSize(8);
+doc.setTextColor(120, 120, 120);
+doc.text(
+  `Date : ${new Date().toLocaleDateString('fr-FR')}`,
+  signatureX,
+  signatureY + 8,
+  { align: 'right' }
+);
+
+
+    // =====================
     // SAUVEGARDE
     // =====================
     doc.save(
