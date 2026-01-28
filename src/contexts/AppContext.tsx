@@ -97,121 +97,127 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     console.log('setSelectedYear appelé mais ignoré - utilisation de l\'année en cours uniquement');
   };
 
+  // OPTIMIZED: Fast product fetching
   const fetchProducts = useCallback(async () => {
     if (!isAuthenticated || authLoading) {
-      console.log('User not authenticated, skipping product fetch');
       return;
     }
     
-    setLoading(true);
-    setError(null);
     try {
+      const startTime = performance.now();
       const fetchedProducts = await productService.getProducts();
       setProducts(fetchedProducts);
-      console.log(`Fetched ${fetchedProducts.length} products`);
+      const endTime = performance.now();
+      console.log(`⚡ Products loaded in ${Math.round(endTime - startTime)}ms (${fetchedProducts.length} items)`);
     } catch (err: any) {
       setError(err.message || 'Failed to fetch products');
       toast({
         title: "Erreur de chargement",
         description: "Impossible de charger les produits.",
-        variant: "destructive",  className: "notification-erreur",
+        variant: "destructive",
+        className: "notification-erreur",
       });
-    } finally {
-      setLoading(false);
     }
   }, [toast, isAuthenticated, authLoading]);
 
+  // OPTIMIZED: Fast sales fetching
   const fetchSales = useCallback(async (month?: number, year?: number) => {
     if (!isAuthenticated || authLoading) {
-      console.log('User not authenticated, skipping sales fetch');
       return;
     }
     
-    // Toujours utiliser le mois en cours, ignorer les paramètres
     const monthToFetch = currentDate.month;
     const yearToFetch = currentDate.year;
     
-    console.log(`Fetching sales for current month: ${monthToFetch} (1-based), year: ${yearToFetch}`);
-    
-    setLoading(true);
-    setError(null);
     try {
-      // API expects 1-based month, so pass it directly
+      const startTime = performance.now();
       const fetchedSales = await salesService.getSales(monthToFetch, yearToFetch);
-      console.log(`Fetched ${fetchedSales.length} sales for ${monthToFetch}/${yearToFetch}`);
       setSales(fetchedSales);
+      const endTime = performance.now();
+      console.log(`⚡ Sales loaded in ${Math.round(endTime - startTime)}ms (${fetchedSales.length} items)`);
     } catch (err: any) {
-      console.error('Error fetching sales:', err);
       setError(err.message || 'Failed to fetch sales');
       toast({
         title: "Erreur de chargement",
         description: "Impossible de charger les ventes.",
-        variant: "destructive", className: "notification-erreur", 
+        variant: "destructive",
+        className: "notification-erreur",
       });
-    } finally {
-      setLoading(false);
     }
   }, [toast, currentDate, isAuthenticated, authLoading]);
 
-  // Nouvelle fonction pour récupérer toutes les ventes historiques
+  // OPTIMIZED: Fast historical sales fetching
   const fetchAllSales = useCallback(async () => {
     if (!isAuthenticated || authLoading) {
-      console.log('User not authenticated, skipping all sales fetch');
       return;
     }
     
-    console.log('Fetching ALL historical sales for trends analysis');
-    
-    setLoading(true);
-    setError(null);
     try {
+      const startTime = performance.now();
       const fetchedAllSales = await salesService.getAllSales();
-      console.log(`Fetched ${fetchedAllSales.length} total historical sales`);
       setAllSales(fetchedAllSales);
+      const endTime = performance.now();
+      console.log(`⚡ All sales loaded in ${Math.round(endTime - startTime)}ms (${fetchedAllSales.length} items)`);
     } catch (err: any) {
-      console.error('Error fetching all sales:', err);
       setError(err.message || 'Failed to fetch all sales');
       toast({
         title: "Erreur de chargement",
         description: "Impossible de charger les données historiques.",
-        variant: "destructive", className: "notification-erreur",
+        variant: "destructive",
+        className: "notification-erreur",
       });
-    } finally {
-      setLoading(false);
     }
   }, [toast, isAuthenticated, authLoading]);
 
-  // Fonction de rafraîchissement pour la synchronisation temps réel
-  // NE PAS rafraîchir si un formulaire est actif
+  // OPTIMIZED: Fast parallel data refresh
   const refreshData = useCallback(async () => {
     if (!isAuthenticated || authLoading) return;
     
-    // Vérifier si un formulaire est actif - ne pas rafraîchir pour éviter la perte de données
     if (isFormProtected()) {
-      console.log('Rafraîchissement bloqué - formulaire actif');
       return;
     }
     
+    setLoading(true);
+    const startTime = performance.now();
+    
     try {
+      // PARALLEL: Fetch all data simultaneously for ultra-fast loading
       await Promise.all([
         fetchProducts(),
         fetchSales(),
-        fetchAllSales() // Rafraîchir aussi toutes les données historiques
+        fetchAllSales()
       ]);
+      
+      const endTime = performance.now();
+      console.log(`⚡ Full refresh completed in ${Math.round(endTime - startTime)}ms`);
     } catch (error) {
-      console.error('Erreur lors du rafraîchissement des données:', error);
+      console.error('Refresh error:', error);
+    } finally {
+      setLoading(false);
     }
   }, [fetchProducts, fetchSales, fetchAllSales, isAuthenticated, authLoading]);
 
-  // Charger les données seulement pour le mois en cours + toutes les données historiques
+  // OPTIMIZED: Fast initial data loading on auth
   useEffect(() => {
     if (isAuthenticated && !authLoading) {
-      console.log(`User authenticated, fetching data for current month: ${currentDate.month}/${currentDate.year}`);
-      fetchProducts();
-      fetchSales();
-      fetchAllSales(); // Charger aussi toutes les données historiques
+      const loadInitialData = async () => {
+        setLoading(true);
+        const startTime = performance.now();
+        
+        // PARALLEL: Load all data simultaneously
+        await Promise.all([
+          fetchProducts(),
+          fetchSales(),
+          fetchAllSales()
+        ]);
+        
+        const endTime = performance.now();
+        console.log(`⚡ Initial data loaded in ${Math.round(endTime - startTime)}ms`);
+        setLoading(false);
+      };
+      
+      loadInitialData();
     } else {
-      console.log('User not authenticated or auth loading, clearing data');
       setProducts([]);
       setSales([]);
       setAllSales([]);

@@ -11,12 +11,14 @@ class RealtimeService {
   private syncListeners: Set<(event: SyncEvent) => void> = new Set();
   private lastSyncTime: Date = new Date();
   private isConnected: boolean = false;
+  private syncInProgress: boolean = false;
 
+  // OPTIMIZED: Faster sync intervals for real-time performance
   private config: ConnectionConfig = {
-    reconnectInterval: 3000,
-    maxReconnectAttempts: 5,
-    connectionTimeout: 10000,
-    fallbackSyncInterval: 30000
+    reconnectInterval: 2000,
+    maxReconnectAttempts: 10,
+    connectionTimeout: 5000,
+    fallbackSyncInterval: 10000 // Reduced from 30s to 10s for faster sync
   };
 
   constructor() {
@@ -45,34 +47,29 @@ class RealtimeService {
       return;
     }
     
-    // Sync initial silencieux
+    // FAST: Sync initial immédiat
     this.syncCurrentMonthData();
     
-    // Polling périodique silencieux
+    // Polling périodique optimisé
     this.fallbackInterval = setInterval(async () => {
-      await this.syncCurrentMonthData();
+      if (!this.syncInProgress) {
+        await this.syncCurrentMonthData();
+      }
     }, this.config.fallbackSyncInterval);
   }
 
   private handleSyncEvent(event: SyncEvent) {
-    console.log('📡 Événement de sync reçu:', event);
-    
     switch (event.type) {
       case 'data-changed':
         if (event.data && event.data.type && event.data.data) {
-          console.log(`📊 Changement de données détecté pour: ${event.data.type}`);
-          
           if (this.dataCacheManager.hasDataChanged(event.data.type, event.data.data)) {
             this.lastSyncTime = new Date();
             this.processSyncData(event.data.type, event.data.data);
-          } else {
-            console.log('📊 Données identiques, pas de mise à jour nécessaire');
           }
         }
         break;
       
       case 'force-sync':
-        console.log('🚀 Force sync demandé');
         this.lastSyncTime = new Date();
         this.syncCurrentMonthData();
         break;
@@ -83,8 +80,6 @@ class RealtimeService {
 
   private processSyncData(dataType: string, receivedData: any) {
     let syncData: Partial<SyncData> = {};
-
-    console.log(`🔄 Traitement des données de type: ${dataType}`, receivedData);
 
     switch (dataType) {
       case 'products':
@@ -109,18 +104,15 @@ class RealtimeService {
         break;
 
       case 'clients':
-        console.log('👥 Mise à jour des clients:', receivedData);
         syncData = { clients: receivedData };
         break;
 
       case 'messages':
-        console.log('💬 Mise à jour des messages:', receivedData);
         syncData = { messages: receivedData };
         break;
     }
 
     if (Object.keys(syncData).length > 0) {
-      console.log('📤 Notification aux listeners:', syncData);
       this.notifyListeners(syncData);
     }
   }
@@ -149,89 +141,98 @@ class RealtimeService {
     this.eventSourceManager.disconnect();
   }
 
+  // OPTIMIZED: Parallel data fetching for ultra-fast loading
   async syncCurrentMonthData(): Promise<SyncData | null> {
+    if (this.syncInProgress) {
+      return null;
+    }
+
+    this.syncInProgress = true;
+    const startTime = performance.now();
+
     try {
       const currentDate = new Date();
       const currentMonth = currentDate.getMonth() + 1;
       const currentYear = currentDate.getFullYear();
       
-      const [products, sales, pretFamilles, pretProduits, depenses, clients, messages] = await Promise.all([
-        api.get('/api/products').catch(() => ({ data: [] })),
-        api.get(`/api/sales/by-month?month=${currentMonth}&year=${currentYear}`).catch(() => ({ data: [] })),
-        api.get('/api/pretfamilles').catch(() => ({ data: [] })),
-        api.get('/api/pretproduits').catch(() => ({ data: [] })),
-        api.get('/api/depenses/mouvements').catch(() => ({ data: [] })),
-        api.get('/api/clients').catch(() => ({ data: [] })),
-        api.get('/api/messages').catch(() => ({ data: [] }))
-      ]).catch(() => [{ data: [] }, { data: [] }, { data: [] }, { data: [] }, { data: [] }, { data: [] }, { data: [] }]);
+      // PARALLEL: Fetch all data simultaneously for fastest loading
+      const results = await Promise.allSettled([
+        api.get('/api/products'),
+        api.get(`/api/sales/by-month?month=${currentMonth}&year=${currentYear}`),
+        api.get('/api/pretfamilles'),
+        api.get('/api/pretproduits'),
+        api.get('/api/depenses/mouvements'),
+        api.get('/api/clients'),
+        api.get('/api/messages')
+      ]);
+
+      const getData = (result: PromiseSettledResult<any>) => 
+        result.status === 'fulfilled' ? result.value.data || [] : [];
 
       const syncData: SyncData = {
-        products: products.data || [],
-        sales: sales.data || [],
-        pretFamilles: pretFamilles.data || [],
-        pretProduits: pretProduits.data || [],
-        depenses: depenses.data || [],
-        clients: clients.data || [],
-        messages: messages.data || []
+        products: getData(results[0]),
+        sales: getData(results[1]),
+        pretFamilles: getData(results[2]),
+        pretProduits: getData(results[3]),
+        depenses: getData(results[4]),
+        clients: getData(results[5]),
+        messages: getData(results[6])
       };
 
-      // Mettre à jour le cache
-      this.dataCacheManager.updateCache('products', products.data);
-      this.dataCacheManager.updateCache('sales', sales.data);
-      this.dataCacheManager.updateCache('pretfamilles', pretFamilles.data);
-      this.dataCacheManager.updateCache('pretproduits', pretProduits.data);
-      this.dataCacheManager.updateCache('depensedumois', depenses.data);
-      this.dataCacheManager.updateCache('clients', clients.data);
-      this.dataCacheManager.updateCache('messages', messages.data);
+      // Update cache
+      this.dataCacheManager.updateCache('products', syncData.products);
+      this.dataCacheManager.updateCache('sales', syncData.sales);
+      this.dataCacheManager.updateCache('pretfamilles', syncData.pretFamilles);
+      this.dataCacheManager.updateCache('pretproduits', syncData.pretProduits);
+      this.dataCacheManager.updateCache('depensedumois', syncData.depenses);
+      this.dataCacheManager.updateCache('clients', syncData.clients);
+      this.dataCacheManager.updateCache('messages', syncData.messages);
 
       this.lastSyncTime = new Date();
       this.notifyListeners(syncData);
       
+      const endTime = performance.now();
+      console.log(`⚡ Sync completed in ${Math.round(endTime - startTime)}ms`);
+      
       return syncData;
     } catch (error) {
-      console.error('❌ Erreur lors de la synchronisation:', error);
+      console.error('❌ Sync error:', error);
       return null;
+    } finally {
+      this.syncInProgress = false;
     }
   }
 
   addDataListener(callback: (data: Partial<SyncData>) => void) {
-    console.log('📡 Ajout d\'un listener de données');
     this.listeners.add(callback);
     return () => {
-      console.log('📡 Suppression d\'un listener de données');
       this.listeners.delete(callback);
     };
   }
 
   addSyncListener(callback: (event: SyncEvent) => void) {
-    console.log('📡 Ajout d\'un listener de sync');
     this.syncListeners.add(callback);
     return () => {
-      console.log('📡 Suppression d\'un listener de sync');
       this.syncListeners.delete(callback);
     };
   }
 
   private notifyListeners(data: Partial<SyncData>) {
-    console.log(`📤 Notification de ${this.listeners.size} listeners`, data);
-    
     this.listeners.forEach(callback => {
       try {
         callback(data);
       } catch (error) {
-        console.error('❌ Erreur dans un listener:', error);
+        console.error('Listener error:', error);
       }
     });
   }
 
   private notifySyncListeners(event: SyncEvent) {
-    console.log(`📤 Notification de ${this.syncListeners.size} listeners de sync`, event);
-    
     this.syncListeners.forEach(callback => {
       try {
         callback(event);
       } catch (error) {
-        console.error('❌ Erreur dans un listener de sync:', error);
+        console.error('Sync listener error:', error);
       }
     });
   }
@@ -246,10 +247,9 @@ class RealtimeService {
 
   async forceSync(): Promise<void> {
     try {
-      console.log('🚀 Force sync demandé via API');
       await api.post('/api/sync/force-sync');
     } catch (error) {
-      console.error('❌ Erreur lors du force sync, fallback vers sync local');
+      console.error('Force sync failed, using local sync');
       await this.syncCurrentMonthData();
     }
   }

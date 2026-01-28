@@ -2,9 +2,9 @@
 import { SyncEvent, ConnectionConfig } from './types';
 
 /**
- * EventSourceManager - Gestionnaire de synchronisation
- * SSE est désactivé pour éviter les problèmes CORS récurrents
- * Utilise uniquement le mode polling pour la synchronisation
+ * EventSourceManager - OPTIMIZED for fast polling
+ * SSE désactivé pour éviter les problèmes CORS
+ * Utilise un mode polling optimisé pour la synchronisation rapide
  */
 export class EventSourceManager {
   private isConnected: boolean = false;
@@ -14,20 +14,16 @@ export class EventSourceManager {
     private config: ConnectionConfig,
     private onEvent: (event: SyncEvent) => void,
     private onConnectionChange: (connected: boolean) => void
-  ) {
-    // Mode polling uniquement - pas de SSE pour éviter les erreurs CORS
-  }
+  ) {}
 
   connect(token?: string) {
-    // SSE désactivé - utiliser uniquement le mode polling
-    // Cela évite toutes les erreurs CORS liées à EventSource
-    console.log('📡 Mode polling activé (SSE désactivé pour éviter CORS)');
+    // Mode polling optimisé - pas de SSE pour éviter CORS
+    console.log('⚡ Fast polling mode activated');
     
-    // Simuler une connexion réussie pour déclencher le fallback polling
     this.isConnected = false;
     this.onConnectionChange(false);
     
-    // Envoyer un événement de connexion pour indiquer que le système est prêt
+    // Immediate connection event
     this.onEvent({
       type: 'connected',
       timestamp: Date.now()
@@ -45,7 +41,6 @@ export class EventSourceManager {
   }
 
   getConnectionStatus(): boolean {
-    // Retourner false pour utiliser le mode de synchronisation de secours (polling)
-    return false;
+    return false; // Always use polling fallback for reliability
   }
 }

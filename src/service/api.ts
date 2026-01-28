@@ -4,25 +4,24 @@ import { Product, Sale, User, LoginCredentials, RegisterCredentials, PretFamille
 
 // Configuration de l'URL de base
 const getBaseURL = () => {
-  // Utiliser toujours l'URL de production pour éviter les problèmes CORS
   return import.meta.env.VITE_API_BASE_URL || 'https://server-gestion-ventes.onrender.com';
 };
 
-// Create axios instance with base configuration
+// OPTIMIZED: Create axios instance with faster timeouts
 const createApiInstance = (): AxiosInstance => {
   const instance = axios.create({
     baseURL: getBaseURL(),
-    timeout: 30000,
+    timeout: 15000, // Reduced from 30s to 15s for faster failure detection
     headers: {
       'Content-Type': 'application/json',
     },
-    withCredentials: false, // Désactiver les credentials pour éviter les problèmes CORS
+    withCredentials: false,
   });
 
-  // Configure retry logic
+  // OPTIMIZED: Faster retry logic
   axiosRetry(instance, {
-    retries: 2, // Réduire le nombre de tentatives
-    retryDelay: (retryCount) => Math.pow(2, retryCount) * 1000,
+    retries: 2,
+    retryDelay: (retryCount) => Math.min(Math.pow(2, retryCount) * 500, 2000), // Faster retry delays
     retryCondition: (error) => {
       return axiosRetry.isNetworkOrIdempotentRequestError(error) || 
              (error.response?.status === 503);
@@ -45,7 +44,6 @@ const createApiInstance = (): AxiosInstance => {
   instance.interceptors.response.use(
     (response) => response,
     (error) => {
-      // Réduire le spam dans la console
       if (error.response?.status === 401) {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
@@ -63,7 +61,7 @@ const createApiInstance = (): AxiosInstance => {
 
 const api = createApiInstance();
 
-// Auth API
+// Auth API with database verification
 export const authService = {
   async login(credentials: LoginCredentials): Promise<{ user: User; token: string }> {
     const response: AxiosResponse<{ user: User; token: string }> = await api.post('/api/auth/login', credentials);
@@ -97,8 +95,15 @@ export const authService = {
     return response.data;
   },
 
-  async verifyToken(): Promise<{ user: User }> {
-    const response: AxiosResponse<{ user: User }> = await api.get('/api/auth/verify');
+  // CRITICAL: Verify token against database
+  async verifyToken(): Promise<{ user: User; valid: boolean }> {
+    const response: AxiosResponse<{ user: User; valid: boolean }> = await api.get('/api/auth/verify');
+    return response.data;
+  },
+
+  // Fast health check
+  async healthCheck(): Promise<{ status: string; timestamp: number }> {
+    const response: AxiosResponse<{ status: string; timestamp: number }> = await api.get('/api/auth/health');
     return response.data;
   },
 
