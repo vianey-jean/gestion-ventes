@@ -72,6 +72,11 @@ const ComptabiliteModule: React.FC<ComptabiliteModuleProps> = ({ className }) =>
   const [showCreditModal, setShowCreditModal] = useState(false);
   const [showDebitModal, setShowDebitModal] = useState(false);
   const [showBeneficeVentesModal, setShowBeneficeVentesModal] = useState(false);
+  
+  // États des modales pour les cartes secondaires (Détails des dépenses)
+  const [showAchatsProduitsModal, setShowAchatsProduitsModal] = useState(false);
+  const [showAutresDepensesModal, setShowAutresDepensesModal] = useState(false);
+  const [showSoldeNetModal, setShowSoldeNetModal] = useState(false);
   const [showBeneficeReelModal, setShowBeneficeReelModal] = useState(false);
   
   // États du formulaire d'achat
@@ -1116,9 +1121,12 @@ doc.text(
         </DialogContent>
       </Dialog>
 
-      {/* Détails des dépenses */}
+      {/* Détails des dépenses - Cards cliquables */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="bg-gradient-to-br from-indigo-500/20 to-purple-600/20 border-indigo-500/30 shadow-xl">
+        <Card 
+          className="bg-gradient-to-br from-indigo-500/20 to-purple-600/20 border-indigo-500/30 shadow-xl cursor-pointer hover:scale-105 hover:shadow-2xl transition-all duration-300"
+          onClick={() => setShowAchatsProduitsModal(true)}
+        >
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
@@ -1130,7 +1138,10 @@ doc.text(
           </CardContent>
         </Card>
         
-        <Card className="bg-gradient-to-br from-orange-500/20 to-amber-600/20 border-orange-500/30 shadow-xl">
+        <Card 
+          className="bg-gradient-to-br from-orange-500/20 to-amber-600/20 border-orange-500/30 shadow-xl cursor-pointer hover:scale-105 hover:shadow-2xl transition-all duration-300"
+          onClick={() => setShowAutresDepensesModal(true)}
+        >
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
@@ -1142,7 +1153,10 @@ doc.text(
           </CardContent>
         </Card>
         
-        <Card className="bg-gradient-to-br from-cyan-500/20 to-blue-600/20 border-cyan-500/30 shadow-xl">
+        <Card 
+          className="bg-gradient-to-br from-cyan-500/20 to-blue-600/20 border-cyan-500/30 shadow-xl cursor-pointer hover:scale-105 hover:shadow-2xl transition-all duration-300"
+          onClick={() => setShowSoldeNetModal(true)}
+        >
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
@@ -1156,6 +1170,247 @@ doc.text(
           </CardContent>
         </Card>
       </div>
+
+      {/* Modal Achats Produits */}
+      <Dialog open={showAchatsProduitsModal} onOpenChange={setShowAchatsProduitsModal}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-indigo-600">
+              <Package className="h-6 w-6" />
+              Achats Produits - {MONTHS[selectedMonth - 1]} {selectedYear}
+            </DialogTitle>
+            <DialogDescription>
+              Total: {formatEuro(comptabiliteData.achatsTotal)} ({achats.filter(a => a.type === 'achat_produit').length} achats)
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 mt-4">
+            {achats.filter(a => a.type === 'achat_produit').length > 0 ? (
+              achats.filter(a => a.type === 'achat_produit').map((achat) => (
+                <div 
+                  key={achat.id} 
+                  className="flex items-center justify-between p-3 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg border border-indigo-200 dark:border-indigo-800"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-indigo-500/20">
+                      <Package className="h-4 w-4 text-indigo-400" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-800 dark:text-white">
+                        {achat.productDescription}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        {new Date(achat.date).toLocaleDateString('fr-FR')}
+                        {achat.fournisseur && ` • ${achat.fournisseur}`}
+                        {achat.quantity && ` • Qté: ${achat.quantity}`}
+                      </p>
+                    </div>
+                  </div>
+                  <p className="text-lg font-bold text-indigo-600">
+                    {formatEuro(achat.totalCost)}
+                  </p>
+                </div>
+              ))
+            ) : (
+              <p className="text-center text-gray-500 py-8">Aucun achat de produit ce mois</p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal Autres Dépenses */}
+      <Dialog open={showAutresDepensesModal} onOpenChange={setShowAutresDepensesModal}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-orange-600">
+              <Receipt className="h-6 w-6" />
+              Autres Dépenses - {MONTHS[selectedMonth - 1]} {selectedYear}
+            </DialogTitle>
+            <DialogDescription>
+              Total: {formatEuro(comptabiliteData.depensesTotal)} ({achats.filter(a => a.type !== 'achat_produit').length} dépenses)
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 mt-4">
+            {achats.filter(a => a.type !== 'achat_produit').length > 0 ? (
+              achats.filter(a => a.type !== 'achat_produit').map((depense) => {
+                const getIcon = (type: string) => {
+                  switch (type) {
+                    case 'carburant':
+                      return <Fuel className="h-4 w-4 text-orange-400" />;
+                    case 'taxes':
+                      return <Receipt className="h-4 w-4 text-red-400" />;
+                    default:
+                      return <DollarSign className="h-4 w-4 text-purple-400" />;
+                  }
+                };
+                const getTypeLabel = (type: string) => {
+                  switch (type) {
+                    case 'carburant': return 'Carburant';
+                    case 'taxes': return 'Taxes';
+                    default: return 'Autre';
+                  }
+                };
+                const getColorClasses = (type: string) => {
+                  switch (type) {
+                    case 'carburant':
+                      return { bg: 'bg-orange-50 dark:bg-orange-900/20', border: 'border-orange-200 dark:border-orange-800', text: 'text-orange-600' };
+                    case 'taxes':
+                      return { bg: 'bg-red-50 dark:bg-red-900/20', border: 'border-red-200 dark:border-red-800', text: 'text-red-600' };
+                    default:
+                      return { bg: 'bg-purple-50 dark:bg-purple-900/20', border: 'border-purple-200 dark:border-purple-800', text: 'text-purple-600' };
+                  }
+                };
+                const colors = getColorClasses(depense.type);
+                return (
+                  <div 
+                    key={depense.id} 
+                    className={`flex items-center justify-between p-3 ${colors.bg} rounded-lg border ${colors.border}`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`p-2 rounded-lg ${colors.bg}`}>
+                        {getIcon(depense.type)}
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-800 dark:text-white">
+                          {depense.productDescription || depense.description}
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          {new Date(depense.date).toLocaleDateString('fr-FR')}
+                          {' • '}
+                          <span className="font-medium">{getTypeLabel(depense.type)}</span>
+                          {depense.categorie && ` • ${depense.categorie}`}
+                        </p>
+                      </div>
+                    </div>
+                    <p className={`text-lg font-bold ${colors.text}`}>
+                      {formatEuro(depense.totalCost)}
+                    </p>
+                  </div>
+                );
+              })
+            ) : (
+              <p className="text-center text-gray-500 py-8">Aucune autre dépense ce mois</p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal Solde Net */}
+      <Dialog open={showSoldeNetModal} onOpenChange={setShowSoldeNetModal}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className={`flex items-center gap-2 ${comptabiliteData.soldeNet >= 0 ? 'text-cyan-600' : 'text-red-600'}`}>
+              <PiggyBank className="h-6 w-6" />
+              Solde Net - {MONTHS[selectedMonth - 1]} {selectedYear}
+            </DialogTitle>
+            <DialogDescription>
+              Solde Net = Total Crédit - Total Débit
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 mt-4">
+            {/* Comparaison visuelle Crédit vs Débit */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Card className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-green-200 dark:border-green-800">
+                <CardContent className="pt-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-green-500/20">
+                      <ArrowUpCircle className="h-6 w-6 text-green-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-green-600 font-medium">Total Crédit</p>
+                      <p className="text-2xl font-bold text-green-700">{formatEuro(comptabiliteData.totalCredit)}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-gradient-to-br from-red-50 to-rose-50 dark:from-red-900/20 dark:to-rose-900/20 border-red-200 dark:border-red-800">
+                <CardContent className="pt-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-red-500/20">
+                      <ArrowDownCircle className="h-6 w-6 text-red-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-red-600 font-medium">Total Débit</p>
+                      <p className="text-2xl font-bold text-red-700">{formatEuro(comptabiliteData.totalDebit)}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Barre de progression visuelle */}
+            <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl">
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Balance Crédit/Débit</p>
+              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden flex">
+                <div 
+                  className="h-full bg-gradient-to-r from-green-500 to-emerald-500 transition-all duration-500"
+                  style={{ width: `${comptabiliteData.totalCredit + comptabiliteData.totalDebit > 0 
+                    ? (comptabiliteData.totalCredit / (comptabiliteData.totalCredit + comptabiliteData.totalDebit)) * 100 
+                    : 50}%` }}
+                />
+                <div 
+                  className="h-full bg-gradient-to-r from-red-500 to-rose-500 transition-all duration-500"
+                  style={{ width: `${comptabiliteData.totalCredit + comptabiliteData.totalDebit > 0 
+                    ? (comptabiliteData.totalDebit / (comptabiliteData.totalCredit + comptabiliteData.totalDebit)) * 100 
+                    : 50}%` }}
+                />
+              </div>
+            </div>
+
+            {/* Détail des dépenses */}
+            <div className="border-t pt-4">
+              <p className="font-semibold text-gray-700 dark:text-gray-300 mb-3">Composition du Débit</p>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between p-3 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <Package className="h-5 w-5 text-indigo-500" />
+                    <span className="text-indigo-700 dark:text-indigo-300">Achats Produits</span>
+                  </div>
+                  <span className="font-bold text-indigo-800 dark:text-indigo-200">{formatEuro(comptabiliteData.achatsTotal)}</span>
+                </div>
+                <div className="flex items-center justify-between p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <Receipt className="h-5 w-5 text-orange-500" />
+                    <span className="text-orange-700 dark:text-orange-300">Autres Dépenses</span>
+                  </div>
+                  <span className="font-bold text-orange-800 dark:text-orange-200">{formatEuro(comptabiliteData.depensesTotal)}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Résultat Solde Net */}
+            <Card className={`${comptabiliteData.soldeNet >= 0 ? 'bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border-cyan-500/50' : 'bg-gradient-to-r from-red-500/20 to-rose-500/20 border-red-500/50'}`}>
+              <CardContent className="pt-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    {comptabiliteData.soldeNet >= 0 ? (
+                      <TrendingUp className="h-8 w-8 text-cyan-600" />
+                    ) : (
+                      <TrendingDown className="h-8 w-8 text-red-600" />
+                    )}
+                    <div>
+                      <p className={`text-sm font-medium ${comptabiliteData.soldeNet >= 0 ? 'text-cyan-600' : 'text-red-600'}`}>
+                        Solde Net
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        Crédit - Débit = Solde
+                      </p>
+                    </div>
+                  </div>
+                  <p className={`text-3xl font-black ${comptabiliteData.soldeNet >= 0 ? 'text-cyan-700' : 'text-red-700'}`}>
+                    {formatEuro(comptabiliteData.soldeNet)}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Formule de calcul */}
+            <div className="p-3 bg-gray-100 dark:bg-gray-800 rounded-lg text-center text-sm text-gray-600 dark:text-gray-400">
+              <strong>Formule:</strong> {formatEuro(comptabiliteData.totalCredit)} (Crédit) - {formatEuro(comptabiliteData.totalDebit)} (Débit) = <span className={comptabiliteData.soldeNet >= 0 ? 'text-cyan-600 font-bold' : 'text-red-600 font-bold'}>{formatEuro(comptabiliteData.soldeNet)}</span>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Graphiques - Ordre: Historique, Répartition Dépenses, Évolution Mensuelle */}
       <Tabs defaultValue="historique" className="w-full">

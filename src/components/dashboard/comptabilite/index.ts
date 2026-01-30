@@ -13,8 +13,17 @@
  * - DepenseFormDialog : Formulaire modal d'ajout de dépense
  * - StableBarChart, StablePieChart : Graphiques stables pour les charts
  * 
+ * NOUVEAUX COMPOSANTS (v2):
+ * - ClickableStatCard : Carte de statistique cliquable avec effet premium
+ * - DetailsModal : Modale générique pour afficher les détails
+ * - AchatsProduitsDetails : Liste détaillée des achats produits
+ * - AutresDepensesDetails : Liste détaillée des autres dépenses
+ * - SoldeNetDetails : Détail du calcul du solde net
+ * 
  * UTILISATION :
  * import { ComptabiliteModule, AchatFormDialog } from '@/components/dashboard/comptabilite';
+ * import { ClickableStatCard, DetailsModal } from '@/components/dashboard/comptabilite/shared';
+ * import { AchatsProduitsDetails } from '@/components/dashboard/comptabilite/details';
  */
 
 // ============================================
@@ -47,3 +56,15 @@ export type { AchatsHistoriqueListProps } from './AchatsHistoriqueList';
 // COMPOSANTS DE GRAPHIQUES
 // ============================================
 export { StableBarChart, StablePieChart } from './StableCharts';
+
+// ============================================
+// COMPOSANTS PARTAGÉS (RÉUTILISABLES)
+// ============================================
+export { ClickableStatCard, DetailsModal } from './shared';
+export type { ClickableStatCardProps, DetailsModalProps } from './shared';
+
+// ============================================
+// COMPOSANTS DE DÉTAILS
+// ============================================
+export { AchatsProduitsDetails, AutresDepensesDetails, SoldeNetDetails } from './details';
+export type { AchatsProduitsDetailsProps, AutresDepensesDetailsProps, SoldeNetDetailsProps } from './details';
