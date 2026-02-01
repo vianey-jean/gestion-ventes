@@ -38,6 +38,8 @@
  */
 
 import React from 'react';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 import {
   Dialog,
   DialogContent,
@@ -51,13 +53,17 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { cn } from '@/lib/utils';
 import {
   ShoppingCart,
   DollarSign,
   Package,
   Receipt,
   Calculator,
-  Plus
+  Plus,
+  CalendarIcon
 } from 'lucide-react';
 import { NouvelleAchatFormData } from '@/types/comptabilite';
 import { Product } from '@/types/product';
@@ -158,7 +164,7 @@ const AchatFormDialog: React.FC<AchatFormDialogProps> = ({
               <p className="text-xs text-amber-600 dark:text-amber-400 font-semibold">
                 ⚠️ Le nom sera modifié de "{selectedProduct.description}" à "{achatForm.productDescription}"
               </p>
-            )}
+          )}
           </div>
 
           {/* Grille Prix / Quantité */}
@@ -251,6 +257,37 @@ const AchatFormDialog: React.FC<AchatFormDialogProps> = ({
             </div>
           </div>
 
+          {/* Date d'achat */}
+          <div className="space-y-3">
+            <Label className="text-sm font-bold text-gray-800 dark:text-gray-100 flex items-center gap-2">
+              <CalendarIcon className="h-4 w-4 text-blue-500" />
+              Date d'achat *
+            </Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-full h-12 justify-start text-left font-normal bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-600 rounded-xl",
+                    !achatForm.date && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {achatForm.date ? format(new Date(achatForm.date), "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={achatForm.date ? new Date(achatForm.date) : undefined}
+                  onSelect={(date) => onFormChange('date', date ? date.toISOString() : '')}
+                  initialFocus
+                  className={cn("p-3 pointer-events-auto")}
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+
           {/* Résumé du coût */}
           {achatForm.quantity > 0 && (
             <Card className="bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-cyan-500/10 border-emerald-500/30 shadow-lg">
@@ -285,7 +322,7 @@ const AchatFormDialog: React.FC<AchatFormDialogProps> = ({
           </Button>
           <Button
             onClick={onSubmit}
-            disabled={!achatForm.productDescription || achatForm.quantity <= 0}
+            disabled={!achatForm.productDescription || achatForm.quantity <= 0 || !achatForm.date}
             className="h-12 px-8 bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-700 hover:via-teal-700 hover:to-cyan-700 text-white shadow-xl rounded-xl font-bold text-base disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
           >
             <Plus className="h-5 w-5 mr-2" />

@@ -26,6 +26,8 @@
  */
 
 import React from 'react';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 import {
   Dialog,
   DialogContent,
@@ -37,6 +39,9 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { cn } from '@/lib/utils';
 import {
   Select,
   SelectContent,
@@ -44,7 +49,7 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/components/ui/select';
-import { Receipt, Fuel, DollarSign, Plus } from 'lucide-react';
+import { Receipt, Fuel, DollarSign, Plus, CalendarIcon } from 'lucide-react';
 import { DepenseFormData } from '@/types/comptabilite';
 
 // ============================================
@@ -91,6 +96,37 @@ const DepenseFormDialog: React.FC<DepenseFormDialogProps> = ({
 
         {/* Corps du formulaire */}
         <div className="space-y-5 py-4">
+          {/* Date de dépense */}
+          <div className="space-y-2">
+            <Label className="text-sm font-semibold text-gray-700 dark:text-gray-200 flex items-center gap-2">
+              <CalendarIcon className="h-4 w-4 text-orange-500" />
+              Date de dépense *
+            </Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-full justify-start text-left font-normal bg-white/80 dark:bg-gray-800/80",
+                    !depenseForm.date && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {depenseForm.date ? format(new Date(depenseForm.date), "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={depenseForm.date ? new Date(depenseForm.date) : undefined}
+                  onSelect={(date) => onFormChange('date', date ? date.toISOString() : '')}
+                  initialFocus
+                  className={cn("p-3 pointer-events-auto")}
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+
           {/* Type de dépense */}
           <div className="space-y-2">
             <Label className="text-sm font-semibold text-gray-700 dark:text-gray-200">
@@ -126,7 +162,7 @@ const DepenseFormDialog: React.FC<DepenseFormDialogProps> = ({
           {/* Description */}
           <div className="space-y-2">
             <Label className="text-sm font-semibold text-gray-700 dark:text-gray-200">
-              Description
+              Description *
             </Label>
             <Input
               value={depenseForm.description}
@@ -139,7 +175,7 @@ const DepenseFormDialog: React.FC<DepenseFormDialogProps> = ({
           {/* Montant */}
           <div className="space-y-2">
             <Label className="text-sm font-semibold text-gray-700 dark:text-gray-200">
-              Montant (€)
+              Montant (€) *
             </Label>
             <Input
               type="number"
@@ -171,7 +207,8 @@ const DepenseFormDialog: React.FC<DepenseFormDialogProps> = ({
           </Button>
           <Button
             onClick={onSubmit}
-            className="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white shadow-xl"
+            disabled={!depenseForm.description || depenseForm.montant <= 0 || !depenseForm.date}
+            className="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Plus className="h-4 w-4 mr-2" />
             Enregistrer la dépense

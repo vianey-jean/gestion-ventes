@@ -26,8 +26,14 @@ import {
   ArrowDownCircle,
   Wallet,
   Sparkles,
-  FileDown
+  FileDown,
+  CalendarIcon
 } from 'lucide-react';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { cn } from '@/lib/utils';
 import { useApp } from '@/contexts/AppContext';
 import useCurrencyFormatter from '@/hooks/use-currency-formatter';
 import nouvelleAchatApiService from '@/services/api/nouvelleAchatApi';
@@ -88,7 +94,8 @@ const ComptabiliteModule: React.FC<ComptabiliteModuleProps> = ({ className }) =>
     purchasePrice: 0,
     quantity: 0,
     fournisseur: '',
-    caracteristiques: ''
+    caracteristiques: '',
+    date: ''
   });
   
   // États du formulaire de dépense
@@ -96,7 +103,8 @@ const ComptabiliteModule: React.FC<ComptabiliteModuleProps> = ({ className }) =>
     description: '',
     montant: 0,
     type: 'autre_depense',
-    categorie: 'divers'
+    categorie: 'divers',
+    date: ''
   });
 
   // Ref pour éviter les appels multiples
@@ -300,10 +308,10 @@ const ComptabiliteModule: React.FC<ComptabiliteModuleProps> = ({ className }) =>
       // ========================================
       // ÉTAPE 1: Validation des champs obligatoires
       // ========================================
-      if (!achatForm.productDescription || achatForm.quantity <= 0) {
+      if (!achatForm.productDescription || achatForm.quantity <= 0 || !achatForm.date) {
         toast({
           title: 'Erreur',
-          description: 'Veuillez remplir la description et la quantité',
+          description: 'Veuillez remplir la description, la quantité et la date',
           variant: 'destructive'
         });
         return;
@@ -327,7 +335,8 @@ const ComptabiliteModule: React.FC<ComptabiliteModuleProps> = ({ className }) =>
         purchasePrice: finalPurchasePrice,
         quantity: achatForm.quantity,
         fournisseur: achatForm.fournisseur,
-        caracteristiques: achatForm.caracteristiques
+        caracteristiques: achatForm.caracteristiques,
+        date: achatForm.date
       });
       console.log('✅ Achat enregistré - le backend gère le produit');
       
@@ -361,7 +370,8 @@ const ComptabiliteModule: React.FC<ComptabiliteModuleProps> = ({ className }) =>
         purchasePrice: 0,
         quantity: 0,
         fournisseur: '',
-        caracteristiques: ''
+        caracteristiques: '',
+        date: ''
       });
       setSelectedProduct(null);
       setSearchTerm('');
@@ -385,16 +395,19 @@ const ComptabiliteModule: React.FC<ComptabiliteModuleProps> = ({ className }) =>
 
   const handleSubmitDepense = useCallback(async () => {
     try {
-      if (!depenseForm.description || depenseForm.montant <= 0) {
+      if (!depenseForm.description || depenseForm.montant <= 0 || !depenseForm.date) {
         toast({
           title: 'Erreur',
-          description: 'Veuillez remplir tous les champs obligatoires',
+          description: 'Veuillez remplir tous les champs obligatoires (description, montant, date)',
           variant: 'destructive'
         });
         return;
       }
 
-      await nouvelleAchatApiService.addDepense(depenseForm);
+      await nouvelleAchatApiService.addDepense({
+        ...depenseForm,
+        date: depenseForm.date
+      });
       
      toast({
   title: 'Succès',
@@ -407,7 +420,8 @@ const ComptabiliteModule: React.FC<ComptabiliteModuleProps> = ({ className }) =>
         description: '',
         montant: 0,
         type: 'autre_depense',
-        categorie: 'divers'
+        categorie: 'divers',
+        date: ''
       });
 
       // ✅ FERMETURE DE LA MODALE
@@ -1737,8 +1751,35 @@ doc.text(
                 <p className="text-xs text-amber-600 dark:text-amber-400 font-semibold">
                   ⚠️ Le nom sera modifié de "{selectedProduct.description}" à "{achatForm.productDescription}"
                 </p>
-              )}
+            )}
             </div>
+
+            {/* Date d'achat */}
+           <div className="space-y-3">
+  <Label
+    htmlFor="date"
+    className="text-sm font-bold text-gray-800 dark:text-gray-100 flex items-center gap-2"
+  >
+    <CalendarIcon className="h-4 w-4 text-blue-500" />
+    Date d'achat *
+  </Label>
+
+  <Input
+    id="date"
+    type="date"
+    value={
+      achatForm.date
+        ? achatForm.date.split('T')[0] // compatibilité ISO string
+        : ''
+    }
+    onChange={(e) =>
+      handleAchatFormChange('date', e.target.value)
+    }
+    className="h-12 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-600 rounded-xl"
+    required
+  />
+</div>
+
 
             <div className="grid grid-cols-2 gap-6">
               {/* Prix d'achat */}
@@ -1861,7 +1902,7 @@ doc.text(
             </Button>
             <Button
               onClick={handleSubmitAchat}
-              disabled={!achatForm.productDescription || achatForm.quantity <= 0}
+              disabled={!achatForm.productDescription || achatForm.quantity <= 0 || !achatForm.date}
               className="h-12 px-8 bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-700 hover:via-teal-700 hover:to-cyan-700 text-white shadow-xl rounded-xl font-bold text-base disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
             >
               <Plus className="h-5 w-5 mr-2" />
@@ -1913,11 +1954,37 @@ doc.text(
                     </div>
                   </SelectItem>
                 </SelectContent>
-              </Select>
+            </Select>
             </div>
 
+            {/* Date de dépense */}
+          <div className="space-y-2">
+  <Label
+    htmlFor="date"
+    className="text-sm font-semibold text-gray-700 dark:text-gray-200 flex items-center gap-2"
+  >
+    <CalendarIcon className="h-4 w-4 text-orange-500" />
+    Date de dépense *
+  </Label>
+
+  <Input
+    id="date"
+    type="date"
+    value={
+      depenseForm.date
+        ? depenseForm.date.split('T')[0] // compatible ISO string
+        : ''
+    }
+    onChange={(e) =>
+      handleDepenseFormChange('date', e.target.value)
+    }
+    className="w-full bg-white/80 dark:bg-gray-800/80"
+    required
+  />
+</div>
+
             <div className="space-y-2">
-              <Label className="text-sm font-semibold text-gray-700 dark:text-gray-200">Description</Label>
+              <Label className="text-sm font-semibold text-gray-700 dark:text-gray-200">Description *</Label>
               <Input
                 value={depenseForm.description}
                 onChange={(e) => handleDepenseFormChange('description', e.target.value)}
@@ -1954,7 +2021,8 @@ doc.text(
             </Button>
             <Button
               onClick={handleSubmitDepense}
-              className="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white shadow-xl"
+              disabled={!depenseForm.description || depenseForm.montant <= 0 || !depenseForm.date}
+              className="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Plus className="h-4 w-4 mr-2" />
               Enregistrer la dépense
