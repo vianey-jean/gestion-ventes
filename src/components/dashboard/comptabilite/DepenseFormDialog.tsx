@@ -97,35 +97,37 @@ const DepenseFormDialog: React.FC<DepenseFormDialogProps> = ({
         {/* Corps du formulaire */}
         <div className="space-y-5 py-4">
           {/* Date de dépense */}
-          <div className="space-y-2">
-            <Label className="text-sm font-semibold text-gray-700 dark:text-gray-200 flex items-center gap-2">
-              <CalendarIcon className="h-4 w-4 text-orange-500" />
-              Date de dépense *
-            </Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-full justify-start text-left font-normal bg-white/80 dark:bg-gray-800/80",
-                    !depenseForm.date && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {depenseForm.date ? format(new Date(depenseForm.date), "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={depenseForm.date ? new Date(depenseForm.date) : undefined}
-                  onSelect={(date) => onFormChange('date', date ? date.toISOString() : '')}
-                  initialFocus
-                  className={cn("p-3 pointer-events-auto")}
-                />
-              </PopoverContent>
-            </Popover>
+            <div className="space-y-2">
+          <Label className="text-sm font-semibold text-gray-700 dark:text-gray-200 flex items-center gap-2">
+            <CalendarIcon className="h-4 w-4 text-orange-500" />
+            Date de dépense *
+          </Label>
+
+          <div className="relative">
+            <CalendarIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-orange-500" />
+
+            <Input
+              type="date"
+              value={depenseForm.date ? depenseForm.date.slice(0, 10) : ""}
+              onChange={(e) =>
+                onFormChange(
+                  "date",
+                  e.target.value ? new Date(e.target.value).toISOString() : ""
+                )
+              }
+              className={cn(
+                "h-12 w-full pl-11 pr-4 rounded-2xl",
+                "bg-white/80 dark:bg-gray-900/70 backdrop-blur-md",
+                "border border-gray-200/60 dark:border-gray-700/60",
+                "text-gray-900 dark:text-gray-100 font-medium",
+                "shadow-sm hover:shadow-md transition-all duration-200",
+                "focus:ring-2 focus:ring-orange-500 focus:border-orange-500",
+                "appearance-none"
+              )}
+            />
           </div>
+          </div>
+
 
           {/* Type de dépense */}
           <div className="space-y-2">

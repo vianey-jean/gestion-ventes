@@ -258,35 +258,36 @@ const AchatFormDialog: React.FC<AchatFormDialogProps> = ({
           </div>
 
           {/* Date d'achat */}
-          <div className="space-y-3">
-            <Label className="text-sm font-bold text-gray-800 dark:text-gray-100 flex items-center gap-2">
-              <CalendarIcon className="h-4 w-4 text-blue-500" />
-              Date d'achat *
-            </Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-full h-12 justify-start text-left font-normal bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-600 rounded-xl",
-                    !achatForm.date && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {achatForm.date ? format(new Date(achatForm.date), "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={achatForm.date ? new Date(achatForm.date) : undefined}
-                  onSelect={(date) => onFormChange('date', date ? date.toISOString() : '')}
-                  initialFocus
-                  className={cn("p-3 pointer-events-auto")}
-                />
-              </PopoverContent>
-            </Popover>
+        <div className="space-y-3">
+          <Label className="text-sm font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+            <CalendarIcon className="h-4 w-4 text-indigo-500" />
+            Date d'achat *
+          </Label>
+
+          <div className="relative">
+            <CalendarIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-indigo-500" />
+
+            <Input
+              type="date"
+              value={achatForm.date ? achatForm.date.slice(0, 10) : ""}
+              onChange={(e) =>
+                onFormChange(
+                  "date",
+                  e.target.value ? new Date(e.target.value).toISOString() : ""
+                )
+              }
+              className={cn(
+                "h-12 w-full pl-11 pr-4 rounded-2xl",
+                "bg-white/80 dark:bg-gray-900/70 backdrop-blur-md",
+                "border border-gray-200/60 dark:border-gray-700/60",
+                "text-gray-900 dark:text-gray-100 font-medium",
+                "shadow-sm hover:shadow-md transition-all duration-200",
+                "focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500",
+                "appearance-none"
+              )}
+            />
           </div>
+        </div>
 
           {/* Résumé du coût */}
           {achatForm.quantity > 0 && (
