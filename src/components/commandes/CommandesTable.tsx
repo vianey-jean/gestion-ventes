@@ -2,13 +2,14 @@
  * Tableau des commandes et réservations
  */
 import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ModernTable, ModernTableHeader, ModernTableRow, ModernTableHead, ModernTableCell, TableBody } from '@/components/dashboard/forms/ModernTable';
 import { Gift, Edit, Trash2, ArrowUp, ArrowDown } from 'lucide-react';
 import { Commande, CommandeStatut } from '@/types/commande';
+import CommandesStatsButtons from './CommandesStatsButtons';
 
 interface CommandesTableProps {
   filteredCommandes: Commande[];
@@ -42,14 +43,11 @@ const CommandesTable: React.FC<CommandesTableProps> = ({
           </span>
           <span className="truncate">Liste des Commandes</span>
         </CardTitle>
-        <CardDescription className="mt-1 text-xs sm:text-sm md:text-base text-muted-foreground">
-          Total: {filteredCommandes.length} {filteredCommandes.length > 1 ? 'commandes' : 'commande'}
-          {commandeSearch.length >= 3 && (
-            <span className="ml-2 text-purple-600 dark:text-purple-400 font-semibold">
-              (sur {totalActiveCommandes} actives)
-            </span>
-          )}
-        </CardDescription>
+        <CommandesStatsButtons
+          filteredCommandes={filteredCommandes}
+          totalActiveCommandes={totalActiveCommandes}
+          commandeSearch={commandeSearch}
+        />
       </CardHeader>
       <CardContent className="p-0">
         {/* Vue mobile - Cards */}
