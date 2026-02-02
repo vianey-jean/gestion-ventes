@@ -4,21 +4,26 @@
 // Correction : Affiche UNIQUEMENT les données de l'année en cours.
 // Les données se réinitialisent automatiquement au 01/01 de chaque nouvelle année.
 
-import React, { useMemo } from 'react';
-import { BarChart3, TrendingUp, DollarSign, Package, Calendar } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { BarChart3, TrendingUp, DollarSign, Package, Calendar, ArrowUpRight, ShoppingBag, Users, X } from 'lucide-react';
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis,
   CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell
 } from 'recharts';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import ModernCard from '../forms/ModernCard';
 import { useApp } from '@/contexts/AppContext';
 import useCurrencyFormatter from '@/hooks/use-currency-formatter';
 import { useYearlyData, getSaleValues } from '@/hooks/useYearlyData';
 
+type ModalType = 'revenue' | 'sales' | 'quantity' | null;
+
 const SalesReport: React.FC = () => {
   const { allSales } = useApp();
   const { formatCurrency } = useCurrencyFormatter();
+  const [activeModal, setActiveModal] = useState<ModalType>(null);
   
   // Utiliser le hook pour obtenir les données de l'année en cours
   const { currentYear, currentYearSales, currentYearMonthlyStats, currentYearTotals } = useYearlyData(allSales);
@@ -82,6 +87,16 @@ const SalesReport: React.FC = () => {
 
   const colors = ['#8B5CF6', '#06B6D4', '#10B981', '#F59E0B', '#EF4444'];
 
+  // Détails mensuels pour chaque modal
+  const monthlyDetails = currentYearMonthlyStats.map(m => ({
+    month: m.month,
+    monthNum: m.monthNum,
+    revenue: m.revenue,
+    profit: m.profit,
+    quantity: m.quantity,
+    salesCount: m.salesCount
+  }));
+
   return (
     <div className="space-y-6">
       {/* Indicateur d'année en cours */}
@@ -92,46 +107,230 @@ const SalesReport: React.FC = () => {
         </span>
       </div>
 
-      {/* KPI Cards */}
+      {/* Modales de détails */}
+      {/* Modal Chiffre d'Affaires */}
+      <Dialog open={activeModal === 'revenue'} onOpenChange={(open) => !open && setActiveModal(null)}>
+        <DialogContent className="sm:max-w-xl bg-gradient-to-br from-white to-emerald-50/50 dark:from-gray-900 dark:to-emerald-950/30 backdrop-blur-xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg">
+                <DollarSign className="h-5 w-5" />
+              </div>
+              <span className="text-xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+                Chiffre d'Affaires {currentYear}
+              </span>
+            </DialogTitle>
+          </DialogHeader>
+          <ScrollArea className="max-h-[60vh] pr-4">
+            <div className="space-y-3 py-2">
+              {monthlyDetails.map((data) => (
+                <div 
+                  key={data.monthNum}
+                  className="flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-emerald-50/80 to-teal-50/80 dark:from-emerald-900/20 dark:to-teal-900/20 border border-emerald-100 dark:border-emerald-800/50 transition-all hover:scale-[1.01]"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-bold text-sm shadow-lg">
+                      {data.monthNum}
+                    </div>
+                    <div>
+                      <p className="font-semibold text-gray-900 dark:text-white capitalize">{data.month}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        {data.salesCount} vente{data.salesCount > 1 ? 's' : ''}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-lg font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+                      {formatCurrency(data.revenue)}
+                    </p>
+                    <p className="text-xs text-emerald-600 dark:text-emerald-400">
+                      Profit: {formatCurrency(data.profit)}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </ScrollArea>
+          <div className="mt-4 p-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-xl">
+            <div className="flex items-center justify-between">
+              <span className="font-medium">Total Année {currentYear}</span>
+              <span className="text-2xl font-bold">{formatCurrency(currentYearTotals.revenue)}</span>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal Ventes */}
+      <Dialog open={activeModal === 'sales'} onOpenChange={(open) => !open && setActiveModal(null)}>
+        <DialogContent className="sm:max-w-xl bg-gradient-to-br from-white to-blue-50/50 dark:from-gray-900 dark:to-blue-950/30 backdrop-blur-xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg">
+                <BarChart3 className="h-5 w-5" />
+              </div>
+              <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                Transactions {currentYear}
+              </span>
+            </DialogTitle>
+          </DialogHeader>
+          <ScrollArea className="max-h-[60vh] pr-4">
+            <div className="space-y-3 py-2">
+              {monthlyDetails.map((data) => (
+                <div 
+                  key={data.monthNum}
+                  className="flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-blue-50/80 to-indigo-50/80 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-100 dark:border-blue-800/50 transition-all hover:scale-[1.01]"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-bold text-sm shadow-lg">
+                      {data.monthNum}
+                    </div>
+                    <div>
+                      <p className="font-semibold text-gray-900 dark:text-white capitalize">{data.month}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        CA: {formatCurrency(data.revenue)}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-lg font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                      {data.salesCount} vente{data.salesCount > 1 ? 's' : ''}
+                    </p>
+                    <p className="text-xs text-blue-600 dark:text-blue-400">
+                      {data.quantity} unités
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </ScrollArea>
+          <div className="mt-4 p-4 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-xl">
+            <div className="flex items-center justify-between">
+              <span className="font-medium">Total Transactions {currentYear}</span>
+              <span className="text-2xl font-bold">{currentYearTotals.salesCount}</span>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal Quantité */}
+      <Dialog open={activeModal === 'quantity'} onOpenChange={(open) => !open && setActiveModal(null)}>
+        <DialogContent className="sm:max-w-xl bg-gradient-to-br from-white to-purple-50/50 dark:from-gray-900 dark:to-purple-950/30 backdrop-blur-xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-gradient-to-r from-purple-500 to-pink-600 text-white shadow-lg">
+                <Package className="h-5 w-5" />
+              </div>
+              <span className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                Unités Vendues {currentYear}
+              </span>
+            </DialogTitle>
+          </DialogHeader>
+          <ScrollArea className="max-h-[60vh] pr-4">
+            <div className="space-y-3 py-2">
+              {monthlyDetails.map((data) => (
+                <div 
+                  key={data.monthNum}
+                  className="flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-purple-50/80 to-pink-50/80 dark:from-purple-900/20 dark:to-pink-900/20 border border-purple-100 dark:border-purple-800/50 transition-all hover:scale-[1.01]"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-gradient-to-r from-purple-500 to-pink-600 text-white font-bold text-sm shadow-lg">
+                      {data.monthNum}
+                    </div>
+                    <div>
+                      <p className="font-semibold text-gray-900 dark:text-white capitalize">{data.month}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        {data.salesCount} transaction{data.salesCount > 1 ? 's' : ''}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-lg font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                      {data.quantity} unités
+                    </p>
+                    <p className="text-xs text-purple-600 dark:text-purple-400">
+                      CA: {formatCurrency(data.revenue)}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </ScrollArea>
+          <div className="mt-4 p-4 rounded-xl bg-gradient-to-r from-purple-500 to-pink-600 text-white shadow-xl">
+            <div className="flex items-center justify-between">
+              <span className="font-medium">Total Unités {currentYear}</span>
+              <span className="text-2xl font-bold">{currentYearTotals.quantity}</span>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* KPI Cards - Premium et Cliquables */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <ModernCard
-          title={`Chiffre d'Affaires ${currentYear}`}
-          icon={DollarSign}
-          className="bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20"
+        <div 
+          onClick={() => setActiveModal('revenue')}
+          className="cursor-pointer group"
         >
-          <div className="text-3xl font-bold text-emerald-600 dark:text-emerald-400">
-            {formatCurrency(currentYearTotals.revenue)}
-          </div>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-            Revenue total de l'année
-          </p>
-        </ModernCard>
+          <ModernCard
+            title={`Chiffre d'Affaires ${currentYear}`}
+            icon={DollarSign}
+            className="bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 transition-all duration-300 group-hover:shadow-2xl group-hover:shadow-emerald-500/20 group-hover:scale-[1.02] group-hover:border-emerald-400/50 border-2 border-transparent"
+          >
+            <div className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent group-hover:scale-105 transition-transform">
+              {formatCurrency(currentYearTotals.revenue)}
+            </div>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+              Revenue total de l'année
+            </p>
+            <div className="mt-3 flex items-center justify-center gap-1 text-xs text-emerald-500 dark:text-emerald-400 opacity-0 group-hover:opacity-100 transition-opacity">
+              <span>Voir détails mensuels</span>
+              <ArrowUpRight className="h-3 w-3" />
+            </div>
+          </ModernCard>
+        </div>
 
-        <ModernCard
-          title={`Ventes ${currentYear}`}
-          icon={BarChart3}
-          className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20"
+        <div 
+          onClick={() => setActiveModal('sales')}
+          className="cursor-pointer group"
         >
-          <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">
-            {currentYearTotals.salesCount}
-          </div>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-            Transactions de l'année
-          </p>
-        </ModernCard>
+          <ModernCard
+            title={`Ventes ${currentYear}`}
+            icon={BarChart3}
+            className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 transition-all duration-300 group-hover:shadow-2xl group-hover:shadow-blue-500/20 group-hover:scale-[1.02] group-hover:border-blue-400/50 border-2 border-transparent"
+          >
+            <div className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent group-hover:scale-105 transition-transform">
+              {currentYearTotals.salesCount}
+            </div>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+              Transactions de l'année
+            </p>
+            <div className="mt-3 flex items-center justify-center gap-1 text-xs text-blue-500 dark:text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity">
+              <span>Voir détails mensuels</span>
+              <ArrowUpRight className="h-3 w-3" />
+            </div>
+          </ModernCard>
+        </div>
 
-        <ModernCard
-          title={`Quantité ${currentYear}`}
-          icon={Package}
-          className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20"
+        <div 
+          onClick={() => setActiveModal('quantity')}
+          className="cursor-pointer group"
         >
-          <div className="text-3xl font-bold text-purple-600 dark:text-purple-400">
-            {currentYearTotals.quantity}
-          </div>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-            Unités vendues cette année
-          </p>
-        </ModernCard>
+          <ModernCard
+            title={`Quantité ${currentYear}`}
+            icon={Package}
+            className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 transition-all duration-300 group-hover:shadow-2xl group-hover:shadow-purple-500/20 group-hover:scale-[1.02] group-hover:border-purple-400/50 border-2 border-transparent"
+          >
+            <div className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent group-hover:scale-105 transition-transform">
+              {currentYearTotals.quantity}
+            </div>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+              Unités vendues cette année
+            </p>
+            <div className="mt-3 flex items-center justify-center gap-1 text-xs text-purple-500 dark:text-purple-400 opacity-0 group-hover:opacity-100 transition-opacity">
+              <span>Voir détails mensuels</span>
+              <ArrowUpRight className="h-3 w-3" />
+            </div>
+          </ModernCard>
+        </div>
       </div>
 
       {/* Charts */}
