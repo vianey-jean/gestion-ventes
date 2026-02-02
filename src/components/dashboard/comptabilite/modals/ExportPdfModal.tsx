@@ -25,6 +25,10 @@ export interface ExportPdfModalProps {
   allSales: Sale[];
 }
 
+const currentYear = new Date().getFullYear(); // année en cours
+const years = Array.from({ length: 7 }, (_, i) => currentYear - 4 + i);
+// commence 4 ans avant, puis +1 chaque fois, jusqu'à 2 ans après
+
 const ExportPdfModal: React.FC<ExportPdfModalProps> = ({
   isOpen,
   onClose,
@@ -252,72 +256,93 @@ const ExportPdfModal: React.FC<ExportPdfModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <FileDown className="h-5 w-5" />
-            Exporter en PDF
-          </DialogTitle>
-          <DialogDescription>
-            Sélectionnez la période à exporter
-          </DialogDescription>
-        </DialogHeader>
-        
-        <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Mois</Label>
-              <Select 
-                value={exportMonth.toString()} 
-                onValueChange={(v) => setExportMonth(parseInt(v))}
+     <DialogContent className="sm:max-w-md bg-[#F2E4E4] text-[#1f2937] border border-[#e5e7eb] shadow-xl rounded-2xl">
+  <DialogHeader>
+    <DialogTitle className="flex items-center gap-3 text-lg font-semibold tracking-tight">
+      <div className="p-2 rounded-lg bg-white border border-[#e5e7eb] shadow-sm">
+        <FileDown className="h-5 w-5 text-[#7c3aed]" />
+      </div>
+      Exporter en PDF
+    </DialogTitle>
+
+    <DialogDescription className="text-sm text-[#6b7280]">
+      Sélectionnez la période à exporter
+    </DialogDescription>
+  </DialogHeader>
+
+  <div className="grid gap-5 py-6">
+    <div className="grid grid-cols-2 gap-4">
+      
+      <div className="space-y-2">
+        <Label className="text-[#374151] font-medium">Mois</Label>
+        <Select
+          value={exportMonth.toString()}
+          onValueChange={(v) => setExportMonth(parseInt(v))}
+        >
+          <SelectTrigger className="bg-white border text-red-600 border-[#e5e7eb] rounded-xl shadow-sm focus:ring-2 focus:ring-violet-500">
+            <SelectValue />
+          </SelectTrigger >
+          <SelectContent className="bg-white text-red-600 border border-[#e5e7eb] shadow-lg rounded-xl">
+            {MONTHS.map((month, index) => (
+              <SelectItem
+                key={index}
+                value={(index + 1).toString()}
+                className="focus:bg-violet-50"
               >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {MONTHS.map((month, index) => (
-                    <SelectItem key={index} value={(index + 1).toString()}>
-                      {month}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <Label>Année</Label>
-              <Select 
-                value={exportYear.toString()} 
-                onValueChange={(v) => setExportYear(parseInt(v))}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {[2023, 2024, 2025, 2026].map(year => (
-                    <SelectItem key={year} value={year.toString()}>
-                      {year}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </div>
-        
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
-            Annuler
-          </Button>
-          <Button 
-            onClick={handleExportPDF}
-            className="bg-gradient-to-r from-purple-600 to-fuchsia-600"
+                {month}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="space-y-2">
+        <Label className="text-[#374151] font-medium">Année</Label>
+        <Select
+          value={exportYear.toString()}
+          onValueChange={(v) => setExportYear(parseInt(v))}
+        >
+          <SelectTrigger className="bg-white border text-red-600 border-[#e5e7eb] rounded-xl shadow-sm focus:ring-2 focus:ring-violet-500">
+            <SelectValue />
+          </SelectTrigger>
+
+        <SelectContent className="bg-white text-red-600 border border-[#e5e7eb] shadow-lg rounded-xl">
+        {years.map((year) => (
+          <SelectItem
+            key={year}
+            value={year.toString()}
+            className="focus:bg-violet-50"
           >
-            <FileDown className="h-4 w-4 mr-2" />
-            Télécharger
-          </Button>
-        </DialogFooter>
-      </DialogContent>
+            {year}
+          </SelectItem>
+        ))}
+      </SelectContent>
+          
+        </Select>
+      </div>
+
+    </div>
+  </div>
+
+  <DialogFooter className="gap-2">
+    <Button
+      variant="outline"
+      onClick={onClose}
+      className="rounded-xl border-[#d1d5db] text-[#374151] hover:bg-[#e5e7eb]"
+    >
+      Annuler
+    </Button>
+
+    <Button
+      onClick={handleExportPDF}
+      className="rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white shadow-md hover:opacity-90"
+    >
+      <FileDown className="h-4 w-4 mr-2" />
+      Télécharger
+    </Button>
+  </DialogFooter>
+</DialogContent>
+
     </Dialog>
   );
 };

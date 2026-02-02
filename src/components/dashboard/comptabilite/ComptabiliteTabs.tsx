@@ -42,18 +42,84 @@ const ComptabiliteTabs: React.FC<ComptabiliteTabsProps> = ({
 }) => {
   return (
     <Tabs defaultValue="historique" className="w-full">
-      <TabsList className="grid w-full grid-cols-3 bg-white/10 backdrop-blur-sm rounded-xl p-1">
-        <TabsTrigger value="historique" className="rounded-lg data-[state=active]:bg-white/20">
-          📜 Historique
-        </TabsTrigger>
-        <TabsTrigger value="repartition" className="rounded-lg data-[state=active]:bg-white/20">
-          📊 Répartition
-        </TabsTrigger>
-        <TabsTrigger value="evolution" className="rounded-lg data-[state=active]:bg-white/20">
-          <BarChart3 className="h-4 w-4 mr-1" />
-          Évolution
-        </TabsTrigger>
-      </TabsList>
+<TabsList className="grid w-full grid-cols-3 bg-white/10 backdrop-blur-sm rounded-xl p-1">
+  {/* Historique */}
+  <TabsTrigger
+    value="historique"
+    className="relative group flex items-center justify-center gap-2 rounded-lg data-[state=active]:bg-white/20"
+  >
+    <span>📜</span>
+    <span className="hidden sm:inline">Historique</span>
+
+    {/* Tooltip */}
+    <span
+      className="
+        pointer-events-none
+        absolute -top-9 left-1/2 -translate-x-1/2
+        rounded-md bg-red-600 px-2 py-1
+        text-xs text-white
+        opacity-0 scale-95
+        transition
+        group-hover:opacity-100 group-hover:scale-100
+        group-focus:opacity-100 group-focus:scale-100
+        sm:hidden
+      "
+    >
+      Historique
+    </span>
+  </TabsTrigger>
+
+  {/* Répartition */}
+  <TabsTrigger
+    value="repartition"
+    className="relative group flex items-center justify-center gap-2 rounded-lg data-[state=active]:bg-white/20"
+  >
+    <span>📊</span>
+    <span className="hidden sm:inline">Répartition</span>
+
+    <span
+      className="
+        pointer-events-none
+        absolute -top-9 left-1/2 -translate-x-1/2
+        rounded-md bg-red-600 px-2 py-1
+        text-xs text-white
+        opacity-0 scale-95
+        transition
+        group-hover:opacity-100 group-hover:scale-100
+        group-focus:opacity-100 group-focus:scale-100
+        sm:hidden
+      "
+    >
+      Répartition
+    </span>
+  </TabsTrigger>
+
+  {/* Évolution */}
+  <TabsTrigger
+    value="evolution"
+    className="relative group flex items-center justify-center gap-2 rounded-lg data-[state=active]:bg-white/20"
+  >
+    <BarChart3 className="h-4 w-4" />
+    <span className="hidden sm:inline">Évolution</span>
+
+    <span
+      className="
+        pointer-events-none
+        absolute -top-9 left-1/2 -translate-x-1/2
+        rounded-md bg-red-600 px-2 py-1
+        text-xs text-white
+        opacity-0 scale-95
+        transition
+        group-hover:opacity-100 group-hover:scale-100
+        group-focus:opacity-100 group-focus:scale-100
+        sm:hidden
+      "
+    >
+      Évolution
+    </span>
+  </TabsTrigger>
+</TabsList>
+
 
       <TabsContent value="historique" className="mt-6">
         <AchatsHistoriqueList
