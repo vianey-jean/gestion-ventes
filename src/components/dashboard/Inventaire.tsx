@@ -9,12 +9,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label';
 import { productService } from '@/service/api';
 import { Product } from '@/types';
-import { Search, Plus, Edit, Trash2, Package, Filter, ArrowUpDown, AlertTriangle, ShoppingBag, Star, TrendingUp, Eye, CheckCircle, XCircle, Clock, Sparkles, Crown, Diamond, Printer } from 'lucide-react';
+import { Search, Plus, Edit, Trash2, Package, Filter, ArrowUpDown, AlertTriangle, ShoppingBag, Star, TrendingUp, Eye, CheckCircle, XCircle, Clock, Sparkles, Crown, Diamond, FileDown, Gem, Award, Zap, Flame } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import ModernActionButton from '@/components/dashboard/forms/ModernActionButton';
 import ModernContainer from '@/components/dashboard/forms/ModernContainer';
 import PremiumLoading from '@/components/ui/premium-loading';
+import jsPDF from 'jspdf';
 
 type CategoryType = 'all' | 'perruque' | 'tissage' | 'autre';
 type SortOrder = 'asc' | 'desc';
@@ -216,107 +217,78 @@ const Inventaire = () => {
     }
   };
 
-  // Fonction pour imprimer l'étiquette du code produit
-  const handlePrintProductLabel = (product: Product) => {
-    const printWindow = window.open('', '_blank', 'width=300,height=200');
-    if (!printWindow) {
+  /**
+   * Génère et télécharge directement un PDF de l'étiquette produit
+   * Utilise jsPDF pour créer un PDF premium sans ouvrir de fenêtre d'impression
+   */
+  const handleDownloadProductPDF = (product: Product) => {
+    try {
+      const productCode = (product.code || 'SANS-CODE').toUpperCase();
+      const productDescription = product.description.toUpperCase();
+      
+      // Créer un nouveau document PDF (format étiquette 50x30mm)
+      const doc = new jsPDF({
+        orientation: 'landscape',
+        unit: 'mm',
+        format: [50, 30]
+      });
+      
+      // Header avec fond dégradé simulé (couleur sombre)
+      doc.setFillColor(26, 26, 46); // Couleur #1a1a2e
+      doc.rect(0, 0, 50, 10, 'F');
+      
+      // Code produit en blanc sur fond sombre
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'bold');
+      doc.text(productCode, 25, 7, { align: 'center' });
+      
+      // Bordure élégante autour de tout le document
+      doc.setDrawColor(100, 100, 100);
+      doc.setLineWidth(0.3);
+      doc.rect(0.5, 0.5, 49, 29);
+      
+      // Section description avec fond blanc
+      doc.setFillColor(255, 255, 255);
+      doc.rect(0, 10, 50, 20, 'F');
+      
+      // Description du produit en noir
+      doc.setTextColor(30, 30, 30);
+      doc.setFontSize(7);
+      doc.setFont('helvetica', 'bold');
+      
+      // Découper la description si elle est trop longue
+      const maxWidth = 45;
+      const lines = doc.splitTextToSize(productDescription, maxWidth);
+      const startY = lines.length > 2 ? 16 : 18;
+      
+      lines.slice(0, 3).forEach((line: string, index: number) => {
+        doc.text(line, 25, startY + (index * 4), { align: 'center' });
+      });
+      
+      // Ligne décorative entre le code et la description
+      doc.setDrawColor(200, 200, 200);
+      doc.setLineWidth(0.2);
+      doc.line(2, 10, 48, 10);
+      
+      // Télécharger le PDF directement
+      const fileName = `etiquette-${productCode.replace(/[^a-zA-Z0-9]/g, '-')}.pdf`;
+      doc.save(fileName);
+      
+      toast({
+        title: "✨ PDF Téléchargé !",
+        description: `L'étiquette "${productCode}" a été sauvegardée avec succès.`,
+        className: "bg-gradient-to-r from-emerald-50 to-green-50 border-2 border-emerald-300 text-emerald-900 shadow-xl rounded-xl font-semibold",
+      });
+    } catch (error) {
+      console.error('Erreur lors de la génération du PDF:', error);
       toast({
         title: "Erreur",
-        description: "Impossible d'ouvrir la fenêtre d'impression. Vérifiez les paramètres de votre navigateur.",
+        description: "Impossible de générer le PDF. Veuillez réessayer.",
         variant: "destructive",
         className: "notification-erreur",
       });
-      return;
     }
-
-    const productCode = (product.code || 'SANS-CODE').toUpperCase();
-    const productDescription = product.description.toUpperCase();
-
-    printWindow.document.write(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Étiquette - ${productCode}</title>
-          <style>
-            @page {
-              size: 50mm 30mm;
-              margin: 0;
-            }
-            * {
-              margin: 0;
-              padding: 0;
-              box-sizing: border-box;
-            }
-            body {
-              width: 50mm;
-              height: 30mm;
-              font-family: 'Arial', sans-serif;
-              display: flex;
-              flex-direction: column;
-              overflow: hidden;
-            }
-            .label-container {
-              width: 50mm;
-              height: 30mm;
-              display: flex;
-              flex-direction: column;
-              border: 1px solid #000;
-            }
-            .code-section {
-              width: 50mm;
-              height: 10mm;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-              color: white;
-              font-weight: 900;
-              font-size: 12px;
-              letter-spacing: 1px;
-              text-transform: uppercase;
-              border-bottom: 1px solid #000;
-            }
-            .description-section {
-              width: 50mm;
-              height: 20mm;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              text-align: center;
-              padding: 2mm;
-              font-weight: 700;
-              font-size: 8px;
-              line-height: 1.3;
-              text-transform: uppercase;
-              background: #ffffff;
-              overflow: hidden;
-              word-wrap: break-word;
-            }
-            @media print {
-              body {
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-              }
-            }
-          </style>
-        </head>
-        <body>
-          <div class="label-container">
-            <div class="code-section">${productCode}</div>
-            <div class="description-section">${productDescription}</div>
-          </div>
-          <script>
-            window.onload = function() {
-              window.print();
-              window.onafterprint = function() {
-                window.close();
-              };
-            };
-          </script>
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
   };
 
   const stats = getStats();
@@ -690,10 +662,10 @@ const Inventaire = () => {
                           buttonSize="sm"
                           variant="outline"
                           gradient="indigo"
-                          icon={Printer}
-                          onClick={() => handlePrintProductLabel(product)}
+                          icon={FileDown}
+                          onClick={() => handleDownloadProductPDF(product)}
                           className="btn-3d hover:scale-105 p-1 min-w-[32px] h-8"
-                          title="Imprimer étiquette"
+                          title="Télécharger PDF"
                         />
                       </div>
                     </td>
