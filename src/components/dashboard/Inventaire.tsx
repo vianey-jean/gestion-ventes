@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label';
 import { productService } from '@/service/api';
 import { Product } from '@/types';
-import { Search, Plus, Edit, Trash2, Package, Filter, ArrowUpDown, AlertTriangle, ShoppingBag, Star, TrendingUp, Eye, CheckCircle, XCircle, Clock, Sparkles, Crown, Diamond, Printer } from 'lucide-react';
+import { Search, Plus, Edit, Trash2, Package, Filter, ArrowUpDown, AlertTriangle, ShoppingBag, Star, TrendingUp, Eye, CheckCircle, XCircle, Clock, Sparkles, Crown, Diamond } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import ModernActionButton from '@/components/dashboard/forms/ModernActionButton';
@@ -214,109 +214,6 @@ const Inventaire = () => {
          className: "notification-erreur",
       });
     }
-  };
-
-  // Fonction pour imprimer l'étiquette du code produit
-  const handlePrintProductLabel = (product: Product) => {
-    const printWindow = window.open('', '_blank', 'width=300,height=200');
-    if (!printWindow) {
-      toast({
-        title: "Erreur",
-        description: "Impossible d'ouvrir la fenêtre d'impression. Vérifiez les paramètres de votre navigateur.",
-        variant: "destructive",
-        className: "notification-erreur",
-      });
-      return;
-    }
-
-    const productCode = (product.code || 'SANS-CODE').toUpperCase();
-    const productDescription = product.description.toUpperCase();
-
-    printWindow.document.write(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Étiquette - ${productCode}</title>
-          <style>
-            @page {
-              size: 50mm 30mm;
-              margin: 0;
-            }
-            * {
-              margin: 0;
-              padding: 0;
-              box-sizing: border-box;
-            }
-            body {
-              width: 50mm;
-              height: 30mm;
-              font-family: 'Arial', sans-serif;
-              display: flex;
-              flex-direction: column;
-              overflow: hidden;
-            }
-            .label-container {
-              width: 50mm;
-              height: 30mm;
-              display: flex;
-              flex-direction: column;
-              border: 1px solid #000;
-            }
-            .code-section {
-              width: 50mm;
-              height: 10mm;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-              color: white;
-              font-weight: 900;
-              font-size: 12px;
-              letter-spacing: 1px;
-              text-transform: uppercase;
-              border-bottom: 1px solid #000;
-            }
-            .description-section {
-              width: 50mm;
-              height: 20mm;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              text-align: center;
-              padding: 2mm;
-              font-weight: 700;
-              font-size: 8px;
-              line-height: 1.3;
-              text-transform: uppercase;
-              background: #ffffff;
-              overflow: hidden;
-              word-wrap: break-word;
-            }
-            @media print {
-              body {
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-              }
-            }
-          </style>
-        </head>
-        <body>
-          <div class="label-container">
-            <div class="code-section">${productCode}</div>
-            <div class="description-section">${productDescription}</div>
-          </div>
-          <script>
-            window.onload = function() {
-              window.print();
-              window.onafterprint = function() {
-                window.close();
-              };
-            };
-          </script>
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
   };
 
   const stats = getStats();
@@ -682,15 +579,6 @@ const Inventaire = () => {
                           icon={Eye}
                           onClick={() => setViewingProduct(product)}
                           className="btn-3d hover:scale-110 p-1 sm:p-2"
-                        />
-                        <ModernActionButton
-                          buttonSize="sm"
-                          variant="outline"
-                          gradient="indigo"
-                          icon={Printer}
-                          onClick={() => handlePrintProductLabel(product)}
-                          className="btn-3d hover:scale-110 p-1 sm:p-2"
-                          title="Imprimer étiquette code produit"
                         />
                       </div>
                     </td>
