@@ -4,7 +4,7 @@
  * RÔLE :
  * Ce composant permet de rechercher un produit existant dans l'inventaire.
  * Il affiche une liste déroulante de suggestions lorsque l'utilisateur tape
- * au moins 3 caractères.
+ * au moins 3 caractères. Recherche possible par description OU par code unique.
  * 
  * PROPS :
  * - searchTerm: string - Terme de recherche actuel
@@ -30,7 +30,7 @@ import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
-import { Search, CheckCircle } from 'lucide-react';
+import { Search, CheckCircle, Hash } from 'lucide-react';
 import { Product } from '@/types/product';
 
 // ============================================
@@ -70,7 +70,7 @@ const ProductSearchInput: React.FC<ProductSearchInputProps> = ({
       {/* Label du champ de recherche */}
       <Label className="text-sm font-semibold text-gray-700 dark:text-gray-200">
         <Search className="h-4 w-4 inline mr-2" />
-        Rechercher un produit
+        Rechercher un produit (par nom ou code)
       </Label>
       
       {/* Champ de recherche avec liste déroulante */}
@@ -78,7 +78,7 @@ const ProductSearchInput: React.FC<ProductSearchInputProps> = ({
         <Input
           value={searchTerm}
           onChange={onSearchChange}
-          placeholder="Tapez au moins 3 caractères..."
+          placeholder="Tapez au moins 3 caractères (nom ou code)..."
           className="bg-white/80 dark:bg-gray-800/80 border-gray-200 dark:border-gray-600"
         />
         
@@ -89,10 +89,19 @@ const ProductSearchInput: React.FC<ProductSearchInputProps> = ({
               <button
                 key={product.id}
                 onClick={() => onSelectProduct(product)}
-                className="w-full text-left px-4 py-3 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors flex items-center justify-between"
+                className="w-full text-left px-4 py-3 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors flex items-center justify-between gap-2"
               >
-                <span className="font-medium">{product.description}</span>
-                <Badge variant="outline">{formatEuro(product.purchasePrice)}</Badge>
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                  {/* Code unique du produit */}
+                  {product.code && (
+                    <Badge className="bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300 font-mono text-xs shrink-0">
+                      <Hash className="h-3 w-3 mr-0.5" />
+                      {product.code}
+                    </Badge>
+                  )}
+                  <span className="font-medium truncate">{product.description}</span>
+                </div>
+                <Badge variant="outline" className="shrink-0">{formatEuro(product.purchasePrice)}</Badge>
               </button>
             ))}
           </div>
@@ -101,10 +110,17 @@ const ProductSearchInput: React.FC<ProductSearchInputProps> = ({
       
       {/* Badge de produit sélectionné */}
       {selectedProduct && (
-        <Badge className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">
-          <CheckCircle className="h-3 w-3 mr-1" />
-          {selectedProduct.description} sélectionné
-        </Badge>
+        <div className="flex items-center gap-2 flex-wrap">
+          <Badge className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">
+            <CheckCircle className="h-3 w-3 mr-1" />
+            {selectedProduct.description} sélectionné
+          </Badge>
+          {selectedProduct.code && (
+            <Badge className="bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300 font-mono text-xs">
+              Code: {selectedProduct.code}
+            </Badge>
+          )}
+        </div>
       )}
     </div>
   );

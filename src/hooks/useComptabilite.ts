@@ -108,11 +108,12 @@ export function useComptabilite() {
     }));
   }, []);
 
-  // Filtrer les produits pour la recherche
+  // Filtrer les produits pour la recherche (par description OU code unique)
   const filteredProducts = useMemo(() => {
     if (searchTerm.length < 3 || !showProductList) return [];
     return products.filter(p => 
-      p.description.toLowerCase().includes(searchTerm.toLowerCase())
+      p.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (p.code && p.code.toLowerCase().includes(searchTerm.toLowerCase()))
     );
   }, [searchTerm, products, showProductList]);
 

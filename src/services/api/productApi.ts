@@ -19,7 +19,7 @@ export const productApiService = {
   async create(data: ProductFormData): Promise<Product> {
     console.log('📝 Adding new product:', data);
     const response: AxiosResponse<Product> = await api.post('/api/products', data);
-    console.log('✅ Product added successfully:', response.data);
+    console.log('✅ Product added successfully with code:', response.data.code, response.data);
     return response.data;
   },
 
@@ -35,6 +35,14 @@ export const productApiService = {
     await api.delete(`/api/products/${id}`);
     console.log('✅ Product deleted successfully');
     return true;
+  },
+
+  // Générer les codes pour les produits existants qui n'en ont pas
+  async generateCodesForExistingProducts(): Promise<{ message: string; updatedCount: number }> {
+    console.log('🔧 Generating codes for existing products...');
+    const response = await api.post('/api/products/generate-codes');
+    console.log('✅ Codes generated:', response.data);
+    return response.data;
   },
 };
 

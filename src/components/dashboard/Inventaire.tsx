@@ -65,7 +65,24 @@ const Inventaire = () => {
     try {
       setLoading(true);
       const data = await productService.getProducts();
-      setProducts(data);
+      
+      // Vérifier si certains produits n'ont pas de code, si oui générer les codes
+      const productsWithoutCode = data.filter(p => !p.code);
+      if (productsWithoutCode.length > 0) {
+        console.log(`🔧 ${productsWithoutCode.length} produits sans code détectés, génération en cours...`);
+        try {
+          await productService.generateCodesForExistingProducts();
+          // Recharger les produits après génération des codes
+          const updatedData = await productService.getProducts();
+          setProducts(updatedData);
+        } catch (codeError) {
+          console.error('⚠️ Erreur lors de la génération des codes:', codeError);
+          // Continuer avec les produits existants même si la génération de codes échoue
+          setProducts(data);
+        }
+      } else {
+        setProducts(data);
+      }
     } catch (error) {
       toast({
         title: "Erreur",
@@ -85,7 +102,11 @@ const Inventaire = () => {
   useEffect(() => {
     let filtered = [...products];
     if (searchTerm.length >= 3) {
-      filtered = filtered.filter(product => product.description.toLowerCase().includes(searchTerm.toLowerCase()));
+      // Recherche par description OU par code unique
+      filtered = filtered.filter(product => 
+        product.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (product.code && product.code.toLowerCase().includes(searchTerm.toLowerCase()))
+      );
     }
     if (category !== 'all') {
       filtered = filtered.filter(product => categorizeProduct(product.description) === category);
@@ -277,7 +298,7 @@ const Inventaire = () => {
                 <Search className="h-5 w-5" />
               </div>
               <Input
-                placeholder="🔍 Recherche premium... (min. 3 caractères)"
+                placeholder="🔍 Recherche par nom ou code... (min. 3 caractères)"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-12 pr-4 py-3 bg-gradient-to-r from-white to-gray-50 border-2 border-gray-200 focus:border-blue-500 focus:from-blue-50 focus:to-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300  placeholder:text-gray-500"
@@ -488,14 +509,22 @@ const Inventaire = () => {
                         </div>
                         <div className="min-w-0">
                           <div className="font-bold text-sm sm:text-base md:text-lg group-hover:text-blue-900 transition-colors truncate">{product.description}</div>
-                          <Badge variant="outline" className="mt-1 sm:mt-2 bg-gradient-to-r from-gray-100 to-gray-200 border-0 text-gray-700 font-semibold text-xs hidden sm:inline-flex">
-                            <div className="flex items-center gap-1">
-                              {categorizeProduct(product.description) === 'perruque' && <Crown className="h-3 w-3" />}
-                              {categorizeProduct(product.description) === 'tissage' && <Diamond className="h-3 w-3" />}
-                              {categorizeProduct(product.description) === 'autre' && <ShoppingBag className="h-3 w-3" />}
-                              {categorizeProduct(product.description)}
-                            </div>
-                          </Badge>
+                          <div className="flex items-center gap-2 mt-1 sm:mt-2 flex-wrap">
+                            {/* Code unique du produit */}
+                            {product.code && (
+                              <Badge className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white border-0 font-mono text-xs px-2 py-0.5 rounded-lg shadow-md">
+                                {product.code}
+                              </Badge>
+                            )}
+                            <Badge variant="outline" className="bg-gradient-to-r from-gray-100 to-gray-200 border-0 text-gray-700 font-semibold text-xs hidden sm:inline-flex">
+                              <div className="flex items-center gap-1">
+                                {categorizeProduct(product.description) === 'perruque' && <Crown className="h-3 w-3" />}
+                                {categorizeProduct(product.description) === 'tissage' && <Diamond className="h-3 w-3" />}
+                                {categorizeProduct(product.description) === 'autre' && <ShoppingBag className="h-3 w-3" />}
+                                {categorizeProduct(product.description)}
+                              </div>
+                            </Badge>
+                          </div>
                         </div>
                       </div>
                     </td>
@@ -674,6 +703,16 @@ const Inventaire = () => {
             </DialogHeader>
             <div className="space-y-6">
               <div className="space-y-4">
+                {/* Code unique du produit */}
+                {viewingProduct.code && (
+                  <div className="p-4 bg-gradient-to-r from-indigo-500/10 to-purple-500/10 rounded-xl border-2 border-indigo-300">
+                    <Label className="text-sm font-bold text-gray-700 flex items-center gap-2 mb-2">
+                      <Sparkles className="h-4 w-4 text-indigo-600" />
+                      Code Unique
+                    </Label>
+                    <p className="text-2xl font-black font-mono bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent tracking-widest">{viewingProduct.code}</p>
+                  </div>
+                )}
                 <div className="p-4 bg-white/80 rounded-xl border-2 border-purple-200">
                   <Label className="text-sm font-bold text-gray-700 flex items-center gap-2 mb-2">
                     <Package className="h-4 w-4 text-purple-600" />
