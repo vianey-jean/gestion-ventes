@@ -4,7 +4,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { TrendingUp, TrendingDown, Calculator, FileText, Eye, EyeOff, DollarSign, ShoppingCart, Target, ArrowUpRight, Receipt, Percent, BarChart3 } from 'lucide-react';
+import { TrendingUp, TrendingDown, Calculator, FileText, Eye, EyeOff, DollarSign, ShoppingCart, Target, ArrowUpRight, Receipt, Percent, BarChart3, ShoppingBag, Gem, Crown, Sparkles, Zap, Trophy, Star, ChartPie, Wallet, PiggyBank, TrendingUp as TrendUp } from 'lucide-react';
 import { useApp } from '@/contexts/AppContext';
 import useCurrencyFormatter from '@/hooks/use-currency-formatter';
 import { Button } from '@/components/ui/button';
@@ -19,7 +19,7 @@ interface PeriodData {
   avgOrderValue: number;
 }
 
-type ModalType = 'revenue' | 'cost' | 'profit' | null;
+type ModalType = 'revenue' | 'cost' | 'profit' | 'avgOrder' | 'margin' | 'salesCount' | 'profitPerSale' | null;
 
 const ProfitLossStatement: React.FC = () => {
   const { allSales } = useApp();
@@ -356,6 +356,237 @@ const ProfitLossStatement: React.FC = () => {
         </DialogContent>
       </Dialog>
 
+      {/* Modal Panier Moyen */}
+      <Dialog open={activeModal === 'avgOrder'} onOpenChange={(open) => !open && setActiveModal(null)}>
+        <DialogContent className="sm:max-w-2xl bg-gradient-to-br from-white via-purple-50/30 to-fuchsia-50/50 dark:from-gray-900 dark:via-purple-950/30 dark:to-fuchsia-950/20 backdrop-blur-xl border-purple-200/50 dark:border-purple-800/50">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-3">
+              <div className="p-3 rounded-2xl bg-gradient-to-r from-purple-500 via-fuchsia-500 to-pink-500 text-white shadow-xl shadow-purple-500/30">
+                <ShoppingBag className="h-6 w-6" />
+              </div>
+              <div>
+                <span className="text-xl font-black bg-gradient-to-r from-purple-600 via-fuchsia-600 to-pink-600 bg-clip-text text-transparent">
+                  Panier Moyen
+                </span>
+                <p className="text-xs text-purple-500/70 font-medium">{getPeriodLabel(selectedPeriod)}</p>
+              </div>
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="p-4 rounded-2xl bg-gradient-to-br from-purple-100 to-fuchsia-100 dark:from-purple-900/40 dark:to-fuchsia-900/30 border border-purple-200/50 dark:border-purple-700/50">
+                <div className="flex items-center gap-2 mb-2">
+                  <Gem className="h-4 w-4 text-purple-500" />
+                  <span className="text-xs font-semibold text-purple-600 uppercase">Panier Actuel</span>
+                </div>
+                <p className="text-2xl font-black bg-gradient-to-r from-purple-600 to-fuchsia-600 bg-clip-text text-transparent">
+                  {formatEuro(currentData.avgOrderValue)}
+                </p>
+              </div>
+              <div className="p-4 rounded-2xl bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/40 dark:to-purple-900/30 border border-indigo-200/50 dark:border-indigo-700/50">
+                <div className="flex items-center gap-2 mb-2">
+                  <Crown className="h-4 w-4 text-indigo-500" />
+                  <span className="text-xs font-semibold text-indigo-600 uppercase">CA Total</span>
+                </div>
+                <p className="text-2xl font-black bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                  {formatEuro(currentData.revenue)}
+                </p>
+              </div>
+            </div>
+            <div className="p-4 rounded-2xl bg-gradient-to-r from-purple-500 via-fuchsia-500 to-pink-500 text-white shadow-xl">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Sparkles className="h-5 w-5" />
+                  <div>
+                    <span className="font-bold">Nombre de transactions</span>
+                    <p className="text-xs opacity-80">Sur cette période</p>
+                  </div>
+                </div>
+                <span className="text-3xl font-black">{currentData.salesCount}</span>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal Marge Brute */}
+      <Dialog open={activeModal === 'margin'} onOpenChange={(open) => !open && setActiveModal(null)}>
+        <DialogContent className="sm:max-w-2xl bg-gradient-to-br from-white via-amber-50/30 to-yellow-50/50 dark:from-gray-900 dark:via-amber-950/30 dark:to-yellow-950/20 backdrop-blur-xl border-amber-200/50 dark:border-amber-800/50">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-3">
+              <div className="p-3 rounded-2xl bg-gradient-to-r from-amber-500 via-yellow-500 to-orange-500 text-white shadow-xl shadow-amber-500/30">
+                <Crown className="h-6 w-6" />
+              </div>
+              <div>
+                <span className="text-xl font-black bg-gradient-to-r from-amber-600 via-yellow-600 to-orange-600 bg-clip-text text-transparent">
+                  Marge Brute
+                </span>
+                <p className="text-xs text-amber-500/70 font-medium">{getPeriodLabel(selectedPeriod)}</p>
+              </div>
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="grid grid-cols-3 gap-3">
+              <div className="p-4 rounded-2xl bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/40 dark:to-indigo-900/30 border border-blue-200/50 dark:border-blue-700/50">
+                <div className="flex items-center gap-2 mb-2">
+                  <DollarSign className="h-4 w-4 text-blue-500" />
+                  <span className="text-[10px] font-semibold text-blue-600 uppercase">CA</span>
+                </div>
+                <p className="text-lg font-black bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                  {formatEuro(currentData.revenue)}
+                </p>
+              </div>
+              <div className="p-4 rounded-2xl bg-gradient-to-br from-red-100 to-orange-100 dark:from-red-900/40 dark:to-orange-900/30 border border-red-200/50 dark:border-red-700/50">
+                <div className="flex items-center gap-2 mb-2">
+                  <Receipt className="h-4 w-4 text-red-500" />
+                  <span className="text-[10px] font-semibold text-red-600 uppercase">Coûts</span>
+                </div>
+                <p className="text-lg font-black bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent">
+                  {formatEuro(currentData.cost)}
+                </p>
+              </div>
+              <div className="p-4 rounded-2xl bg-gradient-to-br from-emerald-100 to-green-100 dark:from-emerald-900/40 dark:to-green-900/30 border border-emerald-200/50 dark:border-emerald-700/50">
+                <div className="flex items-center gap-2 mb-2">
+                  <Target className="h-4 w-4 text-emerald-500" />
+                  <span className="text-[10px] font-semibold text-emerald-600 uppercase">Profit</span>
+                </div>
+                <p className="text-lg font-black bg-gradient-to-r from-emerald-600 to-green-600 bg-clip-text text-transparent">
+                  {formatEuro(currentData.profit)}
+                </p>
+              </div>
+            </div>
+            <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-500 via-yellow-500 to-orange-500 text-white shadow-xl">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Gem className="h-5 w-5" />
+                  <div>
+                    <span className="font-bold">Marge de profit</span>
+                    <p className="text-xs opacity-80">Pourcentage du CA</p>
+                  </div>
+                </div>
+                <span className="text-3xl font-black">{profitMargin.toFixed(1)}%</span>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal Nombre de Ventes */}
+      <Dialog open={activeModal === 'salesCount'} onOpenChange={(open) => !open && setActiveModal(null)}>
+        <DialogContent className="sm:max-w-2xl bg-gradient-to-br from-white via-cyan-50/30 to-teal-50/50 dark:from-gray-900 dark:via-cyan-950/30 dark:to-teal-950/20 backdrop-blur-xl border-cyan-200/50 dark:border-cyan-800/50">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-3">
+              <div className="p-3 rounded-2xl bg-gradient-to-r from-cyan-500 via-sky-500 to-teal-500 text-white shadow-xl shadow-cyan-500/30">
+                <Zap className="h-6 w-6" />
+              </div>
+              <div>
+                <span className="text-xl font-black bg-gradient-to-r from-cyan-600 via-sky-600 to-teal-600 bg-clip-text text-transparent">
+                  Nombre de Ventes
+                </span>
+                <p className="text-xs text-cyan-500/70 font-medium">{getPeriodLabel(selectedPeriod)}</p>
+              </div>
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="p-4 rounded-2xl bg-gradient-to-br from-cyan-100 to-sky-100 dark:from-cyan-900/40 dark:to-sky-900/30 border border-cyan-200/50 dark:border-cyan-700/50">
+                <div className="flex items-center gap-2 mb-2">
+                  <ShoppingCart className="h-4 w-4 text-cyan-500" />
+                  <span className="text-xs font-semibold text-cyan-600 uppercase">Transactions</span>
+                </div>
+                <p className="text-3xl font-black bg-gradient-to-r from-cyan-600 to-sky-600 bg-clip-text text-transparent">
+                  {currentData.salesCount}
+                </p>
+              </div>
+              <div className="p-4 rounded-2xl bg-gradient-to-br from-teal-100 to-emerald-100 dark:from-teal-900/40 dark:to-emerald-900/30 border border-teal-200/50 dark:border-teal-700/50">
+                <div className="flex items-center gap-2 mb-2">
+                  <ShoppingBag className="h-4 w-4 text-teal-500" />
+                  <span className="text-xs font-semibold text-teal-600 uppercase">Produits vendus</span>
+                </div>
+                <p className="text-3xl font-black bg-gradient-to-r from-teal-600 to-emerald-600 bg-clip-text text-transparent">
+                  {currentData.totalProductsSold}
+                </p>
+              </div>
+            </div>
+            <div className="p-4 rounded-2xl bg-gradient-to-r from-cyan-500 via-sky-500 to-teal-500 text-white shadow-xl">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Trophy className="h-5 w-5" />
+                  <div>
+                    <span className="font-bold">Produits/Transaction</span>
+                    <p className="text-xs opacity-80">Moyenne</p>
+                  </div>
+                </div>
+                <span className="text-3xl font-black">
+                  {currentData.salesCount > 0 ? (currentData.totalProductsSold / currentData.salesCount).toFixed(1) : '0'}
+                </span>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal Profit par Vente */}
+      <Dialog open={activeModal === 'profitPerSale'} onOpenChange={(open) => !open && setActiveModal(null)}>
+        <DialogContent className="sm:max-w-2xl bg-gradient-to-br from-white via-rose-50/30 to-pink-50/50 dark:from-gray-900 dark:via-rose-950/30 dark:to-pink-950/20 backdrop-blur-xl border-rose-200/50 dark:border-rose-800/50">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-3">
+              <div className="p-3 rounded-2xl bg-gradient-to-r from-rose-500 via-pink-500 to-red-500 text-white shadow-xl shadow-rose-500/30">
+                <Star className="h-6 w-6" />
+              </div>
+              <div>
+                <span className="text-xl font-black bg-gradient-to-r from-rose-600 via-pink-600 to-red-600 bg-clip-text text-transparent">
+                  Profit par Vente
+                </span>
+                <p className="text-xs text-rose-500/70 font-medium">{getPeriodLabel(selectedPeriod)}</p>
+              </div>
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <ScrollArea className="max-h-[40vh] pr-4">
+              <div className="space-y-2">
+                {periodSales.slice(0, 10).map((sale, idx) => {
+                  const values = getSaleValues(sale);
+                  const saleDate = new Date(sale.date);
+                  return (
+                    <div 
+                      key={sale.id || idx}
+                      className="flex items-center justify-between p-3 rounded-xl bg-gradient-to-r from-rose-50 to-pink-50 dark:from-rose-900/20 dark:to-pink-900/20 border border-rose-100 dark:border-rose-800/50"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-gradient-to-r from-rose-500 to-pink-500 text-white font-bold text-xs">
+                          {saleDate.getDate()}/{saleDate.getMonth() + 1}
+                        </div>
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                          {sale.clientName || 'Client'}
+                        </span>
+                      </div>
+                      <span className="font-bold bg-gradient-to-r from-rose-600 to-pink-600 bg-clip-text text-transparent">
+                        {formatEuro(values.profit)}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </ScrollArea>
+            <div className="p-4 rounded-2xl bg-gradient-to-r from-rose-500 via-pink-500 to-red-500 text-white shadow-xl">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <PiggyBank className="h-5 w-5" />
+                  <div>
+                    <span className="font-bold">Profit moyen/vente</span>
+                    <p className="text-xs opacity-80">Sur {currentData.salesCount} ventes</p>
+                  </div>
+                </div>
+                <span className="text-2xl font-black">
+                  {formatEuro(currentData.salesCount > 0 ? currentData.profit / currentData.salesCount : 0)}
+                </span>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <CardHeader className="border-b border-gray-100 dark:border-gray-800">
         <CardTitle className="flex items-center gap-3">
           <div className="p-2 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 text-white shadow-lg">
@@ -473,7 +704,7 @@ const ProfitLossStatement: React.FC = () => {
           </div>
         </div>
 
-        {/* Métriques détaillées */}
+        {/* Métriques détaillées - Premium & Cliquables */}
         {showDetails && (
           <div className="space-y-4">
             <div className="border-t pt-4 border-gray-200 dark:border-gray-700">
@@ -482,23 +713,96 @@ const ProfitLossStatement: React.FC = () => {
                 Métriques Détaillées
               </h4>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="text-center p-4 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl border border-purple-100 dark:border-purple-800/50">
-                  <p className="text-sm text-purple-600 dark:text-purple-400 font-medium">Panier Moyen</p>
-                  <p className="text-lg font-bold text-purple-700 dark:text-purple-300">{formatEuro(currentData.avgOrderValue)}</p>
+                {/* Panier Moyen - Cliquable */}
+                <div 
+                  onClick={() => setActiveModal('avgOrder')}
+                  className="cursor-pointer group text-center p-4 bg-gradient-to-br from-purple-50 via-fuchsia-50 to-pink-50 dark:from-purple-900/30 dark:via-fuchsia-900/20 dark:to-pink-900/20 rounded-2xl border-2 border-purple-200/50 dark:border-purple-700/50 shadow-lg hover:shadow-2xl hover:shadow-purple-500/20 hover:scale-[1.03] hover:border-purple-400/70 transition-all duration-300 relative overflow-hidden"
+                >
+                  <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-purple-400/20 to-transparent rounded-full -translate-y-1/2 translate-x-1/2" />
+                  <div className="relative z-10">
+                    <div className="flex items-center justify-center gap-2 mb-2">
+                      <div className="p-2 rounded-xl bg-gradient-to-r from-purple-500 to-fuchsia-600 text-white shadow-lg shadow-purple-500/30">
+                        <ShoppingBag className="h-4 w-4" />
+                      </div>
+                    </div>
+                    <p className="text-xs text-purple-600 dark:text-purple-400 font-semibold uppercase tracking-wide">Panier Moyen</p>
+                    <p className="text-xl font-black bg-gradient-to-r from-purple-600 via-fuchsia-600 to-pink-600 bg-clip-text text-transparent group-hover:scale-110 transition-transform">
+                      {formatEuro(currentData.avgOrderValue)}
+                    </p>
+                    <div className="mt-2 flex items-center justify-center gap-1 text-[10px] text-purple-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Sparkles className="h-3 w-3" />
+                      <span>Voir détails</span>
+                    </div>
+                  </div>
                 </div>
-                <div className="text-center p-4 bg-gradient-to-br from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20 rounded-xl border border-amber-100 dark:border-amber-800/50">
-                  <p className="text-sm text-amber-600 dark:text-amber-400 font-medium">Marge Brute</p>
-                  <p className="text-lg font-bold text-amber-700 dark:text-amber-300">{profitMargin.toFixed(1)}%</p>
+
+                {/* Marge Brute - Cliquable */}
+                <div 
+                  onClick={() => setActiveModal('margin')}
+                  className="cursor-pointer group text-center p-4 bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50 dark:from-amber-900/30 dark:via-yellow-900/20 dark:to-orange-900/20 rounded-2xl border-2 border-amber-200/50 dark:border-amber-700/50 shadow-lg hover:shadow-2xl hover:shadow-amber-500/20 hover:scale-[1.03] hover:border-amber-400/70 transition-all duration-300 relative overflow-hidden"
+                >
+                  <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-amber-400/20 to-transparent rounded-full -translate-y-1/2 translate-x-1/2" />
+                  <div className="relative z-10">
+                    <div className="flex items-center justify-center gap-2 mb-2">
+                      <div className="p-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-lg shadow-amber-500/30">
+                        <Crown className="h-4 w-4" />
+                      </div>
+                    </div>
+                    <p className="text-xs text-amber-600 dark:text-amber-400 font-semibold uppercase tracking-wide">Marge Brute</p>
+                    <p className="text-xl font-black bg-gradient-to-r from-amber-600 via-yellow-600 to-orange-600 bg-clip-text text-transparent group-hover:scale-110 transition-transform">
+                      {profitMargin.toFixed(1)}%
+                    </p>
+                    <div className="mt-2 flex items-center justify-center gap-1 text-[10px] text-amber-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Gem className="h-3 w-3" />
+                      <span>Voir détails</span>
+                    </div>
+                  </div>
                 </div>
-                <div className="text-center p-4 bg-gradient-to-br from-cyan-50 to-teal-50 dark:from-cyan-900/20 dark:to-teal-900/20 rounded-xl border border-cyan-100 dark:border-cyan-800/50">
-                  <p className="text-sm text-cyan-600 dark:text-cyan-400 font-medium">Nombre de Ventes</p>
-                  <p className="text-lg font-bold text-cyan-700 dark:text-cyan-300">{currentData.salesCount}</p>
+
+                {/* Nombre de Ventes - Cliquable */}
+                <div 
+                  onClick={() => setActiveModal('salesCount')}
+                  className="cursor-pointer group text-center p-4 bg-gradient-to-br from-cyan-50 via-sky-50 to-teal-50 dark:from-cyan-900/30 dark:via-sky-900/20 dark:to-teal-900/20 rounded-2xl border-2 border-cyan-200/50 dark:border-cyan-700/50 shadow-lg hover:shadow-2xl hover:shadow-cyan-500/20 hover:scale-[1.03] hover:border-cyan-400/70 transition-all duration-300 relative overflow-hidden"
+                >
+                  <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-cyan-400/20 to-transparent rounded-full -translate-y-1/2 translate-x-1/2" />
+                  <div className="relative z-10">
+                    <div className="flex items-center justify-center gap-2 mb-2">
+                      <div className="p-2 rounded-xl bg-gradient-to-r from-cyan-500 to-teal-600 text-white shadow-lg shadow-cyan-500/30">
+                        <Zap className="h-4 w-4" />
+                      </div>
+                    </div>
+                    <p className="text-xs text-cyan-600 dark:text-cyan-400 font-semibold uppercase tracking-wide">Nombre de Ventes</p>
+                    <p className="text-xl font-black bg-gradient-to-r from-cyan-600 via-sky-600 to-teal-600 bg-clip-text text-transparent group-hover:scale-110 transition-transform">
+                      {currentData.salesCount}
+                    </p>
+                    <div className="mt-2 flex items-center justify-center gap-1 text-[10px] text-cyan-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Trophy className="h-3 w-3" />
+                      <span>Voir détails</span>
+                    </div>
+                  </div>
                 </div>
-                <div className="text-center p-4 bg-gradient-to-br from-rose-50 to-pink-50 dark:from-rose-900/20 dark:to-pink-900/20 rounded-xl border border-rose-100 dark:border-rose-800/50">
-                  <p className="text-sm text-rose-600 dark:text-rose-400 font-medium">Profit/Vente</p>
-                  <p className="text-lg font-bold text-rose-700 dark:text-rose-300">
-                    {formatEuro(currentData.salesCount > 0 ? currentData.profit / currentData.salesCount : 0)}
-                  </p>
+
+                {/* Profit/Vente - Cliquable */}
+                <div 
+                  onClick={() => setActiveModal('profitPerSale')}
+                  className="cursor-pointer group text-center p-4 bg-gradient-to-br from-rose-50 via-pink-50 to-red-50 dark:from-rose-900/30 dark:via-pink-900/20 dark:to-red-900/20 rounded-2xl border-2 border-rose-200/50 dark:border-rose-700/50 shadow-lg hover:shadow-2xl hover:shadow-rose-500/20 hover:scale-[1.03] hover:border-rose-400/70 transition-all duration-300 relative overflow-hidden"
+                >
+                  <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-rose-400/20 to-transparent rounded-full -translate-y-1/2 translate-x-1/2" />
+                  <div className="relative z-10">
+                    <div className="flex items-center justify-center gap-2 mb-2">
+                      <div className="p-2 rounded-xl bg-gradient-to-r from-rose-500 to-pink-600 text-white shadow-lg shadow-rose-500/30">
+                        <Star className="h-4 w-4" />
+                      </div>
+                    </div>
+                    <p className="text-xs text-rose-600 dark:text-rose-400 font-semibold uppercase tracking-wide">Profit/Vente</p>
+                    <p className="text-xl font-black bg-gradient-to-r from-rose-600 via-pink-600 to-red-600 bg-clip-text text-transparent group-hover:scale-110 transition-transform">
+                      {formatEuro(currentData.salesCount > 0 ? currentData.profit / currentData.salesCount : 0)}
+                    </p>
+                    <div className="mt-2 flex items-center justify-center gap-1 text-[10px] text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <PiggyBank className="h-3 w-3" />
+                      <span>Voir détails</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

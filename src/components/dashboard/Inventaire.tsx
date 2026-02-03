@@ -657,15 +657,16 @@ const Inventaire = () => {
                         {priority.label}
                       </Badge>
                     </td>
-                    <td className="p-3 sm:p-4 md:p-6">
-                      <div className="flex gap-1 sm:gap-2 md:gap-3">
+                    <td className="p-2 sm:p-4 md:p-6">
+                      <div className="flex flex-wrap gap-1 sm:gap-2">
                         <ModernActionButton
                           buttonSize="sm"
                           variant="outline"
                           gradient="blue"
                           icon={Edit}
                           onClick={() => setEditingProduct(product)}
-                          className="btn-3d hover:scale-110 p-1 sm:p-2"
+                          className="btn-3d hover:scale-105 p-1 min-w-[32px] h-8"
+                          title="Modifier"
                         />
                         <ModernActionButton
                           buttonSize="sm"
@@ -673,7 +674,8 @@ const Inventaire = () => {
                           gradient="red"
                           icon={Trash2}
                           onClick={() => setDeletingProduct(product)}
-                          className="btn-3d hover:scale-110 p-1 sm:p-2 hidden sm:flex"
+                          className="btn-3d hover:scale-105 p-1 min-w-[32px] h-8"
+                          title="Supprimer"
                         />
                         <ModernActionButton
                           buttonSize="sm"
@@ -681,7 +683,8 @@ const Inventaire = () => {
                           gradient="purple"
                           icon={Eye}
                           onClick={() => setViewingProduct(product)}
-                          className="btn-3d hover:scale-110 p-1 sm:p-2"
+                          className="btn-3d hover:scale-105 p-1 min-w-[32px] h-8"
+                          title="Voir"
                         />
                         <ModernActionButton
                           buttonSize="sm"
@@ -689,8 +692,8 @@ const Inventaire = () => {
                           gradient="indigo"
                           icon={Printer}
                           onClick={() => handlePrintProductLabel(product)}
-                          className="btn-3d hover:scale-110 p-1 sm:p-2"
-                          title="Imprimer étiquette code produit"
+                          className="btn-3d hover:scale-105 p-1 min-w-[32px] h-8"
+                          title="Imprimer étiquette"
                         />
                       </div>
                     </td>
