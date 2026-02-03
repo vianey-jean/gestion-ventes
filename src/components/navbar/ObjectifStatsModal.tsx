@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Eye, TrendingUp, Target, Sparkles, BarChart3, Calendar, Coins } from 'lucide-react';
+import { Eye, TrendingUp, Target, Sparkles, BarChart3, Calendar, Coins, ArrowUpRight, Users, Percent, DollarSign, ShoppingCart, Award } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -8,6 +8,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   LineChart,
   Line,
@@ -38,6 +39,13 @@ const MOIS_NOMS = [
   'Juil', 'Aout', 'Sep', 'Oct', 'Nov', 'Déc'
 ];
 
+const MOIS_COMPLETS = [
+  'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
+  'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
+];
+
+type DetailModalType = 'ventesMois' | 'performance' | null;
+
 const ObjectifStatsModal: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [data, setData] = useState<ObjectifHistorique | null>(null);
@@ -47,6 +55,7 @@ const ObjectifStatsModal: React.FC = () => {
   const [showBeneficesModal, setShowBeneficesModal] = useState(false);
   const [showVentesModal, setShowVentesModal] = useState(false);
   const [showObjectifChangesModal, setShowObjectifChangesModal] = useState(false);
+  const [detailModal, setDetailModal] = useState<DetailModalType>(null);
 
   const fetchHistorique = async () => {
     setLoading(true);
@@ -105,6 +114,12 @@ const ObjectifStatsModal: React.FC = () => {
   // Calculate total benefices for the year
   const totalBeneficesAnnuel = data?.beneficesHistorique?.reduce((sum, b) => sum + b.totalBenefice, 0) || 0;
 
+  // Calcul des statistiques de performance
+  const bestMonth = data?.historique?.reduce((best, item) => 
+    item.pourcentage > (best?.pourcentage || 0) ? item : best, data?.historique[0]);
+  
+  const monthsAboveObjectif = data?.historique?.filter(item => item.pourcentage >= 100).length || 0;
+
   return (
     <>
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -140,7 +155,7 @@ const ObjectifStatsModal: React.FC = () => {
             </div>
           ) : data ? (
             <div className="space-y-6 pt-4">
-              {/* Stats Cards */}
+              {/* Stats Cards - Tous cliquables */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <StatCard
                   icon={<TrendingUp className="h-5 w-5" />}
@@ -148,6 +163,8 @@ const ObjectifStatsModal: React.FC = () => {
                   value={formatCurrency(data.currentData.totalVentesMois)}
                   gradient="from-emerald-500 to-teal-500"
                   shadowColor="emerald"
+                  onClick={() => setDetailModal('ventesMois')}
+                  clickable
                 />
                 <StatCard
                   icon={<Target className="h-5 w-5" />}
@@ -164,6 +181,8 @@ const ObjectifStatsModal: React.FC = () => {
                   value={`${currentPercentage}%`}
                   gradient={currentPercentage >= 100 ? "from-amber-500 to-orange-500" : "from-blue-500 to-cyan-500"}
                   shadowColor={currentPercentage >= 100 ? "amber" : "blue"}
+                  onClick={() => setDetailModal('performance')}
+                  clickable
                 />
                 <StatCard
                   icon={<Calendar className="h-5 w-5" />}
@@ -357,6 +376,205 @@ const ObjectifStatsModal: React.FC = () => {
         </DialogContent>
       </Dialog>
 
+      {/* Modal Détail Ventes du Mois */}
+      <Dialog open={detailModal === 'ventesMois'} onOpenChange={(open) => !open && setDetailModal(null)}>
+        <DialogContent className="sm:max-w-xl bg-gradient-to-br from-white to-emerald-50/50 dark:from-gray-900 dark:to-emerald-950/30">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg">
+                <TrendingUp className="h-5 w-5" />
+              </div>
+              <span className="text-xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+                Détails des Ventes du Mois
+              </span>
+            </DialogTitle>
+          </DialogHeader>
+          {data && (
+            <ScrollArea className="max-h-[60vh] pr-4">
+              <div className="space-y-4 py-2">
+                {/* Stats actuelles */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-100 to-teal-100 dark:from-emerald-900/30 dark:to-teal-900/30 border border-emerald-200/50 dark:border-emerald-800/50">
+                    <div className="flex items-center gap-2 mb-2">
+                      <DollarSign className="h-4 w-4 text-emerald-600" />
+                      <span className="text-xs text-emerald-700 dark:text-emerald-400">Ventes Actuelles</span>
+                    </div>
+                    <p className="text-2xl font-bold text-emerald-800 dark:text-emerald-300">
+                      {formatCurrency(data.currentData.totalVentesMois)}
+                    </p>
+                  </div>
+                  <div className="p-4 rounded-xl bg-gradient-to-br from-violet-100 to-purple-100 dark:from-violet-900/30 dark:to-purple-900/30 border border-violet-200/50 dark:border-violet-800/50">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Target className="h-4 w-4 text-violet-600" />
+                      <span className="text-xs text-violet-700 dark:text-violet-400">Objectif</span>
+                    </div>
+                    <p className="text-2xl font-bold text-violet-800 dark:text-violet-300">
+                      {formatCurrency(data.currentData.objectif)}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Progression */}
+                <div className="p-4 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Progression</span>
+                    <span className={cn(
+                      "text-lg font-bold",
+                      currentPercentage >= 100 ? "text-emerald-500" : currentPercentage >= 50 ? "text-amber-500" : "text-rose-500"
+                    )}>
+                      {currentPercentage}%
+                    </span>
+                  </div>
+                  <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                    <div
+                      className={cn(
+                        "h-full rounded-full transition-all duration-500",
+                        currentPercentage >= 100 
+                          ? "bg-gradient-to-r from-emerald-500 to-teal-500" 
+                          : currentPercentage >= 50 
+                            ? "bg-gradient-to-r from-amber-500 to-orange-500"
+                            : "bg-gradient-to-r from-rose-500 to-pink-500"
+                      )}
+                      style={{ width: `${Math.min(currentPercentage, 100)}%` }}
+                    />
+                  </div>
+                </div>
+
+                {/* Reste à atteindre */}
+                <div className="p-4 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200/50 dark:border-blue-800/50">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <ShoppingCart className="h-5 w-5 text-blue-600" />
+                      <span className="font-medium text-blue-700 dark:text-blue-400">Reste à atteindre</span>
+                    </div>
+                    <span className={cn(
+                      "text-xl font-bold",
+                      data.currentData.totalVentesMois >= data.currentData.objectif 
+                        ? "text-emerald-600 dark:text-emerald-400" 
+                        : "text-blue-600 dark:text-blue-400"
+                    )}>
+                      {data.currentData.totalVentesMois >= data.currentData.objectif 
+                        ? "Objectif atteint! 🎉" 
+                        : formatCurrency(data.currentData.objectif - data.currentData.totalVentesMois)}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Mois en cours */}
+                <div className="text-center p-4 rounded-xl bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white">
+                  <p className="text-sm opacity-90">Mois en cours</p>
+                  <p className="text-2xl font-bold">{MOIS_COMPLETS[data.currentData.mois - 1]} {data.annee}</p>
+                </div>
+              </div>
+            </ScrollArea>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal Détail Performance */}
+      <Dialog open={detailModal === 'performance'} onOpenChange={(open) => !open && setDetailModal(null)}>
+        <DialogContent className="sm:max-w-xl bg-gradient-to-br from-white to-blue-50/50 dark:from-gray-900 dark:to-blue-950/30">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-lg">
+                <Sparkles className="h-5 w-5" />
+              </div>
+              <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
+                Analyse de Performance
+              </span>
+            </DialogTitle>
+          </DialogHeader>
+          {data && (
+            <ScrollArea className="max-h-[60vh] pr-4">
+              <div className="space-y-4 py-2">
+                {/* Performance actuelle */}
+                <div className="p-5 rounded-xl bg-gradient-to-br from-blue-100 to-cyan-100 dark:from-blue-900/30 dark:to-cyan-900/30 border border-blue-200/50 dark:border-blue-800/50 text-center">
+                  <p className="text-sm text-blue-600 dark:text-blue-400 mb-2">Performance Actuelle</p>
+                  <p className={cn(
+                    "text-5xl font-bold",
+                    currentPercentage >= 100 ? "text-emerald-600" : currentPercentage >= 50 ? "text-amber-600" : "text-rose-600"
+                  )}>
+                    {currentPercentage}%
+                  </p>
+                  <p className="text-sm text-gray-500 mt-2">
+                    {currentPercentage >= 100 ? "Objectif dépassé!" : currentPercentage >= 50 ? "En bonne voie" : "Effort supplémentaire nécessaire"}
+                  </p>
+                </div>
+
+                {/* Statistiques de performance */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="p-4 rounded-xl bg-gradient-to-br from-amber-100 to-yellow-100 dark:from-amber-900/30 dark:to-yellow-900/30 border border-amber-200/50 dark:border-amber-800/50">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Award className="h-4 w-4 text-amber-600" />
+                      <span className="text-xs text-amber-700 dark:text-amber-400">Meilleur Mois</span>
+                    </div>
+                    <p className="text-lg font-bold text-amber-800 dark:text-amber-300">
+                      {bestMonth ? `${MOIS_NOMS[bestMonth.mois - 1]} (${bestMonth.pourcentage}%)` : 'N/A'}
+                    </p>
+                  </div>
+                  <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-100 to-green-100 dark:from-emerald-900/30 dark:to-green-900/30 border border-emerald-200/50 dark:border-emerald-800/50">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Target className="h-4 w-4 text-emerald-600" />
+                      <span className="text-xs text-emerald-700 dark:text-emerald-400">Objectifs Atteints</span>
+                    </div>
+                    <p className="text-lg font-bold text-emerald-800 dark:text-emerald-300">
+                      {monthsAboveObjectif}/{data.historique?.length || 0} mois
+                    </p>
+                  </div>
+                </div>
+
+                {/* Historique des performances */}
+                <h3 className="font-semibold text-gray-700 dark:text-gray-300 mt-4">Historique des Performances</h3>
+                <div className="space-y-2">
+                  {data.historique?.map((item) => (
+                    <div 
+                      key={`${item.mois}-${item.annee}`}
+                      className={cn(
+                        "flex items-center justify-between p-3 rounded-xl border transition-all hover:scale-[1.01]",
+                        item.pourcentage >= 100 
+                          ? "bg-emerald-50 border-emerald-200 dark:bg-emerald-900/20 dark:border-emerald-800/50" 
+                          : item.pourcentage >= 50 
+                            ? "bg-amber-50 border-amber-200 dark:bg-amber-900/20 dark:border-amber-800/50"
+                            : "bg-rose-50 border-rose-200 dark:bg-rose-900/20 dark:border-rose-800/50"
+                      )}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={cn(
+                          "w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-xs",
+                          item.pourcentage >= 100 
+                            ? "bg-gradient-to-r from-emerald-500 to-green-500" 
+                            : item.pourcentage >= 50 
+                              ? "bg-gradient-to-r from-amber-500 to-orange-500"
+                              : "bg-gradient-to-r from-rose-500 to-pink-500"
+                        )}>
+                          {item.mois}
+                        </div>
+                        <span className="font-medium text-gray-700 dark:text-gray-300">
+                          {MOIS_COMPLETS[item.mois - 1]}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="text-sm text-gray-500">{formatCurrency(item.totalVentesMois)}</span>
+                        <span className={cn(
+                          "font-bold px-2 py-1 rounded-full text-sm",
+                          item.pourcentage >= 100 
+                            ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-400" 
+                            : item.pourcentage >= 50 
+                              ? "bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-400"
+                              : "bg-rose-100 text-rose-700 dark:bg-rose-900/50 dark:text-rose-400"
+                        )}>
+                          {item.pourcentage}%
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </ScrollArea>
+          )}
+        </DialogContent>
+      </Dialog>
+
       {/* Sub-modals */}
       {data && (
         <>
@@ -407,14 +625,15 @@ const StatCard: React.FC<StatCardProps> = ({
   <div 
     className={cn(
       "p-4 rounded-2xl bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50 shadow-xl transition-all duration-300",
-      clickable && "cursor-pointer hover:scale-105 hover:shadow-2xl",
+      clickable && "cursor-pointer hover:scale-105 hover:shadow-2xl group",
       `hover:shadow-${shadowColor}-500/20`
     )}
     onClick={clickable ? onClick : undefined}
   >
     <div className={cn(
-      "w-10 h-10 rounded-xl flex items-center justify-center mb-3 bg-gradient-to-br text-white",
-      gradient
+      "w-10 h-10 rounded-xl flex items-center justify-center mb-3 bg-gradient-to-br text-white transition-transform",
+      gradient,
+      clickable && "group-hover:scale-110"
     )}>
       {icon}
     </div>
@@ -422,9 +641,14 @@ const StatCard: React.FC<StatCardProps> = ({
     <div className="flex items-center gap-1">
       <p className="text-lg font-bold mt-1">{value}</p>
       {clickable && (
-        <span className="text-[10px] text-muted-foreground mt-1">→</span>
+        <ArrowUpRight className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
       )}
     </div>
+    {clickable && (
+      <p className="text-xs text-muted-foreground mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        Cliquez pour voir les détails
+      </p>
+    )}
   </div>
 );
 
