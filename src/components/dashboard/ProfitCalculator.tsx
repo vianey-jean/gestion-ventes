@@ -626,15 +626,20 @@ const ProfitCalculator: React.FC<ProfitCalculatorProps> = ({
                       </ModernTableCell>
                       <ModernTableCell>
                         <ModernActionButton
-                          onClick={() => benefice.id && handleDelete(benefice.id)}
-                          variant="ghost"
-                          gradient="red"
-                          icon={Trash2}
-                          buttonSize="sm"
-                          className=" text-red-800 hover:bg-red-50"
-                        >
-                          Supprimer
-                        </ModernActionButton>
+                      onClick={() => {
+                        if (benefice.id && window.confirm("Êtes-vous sûr de vouloir supprimer ce calcul ?")) {
+                          handleDelete(benefice.id);
+                        }
+                      }}
+                      variant="ghost"
+                      gradient="red"
+                      icon={Trash2}
+                      buttonSize="sm"
+                      className="text-red-800 hover:bg-red-50"
+                    >
+                      Supprimer
+                    </ModernActionButton>
+
                       </ModernTableCell>
                     </ModernTableRow>
                   ))}
