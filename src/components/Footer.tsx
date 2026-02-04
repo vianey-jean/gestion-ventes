@@ -64,19 +64,7 @@ const Footer: React.FC = () => {
                 </li>
               ))}
 
-              {!user && (
-                <li>
-                  <Link
-                    to="/contact"
-                    className="group flex items-center gap-3 text-gray-300 hover:text-white transition-all"
-                  >
-                    <span className="w-2 h-2 rounded-full bg-gradient-to-r from-purple-400 to-pink-400 group-hover:scale-150 transition-transform" />
-                    <span className="relative after:absolute after:left-0 after:-bottom-1 after:h-[2px] after:w-0 after:bg-gradient-to-r after:from-purple-400 after:to-pink-400 after:transition-all group-hover:after:w-full">
-                      Contact
-                    </span>
-                  </Link>
-                </li>
-              )}
+          
             </ul>
           </div>
 

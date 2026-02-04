@@ -1,5 +1,6 @@
 
-import React, { useState } from 'react';
+
+ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -83,13 +84,13 @@ const ContactPage: React.FC = () => {
     return (
      <Layout>
       <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-blue-100 dark:from-emerald-900 dark:via-teal-900 dark:to-blue-900 flex items-center justify-center p-4">
-        <Card className="w-full max-w-lg text-center shadow-2xl border-0 bg-white/90 dark:bg-slate-800/90 backdrop-blur-2xl">
+        <Card className="w-full max-w-lg text-center shadow-2xl border-0 bg-white/90 dark:bg-slate-800/90 backdrop-blur-2xl hover:scale-[1.02] transition-transform duration-500">
           <CardContent className="pt-12 pb-10">
             <div className="relative mb-8">
-              <div className="absolute inset-0 bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full blur-2xl opacity-30"></div>
+              <div className="absolute inset-0 bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 rounded-full blur-3xl opacity-40 animate-pulseSlow"></div>
               <CheckCircle className="relative h-24 w-24 text-emerald-500 mx-auto animate-pulse" />
             </div>
-            <h2 className="text-4xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent mb-4">
+            <h2 className="text-4xl font-extrabold bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-500 bg-clip-text text-transparent mb-4 animate-gradientText">
               Message Envoyé !
             </h2>
             <div className="text-slate-600 dark:text-slate-300 mb-8 text-lg leading-relaxed">
@@ -97,9 +98,9 @@ const ContactPage: React.FC = () => {
             </div>
             <Button 
               onClick={() => setIsSubmitted(false)} 
-              className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white py-4 text-lg font-semibold shadow-xl hover:shadow-emerald-500/25 transition-all duration-300"
+              className="w-full bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-500 hover:from-emerald-700 hover:via-teal-700 hover:to-cyan-600 text-white py-4 text-lg font-semibold shadow-2xl hover:shadow-emerald-500/40 transition-all duration-300 transform hover:scale-[1.03] flex items-center justify-center gap-2"
             >
-              <Send className="mr-3 h-5 w-5" />
+              <Send className="mr-3 h-5 w-5 animate-bounce" />
               Envoyer un autre message
             </Button>
           </CardContent>
@@ -116,36 +117,36 @@ const ContactPage: React.FC = () => {
         {/* Header Premium */}
         <div className="text-center mb-8 sm:mb-12 md:mb-16">
           <div className="relative inline-block mb-4 sm:mb-6 md:mb-8">
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-500 via-purple-600 to-indigo-600 rounded-full blur-3xl opacity-20"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-500 via-purple-600 to-indigo-600 rounded-full blur-3xl opacity-20 animate-pulseSlow"></div>
            
               <motion.h1
-                  initial={{ opacity: 0, y: 60, scale: 0.9 }}   // Apparition douce avec léger zoom
-                  animate={{ opacity: 1, y: 0, scale: 1 }}      // Monte + grossit légèrement
+                  initial={{ opacity: 0, y: 60, scale: 0.9 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
                   transition={{ duration: 0.9, ease: "easeOut" }}
                   className="text-5xl md:text-6xl font-extrabold 
                             bg-gradient-to-r from-purple-600 via-red-600 to-indigo-600 
-                            bg-[length:200%_200%] animate-gradient 
+                            bg-[length:200%_200%] animate-gradientText 
                             bg-clip-text text-transparent mb-6 text-center text-3d"
                 >
                   Contactez-nous
                 </motion.h1>
           </div>
           <div className="max-w-3xl mx-auto px-3 sm:px-4">
-            <div className="text-sm sm:text-base md:text-lg lg:text-xl text-slate-600 dark:text-slate-300 leading-relaxed mb-6 sm:mb-8">
+            <div className="text-sm sm:text-base md:text-lg lg:text-xl text-slate-600 dark:text-slate-300 leading-relaxed mb-6 sm:mb-8 animate-fadeIn">
               Une question ? Un projet ? Notre équipe d'experts est à votre disposition pour vous accompagner dans votre réussite.
             </div>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6 md:gap-8 text-xs sm:text-sm text-slate-500">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 animate-bounce">
                 <Shield className="h-3 w-3 sm:h-4 sm:w-4 text-green-500 shrink-0" />
                 <span>Sécurisé & Confidentiel</span>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 animate-bounce delay-100">
                 <Clock className="h-3 w-3 sm:h-4 sm:w-4 text-blue-500 shrink-0" />
                 <span>Réponse sous 24h</span>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 animate-bounce delay-200">
                 <Sparkles className="h-3 w-3 sm:h-4 sm:w-4 text-purple-500 shrink-0" />
-                <span>Service </span>
+                <span>Service Premium</span>
               </div>
             </div>
           </div>
@@ -154,13 +155,13 @@ const ContactPage: React.FC = () => {
         <div className="grid lg:grid-cols-3 gap-6 sm:gap-8 md:gap-12 max-w-7xl mx-auto">
           {/* Formulaire de contact premium */}
           <div className="lg:col-span-2">
-            <Card className="shadow-2xl border-0 bg-white/90 dark:bg-slate-800/90 backdrop-blur-2xl">
+            <Card className="shadow-2xl border-0 bg-white/90 dark:bg-slate-800/90 backdrop-blur-2xl hover:scale-[1.02] transition-transform duration-500">
               <CardHeader className="pb-4 sm:pb-6 md:pb-8 p-4 sm:p-6">
                 <CardTitle className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 text-lg sm:text-xl md:text-2xl">
-                  <div className="p-2 sm:p-3 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl sm:rounded-2xl shadow-lg shrink-0">
+                  <div className="p-2 sm:p-3 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl sm:rounded-2xl shadow-lg shrink-0 hover:scale-[1.05] transition-transform duration-300">
                     <Mail className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 text-white" />
                   </div>
-                  <span className="bg-gradient-to-r from-slate-800 to-slate-600 dark:from-white dark:to-slate-200 bg-clip-text text-transparent">
+                  <span className="bg-gradient-to-r from-slate-800 to-slate-600 dark:from-white dark:to-slate-200 bg-clip-text text-transparent animate-gradientText">
                     Envoyez-nous un message
                   </span>
                 </CardTitle>
@@ -182,7 +183,7 @@ const ContactPage: React.FC = () => {
                         onChange={handleChange}
                         placeholder="Votre nom complet"
                         required
-                        className="h-12 px-4 bg-slate-50/50 dark:bg-slate-700/50 border-slate-200/50 dark:border-slate-600/50 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200 text-base"
+                        className="h-12 px-4 bg-slate-50/50 dark:bg-slate-700/50 border-slate-200/50 dark:border-slate-600/50 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200 text-base hover:shadow-lg hover:shadow-blue-300/30"
                       />
                     </div>
                     <div className="space-y-3">
@@ -197,7 +198,7 @@ const ContactPage: React.FC = () => {
                         onChange={handleChange}
                         placeholder="votre@email.com"
                         required
-                        className="h-12 px-4 bg-slate-50/50 dark:bg-slate-700/50 border-slate-200/50 dark:border-slate-600/50 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200 text-base"
+                        className="h-12 px-4 bg-slate-50/50 dark:bg-slate-700/50 border-slate-200/50 dark:border-slate-600/50 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200 text-base hover:shadow-lg hover:shadow-blue-300/30"
                       />
                     </div>
                   </div>
@@ -212,7 +213,7 @@ const ContactPage: React.FC = () => {
                       value={formData.expediteurTelephone}
                       onChange={handleChange}
                       placeholder="Votre numéro de téléphone"
-                      className="h-12 px-4 bg-slate-50/50 dark:bg-slate-700/50 border-slate-200/50 dark:border-slate-600/50 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200 text-base"
+                      className="h-12 px-4 bg-slate-50/50 dark:bg-slate-700/50 border-slate-200/50 dark:border-slate-600/50 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200 text-base hover:shadow-lg hover:shadow-blue-300/30"
                     />
                   </div>
 
@@ -221,7 +222,7 @@ const ContactPage: React.FC = () => {
                       Sujet de votre demande *
                     </Label>
                     <Select onValueChange={(value) => handleSelectChange('sujet', value)} value={formData.sujet}>
-                      <SelectTrigger className="h-12 px-4 bg-slate-50/50 dark:bg-slate-700/50 border-slate-200/50 dark:border-slate-600/50 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200 text-base">
+                      <SelectTrigger className="h-12 px-4 bg-slate-50/50 dark:bg-slate-700/50 border-slate-200/50 dark:border-slate-600/50 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200 text-base hover:shadow-lg hover:shadow-blue-300/30">
                         <SelectValue placeholder="Choisissez le sujet de votre demande" />
                       </SelectTrigger>
                       <SelectContent className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl border-0 shadow-2xl">
@@ -246,23 +247,23 @@ const ContactPage: React.FC = () => {
                       placeholder="Décrivez votre demande en détail. Plus vous serez précis, mieux nous pourrons vous aider..."
                       rows={6}
                       required
-                      className="p-4 bg-slate-50/50 dark:bg-slate-700/50 border-slate-200/50 dark:border-slate-600/50 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200 text-base resize-none"
+                      className="p-4 bg-slate-50/50 dark:bg-slate-700/50 border-slate-200/50 dark:border-slate-600/50 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200 text-base resize-none hover:shadow-lg hover:shadow-blue-300/30"
                     />
                   </div>
 
                   <Button 
                     type="submit" 
-                    className="w-full h-14 bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 hover:from-blue-700 hover:via-purple-700 hover:to-indigo-700 text-white text-lg font-semibold shadow-2xl hover:shadow-blue-500/25 transition-all duration-300 rounded-xl"
+                    className="w-full h-14 bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 hover:from-blue-700 hover:via-purple-700 hover:to-indigo-700 text-white text-lg font-semibold shadow-2xl hover:shadow-blue-500/25 transition-all duration-300 rounded-xl flex items-center justify-center gap-2"
                     disabled={isSubmitting}
                   >
                     {isSubmitting ? (
                       <>
-                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
                         Envoi en cours...
                       </>
                     ) : (
                       <>
-                        <Send className="mr-3 h-5 w-5" />
+                        <Send className="mr-3 h-5 w-5 animate-bounce" />
                         Envoyer le message
                       </>
                     )}
@@ -274,7 +275,8 @@ const ContactPage: React.FC = () => {
 
           {/* Informations de contact premium */}
           <div className="space-y-8">
-            <Card className="shadow-2xl border-0 bg-white/90 dark:bg-slate-800/90 backdrop-blur-2xl">
+            {/* Toutes les cartes avec hover:scale et glow */}
+            <Card className="shadow-2xl border-0 bg-white/90 dark:bg-slate-800/90 backdrop-blur-2xl hover:scale-[1.02] transition-transform duration-500">
               <CardHeader>
                 <CardTitle className="flex items-center gap-3 text-xl">
                   <div className="p-2 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-xl shadow-lg">
@@ -284,7 +286,7 @@ const ContactPage: React.FC = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-blue-50/50 to-purple-50/50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-2xl border border-blue-200/30 dark:border-blue-700/30">
+                <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-blue-50/50 to-purple-50/50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-2xl border border-blue-200/30 dark:border-blue-700/30 hover:shadow-lg hover:shadow-blue-300/30 transition-all duration-300">
                   <div className="p-3 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl shadow-lg">
                     <Mail className="h-5 w-5 text-white" />
                   </div>
@@ -294,67 +296,24 @@ const ContactPage: React.FC = () => {
                   </div>
                 </div>
                 
-                <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-emerald-50/50 to-teal-50/50 dark:from-emerald-900/20 dark:to-teal-900/20 rounded-2xl border border-emerald-200/30 dark:border-emerald-700/30">
+                <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-emerald-50/50 to-teal-50/50 dark:from-emerald-900/20 dark:to-teal-900/20 rounded-2xl border border-emerald-200/30 dark:border-emerald-700/30 hover:shadow-lg hover:shadow-green-300/30 transition-all duration-300">
                   <div className="p-3 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-xl shadow-lg">
                     <Phone className="h-5 w-5 text-white" />
                   </div>
                   <div>
                     <div className="font-semibold text-slate-800 dark:text-slate-100 text-base">Ligne Directe</div>
-                    <div className="text-slate-600 dark:text-slate-300">+262 692 84 23 70</div>
+                    <div className="text-slate-600 dark:text-slate-300">+225 0505050505</div>
                   </div>
                 </div>
-                
-                <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-orange-50/50 to-red-50/50 dark:from-orange-900/20 dark:to-red-900/20 rounded-2xl border border-orange-200/30 dark:border-orange-700/30">
-                  <div className="p-3 bg-gradient-to-r from-orange-500 to-red-600 rounded-xl shadow-lg">
+
+                <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-purple-50/50 to-indigo-50/50 dark:from-purple-900/20 dark:to-indigo-900/20 rounded-2xl border border-purple-200/30 dark:border-purple-700/30 hover:shadow-lg hover:shadow-purple-300/30 transition-all duration-300">
+                  <div className="p-3 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-xl shadow-lg">
                     <MapPin className="h-5 w-5 text-white" />
                   </div>
                   <div>
-                    <div className="font-semibold text-slate-800 dark:text-slate-100 text-base">Siège Social</div>
-                    <div className="text-slate-600 dark:text-slate-300">10 Allée des Béryls Bleus, 97400 Saint Denis</div>
+                    <div className="font-semibold text-slate-800 dark:text-slate-100 text-base">Adresse</div>
+                    <div className="text-slate-600 dark:text-slate-300">Abidjan, Côte d'Ivoire</div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="shadow-2xl border-0 bg-white/90 dark:bg-slate-800/90 backdrop-blur-2xl">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-3 text-xl">
-                  <div className="p-2 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl shadow-lg">
-                    <Clock className="h-5 w-5 text-white" />
-                  </div>
-                  Horaires :
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4 text-base">
-                  <div className="flex justify-between items-center p-3 bg-gradient-to-r from-slate-50/50 to-blue-50/50 dark:from-slate-700/50 dark:to-blue-900/20 rounded-xl">
-                    <span className="font-semibold text-slate-700 dark:text-slate-200">Lundi - Vendredi</span>
-                    <span className="text-slate-600 dark:text-slate-300 font-medium">8h00 - 18h00</span>
-                  </div>
-                  <div className="flex justify-between items-center p-3 bg-gradient-to-r from-slate-50/50 to-blue-50/50 dark:from-slate-700/50 dark:to-blue-900/20 rounded-xl">
-                    <span className="font-semibold text-slate-700 dark:text-slate-200">Samedi</span>
-                    <span className="text-slate-600 dark:text-slate-300 font-medium">9h00 - 12h00</span>
-                  </div>
-                  <div className="flex justify-between items-center p-3 bg-gradient-to-r from-red-50/50 to-pink-50/50 dark:from-red-900/20 dark:to-pink-900/20 rounded-xl">
-                    <span className="font-semibold text-slate-700 dark:text-slate-200">Dimanche</span>
-                    <span className="text-red-600 dark:text-red-400 font-medium">Fermé</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Carte de garantie premium */}
-            <Card className="shadow-2xl border-0 bg-gradient-to-br from-purple-500/10 to-pink-500/10 dark:from-purple-900/20 dark:to-pink-900/20 backdrop-blur-2xl border border-purple-200/30 dark:border-purple-700/30">
-              <CardContent className="p-6 text-center">
-                <div className="relative mb-4">
-                  <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-600 rounded-full blur-xl opacity-20"></div>
-                  <Sparkles className="relative h-12 w-12 text-purple-600 mx-auto" />
-                </div>
-                <h3 className="text-lg font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
-                  Garantie :
-                </h3>
-                <div className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed">
-                  Réponse garantie sous 24h avec un suivi personnalisé par nos experts.
                 </div>
               </CardContent>
             </Card>
@@ -362,10 +321,8 @@ const ContactPage: React.FC = () => {
         </div>
       </div>
     </div>
-    
   </Layout>
   );
-
 };
 
 export default ContactPage;
