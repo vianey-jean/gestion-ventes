@@ -676,24 +676,166 @@ const Inventaire = () => {
           </table>
         </div>
 
-        {/* Pagination Premium */}
+        {/* Pagination Premium Responsive */}
         {totalPages > 1 && (
-          <div className="flex justify-center items-center gap-3 p-6 border-t-2 border-gray-200 bg-gradient-to-r from-gray-50 via-white to-gray-50">
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+          <div className="flex flex-col sm:flex-row justify-center items-center gap-3 sm:gap-4 p-4 sm:p-6 border-t-2 border-gray-200 bg-gradient-to-r from-gray-50 via-white to-gray-50">
+            {/* Mobile: Select dropdown pour les pages */}
+            <div className="flex sm:hidden items-center gap-3 w-full justify-center">
               <ModernActionButton
-                key={page}
                 buttonSize="sm"
-                variant={currentPage === page ? "solid" : "outline"}
-                gradient={currentPage === page ? "green" : "indigo"}
-                onClick={() => setCurrentPage(page)}
-                className={cn(
-                  "btn-3d w-12 h-12 rounded-xl font-black text-lg",
-                  currentPage === page ? "shadow-xl shadow-green-500/30" : "hover:scale-110"
-                )}
+                variant="outline"
+                gradient="indigo"
+                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                disabled={currentPage === 1}
+                className="btn-3d w-10 h-10 rounded-xl font-black"
               >
-                {page}
+                ←
               </ModernActionButton>
-            ))}
+              
+              <Select 
+                value={currentPage.toString()} 
+                onValueChange={(value) => setCurrentPage(parseInt(value))}
+              >
+                <SelectTrigger className="w-32 h-10 bg-gradient-to-r from-emerald-500 to-green-600 text-white border-0 rounded-xl shadow-lg font-bold">
+                  <div className="flex items-center gap-2">
+                    <Gem className="h-4 w-4" />
+                    <SelectValue />
+                  </div>
+                </SelectTrigger>
+                <SelectContent className="bg-white/95 backdrop-blur-xl border-2 border-emerald-200 shadow-2xl rounded-xl">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                    <SelectItem 
+                      key={page} 
+                      value={page.toString()}
+                      className="hover:bg-emerald-50 rounded-lg font-semibold"
+                    >
+                      <div className="flex items-center gap-2">
+                        <span>Page {page}</span>
+                        {currentPage === page && <Crown className="h-3 w-3 text-emerald-600" />}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              
+              <ModernActionButton
+                buttonSize="sm"
+                variant="outline"
+                gradient="indigo"
+                onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                disabled={currentPage === totalPages}
+                className="btn-3d w-10 h-10 rounded-xl font-black"
+              >
+                →
+              </ModernActionButton>
+              
+              <span className="text-xs text-gray-500 font-medium">
+                {currentPage}/{totalPages}
+              </span>
+            </div>
+
+            {/* Desktop/Tablet: Boutons de pagination */}
+            <div className="hidden sm:flex items-center gap-2 md:gap-3 flex-wrap justify-center">
+              {/* Bouton précédent */}
+              <ModernActionButton
+                buttonSize="sm"
+                variant="outline"
+                gradient="purple"
+                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                disabled={currentPage === 1}
+                className="btn-3d w-10 h-10 md:w-12 md:h-12 rounded-xl font-black text-sm md:text-lg"
+              >
+                ←
+              </ModernActionButton>
+
+              {/* Pages avec ellipsis pour grand nombre */}
+              {totalPages <= 7 ? (
+                Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                  <ModernActionButton
+                    key={page}
+                    buttonSize="sm"
+                    variant={currentPage === page ? "solid" : "outline"}
+                    gradient={currentPage === page ? "green" : "indigo"}
+                    onClick={() => setCurrentPage(page)}
+                    className={cn(
+                      "btn-3d w-10 h-10 md:w-12 md:h-12 rounded-xl font-black text-sm md:text-lg",
+                      currentPage === page ? "shadow-xl shadow-green-500/30" : "hover:scale-110"
+                    )}
+                  >
+                    {page}
+                  </ModernActionButton>
+                ))
+              ) : (
+                <>
+                  {/* Première page */}
+                  <ModernActionButton
+                    buttonSize="sm"
+                    variant={currentPage === 1 ? "solid" : "outline"}
+                    gradient={currentPage === 1 ? "green" : "indigo"}
+                    onClick={() => setCurrentPage(1)}
+                    className={cn(
+                      "btn-3d w-10 h-10 md:w-12 md:h-12 rounded-xl font-black text-sm md:text-lg",
+                      currentPage === 1 ? "shadow-xl shadow-green-500/30" : "hover:scale-110"
+                    )}
+                  >
+                    1
+                  </ModernActionButton>
+
+                  {currentPage > 3 && (
+                    <span className="px-2 text-gray-400 font-bold">...</span>
+                  )}
+
+                  {/* Pages autour de la page courante */}
+                  {Array.from({ length: 3 }, (_, i) => currentPage - 1 + i)
+                    .filter(page => page > 1 && page < totalPages)
+                    .map((page) => (
+                      <ModernActionButton
+                        key={page}
+                        buttonSize="sm"
+                        variant={currentPage === page ? "solid" : "outline"}
+                        gradient={currentPage === page ? "green" : "indigo"}
+                        onClick={() => setCurrentPage(page)}
+                        className={cn(
+                          "btn-3d w-10 h-10 md:w-12 md:h-12 rounded-xl font-black text-sm md:text-lg",
+                          currentPage === page ? "shadow-xl shadow-green-500/30" : "hover:scale-110"
+                        )}
+                      >
+                        {page}
+                      </ModernActionButton>
+                    ))}
+
+                  {currentPage < totalPages - 2 && (
+                    <span className="px-2 text-gray-400 font-bold">...</span>
+                  )}
+
+                  {/* Dernière page */}
+                  <ModernActionButton
+                    buttonSize="sm"
+                    variant={currentPage === totalPages ? "solid" : "outline"}
+                    gradient={currentPage === totalPages ? "green" : "indigo"}
+                    onClick={() => setCurrentPage(totalPages)}
+                    className={cn(
+                      "btn-3d w-10 h-10 md:w-12 md:h-12 rounded-xl font-black text-sm md:text-lg",
+                      currentPage === totalPages ? "shadow-xl shadow-green-500/30" : "hover:scale-110"
+                    )}
+                  >
+                    {totalPages}
+                  </ModernActionButton>
+                </>
+              )}
+
+              {/* Bouton suivant */}
+              <ModernActionButton
+                buttonSize="sm"
+                variant="outline"
+                gradient="purple"
+                onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                disabled={currentPage === totalPages}
+                className="btn-3d w-10 h-10 md:w-12 md:h-12 rounded-xl font-black text-sm md:text-lg"
+              >
+                →
+              </ModernActionButton>
+            </div>
           </div>
         )}
       </ModernContainer>

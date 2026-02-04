@@ -520,47 +520,119 @@ const ClientsPage: React.FC = () => {
         )}
 
         {/* Pagination */}
-        {filteredClients.length > 0 && totalPages > 1 && (
-          <div className="flex justify-center items-center gap-2 mt-12 mb-8">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-              disabled={currentPage === 1}
-              className="border-2 border-purple-300 dark:border-purple-700 hover:bg-purple-100 dark:hover:bg-purple-900/30 disabled:opacity-50"
-            >
-              ← Précédent
-            </Button>
-            
-            <div className="flex gap-2">
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
-                <Button
-                  key={pageNum}
-                  variant={currentPage === pageNum ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setCurrentPage(pageNum)}
-                  className={`min-w-[40px] ${
-                    currentPage === pageNum
-                      ? 'bg-gradient-to-r from-purple-600 via-violet-600 to-indigo-600 text-white shadow-lg scale-110'
-                      : 'border-2 border-purple-300 dark:border-purple-700 hover:bg-purple-100 dark:hover:bg-purple-900/30'
-                  }`}
-                >
-                  {pageNum}
-                </Button>
-              ))}
-            </div>
-            
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-              disabled={currentPage === totalPages}
-              className="border-2 border-purple-300 dark:border-purple-700 hover:bg-purple-100 dark:hover:bg-purple-900/30 disabled:opacity-50"
-            >
-              Suivant →
-            </Button>
-          </div>
-        )}
+       {filteredClients.length > 0 && totalPages > 1 && (
+  <div className="flex flex-wrap justify-center items-center gap-2 sm:gap-3 mt-12 mb-8 px-4">
+    {/* Précédent */}
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+      disabled={currentPage === 1}
+      className="
+        border-2 border-purple-300 dark:border-purple-700
+        hover:bg-purple-100 dark:hover:bg-purple-900/30
+        disabled:opacity-50
+        font-semibold
+      "
+    >
+      <span className="hidden sm:inline">← Précédent</span>
+      <span className="sm:hidden">←</span>
+    </Button>
+
+    {/* Pages */}
+    <div className="flex items-center gap-2">
+      {/* Page 1 */}
+      <Button
+        variant={currentPage === 1 ? 'default' : 'outline'}
+        size="sm"
+        onClick={() => setCurrentPage(1)}
+        className={`
+          min-w-[40px] font-bold transition-all
+          ${
+            currentPage === 1
+              ? 'bg-gradient-to-r from-purple-600 via-violet-600 to-indigo-600 text-white shadow-lg scale-110'
+              : 'border-2 border-purple-300 dark:border-purple-700 hover:bg-purple-100 dark:hover:bg-purple-900/30'
+          }
+        `}
+      >
+        1
+      </Button>
+
+      {/* Ellipsis gauche */}
+      {currentPage > 4 && (
+        <span className="px-2 text-lg font-bold text-gray-400 dark:text-gray-500">
+          …
+        </span>
+      )}
+
+      {/* Pages autour de la page courante */}
+      {Array.from({ length: 3 }, (_, i) => currentPage - 1 + i)
+        .filter(page => page > 1 && page < totalPages)
+        .map(page => (
+          <Button
+            key={page}
+            variant={currentPage === page ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setCurrentPage(page)}
+            className={`
+              min-w-[40px] font-bold transition-all
+              ${
+                currentPage === page
+                  ? 'bg-gradient-to-r from-purple-600 via-violet-600 to-indigo-600 text-white shadow-lg scale-110'
+                  : 'border-2 border-purple-300 dark:border-purple-700 hover:bg-purple-100 dark:hover:bg-purple-900/30'
+              }
+            `}
+          >
+            {page}
+          </Button>
+        ))}
+
+      {/* Ellipsis droite */}
+      {currentPage < totalPages - 3 && (
+        <span className="px-2 text-lg font-bold text-gray-400 dark:text-gray-500">
+          …
+        </span>
+      )}
+
+      {/* Dernière page */}
+      {totalPages > 1 && (
+        <Button
+          variant={currentPage === totalPages ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => setCurrentPage(totalPages)}
+          className={`
+            min-w-[40px] font-bold transition-all
+            ${
+              currentPage === totalPages
+                ? 'bg-gradient-to-r from-purple-600 via-violet-600 to-indigo-600 text-white shadow-lg scale-110'
+                : 'border-2 border-purple-300 dark:border-purple-700 hover:bg-purple-100 dark:hover:bg-purple-900/30'
+            }
+          `}
+        >
+          {totalPages}
+        </Button>
+      )}
+    </div>
+
+    {/* Suivant */}
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+      disabled={currentPage === totalPages}
+      className="
+        border-2 border-purple-300 dark:border-purple-700
+        hover:bg-purple-100 dark:hover:bg-purple-900/30
+        disabled:opacity-50
+        font-semibold
+      "
+    >
+      <span className="hidden sm:inline">Suivant →</span>
+      <span className="sm:hidden">→</span>
+    </Button>
+  </div>
+)}
+
 
         {/* Empty State Ultra Premium */}
         {clients.length === 0 && searchQuery.length === 0 && (
