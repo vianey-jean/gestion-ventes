@@ -15,7 +15,8 @@ import { Sale, SaleProduct } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import {
   FileText, Search, Calendar, User, MapPin,
-  Phone, Download, Eye, Sparkles, Crown
+  Phone, Download, Eye, Sparkles, Crown,
+  CreditCard
 } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -361,41 +362,84 @@ const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ isOpen, onClose }) 
 
               {/* ===== Résultats ===== */}
               {searchName.length >= 3 && (
-                <div className="space-y-4">
-                  {filteredSalesByName.map(sale => (
-                    <div
-                      key={sale.id}
-                      onClick={() => handleSaleSelect(sale)}
-                      className="
-                        group cursor-pointer
-                        p-5 rounded-2xl
-                        bg-white/80 dark:bg-white/5
-                        backdrop-blur-xl
-                        border border-transparent
-                        hover:border-purple-400
-                        hover:shadow-2xl
-                        transition-all duration-300
-                        hover:scale-[1.015]
-                      "
-                    >
-                      <div className="flex justify-between items-center">
-                        <div>
-                          <div className="font-bold text-purple-700 dark:text-purple-300 flex items-center gap-2">
-                            <User className="h-4 w-4" />
-                            {sale.clientName}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            {new Date(sale.date).toLocaleDateString('fr-FR')}
-                          </div>
-                        </div>
-                        <div className="font-black text-emerald-600 dark:text-emerald-400">
-                          {formatEuro(sale.totalSellingPrice || sale.sellingPrice || 0)}
-                        </div>
-                      </div>
+  <Card className="border-2 border-gradient-to-r from-purple-200 to-pink-200 bg-white/80 dark:bg-gray-800/50 backdrop-blur-xl shadow-xl rounded-2xl">
+    <CardHeader className="pb-3">
+      <CardTitle className="text-lg flex items-center gap-2 text-purple-700 dark:text-purple-300">
+        <User className="h-5 w-5" />
+        Ventes de : {searchName} en {searchYear}
+      </CardTitle>
+    </CardHeader>
+    <CardContent>
+      <ScrollArea className="h-[300px] w-full">
+        <div className="space-y-3">
+          {filteredSalesByName.map((sale) => (
+            <Card
+              key={sale.id}
+              className="cursor-pointer hover:shadow-2xl transition-all duration-300 border-l-4 border-l-purple-500 hover:border-l-pink-500 rounded-xl bg-white/70 dark:bg-gray-900/30 backdrop-blur-md"
+              onClick={() => handleSaleSelect(sale)}
+            >
+              <CardContent className="p-4">
+                <div className="flex justify-between items-start">
+                  <div className="space-y-2">
+                    {/* Nom client */}
+                    <div className="flex items-center gap-2">
+                      <User className="h-4 w-4 text-purple-500" />
+                      <span className="font-semibold text-purple-700 dark:text-purple-300">{sale.clientName}</span>
                     </div>
-                  ))}
+
+                    {/* Date de vente */}
+                    <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                      <Calendar className="h-4 w-4" />
+                      {new Date(sale.date).toLocaleDateString('fr-FR')}
+                    </div>
+
+                    {/* Description ou nombre de produits */}
+                    <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      {sale.products && sale.products.length > 0
+                        ? `${sale.products.length} produit${sale.products.length > 1 ? 's' : ''}`
+                        : sale.description}
+                    </div>
+
+                    {/* Téléphone client */}
+                    {sale.clientPhone && (
+                      <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                        <Phone className="h-4 w-4" />
+                        {sale.clientPhone}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Total et quantité */}
+                  <div className="text-right">
+                    <div className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
+                      {sale.products && sale.products.length > 0
+                        ? formatEuro(sale.totalSellingPrice || 0)
+                        : formatEuro(sale.sellingPrice || 0)}
+                    </div>
+                    <div className="text-sm text-gray-500 dark:text-gray-400">
+                      Qté: {sale.products && sale.products.length > 0
+                        ? sale.products.reduce((sum: number, p) => sum + (p.quantitySold || 0), 0)
+                        : (sale.quantitySold || 0)}
+                    </div>
+                  </div>
                 </div>
-              )}
+              </CardContent>
+            </Card>
+          ))}
+
+          {/* Message si aucune vente */}
+          {filteredSalesByName.length === 0 && (
+            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+              <Search className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p>Aucune vente trouvée pour "{searchName}" en {searchYear}</p>
+            </div>
+          )}
+        </div>
+      </ScrollArea>
+    </CardContent>
+  </Card>
+)}
+
             </div>
           </ScrollArea>
         </DialogContent>
@@ -403,48 +447,153 @@ const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ isOpen, onClose }) 
 
       {/* ================= MODAL DÉTAIL ================= */}
       <Dialog open={showSaleDetails} onOpenChange={setShowSaleDetails}>
-        <DialogContent
-          className="
-            sm:max-w-3xl
-            rounded-[28px]
-            bg-gradient-to-br
-              from-white to-gray-50
-              dark:from-[#0B0D12] dark:to-[#111827]
-            shadow-2xl
-            animate-in fade-in zoom-in-95 slide-in-from-bottom-6 duration-500
-          "
-        >
-          <DialogHeader className="pb-4">
-            <DialogTitle className="flex items-center gap-3 text-xl font-black">
-              <Eye className="h-6 w-6 text-emerald-500" />
-              Détails de la vente
-            </DialogTitle>
-          </DialogHeader>
+  <DialogContent
+    className="
+      sm:max-w-3xl
+      rounded-[28px]
+      bg-gradient-to-br
+        from-white to-gray-50
+        dark:from-[#0B0D12] dark:to-[#111827]
+      shadow-2xl
+      animate-in fade-in zoom-in-95 slide-in-from-bottom-6 duration-500
+      p-0
+    "
+  >
+    <DialogHeader className="pb-4 pt-6 px-6 text-center">
+      <DialogTitle className="flex items-center justify-center gap-3 text-xl font-black bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+        <div className="p-2 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-lg">
+          <Eye className="h-6 w-6 text-white" />
+        </div>
+        Détails de la Vente
+      </DialogTitle>
+    </DialogHeader>
 
-          {selectedSale && (
-            <div className="space-y-6">
-              <div className="text-lg font-semibold">
-                {selectedSale.clientName}
+    <ScrollArea className="h-[calc(90vh-100px)] px-6 pb-6">
+      {selectedSale ? (
+        <div className="space-y-6">
+
+          {/* Informations Client */}
+          <Card className="border-2 border-gradient-to-r from-blue-200 to-indigo-200 rounded-xl bg-white/70 dark:bg-gray-900/30 backdrop-blur-md shadow-md">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg flex items-center gap-2 text-blue-700 dark:text-blue-400">
+                <User className="h-5 w-5" />
+                Informations Client
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex items-center gap-3">
+                <User className="h-4 w-4 text-blue-500" />
+                <span className="font-semibold">{selectedSale.clientName}</span>
+              </div>
+              {selectedSale.clientAddress && (
+                <div className="flex items-center gap-3">
+                  <MapPin className="h-4 w-4 text-blue-500" />
+                  <span>{selectedSale.clientAddress}</span>
+                </div>
+              )}
+              {selectedSale.clientPhone && (
+                <div className="flex items-center gap-3">
+                  <Phone className="h-4 w-4 text-blue-500" />
+                  <span>{selectedSale.clientPhone}</span>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Détails de la Vente */}
+          <Card className="border-2 border-gradient-to-r from-emerald-200 to-teal-200 rounded-xl bg-white/70 dark:bg-gray-900/30 backdrop-blur-md shadow-md">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg flex items-center gap-2 text-emerald-700 dark:text-emerald-400">
+                <CreditCard className="h-5 w-5" />
+                Détails de la Vente
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+
+              {/* Date et Quantité */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-sm font-medium text-gray-600 dark:text-gray-400">Date</Label>
+                  <div className="text-lg font-semibold">{new Date(selectedSale.date).toLocaleDateString('fr-FR')}</div>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-600 dark:text-gray-400">Quantité Total</Label>
+                  <div className="text-lg font-semibold">
+                    {selectedSale.products && selectedSale.products.length > 0
+                      ? selectedSale.products.reduce((sum: number, p) => sum + (p.quantitySold || 0), 0)
+                      : (selectedSale.quantitySold || 0)}
+                  </div>
+                </div>
               </div>
 
-              <Button
-                onClick={() => generateInvoicePDF(selectedSale)}
-                className="
-                  w-full py-4 rounded-2xl
-                  font-black tracking-wide
-                  bg-gradient-to-r from-pink-500 via-purple-600 to-indigo-600
-                  hover:scale-105 hover:shadow-2xl
-                  transition-all
-                "
-              >
-                <Download className="h-5 w-5 mr-3" />
-                Générer la facture PDF
-                <Sparkles className="h-4 w-4 ml-3" />
-              </Button>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+              {/* Produits */}
+              <div>
+                <Label className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                  {selectedSale.products && selectedSale.products.length > 0 ? 'Produits' : 'Produit'}
+                </Label>
+                {selectedSale.products && selectedSale.products.length > 0 ? (
+                  <div className="space-y-2 max-h-64 overflow-y-auto">
+                    {selectedSale.products.map((product, index) => (
+                      <div key={index} className="text-sm bg-gray-50 dark:bg-gray-800 p-2 rounded-md flex justify-between items-center">
+                        <div className="font-medium">{product.description}</div>
+                        <div className="text-gray-600 dark:text-gray-300">
+                          Qté: {product.quantitySold} - {formatEuro(product.sellingPrice || 0)}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-lg font-semibold">{selectedSale.description}</div>
+                )}
+              </div>
+
+              {/* Prix et Bénéfice */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-sm font-medium text-gray-600 dark:text-gray-400">Prix Total</Label>
+                  <div className="text-xl font-bold text-emerald-600 dark:text-emerald-400">
+                    {selectedSale.products && selectedSale.products.length > 0
+                      ? formatEuro(selectedSale.totalSellingPrice || 0)
+                      : formatEuro(selectedSale.sellingPrice || 0)}
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-600 dark:text-gray-400">Bénéfice</Label>
+                  <div className="text-xl font-bold text-purple-600 dark:text-purple-400">
+                    {selectedSale.products && selectedSale.products.length > 0
+                      ? formatEuro(selectedSale.totalProfit || 0)
+                      : formatEuro(selectedSale.profit || 0)}
+                  </div>
+                </div>
+              </div>
+
+            </CardContent>
+          </Card>
+
+          {/* Bouton Générer Facture */}
+          <div className="flex justify-center pt-4">
+            <Button
+              onClick={() => generateInvoicePDF(selectedSale)}
+              className="w-full sm:w-auto py-4 px-6 rounded-2xl font-black tracking-wide
+                         bg-gradient-to-r from-pink-500 via-purple-600 to-indigo-600
+                         hover:scale-105 hover:shadow-2xl transition-all flex items-center gap-3 justify-center"
+            >
+              <Download className="h-5 w-5" />
+              Générer Facture PDF
+              <Sparkles className="h-4 w-4" />
+            </Button>
+          </div>
+
+        </div>
+      ) : (
+        <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+          <p>Aucune vente sélectionnée</p>
+        </div>
+      )}
+    </ScrollArea>
+  </DialogContent>
+</Dialog>
+
     </>
   );
 };
