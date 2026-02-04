@@ -31,9 +31,7 @@ import {
   Package,
   ChevronDown,
   TrendingUp,
-  Sparkles,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
 
 const Navbar: React.FC = () => {
   const { isAuthenticated, user, logout } = useAuth();
@@ -42,37 +40,42 @@ const Navbar: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 backdrop-blur-xl bg-gradient-to-r from-white/90 via-slate-50/90 to-violet-50/90 dark:from-slate-950/90 dark:via-slate-900/90 dark:to-violet-950/90 border-b border-slate-200/50 dark:border-slate-800/50 shadow-lg shadow-violet-500/5">
+    <header className="
+      sticky top-0 z-50
+      backdrop-blur-2xl
+      bg-gradient-to-r from-white/70 via-violet-50/60 to-fuchsia-50/70
+      dark:from-slate-950/80 dark:via-violet-950/70 dark:to-slate-900/80
+      border-b border-white/20 dark:border-white/10
+      shadow-[0_20px_60px_-15px_rgba(139,92,246,0.25)]
+    ">
       <nav className="max-w-7xl mx-auto px-4">
         <div className="flex justify-between h-16 items-center">
 
-          {/* Logo + Objectif */}
+          {/* LOGO + OBJECTIF */}
           <div className="flex items-center gap-4">
-            <Link to="/" className="flex items-center group">
+            <Link to="/" className="group flex items-center">
               <img
                 src="/images/logo.ico"
                 alt="Logo"
-                className="h-12 w-24 sm:h-16 sm:w-32 object-contain transition-transform group-hover:scale-105"
+                className="h-12 w-24 sm:h-16 sm:w-32 object-contain transition-transform duration-300 group-hover:scale-110"
               />
             </Link>
-            
-            {/* Objectif - visible on all sizes */}
             {isAuthenticated && <ObjectifIndicator />}
           </div>
 
           {/* ================= DESKTOP ================= */}
-          <div className="hidden lg:flex items-center space-x-1">
+          <div className="hidden lg:flex items-center gap-1">
             {isAuthenticated && (
               <>
                 <Link to="/dashboard">
-                  <Button variant="ghost" className="rounded-xl hover:bg-violet-500/10 hover:text-violet-600 dark:hover:text-violet-400 transition-all duration-300">
+                  <Button variant="ghost" className="rounded-2xl px-4 hover:bg-violet-500/10 hover:shadow-md transition-all">
                     <LayoutDashboard className="mr-2 h-4 w-4 text-violet-500" />
                     Dashboard
                   </Button>
                 </Link>
 
                 <Link to="/commandes">
-                  <Button variant="ghost" className="rounded-xl hover:bg-emerald-500/10 hover:text-emerald-600 dark:hover:text-emerald-400 transition-all duration-300">
+                  <Button variant="ghost" className="rounded-2xl px-4 hover:bg-emerald-500/10 hover:shadow-md transition-all">
                     <Package className="mr-2 h-4 w-4 text-emerald-500" />
                     Commandes
                   </Button>
@@ -81,7 +84,7 @@ const Navbar: React.FC = () => {
             )}
 
             <Link to="/rdv">
-              <Button variant="ghost" className="rounded-xl hover:bg-orange-500/10 hover:text-orange-600 dark:hover:text-orange-400 transition-all duration-300">
+              <Button variant="ghost" className="rounded-2xl px-4 hover:bg-orange-500/10 hover:shadow-md transition-all">
                 <CalendarDays className="mr-2 h-4 w-4 text-orange-500" />
                 Rendez-vous
               </Button>
@@ -89,15 +92,20 @@ const Navbar: React.FC = () => {
 
             {isAuthenticated && <RdvNotifications />}
 
-            {/* Theme */}
-            <Button 
-              variant="ghost" 
-              size="icon" 
+            {/* THEME */}
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={toggleTheme}
-              className="rounded-xl h-9 w-9 hover:bg-amber-500/10 transition-all duration-300 hover:scale-110"
+              className="
+                rounded-2xl h-9 w-9
+                hover:scale-110
+                hover:bg-amber-500/10
+                transition-all
+              "
             >
               {theme === 'dark'
-                ? <Sun className="h-5 w-5 text-amber-500" />
+                ? <Sun className="h-5 w-5 text-amber-400" />
                 : <Moon className="h-5 w-5 text-indigo-600" />}
             </Button>
 
@@ -105,11 +113,18 @@ const Navbar: React.FC = () => {
             {isAuthenticated ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button 
-                    variant="outline" 
-                    className="rounded-xl border-violet-200/50 dark:border-violet-800/50 hover:bg-violet-500/10 hover:border-violet-400/50 transition-all duration-300"
+                  <Button
+                    variant="outline"
+                    className="
+                      rounded-2xl px-3
+                      border-white/30 dark:border-white/10
+                      bg-white/60 dark:bg-slate-900/60
+                      backdrop-blur-xl
+                      hover:shadow-lg hover:bg-white/80
+                      transition-all
+                    "
                   >
-                    <div className="flex items-center justify-center w-6 h-6 rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-500 mr-2">
+                    <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center mr-2 shadow-md">
                       <UserCircle className="h-4 w-4 text-white" />
                     </div>
                     <span className="font-medium">{user?.firstName}</span>
@@ -117,45 +132,46 @@ const Navbar: React.FC = () => {
                   </Button>
                 </DropdownMenuTrigger>
 
-                <DropdownMenuContent align="end" className="w-56 rounded-xl border-slate-200/50 dark:border-slate-700/50 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl shadow-xl">
-
-                  <DropdownMenuItem asChild className="rounded-lg hover:bg-blue-500/10 focus:bg-blue-500/10 cursor-pointer">
+                <DropdownMenuContent
+                  align="end"
+                  className="
+                    w-56 rounded-2xl
+                    bg-white/80 dark:bg-slate-900/80
+                    backdrop-blur-2xl
+                    border border-white/30 dark:border-white/10
+                    shadow-2xl
+                  "
+                >
+                  <DropdownMenuItem asChild className="rounded-xl hover:bg-blue-500/10">
                     <Link to="/messages" className="flex items-center w-full py-2">
-                      <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-500/10 mr-3">
-                        <MessageSquare className="h-4 w-4 text-blue-500" />
-                      </div>
-                      <span className="font-medium">Messages</span>
+                      <MessageSquare className="h-4 w-4 text-blue-500 mr-3" />
+                      Messages
                       {unreadCount > 0 && (
-                        <Badge className="ml-auto bg-gradient-to-r from-blue-500 to-cyan-500 text-white border-0">
+                        <Badge className="ml-auto bg-gradient-to-r from-blue-500 to-cyan-500 text-white">
                           {unreadCount}
                         </Badge>
                       )}
                     </Link>
                   </DropdownMenuItem>
 
-                  <DropdownMenuItem asChild className="rounded-lg hover:bg-emerald-500/10 focus:bg-emerald-500/10 cursor-pointer">
+                  <DropdownMenuItem asChild className="rounded-xl hover:bg-emerald-500/10">
                     <Link to="/tendances" className="flex items-center w-full py-2">
-                      <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-500/10 mr-3">
-                        <TrendingUp className="h-4 w-4 text-emerald-500" />
-                      </div>
-                      <span className="font-medium">Tendances</span>
+                      <TrendingUp className="h-4 w-4 text-emerald-500 mr-3" />
+                      Tendances
                     </Link>
                   </DropdownMenuItem>
 
-                  <DropdownMenuItem asChild className="rounded-lg hover:bg-violet-500/10 focus:bg-violet-500/10 cursor-pointer">
+                  <DropdownMenuItem asChild className="rounded-xl hover:bg-violet-500/10">
                     <Link to="/Clients" className="flex items-center w-full py-2">
-                      <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-violet-500/10 mr-3">
-                        <Users className="h-4 w-4 text-violet-500" />
-                      </div>
-                      <span className="font-medium">Clients</span>
+                      <Users className="h-4 w-4 text-violet-500 mr-3" />
+                      Clients
                     </Link>
                   </DropdownMenuItem>
-
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
               <Link to="/login">
-                <Button className="rounded-xl bg-gradient-to-r from-violet-500 to-fuchsia-500 hover:from-violet-600 hover:to-fuchsia-600 shadow-lg shadow-violet-500/30 transition-all duration-300 hover:scale-105">
+                <Button className="rounded-2xl bg-gradient-to-r from-violet-500 to-fuchsia-500 shadow-xl hover:scale-105 transition-all">
                   <LogIn className="mr-2 h-4 w-4" />
                   Connexion
                 </Button>
@@ -163,10 +179,10 @@ const Navbar: React.FC = () => {
             )}
 
             {isAuthenticated && (
-              <Button 
-                variant="ghost" 
+              <Button
+                variant="ghost"
                 onClick={logout}
-                className="rounded-xl text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 transition-all duration-300"
+                className="rounded-2xl text-rose-500 hover:bg-rose-500/10 transition-all"
               >
                 <LogOut className="mr-2 h-4 w-4" />
                 Déconnexion
@@ -174,96 +190,26 @@ const Navbar: React.FC = () => {
             )}
           </div>
 
-          {/* ================= TABLET & MOBILE ================= */}
+          {/* ================= MOBILE ================= */}
           <div className="lg:hidden flex items-center gap-2">
             {isAuthenticated && <RdvNotifications />}
 
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={toggleTheme}
-              className="rounded-xl h-9 w-9 hover:bg-amber-500/10 transition-all duration-300"
-            >
-              {theme === 'dark' ? <Sun className="h-5 w-5 text-amber-500" /> : <Moon className="h-5 w-5 text-indigo-600" />}
+            <Button variant="ghost" size="icon" onClick={toggleTheme} className="rounded-2xl h-9 w-9">
+              {theme === 'dark'
+                ? <Sun className="h-5 w-5 text-amber-400" />
+                : <Moon className="h-5 w-5 text-indigo-600" />}
             </Button>
 
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="rounded-xl h-9 w-9 hover:bg-violet-500/10 transition-all duration-300"
+              className="rounded-2xl h-9 w-9"
             >
-              {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              {isMobileMenuOpen ? <X /> : <Menu />}
             </Button>
           </div>
         </div>
-
-        {/* MOBILE/TABLET MENU */}
-        {isMobileMenuOpen && (
-          <div className="lg:hidden grid grid-cols-2 gap-2 pb-4 animate-in slide-in-from-top-2 duration-300">
-            {isAuthenticated && (
-              <>
-                <Link to="/dashboard" onClick={() => setIsMobileMenuOpen(false)}>
-                  <Button variant="outline" className="w-full justify-start rounded-xl border-violet-200/50 dark:border-violet-800/50 hover:bg-violet-500/10">
-                    <LayoutDashboard className="mr-2 h-4 w-4 text-violet-500" />
-                    Dashboard
-                  </Button>
-                </Link>
-                <Link to="/commandes" onClick={() => setIsMobileMenuOpen(false)}>
-                  <Button variant="outline" className="w-full justify-start rounded-xl border-emerald-200/50 dark:border-emerald-800/50 hover:bg-emerald-500/10">
-                    <Package className="mr-2 h-4 w-4 text-emerald-500" />
-                    Commandes
-                  </Button>
-                </Link>
-                <Link to="/clients" onClick={() => setIsMobileMenuOpen(false)}>
-                  <Button variant="outline" className="w-full justify-start rounded-xl border-violet-200/50 dark:border-violet-800/50 hover:bg-violet-500/10">
-                    <Users className="mr-2 h-4 w-4 text-violet-500" />
-                    Clients
-                  </Button>
-                </Link>
-                <Link to="/rdv" onClick={() => setIsMobileMenuOpen(false)}>
-                  <Button variant="outline" className="w-full justify-start rounded-xl border-orange-200/50 dark:border-orange-800/50 hover:bg-orange-500/10">
-                    <CalendarDays className="mr-2 h-4 w-4 text-orange-500" />
-                    Rendez-vous
-                  </Button>
-                </Link>
-                <Link to="/messages" onClick={() => setIsMobileMenuOpen(false)}>
-                  <Button variant="outline" className="w-full justify-start rounded-xl border-blue-200/50 dark:border-blue-800/50 hover:bg-blue-500/10">
-                    <MessageSquare className="mr-2 h-4 w-4 text-blue-500" />
-                    Messages
-                    {unreadCount > 0 && (
-                      <Badge className="ml-auto bg-gradient-to-r from-blue-500 to-cyan-500 text-white border-0">
-                        {unreadCount}
-                      </Badge>
-                    )}
-                  </Button>
-                </Link>
-                <Link to="/tendances" onClick={() => setIsMobileMenuOpen(false)}>
-                  <Button variant="outline" className="w-full justify-start rounded-xl border-emerald-200/50 dark:border-emerald-800/50 hover:bg-emerald-500/10">
-                    <TrendingUp className="mr-2 h-4 w-4 text-emerald-500" />
-                    Tendances
-                  </Button>
-                </Link>
-                <Button 
-                  className="col-span-2 rounded-xl bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 shadow-lg shadow-rose-500/30" 
-                  onClick={() => { logout(); setIsMobileMenuOpen(false); }}
-                >
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Déconnexion
-                </Button>
-              </>
-            )}
-
-            {!isAuthenticated && (
-              <Link to="/login" className="col-span-2" onClick={() => setIsMobileMenuOpen(false)}>
-                <Button className="w-full rounded-xl bg-gradient-to-r from-violet-500 to-fuchsia-500 hover:from-violet-600 hover:to-fuchsia-600 shadow-lg shadow-violet-500/30">
-                  <LogIn className="mr-2 h-4 w-4" />
-                  Connexion
-                </Button>
-              </Link>
-            )}
-          </div>
-        )}
       </nav>
     </header>
   );

@@ -188,106 +188,105 @@ const CommandeTableRow: React.FC<CommandeRowProps> = ({
   };
 
   return (
-    <ModernTableRow className="bg-background/40 hover:bg-primary/5 transition-colors">
-      <ModernTableCell className="align-top w-52">
-        <div className="font-medium whitespace-normal break-words">{commande.clientNom}</div>
-        <div className="text-xs text-muted-foreground whitespace-normal break-words">
-          {commande.clientAddress}
+     <ModernTableRow className="bg-gradient-to-r from-purple-50/30 via-pink-50/20 to-indigo-50/30 dark:from-gray-900/20 dark:via-purple-900/10 dark:to-indigo-900/10 hover:shadow-lg hover:bg-gradient-to-r hover:from-purple-100/40 hover:via-pink-100/30 hover:to-indigo-100/30 transition-all duration-500 rounded-xl backdrop-blur-sm">
+  <ModernTableCell className="align-top w-52">
+    <div className="font-semibold text-purple-800 dark:text-purple-200 whitespace-normal break-words">{commande.clientNom}</div>
+    <div className="text-xs text-muted-foreground whitespace-normal break-words">{commande.clientAddress}</div>
+  </ModernTableCell>
+  <ModernTableCell className="align-top">
+    <span className="text-sm whitespace-normal break-words text-gray-700 dark:text-gray-300">{commande.clientPhone}</span>
+  </ModernTableCell>
+  <ModernTableCell className="align-top w-52">
+    {commande.produits.map((p, idx) => (
+      <div key={idx} className="text-sm space-y-0.5">
+        <div className="font-medium text-purple-700 dark:text-purple-300 whitespace-normal break-words">{p.nom}</div>
+        <div className="text-xs text-muted-foreground">
+          Qté: <span className="font-bold text-red-600">{p.quantite}</span>
         </div>
-      </ModernTableCell>
-      <ModernTableCell className="align-top">
-        <span className="text-sm whitespace-normal break-words">{commande.clientPhone}</span>
-      </ModernTableCell>
-      <ModernTableCell className="align-top w-52">
-        {commande.produits.map((p, idx) => (
-          <div key={idx} className="text-sm space-y-0.5">
-            <div className="font-medium whitespace-normal break-words">{p.nom}</div>
-            <div className="text-xs text-muted-foreground">
-              Qté: <span className="font-bold text-red-600">{p.quantite}</span>
-            </div>
-          </div>
-        ))}
-      </ModernTableCell>
-      <ModernTableCell className="align-top">
-        {commande.produits.map((p, idx) => (
-          <div key={idx} className="text-sm space-y-0.5">
-            <div>Unitaire: {p.prixUnitaire}€</div>
-            <div className="font-semibold">Vente: {p.prixVente}€</div>
-          </div>
-        ))}
-        <div className="mt-3 pt-3 border-t-2 border-red-300 dark:border-red-700">
-          <div className="text-base font-black text-red-600 dark:text-red-500">
-            Total: {commande.produits.reduce((sum, p) => sum + (p.prixVente * p.quantite), 0).toFixed(2)}€
-          </div>
-        </div>
-      </ModernTableCell>
-      <ModernTableCell className="align-top">
-        <Badge
-          className={
-            commande.type === 'commande'
-              ? "bg-purple-600 text-white hover:bg-purple-700"
-              : "bg-blue-600 text-white hover:bg-blue-700"
-          }
-          variant={commande.type === 'commande' ? 'default' : 'secondary'}
-        >
-          {commande.type === 'commande' ? 'Commande' : 'Réservation'}
-        </Badge>
-      </ModernTableCell>
-      <ModernTableCell className="align-top text-sm">
-        {renderDateCell()}
-      </ModernTableCell>
-      <ModernTableCell className="align-top">
-        <Select
-          value={commande.statut}
-          onValueChange={(value) => handleStatusChange(commande.id, value as any)}
-        >
-          <SelectTrigger className="w-36">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {getStatusOptions(commande.type).map((option) => (
-              <SelectItem 
-                key={option.value}
-                value={option.value}
-                className={
-                  option.value === 'en_route' ? 'text-purple-600 font-semibold' :
-                  option.value === 'arrive' ? 'text-green-600 font-semibold' :
-                  option.value === 'en_attente' ? 'text-red-600 font-semibold' :
-                  option.value === 'valide' ? 'text-blue-600 font-semibold' :
-                  option.value === 'annule' ? 'text-gray-600 font-semibold' :
-                  option.value === 'reporter' ? 'text-blue-500 font-semibold' :
-                  ''
-                }
-              >
-                {option.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </ModernTableCell>
-      <ModernTableCell className="align-top">
-        <div className="flex gap-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => handleEdit(commande)}
-            className="hover:bg-gradient-to-r hover:from-green-100 hover:to-emerald-100 dark:hover:from-green-900/30 dark:hover:to-emerald-900/30 rounded-xl transition-all duration-300"
-            title="Modifier"
+      </div>
+    ))}
+  </ModernTableCell>
+  <ModernTableCell className="align-top">
+    {commande.produits.map((p, idx) => (
+      <div key={idx} className="text-sm space-y-0.5">
+        <div className="text-gray-600 dark:text-gray-400">Unitaire: {p.prixUnitaire}€</div>
+        <div className="font-semibold text-purple-700 dark:text-purple-300">Vente: {p.prixVente}€</div>
+      </div>
+    ))}
+    <div className="mt-3 pt-3 border-t-2 border-red-300 dark:border-red-700">
+      <div className="text-base font-extrabold text-red-600 dark:text-red-500 shadow-sm">
+        Total: {commande.produits.reduce((sum, p) => sum + (p.prixVente * p.quantite), 0).toFixed(2)}€
+      </div>
+    </div>
+  </ModernTableCell>
+  <ModernTableCell className="align-top">
+    <Badge
+      className={
+        commande.type === 'commande'
+          ? "bg-gradient-to-br from-purple-600 via-pink-500 to-indigo-500 text-white shadow-md hover:from-purple-700 hover:via-pink-600 hover:to-indigo-600"
+          : "bg-gradient-to-br from-blue-500 via-cyan-400 to-green-400 text-white shadow-md hover:from-blue-600 hover:via-cyan-500 hover:to-green-500"
+      }
+      variant={commande.type === 'commande' ? 'default' : 'secondary'}
+    >
+      {commande.type === 'commande' ? 'Commande' : 'Réservation'}
+    </Badge>
+  </ModernTableCell>
+  <ModernTableCell className="align-top text-sm">
+    {renderDateCell()}
+  </ModernTableCell>
+  <ModernTableCell className="align-top">
+    <Select
+      value={commande.statut}
+      onValueChange={(value) => handleStatusChange(commande.id, value as any)}
+    >
+      <SelectTrigger className="w-36 bg-white/50 dark:bg-gray-800/40 rounded-lg shadow-inner border border-gray-200 dark:border-gray-700 hover:shadow-md transition-all duration-300">
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent className="bg-white dark:bg-gray-900 rounded-xl shadow-lg">
+        {getStatusOptions(commande.type).map((option) => (
+          <SelectItem 
+            key={option.value}
+            value={option.value}
+            className={
+              option.value === 'en_route' ? 'text-purple-600 font-semibold' :
+              option.value === 'arrive' ? 'text-green-600 font-semibold' :
+              option.value === 'en_attente' ? 'text-red-600 font-semibold' :
+              option.value === 'valide' ? 'text-blue-600 font-semibold' :
+              option.value === 'annule' ? 'text-gray-600 font-semibold' :
+              option.value === 'reporter' ? 'text-blue-500 font-semibold' :
+              ''
+            }
           >
-            <Edit className="h-5 w-5 text-green-600 dark:text-green-400" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setDeleteId(commande.id)}
-            className="hover:bg-gradient-to-r hover:from-red-100 hover:to-rose-100 dark:hover:from-red-900/30 dark:hover:to-rose-900/30 rounded-xl transition-all duration-300"
-            title="Supprimer"
-          >
-            <Trash2 className="h-5 w-5 text-red-600 dark:text-red-400" />
-          </Button>
-        </div>
-      </ModernTableCell>
-    </ModernTableRow>
+            {option.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  </ModernTableCell>
+  <ModernTableCell className="align-top">
+    <div className="flex gap-2">
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => handleEdit(commande)}
+        className="hover:bg-gradient-to-r hover:from-green-100 hover:to-emerald-100 dark:hover:from-green-900/30 dark:hover:to-emerald-900/30 rounded-xl shadow-sm transition-all duration-300"
+        title="Modifier"
+      >
+        <Edit className="h-5 w-5 text-green-600 dark:text-green-400" />
+      </Button>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => setDeleteId(commande.id)}
+        className="hover:bg-gradient-to-r hover:from-red-100 hover:to-rose-100 dark:hover:from-red-900/30 dark:hover:to-rose-900/30 rounded-xl shadow-sm transition-all duration-300"
+        title="Supprimer"
+      >
+        <Trash2 className="h-5 w-5 text-red-600 dark:text-red-400" />
+      </Button>
+    </div>
+  </ModernTableCell>
+</ModernTableRow>
+
   );
 };
 
@@ -331,92 +330,93 @@ const CommandeMobileCard: React.FC<CommandeRowProps> = ({
   const dateInfo = getDateInfo();
 
   return (
-    <div className="p-4 border-b border-purple-100 dark:border-purple-800/30 hover:bg-purple-50/50 dark:hover:bg-purple-900/10 transition-colors">
-      {/* En-tête: Client + Type */}
-      <div className="flex justify-between items-start mb-3">
-        <div className="flex-1 min-w-0">
-          <h3 className="font-bold text-base truncate">{commande.clientNom}</h3>
-          <p className="text-xs text-muted-foreground truncate">{commande.clientAddress}</p>
-          <p className="text-xs text-muted-foreground">{commande.clientPhone}</p>
-        </div>
-        <Badge
-          className={`ml-2 text-xs ${
-            commande.type === 'commande'
-              ? "bg-purple-600 text-white"
-              : "bg-blue-600 text-white"
-          }`}
-        >
-          {commande.type === 'commande' ? 'CMD' : 'RES'}
-        </Badge>
+    <div className="p-4 border-b border-purple-100 dark:border-purple-800/30 hover:bg-gradient-to-r hover:from-purple-50/30 hover:via-pink-50/20 hover:to-indigo-50/30 dark:hover:from-purple-900/10 dark:hover:via-pink-900/10 dark:hover:to-indigo-900/10 transition-all duration-500 shadow-lg backdrop-blur-md rounded-2xl">
+  {/* En-tête: Client + Type */}
+  <div className="flex justify-between items-start mb-3">
+    <div className="flex-1 min-w-0">
+      <h3 className="font-extrabold text-lg text-purple-800 dark:text-purple-200 truncate">{commande.clientNom}</h3>
+      <p className="text-xs text-muted-foreground truncate">{commande.clientAddress}</p>
+      <p className="text-xs text-muted-foreground">{commande.clientPhone}</p>
+    </div>
+    <Badge
+      className={`ml-2 text-xs px-3 py-1 rounded-full font-semibold shadow-md ${
+        commande.type === 'commande'
+          ? "bg-gradient-to-br from-purple-600 via-pink-500 to-indigo-500 text-white"
+          : "bg-gradient-to-br from-blue-500 via-cyan-400 to-green-400 text-white"
+      }`}
+    >
+      {commande.type === 'commande' ? 'CMD' : 'RES'}
+    </Badge>
+  </div>
+  
+  {/* Produits */}
+  <div className="mb-3 space-y-1">
+    {commande.produits.map((p, idx) => (
+      <div key={idx} className="flex justify-between text-sm">
+        <span className="truncate flex-1 font-medium text-gray-800 dark:text-gray-200">{p.nom} <span className="text-red-600 font-bold">{`x${p.quantite}`}</span></span>
+        <span className="font-semibold ml-2 text-purple-700 dark:text-purple-300">{p.prixVente}€</span>
       </div>
-      
-      {/* Produits */}
-      <div className="mb-3 space-y-1">
-        {commande.produits.map((p, idx) => (
-          <div key={idx} className="flex justify-between text-sm">
-            <span className="truncate flex-1">{p.nom} <span className="text-red-600 font-bold">x{p.quantite}</span></span>
-            <span className="font-semibold ml-2">{p.prixVente}€</span>
-          </div>
-        ))}
-        <div className="pt-2 border-t border-red-200 dark:border-red-800">
-          <div className="flex justify-between">
-            <span className="font-bold text-red-600">Total</span>
-            <span className="font-black text-red-600">{totalPrice.toFixed(2)}€</span>
-          </div>
-        </div>
-      </div>
-      
-      {/* Date + Statut */}
-      <div className="flex flex-wrap gap-2 items-center mb-3">
-        <div className={`text-xs px-2 py-1 rounded-full ${
-          dateInfo.isOverdue 
-            ? "bg-red-100 text-red-700 animate-pulse"
-            : dateInfo.isNearDeadline 
-            ? "bg-green-100 text-green-700 animate-pulse"
-            : "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300"
-        }`}>
-          {dateInfo.label}: {dateInfo.date}
-          {commande.horaire && ` ${commande.horaire}`}
-        </div>
-        
-        <Select
-          value={commande.statut}
-          onValueChange={(value) => handleStatusChange(commande.id, value as any)}
-        >
-          <SelectTrigger className="h-7 w-28 text-xs">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {getStatusOptions(commande.type).map((option) => (
-              <SelectItem key={option.value} value={option.value} className="text-xs">
-                {option.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-      
-      {/* Actions */}
-      <div className="flex gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => handleEdit(commande)}
-          className="flex-1 text-xs h-8"
-        >
-          <Edit className="h-3 w-3 mr-1" />
-          Modifier
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setDeleteId(commande.id)}
-          className="text-red-600 border-red-200 hover:bg-red-50 text-xs h-8"
-        >
-          <Trash2 className="h-3 w-3" />
-        </Button>
+    ))}
+    <div className="pt-2 border-t border-red-200 dark:border-red-800">
+      <div className="flex justify-between">
+        <span className="font-bold text-red-600 dark:text-red-400 tracking-wide">Total</span>
+        <span className="font-black text-red-600 dark:text-red-400 text-lg">{totalPrice.toFixed(2)}€</span>
       </div>
     </div>
+  </div>
+  
+  {/* Date + Statut */}
+  <div className="flex flex-wrap gap-2 items-center mb-3">
+    <div className={`text-xs px-3 py-1 rounded-full font-semibold shadow-sm ${
+      dateInfo.isOverdue 
+        ? "bg-red-100 text-red-700 animate-pulse"
+        : dateInfo.isNearDeadline 
+        ? "bg-green-100 text-green-700 animate-pulse"
+        : "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300"
+    }`}>
+      {dateInfo.label}: {dateInfo.date}
+      {commande.horaire && ` ${commande.horaire}`}
+    </div>
+    
+    <Select
+      value={commande.statut}
+      onValueChange={(value) => handleStatusChange(commande.id, value as any)}
+    >
+      <SelectTrigger className="h-8 w-28 text-xs bg-white/50 dark:bg-gray-800/40 rounded-lg shadow-inner border border-gray-200 dark:border-gray-700 hover:shadow-md transition-all duration-300">
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent className="bg-white dark:bg-gray-900 rounded-xl shadow-lg">
+        {getStatusOptions(commande.type).map((option) => (
+          <SelectItem key={option.value} value={option.value} className="text-xs font-semibold hover:bg-purple-50 dark:hover:bg-purple-800/30 transition-colors">
+            {option.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  </div>
+  
+  {/* Actions */}
+  <div className="flex gap-2">
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={() => handleEdit(commande)}
+      className="flex-1 text-xs h-8 bg-white/40 dark:bg-gray-800/40 border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md hover:bg-gradient-to-r hover:from-green-100 hover:to-emerald-100 transition-all duration-300"
+    >
+      <Edit className="h-3 w-3 mr-1 text-green-600 dark:text-green-400" />
+      Modifier
+    </Button>
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={() => setDeleteId(commande.id)}
+      className="text-red-600 border-red-200 hover:bg-red-50 dark:hover:bg-red-900/20 text-xs h-8 shadow-sm hover:shadow-md transition-all duration-300"
+    >
+      <Trash2 className="h-3 w-3" />
+    </Button>
+  </div>
+</div>
+
   );
 };
 

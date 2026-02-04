@@ -38,21 +38,15 @@ interface RdvNotificationsProps {
   onCheckNotifications?: () => void;
 }
 
-// Fonction pour vérifier si un RDV est dans les 12h à venir ou dans les 24h passées
 const shouldBlink = (notification: RdvNotification): boolean => {
   const now = new Date();
   const rdvDateTime = new Date(`${notification.rdvDate}T${notification.rdvHeureDebut}:00`);
-  
   const hoursUntilRdv = (rdvDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
   const hoursAfterRdv = (now.getTime() - rdvDateTime.getTime()) / (1000 * 60 * 60);
-  
-  // Clignote si RDV dans moins de 12h OU si RDV passé depuis moins de 24h
   return hoursUntilRdv <= 12 || (hoursAfterRdv > 0 && hoursAfterRdv <= 24);
 };
 
-const RdvNotifications: React.FC<RdvNotificationsProps> = ({
-  onCheckNotifications,
-}) => {
+const RdvNotifications: React.FC<RdvNotificationsProps> = ({ onCheckNotifications }) => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [notifications, setNotifications] = useState<RdvNotification[]>([]);
@@ -60,31 +54,22 @@ const RdvNotifications: React.FC<RdvNotificationsProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const previousCountRef = useRef<number>(0);
-  
-  // État pour le clignotement (toggle toutes les 5 secondes)
   const [blinkState, setBlinkState] = useState(false);
-  
-  // Modal pour voir le détail d'un RDV
   const [selectedNotification, setSelectedNotification] = useState<RdvNotification | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
 
-  // Timer pour le clignotement toutes les 5 secondes
   useEffect(() => {
     const blinkInterval = setInterval(() => {
       setBlinkState(prev => !prev);
     }, 5000);
-    
     return () => clearInterval(blinkInterval);
   }, []);
 
-  // Charger les notifications
   const loadNotifications = useCallback(async () => {
     try {
       setLoading(true);
       const data = await rdvNotificationsApi.getUnread();
       setNotifications(data);
-      
-      // Vérifier si le nombre a augmenté pour afficher un toast
       if (data.length > previousCountRef.current && previousCountRef.current > 0) {
         toast({
           title: '🔔 Nouvelle notification RDV',
@@ -92,7 +77,6 @@ const RdvNotifications: React.FC<RdvNotificationsProps> = ({
           duration: 5000,
         });
       }
-      
       previousCountRef.current = data.length;
       setUnreadCount(data.length);
     } catch (error) {
@@ -102,7 +86,6 @@ const RdvNotifications: React.FC<RdvNotificationsProps> = ({
     }
   }, [toast]);
 
-  // Vérifier et créer des notifications pour les RDV dans 24h
   const checkAndCreateNotifications = useCallback(async () => {
     try {
       const result = await rdvNotificationsApi.checkAndCreate();
@@ -119,30 +102,20 @@ const RdvNotifications: React.FC<RdvNotificationsProps> = ({
     }
   }, [toast, loadNotifications]);
 
-  // Polling pour la synchronisation (SSE désactivé pour éviter erreurs CORS)
   useEffect(() => {
     loadNotifications();
     checkAndCreateNotifications();
-
-    // Polling toutes les 5 minutes (SSE désactivé pour éviter CORS)
     const interval = setInterval(() => {
       checkAndCreateNotifications();
     }, 5 * 60 * 1000);
-
-    return () => {
-      clearInterval(interval);
-    };
+    return () => clearInterval(interval);
   }, [loadNotifications, checkAndCreateNotifications]);
 
-  // Quand on clique sur une notification, afficher le détail et marquer comme lu
   const handleNotificationClick = async (notification: RdvNotification) => {
     setSelectedNotification(notification);
     setShowDetailModal(true);
-    
-    // Marquer la notification comme lue (ne pas supprimer)
     try {
       await rdvNotificationsApi.markAsRead(notification.id);
-      // Retirer de la liste affichée (car on affiche seulement les non lus)
       setNotifications(prev => prev.filter(n => n.id !== notification.id));
       setUnreadCount(prev => Math.max(0, prev - 1));
     } catch (error) {
@@ -150,16 +123,13 @@ const RdvNotifications: React.FC<RdvNotificationsProps> = ({
     }
   };
 
-  // Fermer le modal de détail
   const handleCloseDetail = () => {
     setShowDetailModal(false);
     setSelectedNotification(null);
   };
 
-  // Aller à la page RDV avec le rdv à mettre en surbrillance
   const handleGoToRdv = () => {
     if (selectedNotification) {
-      // Naviguer vers la page RDV avec l'ID du RDV et sa date pour naviguer à la bonne semaine
       const rdvDate = selectedNotification.rdvDate;
       navigate(`/rdv?highlightRdv=${selectedNotification.rdvId}&date=${rdvDate}`);
     }
@@ -171,48 +141,46 @@ const RdvNotifications: React.FC<RdvNotificationsProps> = ({
     <>
       <Sheet open={isOpen} onOpenChange={setIsOpen}>
         <SheetTrigger asChild>
-          <Button 
-            variant="outline" 
-            size="icon" 
-            className="relative h-10 w-10 rounded-xl border-orange-200 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+          <Button
+            variant="outline"
+            size="icon"
+            className="relative h-10 w-10 rounded-2xl border-orange-200 hover:bg-gradient-to-tr hover:from-orange-50 hover:to-yellow-50 dark:hover:bg-orange-900/20 shadow-lg transition-all duration-300"
             aria-label={`${unreadCount} notifications`}
           >
             {unreadCount > 0 ? (
-              <BellRing className="h-5 w-5 text-orange-600" />
+              <BellRing className="h-5 w-5 text-orange-600 animate-bounce" />
             ) : (
               <Bell className="h-5 w-5 text-muted-foreground" />
             )}
             {unreadCount > 0 && (
-              <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full text-xs flex items-center justify-center text-white bg-red-500 animate-pulse">
+              <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full text-xs flex items-center justify-center text-white bg-red-500 animate-pulse shadow-md">
                 {unreadCount > 9 ? '9+' : unreadCount}
               </span>
             )}
           </Button>
         </SheetTrigger>
-        <SheetContent className="w-full sm:max-w-md">
+        <SheetContent className="w-full sm:max-w-md bg-gradient-to-b from-orange-50/50 via-white/50 to-orange-100/30 dark:from-orange-900/20 dark:via-gray-900/20 dark:to-orange-950/30 backdrop-blur-lg shadow-2xl rounded-2xl p-6">
           <SheetHeader>
-            <SheetTitle className="flex items-center gap-2">
-              <BellRing className="h-5 w-5 text-orange-600" />
+            <SheetTitle className="flex items-center gap-2 text-xl font-semibold text-orange-700 dark:text-orange-300">
+              <BellRing className="h-5 w-5 text-orange-600 animate-pulse" />
               Notifications RDV
-              {unreadCount > 0 && (
-                <Badge variant="destructive">{unreadCount}</Badge>
-              )}
+              {unreadCount > 0 && <Badge variant="destructive">{unreadCount}</Badge>}
             </SheetTitle>
           </SheetHeader>
 
           <div className="mt-6 space-y-4">
             {loading ? (
-              <Card>
+              <Card className="shadow-lg border border-orange-200">
                 <CardContent className="py-8 text-center">
-                  <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full mx-auto mb-3" />
-                  <p className="text-muted-foreground">Chargement...</p>
+                  <div className="animate-spin h-8 w-8 border-2 border-orange-500 border-t-transparent rounded-full mx-auto mb-3" />
+                  <p className="text-muted-foreground text-sm">Chargement...</p>
                 </CardContent>
               </Card>
             ) : notifications.length === 0 ? (
-              <Card>
+              <Card className="shadow-xl border border-green-300">
                 <CardContent className="py-8 text-center">
                   <CheckCircle className="h-12 w-12 mx-auto text-green-500 mb-3" />
-                  <p className="text-muted-foreground">
+                  <p className="text-muted-foreground text-sm">
                     Aucun rendez-vous dans les prochaines 24h
                   </p>
                 </CardContent>
@@ -225,45 +193,50 @@ const RdvNotifications: React.FC<RdvNotificationsProps> = ({
                 </p>
                 {notifications.map((notification) => {
                   const shouldBlinkNow = shouldBlink(notification) && blinkState;
-                  
                   return (
-                    <Card 
+                    <Card
                       key={notification.id}
                       className={cn(
-                        "cursor-pointer transition-all hover:shadow-md border-l-4",
-                        shouldBlink(notification) 
-                          ? shouldBlinkNow 
-                            ? "border-l-red-600 bg-red-100 dark:bg-red-950/40" 
+                        "cursor-pointer transition-all hover:shadow-2xl border-l-4 rounded-xl",
+                        shouldBlink(notification)
+                          ? shouldBlinkNow
+                            ? "border-l-red-600 bg-red-100 dark:bg-red-950/40"
                             : "border-l-red-500 bg-red-50 dark:bg-red-950/20"
                           : "border-l-orange-500 bg-orange-50 dark:bg-orange-950/20"
                       )}
                       onClick={() => handleNotificationClick(notification)}
                     >
-                      <CardContent className="p-3">
+                      <CardContent className="p-3 space-y-1">
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex items-start gap-2 flex-1 min-w-0">
-                            <Clock className={cn(
-                              "h-4 w-4 mt-0.5",
-                              shouldBlink(notification) 
-                                ? shouldBlinkNow 
-                                  ? "text-red-600" 
-                                  : "text-red-500"
-                                : "text-orange-500"
-                            )} />
+                            <Clock
+                              className={cn(
+                                "h-4 w-4 mt-0.5",
+                                shouldBlink(notification)
+                                  ? shouldBlinkNow
+                                    ? "text-red-600 animate-pulse"
+                                    : "text-red-500"
+                                  : "text-orange-500"
+                              )}
+                            />
                             <div className="flex-1 min-w-0">
-                              <p className={cn(
-                                "font-medium truncate",
-                                shouldBlink(notification) && shouldBlinkNow && "text-red-700 dark:text-red-400"
-                              )}>{notification.rdvTitre}</p>
+                              <p
+                                className={cn(
+                                  "font-semibold text-lg truncate",
+                                  shouldBlink(notification) && shouldBlinkNow && "text-red-700 dark:text-red-400"
+                                )}
+                              >
+                                {notification.rdvTitre}
+                              </p>
                               <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
                                 <span>{notification.rdvClientNom}</span>
                                 <span>:</span>
                                 <span>{notification.rdvHeureDebut} - {notification.rdvHeureFin}</span>
                               </div>
-                              <Badge 
-                                variant="outline" 
+                              <Badge
+                                variant="outline"
                                 className={cn(
-                                  "mt-1 text-xs",
+                                  "mt-1 text-xs shadow-sm",
                                   shouldBlink(notification) && "border-red-500 text-red-600"
                                 )}
                               >
@@ -275,7 +248,7 @@ const RdvNotifications: React.FC<RdvNotificationsProps> = ({
                             variant="ghost"
                             size="icon"
                             className={cn(
-                              "h-8 w-8 flex-shrink-0",
+                              "h-8 w-8 flex-shrink-0 rounded-lg hover:scale-110 transition-transform",
                               shouldBlink(notification)
                                 ? "text-red-600 hover:bg-red-100"
                                 : "text-orange-600 hover:bg-orange-100"
@@ -284,17 +257,15 @@ const RdvNotifications: React.FC<RdvNotificationsProps> = ({
                             <Eye className="h-4 w-4" />
                           </Button>
                         </div>
-                        
                         {notification.rdvClientTelephone && (
                           <div className="flex items-center gap-1 text-xs text-muted-foreground mt-2">
-                            <Phone className="h-3 w-3" />
+                            <Phone className="h-3 w-3 text-purple-600" />
                             <span>{notification.rdvClientTelephone}</span>
                           </div>
                         )}
-                        
                         {notification.rdvLieu && (
                           <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
-                            <MapPin className="h-3 w-3" />
+                            <MapPin className="h-3 w-3 text-green-600" />
                             <span className="truncate">{notification.rdvLieu}</span>
                           </div>
                         )}
@@ -308,70 +279,67 @@ const RdvNotifications: React.FC<RdvNotificationsProps> = ({
         </SheetContent>
       </Sheet>
 
-      {/* Modal détail du RDV */}
       <Dialog open={showDetailModal} onOpenChange={setShowDetailModal}>
-        <DialogContent className="sm:max-w-lg bg-gradient-to-br from-background via-background to-orange-500/5">
+        <DialogContent className="sm:max-w-lg bg-gradient-to-br from-background via-background to-orange-50/10 backdrop-blur-lg rounded-2xl shadow-2xl p-6">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-3 text-xl">
-              <div className="p-2 rounded-xl bg-gradient-to-r from-orange-500 to-orange-600">
+            <DialogTitle className="flex items-center gap-3 text-2xl font-bold">
+              <div className="p-2 rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 shadow-lg">
                 <Calendar className="h-5 w-5 text-white" />
               </div>
               {selectedNotification?.rdvTitre}
             </DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="text-muted-foreground">
               Rendez-vous dans moins de 24 heures
             </DialogDescription>
           </DialogHeader>
-          
           {selectedNotification && (
             <div className="space-y-4 py-4">
-              {/* Client Info */}
-              <div className="p-4 rounded-xl bg-muted/50 space-y-3">
+              <div className="p-4 rounded-2xl bg-gradient-to-tr from-muted/50 to-white/20 shadow-inner space-y-3">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-orange-100 dark:bg-orange-900/30">
+                  <div className="p-2 rounded-lg bg-orange-100 dark:bg-orange-900/30 shadow">
                     <Calendar className="h-5 w-5 text-orange-600" />
                   </div>
                   <div>
                     <div className="text-sm text-muted-foreground">Date</div>
-                    <div className="font-semibold">
+                    <div className="font-semibold text-orange-700 dark:text-orange-300">
                       {format(parseISO(selectedNotification.rdvDate), 'EEEE d MMMM yyyy', { locale: fr })}
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30">
+                  <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30 shadow">
                     <Clock className="h-5 w-5 text-blue-600" />
                   </div>
                   <div>
                     <div className="text-sm text-muted-foreground">Horaire</div>
-                    <div className="font-semibold">
+                    <div className="font-semibold text-blue-700 dark:text-blue-300">
                       {selectedNotification.rdvHeureDebut} - {selectedNotification.rdvHeureFin}
                     </div>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-900/30">
+                  <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-900/30 shadow">
                     <Phone className="h-5 w-5 text-purple-600" />
                   </div>
                   <div>
                     <div className="text-sm text-muted-foreground">Client</div>
                     <div className="font-semibold">{selectedNotification.rdvClientNom}</div>
                     {selectedNotification.rdvClientTelephone && (
-                      <a 
+                      <a
                         href={`tel:${selectedNotification.rdvClientTelephone}`}
-                        className="text-sm text-primary hover:underline"
+                        className="text-sm text-primary hover:underline font-medium"
                       >
                         {selectedNotification.rdvClientTelephone}
                       </a>
                     )}
                   </div>
                 </div>
-                
+
                 {selectedNotification.rdvLieu && (
                   <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-green-100 dark:bg-green-900/30">
+                    <div className="p-2 rounded-lg bg-green-100 dark:bg-green-900/30 shadow">
                       <MapPin className="h-5 w-5 text-green-600" />
                     </div>
                     <div>
@@ -385,14 +353,14 @@ const RdvNotifications: React.FC<RdvNotificationsProps> = ({
               <div className="flex gap-3 pt-2">
                 <Button
                   variant="outline"
-                  className="flex-1"
+                  className="flex-1 border-gray-300 hover:border-gray-400 hover:bg-gray-50 transition-all shadow-sm"
                   onClick={handleCloseDetail}
                 >
                   <X className="h-4 w-4 mr-2" />
                   Fermer
                 </Button>
                 <Button
-                  className="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700"
+                  className="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 shadow-lg"
                   onClick={handleGoToRdv}
                 >
                   <Calendar className="h-4 w-4 mr-2" />

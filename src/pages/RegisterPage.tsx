@@ -207,7 +207,6 @@ const RegisterPage: React.FC = () => {
     !isEmailChecking &&
     Object.keys(errors).filter(key => errors[key]).length === 0;
 
-  // Show loading during form submission
   if (isSubmitting) {
     return (
       <Layout>
@@ -223,24 +222,22 @@ const RegisterPage: React.FC = () => {
 
   return (
     <Layout>
-      {/* Background decorations */}
-      <div className="min-h-screen bg-gradient-to-br from-violet-50 via-purple-50 to-fuchsia-100 dark:from-gray-900 dark:via-purple-900/20 dark:to-slate-900 py-12 px-4">
-        {/* Background decorations */}
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute top-1/4 left-1/6 w-72 h-72 bg-purple-400/20 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute bottom-1/4 right-1/6 w-72 h-72 bg-pink-400/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-r from-violet-400/10 to-fuchsia-400/10 rounded-full blur-3xl"></div>
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-fuchsia-50 to-pink-50 dark:from-gray-900 dark:via-purple-900/20 dark:to-slate-900 py-12 px-4 relative overflow-hidden">
+        <div className="absolute inset-0">
+          <div className="absolute top-1/4 left-1/6 w-80 h-80 bg-purple-400/20 rounded-full blur-4xl animate-pulse animate-fadeIn"></div>
+          <div className="absolute bottom-1/4 right-1/6 w-80 h-80 bg-pink-400/20 rounded-full blur-4xl animate-pulse delay-1000 animate-fadeIn"></div>
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-r from-violet-400/20 to-fuchsia-400/20 rounded-full blur-4xl animate-rotateSlow opacity-70"></div>
         </div>
 
         <div className="relative container mx-auto max-w-4xl">
-          <Card className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl border-0 shadow-2xl">
+          <Card className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl border-0 shadow-2xl hover:shadow-3xl transition-shadow duration-500">
             <CardHeader className="text-center pb-8 pt-10">
               <div className="flex justify-center mb-6">
-                <div className="w-20 h-20 bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 rounded-2xl flex items-center justify-center shadow-lg">
-                  <UserPlus className="h-10 w-10 text-white" />
+                <div className="w-24 h-24 bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 rounded-3xl flex items-center justify-center shadow-xl animate-pulseGlow">
+                  <UserPlus className="h-12 w-12 text-white" />
                 </div>
               </div>
-              <CardTitle className="text-3xl font-bold bg-gradient-to-r from-violet-600 to-fuchsia-600 bg-clip-text text-transparent">
+              <CardTitle className="text-3xl font-bold bg-gradient-to-r from-violet-600 to-fuchsia-600 bg-clip-text text-transparent animate-textGlow">
                 Créer un compte
               </CardTitle>
               <CardDescription className="text-gray-600 dark:text-gray-300 text-lg mt-2">
@@ -250,13 +247,14 @@ const RegisterPage: React.FC = () => {
 
             <form onSubmit={handleSubmit}>
               <CardContent className="space-y-8 px-8">
-                {/* Personal Info Section */}
+
+                {/* Personal Info */}
                 <div className="space-y-6">
                   <div className="flex items-center gap-2 mb-4">
-                    <User className="h-5 w-5 text-purple-600" />
+                    <User className="h-5 w-5 text-purple-600 animate-bounce" />
                     <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">Informations personnelles</h3>
                   </div>
-                  
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-3">
                       <Label htmlFor="firstName" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
@@ -270,7 +268,7 @@ const RegisterPage: React.FC = () => {
                         onChange={handleChange}
                         className={`h-12 bg-white/50 dark:bg-gray-700/50 border-2 rounded-xl transition-all duration-200 ${
                           errors.firstName ? "border-red-500" : "border-purple-200 dark:border-purple-700 focus:border-purple-500"
-                        } focus:ring-4 focus:ring-purple-500/20`}
+                        } focus:ring-4 focus:ring-purple-500/30 shadow-lg hover:shadow-xl`}
                       />
                       {errors.firstName && (
                         <span className="text-sm text-red-500 flex items-center gap-2">
@@ -292,7 +290,7 @@ const RegisterPage: React.FC = () => {
                         onChange={handleChange}
                         className={`h-12 bg-white/50 dark:bg-gray-700/50 border-2 rounded-xl transition-all duration-200 ${
                           errors.lastName ? "border-red-500" : "border-purple-200 dark:border-purple-700 focus:border-purple-500"
-                        } focus:ring-4 focus:ring-purple-500/20`}
+                        } focus:ring-4 focus:ring-purple-500/30 shadow-lg hover:shadow-xl`}
                       />
                       {errors.lastName && (
                         <span className="text-sm text-red-500 flex items-center gap-2">
@@ -303,6 +301,7 @@ const RegisterPage: React.FC = () => {
                     </div>
                   </div>
 
+                  {/* Email */}
                   <div className="space-y-3">
                     <Label htmlFor="email" className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
                       <Mail className="h-4 w-4" />
@@ -319,7 +318,7 @@ const RegisterPage: React.FC = () => {
                       disabled={isEmailChecking}
                       className={`h-12 bg-white/50 dark:bg-gray-700/50 border-2 rounded-xl transition-all duration-200 ${
                         errors.email ? "border-red-500" : "border-purple-200 dark:border-purple-700 focus:border-purple-500"
-                      } focus:ring-4 focus:ring-purple-500/20`}
+                      } focus:ring-4 focus:ring-purple-500/30 shadow-lg hover:shadow-xl`}
                     />
                     {errors.email && (
                       <span className="text-sm text-red-500 flex items-center gap-2">
@@ -335,6 +334,7 @@ const RegisterPage: React.FC = () => {
                     )}
                   </div>
 
+                  {/* Gender & Phone */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-3">
                       <Label htmlFor="gender" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
@@ -346,7 +346,7 @@ const RegisterPage: React.FC = () => {
                       >
                         <SelectTrigger className={`h-12 bg-white/50 dark:bg-gray-700/50 border-2 rounded-xl transition-all duration-200 ${
                           errors.gender ? "border-red-500" : "border-purple-200 dark:border-purple-700"
-                        }`}>
+                        } focus:ring-4 focus:ring-purple-500/30 shadow-lg hover:shadow-xl`}>
                           <SelectValue placeholder="Sélectionnez votre genre" />
                         </SelectTrigger>
                         <SelectContent>
@@ -376,7 +376,7 @@ const RegisterPage: React.FC = () => {
                         onChange={handleChange}
                         className={`h-12 bg-white/50 dark:bg-gray-700/50 border-2 rounded-xl transition-all duration-200 ${
                           errors.phone ? "border-red-500" : "border-purple-200 dark:border-purple-700 focus:border-purple-500"
-                        } focus:ring-4 focus:ring-purple-500/20`}
+                        } focus:ring-4 focus:ring-purple-500/30 shadow-lg hover:shadow-xl`}
                       />
                       {errors.phone && (
                         <span className="text-sm text-red-500 flex items-center gap-2">
@@ -387,6 +387,7 @@ const RegisterPage: React.FC = () => {
                     </div>
                   </div>
 
+                  {/* Address */}
                   <div className="space-y-3">
                     <Label htmlFor="address" className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
                       <MapPin className="h-4 w-4" />
@@ -400,7 +401,7 @@ const RegisterPage: React.FC = () => {
                       onChange={handleChange}
                       className={`h-12 bg-white/50 dark:bg-gray-700/50 border-2 rounded-xl transition-all duration-200 ${
                         errors.address ? "border-red-500" : "border-purple-200 dark:border-purple-700 focus:border-purple-500"
-                      } focus:ring-4 focus:ring-purple-500/20`}
+                      } focus:ring-4 focus:ring-purple-500/30 shadow-lg hover:shadow-xl`}
                     />
                     {errors.address && (
                       <span className="text-sm text-red-500 flex items-center gap-2">
@@ -414,7 +415,7 @@ const RegisterPage: React.FC = () => {
                 {/* Security Section */}
                 <div className="space-y-6">
                   <div className="flex items-center gap-2 mb-4">
-                    <Shield className="h-5 w-5 text-purple-600" />
+                    <Shield className="h-5 w-5 text-purple-600 animate-pulse" />
                     <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">Sécurité du compte</h3>
                   </div>
 
@@ -430,7 +431,7 @@ const RegisterPage: React.FC = () => {
                         value={formData.password}
                         onChange={handleChange}
                         error={errors.password}
-                        className="h-12"
+                        className="h-12 shadow-lg hover:shadow-xl transition-shadow duration-300"
                       />
                       <PasswordStrengthChecker 
                         password={formData.password} 
@@ -449,15 +450,15 @@ const RegisterPage: React.FC = () => {
                         value={formData.confirmPassword}
                         onChange={handleChange}
                         error={errors.confirmPassword}
-                        className="h-12"
+                        className="h-12 shadow-lg hover:shadow-xl transition-shadow duration-300"
                       />
                     </div>
                   </div>
                 </div>
 
-                {/* Terms and Conditions */}
+                {/* Terms */}
                 <div className="space-y-4">
-                  <div className="flex items-start space-x-3 p-4 bg-purple-50 dark:bg-purple-900/20 rounded-xl border border-purple-200 dark:border-purple-800">
+                  <div className="flex items-start space-x-3 p-4 bg-purple-50/40 dark:bg-purple-900/20 rounded-xl border border-purple-200 dark:border-purple-800 shadow-md hover:shadow-lg transition-shadow duration-300">
                     <Checkbox
                       id="acceptTerms"
                       name="acceptTerms"
@@ -486,19 +487,14 @@ const RegisterPage: React.FC = () => {
                       </Link>
                     </Label>
                   </div>
-                  {errors.acceptTerms && (
-                    <span className="text-sm text-red-500 flex items-center gap-2">
-                      <span className="w-2 h-2 bg-red-500 rounded-full inline-block"></span>
-                      {errors.acceptTerms}
-                    </span>
-                  )}
                 </div>
+
               </CardContent>
 
               <CardFooter className="flex flex-col space-y-6 px-8 pb-10">
                 <Button
                   type="submit"
-                  className="w-full h-14 bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 hover:from-violet-700 hover:via-purple-700 hover:to-fuchsia-700 text-white font-bold text-lg rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center gap-3"
+                  className="w-full h-14 bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 hover:from-violet-700 hover:via-purple-700 hover:to-fuchsia-700 text-white font-bold text-lg rounded-xl shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center gap-3 animate-buttonGlow"
                   disabled={!isFormValid || isSubmitting}
                 >
                   {isEmailChecking ? (
@@ -508,23 +504,37 @@ const RegisterPage: React.FC = () => {
                     </>
                   ) : (
                     <>
-                      <Sparkles className="h-5 w-5" />
+                      <Sparkles className="h-5 w-5 animate-pulse" />
                       Créer mon compte
                     </>
                   )}
                 </Button>
 
-                <div className="text-center">
-                  <p className="text-gray-600 dark:text-gray-300">
-                    Déjà membre?{" "}
-                    <Link 
-                      to="/login" 
-                      className="text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 font-semibold hover:underline transition-colors"
-                    >
-                      Se connecter
-                    </Link>
-                  </p>
-                </div>
+           <div className="text-center mt-6">
+  <p className="text-gray-600 dark:text-gray-300 text-lg md:text-xl font-medium flex items-center justify-center gap-2">
+    <span className="inline-block animate-pulse text-purple-500 dark:text-purple-400">
+      🔑
+    </span>
+    Déjà membre? 
+    <Link
+      to="/login"
+      className="ml-2 relative inline-block text-transparent font-bold bg-clip-text bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 
+                 hover:from-pink-500 hover:via-purple-500 hover:to-violet-500 
+                 transition-all duration-500 ease-in-out 
+                 shadow-lg hover:shadow-2xl 
+                 transform hover:scale-105 hover:translate-y-[-2px] 
+                 animate-textGlow"
+    >
+      Se Connecter
+      <span className="absolute inset-0 rounded-lg bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 opacity-10 blur-xl animate-pulseGlow"></span>
+    </Link>
+    <span className="inline-block animate-bounce text-purple-500 dark:text-purple-400">
+      ✨
+    </span>
+  </p>
+ 
+</div>
+
               </CardFooter>
             </form>
           </Card>
