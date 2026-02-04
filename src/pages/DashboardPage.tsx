@@ -314,22 +314,36 @@ const DashboardPage = () => {
                   <Inventaire />
                 </TabsContent>
                 
-                <TabsContent value="calcul-benefice" className="mt-0 animate-in fade-in-50 slide-in-from-bottom-4 duration-500">
-                  <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
-                    <div className="relative w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-amber-600 via-yellow-600 to-amber-700 rounded-xl sm:rounded-2xl flex items-center justify-center shrink-0 shadow-xl shadow-amber-500/30">
-                      <Calculator className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
-                      <Award className="absolute -top-1 -right-1 h-4 w-4 text-orange-400" />
-                    </div>
-                    <div className="min-w-0">
-                      <h2 className="text-lg sm:text-xl md:text-2xl font-bold bg-gradient-to-r from-amber-600 to-yellow-600 bg-clip-text text-transparent truncate flex items-center gap-2">
-                        Calcul de Bénéfices
-                        <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-purple-500" />
-                      </h2>
-                      <p className="text-xs sm:text-sm md:text-base text-gray-600 dark:text-gray-300 truncate">Calculez vos marges et prix de vente optimaux</p>
-                    </div>
-                  </div>
-                  <ProfitCalculator />
-                </TabsContent>
+               <TabsContent value="calcul-benefice" className="mt-0 animate-in fade-in-50 slide-in-from-bottom-4 duration-500">
+  <div className="flex items-center gap-3 mb-6">
+    
+    {/* Icône principale luxueuse */}
+    <div className="relative w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-amber-600 via-yellow-500 to-amber-700
+                    rounded-2xl flex items-center justify-center shadow-[0_20px_40px_rgba(255,184,28,0.35)]">
+      <Calculator className="h-6 w-6 sm:h-7 sm:w-7 text-white drop-shadow-lg" />
+      <Award className="absolute -top-1 -right-1 h-5 w-5 text-orange-400 animate-pulse" />
+    </div>
+
+    {/* Texte */}
+    <div className="min-w-0">
+      <h2 className="text-xl sm:text-2xl md:text-3xl font-extrabold bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-600
+                     bg-clip-text text-transparent flex items-center gap-2">
+        Calcul de Bénéfices
+        <Sparkles className="h-5 w-5 sm:h-6 sm:w-6 text-purple-500 animate-spin-slow" />
+      </h2>
+      <p className="text-sm sm:text-base md:text-lg text-gray-600 dark:text-gray-300 truncate">
+        Calculez vos marges et prix de vente optimaux
+      </p>
+    </div>
+  </div>
+
+  {/* Encapsulation luxueuse du calculateur */}
+  <div className="bg-gradient-to-br from-white/90 to-gray-50/90 dark:from-gray-900/90 dark:to-gray-800/90
+                  backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-6 sm:p-8">
+    <ProfitCalculator />
+  </div>
+</TabsContent>
+
               </div>
             </motion.div>
           </Tabs>

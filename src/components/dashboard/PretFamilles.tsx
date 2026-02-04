@@ -13,7 +13,8 @@ import { useToast } from '@/hooks/use-toast';
 import { 
   CalendarIcon, Loader2, Wallet, CreditCard, Plus, ArrowUp, ArrowDown,
   Receipt, HandCoins, DollarSign, Sparkles, Award, Users, TrendingDown, TrendingUp, Eye,
-  Edit2, Trash2
+  Edit2, Trash2,
+  Euro
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { pretFamilleService } from '@/service/api';
@@ -729,38 +730,97 @@ const PretFamilles: React.FC = () => {
           </div>
 
           {/* Stats rapides */}
-          <div className="flex flex-wrap gap-2 sm:gap-3 md:gap-4">
-            <div className="bg-white/20 backdrop-blur-sm rounded-lg sm:rounded-xl md:rounded-2xl px-3 py-2 sm:px-4 sm:py-3 md:px-6 md:py-4 text-center">
-              <div className="text-lg sm:text-xl md:text-2xl font-bold text-white">{prets.length}</div>
-              <div className="text-white/80 text-xs sm:text-sm">Familles</div>
-            </div>
-            <div className="bg-white/20 backdrop-blur-sm rounded-lg sm:rounded-xl md:rounded-2xl px-3 py-2 sm:px-4 sm:py-3 md:px-6 md:py-4 text-center">
-              <div className="text-sm sm:text-base md:text-xl lg:text-2xl font-bold text-emerald-200">
-                {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(totalPret)}
-              </div>
-              <div className="text-white/80 text-xs sm:text-sm">Total prêté</div>
-            </div>
-          </div>
+         <div className="flex flex-wrap gap-3 sm:gap-4 md:gap-5">
+  {/* Carte Familles */}
+  <div className="relative overflow-hidden rounded-xl sm:rounded-2xl md:rounded-3xl 
+                  bg-gradient-to-br from-white/25 to-white/5 
+                  backdrop-blur-xl border border-white/20 
+                  shadow-[0_20px_50px_rgba(0,0,0,0.25)]
+                  px-4 py-3 sm:px-6 sm:py-4 md:px-8 md:py-6 text-center">
+    <div className="absolute inset-0 bg-gradient-to-tr from-white/10 via-transparent to-transparent pointer-events-none" />
 
-          {/* Boutons d'action */}
-          <div className="flex flex-row sm:flex-col gap-2 sm:gap-3 w-full sm:w-auto">
-            <Button 
-              onClick={() => setRemboursementDialogOpen(true)} 
-              className="flex-1 sm:flex-none bg-white/20 hover:bg-white/30 text-white backdrop-blur-sm border border-white/30 transition-all duration-300 hover:scale-105 shadow-lg text-xs sm:text-sm px-3 py-2 sm:px-4 sm:py-2"
-            >
-              <Receipt className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-              <span className="hidden xs:inline">Remboursement</span>
-              <span className="xs:hidden">Rembours.</span>
-            </Button>
-            <Button 
-              onClick={() => setDemandePretDialogOpen(true)} 
-              className="flex-1 sm:flex-none bg-emerald-500 hover:bg-emerald-600 text-white transition-all duration-300 hover:scale-105 shadow-lg text-xs sm:text-sm px-3 py-2 sm:px-4 sm:py-2"
-            >
-              <Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-              <span className="hidden xs:inline">Nouveau Prêt</span>
-              <span className="xs:hidden">Nouveau</span>
-            </Button>
-          </div>
+    <div className="flex items-center justify-center gap-2 mb-1">
+      <Users className="h-4 w-4 sm:h-5 sm:w-5 text-white/80" />
+      <div className="text-xl sm:text-2xl md:text-3xl font-extrabold text-white tracking-wide">
+        {prets.length}
+      </div>
+    </div>
+
+    <div className="text-white/70 text-xs sm:text-sm uppercase tracking-widest">
+      Familles
+    </div>
+  </div>
+
+  {/* Carte Total prêté */}
+  <div className="relative overflow-hidden rounded-xl sm:rounded-2xl md:rounded-3xl 
+                  bg-gradient-to-br from-emerald-400/25 to-emerald-900/10 
+                  backdrop-blur-xl border border-emerald-300/30 
+                  shadow-[0_20px_50px_rgba(16,185,129,0.25)]
+                  px-4 py-3 sm:px-6 sm:py-4 md:px-8 md:py-6 text-center">
+    <div className="absolute inset-0 bg-gradient-to-tr from-emerald-400/10 via-transparent to-transparent pointer-events-none" />
+
+    <div className="flex items-center justify-center gap-2 mb-1">
+      <Euro className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-200" />
+      <div className="text-base sm:text-xl md:text-2xl lg:text-3xl font-extrabold text-emerald-200">
+        {new Intl.NumberFormat('fr-FR', {
+          style: 'currency',
+          currency: 'EUR',
+          maximumFractionDigits: 0,
+        }).format(totalPret)}
+      </div>
+    </div>
+
+    <div className="text-white/70 text-xs sm:text-sm uppercase tracking-widest">
+      Total prêté
+    </div>
+  </div>
+</div>
+
+{/* Boutons d'action luxe */}
+<div className="flex flex-row sm:flex-col gap-3 sm:gap-4 w-full sm:w-auto mt-4">
+  {/* Bouton Remboursement */}
+  <Button
+    onClick={() => setRemboursementDialogOpen(true)}
+    className="group relative flex-1 sm:flex-none overflow-hidden
+               rounded-xl sm:rounded-2xl
+               bg-gradient-to-br from-white/30 to-white/10
+               backdrop-blur-xl border border-white/30
+               text-white font-medium
+               shadow-[0_15px_40px_rgba(0,0,0,0.25)]
+               transition-all duration-300
+               hover:scale-105 hover:shadow-[0_20px_60px_rgba(255,255,255,0.25)]
+               px-4 py-2 sm:px-6 sm:py-3 text-xs sm:text-sm"
+  >
+    <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+    <span className="relative flex items-center justify-center">
+      <Receipt className="h-4 w-4 sm:h-5 sm:w-5 mr-2 text-white/90" />
+      <span className="hidden xs:inline">Remboursement</span>
+      <span className="xs:hidden">Rembours.</span>
+    </span>
+  </Button>
+
+  {/* Bouton Nouveau Prêt */}
+  <Button
+    onClick={() => setDemandePretDialogOpen(true)}
+    className="group relative flex-1 sm:flex-none overflow-hidden
+               rounded-xl sm:rounded-2xl
+               bg-gradient-to-br from-emerald-500 to-emerald-700
+               border border-emerald-300/40
+               text-white font-semibold
+               shadow-[0_15px_40px_rgba(16,185,129,0.45)]
+               transition-all duration-300
+               hover:scale-105 hover:shadow-[0_20px_60px_rgba(16,185,129,0.6)]
+               px-4 py-2 sm:px-6 sm:py-3 text-xs sm:text-sm"
+  >
+    <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+    <span className="relative flex items-center justify-center">
+      <Plus className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
+      <span className="hidden xs:inline">Nouveau Prêt</span>
+      <span className="xs:hidden">Nouveau</span>
+    </span>
+  </Button>
+</div>
+
         </div>
       </div>
 
