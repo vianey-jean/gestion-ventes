@@ -1235,7 +1235,7 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
             className="sm:mr-auto rounded-xl font-bold bg-gradient-to-r from-red-500 via-red-600 to-rose-600 hover:from-red-600 hover:via-red-700 hover:to-rose-700 text-white border-0 shadow-lg shadow-red-500/20 hover:shadow-xl hover:shadow-red-500/30 transition-all duration-300 transform hover:-translate-y-0.5"
           >
             <Trash2 className="h-4 w-4 mr-2" />
-            Supprimer toute la vente
+            Supprimer ce vente
           </Button>
         )}
 
