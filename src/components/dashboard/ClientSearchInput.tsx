@@ -126,31 +126,53 @@ const ClientSearchInput: React.FC<ClientSearchInputProps> = ({
     autoComplete="off"
   />
 
-  {/* Liste des suggestions */}
+  {/* Liste des suggestions - affiche min 3 clients avec scroll */}
   {isOpen && suggestions.length > 0 && (
     <div
       ref={dropdownRef}
-      className="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg max-h-60 overflow-auto"
+      className="bg-background border border-border rounded-lg shadow-xl max-h-60 overflow-auto"
+      style={{
+        maxHeight: '240px',
+        minHeight: suggestions.length >= 3 ? '180px' : 'auto',
+        overflowY: 'auto',
+        scrollbarWidth: 'thin',
+      }}
     >
-      {suggestions.map((client) => (
-        <button
-          key={client.id}
-          type="button"
-          className="w-full px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700 border-b border-gray-100 dark:border-gray-600 last:border-b-0 focus:bg-gray-50 dark:focus:bg-gray-700 focus:outline-none transition-colors"
-          onClick={() => handleClientSelect(client)}
-          onMouseDown={(e) => e.preventDefault()} // Empêche le blur de l'input
-        >
-          <div className="font-medium text-gray-900 dark:text-white">
-            {client.nom}
-          </div>
-          <div className="text-sm text-gray-600 dark:text-gray-400">
-            {client.phone}
-          </div>
-          <div className="text-sm text-gray-500 dark:text-gray-500 truncate">
-            {client.adresse}
-          </div>
-        </button>
-      ))}
+      <div className="py-1">
+        {suggestions.map((client, index) => (
+          <button
+            key={client.id}
+            type="button"
+            className="w-full px-4 py-3 text-left hover:bg-accent border-b border-border last:border-b-0 focus:bg-accent focus:outline-none transition-colors"
+            onClick={() => handleClientSelect(client)}
+            onMouseDown={(e) => e.preventDefault()}
+          >
+            <div className="flex items-center gap-2">
+              <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary">
+                {index + 1}
+              </span>
+              <div className="flex-1 min-w-0">
+                <div className="font-medium text-foreground truncate">
+                  {client.nom}
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  {client.phone}
+                </div>
+                <div className="text-xs text-muted-foreground truncate">
+                  {client.adresse}
+                </div>
+              </div>
+            </div>
+          </button>
+        ))}
+      </div>
+      {suggestions.length > 3 && (
+        <div className="sticky bottom-0 bg-gradient-to-t from-background to-transparent py-2 text-center">
+          <span className="text-xs text-muted-foreground">
+            ↓ Faites défiler pour voir plus ({suggestions.length} clients)
+          </span>
+        </div>
+      )}
     </div>
   )}
 </div>
