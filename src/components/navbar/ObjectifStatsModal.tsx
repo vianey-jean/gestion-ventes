@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Eye, TrendingUp, Target, Sparkles, BarChart3, Calendar, Coins, ArrowUpRight, Users, Percent, DollarSign, ShoppingCart, Award } from 'lucide-react';
+import { Eye, TrendingUp, Target, Sparkles, BarChart3, Calendar, Coins, ArrowUpRight, Users, Percent, DollarSign, ShoppingCart, Award, Crown, Diamond, Gem, Star, Zap } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -9,6 +9,8 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Badge } from '@/components/ui/badge';
+import { motion } from 'framer-motion';
 import {
   LineChart,
   Line,
@@ -124,34 +126,53 @@ const ObjectifStatsModal: React.FC = () => {
     <>
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7 rounded-full bg-gradient-to-br from-violet-500/20 to-fuchsia-500/20 hover:from-violet-500/30 hover:to-fuchsia-500/30 border border-violet-500/30 shadow-lg shadow-violet-500/10 transition-all duration-300 hover:scale-110"
+          <motion.button
+            whileHover={{ scale: 1.15 }}
+            whileTap={{ scale: 0.9 }}
+            className="relative h-9 w-9 rounded-xl bg-gradient-to-br from-violet-500 via-purple-500 to-fuchsia-500 hover:from-violet-400 hover:via-purple-400 hover:to-fuchsia-400 border-2 border-white/30 shadow-xl shadow-violet-500/40 transition-all duration-300 flex items-center justify-center group"
           >
-            <Eye className="h-3.5 w-3.5 text-violet-600 dark:text-violet-400" />
-          </Button>
+            <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-amber-400 to-orange-400 opacity-0 group-hover:opacity-30 transition-opacity animate-pulse" />
+            <Eye className="h-4 w-4 text-white drop-shadow-lg" />
+            <Sparkles className="absolute -top-1 -right-1 h-3 w-3 text-amber-400 animate-pulse" />
+          </motion.button>
         </DialogTrigger>
         
-        <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-slate-50 via-white to-violet-50 dark:from-slate-950 dark:via-slate-900 dark:to-violet-950 border-violet-200/50 dark:border-violet-800/50">
-          <DialogHeader className="pb-2">
-            <DialogTitle className="flex items-center gap-3 text-2xl font-bold">
-              <div className="p-2.5 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500 shadow-lg shadow-violet-500/30">
-                <BarChart3 className="h-6 w-6 text-white" />
+        <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-slate-50 via-white to-violet-50 dark:from-slate-950 dark:via-slate-900 dark:to-violet-950 border-2 border-violet-300/50 dark:border-violet-700/50 rounded-3xl shadow-2xl">
+          {/* Premium Top Bar */}
+          <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-violet-500 via-fuchsia-500 to-pink-500 rounded-t-3xl" />
+          
+          <DialogHeader className="pb-4 pt-2">
+            <DialogTitle className="flex items-center gap-4 text-2xl font-bold">
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-violet-400 to-fuchsia-400 rounded-2xl blur-lg opacity-50 animate-pulse" />
+                <div className="relative p-3 rounded-2xl bg-gradient-to-br from-violet-500 via-purple-500 to-fuchsia-500 shadow-xl shadow-violet-500/40">
+                  <BarChart3 className="h-7 w-7 text-white" />
+                </div>
               </div>
-              <span className="bg-gradient-to-r from-violet-600 to-fuchsia-600 bg-clip-text text-transparent">
-                Statistiques des Objectifs
-              </span>
-              <Sparkles className="h-5 w-5 text-amber-500 animate-pulse" />
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 shadow-lg text-xs">
+                    <Crown className="h-3 w-3 mr-1" />
+                    PREMIUM
+                  </Badge>
+                  <Gem className="h-4 w-4 text-fuchsia-500 animate-pulse" />
+                </div>
+                <span className="text-2xl font-black bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 bg-clip-text text-transparent">
+                  Statistiques des Objectifs
+                </span>
+              </div>
+              <Star className="h-6 w-6 text-amber-500 animate-bounce" />
             </DialogTitle>
           </DialogHeader>
 
           {loading ? (
-            <div className="flex items-center justify-center py-20">
+            <div className="flex flex-col items-center justify-center py-24 gap-4">
               <div className="relative">
-                <div className="h-16 w-16 rounded-full border-4 border-violet-200 dark:border-violet-800" />
+                <div className="absolute inset-0 bg-gradient-to-r from-violet-400 to-fuchsia-400 rounded-full blur-xl opacity-30 animate-pulse" />
+                <div className="relative h-20 w-20 rounded-full border-4 border-violet-200 dark:border-violet-800" />
                 <div className="absolute inset-0 h-16 w-16 rounded-full border-4 border-violet-500 border-t-transparent animate-spin" />
               </div>
+              <p className="text-violet-600 dark:text-violet-400 font-semibold animate-pulse">Chargement des données...</p>
             </div>
           ) : data ? (
             <div className="space-y-6 pt-4">
@@ -196,42 +217,67 @@ const ObjectifStatsModal: React.FC = () => {
               </div>
 
               {/* Progress Bar */}
-              <div className="p-5 rounded-2xl bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50 shadow-xl">
-                <div className="flex justify-between items-center mb-3">
-                  <span className="text-sm font-semibold text-slate-600 dark:text-slate-300">
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="relative p-6 rounded-3xl bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl border-2 border-violet-200/50 dark:border-violet-700/50 shadow-2xl overflow-hidden"
+              >
+                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-violet-500/10 to-transparent rounded-full" />
+                <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-fuchsia-500/10 to-transparent rounded-full" />
+                
+                <div className="relative flex justify-between items-center mb-4">
+                  <div className="flex items-center gap-2">
+                    <div className="p-2 rounded-xl bg-gradient-to-r from-violet-500 to-fuchsia-500">
+                      <Zap className="h-4 w-4 text-white" />
+                    </div>
+                    <span className="font-bold text-slate-700 dark:text-slate-200">
                     Progression du mois
-                  </span>
-                  <span className={cn(
-                    "text-lg font-bold",
-                    currentPercentage >= 100 ? "text-emerald-500" : currentPercentage >= 50 ? "text-amber-500" : "text-rose-500"
+                    </span>
+                  </div>
+                  <Badge className={cn(
+                    "text-white border-0 shadow-lg font-black text-lg px-4 py-1",
+                    currentPercentage >= 100 ? "bg-gradient-to-r from-emerald-500 to-green-500" : currentPercentage >= 50 ? "bg-gradient-to-r from-amber-500 to-orange-500" : "bg-gradient-to-r from-rose-500 to-pink-500"
                   )}>
                     {currentPercentage}%
-                  </span>
+                  </Badge>
                 </div>
-                <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-                  <div
+                <div className="relative h-6 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden shadow-inner">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${Math.min(currentPercentage, 100)}%` }}
+                    transition={{ duration: 1.5, ease: "easeOut" }}
                     className={cn(
-                      "h-full rounded-full transition-all duration-1000 ease-out",
+                      "h-full rounded-full",
                       currentPercentage >= 100 
-                        ? "bg-gradient-to-r from-emerald-500 to-teal-500" 
+                        ? "bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500" 
                         : currentPercentage >= 50 
-                          ? "bg-gradient-to-r from-amber-500 to-orange-500"
-                          : "bg-gradient-to-r from-rose-500 to-pink-500"
+                          ? "bg-gradient-to-r from-amber-500 via-yellow-500 to-orange-500"
+                          : "bg-gradient-to-r from-rose-500 via-pink-500 to-fuchsia-500"
                     )}
-                    style={{ width: `${Math.min(currentPercentage, 100)}%` }}
                   />
+                  <div className="absolute inset-0 bg-gradient-to-r from-white/20 via-transparent to-transparent" />
                 </div>
-              </div>
+              </motion.div>
 
               {/* Charts */}
               <div className="grid md:grid-cols-2 gap-6">
                 {/* Ventes par mois */}
-                <div className="p-5 rounded-2xl bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50 shadow-xl">
-                  <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-                    <TrendingUp className="h-5 w-5 text-emerald-500" />
+                <motion.div 
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="relative p-6 rounded-3xl bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl border-2 border-emerald-200/50 dark:border-emerald-700/50 shadow-2xl overflow-hidden"
+                >
+                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500" />
+                  <h3 className="text-lg font-black mb-4 flex items-center gap-3">
+                    <div className="p-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 shadow-lg shadow-emerald-500/30">
+                      <TrendingUp className="h-5 w-5 text-white" />
+                    </div>
                     <span className="bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
-                      Ventes Mensuelles {data.annee}
+                      Ventes {data.annee}
                     </span>
+                    <Diamond className="h-4 w-4 text-emerald-500 animate-pulse" />
                   </h3>
                   <div className="h-64">
                     <ResponsiveContainer width="100%" height="100%">
@@ -268,15 +314,24 @@ const ObjectifStatsModal: React.FC = () => {
                       </AreaChart>
                     </ResponsiveContainer>
                   </div>
-                </div>
+                </motion.div>
 
                 {/* Pourcentage par mois */}
-                <div className="p-5 rounded-2xl bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50 shadow-xl">
-                  <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-                    <Target className="h-5 w-5 text-violet-500" />
+                <motion.div 
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.4 }}
+                  className="relative p-6 rounded-3xl bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl border-2 border-violet-200/50 dark:border-violet-700/50 shadow-2xl overflow-hidden"
+                >
+                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-violet-500 via-purple-500 to-fuchsia-500" />
+                  <h3 className="text-lg font-black mb-4 flex items-center gap-3">
+                    <div className="p-2 rounded-xl bg-gradient-to-r from-violet-500 to-fuchsia-500 shadow-lg shadow-violet-500/30">
+                      <Target className="h-5 w-5 text-white" />
+                    </div>
                     <span className="bg-gradient-to-r from-violet-600 to-fuchsia-600 bg-clip-text text-transparent">
-                      Performance vs Objectif {data.annee}
+                      Performance {data.annee}
                     </span>
+                    <Gem className="h-4 w-4 text-violet-500 animate-pulse" />
                   </h3>
                   <div className="h-64">
                     <ResponsiveContainer width="100%" height="100%">
@@ -317,60 +372,78 @@ const ObjectifStatsModal: React.FC = () => {
                       </LineChart>
                     </ResponsiveContainer>
                   </div>
-                  <p className="text-xs text-center text-muted-foreground mt-2">
+                  <p className="text-xs text-center text-muted-foreground mt-3 flex items-center justify-center gap-2">
+                    <Star className="h-3 w-3 text-amber-500" />
                     La ligne dorée représente l'objectif de 100%
+                    <Star className="h-3 w-3 text-amber-500" />
                   </p>
-                </div>
+                </motion.div>
               </div>
 
               {/* Summary with Benefices */}
-              <div className="p-5 rounded-2xl bg-gradient-to-r from-violet-500/10 via-fuchsia-500/10 to-pink-500/10 border border-violet-200/50 dark:border-violet-800/50">
-                <div className="flex flex-wrap justify-center gap-8 text-center">
-                  <div>
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+                className="relative p-6 rounded-3xl bg-gradient-to-r from-violet-500/10 via-fuchsia-500/10 to-pink-500/10 border-2 border-violet-300/50 dark:border-violet-700/50 shadow-2xl overflow-hidden"
+              >
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-violet-500 via-fuchsia-500 to-pink-500" />
+                <div className="absolute bottom-0 right-0 w-40 h-40 bg-gradient-to-tl from-violet-500/10 to-transparent rounded-full" />
+                
+                <div className="relative flex flex-wrap justify-center gap-8 text-center">
+                  <div className="p-4 rounded-2xl bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm shadow-lg border border-violet-200/30 dark:border-violet-700/30">
                     <p className="text-sm text-muted-foreground">Moyenne mensuelle</p>
-                    <p className="text-xl font-bold text-violet-600 dark:text-violet-400">
+                    <p className="text-2xl font-black text-violet-600 dark:text-violet-400">
                       {formatCurrency(moyenneMensuelle)}
                     </p>
                   </div>
-                  <div>
+                  <div className="p-4 rounded-2xl bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm shadow-lg border border-fuchsia-200/30 dark:border-fuchsia-700/30">
                     <p className="text-sm text-muted-foreground">Mois en cours</p>
-                    <p className="text-xl font-bold text-fuchsia-600 dark:text-fuchsia-400">
+                    <p className="text-2xl font-black text-fuchsia-600 dark:text-fuchsia-400">
                       {MOIS_NOMS[data.currentData.mois - 1]} {data.annee}
                     </p>
                   </div>
-                  <div>
+                  <div className="p-4 rounded-2xl bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm shadow-lg border border-pink-200/30 dark:border-pink-700/30">
                     <p className="text-sm text-muted-foreground">Mois enregistrés</p>
-                    <p className="text-xl font-bold text-pink-600 dark:text-pink-400">
+                    <p className="text-2xl font-black text-pink-600 dark:text-pink-400">
                       {data.historique?.length || 0}
                     </p>
                   </div>
                   {/* New: Total des bénéfices de l'année - Cliquable */}
-                  <div 
-                    className="cursor-pointer group transition-all duration-300 hover:scale-105"
+                  <motion.div 
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="cursor-pointer group transition-all duration-300 p-4 rounded-2xl bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm shadow-lg border border-emerald-200/30 dark:border-emerald-700/30 hover:shadow-xl hover:border-emerald-400/50"
                     onClick={() => setShowBeneficesModal(true)}
                   >
-                    <p className="text-sm text-muted-foreground flex items-center gap-1">
+                    <p className="text-sm text-muted-foreground flex items-center gap-1 justify-center">
                       <Coins className="h-3.5 w-3.5" />
                       Total bénéfices annuels
+                      <Crown className="h-3 w-3 text-amber-500" />
                     </p>
                     <p className={cn(
-                      "text-xl font-bold flex items-center justify-center gap-1",
+                      "text-2xl font-black flex items-center justify-center gap-1",
                       totalBeneficesAnnuel >= 0 
                         ? "text-emerald-600 dark:text-emerald-400" 
                         : "text-rose-600 dark:text-rose-400"
                     )}>
                       {formatCurrency(totalBeneficesAnnuel)}
-                      <span className="text-xs text-muted-foreground group-hover:text-violet-500 transition-colors">
-                        (voir détails)
-                      </span>
                     </p>
-                  </div>
+                    <p className="text-xs text-violet-500 group-hover:text-violet-600 transition-colors mt-1">
+                      Cliquez pour détails →
+                    </p>
+                  </motion.div>
                 </div>
-              </div>
+              </motion.div>
             </div>
           ) : (
-            <div className="text-center py-10 text-muted-foreground">
-              Aucune donnée disponible
+            <div className="text-center py-16">
+              <div className="flex flex-col items-center gap-4">
+                <div className="p-6 bg-gradient-to-r from-violet-100 to-fuchsia-100 dark:from-violet-900/30 dark:to-fuchsia-900/30 rounded-full">
+                  <BarChart3 className="h-12 w-12 text-violet-600" />
+                </div>
+                <p className="text-xl font-bold text-gray-600 dark:text-gray-400">Aucune donnée disponible</p>
+              </div>
             </div>
           )}
         </DialogContent>
@@ -622,34 +695,42 @@ const StatCard: React.FC<StatCardProps> = ({
   onClick,
   clickable = false 
 }) => (
-  <div 
+  <motion.div 
+    initial={{ opacity: 0, scale: 0.9 }}
+    animate={{ opacity: 1, scale: 1 }}
+    whileHover={clickable ? { scale: 1.05, y: -5 } : undefined}
+    whileTap={clickable ? { scale: 0.95 } : undefined}
     className={cn(
-      "p-4 rounded-2xl bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50 shadow-xl transition-all duration-300",
-      clickable && "cursor-pointer hover:scale-105 hover:shadow-2xl group",
-      `hover:shadow-${shadowColor}-500/20`
+      "relative p-5 rounded-3xl bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl border-2 border-slate-200/50 dark:border-slate-700/50 shadow-xl transition-all duration-300 overflow-hidden",
+      clickable && "cursor-pointer hover:shadow-2xl group",
+      `hover:shadow-${shadowColor}-500/30 hover:border-${shadowColor}-300/50`
     )}
     onClick={clickable ? onClick : undefined}
   >
+    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r opacity-80" style={{backgroundImage: `linear-gradient(to right, var(--tw-gradient-stops))`}} />
+    <div className={cn("absolute top-0 right-0 w-20 h-20 rounded-full blur-2xl opacity-20", `bg-${shadowColor}-500`)} />
+    
     <div className={cn(
-      "w-10 h-10 rounded-xl flex items-center justify-center mb-3 bg-gradient-to-br text-white transition-transform",
+      "relative w-12 h-12 rounded-2xl flex items-center justify-center mb-4 bg-gradient-to-br text-white transition-transform shadow-xl",
       gradient,
-      clickable && "group-hover:scale-110"
+      clickable && "group-hover:scale-110 group-hover:rotate-3",
+      `shadow-${shadowColor}-500/40`
     )}>
       {icon}
     </div>
-    <p className="text-xs text-muted-foreground">{label}</p>
-    <div className="flex items-center gap-1">
-      <p className="text-lg font-bold mt-1">{value}</p>
+    <p className="text-xs font-semibold text-muted-foreground mb-1">{label}</p>
+    <div className="flex items-center gap-2">
+      <p className="text-xl font-black">{value}</p>
       {clickable && (
-        <ArrowUpRight className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+        <ArrowUpRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-all group-hover:translate-x-1 group-hover:-translate-y-1" />
       )}
     </div>
     {clickable && (
-      <p className="text-xs text-muted-foreground mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+      <p className="text-xs text-violet-500 dark:text-violet-400 mt-2 opacity-0 group-hover:opacity-100 transition-opacity font-medium">
         Cliquez pour voir les détails
       </p>
     )}
-  </div>
+  </motion.div>
 );
 
 export default ObjectifStatsModal;

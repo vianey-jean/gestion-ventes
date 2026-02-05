@@ -11,19 +11,19 @@ const CommandesHero: React.FC = () => {
           className="absolute top-0 left-1/4 w-72 h-72 bg-purple-300/30 dark:bg-purple-600/20 rounded-full blur-3xl animate-float-slow"
           initial={{ scale: 0.8 }}
           animate={{ scale: 1.1 }}
-          transition={{ repeat: Infinity, duration: 12, yoyo: true }}
+          transition={{ repeat: Infinity, duration: 12, repeatType: "reverse" }}
         />
         <motion.div 
           className="absolute top-0 right-1/4 w-72 h-72 bg-pink-300/30 dark:bg-pink-600/20 rounded-full blur-3xl animate-float-slow"
           initial={{ scale: 0.85 }}
           animate={{ scale: 1.15 }}
-          transition={{ repeat: Infinity, duration: 14, yoyo: true }}
+          transition={{ repeat: Infinity, duration: 14, repeatType: "reverse" }}
         />
         <motion.div 
           className="absolute bottom-0 left-1/3 w-80 h-80 bg-indigo-300/20 dark:bg-indigo-600/10 rounded-full blur-4xl animate-float-slower"
           initial={{ opacity: 0.7 }}
           animate={{ opacity: 1 }}
-          transition={{ repeat: Infinity, duration: 16, yoyo: true }}
+          transition={{ repeat: Infinity, duration: 16, repeatType: "reverse" }}
         />
       </div>
       
