@@ -71,7 +71,7 @@
                  <img
                    src="/images/logo.ico"
                    alt="Logo"
-                   className="relative h-12 w-24 sm:h-16 sm:w-32 object-contain"
+                    className="relative h-10 w-auto sm:h-12 md:h-14 lg:h-16 object-contain max-w-[160px]"
                  />
                </motion.div>
              </Link>

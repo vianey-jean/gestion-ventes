@@ -11,12 +11,21 @@ import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 import PremiumLoading from '@/components/ui/premium-loading';
 import { motion } from "framer-motion";
+import { 
+  VentesTotalesModal, 
+  BeneficesModal, 
+  ProduitsVendusModal, 
+  MeilleurRoiModal 
+} from '@/components/tendances/TendancesStatsModals';
 
 const TendancesPage = () => {
   const { allSales, products, loading } = useApp();
   const [selectedPeriod, setSelectedPeriod] = useState('all');
   const [activeTab, setActiveTab] = useState('overview');
   const isMobile = useIsMobile();
+  
+  // Stats modals state
+  const [activeModal, setActiveModal] = useState<'ventes' | 'benefices' | 'produits' | 'roi' | null>(null);
 
   // Fonction pour déterminer la catégorie d'un produit (exclure les avances)
   const getProductCategory = (description: string | undefined | null) => {
@@ -436,7 +445,8 @@ const TendancesPage = () => {
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
   {/* Ventes Totales */}
-  <Card className="bg-gradient-to-br from-purple-600 via-purple-500 to-indigo-600 text-white border-none shadow-2xl rounded-3xl relative overflow-hidden">
+  <motion.div whileHover={{ scale: 1.03, y: -5 }} whileTap={{ scale: 0.98 }} onClick={() => setActiveModal('ventes')} className="cursor-pointer">
+  <Card className="bg-gradient-to-br from-purple-600 via-purple-500 to-indigo-600 text-white border-none shadow-2xl rounded-3xl relative overflow-hidden cursor-pointer hover:shadow-[0_30px_60px_-15px_rgba(147,51,234,0.7)] transition-all">
     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
       <CardTitle className="text-sm font-semibold tracking-wide uppercase">Ventes Totales</CardTitle>
       <DollarSign className="h-6 w-6 text-yellow-400 drop-shadow-xl animate-pulse" />
@@ -448,11 +458,14 @@ const TendancesPage = () => {
       <p className="text-xs md:text-sm text-purple-100/80 mt-1">
         +{salesData.totals.sales} transactions historiques
       </p>
+     <p className="text-xs text-purple-200/60 mt-2 flex items-center gap-1"><Sparkles className="h-3 w-3" /> Cliquez pour détails</p>
     </CardContent>
   </Card>
+  </motion.div>
 
   {/* Bénéfices */}
-  <Card className="bg-gradient-to-br from-emerald-600 via-emerald-500 to-teal-500 text-white border-none shadow-2xl rounded-3xl relative overflow-hidden">
+  <motion.div whileHover={{ scale: 1.03, y: -5 }} whileTap={{ scale: 0.98 }} onClick={() => setActiveModal('benefices')} className="cursor-pointer">
+  <Card className="bg-gradient-to-br from-emerald-600 via-emerald-500 to-teal-500 text-white border-none shadow-2xl rounded-3xl relative overflow-hidden cursor-pointer hover:shadow-[0_30px_60px_-15px_rgba(16,185,129,0.7)] transition-all">
     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
       <CardTitle className="text-sm font-semibold tracking-wide uppercase">Bénéfices</CardTitle>
       <TrendingUp className="h-6 w-6 text-green-300 drop-shadow-xl animate-bounce" />
@@ -464,11 +477,14 @@ const TendancesPage = () => {
       <p className="text-xs md:text-sm text-emerald-100/80 mt-1">
         Marge moyenne: {salesData.totals.revenue > 0 ? ((salesData.totals.profit / salesData.totals.revenue) * 100).toFixed(1) : 0}%
       </p>
+     <p className="text-xs text-emerald-200/60 mt-2 flex items-center gap-1"><Sparkles className="h-3 w-3" /> Cliquez pour détails</p>
     </CardContent>
   </Card>
+  </motion.div>
 
   {/* Produits Vendus */}
-  <Card className="bg-gradient-to-br from-orange-600 via-orange-500 to-yellow-500 text-white border-none shadow-2xl rounded-3xl relative overflow-hidden">
+  <motion.div whileHover={{ scale: 1.03, y: -5 }} whileTap={{ scale: 0.98 }} onClick={() => setActiveModal('produits')} className="cursor-pointer">
+  <Card className="bg-gradient-to-br from-orange-600 via-orange-500 to-yellow-500 text-white border-none shadow-2xl rounded-3xl relative overflow-hidden cursor-pointer hover:shadow-[0_30px_60px_-15px_rgba(249,115,22,0.7)] transition-all">
     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
       <CardTitle className="text-sm font-semibold tracking-wide uppercase">Produits Vendus</CardTitle>
       <Package className="h-6 w-6 text-yellow-300 drop-shadow-xl animate-pulse" />
@@ -480,11 +496,14 @@ const TendancesPage = () => {
       <p className="text-xs md:text-sm text-orange-100/80 mt-1">
         {salesByProduct.length} produits différents
       </p>
+     <p className="text-xs text-orange-200/60 mt-2 flex items-center gap-1"><Sparkles className="h-3 w-3" /> Cliquez pour détails</p>
     </CardContent>
   </Card>
+  </motion.div>
 
   {/* Meilleur ROI */}
-  <Card className="bg-gradient-to-br from-blue-600 via-indigo-500 to-purple-500 text-white border-none shadow-2xl rounded-3xl relative overflow-hidden">
+  <motion.div whileHover={{ scale: 1.03, y: -5 }} whileTap={{ scale: 0.98 }} onClick={() => setActiveModal('roi')} className="cursor-pointer">
+  <Card className="bg-gradient-to-br from-blue-600 via-indigo-500 to-purple-500 text-white border-none shadow-2xl rounded-3xl relative overflow-hidden cursor-pointer hover:shadow-[0_30px_60px_-15px_rgba(99,102,241,0.7)] transition-all">
     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
       <CardTitle className="text-sm font-semibold tracking-wide uppercase">Meilleur ROI</CardTitle>
       <Award className="h-6 w-6 text-yellow-400 drop-shadow-xl animate-bounce" />
@@ -496,8 +515,10 @@ const TendancesPage = () => {
       <p className="text-xs md:text-sm text-blue-100/80 mt-1">
         {buyingRecommendations.length > 0 ? buyingRecommendations[0].name.slice(0, 20) + '...' : 'Aucune donnée'}
       </p>
+     <p className="text-xs text-blue-200/60 mt-2 flex items-center gap-1"><Sparkles className="h-3 w-3" /> Cliquez pour détails</p>
     </CardContent>
   </Card>
+  </motion.div>
 </div>
 
 
@@ -1003,6 +1024,34 @@ const TendancesPage = () => {
           </Tabs>
         </div>
       </div>
+
+      {/* Stats Modals */}
+      <VentesTotalesModal
+        isOpen={activeModal === 'ventes'}
+        onClose={() => setActiveModal(null)}
+        revenue={salesData.totals.revenue}
+        sales={salesData.totals.sales}
+        salesByProduct={salesByProduct}
+      />
+      <BeneficesModal
+        isOpen={activeModal === 'benefices'}
+        onClose={() => setActiveModal(null)}
+        profit={salesData.totals.profit}
+        margin={salesData.totals.revenue > 0 ? (salesData.totals.profit / salesData.totals.revenue) * 100 : 0}
+        salesByProduct={salesByProduct}
+      />
+      <ProduitsVendusModal
+        isOpen={activeModal === 'produits'}
+        onClose={() => setActiveModal(null)}
+        quantity={salesData.totals.quantity}
+        uniqueProducts={salesByProduct.length}
+        salesByProduct={salesByProduct}
+      />
+      <MeilleurRoiModal
+        isOpen={activeModal === 'roi'}
+        onClose={() => setActiveModal(null)}
+        buyingRecommendations={buyingRecommendations}
+      />
     </Layout>
   );
 };

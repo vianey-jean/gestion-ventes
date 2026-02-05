@@ -24,6 +24,7 @@ import {
 } from 'recharts';
 import { objectifApi, ObjectifData, ObjectifChange, BeneficeMensuel, MonthlyData } from '@/services/api/objectifApi';
 import { cn } from '@/lib/utils';
+import PremiumLoading from '@/components/ui/premium-loading';
 import BeneficesHistoriqueModal from './modals/BeneficesHistoriqueModal';
 import VentesHistoriqueModal from './modals/VentesHistoriqueModal';
 import ObjectifChangesModal from './modals/ObjectifChangesModal';
@@ -166,14 +167,13 @@ const ObjectifStatsModal: React.FC = () => {
           </DialogHeader>
 
           {loading ? (
-            <div className="flex flex-col items-center justify-center py-24 gap-4">
-              <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-violet-400 to-fuchsia-400 rounded-full blur-xl opacity-30 animate-pulse" />
-                <div className="relative h-20 w-20 rounded-full border-4 border-violet-200 dark:border-violet-800" />
-                <div className="absolute inset-0 h-16 w-16 rounded-full border-4 border-violet-500 border-t-transparent animate-spin" />
-              </div>
-              <p className="text-violet-600 dark:text-violet-400 font-semibold animate-pulse">Chargement des données...</p>
-            </div>
+            <PremiumLoading 
+              text="Chargement des statistiques..." 
+              size="lg" 
+              overlay={false}
+              variant="dashboard"
+              showText={true}
+            />
           ) : data ? (
             <div className="space-y-6 pt-4">
               {/* Stats Cards - Tous cliquables */}
