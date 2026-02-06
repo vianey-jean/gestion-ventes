@@ -83,6 +83,8 @@ const ComptabiliteModule: React.FC<ComptabiliteModuleProps> = ({ className }) =>
     handleDepenseFormChange,
     handleSubmitAchat,
     handleSubmitDepense,
+    handleUpdateAchat,
+    handleDeleteAchat,
     
     // Utilitaires
     formatEuro,
@@ -128,6 +130,8 @@ const ComptabiliteModule: React.FC<ComptabiliteModuleProps> = ({ className }) =>
         selectedMonth={selectedMonth}
         selectedYear={selectedYear}
         formatEuro={formatEuro}
+        onUpdateAchat={handleUpdateAchat}
+        onDeleteAchat={handleDeleteAchat}
       />
 
       {/* ========== MODALES DE FORMULAIRES ========== */}

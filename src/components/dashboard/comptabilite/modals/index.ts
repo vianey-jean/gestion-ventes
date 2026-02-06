@@ -25,3 +25,9 @@ export type { SoldeNetModalProps } from './SoldeNetModal';
 
 export { default as ExportPdfModal } from './ExportPdfModal';
 export type { ExportPdfModalProps } from './ExportPdfModal';
+
+export { default as AchatDetailModal } from './AchatDetailModal';
+export type { AchatDetailModalProps } from './AchatDetailModal';
+
+export { default as AchatEditModal } from './AchatEditModal';
+export type { AchatEditModalProps } from './AchatEditModal';

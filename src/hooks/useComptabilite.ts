@@ -388,6 +388,48 @@ export function useComptabilite() {
     }
   }, [depenseForm, loadAchats, toggleModal]);
 
+  // Handler mise à jour achat/dépense
+  const handleUpdateAchat = useCallback(async (id: string, data: Partial<NouvelleAchat>) => {
+    try {
+      await nouvelleAchatApiService.update(id, data);
+      toast({
+        title: 'Succès',
+        description: 'Achat/dépense modifié avec succès',
+        className: 'bg-green-600 text-white border-green-700'
+      });
+      loadAchats();
+      fetchProducts();
+    } catch (error) {
+      console.error('Erreur mise à jour:', error);
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de modifier l\'achat/dépense',
+        variant: 'destructive'
+      });
+    }
+  }, [loadAchats, fetchProducts]);
+
+  // Handler suppression achat/dépense
+  const handleDeleteAchat = useCallback(async (id: string) => {
+    try {
+      await nouvelleAchatApiService.delete(id);
+      toast({
+        title: 'Succès',
+        description: 'Achat/dépense supprimé avec succès',
+        className: 'bg-green-600 text-white border-green-700'
+      });
+      loadAchats();
+      fetchProducts();
+    } catch (error) {
+      console.error('Erreur suppression:', error);
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de supprimer l\'achat/dépense',
+        variant: 'destructive'
+      });
+    }
+  }, [loadAchats, fetchProducts]);
+
   // Handlers pour les changements de période
   const handleMonthChange = useCallback((v: string) => {
     setSelectedMonth(parseInt(v));
@@ -456,6 +498,8 @@ export function useComptabilite() {
     handleDepenseFormChange,
     handleSubmitAchat,
     handleSubmitDepense,
+    handleUpdateAchat,
+    handleDeleteAchat,
     loadAchats,
     
     // Utilitaires

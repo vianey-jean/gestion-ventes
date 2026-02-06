@@ -31,6 +31,8 @@ export interface ComptabiliteTabsProps {
   selectedMonth: number;
   selectedYear: number;
   formatEuro: (value: number) => string;
+  onUpdateAchat?: (id: string, data: Partial<NouvelleAchat>) => Promise<void>;
+  onDeleteAchat?: (id: string) => Promise<void>;
 }
 
 const ComptabiliteTabs: React.FC<ComptabiliteTabsProps> = ({
@@ -39,7 +41,9 @@ const ComptabiliteTabs: React.FC<ComptabiliteTabsProps> = ({
   depensesRepartition,
   selectedMonth,
   selectedYear,
-  formatEuro
+  formatEuro,
+  onUpdateAchat,
+  onDeleteAchat
 }) => {
   return (
     <Tabs defaultValue="historique" className="w-full">
@@ -111,6 +115,8 @@ const ComptabiliteTabs: React.FC<ComptabiliteTabsProps> = ({
             selectedMonth={selectedMonth}
             selectedYear={selectedYear}
             months={MONTHS}
+            onUpdate={onUpdateAchat}
+            onDelete={onDeleteAchat}
           />
         </TabsContent>
 
