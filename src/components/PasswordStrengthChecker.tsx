@@ -16,7 +16,7 @@ const PasswordStrengthChecker: React.FC<PasswordStrengthCheckerProps> = ({
   const hasUpperCase = /[A-Z]/.test(password);
   const hasNumber = /[0-9]/.test(password);
   const hasSpecialChar = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password);
-  const hasMinLength = password.length >= 8;
+  const hasMinLength = password.length >= 6;
   
   // Détermine si tous les critères sont remplis
   const isPasswordValid = hasLowerCase && hasUpperCase && hasNumber && hasSpecialChar && hasMinLength;
@@ -83,7 +83,7 @@ const PasswordStrengthChecker: React.FC<PasswordStrengthCheckerProps> = ({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           <CriteriaItem 
             met={hasMinLength} 
-            text="Au moins 8 caractères"
+            text="Au moins 6 caractères"
           />
           <CriteriaItem 
             met={hasUpperCase} 

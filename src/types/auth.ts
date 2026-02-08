@@ -18,11 +18,13 @@ export interface LoginCredentials {
 export interface RegisterCredentials {
   email: string;
   password: string;
+  confirmPassword: string;
   firstName: string;
   lastName: string;
   gender: 'male' | 'female' | 'other';
   address: string;
   phone: string;
+  acceptTerms: boolean;
 }
 
 export interface RegistrationData {

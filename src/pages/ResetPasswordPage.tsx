@@ -28,7 +28,7 @@ const ResetPasswordPage: React.FC = () => {
     const hasUpperCase = /[A-Z]/.test(newPassword);
     const hasNumber = /[0-9]/.test(newPassword);
     const hasSpecialChar = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(newPassword);
-    const hasMinLength = newPassword.length >= 8;
+    const hasMinLength = newPassword.length >= 6;
     
     return hasLowerCase && hasUpperCase && hasNumber && hasSpecialChar && hasMinLength;
   };

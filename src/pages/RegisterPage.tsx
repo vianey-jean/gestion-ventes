@@ -123,10 +123,17 @@ const RegisterPage: React.FC = () => {
     const hasLowerCase = /[a-z]/.test(formData.password);
     const hasUpperCase = /[A-Z]/.test(formData.password);
     const hasNumber = /[0-9]/.test(formData.password);
-    const hasSpecialChar = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(formData.password);
-    const hasMinLength = formData.password.length >= 8;
+    const hasSpecialChar = /[!@#$%^&*()_+\-\=\[\]{};':"\\|,.<>\/?]/.test(formData.password);
+    const hasMinLength = formData.password.length >= 6;
 
     return hasLowerCase && hasUpperCase && hasNumber && hasSpecialChar && hasMinLength;
+  };
+
+  // IMPORTANT: même règle que le backend (server/middleware/security.js)
+  const validatePhone = (phone: string) => {
+    const cleaned = phone.trim();
+    const regex = /^[0-9+\-\s()]{6,20}$/;
+    return regex.test(cleaned);
   };
 
   const handlePasswordValidityChange = (isValid: boolean) => {
@@ -155,6 +162,11 @@ const RegisterPage: React.FC = () => {
       newErrors.email = 'Veuillez entrer un email valide';
     }
 
+    // IMPORTANT: même règle que le backend (6-20 caractères, chiffres et + - espaces parenthèses)
+    if (formData.phone && !validatePhone(formData.phone)) {
+      newErrors.phone = 'Veuillez entrer un numéro de téléphone valide (au moins 6 caractères).';
+    }
+
     if (formData.password && !validatePassword()) {
       newErrors.password = 'Le mot de passe ne répond pas aux exigences de sécurité';
     }
@@ -174,22 +186,43 @@ const RegisterPage: React.FC = () => {
       return;
     }
 
-    const success = await register({
-      email: formData.email,
-      password: formData.password,
-      confirmPassword: formData.confirmPassword,
-      firstName: formData.firstName,
-      lastName: formData.lastName,
-      gender: formData.gender as 'male' | 'female' | 'other',
-      address: formData.address,
-      phone: formData.phone,
-      acceptTerms: formData.acceptTerms,
-    });
+    try {
+      const success = await register({
+        email: formData.email,
+        password: formData.password,
+        confirmPassword: formData.confirmPassword,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        gender: formData.gender as 'male' | 'female' | 'other',
+        address: formData.address,
+        phone: formData.phone.trim(),
+        acceptTerms: formData.acceptTerms,
+      });
 
-    if (success) {
-      navigate('/dashboard');
+      if (success) {
+        // Rediriger vers la page de connexion après inscription réussie
+        toast({
+          title: "Compte créé avec succès !",
+          description: "Vous pouvez maintenant vous connecter avec vos identifiants.",
+          className: "bg-green-600 text-white border-green-600",
+        });
+        navigate('/login');
+      }
+    } catch (error: any) {
+      console.error('Erreur lors de l\'inscription:', error);
+
+      const apiData = error?.response?.data;
+      const apiDetails = Array.isArray(apiData?.details) ? apiData.details.join(' • ') : null;
+      const message = apiData?.message || apiDetails || "Une erreur s'est produite lors de la création du compte";
+
+      toast({
+        title: "Erreur d'inscription",
+        description: message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
     }
-    setIsSubmitting(false);
   };
 
   const isFormValid =

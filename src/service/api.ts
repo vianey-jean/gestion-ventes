@@ -90,8 +90,8 @@ export const authService = {
     return response.data;
   },
 
-  async resetPassword(email: string): Promise<{ success: boolean }> {
-    const response: AxiosResponse<{ success: boolean }> = await api.post('/api/auth/reset-password', { email });
+  async resetPassword(data: { email: string; newPassword: string; confirmPassword: string; token?: string }): Promise<{ success: boolean }> {
+    const response: AxiosResponse<{ success: boolean }> = await api.post('/api/auth/reset-password', data);
     return response.data;
   },
 
@@ -125,12 +125,12 @@ export const authService = {
     }
   },
 
-  resetPasswordRequest: async (data: { email: string }): Promise<boolean> => {
+  resetPasswordRequest: async (data: { email: string }): Promise<{ exists: boolean; token?: string }> => {
     try {
       const response = await api.post('/api/auth/reset-password-request', data);
-      return response.data.exists;
+      return { exists: response.data.exists || response.data.success, token: response.data.token };
     } catch (error) {
-      return false;
+      return { exists: false };
     }
   },
 };
