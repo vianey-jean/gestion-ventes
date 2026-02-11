@@ -2,10 +2,34 @@
 import React, { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search, X } from 'lucide-react';
+import { Search, X, Filter } from 'lucide-react';
 import { useApp } from '@/contexts/AppContext';
 import { Product } from '@/types';
 import { beneficeService } from '@/service/beneficeService';
+
+type ProductCategory = 'all' | 'perruque' | 'tissage' | 'extension' | 'autres';
+
+const CATEGORY_OPTIONS: { value: ProductCategory; label: string }[] = [
+  { value: 'all', label: 'Tous' },
+  { value: 'perruque', label: 'Perruque' },
+  { value: 'tissage', label: 'Tissage' },
+  { value: 'extension', label: 'Extension' },
+  { value: 'autres', label: 'Autres' },
+];
+
+const filterByCategory = (products: Product[], category: ProductCategory): Product[] => {
+  if (category === 'all') return products;
+  const check = (p: Product) => p.description.toLowerCase();
+  switch (category) {
+    case 'perruque': return products.filter(p => check(p).includes('perruque'));
+    case 'tissage': return products.filter(p => check(p).includes('tissage'));
+    case 'extension': return products.filter(p => check(p).includes('extension'));
+    case 'autres': return products.filter(p =>
+      !check(p).includes('perruque') && !check(p).includes('tissage') && !check(p).includes('extension')
+    );
+    default: return products;
+  }
+};
 
 interface ProductSearchInputProps {
   onProductSelect: (product: Product) => void;
@@ -23,6 +47,7 @@ const ProductSearchInput: React.FC<ProductSearchInputProps> = ({
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [benefices, setBenefices] = useState<any[]>([]);
+  const [categoryFilter, setCategoryFilter] = useState<ProductCategory>('all');
 
   // Charger les bénéfices au montage du composant
   useEffect(() => {
@@ -65,6 +90,9 @@ const ProductSearchInput: React.FC<ProductSearchInputProps> = ({
         !benefices.some(benefice => benefice.productId === product.id)
       );
       
+      // Appliquer le filtre de catégorie
+      filtered = filterByCategory(filtered, categoryFilter);
+      
       if (context === 'sale') {
         // Pour ajouter une vente : exclure les produits avec stock = 0
         filtered = filtered
@@ -85,7 +113,7 @@ const ProductSearchInput: React.FC<ProductSearchInputProps> = ({
       setFilteredProducts([]);
       setShowDropdown(false);
     }
-  }, [searchTerm, products, benefices]);
+  }, [searchTerm, products, benefices, categoryFilter]);
 
   const handleProductSelect = (product: Product) => {
     console.log('🚀 DEBUT - ProductSearchInput handleProductSelect');
@@ -118,7 +146,27 @@ const ProductSearchInput: React.FC<ProductSearchInputProps> = ({
   }, [selectedProduct]);
 
   return (
-    <div className="relative">
+    <div className="relative space-y-2">
+      {/* Filtre par catégorie */}
+      <div className="flex items-center gap-2 flex-wrap">
+        <Filter className="h-4 w-4 text-purple-500" />
+        <span className="text-xs font-semibold text-gray-600 dark:text-gray-400">Filtre :</span>
+        {CATEGORY_OPTIONS.map((option) => (
+          <button
+            key={option.value}
+            type="button"
+            onClick={() => setCategoryFilter(option.value)}
+            className={`px-3 py-1 text-xs font-bold rounded-full transition-all duration-300 border ${
+              categoryFilter === option.value
+                ? 'bg-gradient-to-r from-purple-500 to-indigo-600 text-white border-purple-500 shadow-lg shadow-purple-500/30'
+                : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-300 dark:border-gray-600 hover:border-purple-400 hover:text-purple-600'
+            }`}
+          >
+            {option.label}
+          </button>
+        ))}
+      </div>
+
       <div className="relative">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
         <Input

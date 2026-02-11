@@ -16,7 +16,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Plus, Trash2, Edit, ShoppingCart, Crown, Star, Sparkles, Gift, Award, Zap } from 'lucide-react';
+import { Plus, Trash2, Edit, ShoppingCart, Crown, Star, Sparkles, Gift, Award, Zap, Filter } from 'lucide-react';
 import SaleQuantityInput from '@/components/dashboard/forms/SaleQuantityInput';
 import { Commande, CommandeProduit } from '@/types/commande';
 
@@ -33,6 +33,30 @@ interface Product {
   purchasePrice: number;
   quantity: number;
 }
+
+type ProductCategory = 'all' | 'perruque' | 'tissage' | 'extension' | 'autres';
+
+const CATEGORY_OPTIONS: { value: ProductCategory; label: string }[] = [
+  { value: 'all', label: 'Tous' },
+  { value: 'perruque', label: 'Perruque' },
+  { value: 'tissage', label: 'Tissage' },
+  { value: 'extension', label: 'Extension' },
+  { value: 'autres', label: 'Autres' },
+];
+
+const filterProductsByCategory = (products: Product[], category: ProductCategory): Product[] => {
+  if (category === 'all') return products;
+  const check = (p: Product) => p.description.toLowerCase();
+  switch (category) {
+    case 'perruque': return products.filter(p => check(p).includes('perruque'));
+    case 'tissage': return products.filter(p => check(p).includes('tissage'));
+    case 'extension': return products.filter(p => check(p).includes('extension'));
+    case 'autres': return products.filter(p =>
+      !check(p).includes('perruque') && !check(p).includes('tissage') && !check(p).includes('extension')
+    );
+    default: return products;
+  }
+};
 
 interface CommandeFormDialogProps {
   isOpen: boolean;
@@ -144,6 +168,9 @@ const CommandeFormDialog: React.FC<CommandeFormDialogProps> = ({
   handleSubmit,
   resetForm,
 }) => {
+  const [productCategoryFilter, setProductCategoryFilter] = React.useState<ProductCategory>('all');
+  const categoryFilteredProducts = React.useMemo(() => filterProductsByCategory(filteredProducts, productCategoryFilter), [filteredProducts, productCategoryFilter]);
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => {
       onOpenChange(open);
@@ -263,6 +290,26 @@ const CommandeFormDialog: React.FC<CommandeFormDialogProps> = ({
               </span>
             </h3>
 
+            {/* Filtre par catégorie */}
+            <div className="flex items-center gap-2 flex-wrap mb-3">
+              <Filter className="h-4 w-4 text-purple-500" />
+              <span className="text-xs font-semibold text-gray-600 dark:text-gray-400">Filtre :</span>
+              {CATEGORY_OPTIONS.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => setProductCategoryFilter(option.value)}
+                  className={`px-3 py-1 text-xs font-bold rounded-full transition-all duration-300 border ${
+                    productCategoryFilter === option.value
+                      ? 'bg-gradient-to-r from-purple-500 to-indigo-600 text-white border-purple-500 shadow-lg shadow-purple-500/30'
+                      : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-300 dark:border-gray-600 hover:border-purple-400 hover:text-purple-600'
+                  }`}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+
             <div className="relative">
               <Label htmlFor="produitNom" className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">
                 📦 Nom du Produit
@@ -278,9 +325,9 @@ const CommandeFormDialog: React.FC<CommandeFormDialogProps> = ({
                 placeholder="Saisir au moins 3 caractères..."
                 className="border-2 border-purple-300 dark:border-purple-700 focus:border-purple-500 dark:focus:border-purple-500 bg-white dark:bg-gray-900 shadow-sm"
               />
-              {showProductSuggestions && filteredProducts.length > 0 && (
+              {showProductSuggestions && categoryFilteredProducts.length > 0 && (
                 <div className="absolute z-50 w-full mt-2 bg-white dark:bg-gray-800 border-2 border-purple-300 dark:border-purple-700 rounded-xl shadow-2xl max-h-60 overflow-y-auto">
-                  {filteredProducts.map((product) => (
+                  {categoryFilteredProducts.map((product) => (
                     <div
                       key={product.id}
                       className="p-3 hover:bg-gradient-to-r hover:from-purple-100 hover:to-pink-100 dark:hover:from-purple-900/30 dark:hover:to-pink-900/30 cursor-pointer transition-all duration-200 border-b border-gray-100 dark:border-gray-700 last:border-0"

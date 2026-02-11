@@ -14,7 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
-import { PlusCircle, Edit, CalendarIcon, Loader2, Trash2, Plus, CreditCard, TrendingUp, Wallet, CheckCircle, Clock, Search, Phone, ChevronDown, ChevronUp, ArrowRightLeft, UserPlus, Users, Eye, Pencil, X, Package, DollarSign, Percent, ArrowUpRight } from 'lucide-react';
+import { PlusCircle, Edit, CalendarIcon, Loader2, Trash2, Plus, CreditCard, TrendingUp, Wallet, CheckCircle, Clock, Search, Phone, ChevronDown, ChevronUp, ArrowRightLeft, UserPlus, Users, Eye, Pencil, X, Package, DollarSign, Percent, ArrowUpRight, Filter } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useApp } from '@/contexts/AppContext';
 import { Product, PretProduit } from '@/types';
@@ -24,6 +24,30 @@ import PretRetardNotification from './PretRetardNotification';
 import PremiumLoading from '@/components/ui/premium-loading';
 
 type StatModalType = 'totalVentes' | 'avances' | 'reste' | 'pretsPayes' | null;
+
+type ProductCategory = 'all' | 'perruque' | 'tissage' | 'extension' | 'autres';
+
+const CATEGORY_OPTIONS: { value: ProductCategory; label: string }[] = [
+  { value: 'all', label: 'Tous' },
+  { value: 'perruque', label: 'Perruque' },
+  { value: 'tissage', label: 'Tissage' },
+  { value: 'extension', label: 'Extension' },
+  { value: 'autres', label: 'Autres' },
+];
+
+const filterProductsByCategory = (products: Product[], category: ProductCategory): Product[] => {
+  if (category === 'all') return products;
+  const check = (p: Product) => p.description.toLowerCase();
+  switch (category) {
+    case 'perruque': return products.filter(p => check(p).includes('perruque'));
+    case 'tissage': return products.filter(p => check(p).includes('tissage'));
+    case 'extension': return products.filter(p => check(p).includes('extension'));
+    case 'autres': return products.filter(p =>
+      !check(p).includes('perruque') && !check(p).includes('tissage') && !check(p).includes('extension')
+    );
+    default: return products;
+  }
+};
 
 interface GroupedPrets {
   nom: string;
@@ -56,6 +80,7 @@ const PretProduitsGrouped: React.FC = () => {
   const [avanceRecue, setAvanceRecue] = useState('');
   const [ajoutAvance, setAjoutAvance] = useState('');
   const [searchResults, setSearchResults] = useState<Product[]>([]);
+  const [productCategoryFilter, setProductCategoryFilter] = useState<ProductCategory>('all');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [selectedPret, setSelectedPret] = useState<PretProduit | null>(null);
   const [selectedGroupForTransfer, setSelectedGroupForTransfer] = useState<GroupedPrets | null>(null);
@@ -1729,6 +1754,27 @@ const PretProduitsGrouped: React.FC = () => {
             
             <div className="grid gap-2">
               <Label htmlFor="description" className="text-sm font-semibold text-gray-700 dark:text-gray-300">Description du produit</Label>
+              
+              {/* Filtre par catégorie */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <Filter className="h-4 w-4 text-purple-500" />
+                <span className="text-xs font-semibold text-gray-600 dark:text-gray-400">Filtre :</span>
+                {CATEGORY_OPTIONS.map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => setProductCategoryFilter(option.value)}
+                    className={`px-3 py-1 text-xs font-bold rounded-full transition-all duration-300 border ${
+                      productCategoryFilter === option.value
+                        ? 'bg-gradient-to-r from-purple-500 to-indigo-600 text-white border-purple-500 shadow-lg shadow-purple-500/30'
+                        : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-300 dark:border-gray-600 hover:border-purple-400 hover:text-purple-600'
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+
               <Input
                 id="description"
                 value={description}
@@ -1738,7 +1784,7 @@ const PretProduitsGrouped: React.FC = () => {
               />
               {searchResults.length > 0 && (
                 <div className="border rounded-md max-h-40 overflow-y-auto bg-white dark:bg-gray-800">
-                  {searchResults.map((product) => (
+                  {filterProductsByCategory(searchResults, productCategoryFilter).map((product) => (
                     <div
                       key={product.id}
                       className="p-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"

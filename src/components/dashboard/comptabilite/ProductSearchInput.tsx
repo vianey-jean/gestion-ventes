@@ -26,12 +26,36 @@
  * - ComptabiliteModule.tsx
  */
 
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
-import { Search, CheckCircle, Hash } from 'lucide-react';
+import { Search, CheckCircle, Hash, Filter } from 'lucide-react';
 import { Product } from '@/types/product';
+
+type ProductCategory = 'all' | 'perruque' | 'tissage' | 'extension' | 'autres';
+
+const CATEGORY_OPTIONS: { value: ProductCategory; label: string }[] = [
+  { value: 'all', label: 'Tous' },
+  { value: 'perruque', label: 'Perruque' },
+  { value: 'tissage', label: 'Tissage' },
+  { value: 'extension', label: 'Extension' },
+  { value: 'autres', label: 'Autres' },
+];
+
+const filterByCategory = (products: Product[], category: ProductCategory): Product[] => {
+  if (category === 'all') return products;
+  const check = (p: Product) => p.description.toLowerCase();
+  switch (category) {
+    case 'perruque': return products.filter(p => check(p).includes('perruque'));
+    case 'tissage': return products.filter(p => check(p).includes('tissage'));
+    case 'extension': return products.filter(p => check(p).includes('extension'));
+    case 'autres': return products.filter(p =>
+      !check(p).includes('perruque') && !check(p).includes('tissage') && !check(p).includes('extension')
+    );
+    default: return products;
+  }
+};
 
 // ============================================
 // INTERFACE DES PROPS
@@ -65,6 +89,12 @@ const ProductSearchInput: React.FC<ProductSearchInputProps> = ({
   showProductList,
   formatEuro
 }) => {
+  const [categoryFilter, setCategoryFilter] = useState<ProductCategory>('all');
+
+  const displayedProducts = useMemo(() => {
+    return filterByCategory(filteredProducts, categoryFilter);
+  }, [filteredProducts, categoryFilter]);
+
   return (
     <div className="space-y-2">
       {/* Label du champ de recherche */}
@@ -72,6 +102,26 @@ const ProductSearchInput: React.FC<ProductSearchInputProps> = ({
         <Search className="h-4 w-4 inline mr-2" />
         Rechercher un produit (par nom ou code)
       </Label>
+
+      {/* Filtre par catégorie */}
+      <div className="flex items-center gap-2 flex-wrap">
+        <Filter className="h-4 w-4 text-purple-500" />
+        <span className="text-xs font-semibold text-gray-600 dark:text-gray-400">Filtre :</span>
+        {CATEGORY_OPTIONS.map((option) => (
+          <button
+            key={option.value}
+            type="button"
+            onClick={() => setCategoryFilter(option.value)}
+            className={`px-3 py-1 text-xs font-bold rounded-full transition-all duration-300 border ${
+              categoryFilter === option.value
+                ? 'bg-gradient-to-r from-purple-500 to-indigo-600 text-white border-purple-500 shadow-lg shadow-purple-500/30'
+                : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-300 dark:border-gray-600 hover:border-purple-400 hover:text-purple-600'
+            }`}
+          >
+            {option.label}
+          </button>
+        ))}
+      </div>
       
       {/* Champ de recherche avec liste déroulante */}
       <div className="relative">
@@ -83,9 +133,9 @@ const ProductSearchInput: React.FC<ProductSearchInputProps> = ({
         />
         
         {/* Liste déroulante des produits filtrés */}
-        {filteredProducts.length > 0 && showProductList && (
+        {displayedProducts.length > 0 && showProductList && (
           <div className="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-xl shadow-2xl max-h-48 overflow-y-auto">
-            {filteredProducts.map((product) => (
+            {displayedProducts.map((product) => (
               <button
                 key={product.id}
                 onClick={() => onSelectProduct(product)}
