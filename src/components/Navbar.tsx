@@ -351,7 +351,7 @@
             onClick={toggleTheme}
             className="col-span-1 rounded-2xl flex items-center justify-center bg-gradient-to-br from-yellow-400 to-amber-500 shadow-lg hover:scale-105 transition-all duration-300"
           >
-            {theme === 'dark' ? <Sun className="h-5 w-5 sm:h-6 sm:w-6 text-amber-500" /> : <Moon className="h-5 w-5 sm:h-6 sm:w-6 text-indigo-600" />}
+            {theme === 'dark' ? <Sun className="h-5 w-5 sm:h-6 sm:w-6 text-indigo-900" /> : <Moon className="h-5 w-5 sm:h-6 sm:w-6 text-indigo-900" />}
           </Button>
 
           {/* 3/4 DECONNEXION */}
