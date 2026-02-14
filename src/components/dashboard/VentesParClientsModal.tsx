@@ -1,11 +1,14 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Sale } from '@/types/sale';
 import { saleApiService } from '@/services/api';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, Calendar, Crown, TrendingUp, ChevronDown, Sparkles, Search } from 'lucide-react';
+import { Users, Calendar, Crown, TrendingUp, ChevronDown, Sparkles, Search, FileDown } from 'lucide-react';
 import useCurrencyFormatter from '@/hooks/use-currency-formatter';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import { toast } from '@/hooks/use-toast';
 
 interface VentesParClientsModalProps {
   isOpen: boolean;
@@ -115,6 +118,114 @@ const VentesParClientsModal: React.FC<VentesParClientsModalProps> = ({ isOpen, o
     setSearchQuery('');
     onClose();
   };
+
+  const handleExportClientPDF = useCallback((group: ClientSalesGroup) => {
+    try {
+      const doc = new jsPDF();
+      const monthName = monthNames[selectedMonth - 1];
+
+      // Header
+      doc.setFontSize(20);
+      doc.setTextColor(0, 90, 0);
+      doc.text(`Ventes Client - ${group.clientName}`, 105, 20, { align: 'center' });
+
+      doc.setFontSize(9);
+      doc.setTextColor(120, 120, 120);
+      doc.text(`${monthName} ${selectedYear} • Document privé - Généré le ${new Date().toLocaleDateString('fr-FR')}`, 105, 28, { align: 'center' });
+
+      doc.setDrawColor(180, 180, 180);
+      doc.line(14, 32, 196, 32);
+
+      let yPosition = 40;
+
+      // Section Ventes
+      doc.setFontSize(14);
+      doc.setTextColor(0, 100, 0);
+      doc.text(`DÉTAIL DES VENTES — ${group.clientName}`, 14, yPosition);
+      yPosition += 5;
+
+      const salesData = group.sales.map(s => [
+        new Date(s.date).toLocaleDateString('fr-FR'),
+        (s.description || '-').substring(0, 30),
+        s.quantitySold.toString(),
+        `${s.purchasePrice.toFixed(2)} €`,
+        `${s.sellingPrice.toFixed(2)} €`,
+        `${s.deliveryFee.toFixed(2)} €`,
+        `${s.profit.toFixed(2)} €`
+      ]);
+
+      autoTable(doc, {
+        startY: yPosition,
+        head: [['Date', 'Produit', 'Qté', 'P.Achat', 'P.Vente', 'Livraison', 'Bénéfice']],
+        body: salesData,
+        theme: 'striped',
+        headStyles: { fillColor: [34, 139, 34] },
+        styles: { fontSize: 8 }
+      });
+
+      yPosition = (doc as any).lastAutoTable.finalY + 10;
+
+      // Résumé
+      if (yPosition > 250) { doc.addPage(); yPosition = 20; }
+
+      doc.setFontSize(14);
+      doc.setTextColor(0, 0, 120);
+      doc.text('RÉSUMÉ FINANCIER', 14, yPosition);
+      yPosition += 5;
+
+      const totalDelivery = group.sales.reduce((s, v) => s + v.deliveryFee, 0);
+      const totalPurchase = group.sales.reduce((s, v) => s + v.purchasePrice * v.quantitySold, 0);
+
+      autoTable(doc, {
+        startY: yPosition,
+        head: [['Description', 'Montant']],
+        body: [
+          ['Total Prix de Vente', `${group.totalSellingPrice.toFixed(2)} €`],
+          ['Total Prix d\'Achat', `${totalPurchase.toFixed(2)} €`],
+          ['Total Livraison', `${totalDelivery.toFixed(2)} €`],
+          ['BÉNÉFICE TOTAL', `${group.totalProfit.toFixed(2)} €`]
+        ],
+        theme: 'grid',
+        headStyles: { fillColor: [0, 0, 120] },
+        styles: { fontSize: 10 },
+        didParseCell: data => {
+          if (data.row.index === 3) {
+            data.cell.styles.fontStyle = 'bold';
+            data.cell.styles.fillColor = group.totalProfit >= 0 ? [210, 245, 210] : [255, 220, 220];
+            data.cell.styles.textColor = group.totalProfit >= 0 ? [0, 100, 0] : [150, 0, 0];
+          }
+        }
+      });
+
+      // Footer
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const pageWidth = doc.internal.pageSize.getWidth();
+
+      doc.setFontSize(8);
+      doc.setTextColor(120, 120, 120);
+      doc.text(
+        'Document comptable strictement confidentiel.\nRéservé exclusivement à un usage interne.\nToute diffusion, reproduction ou transmission à des tiers\nsans autorisation écrite est formellement interdite.',
+        14, pageHeight - 40
+      );
+
+      doc.setFontSize(9);
+      doc.setTextColor(90, 90, 90);
+      doc.text('Responsable Comptable', pageWidth - 20, pageHeight - 38, { align: 'right' });
+      doc.setFontSize(12);
+      doc.setTextColor(160, 0, 0);
+      doc.text('La Direction', pageWidth - 20, pageHeight - 30, { align: 'right' });
+      doc.setFontSize(8);
+      doc.setTextColor(120, 120, 120);
+      doc.text(`Date : ${new Date().toLocaleDateString('fr-FR')}`, pageWidth - 20, pageHeight - 22, { align: 'right' });
+
+      doc.save(`ventes_${group.clientName.replace(/\s+/g, '_')}_${monthName}_${selectedYear}.pdf`);
+
+      toast({ title: 'Export réussi', description: `PDF de ${group.clientName} téléchargé`, className: 'bg-green-600 text-white border-green-700' });
+    } catch (error) {
+      console.error('Erreur export PDF client:', error);
+      toast({ title: 'Erreur', description: 'Impossible de générer le PDF', variant: 'destructive' });
+    }
+  }, [selectedMonth, selectedYear]);
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
@@ -277,11 +388,11 @@ const VentesParClientsModal: React.FC<VentesParClientsModalProps> = ({ isOpen, o
                         className="bg-white/5 backdrop-blur rounded-xl border border-white/10 overflow-hidden"
                       >
                         {/* Client Header */}
-                        <button
-                          onClick={() => setExpandedClient(expandedClient === group.clientName ? null : group.clientName)}
-                          className="w-full flex items-center justify-between p-3.5 hover:bg-white/5 transition-all text-left"
-                        >
-                          <div className="flex items-center gap-3 min-w-0">
+                        <div className="flex items-center justify-between p-3.5 hover:bg-white/5 transition-all">
+                          <button
+                            onClick={() => setExpandedClient(expandedClient === group.clientName ? null : group.clientName)}
+                            className="flex items-center gap-3 min-w-0 flex-1 text-left"
+                          >
                             <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold text-white shrink-0 ${
                               idx === 0 ? 'bg-gradient-to-br from-amber-400 to-orange-500 shadow-lg shadow-amber-500/20' :
                               idx === 1 ? 'bg-gradient-to-br from-slate-300 to-slate-400' :
@@ -294,15 +405,32 @@ const VentesParClientsModal: React.FC<VentesParClientsModalProps> = ({ isOpen, o
                               <p className="text-white font-semibold text-sm truncate">{group.clientName}</p>
                               <p className="text-[10px] text-white/40">{group.sales.length} vente{group.sales.length > 1 ? 's' : ''}</p>
                             </div>
+                          </button>
+
+                          <div className="flex items-center gap-2 shrink-0">
+                            {/* PDF Export Button */}
+                            <motion.button
+                              whileHover={{ scale: 1.1 }}
+                              whileTap={{ scale: 0.9 }}
+                              onClick={(e) => { e.stopPropagation(); handleExportClientPDF(group); }}
+                              className="p-2 rounded-lg bg-gradient-to-br from-rose-500 to-pink-600 shadow-lg shadow-rose-500/25 hover:shadow-rose-500/40 transition-all"
+                              title={`Exporter PDF - ${group.clientName}`}
+                            >
+                              <FileDown className="h-3.5 w-3.5 text-white" />
+                            </motion.button>
+
+                            <button
+                              onClick={() => setExpandedClient(expandedClient === group.clientName ? null : group.clientName)}
+                              className="flex items-center gap-3"
+                            >
+                              <div className="text-right">
+                                <p className="text-amber-400 font-bold text-sm">{formatCurrency(group.totalSellingPrice)}</p>
+                                <p className="text-[10px] text-emerald-400">+{formatCurrency(group.totalProfit)}</p>
+                              </div>
+                              <ChevronDown className={`h-4 w-4 text-white/30 transition-transform ${expandedClient === group.clientName ? 'rotate-180' : ''}`} />
+                            </button>
                           </div>
-                          <div className="flex items-center gap-3 shrink-0">
-                            <div className="text-right">
-                              <p className="text-amber-400 font-bold text-sm">{formatCurrency(group.totalSellingPrice)}</p>
-                              <p className="text-[10px] text-emerald-400">+{formatCurrency(group.totalProfit)}</p>
-                            </div>
-                            <ChevronDown className={`h-4 w-4 text-white/30 transition-transform ${expandedClient === group.clientName ? 'rotate-180' : ''}`} />
-                          </div>
-                        </button>
+                        </div>
 
                         {/* Expanded Sales Table */}
                         <AnimatePresence>
