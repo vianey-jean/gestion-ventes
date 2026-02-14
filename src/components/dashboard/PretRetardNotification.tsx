@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Phone, Clock, X } from 'lucide-react';
@@ -10,28 +9,47 @@ interface PretRetardNotificationProps {
 }
 
 const PretRetardNotification: React.FC<PretRetardNotificationProps> = ({ prets }) => {
-  const [dismissedNotifications, setDismissedNotifications] = useState<string[]>([]);
-  
+  const [dismissedNotifications, setDismissedNotifications] = useState<string[]>(() => {
+    // Récupérer les notifications déjà vues depuis localStorage
+    const stored = localStorage.getItem('dismissedNotifications');
+    return stored ? JSON.parse(stored) : [];
+  });
+
   // Filtrer les prêts en retard
-  const pretsEnRetard = prets.filter(pret => {
+  const pretsEnRetard = prets.filter((pret) => {
     if (pret.estPaye || !pret.datePaiement) return false;
-    
+
     const datePaiement = new Date(pret.datePaiement);
     const aujourdhui = new Date();
     aujourdhui.setHours(0, 0, 0, 0);
     datePaiement.setHours(0, 0, 0, 0);
-    
+
     return datePaiement < aujourdhui && !dismissedNotifications.includes(pret.id);
   });
 
   const dismissNotification = (pretId: string) => {
-    setDismissedNotifications(prev => [...prev, pretId]);
+    setDismissedNotifications((prev) => {
+      const updated = [...prev, pretId];
+      localStorage.setItem('dismissedNotifications', JSON.stringify(updated));
+      return updated;
+    });
   };
+
+  // Fermer automatiquement chaque notification après 5 secondes
+  useEffect(() => {
+    const timers = pretsEnRetard.map((pret) =>
+      setTimeout(() => dismissNotification(pret.id), 10000)
+    );
+
+    return () => {
+      timers.forEach(clearTimeout);
+    };
+  }, [pretsEnRetard]);
 
   if (pretsEnRetard.length === 0) return null;
 
   return (
-    <div className="fixed top-4 right-4 z-50 space-y-2">
+    <div className="fixed top-4 right-4 z-50 max-h-[80vh] w-96 overflow-y-auto space-y-2">
       <AnimatePresence>
         {pretsEnRetard.map((pret) => (
           <motion.div
@@ -39,7 +57,7 @@ const PretRetardNotification: React.FC<PretRetardNotificationProps> = ({ prets }
             initial={{ opacity: 0, x: 300 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 300 }}
-            className="w-96"
+            className="w-full"
           >
             <Alert className="bg-red-50 border-red-200 animate-pulse">
               <Clock className="h-4 w-4 text-red-600" />
