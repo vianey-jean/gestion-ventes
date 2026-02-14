@@ -38,7 +38,7 @@ const PretRetardNotification: React.FC<PretRetardNotificationProps> = ({ prets }
   // Fermer automatiquement chaque notification après 5 secondes
   useEffect(() => {
     const timers = pretsEnRetard.map((pret) =>
-      setTimeout(() => dismissNotification(pret.id), 5000)
+      setTimeout(() => dismissNotification(pret.id), 10000)
     );
 
     return () => {
