@@ -11,7 +11,8 @@ import EditProductForm from '@/components/dashboard/EditProductForm';
 import ExportSalesDialog from '@/components/dashboard/ExportSalesDialog';
 import InvoiceGenerator from '@/components/dashboard/InvoiceGenerator';
 import { AccessibleButton } from '@/components/accessibility/AccessibleButton';
-import { PlusCircle, Edit, ShoppingCart, FileText, FileSignature, Package, FileDown, Layers, PenLine, CirclePlus } from 'lucide-react';
+import { PlusCircle, Edit, ShoppingCart, FileText, FileSignature, Package, FileDown, Layers, PenLine, CirclePlus, Users } from 'lucide-react';
+import VentesParClientsModal from '@/components/dashboard/VentesParClientsModal';
 
 interface SalesManagementSectionProps {
   sales: Sale[];
@@ -39,6 +40,7 @@ const SalesManagementSection: React.FC<SalesManagementSectionProps> = ({
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
   const [invoiceGeneratorOpen, setInvoiceGeneratorOpen] = useState(false);
   const [selectedSale, setSelectedSale] = useState<Sale | undefined>(undefined);
+  const [ventesParClientsOpen, setVentesParClientsOpen] = useState(false);
 
   const handleRowClick = (sale: Sale) => {
     setSelectedSale(sale);
@@ -80,6 +82,13 @@ const SalesManagementSection: React.FC<SalesManagementSectionProps> = ({
   onClick: () => setInvoiceGeneratorOpen(true),
   gradient: 'purple' as const,
   'aria-label': 'Ouvrir le générateur de factures'
+},
+{
+  icon: Users,
+  label: 'Ventes par Clients',
+  onClick: () => setVentesParClientsOpen(true),
+  gradient: 'green' as const,
+  'aria-label': 'Voir les ventes groupées par client'
 }
   ];
 
@@ -200,6 +209,11 @@ const SalesManagementSection: React.FC<SalesManagementSectionProps> = ({
       <InvoiceGenerator
         isOpen={invoiceGeneratorOpen}
         onClose={() => setInvoiceGeneratorOpen(false)}
+      />
+
+      <VentesParClientsModal
+        isOpen={ventesParClientsOpen}
+        onClose={() => setVentesParClientsOpen(false)}
       />
     </section>
   );
