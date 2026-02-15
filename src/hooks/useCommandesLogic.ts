@@ -375,6 +375,15 @@ export const useCommandesLogic = () => {
 
       if (editingCommande) {
         await api.put(`/api/commandes/${editingCommande.id}`, commandeData);
+        // Marquer les produits comme réservés si c'est une réservation
+        if (type === 'reservation') {
+          for (const produit of produitsListe) {
+            const existingProduct = products.find(p => p.description.toLowerCase() === produit.nom.toLowerCase());
+            if (existingProduct) {
+              try { await api.put(`/api/products/${existingProduct.id}`, { reserver: 'oui' }); } catch (err) { console.error('Erreur marquage réservation produit:', err); }
+            }
+          }
+        }
         if (type === 'reservation' && dateEcheance && horaire) {
           try { await rdvFromReservationService.updateRdvFromCommande({ ...editingCommande, ...commandeData } as Commande); } catch (err) { console.error('Erreur mise à jour RDV:', err); }
         }
@@ -382,6 +391,15 @@ export const useCommandesLogic = () => {
       } else {
         const response = await api.post('/api/commandes', commandeData);
         const newCommande = response.data as Commande;
+        // Marquer les produits comme réservés si c'est une réservation
+        if (type === 'reservation') {
+          for (const produit of produitsListe) {
+            const existingProduct = products.find(p => p.description.toLowerCase() === produit.nom.toLowerCase());
+            if (existingProduct) {
+              try { await api.put(`/api/products/${existingProduct.id}`, { reserver: 'oui' }); } catch (err) { console.error('Erreur marquage réservation produit:', err); }
+            }
+          }
+        }
         if (type === 'reservation' && dateEcheance && horaire) { setPendingReservationForRdv(newCommande); setShowRdvConfirmDialog(true); }
         toast({ title: 'Succès', description: 'Commande ajoutée avec succès', className: "bg-app-green text-white" });
       }

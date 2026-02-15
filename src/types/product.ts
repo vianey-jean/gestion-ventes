@@ -8,6 +8,7 @@ export interface Product {
   quantity: number;
   sellingPrice?: number;
   profit?: number;
+  reserver?: string; // "oui" si le produit est réservé
 }
 
 export interface ProductFormData {

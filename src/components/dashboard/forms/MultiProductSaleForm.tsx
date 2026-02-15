@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -80,6 +81,10 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
   // États pour la modale de création de prêt produit
   const [pretProduitModalOpen, setPretProduitModalOpen] = useState(false);
   const [currentPretProductIndex, setCurrentPretProductIndex] = useState<number | null>(null);
+
+  // États pour la modale de confirmation produit réservé
+  const [reservedModalOpen, setReservedModalOpen] = useState(false);
+  const [pendingReservedProduct, setPendingReservedProduct] = useState<{ product: Product; index: number } | null>(null);
 
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:10000';
 
@@ -311,6 +316,34 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
 
   // Sélection d'un produit
   const handleProductSelect = (product: Product, index: number) => {
+    // Vérifier si le produit est réservé - ouvrir modale de confirmation
+    if ((product as any).reserver === 'oui') {
+      setPendingReservedProduct({ product, index });
+      setReservedModalOpen(true);
+      return;
+    }
+
+    applyProductSelection(product, index);
+  };
+
+  // Confirmation de vente d'un produit réservé
+  const handleReservedConfirm = () => {
+    if (pendingReservedProduct) {
+      applyProductSelection(pendingReservedProduct.product, pendingReservedProduct.index);
+    }
+    setReservedModalOpen(false);
+    setPendingReservedProduct(null);
+  };
+
+  // Refus de vente d'un produit réservé → fermer tout
+  const handleReservedCancel = () => {
+    setReservedModalOpen(false);
+    setPendingReservedProduct(null);
+    onClose();
+  };
+
+  // Appliquer la sélection du produit (logique extraite)
+  const applyProductSelection = (product: Product, index: number) => {
     const isAdvance = product.description.toLowerCase().includes('avance');
     const productQuantity = product.quantity !== undefined ? product.quantity : 0;
     const purchasePriceUnit = product.purchasePrice;
@@ -755,6 +788,53 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
       }
       
       if (success) {
+        // Vérifier si des produits vendus étaient réservés, et supprimer les réservations correspondantes
+        for (const product of validProducts) {
+          if ((product.selectedProduct as any)?.reserver === 'oui') {
+            try {
+              const token = localStorage.getItem('token');
+              // Récupérer toutes les commandes
+              const commandesResponse = await axios.get(`${API_BASE_URL}/api/commandes`, {
+                headers: { Authorization: `Bearer ${token}` }
+              });
+              const allCommandes = commandesResponse.data;
+              // Trouver la réservation contenant ce produit
+              const reservationToDelete = allCommandes.find((c: any) => 
+                c.type === 'reservation' && 
+                c.statut !== 'valide' && c.statut !== 'annule' &&
+                c.produits?.some((p: any) => p.nom.toLowerCase() === product.description.toLowerCase())
+              );
+              if (reservationToDelete) {
+                await axios.delete(`${API_BASE_URL}/api/commandes/${reservationToDelete.id}`, {
+                  headers: { Authorization: `Bearer ${token}` }
+                });
+                console.log('✅ Réservation supprimée après vente:', reservationToDelete.id);
+
+                // Supprimer aussi le RDV lié à cette réservation
+                try {
+                  const rdvResponse = await axios.get(`${API_BASE_URL}/api/rdv`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                  });
+                  const rdvToDelete = rdvResponse.data.find((r: any) => r.commandeId === reservationToDelete.id);
+                  if (rdvToDelete) {
+                    await axios.delete(`${API_BASE_URL}/api/rdv/${rdvToDelete.id}`, {
+                      headers: { Authorization: `Bearer ${token}` }
+                    });
+                    console.log('✅ RDV lié à la réservation supprimé:', rdvToDelete.id);
+                  }
+                } catch (rdvError) {
+                  console.error('Erreur suppression RDV lié:', rdvError);
+                }
+              }
+              // Enlever le marquage réservé du produit
+              await axios.put(`${API_BASE_URL}/api/products/${product.productId}`, { reserver: 'non' }, {
+                headers: { Authorization: `Bearer ${token}` }
+              });
+            } catch (error) {
+              console.error('Erreur suppression réservation après vente:', error);
+            }
+          }
+        }
         onClose();
       }
     } catch (error) {
@@ -1309,6 +1389,32 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
     }
     isSubmitting={isSubmitting}
   />
+  {/* Modale de confirmation produit réservé */}
+  <AlertDialog open={reservedModalOpen} onOpenChange={setReservedModalOpen}>
+    <AlertDialogContent className="bg-card/95 backdrop-blur-xl border-0 shadow-2xl max-w-md">
+      <AlertDialogHeader>
+        <div className="flex items-center gap-3 mb-2">
+          <div className="p-2 rounded-full bg-amber-500/10">
+            <Package className="h-5 w-5 text-amber-500" />
+          </div>
+          <AlertDialogTitle className="text-xl font-bold text-foreground">
+            Produit réservé
+          </AlertDialogTitle>
+        </div>
+        <AlertDialogDescription className="text-base text-muted-foreground">
+          Le produit <span className="font-semibold text-foreground">"{pendingReservedProduct?.product.description}"</span> est déjà réservé. Voulez-vous toujours le vendre ?
+        </AlertDialogDescription>
+      </AlertDialogHeader>
+      <AlertDialogFooter className="gap-3 sm:gap-2">
+        <AlertDialogCancel onClick={handleReservedCancel} className="bg-secondary hover:bg-secondary/80">
+          Non
+        </AlertDialogCancel>
+        <AlertDialogAction onClick={handleReservedConfirm} className="bg-amber-500 text-white hover:bg-amber-600 min-w-[100px]">
+          Oui, vendre
+        </AlertDialogAction>
+      </AlertDialogFooter>
+    </AlertDialogContent>
+  </AlertDialog>
 </Dialog>
 
   );
