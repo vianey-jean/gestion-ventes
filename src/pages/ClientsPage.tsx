@@ -185,7 +185,7 @@ const ClientsPage: React.FC = () => {
   // Rendu
   // =========================================================================
   return (
-    <div className="min-h-screen bg-gradient-to-br from-violet-50 via-purple-50 to-indigo-100 dark:from-slate-900 dark:via-purple-900 dark:to-indigo-950">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-purple-50/30 to-indigo-50/50 dark:from-slate-900 dark:via-purple-950/30 dark:to-indigo-950/50">
       <Navbar />
       <ScrollToTop />
 

@@ -1,13 +1,11 @@
-
-
- import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Mail, Phone, MapPin, Send, CheckCircle, Clock, Globe, Shield, Sparkles } from 'lucide-react';
+import { Mail, Phone, MapPin, Send, CheckCircle, Clock, Globe, Shield, Sparkles, Crown } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import Layout from '@/components/Layout';
 import { useMessages } from '@/hooks/use-messages';
@@ -20,7 +18,7 @@ const ContactPage: React.FC = () => {
     expediteurTelephone: '',
     sujet: '',
     contenu: '',
-    destinataireId: '1' // ID de l'utilisateur par défaut (admin)
+    destinataireId: '1'
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -39,42 +37,18 @@ const ContactPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!formData.expediteurNom || !formData.expediteurEmail || !formData.sujet || !formData.contenu) {
-      toast({
-        title: "Erreur",
-        description: "Veuillez remplir tous les champs obligatoires.",
-        variant: "destructive", className: "notification-erreur",
-      });
+      toast({ title: "Erreur", description: "Veuillez remplir tous les champs obligatoires.", variant: "destructive", className: "notification-erreur" });
       return;
     }
-
     setIsSubmitting(true);
-
     try {
       await sendMessage(formData);
-      
       setIsSubmitted(true);
-      toast({
-        title: "Message envoyé",
-        description: "Votre message a été envoyé avec succès. Nous vous répondrons dans les plus brefs délais.",
-      });
-
-      // Reset form
-      setFormData({
-        expediteurNom: '',
-        expediteurEmail: '',
-        expediteurTelephone: '',
-        sujet: '',
-        contenu: '',
-        destinataireId: '1'
-      });
+      toast({ title: "Message envoyé", description: "Votre message a été envoyé avec succès." });
+      setFormData({ expediteurNom: '', expediteurEmail: '', expediteurTelephone: '', sujet: '', contenu: '', destinataireId: '1' });
     } catch (error) {
-      toast({
-        title: "Erreur",
-        description: "Une erreur s'est produite lors de l'envoi du message. Veuillez réessayer.",
-        variant: "destructive", className: "notification-erreur",
-      });
+      toast({ title: "Erreur", description: "Une erreur s'est produite lors de l'envoi.", variant: "destructive", className: "notification-erreur" });
     } finally {
       setIsSubmitting(false);
     }
@@ -82,246 +56,198 @@ const ContactPage: React.FC = () => {
 
   if (isSubmitted) {
     return (
-     <Layout>
-      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-blue-100 dark:from-emerald-900 dark:via-teal-900 dark:to-blue-900 flex items-center justify-center p-4">
-        <Card className="w-full max-w-lg text-center shadow-2xl border-0 bg-white/90 dark:bg-slate-800/90 backdrop-blur-2xl hover:scale-[1.02] transition-transform duration-500">
-          <CardContent className="pt-12 pb-10">
-            <div className="relative mb-8">
-              <div className="absolute inset-0 bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 rounded-full blur-3xl opacity-40 animate-pulseSlow"></div>
-              <CheckCircle className="relative h-24 w-24 text-emerald-500 mx-auto animate-pulse" />
-            </div>
-            <h2 className="text-4xl font-extrabold bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-500 bg-clip-text text-transparent mb-4 animate-gradientText">
-              Message Envoyé !
-            </h2>
-            <div className="text-slate-600 dark:text-slate-300 mb-8 text-lg leading-relaxed">
-              Merci pour votre message. Notre équipe d'experts vous répondra dans les plus brefs délais avec une attention particulière.
-            </div>
-            <Button 
-              onClick={() => setIsSubmitted(false)} 
-              className="w-full bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-500 hover:from-emerald-700 hover:via-teal-700 hover:to-cyan-600 text-white py-4 text-lg font-semibold shadow-2xl hover:shadow-emerald-500/40 transition-all duration-300 transform hover:scale-[1.03] flex items-center justify-center gap-2"
-            >
-              <Send className="mr-3 h-5 w-5 animate-bounce" />
-              Envoyer un autre message
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-       </Layout>
+      <Layout>
+        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-emerald-950/50 to-teal-950 flex items-center justify-center p-4">
+          {/* Glass orbs */}
+          <div className="fixed inset-0 overflow-hidden pointer-events-none">
+            <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 12, repeat: Infinity }} className="absolute top-1/3 left-1/3 w-96 h-96 bg-emerald-500/10 rounded-full blur-[120px]" />
+          </div>
+          
+          <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.5 }}>
+            <Card className="w-full max-w-lg text-center border-0 bg-white/[0.06] backdrop-blur-2xl border border-white/[0.1] shadow-[0_32px_64px_rgba(0,0,0,0.4)] rounded-3xl overflow-hidden">
+              <div className="h-px bg-gradient-to-r from-transparent via-emerald-400/40 to-transparent" />
+              <CardContent className="pt-12 pb-10">
+                <div className="relative mb-8">
+                  <div className="absolute inset-0 bg-emerald-500/20 rounded-full blur-2xl" />
+                  <CheckCircle className="relative h-24 w-24 text-emerald-400 mx-auto drop-shadow-[0_0_20px_rgba(52,211,153,0.5)]" />
+                </div>
+                <h2 className="text-4xl font-extrabold text-white mb-4">Message Envoyé !</h2>
+                <div className="text-emerald-200/50 mb-8 text-lg leading-relaxed">
+                  Merci pour votre message. Notre équipe vous répondra dans les plus brefs délais.
+                </div>
+                <Button 
+                  onClick={() => setIsSubmitted(false)} 
+                  className="w-full h-14 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white text-lg font-semibold shadow-[0_20px_40px_rgba(16,185,129,0.3)] border border-white/10 rounded-xl transition-all duration-300 hover:scale-[1.02]"
+                >
+                  <Send className="mr-3 h-5 w-5" />
+                  Envoyer un autre message
+                </Button>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </div>
+      </Layout>
     );
   }
 
   return (
-     <Layout>
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-blue-900 dark:to-indigo-900">
-      <div className="container mx-auto px-3 sm:px-4 md:px-6 py-8 sm:py-12 md:py-16">
-        {/* Header Premium */}
-        <div className="text-center mb-8 sm:mb-12 md:mb-16">
-          <div className="relative inline-block mb-4 sm:mb-6 md:mb-8">
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-500 via-purple-600 to-indigo-600 rounded-full blur-3xl opacity-20 animate-pulseSlow"></div>
-           
-              <motion.h1
-                  initial={{ opacity: 0, y: 60, scale: 0.9 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  transition={{ duration: 0.9, ease: "easeOut" }}
-                  className="text-5xl md:text-6xl font-extrabold 
-                            bg-gradient-to-r from-purple-600 via-red-600 to-indigo-600 
-                            bg-[length:200%_200%] animate-gradientText 
-                            bg-clip-text text-transparent mb-6 text-center text-3d"
-                >
-                  Contactez-nous
-                </motion.h1>
-          </div>
-          <div className="max-w-3xl mx-auto px-3 sm:px-4">
-            <div className="text-sm sm:text-base md:text-lg lg:text-xl text-slate-600 dark:text-slate-300 leading-relaxed mb-6 sm:mb-8 animate-fadeIn">
-              Une question ? Un projet ? Notre équipe d'experts est à votre disposition pour vous accompagner dans votre réussite.
-            </div>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6 md:gap-8 text-xs sm:text-sm text-slate-500">
-              <div className="flex items-center gap-2 animate-bounce">
-                <Shield className="h-3 w-3 sm:h-4 sm:w-4 text-green-500 shrink-0" />
-                <span>Sécurisé & Confidentiel</span>
-              </div>
-              <div className="flex items-center gap-2 animate-bounce delay-100">
-                <Clock className="h-3 w-3 sm:h-4 sm:w-4 text-blue-500 shrink-0" />
-                <span>Réponse sous 24h</span>
-              </div>
-              <div className="flex items-center gap-2 animate-bounce delay-200">
-                <Sparkles className="h-3 w-3 sm:h-4 sm:w-4 text-purple-500 shrink-0" />
-                <span>Service Premium</span>
-              </div>
-            </div>
-          </div>
+    <Layout>
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-950/50 to-indigo-950 relative">
+        {/* Background effects */}
+        <div className="fixed inset-0 overflow-hidden pointer-events-none">
+          <motion.div animate={{ x: [0, 30, 0], y: [0, -20, 0] }} transition={{ duration: 16, repeat: Infinity, ease: "easeInOut" }} className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-[120px]" />
+          <motion.div animate={{ x: [0, -30, 0], y: [0, 20, 0] }} transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }} className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-blue-500/8 rounded-full blur-[120px]" />
         </div>
+        
+        {/* Grid */}
+        <div className="fixed inset-0 bg-[linear-gradient(rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:48px_48px] pointer-events-none" />
 
-        <div className="grid lg:grid-cols-3 gap-6 sm:gap-8 md:gap-12 max-w-7xl mx-auto">
-          {/* Formulaire de contact premium */}
-          <div className="lg:col-span-2">
-            <Card className="shadow-2xl border-0 bg-white/90 dark:bg-slate-800/90 backdrop-blur-2xl hover:scale-[1.02] transition-transform duration-500">
-              <CardHeader className="pb-4 sm:pb-6 md:pb-8 p-4 sm:p-6">
-                <CardTitle className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 text-lg sm:text-xl md:text-2xl">
-                  <div className="p-2 sm:p-3 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl sm:rounded-2xl shadow-lg shrink-0 hover:scale-[1.05] transition-transform duration-300">
-                    <Mail className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 text-white" />
-                  </div>
-                  <span className="bg-gradient-to-r from-slate-800 to-slate-600 dark:from-white dark:to-slate-200 bg-clip-text text-transparent animate-gradientText">
+        <div className="relative container mx-auto px-3 sm:px-4 md:px-6 py-8 sm:py-12 md:py-16">
+          {/* Header */}
+          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-8 sm:mb-12 md:mb-16">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/[0.05] backdrop-blur-xl rounded-full border border-white/[0.08] mb-6">
+              <Crown className="h-4 w-4 text-amber-400" />
+              <span className="text-sm font-medium text-purple-300/80">Contact Premium</span>
+            </div>
+            
+            <motion.h1
+              initial={{ opacity: 0, y: 60, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: 0.9, ease: "easeOut" }}
+              className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-white mb-6 drop-shadow-[0_4px_20px_rgba(139,92,246,0.3)]"
+            >
+              Contactez-nous
+            </motion.h1>
+            
+            <div className="max-w-3xl mx-auto px-3 sm:px-4">
+              <div className="text-sm sm:text-base md:text-lg text-purple-200/40 leading-relaxed mb-6 sm:mb-8">
+                Une question ? Un projet ? Notre équipe est à votre disposition.
+              </div>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6 text-xs sm:text-sm text-purple-300/40">
+                <div className="flex items-center gap-2">
+                  <Shield className="h-3.5 w-3.5 text-emerald-400" />
+                  <span>Sécurisé</span>
+                </div>
+                <div className="hidden sm:block w-1 h-1 bg-purple-400/20 rounded-full" />
+                <div className="flex items-center gap-2">
+                  <Clock className="h-3.5 w-3.5 text-blue-400" />
+                  <span>Réponse sous 24h</span>
+                </div>
+                <div className="hidden sm:block w-1 h-1 bg-purple-400/20 rounded-full" />
+                <div className="flex items-center gap-2">
+                  <Sparkles className="h-3.5 w-3.5 text-purple-400" />
+                  <span>Service Premium</span>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+
+          <div className="grid lg:grid-cols-3 gap-6 sm:gap-8 md:gap-10 max-w-7xl mx-auto">
+            {/* Formulaire */}
+            <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }} className="lg:col-span-2">
+              <Card className="border-0 bg-white/[0.04] backdrop-blur-2xl border border-white/[0.08] rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] overflow-hidden">
+                <div className="h-px bg-gradient-to-r from-transparent via-purple-400/30 to-transparent" />
+                <CardHeader className="pb-4 sm:pb-6 md:pb-8 p-4 sm:p-6">
+                  <CardTitle className="flex items-center gap-3 text-lg sm:text-xl text-white">
+                    <div className="p-2.5 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl shadow-[0_8px_20px_rgba(59,130,246,0.3)] border border-white/10">
+                      <Mail className="h-5 w-5 text-white" />
+                    </div>
                     Envoyez-nous un message
-                  </span>
-                </CardTitle>
-                <CardDescription className="text-sm sm:text-base md:text-lg text-slate-600 dark:text-slate-300 mt-2 sm:mt-3">
-                  Remplissez le formulaire ci-dessous. Chaque message est traité avec soin par notre équipe dédiée.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="pb-8">
-                <form onSubmit={handleSubmit} className="space-y-8">
-                  <div className="grid md:grid-cols-2 gap-6">
-                    <div className="space-y-3">
-                      <Label htmlFor="expediteurNom" className="text-base font-semibold text-slate-700 dark:text-slate-200">
-                        Nom complet *
-                      </Label>
-                      <Input
-                        id="expediteurNom"
-                        name="expediteurNom"
-                        value={formData.expediteurNom}
-                        onChange={handleChange}
-                        placeholder="Votre nom complet"
-                        required
-                        className="h-12 px-4 bg-slate-50/50 dark:bg-slate-700/50 border-slate-200/50 dark:border-slate-600/50 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200 text-base hover:shadow-lg hover:shadow-blue-300/30"
-                      />
+                  </CardTitle>
+                  <CardDescription className="text-sm sm:text-base text-purple-200/40 mt-2">
+                    Chaque message est traité avec soin par notre équipe dédiée.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="pb-8">
+                  <form onSubmit={handleSubmit} className="space-y-6">
+                    <div className="grid md:grid-cols-2 gap-5">
+                      <div className="space-y-2">
+                        <Label htmlFor="expediteurNom" className="text-sm font-semibold text-purple-200/70">Nom complet *</Label>
+                        <Input id="expediteurNom" name="expediteurNom" value={formData.expediteurNom} onChange={handleChange} placeholder="Votre nom" required className="h-12 bg-white/[0.04] border-white/[0.08] text-white placeholder:text-purple-300/25 rounded-xl focus:bg-white/[0.08] focus:border-purple-400/30" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="expediteurEmail" className="text-sm font-semibold text-purple-200/70">Email *</Label>
+                        <Input id="expediteurEmail" name="expediteurEmail" type="email" value={formData.expediteurEmail} onChange={handleChange} placeholder="votre@email.com" required className="h-12 bg-white/[0.04] border-white/[0.08] text-white placeholder:text-purple-300/25 rounded-xl focus:bg-white/[0.08] focus:border-purple-400/30" />
+                      </div>
                     </div>
-                    <div className="space-y-3">
-                      <Label htmlFor="expediteurEmail" className="text-base font-semibold text-slate-700 dark:text-slate-200">
-                        Adresse email *
-                      </Label>
-                      <Input
-                        id="expediteurEmail"
-                        name="expediteurEmail"
-                        type="email"
-                        value={formData.expediteurEmail}
-                        onChange={handleChange}
-                        placeholder="votre@email.com"
-                        required
-                        className="h-12 px-4 bg-slate-50/50 dark:bg-slate-700/50 border-slate-200/50 dark:border-slate-600/50 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200 text-base hover:shadow-lg hover:shadow-blue-300/30"
-                      />
+
+                    <div className="space-y-2">
+                      <Label htmlFor="expediteurTelephone" className="text-sm font-semibold text-purple-200/70">Téléphone</Label>
+                      <Input id="expediteurTelephone" name="expediteurTelephone" value={formData.expediteurTelephone} onChange={handleChange} placeholder="Votre numéro" className="h-12 bg-white/[0.04] border-white/[0.08] text-white placeholder:text-purple-300/25 rounded-xl focus:bg-white/[0.08] focus:border-purple-400/30" />
                     </div>
-                  </div>
 
-                  <div className="space-y-3">
-                    <Label htmlFor="expediteurTelephone" className="text-base font-semibold text-slate-700 dark:text-slate-200">
-                      Numéro de téléphone
-                    </Label>
-                    <Input
-                      id="expediteurTelephone"
-                      name="expediteurTelephone"
-                      value={formData.expediteurTelephone}
-                      onChange={handleChange}
-                      placeholder="Votre numéro de téléphone"
-                      className="h-12 px-4 bg-slate-50/50 dark:bg-slate-700/50 border-slate-200/50 dark:border-slate-600/50 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200 text-base hover:shadow-lg hover:shadow-blue-300/30"
-                    />
-                  </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="sujet" className="text-sm font-semibold text-purple-200/70">Sujet *</Label>
+                      <Select onValueChange={(value) => handleSelectChange('sujet', value)} value={formData.sujet}>
+                        <SelectTrigger className="h-12 bg-white/[0.04] border-white/[0.08] text-white rounded-xl focus:bg-white/[0.08] focus:border-purple-400/30">
+                          <SelectValue placeholder="Choisissez le sujet" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-slate-900/95 backdrop-blur-2xl border border-white/[0.1] shadow-[0_20px_40px_rgba(0,0,0,0.5)]">
+                          <SelectItem value="Demande d'information">💡 Information</SelectItem>
+                          <SelectItem value="Support technique">🔧 Support technique</SelectItem>
+                          <SelectItem value="Partenariat">🤝 Partenariat</SelectItem>
+                          <SelectItem value="Consultation">👨‍💼 Consultation</SelectItem>
+                          <SelectItem value="Autre">📧 Autre</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-                  <div className="space-y-3">
-                    <Label htmlFor="sujet" className="text-base font-semibold text-slate-700 dark:text-slate-200">
-                      Sujet de votre demande *
-                    </Label>
-                    <Select onValueChange={(value) => handleSelectChange('sujet', value)} value={formData.sujet}>
-                      <SelectTrigger className="h-12 px-4 bg-slate-50/50 dark:bg-slate-700/50 border-slate-200/50 dark:border-slate-600/50 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200 text-base hover:shadow-lg hover:shadow-blue-300/30">
-                        <SelectValue placeholder="Choisissez le sujet de votre demande" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl border-0 shadow-2xl">
-                        <SelectItem value="Demande d'information">💡 Demande d'information</SelectItem>
-                        <SelectItem value="Support technique">🔧 Support technique</SelectItem>
-                        <SelectItem value="Partenariat">🤝 Partenariat</SelectItem>
-                        <SelectItem value="Consultation">👨‍💼 Consultation personnalisée</SelectItem>
-                        <SelectItem value="Autre">📧 Autre</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="contenu" className="text-sm font-semibold text-purple-200/70">Message *</Label>
+                      <Textarea id="contenu" name="contenu" value={formData.contenu} onChange={handleChange} placeholder="Décrivez votre demande..." rows={6} required className="bg-white/[0.04] border-white/[0.08] text-white placeholder:text-purple-300/25 rounded-xl focus:bg-white/[0.08] focus:border-purple-400/30 resize-none" />
+                    </div>
 
-                  <div className="space-y-3">
-                    <Label htmlFor="contenu" className="text-base font-semibold text-slate-700 dark:text-slate-200">
-                      Votre message *
-                    </Label>
-                    <Textarea
-                      id="contenu"
-                      name="contenu"
-                      value={formData.contenu}
-                      onChange={handleChange}
-                      placeholder="Décrivez votre demande en détail. Plus vous serez précis, mieux nous pourrons vous aider..."
-                      rows={6}
-                      required
-                      className="p-4 bg-slate-50/50 dark:bg-slate-700/50 border-slate-200/50 dark:border-slate-600/50 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200 text-base resize-none hover:shadow-lg hover:shadow-blue-300/30"
-                    />
-                  </div>
+                    <Button 
+                      type="submit" 
+                      className="w-full h-14 bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 hover:from-blue-500 hover:via-purple-500 hover:to-indigo-500 text-white text-lg font-semibold shadow-[0_20px_40px_rgba(79,70,229,0.3)] rounded-xl border border-white/10 transition-all duration-300 hover:scale-[1.02]"
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting ? (
+                        <><div className="animate-spin rounded-full h-5 w-5 border-2 border-white/30 border-t-white mr-2" />Envoi...</>
+                      ) : (
+                        <><Send className="mr-3 h-5 w-5" />Envoyer le message</>
+                      )}
+                    </Button>
+                  </form>
+                </CardContent>
+              </Card>
+            </motion.div>
 
-                  <Button 
-                    type="submit" 
-                    className="w-full h-14 bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 hover:from-blue-700 hover:via-purple-700 hover:to-indigo-700 text-white text-lg font-semibold shadow-2xl hover:shadow-blue-500/25 transition-all duration-300 rounded-xl flex items-center justify-center gap-2"
-                    disabled={isSubmitting}
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                        Envoi en cours...
-                      </>
-                    ) : (
-                      <>
-                        <Send className="mr-3 h-5 w-5 animate-bounce" />
-                        Envoyer le message
-                      </>
-                    )}
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Informations de contact premium */}
-          <div className="space-y-8">
-            {/* Toutes les cartes avec hover:scale et glow */}
-            <Card className="shadow-2xl border-0 bg-white/90 dark:bg-slate-800/90 backdrop-blur-2xl hover:scale-[1.02] transition-transform duration-500">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-3 text-xl">
-                  <div className="p-2 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-xl shadow-lg">
-                    <Globe className="h-5 w-5 text-white" />
-                  </div>
-                  Nos coordonnées
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-blue-50/50 to-purple-50/50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-2xl border border-blue-200/30 dark:border-blue-700/30 hover:shadow-lg hover:shadow-blue-300/30 transition-all duration-300">
-                  <div className="p-3 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl shadow-lg">
-                    <Mail className="h-5 w-5 text-white" />
-                  </div>
-                  <div>
-                    <div className="font-semibold text-slate-800 dark:text-slate-100 text-base">Email :</div>
-                    <div className="text-slate-600 dark:text-slate-300">vianey.jean@ymail.com</div>
-                  </div>
-                </div>
-                
-                <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-emerald-50/50 to-teal-50/50 dark:from-emerald-900/20 dark:to-teal-900/20 rounded-2xl border border-emerald-200/30 dark:border-emerald-700/30 hover:shadow-lg hover:shadow-green-300/30 transition-all duration-300">
-                  <div className="p-3 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-xl shadow-lg">
-                    <Phone className="h-5 w-5 text-white" />
-                  </div>
-                  <div>
-                    <div className="font-semibold text-slate-800 dark:text-slate-100 text-base">Ligne Directe</div>
-                    <div className="text-slate-600 dark:text-slate-300">+225 0505050505</div>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-purple-50/50 to-indigo-50/50 dark:from-purple-900/20 dark:to-indigo-900/20 rounded-2xl border border-purple-200/30 dark:border-purple-700/30 hover:shadow-lg hover:shadow-purple-300/30 transition-all duration-300">
-                  <div className="p-3 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-xl shadow-lg">
-                    <MapPin className="h-5 w-5 text-white" />
-                  </div>
-                  <div>
-                    <div className="font-semibold text-slate-800 dark:text-slate-100 text-base">Adresse</div>
-                    <div className="text-slate-600 dark:text-slate-300">Abidjan, Côte d'Ivoire</div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            {/* Infos contact */}
+            <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4 }} className="space-y-6">
+              <Card className="border-0 bg-white/[0.04] backdrop-blur-2xl border border-white/[0.08] rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] overflow-hidden">
+                <div className="h-px bg-gradient-to-r from-transparent via-emerald-400/30 to-transparent" />
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-3 text-lg text-white">
+                    <div className="p-2 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl shadow-[0_8px_20px_rgba(16,185,129,0.3)] border border-white/10">
+                      <Globe className="h-5 w-5 text-white" />
+                    </div>
+                    Nos coordonnées
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {[
+                    { icon: Mail, label: 'Email :', value: 'vianey.jean@ymail.com', gradient: 'from-blue-500/10 to-purple-500/10', borderColor: 'border-blue-500/10', iconBg: 'from-blue-500 to-purple-600' },
+                    { icon: Phone, label: 'Ligne Directe', value: '+225 0505050505', gradient: 'from-emerald-500/10 to-teal-500/10', borderColor: 'border-emerald-500/10', iconBg: 'from-emerald-500 to-teal-600' },
+                    { icon: MapPin, label: 'Adresse', value: 'Abidjan, Côte d\'Ivoire', gradient: 'from-purple-500/10 to-indigo-500/10', borderColor: 'border-purple-500/10', iconBg: 'from-purple-500 to-indigo-600' },
+                  ].map((item, i) => (
+                    <div key={i} className={`flex items-center gap-4 p-4 bg-gradient-to-r ${item.gradient} rounded-2xl border ${item.borderColor} transition-all duration-300 hover:bg-white/[0.03]`}>
+                      <div className={`p-2.5 bg-gradient-to-br ${item.iconBg} rounded-xl shadow-lg border border-white/10`}>
+                        <item.icon className="h-4 w-4 text-white" />
+                      </div>
+                      <div>
+                        <div className="font-semibold text-purple-100/80 text-sm">{item.label}</div>
+                        <div className="text-purple-200/50 text-sm">{item.value}</div>
+                      </div>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            </motion.div>
           </div>
         </div>
       </div>
-    </div>
-  </Layout>
+    </Layout>
   );
 };
 

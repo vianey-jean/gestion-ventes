@@ -9,7 +9,8 @@ import PasswordInput from '@/components/PasswordInput';
 import PasswordStrengthChecker from '@/components/PasswordStrengthChecker';
 import Layout from '@/components/Layout';
 import PremiumLoading from '@/components/ui/premium-loading';
-import { Lock, Mail, ArrowRight, Sparkles } from 'lucide-react';
+import { Lock, Mail, ArrowRight, Sparkles, Shield, Fingerprint, KeyRound, Crown } from 'lucide-react';
+import { motion } from 'framer-motion';
 import axios from 'axios';
 
 const AUTH_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://server-gestion-ventes.onrender.com';
@@ -94,7 +95,6 @@ const LoginPage: React.FC = () => {
     setIsPasswordValid(isValid);
   };
 
-  // Show loading during login process
   if (isLoggingIn) {
     return (
       <Layout>
@@ -110,75 +110,160 @@ const LoginPage: React.FC = () => {
   
   return (
     <Layout>
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 dark:from-gray-900 dark:via-purple-900/20 dark:to-slate-900 flex items-center justify-center p-4">
-        {/* Background decorations */}
+      <div className="min-h-screen relative flex items-center justify-center p-4 overflow-hidden">
+        {/* Ultra-luxe animated background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-purple-950 to-indigo-950" />
+        
+        {/* Animated glassmorphism orbs */}
         <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-400/20 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-400/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-r from-pink-400/10 to-violet-400/10 rounded-full blur-3xl"></div>
+          <motion.div
+            animate={{ x: [0, 30, 0], y: [0, -20, 0], scale: [1, 1.1, 1] }}
+            transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
+            className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/20 rounded-full blur-[100px]"
+          />
+          <motion.div
+            animate={{ x: [0, -40, 0], y: [0, 30, 0], scale: [1, 1.2, 1] }}
+            transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
+            className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-blue-500/15 rounded-full blur-[120px]"
+          />
+          <motion.div
+            animate={{ x: [0, 20, 0], y: [0, 40, 0] }}
+            transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-r from-pink-500/10 to-violet-500/10 rounded-full blur-[100px]"
+          />
+          
+          {/* Floating particles */}
+          {[...Array(6)].map((_, i) => (
+            <motion.div
+              key={i}
+              animate={{ y: [0, -60, 0], opacity: [0.3, 0.7, 0.3] }}
+              transition={{ duration: 6 + i * 2, repeat: Infinity, delay: i * 0.8, ease: "easeInOut" }}
+              className="absolute w-1.5 h-1.5 bg-purple-300/40 rounded-full"
+              style={{ left: `${15 + i * 15}%`, top: `${20 + i * 10}%` }}
+            />
+          ))}
         </div>
 
-        <div className="relative w-full max-w-md">
-          <Card className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl border-0 shadow-2xl">
+        {/* Grid pattern overlay */}
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:64px_64px]" />
+
+        <motion.div 
+          initial={{ opacity: 0, y: 40, scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          className="relative w-full max-w-md z-10"
+        >
+          {/* Glow behind card */}
+          <div className="absolute -inset-4 bg-gradient-to-r from-purple-600/20 via-pink-600/20 to-blue-600/20 rounded-[2rem] blur-2xl" />
+          
+          <Card className="relative bg-white/[0.08] backdrop-blur-2xl border border-white/[0.12] shadow-[0_32px_64px_rgba(0,0,0,0.4)] rounded-3xl overflow-hidden">
+            {/* Top shimmer line */}
+            <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-purple-400/50 to-transparent" />
+            
             <CardHeader className="text-center pb-8 pt-10">
-              <div className="flex justify-center mb-6">
-                <div className="w-20 h-20 bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg">
-                  <Lock className="h-10 w-10 text-white" />
+              <motion.div 
+                initial={{ scale: 0, rotate: -180 }}
+                animate={{ scale: 1, rotate: 0 }}
+                transition={{ duration: 0.6, type: "spring", bounce: 0.4 }}
+                className="flex justify-center mb-6"
+              >
+                <div className="relative">
+                  <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl blur-xl opacity-50" />
+                  <div className="relative w-20 h-20 bg-gradient-to-br from-purple-500 via-pink-500 to-blue-500 rounded-2xl flex items-center justify-center shadow-2xl border border-white/20">
+                    <Fingerprint className="h-10 w-10 text-white drop-shadow-lg" />
+                  </div>
+                  <motion.div 
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                    className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-r from-yellow-400 to-amber-400 rounded-full flex items-center justify-center shadow-lg"
+                  >
+                    <Crown className="h-3 w-3 text-white" />
+                  </motion.div>
                 </div>
-              </div>
-              <CardTitle className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+              </motion.div>
+              
+              <CardTitle className="text-3xl font-bold text-white drop-shadow-lg">
                 Connexion
               </CardTitle>
-              <CardDescription className="text-gray-600 dark:text-gray-300 text-lg mt-2">
-                Accédez à votre espace personnel
+              <CardDescription className="text-purple-200/70 text-base mt-2">
+                Accédez à votre espace personnel sécurisé
               </CardDescription>
+              
+              {/* Trust badges */}
+              <div className="flex items-center justify-center gap-4 mt-4">
+                <div className="flex items-center gap-1.5 text-xs text-purple-300/60">
+                  <Shield className="h-3 w-3" />
+                  <span>Sécurisé</span>
+                </div>
+                <div className="w-1 h-1 bg-purple-400/30 rounded-full" />
+                <div className="flex items-center gap-1.5 text-xs text-purple-300/60">
+                  <KeyRound className="h-3 w-3" />
+                  <span>Chiffré</span>
+                </div>
+              </div>
             </CardHeader>
             
             <form onSubmit={handleSubmit}>
               <CardContent className="space-y-6 px-8">
                 <div className="space-y-3">
-                  <Label htmlFor="email" className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
-                    <Mail className="h-4 w-4" />
+                  <Label htmlFor="email" className="text-sm font-semibold text-purple-200/80 flex items-center gap-2">
+                    <Mail className="h-4 w-4 text-purple-400" />
                     Adresse email
                   </Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="exemple@email.com"
-                    value={email}
-                    onChange={(e) => {
-                      setEmail(e.target.value);
-                      setShowPasswordField(false);
-                      setEmailExists(false);
-                      if (errors.email) {
-                        setErrors({ ...errors, email: undefined });
-                      }
-                    }}
-                    onBlur={handleEmailCheck}
-                    disabled={isCheckingEmail || showPasswordField}
-                    className={`h-14 bg-white/50 dark:bg-gray-700/50 border-2 rounded-xl transition-all duration-200 ${
-                      errors.email 
-                        ? "border-red-500 focus:border-red-500 focus:ring-red-500/20" 
-                        : "border-purple-200 dark:border-purple-700 focus:border-purple-500 focus:ring-purple-500/20"
-                    } focus:ring-4`}
-                  />
+                  <div className="relative group">
+                    <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-500/30 to-pink-500/30 rounded-xl blur opacity-0 group-focus-within:opacity-100 transition-opacity duration-300" />
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="exemple@email.com"
+                      value={email}
+                      onChange={(e) => {
+                        setEmail(e.target.value);
+                        setShowPasswordField(false);
+                        setEmailExists(false);
+                        if (errors.email) {
+                          setErrors({ ...errors, email: undefined });
+                        }
+                      }}
+                      onBlur={handleEmailCheck}
+                      disabled={isCheckingEmail || showPasswordField}
+                      className={`relative h-14 bg-white/[0.06] border-white/[0.1] text-white placeholder:text-purple-300/30 rounded-xl transition-all duration-300 focus:bg-white/[0.1] focus:border-purple-400/50 ${
+                        errors.email 
+                          ? "border-red-400/50 focus:border-red-400/50" 
+                          : ""
+                      }`}
+                    />
+                  </div>
                   {errors.email && (
-                    <div className="flex items-center gap-2 text-red-500 text-sm animate-in fade-in-50">
-                      <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                    <motion.div 
+                      initial={{ opacity: 0, y: -5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="flex items-center gap-2 text-red-400 text-sm"
+                    >
+                      <div className="w-1.5 h-1.5 bg-red-400 rounded-full" />
                       {errors.email}
-                    </div>
+                    </motion.div>
                   )}
                   {emailExists && (
-                    <div className="flex items-center gap-2 text-green-600 text-sm animate-in fade-in-50">
+                    <motion.div 
+                      initial={{ opacity: 0, y: -5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="flex items-center gap-2 text-emerald-400 text-sm"
+                    >
                       <Sparkles className="h-4 w-4" />
                       Bienvenue {userName}
-                    </div>
+                    </motion.div>
                   )}
                 </div>
                 
                 {showPasswordField && (
-                  <div className="space-y-3 animate-in fade-in-50 slide-in-from-top-4 duration-300">
-                    <Label htmlFor="password" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  <motion.div 
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    transition={{ duration: 0.3 }}
+                    className="space-y-3"
+                  >
+                    <Label htmlFor="password" className="text-sm font-semibold text-purple-200/80">
                       Mot de passe
                     </Label>
                     <PasswordInput
@@ -187,7 +272,7 @@ const LoginPage: React.FC = () => {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       error={errors.password}
-                      className="h-14"
+                      className="h-14 bg-white/[0.06] border-white/[0.1] text-white rounded-xl"
                     />
                     <PasswordStrengthChecker 
                       password={password} 
@@ -196,99 +281,54 @@ const LoginPage: React.FC = () => {
                     <div className="text-sm text-right">
                       <Link 
                         to="/reset-password" 
-                        className="text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 font-medium hover:underline transition-colors"
+                        className="text-purple-400 hover:text-purple-300 font-medium hover:underline transition-colors"
                       >
                         Mot de passe oublié?
                       </Link>
                     </div>
-                  </div>
+                  </motion.div>
                 )}
               </CardContent>
               
-              {/* <CardFooter className="flex flex-col space-y-6 px-8 pb-10">
+              <CardFooter className="flex flex-row gap-3 px-8 pb-10">
                 <Button
                   type="submit"
-                  className="w-full h-14 bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 hover:from-purple-700 hover:via-pink-700 hover:to-blue-700 text-white font-bold text-lg rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center gap-3"
+                  className="flex-1 h-14 bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 hover:from-purple-500 hover:via-pink-500 hover:to-blue-500 text-white font-bold text-base rounded-xl shadow-[0_20px_40px_rgba(139,92,246,0.3)] hover:shadow-[0_25px_50px_rgba(139,92,246,0.4)] transform hover:scale-[1.02] transition-all duration-300 border border-white/10"
                   disabled={isCheckingEmail || (showPasswordField && !isPasswordValid)}
                 >
                   {isCheckingEmail ? (
                     <>
-                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
                       Vérification...
                     </>
                   ) : showPasswordField ? (
                     <>
-                      <Lock className="h-5 w-5" />
+                      <Lock className="h-5 w-5 mr-2" />
                       Se connecter
                     </>
                   ) : (
                     <>
-                      <ArrowRight className="h-5 w-5" />
+                      <ArrowRight className="h-5 w-5 mr-2" />
                       Continuer
                     </>
                   )}
                 </Button>
-                
-                <div className="text-center">
-                  <p className="text-gray-600 dark:text-gray-300">
-                    Nouveau sur  plateforme?{" "}
-                  </p>
-                  <p>
-                    <Link 
-                      to="/register" 
-                      className="h-5 w-5 text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 font-semibold hover:underline transition-colors"
-                    >
-                      Créer un compte
-                    </Link>
-                  </p>
-                </div>
-              </CardFooter> */}
- <CardFooter className="flex flex-row space-x-4 px-8 pb-10">
-  {/* Bouton principal - Connexion */}
-  <Button
-    type="submit"
-    className="w-1/2 h-14 bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 
-               hover:from-purple-700 hover:via-pink-700 hover:to-blue-700 
-               text-white font-bold text-lg rounded-xl shadow-lg 
-               hover:shadow-xl transform hover:scale-105 
-               transition-all duration-300 flex items-center justify-center gap-3"
-    disabled={isCheckingEmail || (showPasswordField && !isPasswordValid)}
-  >
-    {isCheckingEmail ? (
-      <>
-        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-        Vérification...
-      </>
-    ) : showPasswordField ? (
-      <>
-        <Lock className="h-5 w-5" />
-        Se connecter
-      </>
-    ) : (
-      <>
-        <ArrowRight className="h-5 w-5" />
-        Continuer
-      </>
-    )}
-  </Button>
 
-  {/* Bouton secondaire - Créer un compte */}
-  <Link to="/register" className="w-1/2">
-    <Button
-      className="w-full h-14 bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 
-                 hover:from-purple-700 hover:via-pink-700 hover:to-blue-700 
-                 text-white hover:text-black font-bold text-lg rounded-xl shadow-lg 
-                 hover:shadow-xl transform hover:scale-105 ">
-      Créer un compte
-    </Button>
-  </Link>
-</CardFooter>
-
-
-
+                <Link to="/register" className="flex-1">
+                  <Button
+                    type="button"
+                    className="w-full h-14 bg-white/[0.08] hover:bg-white/[0.15] text-white font-bold text-base rounded-xl border border-white/[0.12] hover:border-white/[0.2] shadow-lg transition-all duration-300 hover:scale-[1.02] backdrop-blur-sm"
+                  >
+                    Créer un compte
+                  </Button>
+                </Link>
+              </CardFooter>
             </form>
+            
+            {/* Bottom shimmer line */}
+            <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-blue-400/30 to-transparent" />
           </Card>
-        </div>
+        </motion.div>
       </div>
     </Layout>
   );

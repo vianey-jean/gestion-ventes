@@ -44,7 +44,7 @@ const CommandesPage: React.FC = () => {
       {/* Hero Header */}
       <CommandesHero />
 
-      <div className="container mx-auto p-4 md:p-6 lg:p-8 space-y-6">
+      <div className="container mx-auto p-4 md:p-6 lg:p-8 space-y-6 bg-gradient-to-br from-slate-50 via-purple-50/20 to-indigo-50/30 dark:from-slate-900/50 dark:via-purple-950/20 dark:to-indigo-950/30 min-h-screen">
         {/* Barre de recherche et actions */}
         <CommandesSearchBar
           commandeSearch={logic.commandeSearch}
