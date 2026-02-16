@@ -1,68 +1,80 @@
 import { useLocation } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 
 const NotFound = () => {
   const location = useLocation();
-  const [animationKey, setAnimationKey] = useState(0);
 
   useEffect(() => {
-    console.error(
-      "404 Error: User attempted to access non-existent route:",
-      location.pathname
-    );
-    // Changer la clé pour relancer l’animation à chaque navigation
-    setAnimationKey(Math.random());
+    console.error("404 Error: User attempted to access non-existent route:", location.pathname);
   }, [location.pathname]);
 
   return (
-    <div
-      key={animationKey}
-      className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-black via-neutral-900 to-black text-white"
-    >
-      {/* Fond néon animé ultra-luxe */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_30%,rgba(255,0,180,0.2),transparent_50%),radial-gradient(circle_at_75%_75%,rgba(0,180,255,0.15),transparent_60%),radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.05),transparent_80%)] animate-gradientShift"></div>
+    <div className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-[#030014] via-[#0a0020] to-[#0e0030] text-white">
+      {/* Mirror reflections */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-0 left-0 right-0 h-1/2 bg-gradient-to-b from-white/[0.03] to-transparent" />
+        <div className="absolute bottom-0 left-0 right-0 h-1/3 bg-gradient-to-t from-violet-500/[0.05] to-transparent" />
+      </div>
 
-      {/* Halo central premium */}
-      <div className="absolute w-[800px] h-[800px] bg-gradient-to-tr from-fuchsia-600/50 via-purple-500/40 to-indigo-600/50 blur-4xl rounded-full opacity-50 animate-pulseGlow shadow-[0_0_200px_rgba(255,100,200,0.5)]"></div>
-
-      {/* Particules lumineuses dynamiques */}
+      {/* Glow orbs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {[...Array(50)].map((_, i) => (
+        <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-violet-600/20 rounded-full blur-[180px] animate-pulseGlow" />
+        <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-fuchsia-600/15 rounded-full blur-[160px] animate-pulseGlow" style={{ animationDelay: '3s' }} />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-indigo-500/10 rounded-full blur-[200px]" />
+      </div>
+
+      {/* Particles */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {[...Array(40)].map((_, i) => (
           <span
             key={i}
-            className="absolute block rounded-full bg-gradient-to-br from-fuchsia-400/70 via-pink-500/60 to-purple-600/50 blur-[2px] animate-particle"
+            className="absolute block rounded-full bg-gradient-to-br from-violet-400/50 to-fuchsia-500/40 blur-[1px] animate-particle"
             style={{
               top: `${Math.random() * 100}%`,
               left: `${Math.random() * 100}%`,
-              width: `${Math.random() * 8 + 4}px`,
-              height: `${Math.random() * 8 + 4}px`,
+              width: `${Math.random() * 6 + 3}px`,
+              height: `${Math.random() * 6 + 3}px`,
               animationDelay: `${Math.random() * 6}s`,
-              animationDuration: `${4 + Math.random() * 12}s`,
+              animationDuration: `${5 + Math.random() * 10}s`,
             }}
-          ></span>
+          />
         ))}
       </div>
 
       <div className="relative z-10 text-center px-6">
-        {/* 404 avec effet 3D, rotation & rebond ultra-luxe */}
-        <h1 className="text-[8rem] md:text-[12rem] font-black tracking-widest bg-gradient-to-br from-fuchsia-300 via-pink-500 to-purple-500 bg-clip-text text-transparent drop-shadow-[0_12px_60px_rgba(255,80,200,0.8)] [text-shadow:_0_6px_18px_rgba(255,0,150,0.7),_0_12px_70px_rgba(255,100,255,0.4)] animate-rotateAndBounce select-none mb-8">
-          404
-        </h1>
+        {/* Glass mirror card */}
+        <div className="relative p-12 sm:p-16 rounded-3xl bg-white/[0.04] backdrop-blur-2xl border border-white/[0.08] shadow-[0_30px_100px_-20px_rgba(139,92,246,0.3)]">
+          {/* Top mirror shine line */}
+          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent" />
+          {/* Mirror glass reflection */}
+          <div className="absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-white/[0.06] to-transparent rounded-t-3xl pointer-events-none" />
 
-        <h2 className="text-3xl md:text-4xl font-extrabold text-red-400 mb-3 animate-fadeIn drop-shadow-lg">
-          Page introuvable
-        </h2>
+          <h1 className="text-[8rem] md:text-[12rem] font-black tracking-widest bg-gradient-to-br from-violet-300 via-fuchsia-400 to-pink-400 bg-clip-text text-transparent drop-shadow-[0_12px_60px_rgba(168,85,247,0.7)] select-none mb-4 leading-none animate-rotateAndBounce" style={{ perspective: '1000px' }}>
+            404
+          </h1>
 
-        <p className="text-neutral-400 font-bold max-w-md mx-auto mb-10 leading-relaxed animate-fadeInDelay drop-shadow-sm">
-          Oups… Il semble que cette page se soit perdue dans la Nature.
-        </p>
+          <h2 className="text-2xl md:text-4xl font-bold bg-gradient-to-r from-violet-300 to-fuchsia-300 bg-clip-text text-transparent mb-4 animate-fadeIn">
+            Page introuvable
+          </h2>
 
-        <a
-          href="/"
-          className="inline-flex items-center gap-2 px-10 py-4 rounded-full bg-gradient-to-r from-fuchsia-500 via-pink-500 to-purple-600 hover:from-fuchsia-400 hover:via-pink-400 hover:to-purple-500 transition-all duration-500 shadow-xl shadow-purple-800/50 hover:shadow-purple-700/70 text-white font-semibold backdrop-blur-md animate-buttonFloat hover:scale-105"
-        >
-          ⟵ Retour à l’accueil
-        </a>
+          <p className="text-white/50 font-medium max-w-md mx-auto mb-10 leading-relaxed animate-fadeInDelay">
+            Oups… Il semble que cette page se soit perdue dans une autre dimension.
+          </p>
+
+          <a
+            href="/"
+            className="group relative inline-flex items-center gap-3 px-10 py-4 rounded-2xl overflow-hidden transition-all duration-500 hover:scale-105 animate-buttonFloat"
+          >
+            {/* Mirror button layers */}
+            <div className="absolute inset-0 bg-gradient-to-r from-violet-600 via-fuchsia-600 to-pink-600 rounded-2xl" />
+            <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent rounded-2xl" />
+            <div className="absolute inset-[1px] bg-gradient-to-r from-violet-600 via-fuchsia-600 to-pink-600 rounded-2xl" />
+            <div className="absolute top-0 inset-x-0 h-1/2 bg-gradient-to-b from-white/15 to-transparent rounded-t-2xl" />
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+            
+            <span className="relative z-10 text-white font-bold text-lg">⟵ Retour à l'accueil</span>
+          </a>
+        </div>
       </div>
     </div>
   );

@@ -46,9 +46,11 @@
    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
  
    return (
-     <header className="sticky top-0 z-50 backdrop-blur-2xl bg-gradient-to-r from-white/95 via-slate-50/95 to-violet-50/95 dark:from-slate-950/95 dark:via-slate-900/95 dark:to-violet-950/95 border-b-2 border-violet-200/30 dark:border-violet-800/30 shadow-2xl shadow-violet-500/10">
+     <header className="sticky top-0 z-50 backdrop-blur-2xl bg-gradient-to-r from-white/90 via-slate-50/90 to-violet-50/90 dark:from-[#030014]/95 dark:via-[#0a0020]/95 dark:to-[#0e0030]/95 border-b border-violet-200/20 dark:border-violet-800/20 shadow-2xl shadow-violet-500/5">
+       {/* Mirror top reflection */}
+       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/40 dark:via-white/10 to-transparent" />
        {/* Ultra Premium Top Gradient Bar */}
-       <div className="h-1 bg-gradient-to-r from-violet-500 via-fuchsia-500 to-pink-500" />
+       <div className="h-[2px] bg-gradient-to-r from-violet-500 via-fuchsia-500 to-pink-500" />
        
        <nav className="max-w-7xl mx-auto px-4 relative">
          {/* Decorative Background Elements */}
@@ -58,7 +60,7 @@
          </div>
          
          <div className="flex justify-between h-16 items-center">
- 
+
            {/* Logo + Objectif */}
            <div className="flex items-center gap-4">
              <Link to="/" className="flex items-center group relative">
@@ -76,54 +78,50 @@
                </motion.div>
              </Link>
              
-             {/* Objectif - visible on all sizes */}
              {isAuthenticated && <ObjectifIndicator />}
            </div>
- 
+
            {/* ================= DESKTOP ================= */}
            <div className="hidden lg:flex items-center space-x-1">
              {isAuthenticated && (
                <>
                  <Link to="/dashboard">
                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                     <Button variant="ghost" className="relative rounded-2xl hover:bg-gradient-to-r hover:from-violet-500/10 hover:to-purple-500/10 transition-all duration-300 group overflow-hidden px-4 py-2">
-                       <div className="absolute inset-0 bg-gradient-to-r from-violet-500 to-purple-500 opacity-0 group-hover:opacity-10 transition-opacity" />
+                     <Button variant="ghost" className="relative rounded-2xl hover:bg-gradient-to-r hover:from-violet-500/10 hover:to-purple-500/10 transition-all duration-300 group overflow-hidden px-4 py-2 mirror-shine">
                        <div className="flex items-center justify-center w-8 h-8 rounded-xl bg-gradient-to-br from-violet-500 to-purple-500 mr-2 shadow-lg shadow-violet-500/30">
                          <LayoutDashboard className="h-4 w-4 text-white" />
                        </div>
-                       <span className="font-bold">Dashboard</span>
+                       <span className="font-bold relative z-10">Dashboard</span>
                      </Button>
                    </motion.div>
                  </Link>
- 
+
                  <Link to="/commandes">
                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                     <Button variant="ghost" className="relative rounded-2xl hover:bg-gradient-to-r hover:from-emerald-500/10 hover:to-teal-500/10 transition-all duration-300 group overflow-hidden px-4 py-2">
-                       <div className="absolute inset-0 bg-gradient-to-r from-emerald-500 to-teal-500 opacity-0 group-hover:opacity-10 transition-opacity" />
+                     <Button variant="ghost" className="relative rounded-2xl hover:bg-gradient-to-r hover:from-emerald-500/10 hover:to-teal-500/10 transition-all duration-300 group overflow-hidden px-4 py-2 mirror-shine">
                        <div className="flex items-center justify-center w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 mr-2 shadow-lg shadow-emerald-500/30">
                          <Package className="h-4 w-4 text-white" />
                        </div>
-                       <span className="font-bold">Commandes</span>
+                       <span className="font-bold relative z-10">Commandes</span>
                      </Button>
                    </motion.div>
                  </Link>
                </>
              )}
- 
+
              <Link to="/rdv">
                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                 <Button variant="ghost" className="relative rounded-2xl hover:bg-gradient-to-r hover:from-orange-500/10 hover:to-amber-500/10 transition-all duration-300 group overflow-hidden px-4 py-2">
-                   <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-amber-500 opacity-0 group-hover:opacity-10 transition-opacity" />
+                 <Button variant="ghost" className="relative rounded-2xl hover:bg-gradient-to-r hover:from-orange-500/10 hover:to-amber-500/10 transition-all duration-300 group overflow-hidden px-4 py-2 mirror-shine">
                    <div className="flex items-center justify-center w-8 h-8 rounded-xl bg-gradient-to-br from-orange-500 to-amber-500 mr-2 shadow-lg shadow-orange-500/30">
                      <CalendarDays className="h-4 w-4 text-white" />
                    </div>
-                   <span className="font-bold">Rendez-vous</span>
+                   <span className="font-bold relative z-10">Rendez-vous</span>
                  </Button>
                </motion.div>
              </Link>
- 
+
              {isAuthenticated && <RdvNotifications />}
- 
+
              {/* Theme */}
              <motion.div whileHover={{ scale: 1.1, rotate: 15 }} whileTap={{ scale: 0.9 }}>
                <Button 
@@ -138,7 +136,7 @@
                    : <Moon className="h-5 w-5 text-indigo-600 drop-shadow-lg" />}
                </Button>
              </motion.div>
- 
+
              {/* USER MENU */}
              {isAuthenticated ? (
                <DropdownMenu>
@@ -146,29 +144,28 @@
                    <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                      <Button 
                        variant="outline" 
-                       className="relative rounded-2xl border-2 border-violet-300/50 dark:border-violet-700/50 hover:bg-gradient-to-r hover:from-violet-500/10 hover:to-fuchsia-500/10 hover:border-violet-400/60 transition-all duration-300 shadow-lg shadow-violet-500/10 overflow-hidden group px-4"
+                       className="relative rounded-2xl border border-violet-300/30 dark:border-violet-700/30 hover:bg-gradient-to-r hover:from-violet-500/10 hover:to-fuchsia-500/10 transition-all duration-300 shadow-lg shadow-violet-500/5 overflow-hidden group px-4 mirror-shine"
                      >
-                       <div className="absolute inset-0 bg-gradient-to-r from-violet-500 to-fuchsia-500 opacity-0 group-hover:opacity-10 transition-opacity" />
                        <div className="flex items-center justify-center w-8 h-8 rounded-xl bg-gradient-to-br from-violet-500 via-purple-500 to-fuchsia-500 mr-2 shadow-lg shadow-violet-500/40">
                          <Crown className="h-4 w-4 text-white" />
                        </div>
-                       <span className="font-bold bg-gradient-to-r from-violet-600 to-fuchsia-600 bg-clip-text text-transparent">{user?.firstName}</span>
+                       <span className="font-bold bg-gradient-to-r from-violet-600 to-fuchsia-600 bg-clip-text text-transparent relative z-10">{user?.firstName}</span>
                        <ChevronDown className="ml-2 h-4 w-4 text-violet-500" />
                        <Sparkles className="ml-1 h-3 w-3 text-amber-500 animate-pulse" />
                      </Button>
                    </motion.div>
                  </DropdownMenuTrigger>
- 
-                 <DropdownMenuContent align="end" className="w-64 rounded-2xl border-2 border-violet-200/50 dark:border-violet-800/50 bg-white/98 dark:bg-slate-900/98 backdrop-blur-2xl shadow-2xl shadow-violet-500/20 p-2">
+
+                 <DropdownMenuContent align="end" className="w-64 rounded-2xl border border-violet-200/30 dark:border-violet-800/30 bg-white/95 dark:bg-[#0a0020]/95 backdrop-blur-2xl shadow-2xl shadow-violet-500/10 p-2">
                    {/* Premium Header in Dropdown */}
-                   <div className="px-3 py-3 mb-2 rounded-xl bg-gradient-to-r from-violet-500/10 via-purple-500/10 to-fuchsia-500/10 border border-violet-200/50 dark:border-violet-800/50">
+                   <div className="px-3 py-3 mb-2 rounded-xl bg-gradient-to-r from-violet-500/10 via-purple-500/10 to-fuchsia-500/10 border border-violet-200/20 dark:border-violet-800/20">
                      <div className="flex items-center gap-2">
                        <Diamond className="h-4 w-4 text-violet-500" />
                        <span className="text-xs font-bold text-violet-600 dark:text-violet-400">Menu Premium</span>
                        <Gem className="h-3 w-3 text-fuchsia-500 animate-pulse" />
                      </div>
                    </div>
- 
+
                    <DropdownMenuItem asChild className="rounded-xl hover:bg-gradient-to-r hover:from-blue-500/10 hover:to-cyan-500/10 focus:bg-blue-500/10 cursor-pointer transition-all duration-300 py-3">
                      <Link to="/messages" className="flex items-center w-full py-2">
                        <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 mr-3 shadow-lg shadow-blue-500/30">
@@ -182,7 +179,7 @@
                        )}
                      </Link>
                    </DropdownMenuItem>
- 
+
                    <DropdownMenuItem asChild className="rounded-xl hover:bg-gradient-to-r hover:from-emerald-500/10 hover:to-teal-500/10 focus:bg-emerald-500/10 cursor-pointer transition-all duration-300 py-3">
                      <Link to="/tendances" className="flex items-center w-full py-2">
                        <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 mr-3 shadow-lg shadow-emerald-500/30">
@@ -192,30 +189,32 @@
                        <Star className="ml-auto h-4 w-4 text-amber-500" />
                      </Link>
                    </DropdownMenuItem>
- 
+
                    <DropdownMenuItem asChild className="rounded-xl hover:bg-gradient-to-r hover:from-violet-500/10 hover:to-purple-500/10 focus:bg-violet-500/10 cursor-pointer transition-all duration-300 py-3">
-                     <Link to="/Clients" className="flex items-center w-full py-2">
+                     <Link to="/clients" className="flex items-center w-full py-2">
                        <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-500 mr-3 shadow-lg shadow-violet-500/30">
                          <Users className="h-5 w-5 text-white" />
                        </div>
                        <span className="font-bold">Clients</span>
                      </Link>
                    </DropdownMenuItem>
- 
+
                  </DropdownMenuContent>
                </DropdownMenu>
              ) : (
                <Link to="/login">
                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                   <Button className="rounded-2xl bg-gradient-to-r from-violet-500 via-purple-500 to-fuchsia-500 hover:from-violet-400 hover:via-purple-400 hover:to-fuchsia-400 shadow-xl shadow-violet-500/40 transition-all duration-300 px-6 py-3 font-bold">
-                     <LogIn className="mr-2 h-5 w-5" />
-                     Connexion
-                     <Sparkles className="ml-2 h-4 w-4 animate-pulse" />
-                   </Button>
+                   <button className="btn-mirror mirror-shine rounded-2xl px-6 py-3 text-white flex items-center gap-2">
+                     <span className="relative z-10 flex items-center gap-2">
+                       <LogIn className="h-5 w-5" />
+                       Connexion
+                       <Sparkles className="h-4 w-4 animate-pulse" />
+                     </span>
+                   </button>
                  </motion.div>
                </Link>
              )}
- 
+
              {isAuthenticated && (
                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                  <Button 
@@ -229,25 +228,21 @@
                </motion.div>
              )}
            </div>
- 
-           {/* ================= TABLET & MOBILE ================= */}
-          {/* ================= MOBILE HEADER ================= */}
-<div className="lg:hidden flex items-center gap-2">
-  {isAuthenticated && <RdvNotifications />}
 
-  {/* ❌ Suppression du bouton thème d'ici */}
-
-  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-    <Button
-      variant="ghost"
-      size="icon"
-      onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-      className="rounded-xl h-10 w-10 hover:bg-violet-500/10 transition-all duration-300"
-    >
-      {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-    </Button>
-  </motion.div>
-</div>
+           {/* ================= MOBILE HEADER ================= */}
+           <div className="lg:hidden flex items-center gap-2">
+             {isAuthenticated && <RdvNotifications />}
+             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+               <Button
+                 variant="ghost"
+                 size="icon"
+                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                 className="rounded-xl h-10 w-10 hover:bg-violet-500/10 transition-all duration-300"
+               >
+                 {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+               </Button>
+             </motion.div>
+           </div>
 
          </div>
  
@@ -264,12 +259,12 @@
         <Link to="/dashboard" onClick={() => setIsMobileMenuOpen(false)}>
           <Button
             variant="outline"
-            className="w-full py-4 sm:py-6 flex items-center justify-start gap-2 sm:gap-3 rounded-2xl border-2 border-violet-300/50 dark:border-violet-700/50 shadow-lg shadow-violet-500/20 bg-gradient-to-r from-white/90 to-violet-50/80 dark:from-slate-900/90 dark:to-violet-950/80 hover:scale-105 transition-all duration-300"
+            className="w-full py-4 sm:py-6 flex items-center justify-start gap-2 sm:gap-3 rounded-2xl border border-violet-300/30 dark:border-violet-700/30 shadow-lg shadow-violet-500/10 bg-gradient-to-r from-white/90 to-violet-50/80 dark:from-[#0a0020]/80 dark:to-violet-950/60 hover:scale-105 transition-all duration-300 mirror-shine"
           >
             <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-500 shadow-lg shadow-violet-500/30">
               <LayoutDashboard className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
             </div>
-            <span className="font-bold text-sm sm:text-base text-violet-700 dark:text-violet-300">Dashboard</span>
+            <span className="font-bold text-sm sm:text-base text-violet-700 dark:text-violet-300 relative z-10">Dashboard</span>
           </Button>
         </Link>
 
@@ -277,12 +272,12 @@
         <Link to="/commandes" onClick={() => setIsMobileMenuOpen(false)}>
           <Button
             variant="outline"
-            className="w-full py-4 sm:py-6 flex items-center justify-start gap-2 sm:gap-3 rounded-2xl border-2 border-emerald-300/50 dark:border-emerald-700/50 shadow-lg shadow-emerald-500/20 bg-gradient-to-r from-white/90 to-emerald-50/80 dark:from-slate-900/90 dark:to-emerald-950/80 hover:scale-105 transition-all duration-300"
+            className="w-full py-4 sm:py-6 flex items-center justify-start gap-2 sm:gap-3 rounded-2xl border border-emerald-300/30 dark:border-emerald-700/30 shadow-lg shadow-emerald-500/10 bg-gradient-to-r from-white/90 to-emerald-50/80 dark:from-[#0a0020]/80 dark:to-emerald-950/60 hover:scale-105 transition-all duration-300 mirror-shine"
           >
             <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 shadow-lg shadow-emerald-500/30">
               <Package className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
             </div>
-            <span className="font-bold text-sm sm:text-base text-emerald-700 dark:text-emerald-300">Commandes</span>
+            <span className="font-bold text-sm sm:text-base text-emerald-700 dark:text-emerald-300 relative z-10">Commandes</span>
           </Button>
         </Link>
 
@@ -290,12 +285,12 @@
         <Link to="/clients" onClick={() => setIsMobileMenuOpen(false)}>
           <Button
             variant="outline"
-            className="w-full py-4 sm:py-6 flex items-center justify-start gap-2 sm:gap-3 rounded-2xl border-2 border-violet-300/50 dark:border-violet-700/50 shadow-lg shadow-violet-500/20 bg-gradient-to-r from-white/90 to-violet-50/80 dark:from-slate-900/90 dark:to-violet-950/80 hover:scale-105 transition-all duration-300"
+            className="w-full py-4 sm:py-6 flex items-center justify-start gap-2 sm:gap-3 rounded-2xl border border-violet-300/30 dark:border-violet-700/30 shadow-lg shadow-violet-500/10 bg-gradient-to-r from-white/90 to-violet-50/80 dark:from-[#0a0020]/80 dark:to-violet-950/60 hover:scale-105 transition-all duration-300 mirror-shine"
           >
             <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-500 shadow-lg shadow-violet-500/30">
               <Users className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
             </div>
-            <span className="font-bold text-sm sm:text-base text-violet-700 dark:text-violet-300">Clients</span>
+            <span className="font-bold text-sm sm:text-base text-violet-700 dark:text-violet-300 relative z-10">Clients</span>
           </Button>
         </Link>
 
@@ -303,12 +298,12 @@
         <Link to="/rdv" onClick={() => setIsMobileMenuOpen(false)}>
           <Button
             variant="outline"
-            className="w-full py-4 sm:py-6 flex items-center justify-start gap-2 sm:gap-3 rounded-2xl border-2 border-orange-300/50 dark:border-orange-700/50 shadow-lg shadow-orange-500/20 bg-gradient-to-r from-white/90 to-orange-50/80 dark:from-slate-900/90 dark:to-orange-950/80 hover:scale-105 transition-all duration-300"
+            className="w-full py-4 sm:py-6 flex items-center justify-start gap-2 sm:gap-3 rounded-2xl border border-orange-300/30 dark:border-orange-700/30 shadow-lg shadow-orange-500/10 bg-gradient-to-r from-white/90 to-orange-50/80 dark:from-[#0a0020]/80 dark:to-orange-950/60 hover:scale-105 transition-all duration-300 mirror-shine"
           >
             <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-orange-500 to-amber-500 shadow-lg shadow-orange-500/30">
               <CalendarDays className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
             </div>
-            <span className="font-bold text-sm sm:text-base text-orange-700 dark:text-orange-300">Rendez-vous</span>
+            <span className="font-bold text-sm sm:text-base text-orange-700 dark:text-orange-300 relative z-10">Rendez-vous</span>
           </Button>
         </Link>
 
@@ -316,12 +311,12 @@
         <Link to="/messages" onClick={() => setIsMobileMenuOpen(false)}>
           <Button
             variant="outline"
-            className="w-full py-4 sm:py-6 flex items-center justify-start gap-2 sm:gap-3 rounded-2xl border-2 border-blue-300/50 dark:border-blue-700/50 shadow-lg shadow-blue-500/20 bg-gradient-to-r from-white/90 to-blue-50/80 dark:from-slate-900/90 dark:to-blue-950/80 hover:scale-105 transition-all duration-300"
+            className="w-full py-4 sm:py-6 flex items-center justify-start gap-2 sm:gap-3 rounded-2xl border border-blue-300/30 dark:border-blue-700/30 shadow-lg shadow-blue-500/10 bg-gradient-to-r from-white/90 to-blue-50/80 dark:from-[#0a0020]/80 dark:to-blue-950/60 hover:scale-105 transition-all duration-300 mirror-shine"
           >
             <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 shadow-lg shadow-blue-500/30">
               <MessageSquare className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
             </div>
-            <span className="font-bold text-sm sm:text-base text-blue-700 dark:text-blue-300">Messages</span>
+            <span className="font-bold text-sm sm:text-base text-blue-700 dark:text-blue-300 relative z-10">Messages</span>
             {unreadCount > 0 && (
               <Badge className="ml-auto bg-gradient-to-r from-blue-500 to-cyan-500 text-white border-0 shadow-lg animate-pulse text-xs sm:text-sm">
                 {unreadCount}
@@ -334,12 +329,12 @@
         <Link to="/tendances" onClick={() => setIsMobileMenuOpen(false)}>
           <Button
             variant="outline"
-            className="w-full py-4 sm:py-6 flex items-center justify-start gap-2 sm:gap-3 rounded-2xl border-2 border-emerald-300/50 dark:border-emerald-700/50 shadow-lg shadow-emerald-500/20 bg-gradient-to-r from-white/90 to-emerald-50/80 dark:from-slate-900/90 dark:to-emerald-950/80 hover:scale-105 transition-all duration-300"
+            className="w-full py-4 sm:py-6 flex items-center justify-start gap-2 sm:gap-3 rounded-2xl border border-emerald-300/30 dark:border-emerald-700/30 shadow-lg shadow-emerald-500/10 bg-gradient-to-r from-white/90 to-emerald-50/80 dark:from-[#0a0020]/80 dark:to-emerald-950/60 hover:scale-105 transition-all duration-300 mirror-shine"
           >
             <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 shadow-lg shadow-emerald-500/30">
               <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
             </div>
-            <span className="font-bold text-sm sm:text-base text-emerald-700 dark:text-emerald-300">Tendances</span>
+            <span className="font-bold text-sm sm:text-base text-emerald-700 dark:text-emerald-300 relative z-10">Tendances</span>
           </Button>
         </Link>
 
@@ -355,36 +350,38 @@
           </Button>
 
           {/* 3/4 DECONNEXION */}
-          <Button
-            className="col-span-3 rounded-2xl bg-gradient-to-r from-rose-500 via-pink-500 to-fuchsia-500 shadow-xl text-white flex items-center justify-center gap-2 font-bold py-4 sm:py-6 hover:scale-105 transition-all duration-300"
+          <button
+            className="col-span-3 btn-mirror mirror-shine rounded-2xl text-white flex items-center justify-center gap-2 font-bold py-4 sm:py-6"
             onClick={() => {
               logout();
               setIsMobileMenuOpen(false);
             }}
           >
-            <LogOut className="h-5 w-5 sm:h-6 sm:w-6" />
-            Déconnexion
-          </Button>
+            <span className="relative z-10 flex items-center gap-2">
+              <LogOut className="h-5 w-5 sm:h-6 sm:w-6" />
+              Déconnexion
+            </span>
+          </button>
         </div>
       </>
     )}
 
     {!isAuthenticated && (
       <Link to="/login" className="col-span-2" onClick={() => setIsMobileMenuOpen(false)}>
-        <Button
-          className="w-full py-4 sm:py-6 rounded-2xl bg-gradient-to-r from-violet-500 via-purple-500 to-fuchsia-500 shadow-xl text-white font-bold flex items-center justify-center gap-2 hover:scale-105 transition-all duration-300"
-        >
-          <LogIn className="h-5 w-5 sm:h-6 sm:w-6" />
-          Connexion
-        </Button>
+        <button className="w-full py-4 sm:py-6 btn-mirror mirror-shine rounded-2xl text-white font-bold flex items-center justify-center gap-2">
+          <span className="relative z-10 flex items-center gap-2">
+            <LogIn className="h-5 w-5 sm:h-6 sm:w-6" />
+            Connexion
+          </span>
+        </button>
       </Link>
     )}
   </motion.div>
 )}
 
-       </nav>
-     </header>
-   );
- };
+      </nav>
+    </header>
+  );
+};
  
- export default Navbar;
+export default Navbar;

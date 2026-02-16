@@ -247,7 +247,7 @@ const ObjectifIndicator: React.FC = () => {
             <Plus className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
           </Button>
         </DialogTrigger>
-        <DialogContent className="sm:max-w-md bg-gradient-to-br from-slate-50 via-white to-violet-50 dark:from-slate-950 dark:via-slate-900 dark:to-violet-950 border-violet-200/50 dark:border-violet-800/50">
+        <DialogContent className="sm:max-w-md bg-gradient-to-br from-white via-slate-50 to-violet-50/50 dark:from-[#030014] dark:via-[#0a0020] dark:to-[#0e0030] border border-violet-200/20 dark:border-violet-800/20 rounded-2xl shadow-[0_30px_80px_-20px_rgba(139,92,246,0.2)]">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-3">
               <div className="p-2 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500 shadow-lg shadow-violet-500/30">

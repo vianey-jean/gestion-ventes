@@ -185,7 +185,7 @@ const ClientsPage: React.FC = () => {
   // Rendu
   // =========================================================================
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-purple-50/30 to-indigo-50/50 dark:from-slate-900 dark:via-purple-950/30 dark:to-indigo-950/50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-purple-50/30 to-indigo-50/50 dark:from-[#030014] dark:via-[#0a0020]/80 dark:to-[#0e0030]">
       <Navbar />
       <ScrollToTop />
 
@@ -206,7 +206,7 @@ const ClientsPage: React.FC = () => {
           {paginatedClients.map((client, index) => (
             <Card 
               key={client.id} 
-              className="group hover:shadow-2xl transition-all duration-700 transform hover:-translate-y-4 hover:rotate-1 bg-gradient-to-br from-white via-gray-50 to-purple-50/30 dark:from-gray-800 dark:via-gray-900 dark:to-purple-900/30 backdrop-blur-sm border-0 shadow-xl hover:shadow-purple-500/25 relative overflow-hidden"
+              className="group hover:shadow-2xl transition-all duration-700 transform hover:-translate-y-4 card-mirror-light dark:card-mirror mirror-shine backdrop-blur-sm shadow-xl hover:shadow-purple-500/25 relative"
               style={{ animationDelay: `${index * 150}ms` }}
             >
               {/* Badge ÉLITE au hover */}
@@ -214,9 +214,9 @@ const ClientsPage: React.FC = () => {
                 <Star className="w-3 h-3 inline mr-1" />ÉLITE
               </div>
               
-              {/* Effet brillance */}
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-              <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-500 via-pink-500 to-yellow-500 rounded-xl opacity-0 group-hover:opacity-20 blur transition-opacity duration-500"></div>
+              {/* Mirror shine effect */}
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 z-20 pointer-events-none"></div>
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-500 via-pink-500 to-violet-500 rounded-3xl opacity-0 group-hover:opacity-15 blur transition-opacity duration-500 pointer-events-none"></div>
               
               <CardHeader className="pb-4 relative z-10">
                 <div className="flex justify-between items-start">
@@ -321,7 +321,7 @@ const ClientsPage: React.FC = () => {
       
       {/* Dialog principal ajout/modification */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent className="sm:max-w-md bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm border-0 shadow-2xl">
+        <DialogContent className="sm:max-w-md bg-white/95 dark:bg-[#0a0020]/95 backdrop-blur-2xl border border-violet-200/20 dark:border-violet-800/20 shadow-2xl rounded-2xl">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
               {editingClient ? 'Modifier le client' : 'Nouveau client'}
@@ -368,7 +368,7 @@ const ClientsPage: React.FC = () => {
 
       {/* Modale téléphone */}
       <Dialog open={phoneActionOpen} onOpenChange={setPhoneActionOpen}>
-        <DialogContent className="sm:max-w-md bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm border-0 shadow-2xl">
+         <DialogContent className="sm:max-w-md bg-white/95 dark:bg-[#0a0020]/95 backdrop-blur-2xl border border-violet-200/20 dark:border-violet-800/20 shadow-2xl rounded-2xl">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
               <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full"><Phone className="w-5 h-5 text-white" /></div>{selectedPhone}
@@ -385,7 +385,7 @@ const ClientsPage: React.FC = () => {
 
       {/* Modale adresse (mobile) */}
       <Dialog open={addressActionOpen} onOpenChange={setAddressActionOpen}>
-        <DialogContent className="sm:max-w-md bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm border-0 shadow-2xl">
+        <DialogContent className="sm:max-w-md bg-white/95 dark:bg-[#0a0020]/95 backdrop-blur-2xl border border-violet-200/20 dark:border-violet-800/20 shadow-2xl rounded-2xl">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
               <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-r from-blue-400 to-indigo-500 rounded-full"><Navigation className="w-5 h-5 text-white" /></div>Navigation

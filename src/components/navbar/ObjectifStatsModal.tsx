@@ -138,7 +138,7 @@ const ObjectifStatsModal: React.FC = () => {
           </motion.button>
         </DialogTrigger>
         
-        <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-slate-50 via-white to-violet-50 dark:from-slate-950 dark:via-slate-900 dark:to-violet-950 border-2 border-violet-300/50 dark:border-violet-700/50 rounded-3xl shadow-2xl">
+        <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-white via-slate-50 to-violet-50/50 dark:from-[#030014] dark:via-[#0a0020] dark:to-[#0e0030] border border-violet-200/20 dark:border-violet-700/20 rounded-3xl shadow-[0_30px_100px_-20px_rgba(139,92,246,0.2)]">
           {/* Premium Top Bar */}
           <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-violet-500 via-fuchsia-500 to-pink-500 rounded-t-3xl" />
           
@@ -451,7 +451,7 @@ const ObjectifStatsModal: React.FC = () => {
 
       {/* Modal Détail Ventes du Mois */}
       <Dialog open={detailModal === 'ventesMois'} onOpenChange={(open) => !open && setDetailModal(null)}>
-        <DialogContent className="sm:max-w-xl bg-gradient-to-br from-white to-emerald-50/50 dark:from-gray-900 dark:to-emerald-950/30">
+        <DialogContent className="sm:max-w-xl bg-gradient-to-br from-white to-emerald-50/50 dark:from-[#030014] dark:to-emerald-950/20 border border-emerald-200/20 dark:border-emerald-800/20">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-3">
               <div className="p-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg">
@@ -546,7 +546,7 @@ const ObjectifStatsModal: React.FC = () => {
 
       {/* Modal Détail Performance */}
       <Dialog open={detailModal === 'performance'} onOpenChange={(open) => !open && setDetailModal(null)}>
-        <DialogContent className="sm:max-w-xl bg-gradient-to-br from-white to-blue-50/50 dark:from-gray-900 dark:to-blue-950/30">
+        <DialogContent className="sm:max-w-xl bg-gradient-to-br from-white to-blue-50/50 dark:from-[#030014] dark:to-blue-950/20 border border-blue-200/20 dark:border-blue-800/20">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-3">
               <div className="p-2 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-lg">
@@ -701,7 +701,7 @@ const StatCard: React.FC<StatCardProps> = ({
     whileHover={clickable ? { scale: 1.05, y: -5 } : undefined}
     whileTap={clickable ? { scale: 0.95 } : undefined}
     className={cn(
-      "relative p-5 rounded-3xl bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl border-2 border-slate-200/50 dark:border-slate-700/50 shadow-xl transition-all duration-300 overflow-hidden",
+      "relative p-5 rounded-3xl card-mirror-light dark:card-mirror backdrop-blur-xl shadow-xl transition-all duration-300 overflow-hidden",
       clickable && "cursor-pointer hover:shadow-2xl group",
       `hover:shadow-${shadowColor}-500/30 hover:border-${shadowColor}-300/50`
     )}
