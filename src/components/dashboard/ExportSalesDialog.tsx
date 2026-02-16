@@ -116,26 +116,31 @@ const ExportSalesDialog: React.FC<ExportSalesDialogProps> = ({ isOpen, onClose }
    */
   const generatePDF = (sales: Sale[], month: number, year: number) => {
     const doc = new jsPDF();
+    const pw = doc.internal.pageSize.width;
+    const ph = doc.internal.pageSize.height;
     
-    // En-tête premium avec gradient simulé
-    doc.setFillColor(153, 51, 204); // Bleu premium 
-    doc.rect(0, 0, 210, 35, 'F');
+    // === EN-TÊTE ULTRA LUXE (fond sombre) ===
+    doc.setFillColor(15, 15, 35);
+    doc.rect(0, 0, pw, 50, 'F');
+    // Bande dorée
+    doc.setFillColor(234, 179, 8);
+    doc.rect(0, 48, pw, 3, 'F');
     
     // Titre principal en blanc
     doc.setTextColor(255, 255, 255);
-    doc.setFontSize(22);
-    doc.setFont(undefined, 'bold');
-    doc.text('RAPPORT DE VENTES PREMIUM', 105, 15, { align: 'center' });
+    doc.setFontSize(24);
+    doc.setFont('helvetica', 'bold');
+    doc.text('RAPPORT DE VENTES', pw / 2, 18, { align: 'center' });
     
     // Sous-titre avec période
     doc.setFontSize(14);
-    doc.setFont(undefined, 'normal');
-    doc.text(`${monthNames[month]} ${year}`, 105, 25, { align: 'center' });
-    
-    // Ligne de séparation élégante
-    doc.setDrawColor(37, 99, 235);
-    doc.setLineWidth(2);
-    doc.line(20, 40, 190, 40);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`${monthNames[month]} ${year}`, pw / 2, 30, { align: 'center' });
+
+    // Date de génération
+    doc.setFontSize(9);
+    doc.setTextColor(180, 180, 200);
+    doc.text(`Généré le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleTimeString('fr-FR')}`, pw / 2, 42, { align: 'center' });
 
     // Préparer le corps du tableau - Gestion ventes multi-produits ET simples
     const tableBody = [];
@@ -246,71 +251,80 @@ const ExportSalesDialog: React.FC<ExportSalesDialogProps> = ({ isOpen, onClose }
       `${totalProfit.toFixed(2)} €`,
     ]);
 
-    // Tableau premium avec style moderne
+    // Tableau luxe
     autoTable(doc, {
-      startY: 50,
+      startY: 58,
       head: [['Date', 'Produit', 'Prix Achat', 'Qté', 'Prix Vendu', 'Frais livr.', 'Bénéfice']],
       body: tableBody,
       theme: 'grid',
       headStyles: {
-        fillColor: [37, 99, 235], // Bleu premium
+        fillColor: [139, 92, 246],
         textColor: [255, 255, 255],
         fontStyle: 'bold',
-        fontSize: 7,
+        fontSize: 8,
         halign: 'center',
         valign: 'middle',
-        cellPadding: 6,
+        cellPadding: 5,
       },
       bodyStyles: {
-        fontSize: 7,
+        fontSize: 8,
         cellPadding: 4,
         halign: 'center',
         valign: 'middle',
+        textColor: [30, 30, 50],
       },
       alternateRowStyles: {
-        fillColor: [248, 250, 252], // Gris très clair pour alternance
+        fillColor: [248, 250, 252],
       },
       styles: {
-        lineColor: [203, 213, 225], // Bordures grises élégantes
-        lineWidth: 0.5,
+        lineColor: [220, 220, 230],
+        lineWidth: 0.3,
         font: 'helvetica',
       },
       columnStyles: {
-        0: { halign: 'center', cellWidth: 22 }, // Date
-        1: { halign: 'left', cellWidth: 45 },   // Produit
-        2: { halign: 'right', cellWidth: 22 },  // Prix Achat
-        3: { halign: 'center', cellWidth: 15 }, // Quantité
-        4: { halign: 'right', cellWidth: 22 },  // Prix Vendu
-        5: { halign: 'right', cellWidth: 20 },  // Frais livraison
-        6: { halign: 'right', cellWidth: 24 },  // Bénéfice
+        0: { halign: 'center', cellWidth: 22 },
+        1: { halign: 'left', cellWidth: 45 },
+        2: { halign: 'right', cellWidth: 22 },
+        3: { halign: 'center', cellWidth: 15 },
+        4: { halign: 'right', cellWidth: 22 },
+        5: { halign: 'right', cellWidth: 20 },
+        6: { halign: 'right', cellWidth: 24 },
       },
       didParseCell: (data) => {
-        // Styling spécial pour la ligne de totaux
         if (data.row.index === tableBody.length - 1) {
-          data.cell.styles.fillColor = [220, 252, 231]; // Vert très clair
-          data.cell.styles.textColor = [22, 101, 52];   // Vert foncé
+          data.cell.styles.fillColor = [15, 15, 35];
+          data.cell.styles.textColor = [234, 179, 8];
           data.cell.styles.fontStyle = 'bold';
-          data.cell.styles.fontSize = 8;
+          data.cell.styles.fontSize = 9;
         }
       },
-      margin: { top: 50, left: 20, right: 20 },
+      margin: { top: 58, left: 20, right: 20 },
     });
 
-    // Footer premium avec informations additionnelles
-    const finalY = (doc as any).lastAutoTable.finalY + 20;
-    doc.setTextColor(100, 116, 139);
-    doc.setFontSize(9);
-    doc.text(`Généré le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleTimeString('fr-FR')}`, 105, finalY, { align: 'center' });
-    
-    // Ligne de séparation footer
-    doc.setDrawColor(203, 213, 225);
-    doc.setLineWidth(0.5);
-    doc.line(20, finalY + 5, 190, finalY + 5);
-    
-    doc.setFontSize(8);
-    doc.text('Rapport confidentiel - Usage interne uniquement', 105, finalY + 12, { align: 'center' });
+    // Footer confidentiel luxe
+    const finalY = (doc as any).lastAutoTable.finalY + 15;
+    doc.setDrawColor(139, 92, 246);
+    doc.setLineWidth(0.8);
+    doc.line(20, finalY, pw - 20, finalY);
 
-    doc.save(`rapport_ventes_premium_${monthNames[month]}_${year}.pdf`);
+    doc.setFontSize(8);
+    doc.setTextColor(120, 120, 120);
+    doc.text(
+      'Document comptable strictement confidentiel.\nRéservé exclusivement à un usage interne.\nToute diffusion sans autorisation écrite est formellement interdite.',
+      14, finalY + 8
+    );
+
+    doc.setFontSize(9);
+    doc.setTextColor(90, 90, 90);
+    doc.text('Responsable Comptable', pw - 20, finalY + 8, { align: 'right' });
+    doc.setFontSize(12);
+    doc.setTextColor(160, 0, 0);
+    doc.text('La Direction', pw - 20, finalY + 16, { align: 'right' });
+    doc.setFontSize(8);
+    doc.setTextColor(120, 120, 120);
+    doc.text(`Date : ${new Date().toLocaleDateString('fr-FR')}`, pw - 20, finalY + 24, { align: 'right' });
+
+    doc.save(`rapport_ventes_${monthNames[month]}_${year}.pdf`);
   };
 
   return (

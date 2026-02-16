@@ -85,97 +85,67 @@ const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ isOpen, onClose }) 
       return;
     }
 
-    /* 🔒 PDF : AUCUN CHANGEMENT */
-  const doc = new jsPDF();
+    const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.width;
     const pageHeight = doc.internal.pageSize.height;
 
-    // Couleurs définies comme des tuples [r, g, b]
-    const primaryViolet: [number, number, number] = [153, 51, 204];
-    const primaryBlue: [number, number, number] = [51, 153, 204];
-    const lightGray: [number, number, number] = [248, 249, 250];
-    const darkGray: [number, number, number] = [52, 58, 64];
-
-    // === EN-TÊTE ===
-    doc.setFillColor(...primaryViolet);
-    doc.rect(0, 0, pageWidth, 50, 'F');
-
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(28).setFont('helvetica', 'bold');
-    doc.text('Riziky Beauté', 20, 25);
-
-    doc.setFontSize(12).setFont('helvetica', 'normal');
-    doc.text('Votre partenaire beauté à La Réunion', 20, 35);
-    doc.text('10 Allée des Beryls Bleus, 97400 Saint-Denis', 20, 45);
-
-    doc.setTextColor(255, 0, 0).setFontSize(36).setFont('helvetica', 'bold');
-    doc.text('FACTURE', pageWidth - 85, 35);
-
-    // === INFOS ENTREPRISE / FACTURE ===
-    const leftX = 20;
-    const rightX = pageWidth - 80;
-    const infoY = 65;
     const date = new Date(sale.date);
-
     const invoiceNumber = `${date.getFullYear()}-${sale.id.toString().padStart(3, '0')}`;
-
-    // *** MODIFICATION DEMANDÉE ***
     const dueDate = new Date(date);
     dueDate.setFullYear(dueDate.getFullYear() + 1);
     dueDate.setDate(dueDate.getDate() - 1);
-    // ******************************
 
-    doc.setFontSize(11).setTextColor(...darkGray).setFont('helvetica', 'bold');
-    doc.text('Riziky Beauté', leftX, infoY);
-    doc.setFont('helvetica', 'normal').setFontSize(10);
-    doc.text('10 Allée des Beryls Bleus', leftX, infoY + 8);
-    doc.text('97400 Saint-Denis, La Réunion', leftX, infoY + 16);
-    doc.text('Tél: 0692 19 87 01', leftX, infoY + 24);
-    doc.text('SIRET : 123 456 789 00010', leftX, infoY + 32);
+    // === EN-TÊTE ULTRA LUXE (fond sombre) ===
+    doc.setFillColor(15, 15, 35);
+    doc.rect(0, 0, pageWidth, 55, 'F');
+    // Bande dorée
+    doc.setFillColor(234, 179, 8);
+    doc.rect(0, 53, pageWidth, 3, 'F');
 
-    doc.setFont('helvetica', 'bold');
-    doc.text('Facture n°', rightX, infoY);
-    doc.setFont('helvetica', 'normal');
-    doc.text(invoiceNumber, rightX, infoY + 8);
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(26).setFont('helvetica', 'bold');
+    doc.text('Riziky Beauté', 20, 22);
+    doc.setFontSize(10).setFont('helvetica', 'normal');
+    doc.setTextColor(200, 200, 220);
+    doc.text('Votre partenaire beauté à La Réunion', 20, 32);
+    doc.text('10 Allée des Beryls Bleus, 97400 Saint-Denis', 20, 40);
+    doc.text('Tél: 0692 19 87 01 • SIRET: 123 456 789 00010', 20, 48);
 
-    doc.setFont('helvetica', 'bold');
-    doc.text('Date :', rightX, infoY + 20);
-    doc.setFont('helvetica', 'normal');
-    doc.text(date.toLocaleDateString('fr-FR'), rightX + 25, infoY + 20);
+    // FACTURE en rouge
+    doc.setTextColor(239, 68, 68);
+    doc.setFontSize(32).setFont('helvetica', 'bold');
+    doc.text('FACTURE', pageWidth - 20, 30, { align: 'right' });
+    doc.setFontSize(11).setTextColor(180, 180, 200);
+    doc.text(`N° ${invoiceNumber}`, pageWidth - 20, 42, { align: 'right' });
 
+    // === INFOS FACTURE ===
+    let y = 68;
+    doc.setFontSize(10).setTextColor(100, 100, 120);
+    doc.text(`Date : ${date.toLocaleDateString('fr-FR')}`, 20, y);
+    doc.setTextColor(16, 185, 129);
     doc.setFont('helvetica', 'bold');
-    doc.text('Échéance :', rightX, infoY + 30);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(0, 128, 0); // vert
-    doc.text(dueDate.toLocaleDateString('fr-FR'), rightX + 25, infoY + 30);
+    doc.text(`Échéance : ${dueDate.toLocaleDateString('fr-FR')}`, 20, y + 8);
+
+    // === CLIENT (fond clair avec bordure gauche colorée) ===
+    const clientY = y + 20;
+    doc.setFillColor(248, 250, 252);
+    doc.rect(20, clientY, pageWidth - 40, 32, 'F');
+    doc.setFillColor(139, 92, 246);
+    doc.rect(20, clientY, 4, 32, 'F');
     
-
-    // === INFOS CLIENT ===
-    const clientY = 120;
-    doc.setFillColor(...lightGray).rect(20, clientY, pageWidth - 40, 35, 'F');
-    doc.setDrawColor(...primaryBlue).setLineWidth(0.5);
-    doc.rect(20, clientY, pageWidth - 40, 35, 'S');
-
-    doc.setTextColor(...primaryBlue).setFontSize(12).setFont('helvetica', 'bold');
-    doc.text('Expédier à :', 25, clientY + 12);
-
-    doc.setTextColor(...darkGray).setFontSize(11).setFont('helvetica', 'bold');
-    doc.text(sale.clientName || '', 25, clientY + 22);
-
-    doc.setFont('helvetica', 'normal').setFontSize(10);
-    if (sale.clientAddress) doc.text(sale.clientAddress, 25, clientY + 30);
+    doc.setTextColor(139, 92, 246).setFontSize(9).setFont('helvetica', 'bold');
+    doc.text('FACTURER À', 30, clientY + 8);
+    doc.setTextColor(30, 30, 50).setFontSize(12).setFont('helvetica', 'bold');
+    doc.text(sale.clientName || '', 30, clientY + 18);
+    doc.setFont('helvetica', 'normal').setFontSize(9).setTextColor(100, 100, 120);
+    if (sale.clientAddress) doc.text(sale.clientAddress, 30, clientY + 26);
     if (sale.clientPhone) {
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(255, 0, 0); // rouge
-  doc.text(`Tél: ${sale.clientPhone}`, 120, clientY + 30);
-
-  // Réinitialisation des styles pour ne pas affecter la suite
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(...darkGray);
-}
+      doc.setTextColor(239, 68, 68).setFont('helvetica', 'bold');
+      doc.text(`Tél: ${sale.clientPhone}`, pageWidth - 60, clientY + 18);
+    }
 
     // === PRODUITS ===
-    const products: SaleProduct[] =
+    const saleProducts: SaleProduct[] =
       sale.products && sale.products.length > 0
         ? sale.products
         : [{
@@ -185,7 +155,7 @@ const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ isOpen, onClose }) 
             deliveryFee: sale.deliveryFee || 0
           } as SaleProduct];
 
-    const tableData = products.map(prod => [
+    const tableData = saleProducts.map(prod => [
       prod.description || '',
       (prod.quantitySold || 0).toString(),
       formatEuro(prod.quantitySold ? (prod.sellingPrice || 0) / prod.quantitySold : 0),
@@ -194,59 +164,60 @@ const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ isOpen, onClose }) 
     ]);
 
     autoTable(doc, {
-      startY: 170,
-      head: [['DESCRIPTION', 'QTÉ', 'PRIX UNIT.', 'MONTANT EUR', 'FRAIS LIVR.']],
+      startY: clientY + 40,
+      head: [['DESCRIPTION', 'QTÉ', 'PRIX UNIT.', 'MONTANT', 'LIVRAISON']],
       body: tableData,
       theme: 'grid',
-      headStyles: { fillColor: primaryBlue, textColor: 255, fontStyle: 'bold', halign: 'center' },
-      bodyStyles: { textColor: darkGray, fontSize: 9, cellPadding: 4 },
-      alternateRowStyles: { fillColor: [245, 245, 245] },
-      styles: { overflow: 'linebreak', cellWidth: 'wrap', halign: 'center' },
-      columnStyles: {
-        0: { halign: 'left', cellWidth: 60 }
-      }
+      headStyles: { fillColor: [139, 92, 246], textColor: 255, fontStyle: 'bold', halign: 'center', fontSize: 9 },
+      bodyStyles: { textColor: [30, 30, 50], fontSize: 9, cellPadding: 5 },
+      alternateRowStyles: { fillColor: [248, 250, 252] },
+      styles: { overflow: 'linebreak', halign: 'center', lineColor: [220, 220, 230], lineWidth: 0.3 },
+      columnStyles: { 0: { halign: 'left', cellWidth: 60 } }
     });
 
-    const finalY = (doc as any).lastAutoTable.finalY + 10;
+    const finalY = (doc as any).lastAutoTable.finalY + 12;
 
-    const totalAmount = products.reduce((sum: number, product: SaleProduct) =>
-      sum + (product.sellingPrice || 0), 0);
-    
-    const totalDeliveryFee = products.reduce((sum: number, product: SaleProduct) =>
-      sum + (product.deliveryFee || 0), 0);
+    const totalAmount = saleProducts.reduce((sum: number, product: SaleProduct) => sum + (product.sellingPrice || 0), 0);
+    const totalDeliveryFee = saleProducts.reduce((sum: number, product: SaleProduct) => sum + (product.deliveryFee || 0), 0);
 
-    // === TOTAUX ===
-    const totalsX = pageWidth - 100;
-    doc.setFontSize(10).setTextColor(...darkGray);
-    doc.text('Sous-total HT:', totalsX - 30, finalY);
-    doc.text(formatEuro(totalAmount), totalsX + 15, finalY);
-    doc.text('Frais livraison:', totalsX - 30, finalY + 10);
-    doc.text(formatEuro(totalDeliveryFee), totalsX + 15, finalY + 10);
-    doc.text('TVA (0%):', totalsX - 30, finalY + 20);
-    doc.text('0,00 €', totalsX + 15, finalY + 20);
+    // === TOTAUX (style luxe) ===
+    const totalsX = pageWidth - 90;
+    doc.setFontSize(10).setTextColor(80, 80, 100);
+    doc.text('Sous-total HT:', totalsX - 20, finalY);
+    doc.text(formatEuro(totalAmount), totalsX + 30, finalY, { align: 'right' });
+    doc.text('Frais livraison:', totalsX - 20, finalY + 9);
+    doc.text(formatEuro(totalDeliveryFee), totalsX + 30, finalY + 9, { align: 'right' });
+    doc.text('TVA (0%):', totalsX - 20, finalY + 18);
+    doc.text('0,00 €', totalsX + 30, finalY + 18, { align: 'right' });
 
-    doc.setFillColor(...primaryBlue).rect(totalsX - 35, finalY + 25, 75, 12, 'F');
-    doc.setTextColor(255, 0, 0).setFontSize(12).setFont('helvetica', 'bold');
-    doc.text('Total TTC:', totalsX - 30, finalY + 33);
-    doc.text(formatEuro(totalAmount + totalDeliveryFee), totalsX + 15, finalY + 33);
+    // Bande total
+    doc.setFillColor(15, 15, 35);
+    doc.rect(totalsX - 25, finalY + 24, 60, 14, 'F');
+    doc.setTextColor(234, 179, 8).setFontSize(12).setFont('helvetica', 'bold');
+    doc.text('Total TTC:', totalsX - 20, finalY + 33);
+    doc.setTextColor(255, 255, 255);
+    doc.text(formatEuro(totalAmount + totalDeliveryFee), totalsX + 30, finalY + 33, { align: 'right' });
 
-    // === PIED DE PAGE ===
-    const footerStartY = pageHeight - 40;
-    doc.setDrawColor(...primaryBlue).setLineWidth(1);
-    doc.line(20, footerStartY, pageWidth - 20, footerStartY);
+    // === PIED DE PAGE CONFIDENTIEL ===
+    doc.setDrawColor(139, 92, 246).setLineWidth(1);
+    doc.line(20, pageHeight - 48, pageWidth - 20, pageHeight - 48);
 
-    doc.setTextColor(...darkGray).setFont('helvetica', 'bold').setFontSize(10);
-    doc.text('Informations de paiement :', 20, footerStartY + 10);
+    doc.setTextColor(80, 80, 100).setFont('helvetica', 'bold').setFontSize(10);
+    doc.text('Informations de paiement :', 20, pageHeight - 40);
     doc.setFont('helvetica', 'normal').setFontSize(9);
-    doc.text(`Date de paiement : ${date.toLocaleDateString('fr-FR')}`, 20, footerStartY + 18);
-    doc.text('Mode de paiement : Espèces', 20, footerStartY + 26);
-    doc.text('Paiement à réception de facture', 20, footerStartY + 34);
+    doc.text(`Date de paiement : ${date.toLocaleDateString('fr-FR')}`, 20, pageHeight - 32);
+    doc.text('Mode de paiement : Espèces', 20, pageHeight - 24);
 
-    doc.setFont('helvetica', 'bold').setTextColor(...primaryBlue).setFontSize(10);
-    doc.text('Merci de votre confiance !', pageWidth - 20, footerStartY + 10, { align: 'right' });
-    doc.setFont('helvetica', 'normal').setFontSize(8).setTextColor(120, 120, 120);
-    doc.text('Riziky Beauté - Votre partenaire beauté à La Réunion', pageWidth - 20, footerStartY + 18, { align: 'right' });
-    doc.text('TVA non applicable - Article 293B du CGI', pageWidth - 20, footerStartY + 26, { align: 'right' });
+    doc.setFontSize(8).setTextColor(120, 120, 120);
+    doc.text('Document comptable strictement confidentiel.\nRéservé exclusivement à un usage interne.', 20, pageHeight - 14);
+
+    doc.setFontSize(9).setTextColor(90, 90, 90);
+    doc.text('Responsable Comptable', pageWidth - 20, pageHeight - 36, { align: 'right' });
+    doc.setFontSize(12).setTextColor(160, 0, 0);
+    doc.text('La Direction', pageWidth - 20, pageHeight - 28, { align: 'right' });
+    doc.setFontSize(8).setTextColor(120, 120, 120);
+    doc.text(`Date : ${new Date().toLocaleDateString('fr-FR')}`, pageWidth - 20, pageHeight - 20, { align: 'right' });
+    doc.text('TVA non applicable - Article 293B du CGI', pageWidth - 20, pageHeight - 12, { align: 'right' });
 
     doc.save(`Facture_${sale.clientName?.replace(/\s+/g, '_')}_${sale.id}.pdf`);
     toast({
