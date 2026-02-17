@@ -1,3 +1,79 @@
+/**
+ * InvoiceGenerator.tsx
+ * 
+ * Composant React pour générer et afficher des factures de ventes.
+ * 
+ * ========================= DESIGN ULTRA-LUXE / IPHONE =========================
+ * Objectif : créer une interface premium, élégante et immersive, inspirée des iPhone et apps modernes.
+ * 
+ * 1️⃣ Effet miroir / glassmorphism :
+ *      - Cartes (Card), Modals (Dialog) et sections utilisent :
+ *          * backdrop-blur-xl pour effet vitre transparente
+ *          * bg-white/80 ou dark:bg-gray-900/30 pour contraste doux
+ *          * Bordures arrondies très larges : rounded-3xl / rounded-[32px]
+ *      - Ombres profondes et dynamiques : shadow-2xl, hover:shadow-3xl
+ * 
+ * 2️⃣ Boutons ronds premium :
+ *      - bg-gradient-to-r avec couleurs vives (pink → purple → indigo)
+ *      - Hover : scale-105 + shadow-2xl
+ *      - Icônes Lucide intégrées et animées (ex: Sparkles animate-pulse)
+ * 
+ * 3️⃣ Typography / couleurs :
+ *      - Titres ultra-bold et contrastés : font-extrabold, text-xl
+ *      - Couleurs vives et saturées pour les accents (emerald, indigo, purple)
+ *      - Textes secondaires gris subtil pour hiérarchie visuelle
+ * 
+ * 4️⃣ Layout & UX :
+ *      - ScrollArea pour contenu long avec smooth scroll
+ *      - Espacement généreux (space-y-6 / space-y-10) pour lisibilité
+ *      - Cartes cliquables avec bordure colorée pour retour visuel
+ *      - Responsive : sm:max-w-5xl pour modal principal
+ * 
+ * ========================= FONCTIONNALITÉS =========================
+ * - Filtrage des ventes :
+ *      * Par année
+ *      * Par nom de client (>= 3 caractères)
+ * - Sélection d’une vente pour voir détails complets
+ * - Calcul des totaux : produits, livraison, TVA (0%), bénéfice
+ * - Génération PDF ultra-luxe avec jsPDF + autoTable :
+ *      * Header premium avec couleurs et typographie
+ *      * Table produits avec styles modernes et couleurs dégradées
+ *      * Totaux et informations paiement stylisées
+ * 
+ * ========================= MINI-SCHÉMA VISUEL =========================
+ * 
+ * Modal Principal (sm:max-w-5xl) ────────────────────────────────┐
+ * ┌─────────────────────────────────────────────────────────────┐ │
+ * │ Header gradient (purple → pink → indigo)                    │ │
+ * │   BrandLogo + Premium Badge / Sparkles                      │ │
+ * └─────────────────────────────────────────────────────────────┘ │
+ * ┌─────────────────────────────────────────────────────────────┐ │
+ * │ ScrollArea : contenu filtrage + ventes                       │ │
+ * │ ┌───────────────┐  ┌───────────────┐  ┌───────────────┐     │ │
+ * │ │ Card Glass    │  │ Card Glass    │  │ Card Glass    │     │ │
+ * │ │ année / filtre│  │ recherche     │  │ ventes liste  │     │ │
+ * │ └───────────────┘  └───────────────┘  └───────────────┘     │ │
+ * └─────────────────────────────────────────────────────────────┘ │
+ * 
+ * Modal Détails Vente (sm:max-w-3xl) ────────────────────────────┐
+ * ┌─────────────────────────────────────────────────────────────┐ │
+ * │ Header : Eye icon + Gradient Text (emerald → teal)           │ │
+ * └─────────────────────────────────────────────────────────────┘ │
+ * ┌───────────────┐  ┌───────────────┐                             │
+ * │ Card Client   │  │ Card Détails  │                             │
+ * │ Glass / Blur  │  │ Glass / Blur  │                             │
+ * └───────────────┘  └───────────────┘                             │
+ * ┌─────────────────────────────────────────────────────────────┐ │
+ * │ Button Générer PDF : dégradé + icônes + hover scale/shine     │ │
+ * └─────────────────────────────────────────────────────────────┘ │
+ * 
+ * =======================================================================
+ * 
+ * Objectif global : allier esthétique ultra-moderne, expérience premium
+ * et fonctionnalités complètes de facturation pour utilisateurs exigeants.
+ */
+
+
 import React, { useState } from 'react';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle
@@ -23,19 +99,20 @@ import autoTable from 'jspdf-autotable';
 import useCurrencyFormatter from '@/hooks/use-currency-formatter';
 
 /* =========================
-   SIGNATURE DE MARQUE
+   BRAND LOGO ULTRA LUXE
 ========================= */
 const BrandLogo = () => (
   <div className="flex items-center gap-3">
     <div className="
-      w-10 h-10 rounded-2xl
-      bg-gradient-to-br from-pink-500 via-purple-600 to-indigo-600
-      shadow-lg shadow-purple-500/30
+      w-12 h-12 rounded-3xl
+      bg-gradient-to-tr from-pink-400 via-purple-500 to-indigo-500
+      shadow-2xl shadow-purple-400/30
       flex items-center justify-center
+      transform hover:scale-105 transition-transform duration-300
     ">
-      <Crown className="h-5 w-5 text-white" />
+      <Crown className="h-6 w-6 text-white" />
     </div>
-    <span className="font-black tracking-wide text-lg">
+    <span className="font-extrabold tracking-wide text-xl text-gray-900 dark:text-white">
       Riziky Beauté
     </span>
   </div>
@@ -56,9 +133,6 @@ const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ isOpen, onClose }) 
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
   const [showSaleDetails, setShowSaleDetails] = useState(false);
 
-  /* =========================
-     LOGIQUE STRICTEMENT IDENTIQUE
-  ========================= */
   const filteredSalesByYear = allSales.filter(
     sale => new Date(sale.date).getFullYear().toString() === searchYear
   );
@@ -95,11 +169,10 @@ const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ isOpen, onClose }) 
     dueDate.setFullYear(dueDate.getFullYear() + 1);
     dueDate.setDate(dueDate.getDate() - 1);
 
-    // === EN-TÊTE ULTRA LUXE (fond sombre) ===
-    doc.setFillColor(15, 15, 35);
+    // === EN-TÊTE ULTRA LUXE MODERNE ===
+    doc.setFillColor(18, 18, 40);
     doc.rect(0, 0, pageWidth, 55, 'F');
-    // Bande dorée
-    doc.setFillColor(234, 179, 8);
+    doc.setFillColor(250, 215, 70);
     doc.rect(0, 53, pageWidth, 3, 'F');
 
     doc.setTextColor(255, 255, 255);
@@ -111,14 +184,12 @@ const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ isOpen, onClose }) 
     doc.text('10 Allée des Beryls Bleus, 97400 Saint-Denis', 20, 40);
     doc.text('Tél: 0692 19 87 01 • SIRET: 123 456 789 00010', 20, 48);
 
-    // FACTURE en rouge
     doc.setTextColor(239, 68, 68);
     doc.setFontSize(32).setFont('helvetica', 'bold');
     doc.text('FACTURE', pageWidth - 20, 30, { align: 'right' });
     doc.setFontSize(11).setTextColor(180, 180, 200);
     doc.text(`N° ${invoiceNumber}`, pageWidth - 20, 42, { align: 'right' });
 
-    // === INFOS FACTURE ===
     let y = 68;
     doc.setFontSize(10).setTextColor(100, 100, 120);
     doc.text(`Date : ${date.toLocaleDateString('fr-FR')}`, 20, y);
@@ -126,13 +197,12 @@ const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ isOpen, onClose }) 
     doc.setFont('helvetica', 'bold');
     doc.text(`Échéance : ${dueDate.toLocaleDateString('fr-FR')}`, 20, y + 8);
 
-    // === CLIENT (fond clair avec bordure gauche colorée) ===
     const clientY = y + 20;
-    doc.setFillColor(248, 250, 252);
+    doc.setFillColor(245, 247, 250);
     doc.rect(20, clientY, pageWidth - 40, 32, 'F');
     doc.setFillColor(139, 92, 246);
     doc.rect(20, clientY, 4, 32, 'F');
-    
+
     doc.setTextColor(139, 92, 246).setFontSize(9).setFont('helvetica', 'bold');
     doc.text('FACTURER À', 30, clientY + 8);
     doc.setTextColor(30, 30, 50).setFontSize(12).setFont('helvetica', 'bold');
@@ -144,7 +214,6 @@ const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ isOpen, onClose }) 
       doc.text(`Tél: ${sale.clientPhone}`, pageWidth - 60, clientY + 18);
     }
 
-    // === PRODUITS ===
     const saleProducts: SaleProduct[] =
       sale.products && sale.products.length > 0
         ? sale.products
@@ -180,7 +249,6 @@ const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ isOpen, onClose }) 
     const totalAmount = saleProducts.reduce((sum: number, product: SaleProduct) => sum + (product.sellingPrice || 0), 0);
     const totalDeliveryFee = saleProducts.reduce((sum: number, product: SaleProduct) => sum + (product.deliveryFee || 0), 0);
 
-    // === TOTAUX (style luxe) ===
     const totalsX = pageWidth - 90;
     doc.setFontSize(10).setTextColor(80, 80, 100);
     doc.text('Sous-total HT:', totalsX - 20, finalY);
@@ -190,15 +258,13 @@ const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ isOpen, onClose }) 
     doc.text('TVA (0%):', totalsX - 20, finalY + 18);
     doc.text('0,00 €', totalsX + 30, finalY + 18, { align: 'right' });
 
-    // Bande total
-    doc.setFillColor(15, 15, 35);
+    doc.setFillColor(18, 18, 40);
     doc.rect(totalsX - 25, finalY + 24, 60, 14, 'F');
-    doc.setTextColor(234, 179, 8).setFontSize(12).setFont('helvetica', 'bold');
+    doc.setTextColor(250, 215, 70).setFontSize(12).setFont('helvetica', 'bold');
     doc.text('Total TTC:', totalsX - 20, finalY + 33);
     doc.setTextColor(255, 255, 255);
     doc.text(formatEuro(totalAmount + totalDeliveryFee), totalsX + 30, finalY + 33, { align: 'right' });
 
-    // === PIED DE PAGE CONFIDENTIEL ===
     doc.setDrawColor(139, 92, 246).setLineWidth(1);
     doc.line(20, pageHeight - 48, pageWidth - 20, pageHeight - 48);
 
@@ -225,6 +291,7 @@ const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ isOpen, onClose }) 
       description: `La facture pour ${sale.clientName} a été générée avec succès.`,
     });
   }
+
   return (
     <>
       {/* ================= MODAL PRINCIPAL ================= */}
@@ -232,21 +299,22 @@ const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ isOpen, onClose }) 
         <DialogContent
           className="
             sm:max-w-5xl p-0 overflow-hidden
-            rounded-[28px]
-            bg-gradient-to-br
+            rounded-[32px]
+            bg-gradient-to-tr
               from-white via-gray-50 to-white
-              dark:from-[#0B0D12] dark:via-[#111827] dark:to-[#0B0D12]
+              dark:from-[#0A0C10] dark:via-[#121827] dark:to-[#0A0C10]
             border border-white/20 dark:border-white/10
-            shadow-[0_30px_120px_-20px_rgba(0,0,0,0.6)]
+            shadow-[0_35px_140px_-25px_rgba(0,0,0,0.5)]
             animate-in fade-in zoom-in-95 slide-in-from-bottom-6 duration-500
           "
         >
-          {/* ===== Header Apple / Linear ===== */}
+          {/* ===== Header ===== */}
           <DialogHeader
             className="
               px-8 py-6
-              bg-gradient-to-r from-purple-600 via-pink-600 to-indigo-600
+              bg-gradient-to-r from-purple-600 via-pink-500 to-indigo-500
               text-white
+              shadow-lg
             "
           >
             <DialogTitle className="flex items-center justify-between">
@@ -263,13 +331,12 @@ const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ isOpen, onClose }) 
           <ScrollArea className="h-[calc(90vh-120px)] px-8 py-8">
             <div className="space-y-10">
 
-              {/* ===== Année ===== */}
+              {/* ===== Sélection Année ===== */}
               <Card className="
                 rounded-3xl
-                bg-white/70 dark:bg-white/5
+                bg-white/80 dark:bg-white/10
                 backdrop-blur-xl
-                shadow-xl
-                hover:shadow-2xl
+                shadow-2xl hover:shadow-3xl
                 transition-all duration-300
               ">
                 <CardHeader>
@@ -299,12 +366,13 @@ const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ isOpen, onClose }) 
                 </CardContent>
               </Card>
 
-              {/* ===== Recherche ===== */}
+              {/* ===== Recherche Client ===== */}
               <Card className="
                 rounded-3xl
-                bg-white/70 dark:bg-white/5
+                bg-white/80 dark:bg-white/10
                 backdrop-blur-xl
-                shadow-xl
+                shadow-2xl
+                transition-all duration-300
               ">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-3 text-emerald-600 dark:text-emerald-400">
@@ -331,239 +399,234 @@ const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ isOpen, onClose }) 
                 </CardContent>
               </Card>
 
-              {/* ===== Résultats ===== */}
+              {/* ===== Résultats Ventes ===== */}
               {searchName.length >= 3 && (
-  <Card className="border-2 border-gradient-to-r from-purple-200 to-pink-200 bg-white/80 dark:bg-gray-800/50 backdrop-blur-xl shadow-xl rounded-2xl">
-    <CardHeader className="pb-3">
-      <CardTitle className="text-lg flex items-center gap-2 text-purple-700 dark:text-purple-300">
-        <User className="h-5 w-5" />
-        Ventes de : {searchName} en {searchYear}
-      </CardTitle>
-    </CardHeader>
-    <CardContent>
-      <ScrollArea className="h-[300px] w-full">
-        <div className="space-y-3">
-          {filteredSalesByName.map((sale) => (
-            <Card
-              key={sale.id}
-              className="cursor-pointer hover:shadow-2xl transition-all duration-300 border-l-4 border-l-purple-500 hover:border-l-pink-500 rounded-xl bg-white/70 dark:bg-gray-900/30 backdrop-blur-md"
-              onClick={() => handleSaleSelect(sale)}
-            >
-              <CardContent className="p-4">
-                <div className="flex justify-between items-start">
-                  <div className="space-y-2">
-                    {/* Nom client */}
-                    <div className="flex items-center gap-2">
-                      <User className="h-4 w-4 text-purple-500" />
-                      <span className="font-semibold text-purple-700 dark:text-purple-300">{sale.clientName}</span>
-                    </div>
+                <Card className="border-2 border-gradient-to-r from-purple-200 to-pink-200 bg-white/80 dark:bg-gray-800/50 backdrop-blur-xl shadow-2xl rounded-2xl">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg flex items-center gap-2 text-purple-700 dark:text-purple-300">
+                      <User className="h-5 w-5" />
+                      Ventes de : {searchName} en {searchYear}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ScrollArea className="h-[300px] w-full">
+                      <div className="space-y-3">
+                        {filteredSalesByName.map((sale) => (
+                          <Card
+                            key={sale.id}
+                            className="cursor-pointer hover:shadow-3xl transition-all duration-300 border-l-4 border-l-purple-500 hover:border-l-pink-500 rounded-xl bg-white/80 dark:bg-gray-900/30 backdrop-blur-md"
+                            onClick={() => handleSaleSelect(sale)}
+                          >
+                            <CardContent className="p-4">
+                              <div className="flex justify-between items-start">
+                                <div className="space-y-2">
+                                  <div className="flex items-center gap-2">
+                                    <User className="h-4 w-4 text-purple-500" />
+                                    <span className="font-semibold text-purple-700 dark:text-purple-300">{sale.clientName}</span>
+                                  </div>
+                                  <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                                    <Calendar className="h-4 w-4" />
+                                    {new Date(sale.date).toLocaleDateString('fr-FR')}
+                                  </div>
+                                  <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    {sale.products && sale.products.length > 0
+                                      ? `${sale.products.length} produit${sale.products.length > 1 ? 's' : ''}`
+                                      : sale.description}
+                                  </div>
 
-                    {/* Date de vente */}
-                    <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                      <Calendar className="h-4 w-4" />
-                      {new Date(sale.date).toLocaleDateString('fr-FR')}
-                    </div>
+                                  {sale.clientPhone && (
+                                    <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                                      <Phone className="h-4 w-4" />
+                                      {sale.clientPhone}
+                                    </div>
+                                  )}
+                                </div>
 
-                    {/* Description ou nombre de produits */}
-                    <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                      {sale.products && sale.products.length > 0
-                        ? `${sale.products.length} produit${sale.products.length > 1 ? 's' : ''}`
-                        : sale.description}
-                    </div>
+                                <div className="text-right">
+                                  <div className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
+                                    {sale.products && sale.products.length > 0
+                                      ? formatEuro(sale.totalSellingPrice || 0)
+                                      : formatEuro(sale.sellingPrice || 0)}
+                                  </div>
+                                  <div className="text-sm text-gray-500 dark:text-gray-400">
+                                    Qté: {sale.products && sale.products.length > 0
+                                      ? sale.products.reduce((sum: number, p) => sum + (p.quantitySold || 0), 0)
+                                      : (sale.quantitySold || 0)}
+                                  </div>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
 
-                    {/* Téléphone client */}
-                    {sale.clientPhone && (
-                      <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-                        <Phone className="h-4 w-4" />
-                        {sale.clientPhone}
+                        {filteredSalesByName.length === 0 && (
+                          <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                            <Search className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                            <p>Aucune vente trouvée pour "{searchName}" en {searchYear}</p>
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
-
-                  {/* Total et quantité */}
-                  <div className="text-right">
-                    <div className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
-                      {sale.products && sale.products.length > 0
-                        ? formatEuro(sale.totalSellingPrice || 0)
-                        : formatEuro(sale.sellingPrice || 0)}
-                    </div>
-                    <div className="text-sm text-gray-500 dark:text-gray-400">
-                      Qté: {sale.products && sale.products.length > 0
-                        ? sale.products.reduce((sum: number, p) => sum + (p.quantitySold || 0), 0)
-                        : (sale.quantitySold || 0)}
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-
-          {/* Message si aucune vente */}
-          {filteredSalesByName.length === 0 && (
-            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-              <Search className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>Aucune vente trouvée pour "{searchName}" en {searchYear}</p>
-            </div>
-          )}
-        </div>
-      </ScrollArea>
-    </CardContent>
-  </Card>
-)}
+                    </ScrollArea>
+                  </CardContent>
+                </Card>
+              )}
 
             </div>
           </ScrollArea>
         </DialogContent>
       </Dialog>
 
-      {/* ================= MODAL DÉTAIL ================= */}
+      {/* ================= MODAL DÉTAIL VENTE ================= */}
       <Dialog open={showSaleDetails} onOpenChange={setShowSaleDetails}>
-  <DialogContent
-    className="
-      sm:max-w-3xl
-      rounded-[28px]
-      bg-gradient-to-br
-        from-white to-gray-50
-        dark:from-[#0B0D12] dark:to-[#111827]
-      shadow-2xl
-      animate-in fade-in zoom-in-95 slide-in-from-bottom-6 duration-500
-      p-0
-    "
-  >
-    <DialogHeader className="pb-4 pt-6 px-6 text-center">
-      <DialogTitle className="flex items-center justify-center gap-3 text-xl font-black bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
-        <div className="p-2 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-lg">
-          <Eye className="h-6 w-6 text-white" />
-        </div>
-        Détails de la Vente
-      </DialogTitle>
-    </DialogHeader>
-
-    <ScrollArea className="h-[calc(90vh-100px)] px-6 pb-6">
-      {selectedSale ? (
-        <div className="space-y-6">
-
-          {/* Informations Client */}
-          <Card className="border-2 border-gradient-to-r from-blue-200 to-indigo-200 rounded-xl bg-white/70 dark:bg-gray-900/30 backdrop-blur-md shadow-md">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg flex items-center gap-2 text-blue-700 dark:text-blue-400">
-                <User className="h-5 w-5" />
-                Informations Client
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex items-center gap-3">
-                <User className="h-4 w-4 text-blue-500" />
-                <span className="font-semibold">{selectedSale.clientName}</span>
+        <DialogContent
+          className="
+            sm:max-w-3xl
+            rounded-[32px]
+            bg-gradient-to-tr from-white to-gray-50 dark:from-[#0B0D12] dark:to-[#111827]
+            shadow-2xl
+            animate-in fade-in zoom-in-95 slide-in-from-bottom-6 duration-500
+            p-0
+          "
+        >
+          <DialogHeader className="pb-4 pt-6 px-6 text-center">
+            <DialogTitle className="flex items-center justify-center gap-3 text-xl font-black bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+              <div className="p-2 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-lg">
+                <Eye className="h-6 w-6 text-white" />
               </div>
-              {selectedSale.clientAddress && (
-                <div className="flex items-center gap-3">
-                  <MapPin className="h-4 w-4 text-blue-500" />
-                  <span>{selectedSale.clientAddress}</span>
-                </div>
-              )}
-              {selectedSale.clientPhone && (
-                <div className="flex items-center gap-3">
-                  <Phone className="h-4 w-4 text-blue-500" />
-                  <span>{selectedSale.clientPhone}</span>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+              Détails de la Vente
+            </DialogTitle>
+          </DialogHeader>
 
-          {/* Détails de la Vente */}
-          <Card className="border-2 border-gradient-to-r from-emerald-200 to-teal-200 rounded-xl bg-white/70 dark:bg-gray-900/30 backdrop-blur-md shadow-md">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg flex items-center gap-2 text-emerald-700 dark:text-emerald-400">
-                <CreditCard className="h-5 w-5" />
-                Détails de la Vente
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
+          <ScrollArea className="h-[calc(90vh-100px)] px-6 pb-6">
+            {selectedSale ? (
+              <div className="space-y-6">
 
-              {/* Date et Quantité */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-sm font-medium text-gray-600 dark:text-gray-400">Date</Label>
-                  <div className="text-lg font-semibold">{new Date(selectedSale.date).toLocaleDateString('fr-FR')}</div>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium text-gray-600 dark:text-gray-400">Quantité Total</Label>
-                  <div className="text-lg font-semibold">
-                    {selectedSale.products && selectedSale.products.length > 0
-                      ? selectedSale.products.reduce((sum: number, p) => sum + (p.quantitySold || 0), 0)
-                      : (selectedSale.quantitySold || 0)}
-                  </div>
-                </div>
-              </div>
+                {/* Informations Client */}
+                <Card className="border-2 border-gradient-to-r from-blue-200 to-indigo-200 rounded-xl bg-white/80 dark:bg-gray-900/30 backdrop-blur-md shadow-md">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg flex items-center gap-2 text-blue-700 dark:text-blue-400">
+                      <User className="h-5 w-5" />
+                      Informations Client
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      <User className="h-4 w-4 text-blue-500" />
+                      <span className="font-semibold">{selectedSale.clientName}</span>
+                    </div>
+                    {selectedSale.clientAddress && (
+                      <div className="flex items-center gap-3">
+                        <MapPin className="h-4 w-4 text-blue-500" />
+                        <span>{selectedSale.clientAddress}</span>
+                      </div>
+                    )}
+                    {selectedSale.clientPhone && (
+                      <div className="flex items-center gap-3">
+                        <Phone className="h-4 w-4 text-blue-500" />
+                        <span>{selectedSale.clientPhone}</span>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
 
-              {/* Produits */}
-              <div>
-                <Label className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                  {selectedSale.products && selectedSale.products.length > 0 ? 'Produits' : 'Produit'}
-                </Label>
-                {selectedSale.products && selectedSale.products.length > 0 ? (
-                  <div className="space-y-2 max-h-64 overflow-y-auto">
-                    {selectedSale.products.map((product, index) => (
-                      <div key={index} className="text-sm bg-gray-50 dark:bg-gray-800 p-2 rounded-md flex justify-between items-center">
-                        <div className="font-medium">{product.description}</div>
-                        <div className="text-gray-600 dark:text-gray-300">
-                          Qté: {product.quantitySold} - {formatEuro(product.sellingPrice || 0)}
+                {/* Détails de la Vente */}
+                <Card className="border-2 border-gradient-to-r from-emerald-200 to-teal-200 rounded-xl bg-white/80 dark:bg-gray-900/30 backdrop-blur-md shadow-md">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg flex items-center gap-2 text-emerald-700 dark:text-emerald-400">
+                      <CreditCard className="h-5 w-5" />
+                      Détails de la Vente
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+
+                    {/* Date et Quantité Totale */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label className="text-sm font-medium text-gray-600 dark:text-gray-400">Date</Label>
+                        <div className="text-lg font-semibold">{new Date(selectedSale.date).toLocaleDateString('fr-FR')}</div>
+                      </div>
+                      <div>
+                        <Label className="text-sm font-medium text-gray-600 dark:text-gray-400">Quantité Totale</Label>
+                        <div className="text-lg font-semibold">
+                          {selectedSale.products && selectedSale.products.length > 0
+                            ? selectedSale.products.reduce((sum: number, p) => sum + (p.quantitySold || 0), 0)
+                            : (selectedSale.quantitySold || 0)}
                         </div>
                       </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-lg font-semibold">{selectedSale.description}</div>
-                )}
-              </div>
+                    </div>
 
-              {/* Prix et Bénéfice */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-sm font-medium text-gray-600 dark:text-gray-400">Prix Total</Label>
-                  <div className="text-xl font-bold text-emerald-600 dark:text-emerald-400">
-                    {selectedSale.products && selectedSale.products.length > 0
-                      ? formatEuro(selectedSale.totalSellingPrice || 0)
-                      : formatEuro(selectedSale.sellingPrice || 0)}
-                  </div>
+                    {/* Produits */}
+                    <div>
+                      <Label className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                        {selectedSale.products && selectedSale.products.length > 0 ? 'Produits' : 'Produit'}
+                      </Label>
+                      {selectedSale.products && selectedSale.products.length > 0 ? (
+                        <div className="space-y-2 max-h-64 overflow-y-auto">
+                          {selectedSale.products.map((product, index) => (
+                            <div key={index} className="text-sm bg-gray-50 dark:bg-gray-800 p-2 rounded-md flex justify-between items-center shadow-md hover:shadow-lg transition-all">
+                              <div className="font-medium">{product.description}</div>
+                              <div className="text-gray-600 dark:text-gray-300">
+                                Qté: {product.quantitySold} - {formatEuro(product.sellingPrice || 0)}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-lg font-semibold">{selectedSale.description}</div>
+                      )}
+                    </div>
+
+                    {/* Prix Total et Bénéfice */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label className="text-sm font-medium text-gray-600 dark:text-gray-400">Prix Total</Label>
+                        <div className="text-xl font-bold text-emerald-600 dark:text-emerald-400">
+                          {selectedSale.products && selectedSale.products.length > 0
+                            ? formatEuro(selectedSale.totalSellingPrice || 0)
+                            : formatEuro(selectedSale.sellingPrice || 0)}
+                        </div>
+                      </div>
+                      <div>
+                        <Label className="text-sm font-medium text-gray-600 dark:text-gray-400">Bénéfice</Label>
+                        <div className="text-xl font-bold text-purple-600 dark:text-purple-400">
+                          {selectedSale.products && selectedSale.products.length > 0
+                            ? formatEuro(selectedSale.totalProfit || 0)
+                            : formatEuro(selectedSale.profit || 0)}
+                        </div>
+                      </div>
+                    </div>
+
+                  </CardContent>
+                </Card>
+
+                {/* Bouton Générer Facture PDF */}
+                <div className="flex justify-center pt-4">
+                  <Button
+                    onClick={() => generateInvoicePDF(selectedSale)}
+                    className="
+                      w-full sm:w-auto py-4 px-6 rounded-3xl font-black tracking-wide
+                      bg-gradient-to-r from-pink-500 via-purple-600 to-indigo-600
+                      shadow-2xl hover:shadow-3xl
+                      hover:scale-105
+                      transition-all duration-300
+                      flex items-center gap-3 justify-center
+                    "
+                  >
+                    <Download className="h-5 w-5 text-white" />
+                    Générer Facture PDF
+                    <Sparkles className="h-4 w-4 text-white animate-pulse" />
+                  </Button>
                 </div>
-                <div>
-                  <Label className="text-sm font-medium text-gray-600 dark:text-gray-400">Bénéfice</Label>
-                  <div className="text-xl font-bold text-purple-600 dark:text-purple-400">
-                    {selectedSale.products && selectedSale.products.length > 0
-                      ? formatEuro(selectedSale.totalProfit || 0)
-                      : formatEuro(selectedSale.profit || 0)}
-                  </div>
-                </div>
+
               </div>
-
-            </CardContent>
-          </Card>
-
-          {/* Bouton Générer Facture */}
-          <div className="flex justify-center pt-4">
-            <Button
-              onClick={() => generateInvoicePDF(selectedSale)}
-              className="w-full sm:w-auto py-4 px-6 rounded-2xl font-black tracking-wide
-                         bg-gradient-to-r from-pink-500 via-purple-600 to-indigo-600
-                         hover:scale-105 hover:shadow-2xl transition-all flex items-center gap-3 justify-center"
-            >
-              <Download className="h-5 w-5" />
-              Générer Facture PDF
-              <Sparkles className="h-4 w-4" />
-            </Button>
-          </div>
-
-        </div>
-      ) : (
-        <div className="text-center py-12 text-gray-500 dark:text-gray-400">
-          <p>Aucune vente sélectionnée</p>
-        </div>
-      )}
-    </ScrollArea>
-  </DialogContent>
-</Dialog>
+            ) : (
+              <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+                <p>Aucune vente sélectionnée</p>
+              </div>
+            )}
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
 
     </>
   );
