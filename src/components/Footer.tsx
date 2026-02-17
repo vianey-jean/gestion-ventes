@@ -35,8 +35,8 @@ const Footer: React.FC = () => {
             </div>
 
             <p className="text-white/50 leading-relaxed mb-6">
-              Solution révolutionnaire pour la gestion moderne de vos ventes et inventaires.
-              Transformez votre business avec une technologie élégante et performante.
+              Solution innovante pour une gestion moderne et efficace de vos ventes et inventaires. 
+Optimisez votre activité grâce à une technologie performante, élégante et pensée pour simplifier la gestion de votre business.
             </p>
 
             <div className="flex items-center gap-2 text-sm text-white/40">
@@ -55,6 +55,8 @@ const Footer: React.FC = () => {
                 { label: 'Accueil', to: '/' },
                 { label: 'À propos', to: '/about' },
                 { label: 'Contact', to: '/contact' },
+                { label: 'Rendez-Vous', to: '/rdv' },
+                { label: 'Commandes', to: '/commandes' },
               ].map((item, i) => (
                 <li key={i}>
                   <Link
@@ -158,7 +160,7 @@ const Footer: React.FC = () => {
 
           <div className="mt-6 flex flex-wrap justify-center gap-3">
             {[
-              'Version 4.0.0 - Système opérationnel',
+              'Version 4.2.0 - Système opérationnel',
               'Créé par Jean Rabemanalina',
             ].map((text, i) => (
               <div
