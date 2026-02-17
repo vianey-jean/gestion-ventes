@@ -28,6 +28,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
@@ -80,6 +81,7 @@ const RdvCalendar: React.FC<RdvCalendarProps> = ({
   highlightDate,
   onHighlightComplete,
 }) => {
+  const isMobile = useIsMobile();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [draggedRdv, setDraggedRdv] = useState<RDV | null>(null);
   const [dropTarget, setDropTarget] = useState<{ date: string; hour: number } | null>(null);
@@ -96,6 +98,14 @@ const RdvCalendar: React.FC<RdvCalendarProps> = ({
   // RDV Detail Modal
   const [selectedRdvDetail, setSelectedRdvDetail] = useState<RDV | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
+  
+  // Phone action modal
+  const [showPhoneModal, setShowPhoneModal] = useState(false);
+  const [selectedPhone, setSelectedPhone] = useState('');
+  
+  // Address/Location action modal
+  const [showLocationModal, setShowLocationModal] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState('');
   
   // Confirm dialogs
   const [confirmModifyOpen, setConfirmModifyOpen] = useState(false);
@@ -598,22 +608,34 @@ const RdvCalendar: React.FC<RdvCalendarProps> = ({
                   </div>
                 </div>
                 {selectedRdvDetail.clientTelephone && (
-                  <div className="flex items-center gap-3">
+                  <div 
+                    className="flex items-center gap-3 cursor-pointer hover:bg-primary/10 rounded-lg p-2 -m-2 transition-colors"
+                    onClick={() => {
+                      setSelectedPhone(selectedRdvDetail.clientTelephone!);
+                      setShowPhoneModal(true);
+                    }}
+                  >
                     <Phone className="h-5 w-5 text-primary" />
                     <div>
                       <div className="text-sm text-muted-foreground">Téléphone</div>
-                      <a href={`tel:${selectedRdvDetail.clientTelephone}`} className="font-semibold text-primary hover:underline">
+                      <div className="font-semibold text-primary hover:underline cursor-pointer">
                         {selectedRdvDetail.clientTelephone}
-                      </a>
+                      </div>
                     </div>
                   </div>
                 )}
                 {selectedRdvDetail.lieu && (
-                  <div className="flex items-center gap-3">
+                  <div 
+                    className="flex items-center gap-3 cursor-pointer hover:bg-primary/10 rounded-lg p-2 -m-2 transition-colors"
+                    onClick={() => {
+                      setSelectedLocation(selectedRdvDetail.lieu!);
+                      setShowLocationModal(true);
+                    }}
+                  >
                     <MapPin className="h-5 w-5 text-primary" />
                     <div>
                       <div className="text-sm text-muted-foreground">Lieu</div>
-                      <div className="font-semibold">{selectedRdvDetail.lieu}</div>
+                      <div className="font-semibold text-primary hover:underline cursor-pointer">{selectedRdvDetail.lieu}</div>
                     </div>
                   </div>
                 )}
@@ -705,6 +727,82 @@ const RdvCalendar: React.FC<RdvCalendarProps> = ({
         onConfirm={confirmDelete}
         variant="danger"
       />
+
+      {/* Phone Action Modal */}
+      <Dialog open={showPhoneModal} onOpenChange={setShowPhoneModal}>
+        <DialogContent className="sm:max-w-md bg-gradient-to-br from-background via-background to-primary/5 backdrop-blur-2xl border border-primary/20 shadow-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-3 text-xl">
+              <div className="p-2 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 shadow-lg">
+                <Phone className="h-5 w-5 text-white" />
+              </div>
+              {selectedPhone}
+            </DialogTitle>
+            <DialogDescription>Que souhaitez-vous faire avec ce numéro ?</DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <Button
+              onClick={() => { window.location.href = `tel:${selectedPhone}`; setShowPhoneModal(false); }}
+              className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-3"
+            >
+              <Phone className="w-5 h-5" />
+              Appeler ce numéro
+            </Button>
+            <Button
+              onClick={() => {
+                if (isMobile) {
+                  window.location.href = `sms:${selectedPhone}`;
+                } else {
+                  window.open(`sms:${selectedPhone}`, '_blank');
+                }
+                setShowPhoneModal(false);
+              }}
+              className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-bold py-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-3"
+            >
+              <User className="w-5 h-5" />
+              Envoyer un SMS
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Location Action Modal */}
+      <Dialog open={showLocationModal} onOpenChange={setShowLocationModal}>
+        <DialogContent className="sm:max-w-md bg-gradient-to-br from-background via-background to-primary/5 backdrop-blur-2xl border border-primary/20 shadow-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-3 text-xl">
+              <div className="p-2 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 shadow-lg">
+                <MapPin className="h-5 w-5 text-white" />
+              </div>
+              Navigation
+            </DialogTitle>
+            <DialogDescription>Ouvrir l'adresse dans quelle application ?</DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <Button
+              onClick={() => { window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selectedLocation)}`, '_blank'); setShowLocationModal(false); }}
+              className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold py-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-3"
+            >
+              <MapPin className="w-5 h-5" />
+              Google Maps
+            </Button>
+            <Button
+              onClick={() => { window.open(`https://waze.com/ul?q=${encodeURIComponent(selectedLocation)}`, '_blank'); setShowLocationModal(false); }}
+              className="w-full bg-gradient-to-r from-cyan-500 to-teal-600 hover:from-cyan-600 hover:to-teal-700 text-white font-bold py-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-3"
+            >
+              <MapPin className="w-5 h-5" />
+              Waze
+            </Button>
+            <Button
+              onClick={() => { window.open(`https://maps.apple.com/?q=${encodeURIComponent(selectedLocation)}`, '_blank'); setShowLocationModal(false); }}
+              className="w-full bg-gradient-to-r from-gray-600 to-gray-800 hover:from-gray-700 hover:to-gray-900 text-white font-bold py-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-3"
+            >
+              <MapPin className="w-5 h-5" />
+              Apple Maps
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };
