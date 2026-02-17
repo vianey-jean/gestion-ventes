@@ -101,7 +101,7 @@ import useCurrencyFormatter from '@/hooks/use-currency-formatter';
 /* =========================
    BRAND LOGO ULTRA LUXE
 ========================= */
-const BrandLogo = () => (
+const BrandLogo: React.FC = () => (
   <div className="flex items-center gap-3">
     <div className="
       w-12 h-12 rounded-3xl
@@ -297,17 +297,17 @@ const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ isOpen, onClose }) 
       {/* ================= MODAL PRINCIPAL ================= */}
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent
-          className="
-            sm:max-w-5xl p-0 overflow-hidden
-            rounded-[32px]
-            bg-gradient-to-tr
-              from-white via-gray-50 to-white
-              dark:from-[#0A0C10] dark:via-[#121827] dark:to-[#0A0C10]
-            border border-white/20 dark:border-white/10
-            shadow-[0_35px_140px_-25px_rgba(0,0,0,0.5)]
-            animate-in fade-in zoom-in-95 slide-in-from-bottom-6 duration-500
-          "
-        >
+  className="
+    sm:max-w-5xl p-0 overflow-hidden
+    rounded-[32px]
+    bg-gray-500/30 dark:bg-gray-900/40
+    backdrop-blur-md
+    border border-white/20 dark:border-white/10
+    shadow-[0_35px_140px_-25px_rgba(0,0,0,0.5)]
+    animate-in fade-in zoom-in-95 slide-in-from-bottom-6 duration-500
+  "
+>
+
           {/* ===== Header ===== */}
           <DialogHeader
             className="
@@ -332,15 +332,17 @@ const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ isOpen, onClose }) 
             <div className="space-y-10">
 
               {/* ===== Sélection Année ===== */}
-              <Card className="
-                rounded-3xl
-                bg-white/80 dark:bg-white/10
-                backdrop-blur-xl
-                shadow-2xl hover:shadow-3xl
-                transition-all duration-300
-              ">
+              <Card
+  className="
+    rounded-3xl
+    bg-gray-500/30 dark:bg-gray-900/40
+    backdrop-blur-md
+    shadow-2xl hover:shadow-3xl
+  "
+>
+
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-3 text-indigo-600 dark:text-indigo-400">
+                  <CardTitle className="flex items-center gap-3 text-red-600 dark:text-indigo-400">
                     <Calendar className="h-5 w-5" />
                     Année
                   </CardTitle>
@@ -367,13 +369,16 @@ const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ isOpen, onClose }) 
               </Card>
 
               {/* ===== Recherche Client ===== */}
-              <Card className="
-                rounded-3xl
-                bg-white/80 dark:bg-white/10
-                backdrop-blur-xl
-                shadow-2xl
-                transition-all duration-300
-              ">
+            <Card
+  className="
+    rounded-3xl
+    bg-gray-500/30 dark:bg-gray-900/40
+    backdrop-blur-md
+    shadow-2xl
+    transition-all duration-300
+  "
+>
+
                 <CardHeader>
                   <CardTitle className="flex items-center gap-3 text-emerald-600 dark:text-emerald-400">
                     <Search className="h-5 w-5" />
@@ -401,9 +406,26 @@ const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ isOpen, onClose }) 
 
               {/* ===== Résultats Ventes ===== */}
               {searchName.length >= 3 && (
-                <Card className="border-2 border-gradient-to-r from-purple-200 to-pink-200 bg-white/80 dark:bg-gray-800/50 backdrop-blur-xl shadow-2xl rounded-2xl">
+              <Card
+  className="
+    border-2 border-gray-300/40 dark:border-gray-700/40
+    bg-gray-500/30 dark:bg-gray-900/40
+    backdrop-blur-md
+    shadow-2xl
+    rounded-2xl
+  "
+>
+
                   <CardHeader className="pb-3">
-                    <CardTitle className="text-lg flex items-center gap-2 text-purple-700 dark:text-purple-300">
+                    <CardTitle
+  className="
+    text-lg
+    flex items-center gap-2
+    font-bold
+    text-gray-800 dark:text-gray-100
+  "
+>
+
                       <User className="h-5 w-5" />
                       Ventes de : {searchName} en {searchYear}
                     </CardTitle>
@@ -478,16 +500,21 @@ const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ isOpen, onClose }) 
 
       {/* ================= MODAL DÉTAIL VENTE ================= */}
       <Dialog open={showSaleDetails} onOpenChange={setShowSaleDetails}>
-        <DialogContent
-          className="
-            sm:max-w-3xl
-            rounded-[32px]
-            bg-gradient-to-tr from-white to-gray-50 dark:from-[#0B0D12] dark:to-[#111827]
-            shadow-2xl
-            animate-in fade-in zoom-in-95 slide-in-from-bottom-6 duration-500
-            p-0
-          "
-        >
+      <DialogContent
+  className="
+    sm:max-w-3xl
+    rounded-[32px]
+
+    bg-white/20 dark:bg-white/10
+    backdrop-blur-2xl
+    border border-white/30 dark:border-white/10
+
+    shadow-2xl
+    animate-in fade-in zoom-in-95 slide-in-from-bottom-6 duration-500
+    p-0
+  "
+>
+
           <DialogHeader className="pb-4 pt-6 px-6 text-center">
             <DialogTitle className="flex items-center justify-center gap-3 text-xl font-black bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
               <div className="p-2 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-lg">
