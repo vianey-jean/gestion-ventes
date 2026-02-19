@@ -26,6 +26,9 @@ import { useToast } from '@/components/ui/use-toast';
 import ProductSearchInput from './ProductSearchInput';
 import { cn } from '@/lib/utils';
 import { useApp } from '@/contexts/AppContext';
+import PhotoUploadSection from './PhotoUploadSection';
+
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://server-gestion-ventes.onrender.com';
 
 interface EditProductFormProps {
   isOpen: boolean;
@@ -50,6 +53,13 @@ const EditProductForm: React.FC<EditProductFormProps> = ({ isOpen, onClose }) =>
   const [openDeleteConfirm, setOpenDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // Photo state
+  const [editPhotos, setEditPhotos] = useState<{ files: File[]; existingUrls: string[]; mainIndex: number }>({
+    files: [],
+    existingUrls: [],
+    mainIndex: 0,
+  });
+
   useEffect(() => {
     if (selectedProduct) {
       setFormData({
@@ -58,6 +68,12 @@ const EditProductForm: React.FC<EditProductFormProps> = ({ isOpen, onClose }) =>
         purchasePrice: selectedProduct.purchasePrice,
         quantity: selectedProduct.quantity,
         additionalQuantity: 0,
+      });
+      // Reset photo state with existing product photos
+      setEditPhotos({
+        files: [],
+        existingUrls: selectedProduct.photos || [],
+        mainIndex: 0,
       });
     }
   }, [selectedProduct]);
@@ -102,6 +118,25 @@ const EditProductForm: React.FC<EditProductFormProps> = ({ isOpen, onClose }) =>
       };
 
       await productService.updateProduct(updatedProduct);
+
+      // Handle photo updates
+      const hasNewPhotos = editPhotos.files.length > 0;
+      const existingPhotosChanged = selectedProduct
+        ? JSON.stringify(editPhotos.existingUrls) !== JSON.stringify(selectedProduct.photos || [])
+        : false;
+
+      if (hasNewPhotos || existingPhotosChanged) {
+        try {
+          await productService.replaceProductPhotos(
+            formData.id,
+            editPhotos.files,
+            editPhotos.existingUrls,
+            editPhotos.mainIndex
+          );
+        } catch (photoError) {
+          console.error('❌ Error updating photos:', photoError);
+        }
+      }
 
       toast({
         title: 'Succès',
@@ -161,6 +196,7 @@ const EditProductForm: React.FC<EditProductFormProps> = ({ isOpen, onClose }) =>
         quantity: 0,
         additionalQuantity: 0,
       });
+      setEditPhotos({ files: [], existingUrls: [], mainIndex: 0 });
       
       if (fetchProducts) {
         await fetchProducts();
@@ -179,13 +215,18 @@ const EditProductForm: React.FC<EditProductFormProps> = ({ isOpen, onClose }) =>
     }
   };
 
+  const handleClose = () => {
+    setEditPhotos({ files: [], existingUrls: [], mainIndex: 0 });
+    onClose();
+  };
+
   return (
     <>
-      <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
         <DialogContent
           className="sm:max-w-2xl bg-gradient-to-br from-white via-blue-50/30 to-indigo-50/50
           backdrop-blur-xl border-0 shadow-2xl rounded-3xl
-          max-h-[85vh] overflow-y-auto"
+          max-h-[90vh] overflow-y-auto"
         >
           {/* Decorative background */}
           <div className="absolute inset-0 pointer-events-none">
@@ -270,6 +311,19 @@ const EditProductForm: React.FC<EditProductFormProps> = ({ isOpen, onClose }) =>
                     Quantité finale : <b>{formData.quantity + formData.additionalQuantity}</b>
                   </p>
                 </div>
+
+                {/* Photo Upload Section */}
+                <div className="p-4 bg-gradient-to-r from-blue-50/50 to-indigo-50/50 border-2 border-blue-100 rounded-2xl">
+                  <PhotoUploadSection
+                    existingPhotos={selectedProduct.photos || []}
+                    existingMainPhoto={selectedProduct.mainPhoto}
+                    baseUrl={BASE_URL}
+                    onPhotosChange={(files, existingUrls, mainIndex) => {
+                      setEditPhotos({ files, existingUrls, mainIndex });
+                    }}
+                    maxPhotos={6}
+                  />
+                </div>
               </>
             )}
 
@@ -277,7 +331,7 @@ const EditProductForm: React.FC<EditProductFormProps> = ({ isOpen, onClose }) =>
               <Button 
                 type="button"
                 variant="outline" 
-                onClick={onClose}
+                onClick={handleClose}
                 className="order-3 sm:order-1 rounded-xl border-2 hover:bg-gray-50 transition-all duration-300"
               >
                 <XCircle className="mr-2 h-5 w-5" />
@@ -302,7 +356,7 @@ const EditProductForm: React.FC<EditProductFormProps> = ({ isOpen, onClose }) =>
                 className="order-1 sm:order-3 rounded-xl font-bold bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 hover:from-blue-600 hover:via-blue-700 hover:to-indigo-700 text-white border-0 shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/40 transition-all duration-300 transform hover:-translate-y-0.5"
               >
                 <Pencil className="mr-2 h-5 w-5" />
-                Modifier le produit
+                {isLoading ? 'Envoi en cours...' : 'Modifier le produit'}
               </Button>
             </DialogFooter>
           </form>

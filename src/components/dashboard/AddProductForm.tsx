@@ -23,6 +23,8 @@ import { Label } from '@/components/ui/label';
 import { PackagePlus, XCircle, CheckCircle2, Package, Euro, Hash, Sparkles } from 'lucide-react';
 import { useApp } from '@/contexts/AppContext';
 import { cn } from '@/lib/utils';
+import { productService } from '@/service/api';
+import PhotoUploadSection from './PhotoUploadSection';
 
 interface AddProductFormProps {
   isOpen: boolean;
@@ -30,7 +32,7 @@ interface AddProductFormProps {
 }
 
 const AddProductForm: React.FC<AddProductFormProps> = ({ isOpen, onClose }) => {
-  const { addProduct } = useApp();
+  const { addProduct, fetchProducts } = useApp();
 
   const [formData, setFormData] = useState({
     description: '',
@@ -41,6 +43,13 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ isOpen, onClose }) => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [openConfirm, setOpenConfirm] = useState(false);
+
+  // Photo state
+  const [addPhotos, setAddPhotos] = useState<{ files: File[]; existingUrls: string[]; mainIndex: number }>({
+    files: [],
+    existingUrls: [],
+    mainIndex: 0,
+  });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -89,17 +98,35 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ isOpen, onClose }) => {
     setIsSubmitting(true);
 
     try {
-      await addProduct({
+      const newProduct = await addProduct({
         description: formData.description,
         purchasePrice: Number(formData.purchasePrice),
         quantity: Number(formData.quantity),
       });
+
+      // Upload photos if any were selected
+      if (newProduct && addPhotos.files.length > 0) {
+        try {
+          await productService.uploadProductPhotos(
+            newProduct.id,
+            addPhotos.files,
+            addPhotos.mainIndex
+          );
+          // Refresh products to get updated photo data
+          if (fetchProducts) {
+            await fetchProducts();
+          }
+        } catch (photoError) {
+          console.error('❌ Error uploading photos:', photoError);
+        }
+      }
 
       setFormData({
         description: '',
         purchasePrice: '',
         quantity: '',
       });
+      setAddPhotos({ files: [], existingUrls: [], mainIndex: 0 });
 
       setOpenConfirm(false);
       onClose();
@@ -108,10 +135,15 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ isOpen, onClose }) => {
     }
   };
 
+  const handleClose = () => {
+    setAddPhotos({ files: [], existingUrls: [], mainIndex: 0 });
+    onClose();
+  };
+
   return (
     <>
-      <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-lg bg-gradient-to-br from-white via-emerald-50/30 to-green-50/50 backdrop-blur-xl border-0 shadow-2xl rounded-3xl overflow-hidden">
+      <Dialog open={isOpen} onOpenChange={handleClose}>
+        <DialogContent className="sm:max-w-lg bg-gradient-to-br from-white via-emerald-50/30 to-green-50/50 backdrop-blur-xl border-0 shadow-2xl rounded-3xl overflow-hidden max-h-[90vh] overflow-y-auto">
           {/* Decorative background elements */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
             <div className="absolute -top-24 -right-24 w-48 h-48 bg-gradient-to-br from-emerald-200/20 to-green-200/20 rounded-full blur-3xl" />
@@ -236,11 +268,21 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ isOpen, onClose }) => {
               </div>
             </div>
 
+            {/* Photo Upload Section */}
+            <div className="p-4 bg-gradient-to-r from-emerald-50/50 to-green-50/50 border-2 border-emerald-100 rounded-2xl">
+              <PhotoUploadSection
+                onPhotosChange={(files, existingUrls, mainIndex) => {
+                  setAddPhotos({ files, existingUrls, mainIndex });
+                }}
+                maxPhotos={6}
+              />
+            </div>
+
             <DialogFooter className="flex gap-3 pt-4 sm:flex-row">
               <Button
                 type="button"
                 variant="outline"
-                onClick={onClose}
+                onClick={handleClose}
                 disabled={isSubmitting}
                 className={cn(
                   "flex-1 h-12 rounded-xl font-bold",
@@ -267,7 +309,7 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ isOpen, onClose }) => {
                 )}
               >
                 <Sparkles className="h-5 w-5 mr-2" />
-                Ajouter le produit
+                {isSubmitting ? 'Envoi en cours...' : 'Ajouter le produit'}
               </Button>
             </DialogFooter>
           </form>
@@ -311,6 +353,12 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ isOpen, onClose }) => {
                   <span className="text-gray-500 text-sm">Quantité:</span>
                   <span className="font-bold text-blue-600">{formData.quantity}</span>
                 </div>
+                {addPhotos.files.length > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-500 text-sm">Photos:</span>
+                    <span className="font-bold text-purple-600">{addPhotos.files.length} photo(s)</span>
+                  </div>
+                )}
               </div>
             </div>
           </AlertDialogHeader>
