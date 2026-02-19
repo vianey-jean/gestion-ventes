@@ -105,9 +105,31 @@
                        <span className="font-bold relative z-10">Commandes</span>
                      </Button>
                    </motion.div>
-                 </Link>
-               </>
-             )}
+                  </Link>
+
+                  <Link to="/clients">
+                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                      <Button variant="ghost" className="relative rounded-2xl hover:bg-gradient-to-r hover:from-violet-500/10 hover:to-purple-500/10 transition-all duration-300 group overflow-hidden px-4 py-2 mirror-shine">
+                        <div className="flex items-center justify-center w-8 h-8 rounded-xl bg-gradient-to-br from-violet-500 to-purple-500 mr-2 shadow-lg shadow-violet-500/30">
+                          <Users className="h-4 w-4 text-white" />
+                        </div>
+                        <span className="font-bold relative z-10">Clients</span>
+                      </Button>
+                    </motion.div>
+                  </Link>
+
+                  <Link to="/produits">
+                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                      <Button variant="ghost" className="relative rounded-2xl hover:bg-gradient-to-r hover:from-pink-500/10 hover:to-rose-500/10 transition-all duration-300 group overflow-hidden px-4 py-2 mirror-shine">
+                        <div className="flex items-center justify-center w-8 h-8 rounded-xl bg-gradient-to-br from-pink-500 to-rose-500 mr-2 shadow-lg shadow-pink-500/30">
+                          <Package className="h-4 w-4 text-white" />
+                        </div>
+                        <span className="font-bold relative z-10">Produits</span>
+                      </Button>
+                    </motion.div>
+                  </Link>
+                </>
+              )}
 
              <Link to="/rdv">
                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
@@ -190,14 +212,23 @@
                      </Link>
                    </DropdownMenuItem>
 
-                   <DropdownMenuItem asChild className="rounded-xl hover:bg-gradient-to-r hover:from-violet-500/10 hover:to-purple-500/10 focus:bg-violet-500/10 cursor-pointer transition-all duration-300 py-3">
-                     <Link to="/clients" className="flex items-center w-full py-2">
-                       <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-500 mr-3 shadow-lg shadow-violet-500/30">
-                         <Users className="h-5 w-5 text-white" />
-                       </div>
-                       <span className="font-bold">Clients</span>
-                     </Link>
-                   </DropdownMenuItem>
+                    <DropdownMenuItem asChild className="rounded-xl hover:bg-gradient-to-r hover:from-violet-500/10 hover:to-purple-500/10 focus:bg-violet-500/10 cursor-pointer transition-all duration-300 py-3">
+                      <Link to="/clients" className="flex items-center w-full py-2">
+                        <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-500 mr-3 shadow-lg shadow-violet-500/30">
+                          <Users className="h-5 w-5 text-white" />
+                        </div>
+                        <span className="font-bold">Clients</span>
+                      </Link>
+                    </DropdownMenuItem>
+
+                    <DropdownMenuItem asChild className="rounded-xl hover:bg-gradient-to-r hover:from-pink-500/10 hover:to-rose-500/10 focus:bg-pink-500/10 cursor-pointer transition-all duration-300 py-3">
+                      <Link to="/produits" className="flex items-center w-full py-2">
+                        <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-pink-500 to-rose-500 mr-3 shadow-lg shadow-pink-500/30">
+                          <Package className="h-5 w-5 text-white" />
+                        </div>
+                        <span className="font-bold">Produits</span>
+                      </Link>
+                    </DropdownMenuItem>
 
                  </DropdownMenuContent>
                </DropdownMenu>
@@ -291,6 +322,19 @@
               <Users className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
             </div>
             <span className="font-bold text-sm sm:text-base text-violet-700 dark:text-violet-300 relative z-10">Clients</span>
+          </Button>
+        </Link>
+
+        {/* PRODUITS */}
+        <Link to="/produits" onClick={() => setIsMobileMenuOpen(false)}>
+          <Button
+            variant="outline"
+            className="w-full py-4 sm:py-6 flex items-center justify-start gap-2 sm:gap-3 rounded-2xl border border-pink-300/30 dark:border-pink-700/30 shadow-lg shadow-pink-500/10 bg-gradient-to-r from-white/90 to-pink-50/80 dark:from-[#0a0020]/80 dark:to-pink-950/60 hover:scale-105 transition-all duration-300 mirror-shine"
+          >
+            <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-pink-500 to-rose-500 shadow-lg shadow-pink-500/30">
+              <Package className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
+            </div>
+            <span className="font-bold text-sm sm:text-base text-pink-700 dark:text-pink-300 relative z-10">Produits</span>
           </Button>
         </Link>
 
