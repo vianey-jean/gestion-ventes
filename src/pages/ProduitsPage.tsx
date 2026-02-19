@@ -419,7 +419,7 @@ const ProduitsPage: React.FC = () => {
                         {/* Photo with eye icon */}
                         <TableCell>
                           <div className="relative group cursor-pointer" onClick={() => openView(product)}>
-                            <div className="w-12 h-12 rounded-xl overflow-hidden border-2 border-violet-200/30 dark:border-violet-800/30 shadow-md">
+                            <div className="h-12 rounded-xl overflow-hidden border-2 border-violet-200/30 dark:border-violet-800/30 shadow-md">
                               {product.mainPhoto || (product.photos && product.photos.length > 0) ? (
                                 <img src={getPhotoUrl(product.mainPhoto || product.photos![0])} alt="" className="w-full h-full object-cover" />
                               ) : (
