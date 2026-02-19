@@ -12,6 +12,7 @@ import {
   X, PackagePlus, Pencil, ImageOff, ShoppingBag
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import SharedPagination from '@/components/shared/Pagination';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -66,6 +67,10 @@ const ProduitsPage: React.FC = () => {
   // Slideshow
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
 
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
+
   // Filter products
   const filteredProducts = useMemo(() => {
     let filtered = [...products];
@@ -92,6 +97,17 @@ const ProduitsPage: React.FC = () => {
 
     return filtered;
   }, [products, activeFilter, searchQuery]);
+
+  // Reset page when filter/search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeFilter, searchQuery]);
+
+  const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
+  const paginatedProducts = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredProducts.slice(start, start + ITEMS_PER_PAGE);
+  }, [filteredProducts, currentPage]);
 
   // Search results for quick search
   const searchResults = useMemo(() => {
@@ -281,7 +297,7 @@ const ProduitsPage: React.FC = () => {
                 />
               </div>
               {/* Quick search results dropdown */}
-              <AnimatePresence>
+              {/* <AnimatePresence>
                 {showSearchResults && searchResults.length > 0 && (
                   <motion.div
                     initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
@@ -309,7 +325,7 @@ const ProduitsPage: React.FC = () => {
                     ))}
                   </motion.div>
                 )}
-              </AnimatePresence>
+              </AnimatePresence> */}
             </div>
 
             {/* Add button */}
@@ -400,7 +416,7 @@ const ProduitsPage: React.FC = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredProducts.length === 0 ? (
+                  {paginatedProducts.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={6} className="text-center py-12">
                         <div className="flex flex-col items-center gap-3">
@@ -412,7 +428,7 @@ const ProduitsPage: React.FC = () => {
                       </TableCell>
                     </TableRow>
                   ) : (
-                    filteredProducts.map((product, index) => (
+                    paginatedProducts.map((product, index) => (
                       <TableRow key={product.id}
                         className="hover:bg-gradient-to-r hover:from-violet-50 hover:to-fuchsia-50 dark:hover:from-violet-900/10 dark:hover:to-fuchsia-900/10 transition-all duration-200 border-b border-violet-100/20 dark:border-violet-800/10"
                       >
@@ -488,6 +504,18 @@ const ProduitsPage: React.FC = () => {
               </Table>
             </div>
           </motion.div>
+
+          {/* Pagination */}
+          <SharedPagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+            totalItems={filteredProducts.length}
+            itemsPerPage={ITEMS_PER_PAGE}
+            showFirstLast={true}
+            showItemCount={true}
+            siblingCount={1}
+          />
         </div>
 
         {/* ========== ADD MODAL ========== */}
