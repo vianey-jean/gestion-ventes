@@ -9,6 +9,8 @@ export interface Product {
   sellingPrice?: number;
   profit?: number;
   reserver?: string; // "oui" si le produit est réservé
+  photos?: string[]; // URLs des photos du produit (stockées dans /uploads)
+  mainPhoto?: string; // URL de la photo principale
 }
 
 export interface ProductFormData {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -9,13 +9,23 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label';
 import { productService } from '@/service/api';
 import { Product } from '@/types';
-import { Search, Plus, Edit, Trash2, Package, Filter, ArrowUpDown, AlertTriangle, ShoppingBag, Star, TrendingUp, Eye, CheckCircle, XCircle, Clock, Sparkles, Crown, Diamond, FileDown, Gem, Award, Zap, Flame, Printer, Settings, Ban } from 'lucide-react';
+import { Search, Plus, Edit, Trash2, Package, Filter, ArrowUpDown, AlertTriangle, ShoppingBag, Star, TrendingUp, Eye, CheckCircle, XCircle, Clock, Sparkles, Crown, Diamond, FileDown, Gem, Award, Zap, Flame, Printer, Settings, Ban, Camera, ImageOff, ChevronLeft, ChevronRight, Upload, X, Image } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import ModernActionButton from '@/components/dashboard/forms/ModernActionButton';
 import ModernContainer from '@/components/dashboard/forms/ModernContainer';
 import PremiumLoading from '@/components/ui/premium-loading';
 import jsPDF from 'jspdf';
+import ProductPhotoSlideshow from './ProductPhotoSlideshow';
+import PhotoUploadSection from './PhotoUploadSection';
+
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://server-gestion-ventes.onrender.com';
+
+const getPhotoUrl = (url?: string) => {
+  if (!url) return '';
+  if (url.startsWith('http') || url.startsWith('blob') || url.startsWith('data:')) return url;
+  return `${BASE_URL}${url}`;
+};
 
 type CategoryType = 'all' | 'perruque' | 'tissage' | 'autre';
 type SortOrder = 'asc' | 'desc';
@@ -37,6 +47,13 @@ const Inventaire = () => {
   // États pour les confirmations depuis la modale de détail
   const [showEditConfirmFromDetail, setShowEditConfirmFromDetail] = useState(false);
   const [showDeleteConfirmFromDetail, setShowDeleteConfirmFromDetail] = useState(false);
+  // Photo states
+  const [slideshowProduct, setSlideshowProduct] = useState<Product | null>(null);
+  // Photo upload states for add form
+  const [addPhotos, setAddPhotos] = useState<{ files: File[]; existingUrls: string[]; mainIndex: number }>({ files: [], existingUrls: [], mainIndex: 0 });
+  // Photo upload states for edit form
+  const [editPhotos, setEditPhotos] = useState<{ files: File[]; existingUrls: string[]; mainIndex: number }>({ files: [], existingUrls: [], mainIndex: 0 });
+  const [isUploadingPhotos, setIsUploadingPhotos] = useState(false);
 
   const [newProduct, setNewProduct] = useState({
     description: '',
@@ -159,9 +176,21 @@ const Inventaire = () => {
       return;
     }
     try {
-      await productService.addProduct(newProduct);
+      const created = await productService.addProduct(newProduct);
+      // Upload photos if any
+      if (addPhotos.files.length > 0 && created?.id) {
+        setIsUploadingPhotos(true);
+        try {
+          await productService.uploadProductPhotos(created.id, addPhotos.files, addPhotos.mainIndex);
+        } catch (photoErr) {
+          console.warn('Photo upload warning:', photoErr);
+        } finally {
+          setIsUploadingPhotos(false);
+        }
+      }
       await loadProducts();
       setNewProduct({ description: '', purchasePrice: 0, quantity: 0 });
+      setAddPhotos({ files: [], existingUrls: [], mainIndex: 0 });
       setIsAddDialogOpen(false);
       toast({
         title: "🎉 Produit Premium Ajouté !",
@@ -182,8 +211,32 @@ const Inventaire = () => {
     if (!editingProduct) return;
     try {
       await productService.updateProduct(editingProduct);
+      // Handle photo changes: always use replaceProductPhotos to sync photos
+      if (editingProduct.id) {
+        const hasNewFiles = editPhotos.files.length > 0;
+        const existingPhotos = editingProduct.photos || [];
+        const keptChanged = editPhotos.existingUrls.length !== existingPhotos.length || 
+          editPhotos.existingUrls.some((url, i) => url !== existingPhotos[i]);
+        
+        if (hasNewFiles || keptChanged) {
+          setIsUploadingPhotos(true);
+          try {
+            await productService.replaceProductPhotos(
+              editingProduct.id, 
+              editPhotos.files, 
+              editPhotos.existingUrls, 
+              editPhotos.mainIndex
+            );
+          } catch (photoErr) {
+            console.warn('Photo upload warning:', photoErr);
+          } finally {
+            setIsUploadingPhotos(false);
+          }
+        }
+      }
       await loadProducts();
       setEditingProduct(null);
+      setEditPhotos({ files: [], existingUrls: [], mainIndex: 0 });
       toast({
         title: "🎨 Produit Premium Modifié !",
         description: "✨ Les modifications de votre produit de luxe ont été enregistrées avec élégance.",
@@ -457,19 +510,19 @@ const Inventaire = () => {
                 ✨ Ajouter Produit Premium
               </ModernActionButton>
             </DialogTrigger>
-            <DialogContent className="bg-gradient-to-br from-white via-green-50 to-emerald-50 backdrop-blur-xl border-0 shadow-2xl rounded-3xl">
-              <DialogHeader className="text-center space-y-4 pb-6">
-                <div className="mx-auto w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center shadow-xl">
+            <DialogContent className="bg-gradient-to-br from-slate-900 via-green-900/30 to-emerald-900/20 backdrop-blur-2xl border border-white/10 shadow-2xl rounded-3xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader className="text-center space-y-4 pb-4">
+                <div className="mx-auto w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center shadow-xl shadow-green-500/30">
                   <Plus className="h-8 w-8 text-white" />
                 </div>
-                <DialogTitle className="text-2xl font-black bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+                <DialogTitle className="text-2xl font-black bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">
                   ✨ Nouveau Produit Premium
                 </DialogTitle>
               </DialogHeader>
-              <div className="space-y-6">
+              <div className="space-y-5">
                 <div className="space-y-2">
-                  <Label htmlFor="description" className="text-sm font-bold text-gray-700 flex items-center gap-2">
-                    <Package className="h-4 w-4 text-green-600" />
+                  <Label htmlFor="description" className="text-sm font-bold text-white/80 flex items-center gap-2">
+                    <Package className="h-4 w-4 text-green-400" />
                     Description du produit
                   </Label>
                   <Input
@@ -477,12 +530,12 @@ const Inventaire = () => {
                     value={newProduct.description}
                     onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })}
                     placeholder="Entrez une description premium..."
-                    className="bg-white/80 border-2 border-green-200 focus:border-green-500 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
+                    className="bg-white/10 border border-white/20 focus:border-green-400 rounded-xl text-white placeholder:text-white/40 hover:bg-white/15 transition-all"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="price" className="text-sm font-bold text-gray-700 flex items-center gap-2">
-                    <Star className="h-4 w-4 text-yellow-500" />
+                  <Label htmlFor="price" className="text-sm font-bold text-white/80 flex items-center gap-2">
+                    <Star className="h-4 w-4 text-yellow-400" />
                     Prix (€)
                   </Label>
                   <Input
@@ -491,12 +544,12 @@ const Inventaire = () => {
                     step="0.01"
                     value={newProduct.purchasePrice}
                     onChange={(e) => setNewProduct({ ...newProduct, purchasePrice: parseFloat(e.target.value) || 0 })}
-                    className="bg-white/80 border-2 border-green-200 focus:border-green-500 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
+                    className="bg-white/10 border border-white/20 focus:border-yellow-400 rounded-xl text-white placeholder:text-white/40 hover:bg-white/15 transition-all"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="quantity" className="text-sm font-bold text-gray-700 flex items-center gap-2">
-                    <TrendingUp className="h-4 w-4 text-blue-500" />
+                  <Label htmlFor="quantity" className="text-sm font-bold text-white/80 flex items-center gap-2">
+                    <TrendingUp className="h-4 w-4 text-blue-400" />
                     Quantité en stock
                   </Label>
                   <Input
@@ -504,23 +557,33 @@ const Inventaire = () => {
                     type="number"
                     value={newProduct.quantity}
                     onChange={(e) => setNewProduct({ ...newProduct, quantity: parseInt(e.target.value) || 0 })}
-                    className="bg-white/80 border-2 border-green-200 focus:border-green-500 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
+                    className="bg-white/10 border border-white/20 focus:border-blue-400 rounded-xl text-white placeholder:text-white/40 hover:bg-white/15 transition-all"
                   />
                 </div>
-                <div className="flex gap-3 pt-6">
+                {/* Photo Upload for new product */}
+                <div className="p-4 bg-white/5 border border-white/10 rounded-2xl">
+                  <PhotoUploadSection
+                    onPhotosChange={(files, existingUrls, mainIndex) => {
+                      setAddPhotos({ files, existingUrls, mainIndex });
+                    }}
+                    maxPhotos={6}
+                  />
+                </div>
+                <div className="flex gap-3 pt-2">
                   <ModernActionButton
                     onClick={handleAddProduct}
                     gradient="green"
                     buttonSize="lg"
                     className="flex-1 btn-3d"
+                    disabled={isUploadingPhotos}
                   >
                     <CheckCircle className="h-5 w-5 mr-2" />
-                    Ajouter au Stock
+                    {isUploadingPhotos ? 'Envoi photos...' : 'Ajouter au Stock'}
                   </ModernActionButton>
                   <ModernActionButton
                     variant="outline"
                     gradient="red"
-                    onClick={() => setIsAddDialogOpen(false)}
+                    onClick={() => { setIsAddDialogOpen(false); setAddPhotos({ files: [], existingUrls: [], mainIndex: 0 }); }}
                     buttonSize="lg"
                     className="flex-1"
                   >
@@ -567,10 +630,10 @@ const Inventaire = () => {
                 </th>
                 <th className="p-3 sm:p-4 md:p-6 text-left font-black uppercase tracking-wider hidden md:table-cell">
                   <div className="flex items-center gap-2 sm:gap-3">
-                    <div className="p-1.5 sm:p-2 rounded-lg bg-gradient-to-br from-orange-500 to-red-500 shadow-lg shadow-orange-500/30">
-                      <AlertTriangle className="h-3 w-3 sm:h-4 sm:w-4 text-white" />
+                    <div className="p-1.5 sm:p-2 rounded-lg bg-gradient-to-br from-pink-500 to-rose-500 shadow-lg shadow-pink-500/30">
+                      <Camera className="h-3 w-3 sm:h-4 sm:w-4 text-white" />
                     </div>
-                    <span className="text-red-400 text-sm">Priorité</span>
+                    <span className="text-pink-400 text-sm">Photo</span>
                   </div>
                 </th>
                 <th className="p-3 sm:p-4 md:p-6 text-center font-black uppercase tracking-wider">
@@ -585,8 +648,6 @@ const Inventaire = () => {
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
               {currentProducts.map((product, index) => {
-                const priority = getPriority(product.quantity);
-                const PriorityIcon = priority.icon;
                 return (
                   <tr 
                     key={product.id} 
@@ -654,14 +715,35 @@ const Inventaire = () => {
                         </div>
                       </div>
                     </td>
-                    <td className="p-3 sm:p-4 md:p-6 hidden md:table-cell">
-                      <Badge className={cn(
-                        "font-bold text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl shadow-lg flex items-center gap-2 w-fit transition-all duration-300 group-hover:scale-105",
-                        priority.color
-                      )}>
-                        <PriorityIcon className="h-3 w-3 sm:h-4 sm:w-4" />
-                        {priority.label}
-                      </Badge>
+                    <td className="p-3 sm:p-4 md:p-6 hidden md:table-cell" onClick={(e) => e.stopPropagation()}>
+                      {/* Photo principale ou placeholder */}
+                      {(product.mainPhoto || (product.photos && product.photos.length > 0)) ? (
+                        <button
+                          onClick={() => setSlideshowProduct(product)}
+                          className="relative w-14 h-14 rounded-xl overflow-hidden border-2 border-purple-400/50 hover:border-purple-400 shadow-lg shadow-purple-500/20 hover:shadow-xl hover:shadow-purple-500/40 hover:scale-105 transition-all duration-300 group/photo"
+                          title="Voir toutes les photos"
+                        >
+                          <img
+                            src={getPhotoUrl(product.mainPhoto || (product.photos && product.photos[0]) || '')}
+                            alt={product.description}
+                            className="w-full h-full object-cover"
+                            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                          />
+                          {/* Photo count badge */}
+                          {product.photos && product.photos.length > 1 && (
+                            <div className="absolute bottom-0 right-0 bg-black/70 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-tl-lg">
+                              +{product.photos.length - 1}
+                            </div>
+                          )}
+                          <div className="absolute inset-0 bg-black/30 opacity-0 group-hover/photo:opacity-100 transition-opacity flex items-center justify-center">
+                            <Eye className="h-4 w-4 text-white" />
+                          </div>
+                        </button>
+                      ) : (
+                        <div className="w-14 h-14 rounded-xl border-2 border-dashed border-white/20 bg-white/5 flex items-center justify-center">
+                          <ImageOff className="h-5 w-5 text-white/20" />
+                        </div>
+                      )}
                     </td>
                     <td className="p-2 sm:p-4 md:p-6" onClick={(e) => e.stopPropagation()}>
                       <div className="flex flex-wrap justify-center gap-1.5 sm:gap-2">
@@ -879,32 +961,32 @@ const Inventaire = () => {
 
       {/* Dialog de modification Premium */}
       {editingProduct && (
-        <Dialog open={!!editingProduct} onOpenChange={() => setEditingProduct(null)}>
-          <DialogContent className="bg-gradient-to-br from-white via-blue-50 to-indigo-50 backdrop-blur-xl border-0 shadow-2xl rounded-3xl">
-            <DialogHeader className="text-center space-y-4 pb-6">
-              <div className="mx-auto w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-xl">
+        <Dialog open={!!editingProduct} onOpenChange={() => { setEditingProduct(null); setEditPhotos({ files: [], existingUrls: [], mainIndex: 0 }); }}>
+          <DialogContent className="bg-gradient-to-br from-slate-900 via-blue-900/40 to-indigo-900/30 backdrop-blur-2xl border border-white/10 shadow-2xl rounded-3xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader className="text-center space-y-4 pb-4">
+              <div className="mx-auto w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-xl shadow-blue-500/30">
                 <Edit className="h-8 w-8 text-white" />
               </div>
-              <DialogTitle className="text-2xl font-black bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+              <DialogTitle className="text-2xl font-black bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">
                 ✨ Modifier Produit Premium
               </DialogTitle>
             </DialogHeader>
-            <div className="space-y-6">
+            <div className="space-y-5">
               <div className="space-y-2">
-                <Label htmlFor="edit-description" className="text-sm font-bold text-gray-700 flex items-center gap-2">
-                  <Package className="h-4 w-4 text-blue-600" />
+                <Label htmlFor="edit-description" className="text-sm font-bold text-white/80 flex items-center gap-2">
+                  <Package className="h-4 w-4 text-blue-400" />
                   Description du produit
                 </Label>
                 <Input
                   id="edit-description"
                   value={editingProduct.description}
                   onChange={(e) => setEditingProduct({ ...editingProduct, description: e.target.value })}
-                  className="bg-white/80 border-2 border-blue-200 focus:border-blue-500 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
+                  className="bg-white/10 border border-white/20 focus:border-blue-400 rounded-xl text-white placeholder:text-white/40 hover:bg-white/15 transition-all"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="edit-price" className="text-sm font-bold text-gray-700 flex items-center gap-2">
-                  <Star className="h-4 w-4 text-yellow-500" />
+                <Label htmlFor="edit-price" className="text-sm font-bold text-white/80 flex items-center gap-2">
+                  <Star className="h-4 w-4 text-yellow-400" />
                   Prix (€)
                 </Label>
                 <Input
@@ -913,12 +995,12 @@ const Inventaire = () => {
                   step="0.01"
                   value={editingProduct.purchasePrice}
                   onChange={(e) => setEditingProduct({ ...editingProduct, purchasePrice: parseFloat(e.target.value) || 0 })}
-                  className="bg-white/80 border-2 border-blue-200 focus:border-blue-500 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
+                  className="bg-white/10 border border-white/20 focus:border-yellow-400 rounded-xl text-white placeholder:text-white/40 hover:bg-white/15 transition-all"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="edit-quantity" className="text-sm font-bold text-gray-700 flex items-center gap-2">
-                  <TrendingUp className="h-4 w-4 text-indigo-500" />
+                <Label htmlFor="edit-quantity" className="text-sm font-bold text-white/80 flex items-center gap-2">
+                  <TrendingUp className="h-4 w-4 text-indigo-400" />
                   Quantité en stock
                 </Label>
                 <Input
@@ -926,23 +1008,38 @@ const Inventaire = () => {
                   type="number"
                   value={editingProduct.quantity}
                   onChange={(e) => setEditingProduct({ ...editingProduct, quantity: parseInt(e.target.value) || 0 })}
-                  className="bg-white/80 border-2 border-blue-200 focus:border-blue-500 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
+                  className="bg-white/10 border border-white/20 focus:border-indigo-400 rounded-xl text-white placeholder:text-white/40 hover:bg-white/15 transition-all"
                 />
               </div>
-              <div className="flex gap-3 pt-6">
+
+              {/* Photo Upload Section */}
+              <div className="p-4 bg-white/5 border border-white/10 rounded-2xl">
+                <PhotoUploadSection
+                  existingPhotos={editingProduct.photos || []}
+                  existingMainPhoto={editingProduct.mainPhoto}
+                  baseUrl={BASE_URL}
+                  onPhotosChange={(files, existingUrls, mainIndex) => {
+                    setEditPhotos({ files, existingUrls, mainIndex });
+                  }}
+                  maxPhotos={6}
+                />
+              </div>
+
+              <div className="flex gap-3 pt-2">
                 <ModernActionButton
                   onClick={handleEditProduct}
                   gradient="blue"
                   buttonSize="lg"
                   className="flex-1 btn-3d"
+                  disabled={isUploadingPhotos}
                 >
                   <CheckCircle className="h-5 w-5 mr-2" />
-                  Sauvegarder
+                  {isUploadingPhotos ? 'Envoi photos...' : 'Sauvegarder'}
                 </ModernActionButton>
                 <ModernActionButton
                   variant="outline"
                   gradient="red"
-                  onClick={() => setEditingProduct(null)}
+                  onClick={() => { setEditingProduct(null); setEditPhotos({ files: [], existingUrls: [], mainIndex: 0 }); }}
                   buttonSize="lg"
                   className="flex-1"
                 >
@@ -1004,21 +1101,44 @@ const Inventaire = () => {
                     </p>
                   </div>
                 </div>
-                <div className="p-4 bg-white/80 rounded-xl border-2 border-indigo-200">
-                  <Label className="text-sm font-bold text-gray-700 flex items-center gap-2 mb-2">
-                    <AlertTriangle className="h-4 w-4 text-indigo-500" />
-                    Statut
+                {/* Photo principale */}
+                <div className="p-4 bg-white/80 rounded-xl border-2 border-pink-200">
+                  <Label className="text-sm font-bold text-gray-700 flex items-center gap-2 mb-3">
+                    <Camera className="h-4 w-4 text-pink-500" />
+                    Photo principale
+                    {viewingProduct.photos && viewingProduct.photos.length > 0 && (
+                      <span className="text-xs text-gray-400 font-normal">({viewingProduct.photos.length} photo{viewingProduct.photos.length > 1 ? 's' : ''})</span>
+                    )}
                   </Label>
-                  {(() => {
-                    const priority = getPriority(viewingProduct.quantity);
-                    const PriorityIcon = priority.icon;
-                    return (
-                      <Badge className={cn("font-bold text-sm px-4 py-2 rounded-xl shadow-lg flex items-center gap-2 w-fit", priority.color)}>
-                        <PriorityIcon className="h-4 w-4" />
-                        {priority.label}
-                      </Badge>
-                    );
-                  })()}
+                  {(viewingProduct.mainPhoto || (viewingProduct.photos && viewingProduct.photos.length > 0)) ? (
+                    <button
+                      onClick={() => { setViewingProduct(null); setSlideshowProduct(viewingProduct); }}
+                      className="relative w-full h-40 rounded-xl overflow-hidden border-2 border-pink-200 hover:border-pink-400 transition-all hover:shadow-lg group/photo"
+                      title="Voir toutes les photos"
+                    >
+                      <img
+                        src={getPhotoUrl(viewingProduct.mainPhoto || (viewingProduct.photos?.[0] ?? ''))}
+                        alt={viewingProduct.description}
+                        className="w-full h-full object-cover group-hover/photo:scale-105 transition-transform duration-300"
+                      />
+                      <div className="absolute inset-0 bg-black/30 opacity-0 group-hover/photo:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                        <Eye className="h-6 w-6 text-white" />
+                        <span className="text-white font-bold text-sm">Voir toutes les photos</span>
+                      </div>
+                      {viewingProduct.photos && viewingProduct.photos.length > 1 && (
+                        <div className="absolute bottom-2 right-2 flex gap-1">
+                          {viewingProduct.photos.slice(0, 4).map((_, i) => (
+                            <div key={i} className={cn("w-2 h-2 rounded-full", i === 0 ? "bg-white" : "bg-white/50")} />
+                          ))}
+                        </div>
+                      )}
+                    </button>
+                  ) : (
+                    <div className="w-full h-28 rounded-xl border-2 border-dashed border-pink-200 bg-pink-50/50 flex flex-col items-center justify-center gap-2">
+                      <ImageOff className="h-8 w-8 text-pink-300" />
+                      <p className="text-xs text-pink-400 font-medium">Aucune photo</p>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -1281,6 +1401,18 @@ const Inventaire = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Product Photo Slideshow Modal */}
+      {slideshowProduct && (
+        <ProductPhotoSlideshow
+          photos={slideshowProduct.photos || []}
+          mainPhoto={slideshowProduct.mainPhoto}
+          productName={slideshowProduct.description}
+          isOpen={!!slideshowProduct}
+          onClose={() => setSlideshowProduct(null)}
+          baseUrl={BASE_URL}
+        />
+      )}
     </div>
   );
 };
