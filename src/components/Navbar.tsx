@@ -107,27 +107,7 @@
                    </motion.div>
                   </Link>
 
-                  <Link to="/clients">
-                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                      <Button variant="ghost" className="relative rounded-2xl hover:bg-gradient-to-r hover:from-violet-500/10 hover:to-purple-500/10 transition-all duration-300 group overflow-hidden px-4 py-2 mirror-shine">
-                        <div className="flex items-center justify-center w-8 h-8 rounded-xl bg-gradient-to-br from-violet-500 to-purple-500 mr-2 shadow-lg shadow-violet-500/30">
-                          <Users className="h-4 w-4 text-white" />
-                        </div>
-                        <span className="font-bold relative z-10">Clients</span>
-                      </Button>
-                    </motion.div>
-                  </Link>
-
-                  <Link to="/produits">
-                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                      <Button variant="ghost" className="relative rounded-2xl hover:bg-gradient-to-r hover:from-pink-500/10 hover:to-rose-500/10 transition-all duration-300 group overflow-hidden px-4 py-2 mirror-shine">
-                        <div className="flex items-center justify-center w-8 h-8 rounded-xl bg-gradient-to-br from-pink-500 to-rose-500 mr-2 shadow-lg shadow-pink-500/30">
-                          <Package className="h-4 w-4 text-white" />
-                        </div>
-                        <span className="font-bold relative z-10">Produits</span>
-                      </Button>
-                    </motion.div>
-                  </Link>
+                
                 </>
               )}
 
