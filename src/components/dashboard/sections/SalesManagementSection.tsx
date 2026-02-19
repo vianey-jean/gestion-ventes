@@ -54,20 +54,20 @@ const SalesManagementSection: React.FC<SalesManagementSectionProps> = ({
   };
 
   const actions = [
-   {
-  icon: CirclePlus,
-  label: 'Ajouter un produit',
-  onClick: () => setAddProductDialogOpen(true),
-  gradient: 'red' as const,
-  'aria-label': 'Ouvrir le formulaire d\'ajout de produit'
-},
-{
-  icon: PenLine,
-  label: 'Modifier un produit',
-  onClick: () => setEditProductDialogOpen(true),
-  gradient: 'blue' as const,
-  'aria-label': 'Ouvrir le formulaire de modification de produit'
-},
+//    {
+//   icon: CirclePlus,
+//   label: 'Ajouter un produit',
+//   onClick: () => setAddProductDialogOpen(true),
+//   gradient: 'red' as const,
+//   'aria-label': 'Ouvrir le formulaire d\'ajout de produit'
+// },
+// {
+//   icon: PenLine,
+//   label: 'Modifier un produit',
+//   onClick: () => setEditProductDialogOpen(true),
+//   gradient: 'blue' as const,
+//   'aria-label': 'Ouvrir le formulaire de modification de produit'
+// },
 {
   icon: Layers,
   label: 'Ajouter vente multi-produits',
