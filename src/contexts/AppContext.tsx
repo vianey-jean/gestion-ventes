@@ -71,7 +71,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const checkAndUpdateCurrentMonth = useCallback(() => {
     const newDate = getCurrentMonthYear();
     if (newDate.month !== currentDate.month || newDate.year !== currentDate.year) {
-      // Changement de mois détecté
+      console.log(`Changement de mois détecté: ${currentDate.month}/${currentDate.year} -> ${newDate.month}/${newDate.year}`);
       setCurrentDate(newDate);
       // Vider les ventes existantes car on change de mois
       setSales([]);
@@ -90,11 +90,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   // Fonctions pour la compatibilité (même si on ne permet plus la sélection manuelle)
   const setSelectedMonth = (month: number) => {
-    // Ignoré - utilisation du mois en cours uniquement
+    console.log('setSelectedMonth appelé mais ignoré - utilisation du mois en cours uniquement');
   };
   
-  const setSelectedYear = (_year: number) => {
-    // Ignoré - utilisation de l'année en cours uniquement
+  const setSelectedYear = (year: number) => {
+    console.log('setSelectedYear appelé mais ignoré - utilisation de l\'année en cours uniquement');
   };
 
   // OPTIMIZED: Fast product fetching
@@ -104,8 +104,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     }
     
     try {
+      const startTime = performance.now();
       const fetchedProducts = await productService.getProducts();
       setProducts(fetchedProducts);
+      const endTime = performance.now();
+      console.log(`⚡ Products loaded in ${Math.round(endTime - startTime)}ms (${fetchedProducts.length} items)`);
     } catch (err: any) {
       setError(err.message || 'Failed to fetch products');
       toast({
@@ -127,8 +130,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     const yearToFetch = currentDate.year;
     
     try {
+      const startTime = performance.now();
       const fetchedSales = await salesService.getSales(monthToFetch, yearToFetch);
       setSales(fetchedSales);
+      const endTime = performance.now();
+      console.log(`⚡ Sales loaded in ${Math.round(endTime - startTime)}ms (${fetchedSales.length} items)`);
     } catch (err: any) {
       setError(err.message || 'Failed to fetch sales');
       toast({
@@ -147,8 +153,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     }
     
     try {
+      const startTime = performance.now();
       const fetchedAllSales = await salesService.getAllSales();
       setAllSales(fetchedAllSales);
+      const endTime = performance.now();
+      console.log(`⚡ All sales loaded in ${Math.round(endTime - startTime)}ms (${fetchedAllSales.length} items)`);
     } catch (err: any) {
       setError(err.message || 'Failed to fetch all sales');
       toast({
@@ -169,6 +178,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     }
     
     setLoading(true);
+    const startTime = performance.now();
     
     try {
       // PARALLEL: Fetch all data simultaneously for ultra-fast loading
@@ -177,8 +187,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         fetchSales(),
         fetchAllSales()
       ]);
-    } catch {
-      // Refresh error handled silently
+      
+      const endTime = performance.now();
+      console.log(`⚡ Full refresh completed in ${Math.round(endTime - startTime)}ms`);
+    } catch (error) {
+      console.error('Refresh error:', error);
     } finally {
       setLoading(false);
     }
@@ -189,15 +202,18 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     if (isAuthenticated && !authLoading) {
       const loadInitialData = async () => {
         setLoading(true);
+        const startTime = performance.now();
         
         // PARALLEL: Load all data simultaneously
         await Promise.all([
           fetchProducts(),
           fetchSales(),
           fetchAllSales()
-      ]);
-      
-      setLoading(false);
+        ]);
+        
+        const endTime = performance.now();
+        console.log(`⚡ Initial data loaded in ${Math.round(endTime - startTime)}ms`);
+        setLoading(false);
       };
       
       loadInitialData();
@@ -217,7 +233,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       return products.filter(product => 
         product.description.toLowerCase().includes(query.toLowerCase())
       );
-    } catch {
+    } catch (error) {
+      console.error('Error searching products:', error);
       return [];
     }
   };
@@ -228,13 +245,15 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       // Implementation would depend on your API
       // For now, this is a placeholder that returns success
       return true;
-    } catch {
+    } catch (error) {
+      console.error('Error exporting month:', error);
       return false;
     }
   };
 
   const addProduct = async (productData: Omit<Product, 'id'>): Promise<Product | null> => {
     if (!isAuthenticated) {
+      console.log('User not authenticated, cannot add product');
       return null;
     }
     
@@ -245,13 +264,15 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         return newProduct;
       }
       return null;
-    } catch {
+    } catch (error) {
+      console.error('Error adding product:', error);
       return null;
     }
   };
 
   const updateProduct = async (product: Product): Promise<Product | null> => {
     if (!isAuthenticated) {
+      console.log('User not authenticated, cannot update product');
       return null;
     }
     
@@ -264,13 +285,15 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         return updatedProduct;
       }
       return null;
-    } catch {
+    } catch (error) {
+      console.error('Error updating product:', error);
       return null;
     }
   };
   
   const addSale = async (saleData: Omit<Sale, 'id'>): Promise<Sale | null> => {
     if (!isAuthenticated) {
+      console.log('User not authenticated, cannot add sale');
       return null;
     }
     
@@ -281,12 +304,15 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       if (result && typeof result === 'object' && 'id' in result) {
         // Check if the new sale belongs to the current month/year
         const saleDate = new Date(result.date);
-        const saleMonth = saleDate.getMonth() + 1;
+        const saleMonth = saleDate.getMonth() + 1; // Convert from 0-based to 1-based
         const saleYear = saleDate.getFullYear();
+        
+        console.log(`New sale added for ${saleMonth}/${saleYear}, current month is ${currentDate.month}/${currentDate.year}`);
         
         if (saleMonth === currentDate.month && saleYear === currentDate.year) {
           setSales(prevSales => [...prevSales, result]);
         } else {
+          console.log("Sale added but for a different month than current");
           toast({
             title: "Vente ajoutée",
             description: `La vente a été ajoutée pour le mois de ${saleMonth}/${saleYear}, différent du mois en cours.`,
@@ -300,13 +326,15 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       }
       
       return null;
-    } catch {
+    } catch (error) {
+      console.error('Error adding sale:', error);
       return null;
     }
   };
 
   const updateSale = async (sale: Sale): Promise<Sale | null> => {
     if (!isAuthenticated) {
+      console.log('User not authenticated, cannot update sale');
       return null;
     }
     
@@ -328,13 +356,15 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       }
       
       return null;
-    } catch {
+    } catch (error) {
+      console.error('Error updating sale:', error);
       return null;
     }
   };
 
   const deleteSale = async (id: string): Promise<boolean> => {
     if (!isAuthenticated) {
+      console.log('User not authenticated, cannot delete sale');
       return false;
     }
     
@@ -346,7 +376,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         return true;
       }
       return false;
-    } catch {
+    } catch (error) {
+      console.error('Error deleting sale:', error);
       return false;
     }
   };

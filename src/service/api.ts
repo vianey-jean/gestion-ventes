@@ -48,7 +48,10 @@ const createApiInstance = (): AxiosInstance => {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         window.location.href = '/login';
+      } else if (error.code !== 'ERR_NETWORK') {
+        console.error('API Error:', error);
       }
+      
       return Promise.reject(error);
     }
   );
@@ -135,23 +138,51 @@ export const authService = {
 // Products API
 export const productService = {
   async getProducts(): Promise<Product[]> {
-    const response: AxiosResponse<Product[]> = await api.get('/api/products');
-    return response.data;
+    try {
+      console.log('📦 Fetching products from API...');
+      const response: AxiosResponse<Product[]> = await api.get('/api/products');
+      console.log(`✅ Retrieved ${response.data.length} products from API`);
+      return response.data;
+    } catch (error) {
+      console.error('❌ Error fetching products:', error);
+      throw error;
+    }
   },
 
   async addProduct(product: Omit<Product, 'id'>): Promise<Product> {
-    const response: AxiosResponse<Product> = await api.post('/api/products', product);
-    return response.data;
+    try {
+      console.log('📝 Adding new product:', product);
+      const response: AxiosResponse<Product> = await api.post('/api/products', product);
+      console.log('✅ Product added successfully with code:', response.data.code, response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ Error adding product:', error);
+      throw error;
+    }
   },
 
   async updateProduct(product: Product): Promise<Product> {
-    const response: AxiosResponse<Product> = await api.put(`/api/products/${product.id}`, product);
-    return response.data;
+    try {
+      console.log('📝 Updating product:', product);
+      const response: AxiosResponse<Product> = await api.put(`/api/products/${product.id}`, product);
+      console.log('✅ Product updated successfully:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ Error updating product:', error);
+      throw error;
+    }
   },
 
   async deleteProduct(id: string): Promise<boolean> {
-    await api.delete(`/api/products/${id}`);
-    return true;
+    try {
+      console.log('🗑️ Deleting product with ID:', id);
+      await api.delete(`/api/products/${id}`);
+      console.log('✅ Product deleted successfully');
+      return true;
+    } catch (error) {
+      console.error('❌ Error deleting product:', error);
+      throw error;
+    }
   },
 
   // Upload photos for a product (up to 6)
@@ -205,8 +236,15 @@ export const productService = {
 
   // Générer les codes pour les produits existants qui n'en ont pas
   async generateCodesForExistingProducts(): Promise<{ message: string; updatedCount: number }> {
-    const response = await api.post('/api/products/generate-codes');
-    return response.data;
+    try {
+      console.log('🔧 Generating codes for existing products...');
+      const response = await api.post('/api/products/generate-codes');
+      console.log('✅ Codes generated:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ Error generating codes:', error);
+      throw error;
+    }
   },
 };
 
@@ -349,32 +387,61 @@ export const pretProduitService = {
 // Benefice Service
 export const beneficeService = {
   async getBenefices(): Promise<any[]> {
-    const response = await api.get('/api/benefices');
-    return response.data;
+    try {
+      console.log('📊 Fetching benefices from API...');
+      const response = await api.get('/api/benefices');
+      console.log(`✅ Retrieved ${response.data.length} benefices from API`);
+      return response.data;
+    } catch (error) {
+      console.error('❌ Error fetching benefices:', error);
+      throw error;
+    }
   },
 
   async getBeneficeByProductId(productId: string): Promise<any> {
     try {
       const response = await api.get(`/api/benefices/product/${productId}`);
       return response.data;
-    } catch {
+    } catch (error) {
+      console.log('Aucune donnée de bénéfice existante pour ce produit');
       return null;
     }
   },
 
   async createBenefice(beneficeData: any): Promise<any> {
-    const response = await api.post('/api/benefices', beneficeData);
-    return response.data;
+    try {
+      console.log('📝 Adding new benefice:', beneficeData);
+      const response = await api.post('/api/benefices', beneficeData);
+      console.log('✅ Benefice added successfully:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ Error adding benefice:', error);
+      throw error;
+    }
   },
 
   async updateBenefice(id: string, beneficeData: any): Promise<any> {
-    const response = await api.put(`/api/benefices/${id}`, beneficeData);
-    return response.data;
+    try {
+      console.log('📝 Updating benefice:', beneficeData);
+      const response = await api.put(`/api/benefices/${id}`, beneficeData);
+      console.log('✅ Benefice updated successfully:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ Error updating benefice:', error);
+      throw error;
+    }
   },
 
   async deleteBenefice(id: string): Promise<boolean> {
-    await api.delete(`/api/benefices/${id}`);
-    return true;
+    try {
+      console.log('🗑️ Deleting benefice with ID:', id);
+      await api.delete(`/api/benefices/${id}`);
+      console.log('✅ Benefice deleted successfully');
+      return true;
+    } catch (error) {
+      console.error('❌ Error deleting benefice:', error);
+      throw error;
+    }
   },
 };
 

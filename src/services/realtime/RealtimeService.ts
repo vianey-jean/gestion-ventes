@@ -148,6 +148,7 @@ class RealtimeService {
     }
 
     this.syncInProgress = true;
+    const startTime = performance.now();
 
     try {
       const currentDate = new Date();
@@ -190,9 +191,12 @@ class RealtimeService {
       this.lastSyncTime = new Date();
       this.notifyListeners(syncData);
       
+      const endTime = performance.now();
+      console.log(`⚡ Sync completed in ${Math.round(endTime - startTime)}ms`);
+      
       return syncData;
-    } catch {
-      return null;
+    } catch (error) {
+      console.error('❌ Sync error:', error);
       return null;
     } finally {
       this.syncInProgress = false;
@@ -217,8 +221,8 @@ class RealtimeService {
     this.listeners.forEach(callback => {
       try {
         callback(data);
-      } catch {
-        // Listener error handled silently
+      } catch (error) {
+        console.error('Listener error:', error);
       }
     });
   }
@@ -227,8 +231,8 @@ class RealtimeService {
     this.syncListeners.forEach(callback => {
       try {
         callback(event);
-      } catch {
-        // Sync listener error handled silently
+      } catch (error) {
+        console.error('Sync listener error:', error);
       }
     });
   }
@@ -244,8 +248,8 @@ class RealtimeService {
   async forceSync(): Promise<void> {
     try {
       await api.post('/api/sync/force-sync');
-    } catch {
-      // Force sync failed, use local sync
+    } catch (error) {
+      console.error('Force sync failed, using local sync');
       await this.syncCurrentMonthData();
     }
   }
