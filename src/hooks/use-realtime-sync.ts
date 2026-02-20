@@ -26,7 +26,6 @@ export const setFormProtection = (active: boolean) => {
   if (active) {
     formProtectionTimeout = setTimeout(() => {
       globalFormProtection = false;
-      console.log('Protection formulaire désactivée automatiquement après timeout');
     }, 2 * 60 * 60 * 1000); // 2 heures
   }
 };
@@ -45,7 +44,6 @@ export const useRealtimeSync = (options: RealtimeSyncOptions = {}) => {
   const debouncedSync = useCallback(async () => {
     // NE PAS synchroniser si un formulaire est actif
     if (globalFormProtection) {
-      console.log('Synchronisation bloquée - formulaire actif');
       return;
     }
     
@@ -59,7 +57,6 @@ export const useRealtimeSync = (options: RealtimeSyncOptions = {}) => {
     debounceRef.current = setTimeout(async () => {
       // Double vérification avant la sync
       if (globalFormProtection) {
-        console.log('Synchronisation annulée - formulaire actif');
         return;
       }
       
@@ -70,9 +67,8 @@ export const useRealtimeSync = (options: RealtimeSyncOptions = {}) => {
         
         lastSyncRef.current = now;
         await refreshData();
-        console.log('Synchronisation automatique effectuée');
-      } catch (error) {
-        console.error('Erreur lors de la synchronisation:', error);
+      } catch {
+        // Sync error handled silently
       }
     }, debounceMs);
   }, [enabled, refreshData, debounceMs]);
@@ -81,7 +77,6 @@ export const useRealtimeSync = (options: RealtimeSyncOptions = {}) => {
   const forceSync = useCallback(async () => {
     // NE PAS synchroniser si un formulaire est actif
     if (globalFormProtection) {
-      console.log('Synchronisation forcée bloquée - formulaire actif');
       return;
     }
     
@@ -90,9 +85,8 @@ export const useRealtimeSync = (options: RealtimeSyncOptions = {}) => {
     try {
       await refreshData();
       lastSyncRef.current = Date.now();
-      console.log('Synchronisation forcée effectuée');
-    } catch (error) {
-      console.error('Erreur lors de la synchronisation forcée:', error);
+    } catch {
+      // Force sync error handled silently
     }
   }, [refreshData]);
 

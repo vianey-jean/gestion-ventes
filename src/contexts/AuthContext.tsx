@@ -58,8 +58,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setIsVerified(false);
         return false;
       }
-    } catch (error) {
-      console.error('Session verification failed:', error);
+    } catch {
+      // Session verification failed - clear invalid session
       // Clear invalid session
       localStorage.removeItem('token');
       localStorage.removeItem('user');
@@ -94,8 +94,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             variant: "destructive",
           });
         }
-      } catch (error) {
-        console.error('Auth initialization error:', error);
+      } catch {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
       } finally {
@@ -188,11 +187,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         acceptTerms: data.acceptTerms,
       };
       
-      console.log('📝 Envoi des données d\'inscription au backend:', { ...registerData, password: '***', confirmPassword: '***' });
-      
       const result = await authService.register(registerData);
       
-      console.log('✅ Réponse du backend:', result);
       
       if (result && result.user) {
         // Ne pas stocker la session après inscription - l'utilisateur doit se connecter
@@ -204,8 +200,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(null);
         setToken(null);
         setIsVerified(false);
-        
-        console.log('✅ Compte créé avec succès, redirection vers login');
         return true;
       } else {
         toast({
@@ -216,7 +210,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return false;
       }
     } catch (error: any) {
-      console.error('❌ Erreur lors de l\'inscription:', error);
 
       const apiData = error?.response?.data;
       const apiDetails = Array.isArray(apiData?.details) ? apiData.details.join(' • ') : null;
