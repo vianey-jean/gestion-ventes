@@ -29,6 +29,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import PhotoUploadSection from '@/components/dashboard/PhotoUploadSection';
+import EditProductForm from '@/components/dashboard/EditProductForm';
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://server-gestion-ventes.onrender.com';
 
@@ -45,6 +46,7 @@ const ProduitsPage: React.FC = () => {
 
   // Modals
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const [isEditProductOpen, setIsEditProductOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isViewOpen, setIsViewOpen] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
@@ -330,16 +332,30 @@ const ProduitsPage: React.FC = () => {
               </AnimatePresence> */}
             </div>
 
-            {/* Add button */}
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Button
-                onClick={() => setIsAddOpen(true)}
-                className="h-14 px-6 rounded-2xl font-bold bg-gradient-to-r from-emerald-500 via-green-600 to-teal-600 hover:from-emerald-600 hover:via-green-700 hover:to-teal-700 text-white shadow-xl shadow-green-500/25 hover:shadow-2xl hover:shadow-green-500/40 transition-all duration-300 border-0"
-              >
-                <Plus className="h-5 w-5 mr-2" />
-                Ajouter Produit
-              </Button>
-            </motion.div>
+            {/* Action buttons */}
+            <div className="flex flex-col sm:flex-row gap-3">
+              {/* Add button */}
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Button
+                  onClick={() => setIsAddOpen(true)}
+                  className="h-14 px-6 rounded-2xl font-bold bg-gradient-to-r from-emerald-500 via-green-600 to-teal-600 hover:from-emerald-600 hover:via-green-700 hover:to-teal-700 text-white shadow-xl shadow-green-500/25 hover:shadow-2xl hover:shadow-green-500/40 transition-all duration-300 border-0 w-full sm:w-auto"
+                >
+                  <Plus className="h-5 w-5 mr-2" />
+                  Ajouter Produit
+                </Button>
+              </motion.div>
+
+              {/* Edit button */}
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Button
+                  onClick={() => setIsEditProductOpen(true)}
+                  className="h-14 px-6 rounded-2xl font-bold bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 hover:from-blue-600 hover:via-blue-700 hover:to-indigo-700 text-white shadow-xl shadow-blue-500/25 hover:shadow-2xl hover:shadow-blue-500/40 transition-all duration-300 border-0 w-full sm:w-auto"
+                >
+                  <Pencil className="h-5 w-5 mr-2" />
+                  Modifier Produit
+                </Button>
+              </motion.div>
+            </div>
           </motion.div>
 
           {/* Filters */}
@@ -852,6 +868,12 @@ const ProduitsPage: React.FC = () => {
           </Dialog>
         )}
       </div>
+
+      {/* Edit Product Modal */}
+      <EditProductForm
+        isOpen={isEditProductOpen}
+        onClose={() => setIsEditProductOpen(false)}
+      />
     </Layout>
   );
 };
