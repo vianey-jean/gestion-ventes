@@ -6,7 +6,7 @@
  * Centralise toute la logique de calcul des données de tendances :
  * - Filtrage des ventes (exclusion des avances)
  * - Calcul des totaux (revenus, bénéfices, quantités)
- * - Analyse par produit, catégorie, mois
+ * - Analyse par produit, catégorie, mois, client
  * - Recommandations d'achat (ROI)
  * - Analyse du stock critique
  * - Ventes quotidiennes du mois en cours
@@ -20,13 +20,9 @@ import { useMemo } from 'react';
 // Fonctions utilitaires
 // ============================================================================
 
-/**
- * Détermine la catégorie d'un produit à partir de sa description.
- * Les avances sont exclues (retourne null).
- */
+/** Détermine la catégorie d'un produit. Avances exclues (null). */
 export const getProductCategory = (description: string | undefined | null): string | null => {
   if (!description || typeof description !== 'string') return null;
-  
   const desc = description.toLowerCase();
   if (desc.includes('avance')) return null;
   if (desc.includes('tissage')) return 'Tissages';
@@ -35,30 +31,19 @@ export const getProductCategory = (description: string | undefined | null): stri
   return 'Autres';
 };
 
-/**
- * Calcule les valeurs financières d'une vente (multi-produit ou single).
- */
+/** Calcule les valeurs financières d'une vente (multi-produit ou single). */
 export const getSaleValues = (sale: any) => {
-  // Nouveau format multi-produits
   if (sale.products && Array.isArray(sale.products) && sale.products.length > 0) {
     let revenue = 0, quantity = 0, profit = 0;
-    
-    const validProducts = sale.products.filter((p: any) => getProductCategory(p.description) !== null);
-    validProducts.forEach((product: any) => {
+    sale.products.filter((p: any) => getProductCategory(p.description) !== null).forEach((product: any) => {
       revenue += product.sellingPrice;
       quantity += product.quantitySold;
       profit += product.profit || 0;
     });
-    
     return { revenue, quantity, profit };
   }
-  // Ancien format single-produit
   if (sale.sellingPrice !== undefined && sale.quantitySold !== undefined) {
-    return {
-      revenue: sale.sellingPrice,
-      quantity: sale.quantitySold,
-      profit: sale.profit || 0,
-    };
+    return { revenue: sale.sellingPrice, quantity: sale.quantitySold, profit: sale.profit || 0 };
   }
   return { revenue: 0, quantity: 0, profit: 0 };
 };
@@ -81,7 +66,6 @@ export const useTendancesData = (allSales: any[], products: any[]) => {
   /** Analyse du stock critique */
   const stockAnalysis = useMemo(() => {
     const lowStockProducts = products.filter(product => product.quantity <= 10);
-    
     const recommendations = lowStockProducts.map(product => {
       const productSales = filteredSales.filter(sale => {
         if (sale.products && Array.isArray(sale.products)) {
@@ -89,7 +73,6 @@ export const useTendancesData = (allSales: any[], products: any[]) => {
         }
         return sale.productId === product.id;
       });
-      
       let totalSold = 0, totalProfit = 0;
       productSales.forEach(sale => {
         if (sale.products && Array.isArray(sale.products)) {
@@ -102,47 +85,40 @@ export const useTendancesData = (allSales: any[], products: any[]) => {
           totalProfit += sale.profit || 0;
         }
       });
-      
       const averageProfit = productSales.length > 0 ? totalProfit / productSales.length : 0;
       return { ...product, currentStock: product.quantity, totalSold, averageProfit, priority: product.quantity <= 2 ? 'URGENT' : product.quantity <= 5 ? 'ÉLEVÉE' : 'MOYENNE' };
     }).sort((a, b) => b.averageProfit - a.averageProfit);
-
     return { recommendations };
   }, [products, filteredSales]);
 
   /** Ventes quotidiennes du mois en cours */
   const dailySalesAnalysis = useMemo(() => {
     const dailySales: Record<number, any> = {};
-    const currentMonth = new Date();
-    const currentMonthKey = `${currentMonth.getFullYear()}-${String(currentMonth.getMonth() + 1).padStart(2, '0')}`;
-
+    const now = new Date();
+    const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
     filteredSales.forEach(sale => {
       const date = new Date(sale.date);
       const day = date.getDate();
       const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-      
       if (monthKey === currentMonthKey) {
         if (!dailySales[day]) dailySales[day] = { jour: day, ventes: 0, benefice: 0, quantite: 0 };
-        const saleValues = getSaleValues(sale);
-        dailySales[day].ventes += saleValues.revenue;
-        dailySales[day].benefice += saleValues.profit;
-        dailySales[day].quantite += saleValues.quantity;
+        const v = getSaleValues(sale);
+        dailySales[day].ventes += v.revenue;
+        dailySales[day].benefice += v.profit;
+        dailySales[day].quantite += v.quantity;
       }
     });
-
     return Object.values(dailySales).sort((a, b) => a.jour - b.jour);
   }, [filteredSales]);
 
   /** Ventes par produit (top 15) */
   const salesByProduct = useMemo(() => {
     const productSales: Record<string, any> = {};
-    
     filteredSales.forEach(sale => {
       const processSale = (description: string, sellingPrice: number, quantitySold: number, profit: number, purchasePrice: number) => {
         const category = getProductCategory(description);
         if (!category) return;
         const productName = description.length > 50 ? description.substring(0, 47) + '...' : description;
-        
         if (!productSales[productName]) {
           productSales[productName] = { name: productName, fullName: description, ventes: 0, benefice: 0, quantite: 0, prixAchat: 0, category, count: 0 };
         }
@@ -152,21 +128,18 @@ export const useTendancesData = (allSales: any[], products: any[]) => {
         productSales[productName].prixAchat += purchasePrice * quantitySold;
         productSales[productName].count += 1;
       };
-
       if (sale.products && Array.isArray(sale.products)) {
         sale.products.forEach((p: any) => processSale(p.description, p.sellingPrice, p.quantitySold, p.profit || 0, p.purchasePrice || 0));
       } else {
         processSale(sale.description, sale.sellingPrice, sale.quantitySold, sale.profit || 0, sale.purchasePrice);
       }
     });
-
     return Object.values(productSales).sort((a: any, b: any) => b.benefice - a.benefice).slice(0, 15);
   }, [filteredSales]);
 
   /** Ventes par catégorie */
   const salesByCategory = useMemo(() => {
     const categorySales: Record<string, any> = {};
-    
     filteredSales.forEach(sale => {
       const processProduct = (description: string, sellingPrice: number, quantitySold: number, profit: number) => {
         const category = getProductCategory(description);
@@ -177,14 +150,12 @@ export const useTendancesData = (allSales: any[], products: any[]) => {
         categorySales[category].quantite += quantitySold;
         categorySales[category].count += 1;
       };
-
       if (sale.products && Array.isArray(sale.products)) {
         sale.products.forEach((p: any) => processProduct(p.description, p.sellingPrice, p.quantitySold, p.profit || 0));
       } else {
         processProduct(sale.description, sale.sellingPrice, sale.quantitySold, sale.profit || 0);
       }
     });
-
     return Object.values(categorySales);
   }, [filteredSales]);
 
@@ -195,12 +166,11 @@ export const useTendancesData = (allSales: any[], products: any[]) => {
       const date = new Date(sale.date);
       const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
       const monthName = date.toLocaleDateString('fr-FR', { year: 'numeric', month: 'short' });
-      
       if (!monthlySales[monthKey]) monthlySales[monthKey] = { mois: monthKey, monthName, ventes: 0, benefice: 0, quantite: 0 };
-      const saleValues = getSaleValues(sale);
-      monthlySales[monthKey].ventes += saleValues.revenue;
-      monthlySales[monthKey].benefice += saleValues.profit;
-      monthlySales[monthKey].quantite += saleValues.quantity;
+      const v = getSaleValues(sale);
+      monthlySales[monthKey].ventes += v.revenue;
+      monthlySales[monthKey].benefice += v.profit;
+      monthlySales[monthKey].quantite += v.quantity;
     });
     return Object.values(monthlySales).sort((a: any, b: any) => a.mois.localeCompare(b.mois));
   }, [filteredSales]);
@@ -235,6 +205,33 @@ export const useTendancesData = (allSales: any[], products: any[]) => {
       }));
   }, [salesByProduct]);
 
+  /** Analyse des clients - classement par CA */
+  const clientsData = useMemo(() => {
+    const clients: Record<string, { name: string; totalSpent: number; totalProfit: number; purchaseCount: number; lastPurchase: string }> = {};
+    filteredSales.forEach(sale => {
+      const name = sale.clientName?.trim();
+      if (!name) return;
+      const values = getSaleValues(sale);
+      if (!clients[name]) {
+        clients[name] = { name, totalSpent: 0, totalProfit: 0, purchaseCount: 0, lastPurchase: '' };
+      }
+      clients[name].totalSpent += values.revenue;
+      clients[name].totalProfit += values.profit;
+      clients[name].purchaseCount += 1;
+      const saleDate = new Date(sale.date).toISOString().split('T')[0];
+      if (!clients[name].lastPurchase || saleDate > clients[name].lastPurchase) {
+        clients[name].lastPurchase = saleDate;
+      }
+    });
+    return Object.values(clients)
+      .map(c => ({
+        ...c,
+        avgBasket: c.purchaseCount > 0 ? c.totalSpent / c.purchaseCount : 0,
+        lastPurchase: c.lastPurchase ? new Date(c.lastPurchase).toLocaleDateString('fr-FR') : 'N/A',
+      }))
+      .sort((a, b) => b.totalSpent - a.totalSpent);
+  }, [filteredSales]);
+
   return {
     filteredSales,
     stockAnalysis,
@@ -245,5 +242,6 @@ export const useTendancesData = (allSales: any[], products: any[]) => {
     salesData,
     topProfitableProducts,
     buyingRecommendations,
+    clientsData,
   };
 };

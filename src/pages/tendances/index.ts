@@ -13,3 +13,4 @@ export { default as TendancesProductsTab } from './TendancesProductsTab';
 export { default as TendancesCategoriesTab } from './TendancesCategoriesTab';
 export { default as TendancesRecommendationsTab } from './TendancesRecommendationsTab';
 export { default as TendancesStockTab } from './TendancesStockTab';
+export { default as TendancesClientsTab } from './TendancesClientsTab';

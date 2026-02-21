@@ -11,7 +11,7 @@
 
 import React from 'react';
 import { TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { TrendingUp, ShoppingCart, Target, Sparkles, AlertTriangle } from 'lucide-react';
+import { TrendingUp, ShoppingCart, Target, Sparkles, AlertTriangle, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface TendancesTabNavigationProps {
@@ -26,6 +26,7 @@ const TendancesTabNavigation: React.FC<TendancesTabNavigationProps> = ({ activeT
     { value: 'overview', label: "Vue d'ensemble", icon: TrendingUp, gradient: 'from-emerald-600 to-blue-600' },
     { value: 'products', label: 'Par Produits', icon: ShoppingCart, gradient: 'from-purple-600 to-pink-600' },
     { value: 'categories', label: 'Par Catégories', icon: Target, gradient: 'from-orange-600 to-red-600' },
+    { value: 'clients', label: 'Par Clients', icon: Users, gradient: 'from-indigo-600 to-violet-600' },
     { value: 'recommendations', label: 'Recommandations', icon: Sparkles, gradient: 'from-yellow-600 to-orange-600' },
     { value: 'intelligence', label: 'Prévention Stock', icon: AlertTriangle, gradient: 'from-red-600 to-pink-600' },
   ];
@@ -40,7 +41,7 @@ const TendancesTabNavigation: React.FC<TendancesTabNavigationProps> = ({ activeT
       
       <TabsList className={cn(
         "relative grid w-full h-auto p-2 bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm rounded-2xl border border-white/20",
-        isMobile ? 'grid-cols-1 gap-3' : 'grid-cols-5 gap-2'
+        isMobile ? 'grid-cols-2 gap-2' : 'grid-cols-6 gap-2'
       )}>
         {tabs.map((tab) => (
           <TabsTrigger

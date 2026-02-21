@@ -33,6 +33,7 @@ import TendancesProductsTab from '@/pages/tendances/TendancesProductsTab';
 import TendancesCategoriesTab from '@/pages/tendances/TendancesCategoriesTab';
 import TendancesRecommendationsTab from '@/pages/tendances/TendancesRecommendationsTab';
 import TendancesStockTab from '@/pages/tendances/TendancesStockTab';
+import TendancesClientsTab from '@/pages/tendances/TendancesClientsTab';
 
 const TendancesPage = () => {
   const { allSales, products, loading } = useApp();
@@ -52,6 +53,7 @@ const TendancesPage = () => {
     salesData,
     topProfitableProducts,
     buyingRecommendations,
+    clientsData,
   } = useTendancesData(allSales, products);
 
   const formatCurrency = (value: number) => {
@@ -103,6 +105,10 @@ const TendancesPage = () => {
 
             <TabsContent value="recommendations" className="space-y-6">
               <TendancesRecommendationsTab buyingRecommendations={buyingRecommendations} />
+            </TabsContent>
+
+            <TabsContent value="clients" className="space-y-6">
+              <TendancesClientsTab clientsData={clientsData} />
             </TabsContent>
 
             <TabsContent value="intelligence" className="space-y-6">

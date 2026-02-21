@@ -8,7 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useApp } from '@/contexts/AppContext';
 import { Product, SaleProduct, Sale } from '@/types';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Trash2, Package, Euro, Edit3 } from 'lucide-react';
+import { Plus, Trash2, Package, Euro, Edit3, Camera } from 'lucide-react';
+import ProductPhotoSlideshow from '../ProductPhotoSlideshow';
 import ProductSearchInput from '../ProductSearchInput';
 import SaleQuantityInput from './SaleQuantityInput';
 import ClientSearchInput from '../ClientSearchInput';
@@ -85,6 +86,8 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
   // États pour la modale de confirmation produit réservé
   const [reservedModalOpen, setReservedModalOpen] = useState(false);
   const [pendingReservedProduct, setPendingReservedProduct] = useState<{ product: Product; index: number } | null>(null);
+  // État pour le slideshow photo produit
+  const [slideshowProduct, setSlideshowProduct] = useState<{ photos: string[]; mainPhoto?: string; name: string } | null>(null);
 
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:10000';
 
@@ -960,6 +963,38 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
                   <span className="bg-gradient-to-r from-indigo-600 to-purple-700 bg-clip-text text-transparent">
                     Produit {index + 1}
                   </span>
+                  {/* Photo principale cliquable */}
+                  {product.selectedProduct?.mainPhoto && (
+                    <button
+                      type="button"
+                      onClick={() => setSlideshowProduct({
+                        photos: product.selectedProduct?.photos || [],
+                        mainPhoto: product.selectedProduct?.mainPhoto,
+                        name: product.selectedProduct?.description || ''
+                      })}
+                      className="w-8 h-8 rounded-lg overflow-hidden border-2 border-purple-300 hover:border-purple-500 hover:scale-110 transition-all duration-200 shadow-md cursor-pointer"
+                    >
+                      <img
+                        src={`${API_BASE_URL}${product.selectedProduct.mainPhoto}`}
+                        alt={product.selectedProduct.description}
+                        className="w-full h-full object-cover"
+                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                      />
+                    </button>
+                  )}
+                  {product.selectedProduct && !product.selectedProduct.mainPhoto && product.selectedProduct.photos && product.selectedProduct.photos.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setSlideshowProduct({
+                        photos: product.selectedProduct?.photos || [],
+                        mainPhoto: product.selectedProduct?.photos?.[0],
+                        name: product.selectedProduct?.description || ''
+                      })}
+                      className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center border-2 border-gray-300 hover:border-purple-500 hover:scale-110 transition-all duration-200 shadow-md cursor-pointer"
+                    >
+                      <Camera className="h-4 w-4 text-gray-500" />
+                    </button>
+                  )}
                   {product.isAdvanceProduct && (
                     <span className="text-xs bg-gradient-to-r from-amber-100 to-orange-100 text-amber-800 px-3 py-1 rounded-full font-semibold shadow-sm">
                       ⭐ Avance
@@ -1415,6 +1450,16 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
       </AlertDialogFooter>
     </AlertDialogContent>
   </AlertDialog>
+
+  {/* Slideshow photos produit */}
+  <ProductPhotoSlideshow
+    photos={slideshowProduct?.photos || []}
+    mainPhoto={slideshowProduct?.mainPhoto}
+    productName={slideshowProduct?.name || ''}
+    isOpen={!!slideshowProduct}
+    onClose={() => setSlideshowProduct(null)}
+    baseUrl={API_BASE_URL}
+  />
 </Dialog>
 
   );
