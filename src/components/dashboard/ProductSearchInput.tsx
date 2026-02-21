@@ -80,23 +80,19 @@ const ProductSearchInput: React.FC<ProductSearchInputProps> = ({
 
   useEffect(() => {
     if (searchTerm.length >= 3) {
-      // Filtrer les produits par terme de recherche
+      // Filtrer les produits par terme de recherche (description ou code)
       let filtered = products.filter(product =>
-        product.description.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      
-      // Exclure les produits qui ont déjà des calculs de bénéfice
-      filtered = filtered.filter(product => 
-        !benefices.some(benefice => benefice.productId === product.id)
+        product.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (product.code && product.code.toLowerCase().includes(searchTerm.toLowerCase()))
       );
       
       // Appliquer le filtre de catégorie
       filtered = filterByCategory(filtered, categoryFilter);
       
       if (context === 'sale') {
-        // Pour ajouter une vente : exclure les produits avec stock = 0
+        // Pour ajouter une vente : afficher les produits avec stock >= 1
         filtered = filtered
-          .filter(product => product.quantity > 0)
+          .filter(product => (product.quantity || 0) >= 1)
           .sort((a, b) => (b.quantity || 0) - (a.quantity || 0));
       } else {
         // Pour modifier un produit : montrer tous les produits mais stock > 0 en premier

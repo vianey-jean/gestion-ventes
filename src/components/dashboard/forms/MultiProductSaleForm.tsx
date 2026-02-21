@@ -963,43 +963,6 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
                   <span className="bg-gradient-to-r from-indigo-600 to-purple-700 bg-clip-text text-transparent">
                     Produit {index + 1}
                   </span>
-                  {/* Photo principale cliquable */}
-                  {product.selectedProduct?.mainPhoto && (
-                    <button
-                      type="button"
-                      onClick={() => setSlideshowProduct({
-                        photos: product.selectedProduct?.photos || [],
-                        mainPhoto: product.selectedProduct?.mainPhoto,
-                        name: product.selectedProduct?.description || ''
-                      })}
-                      className="w-8 h-8 rounded-lg overflow-hidden border-2 border-purple-300 hover:border-purple-500 hover:scale-110 transition-all duration-200 shadow-md cursor-pointer"
-                    >
-                      <img
-                        src={`${API_BASE_URL}${product.selectedProduct.mainPhoto}`}
-                        alt={product.selectedProduct.description}
-                        className="w-full h-full object-cover"
-                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                      />
-                    </button>
-                  )}
-                  {product.selectedProduct && !product.selectedProduct.mainPhoto && product.selectedProduct.photos && product.selectedProduct.photos.length > 0 && (
-                    <button
-                      type="button"
-                      onClick={() => setSlideshowProduct({
-                        photos: product.selectedProduct?.photos || [],
-                        mainPhoto: product.selectedProduct?.photos?.[0],
-                        name: product.selectedProduct?.description || ''
-                      })}
-                      className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center border-2 border-gray-300 hover:border-purple-500 hover:scale-110 transition-all duration-200 shadow-md cursor-pointer"
-                    >
-                      <Camera className="h-4 w-4 text-gray-500" />
-                    </button>
-                  )}
-                  {product.isAdvanceProduct && (
-                    <span className="text-xs bg-gradient-to-r from-amber-100 to-orange-100 text-amber-800 px-3 py-1 rounded-full font-semibold shadow-sm">
-                      ⭐ Avance
-                    </span>
-                  )}
                 </CardTitle>
                 {formProducts.length > 1 && (
                   <Button
@@ -1012,6 +975,47 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
                   </Button>
                 )}
               </div>
+              {/* Photo principale cliquable - centrée et agrandie */}
+              {product.selectedProduct?.mainPhoto && (
+                <div className="flex justify-center mt-3">
+                  <button
+                    type="button"
+                    onClick={() => setSlideshowProduct({
+                      photos: product.selectedProduct?.photos || [],
+                      mainPhoto: product.selectedProduct?.mainPhoto,
+                      name: product.selectedProduct?.description || ''
+                    })}
+                    className="w-16 h-16 rounded-xl overflow-hidden border-2 border-purple-300 hover:border-purple-500 hover:scale-110 transition-all duration-200 shadow-lg cursor-pointer"
+                  >
+                    <img
+                      src={`${API_BASE_URL}${product.selectedProduct.mainPhoto}`}
+                      alt={product.selectedProduct.description}
+                      className="w-full h-full object-cover"
+                      onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                    />
+                  </button>
+                </div>
+              )}
+              {product.selectedProduct && !product.selectedProduct.mainPhoto && product.selectedProduct.photos && product.selectedProduct.photos.length > 0 && (
+                <div className="flex justify-center mt-3">
+                  <button
+                    type="button"
+                    onClick={() => setSlideshowProduct({
+                      photos: product.selectedProduct?.photos || [],
+                      mainPhoto: product.selectedProduct?.photos?.[0],
+                      name: product.selectedProduct?.description || ''
+                    })}
+                    className="w-16 h-16 rounded-xl bg-gray-100 dark:bg-gray-700 flex items-center justify-center border-2 border-gray-300 hover:border-purple-500 hover:scale-110 transition-all duration-200 shadow-lg cursor-pointer"
+                  >
+                    <Camera className="h-5 w-5 text-gray-500" />
+                  </button>
+                </div>
+              )}
+              {product.isAdvanceProduct && (
+                <span className="text-xs bg-gradient-to-r from-amber-100 to-orange-100 text-amber-800 px-3 py-1 rounded-full font-semibold shadow-sm flex justify-center">
+                  ⭐ Avance
+                </span>
+              )}
             </CardHeader>
             <CardContent className="space-y-4">
               {/* Sélection produit */}
