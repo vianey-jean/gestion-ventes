@@ -58,7 +58,7 @@ const AutresDepensesModal: React.FC<AutresDepensesModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-     <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto bg-white/30 backdrop-blur-lg border border-white/60 shadow-lg rounded-2xl">   <DialogHeader>
+     <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto bg-white/10 backdrop-blur border border-white/60 shadow-lg rounded-2xl">   <DialogHeader>
           <DialogTitle className="flex items-center gap-3 text-orange-400">
             <div className="p-2.5 rounded-xl bg-gradient-to-br from-orange-500/20 to-amber-500/20 border border-orange-500/20 backdrop-blur-sm">
               <Receipt className="h-6 w-6 text-orange-400" />

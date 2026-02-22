@@ -31,7 +31,7 @@ const BeneficeVentesModal: React.FC<BeneficeVentesModalProps> = ({
 }) => {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto bg-white/30 backdrop-blur border border-white/25 shadow-xl rounded-2xl">
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto bg-white/10 backdrop-blur border border-white/25 shadow-xl rounded-2xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3 text-blue-400">
             <div className="p-2.5 rounded-xl bg-gradient-to-br from-blue-500/20 to-indigo-500/20 border border-blue-500/20 backdrop-blur-sm">
