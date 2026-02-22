@@ -23,7 +23,8 @@ const ResetPasswordPage: React.FC = () => {
   const [errors, setErrors] = useState<{ email?: string; newPassword?: string; confirmPassword?: string }>({});
   const [isLoading, setIsLoading] = useState(false);
   const [isPasswordValid, setIsPasswordValid] = useState(false);
-  
+  const [showPasswordChecker, setShowPasswordChecker] = useState(true); // Pour fermer le checker automatiquement
+
   const validatePassword = () => {
     const hasLowerCase = /[a-z]/.test(newPassword);
     const hasUpperCase = /[A-Z]/.test(newPassword);
@@ -62,6 +63,8 @@ const ResetPasswordPage: React.FC = () => {
   
   const handlePasswordValidityChange = (isValid: boolean) => {
     setIsPasswordValid(isValid);
+    if (isValid) setShowPasswordChecker(false); // Fermer automatiquement le checker
+    else setShowPasswordChecker(true);           // Réouvrir si invalide
   };
 
   if (isLoading) {
@@ -116,7 +119,7 @@ const ResetPasswordPage: React.FC = () => {
           transition={{ duration: 0.8, ease: "easeOut" }}
           className="relative w-full max-w-5xl z-10 flex flex-col lg:flex-row items-center gap-8 lg:gap-16"
         >
-          {/* LEFT SIDE — Project description (Facebook-style) */}
+          {/* LEFT SIDE — Project description */}
           <motion.div
             initial={{ opacity: 0, x: -40 }}
             animate={{ opacity: 1, x: 0 }}
@@ -129,39 +132,14 @@ const ResetPasswordPage: React.FC = () => {
             <p className="text-lg text-blue-200/60 mb-8 leading-relaxed">
               Réinitialisez votre mot de passe en toute sécurité et retrouvez l'accès à votre tableau de bord.
             </p>
-            
-            <div className="grid grid-cols-2 gap-4">
-              {[
-                { icon: Shield, label: 'Sécurisé', desc: 'Processus vérifié' },
-                { icon: Mail, label: 'Par email', desc: 'Vérification rapide' },
-                { icon: KeyRound, label: 'Chiffré', desc: 'Données protégées' },
-                { icon: CheckCircle, label: 'Simple', desc: 'En quelques clics' },
-              ].map((item, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4 + i * 0.1 }}
-                  className="p-3 bg-white/[0.04] border border-white/[0.08] rounded-xl backdrop-blur-sm"
-                >
-                  <item.icon className="h-5 w-5 text-blue-400 mb-1.5" />
-                  <p className="text-sm font-bold text-white/90">{item.label}</p>
-                  <p className="text-xs text-white/40">{item.desc}</p>
-                </motion.div>
-              ))}
-            </div>
           </motion.div>
 
           {/* RIGHT SIDE — Reset form */}
           <div className="relative w-full max-w-md">
-            {/* Glow behind card */}
             <div className="absolute -inset-4 bg-gradient-to-r from-blue-600/20 via-purple-600/20 to-cyan-600/20 rounded-[2rem] blur-2xl" />
             
             <Card className="relative bg-white/[0.08] backdrop-blur-2xl border border-white/[0.12] shadow-[0_32px_64px_rgba(0,0,0,0.4)] rounded-3xl overflow-hidden">
-              {/* Top shimmer line */}
               <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-blue-400/50 to-transparent" />
-              
-              {/* Mirror reflection */}
               <div className="absolute inset-0 bg-gradient-to-b from-white/[0.08] via-transparent to-white/[0.02] pointer-events-none" />
               
               <CardHeader className="text-center pb-8 pt-10">
@@ -203,135 +181,76 @@ const ResetPasswordPage: React.FC = () => {
                     ? "Créez un mot de passe sécurisé pour votre compte"
                     : "Saisissez votre email pour réinitialiser votre mot de passe"}
                 </CardDescription>
-
-                {emailVerified && (
-                  <motion.div 
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="mt-4 p-4 bg-emerald-500/10 rounded-xl border border-emerald-500/20"
-                  >
-                    <div className="flex items-center justify-center gap-2 text-emerald-400">
-                      <Mail className="h-5 w-5" />
-                      <span className="text-sm font-medium">Email vérifié avec succès</span>
-                    </div>
-                  </motion.div>
-                )}
-
-                <div className="flex items-center justify-center gap-4 mt-4">
-                  <div className="flex items-center gap-1.5 text-xs text-purple-300/60">
-                    <Shield className="h-3 w-3" />
-                    <span>Sécurisé</span>
-                  </div>
-                  <div className="w-1 h-1 bg-purple-400/30 rounded-full" />
-                  <div className="flex items-center gap-1.5 text-xs text-purple-300/60">
-                    <Fingerprint className="h-3 w-3" />
-                    <span>Protégé</span>
-                  </div>
-                </div>
               </CardHeader>
               
               {!emailVerified ? (
                 <form onSubmit={handleEmailSubmit}>
                   <CardContent className="space-y-6 px-8">
-                    <div className="space-y-3">
-                      <Label htmlFor="email" className="text-sm font-semibold text-purple-200/80 flex items-center gap-2">
-                        <Mail className="h-4 w-4 text-blue-400" />
-                        Adresse email
-                      </Label>
-                      <div className="relative group">
-                        <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-xl blur opacity-0 group-focus-within:opacity-100 transition-opacity duration-300" />
-                        <Input
-                          id="email"
-                          type="email"
-                          placeholder="exemple@email.com"
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
-                          disabled={isLoading}
-                          className={`relative h-14 bg-white/[0.06] border-white/[0.1] text-white placeholder:text-purple-300/30 rounded-xl transition-all duration-300 focus:bg-white/[0.1] focus:border-blue-400/50 ${
-                            errors.email ? "border-red-400/50" : ""
-                          }`}
-                        />
-                      </div>
-                      {errors.email && (
-                        <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-2 text-red-400 text-sm">
-                          <div className="w-1.5 h-1.5 bg-red-400 rounded-full" />
-                          {errors.email}
-                        </motion.div>
-                      )}
-                    </div>
-                  </CardContent>
-                  
-                  <CardFooter className="flex flex-col space-y-6 px-8 pb-10">
-                    <Button
-                      type="submit"
-                      className="w-full h-14 bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 hover:from-blue-500 hover:via-purple-500 hover:to-indigo-500 text-white font-bold text-lg rounded-xl shadow-[0_20px_40px_rgba(59,130,246,0.3)] hover:shadow-[0_25px_50px_rgba(59,130,246,0.4)] transform hover:scale-[1.02] transition-all duration-300 border border-white/10 flex items-center justify-center gap-3"
+                    <Label htmlFor="email" className="text-sm font-semibold text-purple-200/80 flex items-center gap-2">
+                      <Mail className="h-4 w-4 text-blue-400" />
+                      Adresse email
+                    </Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="exemple@email.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
                       disabled={isLoading}
-                    >
-                      <Mail className="h-5 w-5" />
+                      className={`h-14 bg-white/[0.06] border-white/[0.1] text-white rounded-xl ${errors.email ? "border-red-400/50" : ""}`}
+                    />
+                    {errors.email && <div className="text-red-400 text-sm">{errors.email}</div>}
+                  </CardContent>
+                  <CardFooter className="px-8 pb-10">
+                    <Button type="submit" disabled={isLoading} className="w-full h-14 bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 text-white font-bold rounded-xl">
                       Envoyer le lien
                     </Button>
-                    
-                    <div className="flex justify-between w-full text-sm">
-                      <Link to="/login" className="text-blue-400 hover:text-blue-300 font-medium hover:underline transition-colors flex items-center gap-2">
-                        <ArrowLeft className="h-4 w-4" />
-                        Retour à la connexion
-                      </Link>
-                      <Link to="/register" className="text-purple-400 hover:text-purple-300 font-medium hover:underline transition-colors">
-                        Créer un compte
-                      </Link>
-                    </div>
                   </CardFooter>
                 </form>
               ) : (
                 <form onSubmit={handlePasswordSubmit}>
                   <CardContent className="space-y-6 px-8">
-                    <div className="space-y-3">
-                      <Label htmlFor="newPassword" className="text-sm font-semibold text-purple-200/80 flex items-center gap-2">
-                        <Shield className="h-4 w-4 text-emerald-400" />
-                        Nouveau mot de passe
-                      </Label>
-                      <PasswordInput
-                        id="newPassword"
-                        placeholder="••••••••"
-                        value={newPassword}
-                        onChange={(e) => setNewPassword(e.target.value)}
-                        error={errors.newPassword}
-                        disabled={isLoading}
-                        className="h-14 bg-white/[0.06] border-white/[0.1] text-white rounded-xl"
+                    <Label htmlFor="newPassword" className="text-sm font-semibold text-purple-200/80 flex items-center gap-2">
+                      <Shield className="h-4 w-4 text-emerald-400" />
+                      Nouveau mot de passe
+                    </Label>
+                    <PasswordInput
+                      id="newPassword"
+                      placeholder="••••••••"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      error={errors.newPassword}
+                      disabled={isLoading}
+                      className="h-14 bg-white/[0.06] border-white/[0.1] text-white rounded-xl"
+                    />
+                    {showPasswordChecker && (
+                      <PasswordStrengthChecker
+                        password={newPassword}
+                        onValidityChange={handlePasswordValidityChange}
                       />
-                      <PasswordStrengthChecker password={newPassword} onValidityChange={handlePasswordValidityChange} />
-                    </div>
-                    
-                    <div className="space-y-3">
-                      <Label htmlFor="confirmPassword" className="text-sm font-semibold text-purple-200/80">
-                        Confirmer le mot de passe
-                      </Label>
-                      <PasswordInput
-                        id="confirmPassword"
-                        placeholder="••••••••"
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        error={errors.confirmPassword}
-                        disabled={isLoading}
-                        className="h-14 bg-white/[0.06] border-white/[0.1] text-white rounded-xl"
-                      />
-                    </div>
+                    )}
+
+                    <Label htmlFor="confirmPassword" className="text-sm font-semibold text-purple-200/80">
+                      Confirmer le mot de passe
+                    </Label>
+                    <PasswordInput
+                      id="confirmPassword"
+                      placeholder="••••••••"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      error={errors.confirmPassword}
+                      disabled={isLoading}
+                      className="h-14 bg-white/[0.06] border-white/[0.1] text-white rounded-xl"
+                    />
                   </CardContent>
-                  
-                  <CardFooter className="flex flex-col space-y-6 px-8 pb-10">
-                    <Button
-                      type="submit"
-                      className="w-full h-14 bg-gradient-to-r from-emerald-600 via-teal-600 to-green-600 hover:from-emerald-500 hover:via-teal-500 hover:to-green-500 text-white font-bold text-lg rounded-xl shadow-[0_20px_40px_rgba(16,185,129,0.3)] hover:shadow-[0_25px_50px_rgba(16,185,129,0.4)] transform hover:scale-[1.02] transition-all duration-300 border border-white/10 flex items-center justify-center gap-3"
-                      disabled={isLoading || !isPasswordValid || !confirmPassword}
-                    >
-                      <CheckCircle className="h-5 w-5" />
+                  <CardFooter className="px-8 pb-10">
+                    <Button type="submit" disabled={isLoading || !isPasswordValid || !confirmPassword} className="w-full h-14 bg-gradient-to-r from-emerald-600 via-teal-600 to-green-600 text-white font-bold rounded-xl">
                       Réinitialiser le mot de passe
                     </Button>
                   </CardFooter>
                 </form>
               )}
-              
-              {/* Bottom shimmer */}
+
               <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-blue-400/30 to-transparent" />
             </Card>
           </div>

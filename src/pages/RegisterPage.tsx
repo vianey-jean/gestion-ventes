@@ -37,6 +37,7 @@ const RegisterPage: React.FC = () => {
   const [isEmailValid, setIsEmailValid] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isPasswordValid, setIsPasswordValid] = useState(false);
+  const [showPasswordChecker, setShowPasswordChecker] = useState(true);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -138,6 +139,7 @@ const RegisterPage: React.FC = () => {
 
   const handlePasswordValidityChange = (isValid: boolean) => {
     setIsPasswordValid(isValid);
+    setShowPasswordChecker(!isValid);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -256,7 +258,7 @@ const RegisterPage: React.FC = () => {
   return (
     <Layout>
       <div className="min-h-screen relative flex items-center justify-center p-4 py-12 overflow-hidden">
-        {/* Ultra-luxe animated background */}
+       {/* Ultra-luxe animated background */}
         <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-purple-950 to-indigo-950" />
         
         {/* Animated glassmorphism orbs */}
@@ -580,24 +582,26 @@ const RegisterPage: React.FC = () => {
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                      <div className="space-y-2">
-                        <Label htmlFor="password" className="text-sm font-semibold text-purple-200/80">
-                          Mot de passe
-                        </Label>
-                        <PasswordInput
-                          id="password"
-                          name="password"
-                          placeholder="••••••••"
-                          value={formData.password}
-                          onChange={handleChange}
-                          error={errors.password}
-                          className="h-12 bg-white/[0.06] border-white/[0.1] text-white rounded-xl"
-                        />
-                        <PasswordStrengthChecker 
-                          password={formData.password} 
-                          onValidityChange={handlePasswordValidityChange}
-                        />
-                      </div>
+                         <div className="space-y-2">
+          <Label htmlFor="password" className="text-sm font-semibold text-purple-200/80">
+            Mot de passe
+          </Label>
+          <PasswordInput
+            id="password"
+            name="password"
+            placeholder="••••••••"
+            value={formData.password}
+            onChange={handleChange}
+            error={errors.password}
+            className="h-12 bg-white/[0.06] border-white/[0.1] text-white rounded-xl"
+          />
+          {showPasswordChecker && (
+            <PasswordStrengthChecker 
+              password={formData.password} 
+              onValidityChange={handlePasswordValidityChange}
+            />
+          )}
+        </div>
 
                       <div className="space-y-2">
                         <Label htmlFor="confirmPassword" className="text-sm font-semibold text-purple-200/80">
