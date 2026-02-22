@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { useApp } from '@/contexts/AppContext';
 import { Product, Sale } from '@/types';
 import { useToast } from '@/hooks/use-toast';
-import { Trash2 } from 'lucide-react';
+import { Trash2, RotateCcw } from 'lucide-react';
 import ConfirmDeleteDialog from './forms/ConfirmDeleteDialog';
 import { useSaleForm } from './forms/hooks/useSaleForm';
 import { calculateSaleProfit } from './forms/utils/saleCalculations';
@@ -16,12 +16,13 @@ interface AddSaleFormProps {
   isOpen: boolean;
   onClose: () => void;
   editSale?: Sale;
+  onRefund?: (sale: Sale) => void;
 }
 
 /**
  * Formulaire pour ajouter ou modifier une vente
  */
-const AddSaleForm: React.FC<AddSaleFormProps> = ({ isOpen, onClose, editSale }) => {
+const AddSaleForm: React.FC<AddSaleFormProps> = ({ isOpen, onClose, editSale, onRefund }) => {
   const { products, addSale, updateSale, deleteSale } = useApp();
   const { toast } = useToast();
   
@@ -468,6 +469,18 @@ const AddSaleForm: React.FC<AddSaleFormProps> = ({ isOpen, onClose, editSale }) 
                 >
                   <Trash2 className="h-4 w-4 mr-2" />
                   Supprimer
+                </Button>
+              )}
+
+              {editSale && onRefund && (
+                <Button
+                  type="button"
+                  onClick={() => onRefund(editSale)}
+                  disabled={isSubmitting}
+                  className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-bold"
+                >
+                  <RotateCcw className="h-4 w-4 mr-2" />
+                  Rembourser
                 </Button>
               )}
               

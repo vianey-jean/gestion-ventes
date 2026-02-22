@@ -31,14 +31,18 @@ const AchatsProduitsModal: React.FC<AchatsProduitsModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto bg-white/[0.03] backdrop-blur-3xl border border-white/[0.08] shadow-[0_32px_80px_rgba(0,0,0,0.5)] rounded-2xl">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-indigo-600">
-            <Package className="h-6 w-6" />
-            Achats Produits - {MONTHS[selectedMonth - 1]} {selectedYear}
+          <DialogTitle className="flex items-center gap-3 text-indigo-400">
+            <div className="p-2.5 rounded-xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border border-indigo-500/20 backdrop-blur-sm">
+              <Package className="h-6 w-6 text-indigo-400" />
+            </div>
+            <span className="bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent font-black text-xl">
+              Achats Produits - {MONTHS[selectedMonth - 1]} {selectedYear}
+            </span>
           </DialogTitle>
-          <DialogDescription>
-            Total: {formatEuro(achatsTotal)} ({achatsProducts.length} achats)
+          <DialogDescription className="text-white/50">
+            Total: <span className="font-bold text-indigo-400">{formatEuro(achatsTotal)}</span> ({achatsProducts.length} achats)
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-3 mt-4">
@@ -46,30 +50,30 @@ const AchatsProduitsModal: React.FC<AchatsProduitsModalProps> = ({
             achatsProducts.map((achat) => (
               <div 
                 key={achat.id} 
-                className="flex items-center justify-between p-3 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg border border-indigo-200 dark:border-indigo-800"
+                className="flex items-center justify-between p-4 bg-white/[0.04] border border-white/[0.08] rounded-xl backdrop-blur-sm transition-all duration-300 hover:scale-[1.01] hover:border-indigo-500/20"
               >
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-indigo-500/20">
+                  <div className="p-2.5 rounded-xl bg-indigo-500/20 border border-indigo-500/20">
                     <Package className="h-4 w-4 text-indigo-400" />
                   </div>
                   <div>
-                    <p className="font-medium text-gray-800 dark:text-white">
+                    <p className="font-semibold text-white/90">
                       {achat.productDescription}
                     </p>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-white/40 mt-0.5">
                       {new Date(achat.date).toLocaleDateString('fr-FR')}
                       {achat.fournisseur && ` • ${achat.fournisseur}`}
                       {achat.quantity && ` • Qté: ${achat.quantity}`}
                     </p>
                   </div>
                 </div>
-                <p className="text-lg font-bold text-indigo-600">
+                <p className="text-lg font-black text-indigo-400">
                   {formatEuro(achat.totalCost)}
                 </p>
               </div>
             ))
           ) : (
-            <p className="text-center text-gray-500 py-8">Aucun achat de produit ce mois</p>
+            <p className="text-center text-white/40 py-8">Aucun achat de produit ce mois</p>
           )}
         </div>
       </DialogContent>

@@ -35,6 +35,9 @@ export interface Sale {
   // Informations d'avance
   reste?: number;
   nextPaymentDate?: string;
+  // Remboursement
+  isRefund?: boolean;
+  originalSaleId?: string;
 }
 
 export interface SaleFormData {

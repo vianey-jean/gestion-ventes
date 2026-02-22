@@ -9,4 +9,5 @@ export { default as pretFamilleApiService } from './pretFamilleApi';
 export { default as pretProduitApiService } from './pretProduitApi';
 export { default as depenseApiService } from './depenseApi';
 export { default as beneficeApiService } from './beneficeApi';
+export { default as remboursementApiService } from './remboursementApi';
 

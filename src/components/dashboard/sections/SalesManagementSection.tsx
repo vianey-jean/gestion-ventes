@@ -10,8 +10,10 @@ import AddProductForm from '@/components/dashboard/AddProductForm';
 import EditProductForm from '@/components/dashboard/EditProductForm';
 import ExportSalesDialog from '@/components/dashboard/ExportSalesDialog';
 import InvoiceGenerator from '@/components/dashboard/InvoiceGenerator';
+import RefundForm from '@/components/dashboard/RefundForm';
+import ViewRefundsModal from '@/components/dashboard/ViewRefundsModal';
 import { AccessibleButton } from '@/components/accessibility/AccessibleButton';
-import { PlusCircle, Edit, ShoppingCart, FileText, FileSignature, Package, FileDown, Layers, PenLine, CirclePlus, Users } from 'lucide-react';
+import { PlusCircle, Edit, ShoppingCart, FileText, FileSignature, Package, FileDown, Layers, PenLine, CirclePlus, Users, RotateCcw, Eye } from 'lucide-react';
 import VentesParClientsModal from '@/components/dashboard/VentesParClientsModal';
 
 interface SalesManagementSectionProps {
@@ -32,7 +34,6 @@ const SalesManagementSection: React.FC<SalesManagementSectionProps> = ({
   currentMonth,
   currentYear
 }) => {
-  // États pour gérer les dialogues
   const [addSaleDialogOpen, setAddSaleDialogOpen] = useState(false);
   const [multiProductSaleDialogOpen, setMultiProductSaleDialogOpen] = useState(false);
   const [addProductDialogOpen, setAddProductDialogOpen] = useState(false);
@@ -41,11 +42,13 @@ const SalesManagementSection: React.FC<SalesManagementSectionProps> = ({
   const [invoiceGeneratorOpen, setInvoiceGeneratorOpen] = useState(false);
   const [selectedSale, setSelectedSale] = useState<Sale | undefined>(undefined);
   const [ventesParClientsOpen, setVentesParClientsOpen] = useState(false);
+  const [refundFormOpen, setRefundFormOpen] = useState(false);
+  const [refundFromSale, setRefundFromSale] = useState<Sale | undefined>(undefined);
+  const [viewRefundsOpen, setViewRefundsOpen] = useState(false);
 
   const handleRowClick = (sale: Sale) => {
     setSelectedSale(sale);
     
-    // Vérifier si c'est une vente multi-produits
     if (sale.products && sale.products.length > 0) {
       setMultiProductSaleDialogOpen(true);
     } else {
@@ -53,21 +56,16 @@ const SalesManagementSection: React.FC<SalesManagementSectionProps> = ({
     }
   };
 
+  // Handle refund from sale edit form
+  const handleRefundFromSale = (sale: Sale) => {
+    setSelectedSale(undefined);
+    setMultiProductSaleDialogOpen(false);
+    setAddSaleDialogOpen(false);
+    setRefundFromSale(sale);
+    setRefundFormOpen(true);
+  };
+
   const actions = [
-//    {
-//   icon: CirclePlus,
-//   label: 'Ajouter un produit',
-//   onClick: () => setAddProductDialogOpen(true),
-//   gradient: 'red' as const,
-//   'aria-label': 'Ouvrir le formulaire d\'ajout de produit'
-// },
-// {
-//   icon: PenLine,
-//   label: 'Modifier un produit',
-//   onClick: () => setEditProductDialogOpen(true),
-//   gradient: 'blue' as const,
-//   'aria-label': 'Ouvrir le formulaire de modification de produit'
-// },
 {
   icon: Layers,
   label: 'Ajouter vente multi-produits',
@@ -89,6 +87,20 @@ const SalesManagementSection: React.FC<SalesManagementSectionProps> = ({
   onClick: () => setVentesParClientsOpen(true),
   gradient: 'green' as const,
   'aria-label': 'Voir les ventes groupées par client'
+},
+{
+  icon: RotateCcw,
+  label: 'Remboursement',
+  onClick: () => { setRefundFromSale(undefined); setRefundFormOpen(true); },
+  gradient: 'red' as const,
+  'aria-label': 'Ouvrir le formulaire de remboursement'
+},
+{
+  icon: Eye,
+  label: 'Voir Remboursements',
+  onClick: () => setViewRefundsOpen(true),
+  gradient: 'blue' as const,
+  'aria-label': 'Voir les remboursements du mois'
 }
   ];
 
@@ -101,8 +113,8 @@ const SalesManagementSection: React.FC<SalesManagementSectionProps> = ({
         headerActions={
           <div className="flex items-center space-x-4">
             <div className="text-right">
-              <p className="text-sm text-gray-500">Mois en cours</p>
-              <p className="text-lg font-bold text-blue-500">
+              <p className="text-sm text-muted-foreground">Mois en cours</p>
+              <p className="text-lg font-bold text-primary">
                 {monthNames[currentMonth - 1]} {currentYear}
               </p>
             </div>
@@ -123,7 +135,7 @@ const SalesManagementSection: React.FC<SalesManagementSectionProps> = ({
           role="toolbar"
           aria-label="Actions de gestion des ventes"
         >
-          {actions.map((action, index) => (
+          {actions.map((action) => (
             <ModernActionButton
               key={action.label}
               icon={action.icon}
@@ -139,7 +151,7 @@ const SalesManagementSection: React.FC<SalesManagementSectionProps> = ({
         
         {/* Tableau des ventes */}
         <div 
-          className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden"
+          className="bg-card rounded-xl shadow-lg overflow-hidden"
           role="region"
           aria-label="Tableau des ventes du mois"
         >
@@ -149,16 +161,16 @@ const SalesManagementSection: React.FC<SalesManagementSectionProps> = ({
           />
         </div>
         
-        {/* Message informatif accessible */}
+        {/* Message informatif */}
         <div 
-          className="text-sm text-gray-500 mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg"
+          className="text-sm text-muted-foreground mt-4 p-4 bg-primary/5 rounded-lg"
           role="status"
           aria-live="polite"
         >
-          <p className="font-medium text-blue-700 dark:text-blue-300">
+          <p className="font-medium text-primary">
             📅 Affichage automatique du mois en cours: {monthNames[currentMonth - 1]} {currentYear}
           </p>
-          <p className="text-blue-600 dark:text-blue-400 mt-1">
+          <p className="text-primary/70 mt-1">
             Les données se mettront automatiquement à jour le 1er du mois prochain.
           </p>
         </div>
@@ -173,6 +185,7 @@ const SalesManagementSection: React.FC<SalesManagementSectionProps> = ({
             setSelectedSale(undefined);
           }} 
           editSale={selectedSale}
+          onRefund={handleRefundFromSale}
         />
       )}
       
@@ -184,6 +197,7 @@ const SalesManagementSection: React.FC<SalesManagementSectionProps> = ({
             setSelectedSale(undefined);
           }} 
           editSale={selectedSale}
+          onRefund={handleRefundFromSale}
         />
       )}
       
@@ -214,6 +228,17 @@ const SalesManagementSection: React.FC<SalesManagementSectionProps> = ({
       <VentesParClientsModal
         isOpen={ventesParClientsOpen}
         onClose={() => setVentesParClientsOpen(false)}
+      />
+
+      <RefundForm
+        isOpen={refundFormOpen}
+        onClose={() => { setRefundFormOpen(false); setRefundFromSale(undefined); }}
+        editSale={refundFromSale}
+      />
+
+      <ViewRefundsModal
+        isOpen={viewRefundsOpen}
+        onClose={() => setViewRefundsOpen(false)}
       />
     </section>
   );

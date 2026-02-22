@@ -319,11 +319,13 @@ const SalesTable: React.FC<SalesTableProps> = ({ sales: initialSales, onRowClick
               </TableCell>
             </TableRow>
           ) : (
-            sortedSales.map((sale, index) => (
+            sortedSales.map((sale, index) => {
+              const isRefund = (sale as any).isRefund || (sale.totalSellingPrice ?? sale.sellingPrice ?? 0) < 0;
+              return (
               <ModernTableRow 
                 key={sale.id} 
                 onClick={() => onRowClick(sale)}
-                className="hover:bg-gradient-to-r hover:from-purple-50/50 hover:to-blue-50/50 dark:hover:from-purple-900/20 dark:hover:to-blue-900/20 transition-all duration-300 hover:shadow-lg border-b border-gray-100/50 dark:border-gray-700/50 cursor-pointer"
+                className={`${isRefund ? 'bg-red-50/80 dark:bg-red-900/20 border-l-4 border-l-red-500' : ''} hover:bg-gradient-to-r hover:from-purple-50/50 hover:to-blue-50/50 dark:hover:from-purple-900/20 dark:hover:to-blue-900/20 transition-all duration-300 hover:shadow-lg border-b border-gray-100/50 dark:border-gray-700/50 cursor-pointer`}
               >
                 <ModernTableCell className="font-medium">
                   <div className="flex items-center space-x-3">
@@ -337,22 +339,27 @@ const SalesTable: React.FC<SalesTableProps> = ({ sales: initialSales, onRowClick
                 </ModernTableCell>
                 <ModernTableCell className="font-medium">
                   <div className="max-w-xs space-y-1">
+                    {isRefund && (
+                      <span className="inline-block text-[10px] font-bold text-white bg-red-500 rounded px-1.5 py-0.5 mb-1">
+                        REMBOURSEMENT
+                      </span>
+                    )}
                     {sale.products ? (
                       sale.products.map((product, idx) => (
-                        <p key={idx} className="font-semibold text-gray-800 dark:text-gray-200 truncate text-xs">
+                        <p key={idx} className={`font-semibold truncate text-xs ${isRefund ? 'text-red-600 dark:text-red-400' : 'text-gray-800 dark:text-gray-200'}`}>
                           {product.description}
                         </p>
                       ))
                     ) : (
-                      <p className="font-semibold text-gray-800 dark:text-gray-200 truncate">
+                      <p className={`font-semibold truncate ${isRefund ? 'text-red-600 dark:text-red-400' : 'text-gray-800 dark:text-gray-200'}`}>
                         {sale.description}
                       </p>
                     )}
                   </div>
                 </ModernTableCell>
                 <ModernTableCell className="text-right">
-                  <div className="bg-gradient-to-r from-emerald-100 to-teal-100 dark:from-emerald-900/30 dark:to-teal-900/30 px-3 py-1 rounded-full inline-block">
-                    <span className="font-bold text-emerald-700 dark:text-emerald-400">
+                  <div className={`${isRefund ? 'bg-red-100 dark:bg-red-900/30' : 'bg-gradient-to-r from-emerald-100 to-teal-100 dark:from-emerald-900/30 dark:to-teal-900/30'} px-3 py-1 rounded-full inline-block`}>
+                    <span className={`font-bold ${isRefund ? 'text-red-700 dark:text-red-400' : 'text-emerald-700 dark:text-emerald-400'}`}>
                       {formatCurrency(sale.totalSellingPrice ?? sale.sellingPrice ?? 0)}
                     </span>
                   </div>
@@ -407,8 +414,8 @@ const SalesTable: React.FC<SalesTableProps> = ({ sales: initialSales, onRowClick
                   </div>
                 </ModernTableCell>
                 <ModernTableCell className="text-right">
-                  <div className="bg-gradient-to-r from-yellow-100 to-orange-100 dark:from-yellow-900/30 dark:to-orange-900/30 px-3 py-1 rounded-full inline-block">
-                    <span className="font-bold text-orange-700 dark:text-orange-400">
+                  <div className={`${isRefund ? 'bg-red-100 dark:bg-red-900/30' : 'bg-gradient-to-r from-yellow-100 to-orange-100 dark:from-yellow-900/30 dark:to-orange-900/30'} px-3 py-1 rounded-full inline-block`}>
+                    <span className={`font-bold ${isRefund ? 'text-red-700 dark:text-red-400' : 'text-orange-700 dark:text-orange-400'}`}>
                       {sale.products ? (
                         <div className="space-y-1">
                           {sale.products.map((product, idx) => (
@@ -424,7 +431,8 @@ const SalesTable: React.FC<SalesTableProps> = ({ sales: initialSales, onRowClick
                   </div>
                 </ModernTableCell>
               </ModernTableRow>
-            ))
+              );
+            })
           )}
         </TableBody>
         {sortedSales.length > 0 && (

@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useApp } from '@/contexts/AppContext';
 import { Product, SaleProduct, Sale } from '@/types';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Trash2, Package, Euro, Edit3, Camera } from 'lucide-react';
+import { Plus, Trash2, Package, Euro, Edit3, Camera, RotateCcw } from 'lucide-react';
 import ProductPhotoSlideshow from '../ProductPhotoSlideshow';
 import ProductSearchInput from '../ProductSearchInput';
 import SaleQuantityInput from './SaleQuantityInput';
@@ -24,6 +24,7 @@ interface MultiProductSaleFormProps {
   isOpen: boolean;
   onClose: () => void;
   editSale?: Sale;
+  onRefund?: (sale: Sale) => void;
 }
 
 interface FormProduct {
@@ -42,7 +43,7 @@ interface FormProduct {
   avancePretProduit: string;
 }
 
-const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onClose, editSale }) => {
+const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onClose, editSale, onRefund }) => {
   const { products, addSale, updateSale, deleteSale } = useApp();
   const { toast } = useToast();
   
@@ -1355,6 +1356,18 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
           >
             <Trash2 className="h-4 w-4 mr-2" />
             Supprimer ce vente
+          </Button>
+        )}
+
+        {editSale && onRefund && (
+          <Button
+            type="button"
+            onClick={() => onRefund(editSale)}
+            disabled={isSubmitting}
+            className="rounded-xl font-bold bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-600 hover:via-orange-600 hover:to-amber-700 text-white border-0 shadow-lg shadow-amber-500/20 hover:shadow-xl hover:shadow-amber-500/30 transition-all duration-300 transform hover:-translate-y-0.5"
+          >
+            <RotateCcw className="h-4 w-4 mr-2" />
+            Rembourser
           </Button>
         )}
 

@@ -31,14 +31,18 @@ const BeneficeVentesModal: React.FC<BeneficeVentesModalProps> = ({
 }) => {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto bg-white/[0.03] backdrop-blur-3xl border border-white/[0.08] shadow-[0_32px_80px_rgba(0,0,0,0.5)] rounded-2xl">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-blue-600">
-            <TrendingUp className="h-6 w-6" />
-            Détails Bénéfice Ventes - {MONTHS[selectedMonth - 1]} {selectedYear}
+          <DialogTitle className="flex items-center gap-3 text-blue-400">
+            <div className="p-2.5 rounded-xl bg-gradient-to-br from-blue-500/20 to-indigo-500/20 border border-blue-500/20 backdrop-blur-sm">
+              <TrendingUp className="h-6 w-6 text-blue-400" />
+            </div>
+            <span className="bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent font-black text-xl">
+              Détails Bénéfice Ventes - {MONTHS[selectedMonth - 1]} {selectedYear}
+            </span>
           </DialogTitle>
-          <DialogDescription>
-            Total: {formatEuro(salesProfit)} ({salesCount} ventes)
+          <DialogDescription className="text-white/50">
+            Total: <span className="font-bold text-blue-400">{formatEuro(salesProfit)}</span> ({salesCount} ventes)
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-3 mt-4">
@@ -48,26 +52,26 @@ const BeneficeVentesModal: React.FC<BeneficeVentesModalProps> = ({
                 ? (sale.totalProfit || 0) 
                 : sale.profit;
               return (
-                <div key={sale.id} className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                <div key={sale.id} className="flex items-center justify-between p-4 bg-white/[0.04] border border-white/[0.08] rounded-xl backdrop-blur-sm transition-all duration-300 hover:scale-[1.01] hover:border-blue-500/20">
                   <div>
-                    <p className="font-medium text-gray-800 dark:text-white">
+                    <p className="font-semibold text-white/90">
                       {sale.products && Array.isArray(sale.products) 
                         ? sale.products.map((p: any) => p.description).join(', ')
                         : sale.description}
                     </p>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-white/40 mt-0.5">
                       {new Date(sale.date).toLocaleDateString('fr-FR')}
                       {sale.clientName && ` - ${sale.clientName}`}
                     </p>
                   </div>
-                  <p className={`text-lg font-bold ${profit >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
+                  <p className={`text-lg font-black ${profit >= 0 ? 'text-blue-400' : 'text-red-400'}`}>
                     {formatEuro(profit)}
                   </p>
                 </div>
               );
             })
           ) : (
-            <p className="text-center text-gray-500 py-8">Aucune vente ce mois</p>
+            <p className="text-center text-white/40 py-8">Aucune vente ce mois</p>
           )}
         </div>
       </DialogContent>
