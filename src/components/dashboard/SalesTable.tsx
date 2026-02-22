@@ -28,7 +28,7 @@ const SalesTable: React.FC<SalesTableProps> = ({ sales: initialSales, onRowClick
     const now = new Date();
     const currentMonth = now.getMonth();
     const currentYear = now.getFullYear();
-    
+
     return salesData.filter(sale => {
       const saleDate = new Date(sale.date);
       return saleDate.getMonth() === currentMonth && saleDate.getFullYear() === currentYear;
@@ -43,13 +43,13 @@ const SalesTable: React.FC<SalesTableProps> = ({ sales: initialSales, onRowClick
   // Synchronisation temps réel pour les ventes du mois en cours
   useEffect(() => {
     console.log('🔄 Initialisation SalesTable - Filtrage mois en cours');
-    
+
     // Initialiser avec les ventes du mois en cours seulement
     setSales(currentMonthSales);
-    
+
     // Connexion au service temps réel
     realtimeService.connect();
-    
+
     // Écouter les changements de données
     const unsubscribeData = realtimeService.addDataListener((data) => {
       if (data.sales) {
@@ -114,7 +114,7 @@ const SalesTable: React.FC<SalesTableProps> = ({ sales: initialSales, onRowClick
       year: 'numeric',
     });
   };
-  
+
   // Formater un montant en euros
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('fr-FR', {
@@ -122,22 +122,22 @@ const SalesTable: React.FC<SalesTableProps> = ({ sales: initialSales, onRowClick
       currency: 'EUR',
     }).format(amount);
   };
-  
+
   // Vérifier si le produit est une avance
   const isAdvanceProduct = (description: string) => {
     return description.includes("Avance Perruque ou Tissages");
   };
-  
+
   // Obtenir la quantité à afficher selon le type de produit
   const getDisplayQuantity = (sale: Sale) => {
     return isAdvanceProduct(sale.description) ? 0 : sale.quantitySold;
   };
-  
+
   // Calculer les totaux pour le mois en cours uniquement
   const totalSellingPrice = sortedSales.reduce((sum, sale) => {
     return sum + (sale.totalSellingPrice || sale.sellingPrice || 0);
   }, 0);
-  
+
   // Calculer le nombre total de produits vendus (pas le nombre de ventes)
   const totalProductsSold = sortedSales.reduce((sum, sale) => {
     if (sale.products) {
@@ -149,13 +149,13 @@ const SalesTable: React.FC<SalesTableProps> = ({ sales: initialSales, onRowClick
     // Pour les ventes simples
     return sum + (isAdvanceProduct(sale.description || '') ? 0 : (sale.quantitySold || 0));
   }, 0);
-  
+
   const totalQuantitySold = totalProductsSold; // Alias pour compatibilité
-  
+
   const totalPurchasePrice = sortedSales.reduce((sum, sale) => {
     return sum + (sale.totalPurchasePrice || sale.purchasePrice || 0);
   }, 0);
-  
+
   const totalDeliveryFee = sortedSales.reduce((sum, sale) => {
     if (sale.products) {
       return sum + sale.products.reduce((feeSum, product) => {
@@ -164,7 +164,7 @@ const SalesTable: React.FC<SalesTableProps> = ({ sales: initialSales, onRowClick
     }
     return sum + (sale.deliveryFee || 0);
   }, 0);
-  
+
   const totalProfit = sortedSales.reduce((sum, sale) => {
     return sum + (sale.totalProfit || sale.profit || 0);
   }, 0);
@@ -173,7 +173,7 @@ const SalesTable: React.FC<SalesTableProps> = ({ sales: initialSales, onRowClick
     const now = new Date();
     return now.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
   };
-  
+
   // Simuler un chargement initial
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -184,7 +184,7 @@ const SalesTable: React.FC<SalesTableProps> = ({ sales: initialSales, onRowClick
 
   if (isLoading) {
     return (
-      <PremiumLoading 
+      <PremiumLoading
         text="Chargement des Ventes"
         size="md"
         variant="ventes"
@@ -207,14 +207,12 @@ const SalesTable: React.FC<SalesTableProps> = ({ sales: initialSales, onRowClick
           </div>
           <div className="flex items-center gap-2">
             {/* Indicateur de synchronisation temps réel */}
-            <div className={`flex items-center gap-2 px-3 py-1 rounded-full ${
-              isRealtimeActive 
-                ? 'bg-green-500/20 text-green-100' 
+            <div className={`flex items-center gap-2 px-3 py-1 rounded-full ${isRealtimeActive
+                ? 'bg-green-500/20 text-green-100'
                 : 'bg-red-500/20 text-red-100'
-            }`}>
-              <div className={`w-2 h-2 rounded-full ${
-                isRealtimeActive ? 'bg-green-400 animate-pulse' : 'bg-red-400'
-              }`} />
+              }`}>
+              <div className={`w-2 h-2 rounded-full ${isRealtimeActive ? 'bg-green-400 animate-pulse' : 'bg-red-400'
+                }`} />
               <span className="text-xs font-medium">
                 {isRealtimeActive ? 'Temps réel' : 'Hors ligne'}
               </span>
@@ -227,7 +225,7 @@ const SalesTable: React.FC<SalesTableProps> = ({ sales: initialSales, onRowClick
             <Sparkles className="h-6 w-6 text-white animate-pulse" />
           </div>
         </div>
-        
+
         {/* Informations de dernière mise à jour */}
         <div className="mt-2 text-xs text-white/60">
           Dernière mise à jour: {lastUpdate.toLocaleTimeString('fr-FR')} • {totalProductsSold} produits vendus ce mois
@@ -267,22 +265,22 @@ const SalesTable: React.FC<SalesTableProps> = ({ sales: initialSales, onRowClick
               </div>
             </ModernTableHead>
             <ModernTableHead className="text-right bg-transparent">
-               <div className="flex items-center justify-end space-x-2">
+              <div className="flex items-center justify-end space-x-2">
                 <div className="bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full p-1">
                   <Euro className="h-3 w-3 text-white" />
                 </div>
-              <span className='text-red-600 font-bold text-sm'>Prix de vente</span>
+                <span className='text-red-600 font-bold text-sm'>Prix de vente</span>
               </div>
             </ModernTableHead>
             <ModernTableHead className="text-right bg-transparent">
               <span className='text-red-600 font-bold text-sm'>Quantités</span>
             </ModernTableHead>
             <ModernTableHead className="text-right bg-transparent">
-               <div className="flex items-center justify-end space-x-2">
+              <div className="flex items-center justify-end space-x-2">
                 <div className="bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full p-1">
                   <Euro className="h-3 w-3 text-white" />
                 </div>
-              <span className='text-red-600 font-bold text-sm'>Prix d'achat</span>
+                <span className='text-red-600 font-bold text-sm'>Prix d'achat</span>
               </div>
             </ModernTableHead>
             <ModernTableHead className="text-right bg-transparent">
@@ -322,115 +320,117 @@ const SalesTable: React.FC<SalesTableProps> = ({ sales: initialSales, onRowClick
             sortedSales.map((sale, index) => {
               const isRefund = (sale as any).isRefund || (sale.totalSellingPrice ?? sale.sellingPrice ?? 0) < 0;
               return (
-              <ModernTableRow 
-                key={sale.id} 
-                onClick={() => onRowClick(sale)}
-                className={`${isRefund ? 'bg-red-50/80 dark:bg-red-900/20 border-l-4 border-l-red-500' : ''} hover:bg-gradient-to-r hover:from-purple-50/50 hover:to-blue-50/50 dark:hover:from-purple-900/20 dark:hover:to-blue-900/20 transition-all duration-300 hover:shadow-lg border-b border-gray-100/50 dark:border-gray-700/50 cursor-pointer`}
-              >
-                <ModernTableCell className="font-medium">
-                  <div className="flex items-center space-x-3">
-                    <div className="bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900/30 dark:to-purple-900/30 rounded-full w-8 h-8 flex items-center justify-center">
-                      <span className="text-xs font-bold text-blue-600 dark:text-blue-400">
-                        {index + 1}
+                <ModernTableRow
+                  key={sale.id}
+                  onClick={() => onRowClick(sale)}
+                  className={`${isRefund ? 'bg-red-50/80 dark:bg-red-900/20 border-l-4 border-l-red-500' : ''} hover:bg-gradient-to-r hover:from-purple-50/50 hover:to-blue-50/50 dark:hover:from-purple-900/20 dark:hover:to-blue-900/20 transition-all duration-300 hover:shadow-lg border-b border-gray-100/50 dark:border-gray-700/50 cursor-pointer`}
+                >
+                  <ModernTableCell className="font-medium">
+                    <div className="flex items-center space-x-3">
+                      <div className="bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900/30 dark:to-purple-900/30 rounded-full w-8 h-8 flex items-center justify-center">
+                        <span className="text-xs font-bold text-blue-600 dark:text-blue-400">
+                          {index + 1}
+                        </span>
+                      </div>
+                      <span className="text-gray-700 font-bold dark:text-gray-300">{formatDate(sale.date)}</span>
+                    </div>
+                  </ModernTableCell>
+                  <ModernTableCell className="font-medium">
+                    <div className="max-w-xs space-y-1">
+                      {isRefund && (
+                        <span className="inline-block text-[10px] font-bold text-white bg-red-500 rounded px-1.5 py-0.5 mb-1">
+                          REMBOURSEMENT
+                        </span>
+                      )}
+                      {sale.products ? (
+                        sale.products.map((product, idx) => (
+                          <p key={idx} className={`font-semibold truncate text-xs ${isRefund ? 'text-red-600 dark:text-red-400' : 'text-gray-800 dark:text-gray-200'}`}>
+                            {product.description}
+                          </p>
+                        ))
+                      ) : (
+                        <p className={`font-semibold truncate ${isRefund ? 'text-red-600 dark:text-red-400' : 'text-gray-800 dark:text-gray-200'}`}>
+                          {sale.description}
+                        </p>
+                      )}
+                    </div>
+                  </ModernTableCell>
+                  <ModernTableCell className="text-right">
+                    <div className={`${isRefund ? 'bg-red-100 dark:bg-red-900/30' : 'bg-gradient-to-r from-emerald-100 to-teal-100 dark:from-emerald-900/30 dark:to-teal-900/30'} px-3 py-1 rounded-full inline-block`}>
+                      <span className={`font-bold ${isRefund ? 'text-red-700 dark:text-red-400' : 'text-emerald-700 dark:text-emerald-400'}`}>
+                        {formatCurrency(sale.totalSellingPrice ?? sale.sellingPrice ?? 0)}
                       </span>
                     </div>
-                    <span className="text-gray-700 font-bold dark:text-gray-300">{formatDate(sale.date)}</span>
-                  </div>
-                </ModernTableCell>
-                <ModernTableCell className="font-medium">
-                  <div className="max-w-xs space-y-1">
-                    {isRefund && (
-                      <span className="inline-block text-[10px] font-bold text-white bg-red-500 rounded px-1.5 py-0.5 mb-1">
-                        REMBOURSEMENT
-                      </span>
-                    )}
-                    {sale.products ? (
-                      sale.products.map((product, idx) => (
-                        <p key={idx} className={`font-semibold truncate text-xs ${isRefund ? 'text-red-600 dark:text-red-400' : 'text-gray-800 dark:text-gray-200'}`}>
-                          {product.description}
-                        </p>
-                      ))
-                    ) : (
-                      <p className={`font-semibold truncate ${isRefund ? 'text-red-600 dark:text-red-400' : 'text-gray-800 dark:text-gray-200'}`}>
-                        {sale.description}
-                      </p>
-                    )}
-                  </div>
-                </ModernTableCell>
-                <ModernTableCell className="text-right">
-                  <div className={`${isRefund ? 'bg-red-100 dark:bg-red-900/30' : 'bg-gradient-to-r from-emerald-100 to-teal-100 dark:from-emerald-900/30 dark:to-teal-900/30'} px-3 py-1 rounded-full inline-block`}>
-                    <span className={`font-bold ${isRefund ? 'text-red-700 dark:text-red-400' : 'text-emerald-700 dark:text-emerald-400'}`}>
-                      {formatCurrency(sale.totalSellingPrice ?? sale.sellingPrice ?? 0)}
-                    </span>
-                  </div>
-                </ModernTableCell>
-                <ModernTableCell className="text-right">
-                  <div className="bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30 px-3 py-1 rounded-full inline-block">
-                    <span className="font-semibold text-purple-700 dark:text-purple-400">
-                      {sale.products ? (
-                        <div className="space-y-1">
-                          {sale.products.map((product, idx) => (
-                            <div key={idx} className="text-xs">
-                              {isAdvanceProduct(product.description) ? 0 : product.quantitySold}
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        getDisplayQuantity(sale)
-                      )}
-                    </span>
-                  </div>
-                </ModernTableCell>
-                <ModernTableCell className="text-right">
-                  <span className="text-gray-600 dark:text-gray-400 font-bold">
-                    {sale.products ? (
-                      <div className="space-y-1">
-                        {sale.products.map((product, idx) => (
-                          <div key={idx} className="text-xs">
-                            {formatCurrency(product.purchasePrice)}
+                  </ModernTableCell>
+                  <ModernTableCell className="text-right">
+                    <div className="bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30 px-3 py-1 rounded-full inline-block">
+                      <span className="font-semibold text-purple-700 dark:text-purple-400">
+                        {sale.products ? (
+                          <div className="space-y-1">
+                            {sale.products.map((product, idx) => (
+                              <div key={idx} className="text-xs">
+                                {isAdvanceProduct(product.description) ? 0 : product.quantitySold}
+                              </div>
+                            ))}
                           </div>
-                        ))}
-                      </div>
-                    ) : (
-                      formatCurrency(sale.purchasePrice)
-                    )}
-                  </span>
-                </ModernTableCell>
-                <ModernTableCell className="text-right">
-                  <div className="bg-gradient-to-r from-blue-100 to-cyan-100 dark:from-blue-900/30 dark:to-cyan-900/30 px-3 py-1 rounded-full inline-block">
-                    <span className="font-bold text-blue-700 dark:text-blue-400">
+                        ) : (
+                          getDisplayQuantity(sale)
+                        )}
+                      </span>
+                    </div>
+                  </ModernTableCell>
+                  <ModernTableCell className="text-right">
+                    <div className={`${isRefund ? 'bg-red-100 dark:bg-red-900/30' : 'bg-gradient-to-r from-emerald-100 to-teal-100 dark:from-emerald-900/30 dark:to-teal-900/30'} px-3 py-1 rounded-full inline-block`}>
                       {sale.products ? (
                         <div className="space-y-1">
                           {sale.products.map((product, idx) => (
-                            <div key={idx} className="text-xs">
-                              {formatCurrency(product.deliveryFee || 0)}
+                            <div key={idx} className={`text-xs font-bold ${isRefund ? 'text-red-700 dark:text-red-400' : 'text-emerald-700 dark:text-emerald-400'}`}>
+                              {formatCurrency(product.purchasePrice)}
                             </div>
                           ))}
                         </div>
                       ) : (
-                        formatCurrency(sale.deliveryFee || 0)
+                        <span className={`font-bold ${isRefund ? 'text-red-700 dark:text-red-400' : 'text-emerald-700 dark:text-emerald-400'}`}>
+                          {formatCurrency(sale.purchasePrice)}
+                        </span>
                       )}
-                    </span>
-                  </div>
-                </ModernTableCell>
-                <ModernTableCell className="text-right">
-                  <div className={`${isRefund ? 'bg-red-100 dark:bg-red-900/30' : 'bg-gradient-to-r from-yellow-100 to-orange-100 dark:from-yellow-900/30 dark:to-orange-900/30'} px-3 py-1 rounded-full inline-block`}>
-                    <span className={`font-bold ${isRefund ? 'text-red-700 dark:text-red-400' : 'text-orange-700 dark:text-orange-400'}`}>
-                      {sale.products ? (
-                        <div className="space-y-1">
-                          {sale.products.map((product, idx) => (
-                            <div key={idx} className="text-xs">
-                              {formatCurrency(product.profit)}
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        formatCurrency(sale.profit)
-                      )}
-                    </span>
-                  </div>
-                </ModernTableCell>
-              </ModernTableRow>
+                    </div>
+                  </ModernTableCell>
+                  <ModernTableCell className="text-right">
+                    <div className="bg-gradient-to-r from-blue-100 to-cyan-100 dark:from-blue-900/30 dark:to-cyan-900/30 px-3 py-1 rounded-full inline-block">
+                      <span className="font-bold text-blue-700 dark:text-blue-400">
+                        {sale.products ? (
+                          <div className="space-y-1">
+                            {sale.products.map((product, idx) => (
+                              <div key={idx} className="text-xs">
+                                {formatCurrency(product.deliveryFee || 0)}
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          formatCurrency(sale.deliveryFee || 0)
+                        )}
+                      </span>
+                    </div>
+                  </ModernTableCell>
+                  <ModernTableCell className="text-right">
+                    <div className={`${isRefund ? 'bg-red-100 dark:bg-red-900/30' : 'bg-gradient-to-r from-yellow-100 to-orange-100 dark:from-yellow-900/30 dark:to-orange-900/30'} px-3 py-1 rounded-full inline-block`}>
+                      <span className={`font-bold ${isRefund ? 'text-red-700 dark:text-red-400' : 'text-orange-700 dark:text-orange-400'}`}>
+                        {sale.products ? (
+                          <div className="space-y-1">
+                            {sale.products.map((product, idx) => (
+                              <div key={idx} className="text-xs">
+                                {formatCurrency(product.profit)}
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          formatCurrency(sale.profit)
+                        )}
+                      </span>
+                    </div>
+                  </ModernTableCell>
+                </ModernTableRow>
               );
             })
           )}

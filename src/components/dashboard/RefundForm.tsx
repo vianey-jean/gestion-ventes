@@ -3,7 +3,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useApp } from '@/contexts/AppContext';
 import { useToast } from '@/hooks/use-toast';
 import { Sale } from '@/types';
@@ -14,7 +13,7 @@ import pretProduitApiService from '@/services/api/pretProduitApi';
 interface RefundFormProps {
   isOpen: boolean;
   onClose: () => void;
-  editSale?: Sale; // If provided, refund this specific sale
+  editSale?: Sale;
 }
 
 interface RefundProduct {
@@ -42,7 +41,6 @@ const RefundForm: React.FC<RefundFormProps> = ({ isOpen, onClose, editSale }) =>
   const [linkedPrets, setLinkedPrets] = useState<any[]>([]);
   const [pretAction, setPretAction] = useState<'delete' | 'modify'>('delete');
 
-  // Initialize from editSale if provided
   React.useEffect(() => {
     if (isOpen && editSale) {
       setSelectedSale(editSale);
@@ -91,7 +89,6 @@ const RefundForm: React.FC<RefundFormProps> = ({ isOpen, onClose, editSale }) =>
     }
   };
 
-  // Check if the sale has linked pret produits (advances)
   const checkLinkedPrets = async (sale: Sale) => {
     try {
       const allPrets = await pretProduitApiService.getAll();
@@ -107,11 +104,10 @@ const RefundForm: React.FC<RefundFormProps> = ({ isOpen, onClose, editSale }) =>
 
       setLinkedPrets(linked);
     } catch (error) {
-      console.error('Error checking linked prets:', error);
+      // silently fail
     }
   };
 
-  // Search sales by client name
   const handleSearch = useCallback(async (value: string) => {
     setClientSearch(value);
     if (value.length >= 3) {
@@ -120,7 +116,7 @@ const RefundForm: React.FC<RefundFormProps> = ({ isOpen, onClose, editSale }) =>
         const results = await remboursementApiService.searchSalesByClient(value);
         setSearchResults(results);
       } catch (error) {
-        console.error('Erreur recherche:', error);
+        // silently fail
       } finally {
         setIsSearching(false);
       }
@@ -129,7 +125,6 @@ const RefundForm: React.FC<RefundFormProps> = ({ isOpen, onClose, editSale }) =>
     }
   }, []);
 
-  // Select a sale to refund
   const handleSelectSale = (sale: Sale) => {
     setSelectedSale(sale);
     setSearchResults([]);
@@ -138,13 +133,11 @@ const RefundForm: React.FC<RefundFormProps> = ({ isOpen, onClose, editSale }) =>
     checkLinkedPrets(sale);
   };
 
-  // Remove a product from refund (keep at least 1)
   const removeProduct = (index: number) => {
     if (refundProducts.length <= 1) return;
     setRefundProducts(prev => prev.filter((_, i) => i !== index));
   };
 
-  // Update quantity
   const updateQuantity = (index: number, value: string) => {
     const qty = Math.max(1, Math.min(Number(value) || 1, refundProducts[index].maxQuantity));
     setRefundProducts(prev => {
@@ -158,7 +151,6 @@ const RefundForm: React.FC<RefundFormProps> = ({ isOpen, onClose, editSale }) =>
     });
   };
 
-  // Update refund price
   const updateRefundPrice = (index: number, value: string) => {
     const price = Number(value) || 0;
     setRefundProducts(prev => {
@@ -172,7 +164,6 @@ const RefundForm: React.FC<RefundFormProps> = ({ isOpen, onClose, editSale }) =>
     });
   };
 
-  // Calculate totals
   const totals = refundProducts.reduce((acc, p) => ({
     totalRefundPrice: acc.totalRefundPrice + (p.quantitySold * p.refundPriceUnit),
     totalPurchasePrice: acc.totalPurchasePrice + (p.quantitySold * p.purchasePriceUnit),
@@ -182,56 +173,44 @@ const RefundForm: React.FC<RefundFormProps> = ({ isOpen, onClose, editSale }) =>
   const formatCurrency = (amount: number) => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(amount);
   const formatDate = (dateStr: string) => new Date(dateStr).toLocaleDateString('fr-FR');
 
-  // Handle pret produit when refunding
   const handlePretOnRefund = async () => {
     if (linkedPrets.length === 0) return;
 
     for (const pret of linkedPrets) {
       try {
-        // Check which products are being refunded
         const refundedDescriptions = refundProducts.map(p => p.description.toLowerCase());
         const pretDesc = (pret.description || '').toLowerCase();
-
         const isLinked = refundedDescriptions.some(desc => pretDesc.includes(desc) || desc.includes(pretDesc));
-
         if (!isLinked) continue;
 
         if (pretAction === 'delete') {
-          // Delete the pret produit entirely
           await pretProduitApiService.delete(pret.id);
-          console.log(`🗑️ Prêt produit supprimé: ${pret.id}`);
         } else {
-          // Modify: reduce the advance by the refund amount
           const refundTotal = totals.totalRefundPrice;
           const newAvance = Math.max(0, (pret.avanceRecue || 0) - refundTotal);
           const newReste = (pret.prixVente || 0) - newAvance;
 
           if (newAvance <= 0) {
-            // If no advance left, delete the pret
             await pretProduitApiService.delete(pret.id);
-            console.log(`🗑️ Prêt produit supprimé (avance à 0): ${pret.id}`);
           } else {
             await pretProduitApiService.update(pret.id, {
               avanceRecue: newAvance,
               reste: newReste,
               estPaye: newReste <= 0
             });
-            console.log(`✏️ Prêt produit modifié: ${pret.id}, nouvelle avance: ${newAvance}`);
           }
         }
       } catch (error) {
-        console.error('Erreur gestion prêt produit:', error);
+        // silently fail
       }
     }
   };
 
-  // Submit refund
   const handleSubmit = async () => {
     if (!selectedSale || refundProducts.length === 0) return;
     setIsSubmitting(true);
 
     try {
-      // Handle linked prets first
       await handlePretOnRefund();
 
       await remboursementApiService.create({
@@ -264,7 +243,6 @@ const RefundForm: React.FC<RefundFormProps> = ({ isOpen, onClose, editSale }) =>
       if (refreshData) refreshData();
       onClose();
     } catch (error) {
-      console.error('Erreur remboursement:', error);
       toast({
         title: "Erreur",
         description: "Erreur lors de l'enregistrement du remboursement",
@@ -278,17 +256,28 @@ const RefundForm: React.FC<RefundFormProps> = ({ isOpen, onClose, editSale }) =>
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto bg-white/10 backdrop-blur border border-white/20 shadow-[0_20px_60px_rgba(0,0,0,0.3)] rounded-2xl">
+      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto
+        bg-gradient-to-br from-white/98 via-gray-50/98 to-gray-100/98
+        dark:from-gray-900/98 dark:via-gray-800/98 dark:to-gray-900/98
+        backdrop-blur-2xl
+        border border-gray-200/60 dark:border-white/15
+        shadow-[0_40px_120px_rgba(0,0,0,0.15)] dark:shadow-[0_40px_120px_rgba(0,0,0,0.5)]
+        rounded-2xl sm:rounded-3xl">
+
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3 text-xl">
-            <div className="p-2.5 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/20 border border-amber-500/20 backdrop-blur-sm">
-              <RotateCcw className="h-5 w-5 text-amber-400" />
+            <div className="relative p-3 rounded-2xl
+              bg-gradient-to-br from-amber-100 via-orange-100 to-amber-50
+              dark:from-amber-500/20 dark:via-orange-500/20 dark:to-amber-500/10
+              border border-amber-200/60 dark:border-amber-500/20
+              shadow-[0_10px_40px_rgba(245,158,11,0.2)]">
+              <RotateCcw className="h-6 w-6 text-amber-600 dark:text-amber-400 drop-shadow-lg" />
             </div>
-            <span className="bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent font-black">
+            <span className="bg-gradient-to-r from-amber-600 to-orange-600 dark:from-amber-400 dark:to-orange-400 bg-clip-text text-transparent font-black text-xl sm:text-2xl">
               Remboursement
             </span>
           </DialogTitle>
-          <DialogDescription className="text-white/50">
+          <DialogDescription className="text-gray-500 dark:text-white/50 text-sm sm:text-base">
             Recherchez un client et sélectionnez la vente à rembourser
           </DialogDescription>
         </DialogHeader>
@@ -296,58 +285,62 @@ const RefundForm: React.FC<RefundFormProps> = ({ isOpen, onClose, editSale }) =>
         <div className="space-y-4">
           {/* Date */}
           <div className="space-y-2">
-            <Label className="text-white/70">Date du remboursement</Label>
-            <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="bg-white/[0.06] border-white/[0.1] text-white rounded-xl" />
+            <Label className="text-gray-700 dark:text-white/70 font-semibold">Date du remboursement</Label>
+            <Input
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              className="bg-gray-100/60 dark:bg-white/[0.06] border-gray-200/80 dark:border-white/[0.1] text-gray-900 dark:text-white rounded-xl shadow-sm"
+            />
           </div>
 
           {/* Search client */}
           {!selectedSale && (
             <div className="space-y-2">
-              <Label className="text-white/70">Rechercher par nom du client (min. 3 caractères)</Label>
+              <Label className="text-gray-700 dark:text-white/70 font-semibold">Rechercher par nom du client (min. 3 caractères)</Label>
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/30" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-white/30" />
                 <Input
                   value={clientSearch}
                   onChange={(e) => handleSearch(e.target.value)}
                   placeholder="Nom du client..."
-                  className="pl-10 bg-white/[0.06] border-white/[0.1] text-white placeholder:text-white/20 rounded-xl"
+                  className="pl-10 bg-gray-100/60 dark:bg-white/[0.06] border-gray-200/80 dark:border-white/[0.1] text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-white/20 rounded-xl shadow-sm"
                 />
               </div>
 
-              {isSearching && <p className="text-sm text-white/40">Recherche en cours...</p>}
+              {isSearching && <p className="text-sm text-gray-400 dark:text-white/40">Recherche en cours...</p>}
 
               {searchResults.length > 0 && (
-                <div className="max-h-60 overflow-y-auto border border-white/[0.08] rounded-xl divide-y divide-white/[0.06] bg-white/[0.02] backdrop-blur-sm">
+                <div className="max-h-60 overflow-y-auto border border-gray-200/60 dark:border-white/[0.08] rounded-xl divide-y divide-gray-100 dark:divide-white/[0.06] bg-white/80 dark:bg-white/[0.02] backdrop-blur-sm shadow-lg">
                   {searchResults.map((sale) => (
                     <div
                       key={sale.id}
                       onClick={() => handleSelectSale(sale)}
-                      className="p-3 hover:bg-white/[0.06] cursor-pointer transition-colors"
+                      className="p-3 hover:bg-gray-50 dark:hover:bg-white/[0.06] cursor-pointer transition-colors"
                     >
                       <div className="flex justify-between items-start">
                         <div>
-                          <p className="font-bold text-sm text-white/90">{sale.clientName}</p>
-                          <p className="text-xs text-white/40">
+                          <p className="font-bold text-sm text-gray-800 dark:text-white/90">{sale.clientName}</p>
+                          <p className="text-xs text-gray-500 dark:text-white/40">
                             {sale.products
                               ? sale.products.map(p => p.description).join(', ')
                               : sale.description}
                           </p>
                         </div>
                         <div className="text-right">
-                          <p className="font-bold text-sm text-emerald-400">
+                          <p className="font-bold text-sm text-emerald-600 dark:text-emerald-400">
                             {formatCurrency(sale.totalSellingPrice || sale.sellingPrice || 0)}
                           </p>
-                          <p className="text-xs text-white/40">{formatDate(sale.date)}</p>
+                          <p className="text-xs text-gray-400 dark:text-white/40">{formatDate(sale.date)}</p>
                         </div>
                       </div>
                     </div>
-                  ))
-                  }
+                  ))}
                 </div>
               )}
 
               {clientSearch.length >= 3 && !isSearching && searchResults.length === 0 && (
-                <p className="text-sm text-white/40">Aucune vente trouvée pour ce client</p>
+                <p className="text-sm text-gray-400 dark:text-white/40">Aucune vente trouvée pour ce client</p>
               )}
             </div>
           )}
@@ -355,19 +348,19 @@ const RefundForm: React.FC<RefundFormProps> = ({ isOpen, onClose, editSale }) =>
           {/* Selected sale info */}
           {selectedSale && (
             <>
-              <div className="p-4 bg-amber-500/[0.06] border border-amber-500/20 rounded-xl backdrop-blur-sm">
+              <div className="p-4 bg-amber-50/80 dark:bg-amber-500/[0.06] border border-amber-200/60 dark:border-amber-500/20 rounded-xl backdrop-blur-sm shadow-sm">
                 <div className="flex justify-between items-center">
                   <div>
-                    <p className="text-sm font-bold text-amber-400">
+                    <p className="text-sm font-bold text-amber-700 dark:text-amber-400">
                       Vente sélectionnée - {selectedSale.clientName}
                     </p>
-                    <p className="text-xs text-white/40 mt-1">
+                    <p className="text-xs text-gray-500 dark:text-white/40 mt-1">
                       Date: {formatDate(selectedSale.date)} •
                       Total: {formatCurrency(selectedSale.totalSellingPrice || selectedSale.sellingPrice || 0)}
                     </p>
                   </div>
                   {!editSale && (
-                    <Button variant="ghost" size="sm" onClick={resetForm} className="text-white/50 hover:text-white hover:bg-white/10">
+                    <Button variant="ghost" size="sm" onClick={resetForm} className="text-gray-500 dark:text-white/50 hover:text-gray-800 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/10">
                       <X className="h-4 w-4" /> Changer
                     </Button>
                   )}
@@ -376,15 +369,15 @@ const RefundForm: React.FC<RefundFormProps> = ({ isOpen, onClose, editSale }) =>
 
               {/* Linked Pret Produit Warning */}
               {linkedPrets.length > 0 && (
-                <div className="p-4 bg-yellow-500/[0.06] border border-yellow-500/20 rounded-xl backdrop-blur-sm">
+                <div className="p-4 bg-yellow-50/80 dark:bg-yellow-500/[0.06] border border-yellow-200/60 dark:border-yellow-500/20 rounded-xl backdrop-blur-sm shadow-sm">
                   <div className="flex items-center gap-2 mb-3">
-                    <AlertTriangle className="h-5 w-5 text-yellow-400" />
-                    <p className="font-bold text-sm text-yellow-400">
+                    <AlertTriangle className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
+                    <p className="font-bold text-sm text-yellow-700 dark:text-yellow-400">
                       ⚠️ Cette vente a {linkedPrets.length} prêt(s) produit avec avance
                     </p>
                   </div>
                   {linkedPrets.map(pret => (
-                    <div key={pret.id} className="text-xs text-white/50 mb-1">
+                    <div key={pret.id} className="text-xs text-gray-600 dark:text-white/50 mb-1">
                       • {pret.description} — Avance: {formatCurrency(pret.avanceRecue || 0)} / Reste: {formatCurrency(pret.reste || 0)}
                     </div>
                   ))}
@@ -395,8 +388,8 @@ const RefundForm: React.FC<RefundFormProps> = ({ isOpen, onClose, editSale }) =>
                       variant={pretAction === 'delete' ? 'default' : 'outline'}
                       onClick={() => setPretAction('delete')}
                       className={pretAction === 'delete'
-                        ? 'bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30'
-                        : 'bg-white/[0.04] text-white/50 border-white/[0.1] hover:bg-white/[0.08]'}
+                        ? 'bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-500/30 hover:bg-red-200 dark:hover:bg-red-500/30'
+                        : 'bg-gray-50 dark:bg-white/[0.04] text-gray-600 dark:text-white/50 border-gray-200 dark:border-white/[0.1] hover:bg-gray-100 dark:hover:bg-white/[0.08]'}
                     >
                       <Trash2 className="h-3 w-3 mr-1" /> Supprimer le prêt
                     </Button>
@@ -406,8 +399,8 @@ const RefundForm: React.FC<RefundFormProps> = ({ isOpen, onClose, editSale }) =>
                       variant={pretAction === 'modify' ? 'default' : 'outline'}
                       onClick={() => setPretAction('modify')}
                       className={pretAction === 'modify'
-                        ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30 hover:bg-blue-500/30'
-                        : 'bg-white/[0.04] text-white/50 border-white/[0.1] hover:bg-white/[0.08]'}
+                        ? 'bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-500/30 hover:bg-blue-200 dark:hover:bg-blue-500/30'
+                        : 'bg-gray-50 dark:bg-white/[0.04] text-gray-600 dark:text-white/50 border-gray-200 dark:border-white/[0.1] hover:bg-gray-100 dark:hover:bg-white/[0.08]'}
                     >
                       <Edit3 className="h-3 w-3 mr-1" /> Modifier l'avance
                     </Button>
@@ -417,62 +410,70 @@ const RefundForm: React.FC<RefundFormProps> = ({ isOpen, onClose, editSale }) =>
 
               {/* Products to refund */}
               <div className="space-y-3">
-                <Label className="text-sm font-bold text-white/70">Produits à rembourser</Label>
+                <Label className="text-sm font-bold text-gray-700 dark:text-white/70">Produits à rembourser</Label>
                 {refundProducts.map((product, index) => (
-                  <div key={index} className="p-4 bg-white/[0.04] border border-white/[0.08] rounded-xl backdrop-blur-sm space-y-3 transition-all duration-300 hover:border-amber-500/20">
+                  <div
+                    key={index}
+                    className="p-4
+                      bg-gray-50/80 dark:bg-white/[0.04]
+                      border border-gray-200/60 dark:border-white/[0.08]
+                      rounded-xl backdrop-blur-sm space-y-3 transition-all duration-300
+                      hover:border-amber-300 dark:hover:border-amber-500/20
+                      shadow-sm hover:shadow-md"
+                  >
                     <div className="flex justify-between items-start">
                       <div className="flex items-center gap-2">
-                        <div className="p-2 rounded-lg bg-blue-500/20 border border-blue-500/20">
-                          <Package className="h-4 w-4 text-blue-400" />
+                        <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-500/20 border border-blue-200 dark:border-blue-500/20">
+                          <Package className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                         </div>
-                        <span className="font-bold text-sm text-white/90">{product.description}</span>
+                        <span className="font-bold text-sm text-gray-800 dark:text-white/90">{product.description}</span>
                       </div>
                       {refundProducts.length > 1 && (
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => removeProduct(index)}
-                          className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                          className="text-red-500 dark:text-red-400 hover:text-red-600 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-500/10"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       )}
                     </div>
 
-                    <div className="grid grid-cols-3 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                       <div className="space-y-1">
-                        <Label className="text-xs text-white/50">Quantité (max: {product.maxQuantity})</Label>
+                        <Label className="text-xs text-gray-500 dark:text-white/50">Quantité (max: {product.maxQuantity})</Label>
                         <Input
                           type="number"
                           min="1"
                           max={product.maxQuantity}
                           value={product.quantitySold}
                           onChange={(e) => updateQuantity(index, e.target.value)}
-                          className="bg-white/[0.06] border-white/[0.1] text-white rounded-xl"
+                          className="bg-white dark:bg-white/[0.06] border-gray-200 dark:border-white/[0.1] text-gray-900 dark:text-white rounded-xl shadow-sm"
                         />
                       </div>
                       <div className="space-y-1">
-                        <Label className="text-xs text-white/50">Prix remb. unitaire (€)</Label>
+                        <Label className="text-xs text-gray-500 dark:text-white/50">Prix remb. unitaire (€)</Label>
                         <Input
                           type="number"
                           step="0.01"
                           min="0"
                           value={product.refundPriceUnit}
                           onChange={(e) => updateRefundPrice(index, e.target.value)}
-                          className="bg-white/[0.06] border-white/[0.1] text-white rounded-xl"
+                          className="bg-white dark:bg-white/[0.06] border-gray-200 dark:border-white/[0.1] text-gray-900 dark:text-white rounded-xl shadow-sm"
                         />
                       </div>
                       <div className="space-y-1">
-                        <Label className="text-xs text-white/50">Total remboursement</Label>
-                        <div className="h-10 flex items-center px-3 rounded-xl bg-amber-500/10 border border-amber-500/20 font-black text-amber-400 text-sm">
+                        <Label className="text-xs text-gray-500 dark:text-white/50">Total remboursement</Label>
+                        <div className="h-10 flex items-center px-3 rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 font-black text-amber-700 dark:text-amber-400 text-sm shadow-sm">
                           {formatCurrency(product.quantitySold * product.refundPriceUnit)}
                         </div>
                       </div>
                     </div>
 
-                    <div className="text-xs text-white/40">
+                    <div className="text-xs text-gray-500 dark:text-white/40">
                       Prix d'achat unitaire: {formatCurrency(product.purchasePriceUnit)} •
-                      Bénéfice: <span className={product.profit >= 0 ? 'text-green-400' : 'text-red-400'}>
+                      Bénéfice: <span className={product.profit >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}>
                         {formatCurrency(product.profit)}
                       </span>
                     </div>
@@ -481,23 +482,23 @@ const RefundForm: React.FC<RefundFormProps> = ({ isOpen, onClose, editSale }) =>
               </div>
 
               {/* Totals */}
-              <div className="p-4 bg-gradient-to-r from-amber-500/[0.06] to-orange-500/[0.06] border border-amber-500/20 rounded-xl backdrop-blur-sm">
+              <div className="p-4 bg-gradient-to-r from-amber-50/80 to-orange-50/80 dark:from-amber-500/[0.06] dark:to-orange-500/[0.06] border border-amber-200/60 dark:border-amber-500/20 rounded-xl backdrop-blur-sm shadow-sm">
                 <div className="grid grid-cols-3 gap-4 text-center">
                   <div>
-                    <p className="text-xs text-white/40">Total remboursement</p>
-                    <p className="text-lg font-black text-amber-400">
+                    <p className="text-xs text-gray-500 dark:text-white/40">Total remboursement</p>
+                    <p className="text-lg font-black text-amber-700 dark:text-amber-400">
                       {formatCurrency(totals.totalRefundPrice)}
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-white/40">Coût d'achat</p>
-                    <p className="text-lg font-black text-white/60">
+                    <p className="text-xs text-gray-500 dark:text-white/40">Coût d'achat</p>
+                    <p className="text-lg font-black text-gray-600 dark:text-white/60">
                       {formatCurrency(totals.totalPurchasePrice)}
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-white/40">Impact bénéfice</p>
-                    <p className="text-lg font-black text-red-400">
+                    <p className="text-xs text-gray-500 dark:text-white/40">Impact bénéfice</p>
+                    <p className="text-lg font-black text-red-600 dark:text-red-400">
                       -{formatCurrency(Math.abs(totals.totalProfit))}
                     </p>
                   </div>
@@ -508,7 +509,12 @@ const RefundForm: React.FC<RefundFormProps> = ({ isOpen, onClose, editSale }) =>
         </div>
 
         <DialogFooter className="gap-2">
-          <Button variant="outline" onClick={onClose} disabled={isSubmitting} className="bg-white/[0.04] border-white/[0.1] text-white/70 hover:bg-white/[0.08] hover:text-white">
+          <Button
+            variant="outline"
+            onClick={onClose}
+            disabled={isSubmitting}
+            className="bg-gray-50 dark:bg-white/[0.04] border-gray-200 dark:border-white/[0.1] text-gray-700 dark:text-white/70 hover:bg-gray-100 dark:hover:bg-white/[0.08] hover:text-gray-900 dark:hover:text-white"
+          >
             Annuler
           </Button>
           <Button
