@@ -374,8 +374,20 @@ export const useCommandesLogic = () => {
       await fetchProducts();
 
       if (editingCommande) {
+        // Dé-réserver les anciens produits qui ne sont plus dans la liste
+        if (editingCommande.type === 'reservation') {
+          for (const oldProduit of editingCommande.produits) {
+            const stillInList = produitsListe.some(p => p.nom.toLowerCase() === oldProduit.nom.toLowerCase());
+            if (!stillInList) {
+              const existingProduct = products.find(p => p.description.toLowerCase() === oldProduit.nom.toLowerCase());
+              if (existingProduct) {
+                try { await api.put(`/api/products/${existingProduct.id}`, { reserver: 'non' }); } catch (err) { console.error('Erreur dé-réservation ancien produit:', err); }
+              }
+            }
+          }
+        }
         await api.put(`/api/commandes/${editingCommande.id}`, commandeData);
-        // Marquer les produits comme réservés si c'est une réservation
+        // Marquer les nouveaux produits comme réservés si c'est une réservation
         if (type === 'reservation') {
           for (const produit of produitsListe) {
             const existingProduct = products.find(p => p.description.toLowerCase() === produit.nom.toLowerCase());
@@ -476,7 +488,16 @@ export const useCommandesLogic = () => {
     try {
       if (commande && commande.statut === 'valide' && commande.saleId) await api.delete(`/api/sales/${commande.saleId}`);
       await api.put(`/api/commandes/${cancellingId}`, { statut: 'annule', saleId: null });
-      if (commande && commande.type === 'reservation') { try { await api.put(`/api/rdv/by-commande/${cancellingId}`, { statut: 'annule' }); } catch (rdvError) { console.log('RDV non trouvé:', rdvError); } }
+      // Dé-réserver tous les produits de cette réservation annulée
+      if (commande && commande.type === 'reservation') {
+        for (const produit of commande.produits) {
+          const existingProduct = products.find(p => p.description.toLowerCase() === produit.nom.toLowerCase());
+          if (existingProduct) {
+            try { await api.put(`/api/products/${existingProduct.id}`, { reserver: 'non' }); } catch (err) { console.error('Erreur dé-réservation produit:', err); }
+          }
+        }
+        try { await api.put(`/api/rdv/by-commande/${cancellingId}`, { statut: 'annule' }); } catch (rdvError) { console.log('RDV non trouvé:', rdvError); }
+      }
       toast({ title: 'Succès', description: 'Commande annulée', className: "bg-app-green text-white" });
       await Promise.all([fetchCommandes(), fetchProducts()]); setCancellingId(null);
     } catch (error) { console.error('Error cancelling:', error); toast({ title: 'Erreur', description: "Impossible d'annuler", className: "bg-app-red text-white", variant: 'destructive' }); }
@@ -511,6 +532,16 @@ export const useCommandesLogic = () => {
       const saleResponse = await api.post('/api/sales', saleData);
       const createdSale = saleResponse.data;
       await api.put(`/api/commandes/${validatingId}`, { statut: 'valide', saleId: createdSale.id });
+      // Dé-réserver les produits et déduire la quantité réservée du stock
+      if (commandeToValidate.type === 'reservation') {
+        for (const p of commandeToValidate.produits) {
+          const existingProduct = products.find(prod => prod.description.toLowerCase() === p.nom.toLowerCase());
+          if (existingProduct) {
+            const newQuantity = Math.max(0, existingProduct.quantity - p.quantite);
+            try { await api.put(`/api/products/${existingProduct.id}`, { reserver: 'non', quantity: newQuantity }); } catch (err) { console.error('Erreur dé-réservation/stock produit:', err); }
+          }
+        }
+      }
       toast({ title: 'Succès', description: 'Commande validée et enregistrée comme vente', className: "bg-app-green text-white" });
       await Promise.all([fetchCommandes(), fetchProducts()]); setValidatingId(null);
     } catch (error) { console.error('Error validating:', error); toast({ title: 'Erreur', description: 'Impossible de valider', className: "bg-app-red text-white", variant: 'destructive' }); }
