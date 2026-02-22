@@ -71,23 +71,17 @@ const AutresDepensesModal: React.FC<AutresDepensesModalProps> = ({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto
-        bg-gradient-to-br from-white/98 via-gray-50/98 to-gray-100/98
-        dark:from-gray-900/98 dark:via-gray-800/98 dark:to-gray-900/98
-        backdrop-blur-2xl
-        border border-gray-200/60 dark:border-white/15
+        bg-gradient-to-br from-white to-orange-50/50 dark:from-gray-900 dark:to-orange-950/30
+        backdrop-blur-xl border border-orange-100/50 dark:border-orange-800/30
         shadow-[0_40px_120px_rgba(0,0,0,0.15)] dark:shadow-[0_40px_120px_rgba(0,0,0,0.5)]
         rounded-2xl sm:rounded-3xl">
 
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3">
-            <div className="relative p-3 rounded-2xl
-              bg-gradient-to-br from-orange-100 via-amber-100 to-orange-50
-              dark:from-orange-500/20 dark:via-amber-500/20 dark:to-orange-500/10
-              border border-orange-200/60 dark:border-orange-500/20
-              shadow-[0_10px_40px_rgba(249,115,22,0.2)]">
-              <Receipt className="h-6 w-6 text-orange-600 dark:text-orange-400 drop-shadow-lg" />
+            <div className="p-2 rounded-xl bg-gradient-to-r from-orange-500 to-amber-600 text-white shadow-lg">
+              <Receipt className="h-5 w-5" />
             </div>
-            <span className="bg-gradient-to-r from-orange-600 to-amber-600 dark:from-orange-400 dark:to-amber-400 bg-clip-text text-transparent font-black text-xl sm:text-2xl">
+            <span className="text-xl font-bold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
               Autres Dépenses - {MONTHS[selectedMonth - 1]} {selectedYear}
             </span>
           </DialogTitle>
@@ -104,11 +98,9 @@ const AutresDepensesModal: React.FC<AutresDepensesModalProps> = ({
                 <div
                   key={depense.id}
                   className="flex items-center justify-between p-4
-                    bg-gray-50/80 dark:bg-white/[0.04]
-                    border border-gray-200/60 dark:border-white/[0.08]
-                    rounded-xl backdrop-blur-sm transition-all duration-300
-                    hover:scale-[1.01] hover:border-orange-300 dark:hover:border-orange-500/20
-                    shadow-sm hover:shadow-md"
+                    rounded-xl bg-gradient-to-r from-orange-50/80 to-amber-50/80 dark:from-orange-900/20 dark:to-amber-900/20
+                    border border-orange-100 dark:border-orange-800/50
+                    transition-all hover:scale-[1.01]"
                 >
                   <div className="flex items-center gap-3">
                     <div className={`p-2.5 rounded-xl border ${colors.bg} ${colors.border}`}>

@@ -30,23 +30,17 @@ const CreditDetailsModal: React.FC<CreditDetailsModalProps> = ({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto
-        bg-gradient-to-br from-white/98 via-gray-50/98 to-gray-100/98
-        dark:from-gray-900/98 dark:via-gray-800/98 dark:to-gray-900/98
-        backdrop-blur-2xl
-        border border-gray-200/60 dark:border-white/15
+        bg-gradient-to-br from-white to-green-50/50 dark:from-gray-900 dark:to-green-950/30
+        backdrop-blur-xl border border-green-100/50 dark:border-green-800/30
         shadow-[0_40px_120px_rgba(0,0,0,0.15)] dark:shadow-[0_40px_120px_rgba(0,0,0,0.5)]
         rounded-2xl sm:rounded-3xl">
 
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3">
-            <div className="relative p-3 rounded-2xl
-              bg-gradient-to-br from-green-100 via-emerald-100 to-green-50
-              dark:from-green-500/20 dark:via-emerald-500/20 dark:to-green-500/10
-              border border-green-200/60 dark:border-green-500/20
-              shadow-[0_10px_40px_rgba(34,197,94,0.2)]">
-              <ArrowUpCircle className="h-6 w-6 text-green-600 dark:text-green-400 drop-shadow-lg" />
+            <div className="p-2 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-lg">
+              <ArrowUpCircle className="h-5 w-5" />
             </div>
-            <span className="bg-gradient-to-r from-green-600 to-emerald-600 dark:from-green-400 dark:to-emerald-400 bg-clip-text text-transparent font-black text-xl sm:text-2xl">
+            <span className="text-xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
               Détails Crédit - {MONTHS[selectedMonth - 1]} {selectedYear}
             </span>
           </DialogTitle>
@@ -67,9 +61,9 @@ const CreditDetailsModal: React.FC<CreditDetailsModalProps> = ({
               return (
                 <div
                   key={sale.id}
-                  className={`relative p-4 rounded-xl border backdrop-blur-sm transition-all duration-300 hover:scale-[1.01] shadow-sm hover:shadow-md ${isRefund
-                    ? 'bg-red-50/80 dark:bg-red-500/[0.06] border-red-200/60 dark:border-red-500/20 hover:border-red-300 dark:hover:border-red-500/30'
-                    : 'bg-gray-50/80 dark:bg-white/[0.04] border-gray-200/60 dark:border-white/[0.08] hover:border-green-300 dark:hover:border-green-500/20'
+                  className={`relative p-4 rounded-xl border transition-all hover:scale-[1.01] ${isRefund
+                    ? 'bg-gradient-to-r from-red-50/80 to-rose-50/80 dark:from-red-900/20 dark:to-rose-900/20 border-red-100 dark:border-red-800/50'
+                    : 'bg-gradient-to-r from-green-50/80 to-emerald-50/80 dark:from-green-900/20 dark:to-emerald-900/20 border-green-100 dark:border-green-800/50'
                   }`}
                 >
                   {isRefund && (

@@ -42,23 +42,17 @@ const ViewRefundsModal: React.FC<ViewRefundsModalProps> = ({ isOpen, onClose }) 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto
-        bg-gradient-to-br from-white/98 via-gray-50/98 to-gray-100/98
-        dark:from-gray-900/98 dark:via-gray-800/98 dark:to-gray-900/98
-        backdrop-blur-2xl
-        border border-gray-200/60 dark:border-white/15
+        bg-gradient-to-br from-white to-amber-50/50 dark:from-gray-900 dark:to-amber-950/30
+        backdrop-blur-xl border border-amber-100/50 dark:border-amber-800/30
         shadow-[0_40px_120px_rgba(0,0,0,0.15)] dark:shadow-[0_40px_120px_rgba(0,0,0,0.5)]
         rounded-2xl sm:rounded-3xl">
 
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3 text-xl">
-            <div className="relative p-3 rounded-2xl
-              bg-gradient-to-br from-amber-100 via-orange-100 to-amber-50
-              dark:from-amber-500/20 dark:via-orange-500/20 dark:to-amber-500/10
-              border border-amber-200/60 dark:border-amber-500/20
-              shadow-[0_10px_40px_rgba(245,158,11,0.2)]">
-              <RotateCcw className="h-6 w-6 text-amber-600 dark:text-amber-400 drop-shadow-lg" />
+            <div className="p-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-lg">
+              <RotateCcw className="h-5 w-5" />
             </div>
-            <span className="bg-gradient-to-r from-amber-600 to-orange-600 dark:from-amber-400 dark:to-orange-400 bg-clip-text text-transparent font-black text-xl sm:text-2xl">
+            <span className="text-xl font-bold bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
               Remboursements du mois
             </span>
           </DialogTitle>

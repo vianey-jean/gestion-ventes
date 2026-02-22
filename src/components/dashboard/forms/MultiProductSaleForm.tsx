@@ -320,8 +320,9 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
 
   // Sélection d'un produit
   const handleProductSelect = (product: Product, index: number) => {
-    // Vérifier si le produit est réservé - ouvrir modale de confirmation
-    if ((product as any).reserver === 'oui') {
+    // Vérifier si le produit est réservé ET quantité === 1 - ouvrir modale de confirmation
+    // Si quantité > 1, pas de notification et on peut vendre normalement
+    if ((product as any).reserver === 'oui' && product.quantity === 1) {
       setPendingReservedProduct({ product, index });
       setReservedModalOpen(true);
       return;

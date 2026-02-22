@@ -34,23 +34,18 @@ const SoldeNetModal: React.FC<SoldeNetModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto
-        bg-gradient-to-br from-white/98 via-gray-50/98 to-gray-100/98
-        dark:from-gray-900/98 dark:via-gray-800/98 dark:to-gray-900/98
-        backdrop-blur-2xl
-        border border-gray-200/60 dark:border-white/15
+      <DialogContent className={`max-w-2xl max-h-[80vh] overflow-y-auto
+        bg-gradient-to-br ${isPositive ? 'from-white to-cyan-50/50 dark:from-gray-900 dark:to-cyan-950/30' : 'from-white to-red-50/50 dark:from-gray-900 dark:to-red-950/30'}
+        backdrop-blur-xl border ${isPositive ? 'border-cyan-100/50 dark:border-cyan-800/30' : 'border-red-100/50 dark:border-red-800/30'}
         shadow-[0_40px_120px_rgba(0,0,0,0.15)] dark:shadow-[0_40px_120px_rgba(0,0,0,0.5)]
-        rounded-2xl sm:rounded-3xl">
+        rounded-2xl sm:rounded-3xl`}>
 
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3">
-            <div className={`relative p-3 rounded-2xl border shadow-[0_10px_40px_rgba(0,0,0,0.1)] ${isPositive
-              ? 'bg-gradient-to-br from-cyan-100 via-blue-100 to-cyan-50 dark:from-cyan-500/20 dark:via-blue-500/20 dark:to-cyan-500/10 border-cyan-200/60 dark:border-cyan-500/20'
-              : 'bg-gradient-to-br from-red-100 via-rose-100 to-red-50 dark:from-red-500/20 dark:via-rose-500/20 dark:to-red-500/10 border-red-200/60 dark:border-red-500/20'
-            }`}>
-              <PiggyBank className={`h-6 w-6 drop-shadow-lg ${isPositive ? 'text-cyan-600 dark:text-cyan-400' : 'text-red-600 dark:text-red-400'}`} />
+            <div className={`p-2 rounded-xl shadow-lg text-white ${isPositive ? 'bg-gradient-to-r from-cyan-500 to-blue-600' : 'bg-gradient-to-r from-red-500 to-orange-600'}`}>
+              <PiggyBank className="h-5 w-5" />
             </div>
-            <span className={`bg-gradient-to-r ${isPositive ? 'from-cyan-600 to-blue-600 dark:from-cyan-400 dark:to-blue-400' : 'from-red-600 to-rose-600 dark:from-red-400 dark:to-rose-400'} bg-clip-text text-transparent font-black text-xl sm:text-2xl`}>
+            <span className={`text-xl font-bold bg-gradient-to-r ${isPositive ? 'from-cyan-600 to-blue-600' : 'from-red-600 to-orange-600'} bg-clip-text text-transparent`}>
               Solde Net - {MONTHS[selectedMonth - 1]} {selectedYear}
             </span>
           </DialogTitle>
