@@ -37,16 +37,16 @@ const ProfitLossStatement: React.FC = () => {
       const cost = sale.totalPurchasePrice || sale.products.reduce((sum, p) => sum + ((p.purchasePrice || 0)), 0);
       const profit = sale.totalProfit || sale.products.reduce((sum, p) => sum + (p.profit || 0), 0);
       const totalProductsSold = sale.products.reduce((sum, p) => sum + (p.quantitySold || 0), 0);
-      
+
       return { revenue, cost, profit, totalProductsSold };
     }
     // Ancien format single-produit
     else if (sale.sellingPrice !== undefined && sale.quantitySold !== undefined && sale.purchasePrice !== undefined) {
-      const revenue = (sale.sellingPrice || 0) ;
-      const cost = (sale.purchasePrice || 0) ;
+      const revenue = (sale.sellingPrice || 0);
+      const cost = (sale.purchasePrice || 0);
       const profit = sale.profit || (revenue - cost);
       const totalProductsSold = sale.quantitySold || 0;
-      
+
       return { revenue, cost, profit, totalProductsSold };
     }
     // Fallback
@@ -98,13 +98,13 @@ const ProfitLossStatement: React.FC = () => {
     const salesCount = periodSales.length;
     const avgOrderValue = salesCount > 0 ? totalRevenue / salesCount : 0;
 
-    return { 
-      revenue: totalRevenue, 
-      cost: totalCost, 
-      profit: totalProfit, 
-      salesCount, 
+    return {
+      revenue: totalRevenue,
+      cost: totalCost,
+      profit: totalProfit,
+      salesCount,
       totalProductsSold,
-      avgOrderValue 
+      avgOrderValue
     };
   };
 
@@ -140,7 +140,7 @@ const ProfitLossStatement: React.FC = () => {
   };
 
   const currentData = calculatePeriodData(selectedPeriod);
-  const previousPeriodData = selectedPeriod === 'current-month' 
+  const previousPeriodData = selectedPeriod === 'current-month'
     ? calculatePeriodData('last-month')
     : calculatePeriodData('current-month');
   const periodSales = getPeriodSales(selectedPeriod);
@@ -197,7 +197,7 @@ const ProfitLossStatement: React.FC = () => {
                 const values = getSaleValues(sale);
                 const saleDate = new Date(sale.date);
                 return (
-                  <div 
+                  <div
                     key={sale.id || idx}
                     className="flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-blue-50/80 to-indigo-50/80 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-100 dark:border-blue-800/50 transition-all hover:scale-[1.01]"
                   >
@@ -256,7 +256,7 @@ const ProfitLossStatement: React.FC = () => {
                 const saleDate = new Date(sale.date);
                 const costPercent = values.revenue > 0 ? (values.cost / values.revenue) * 100 : 0;
                 return (
-                  <div 
+                  <div
                     key={sale.id || idx}
                     className="flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-red-50/80 to-orange-50/80 dark:from-red-900/20 dark:to-orange-900/20 border border-red-100 dark:border-red-800/50 transition-all hover:scale-[1.01]"
                   >
@@ -317,7 +317,7 @@ const ProfitLossStatement: React.FC = () => {
                 const saleDate = new Date(sale.date);
                 const margin = values.revenue > 0 ? (values.profit / values.revenue) * 100 : 0;
                 return (
-                  <div 
+                  <div
                     key={sale.id || idx}
                     className="flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-emerald-50/80 to-green-50/80 dark:from-emerald-900/20 dark:to-green-900/20 border border-emerald-100 dark:border-emerald-800/50 transition-all hover:scale-[1.01]"
                   >
@@ -527,8 +527,12 @@ const ProfitLossStatement: React.FC = () => {
       </Dialog>
 
       {/* Modal Profit par Vente */}
-      <Dialog open={activeModal === 'profitPerSale'} onOpenChange={(open) => !open && setActiveModal(null)}>
-        <DialogContent className="sm:max-w-2xl bg-gradient-to-br from-white via-rose-50/30 to-pink-50/50 dark:from-gray-900 dark:via-rose-950/30 dark:to-pink-950/20 backdrop-blur-xl border-rose-200/50 dark:border-rose-800/50">
+      <Dialog
+        open={activeModal === 'profitPerSale'}
+        onOpenChange={(open) => !open && setActiveModal(null)}
+      >
+        <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-hidden flex flex-col bg-gradient-to-br from-white via-rose-50/30 to-pink-50/50 dark:from-gray-900 dark:via-rose-950/30 dark:to-pink-950/20 backdrop-blur-xl border-rose-200/50 dark:border-rose-800/50">
+
           <DialogHeader>
             <DialogTitle className="flex items-center gap-3">
               <div className="p-3 rounded-2xl bg-gradient-to-r from-rose-500 via-pink-500 to-red-500 text-white shadow-xl shadow-rose-500/30">
@@ -538,18 +542,24 @@ const ProfitLossStatement: React.FC = () => {
                 <span className="text-xl font-black bg-gradient-to-r from-rose-600 via-pink-600 to-red-600 bg-clip-text text-transparent">
                   Profit par Vente
                 </span>
-                <p className="text-xs text-rose-500/70 font-medium">{getPeriodLabel(selectedPeriod)}</p>
+                <p className="text-xs text-rose-500/70 font-medium">
+                  {getPeriodLabel(selectedPeriod)}
+                </p>
               </div>
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            <ScrollArea className="max-h-[40vh] pr-4">
+
+          {/* BODY SCROLLABLE */}
+          <div className="flex-1 overflow-y-auto space-y-4 py-4 pr-2">
+
+            <ScrollArea className="h-[40vh] pr-4">
               <div className="space-y-2">
                 {periodSales.slice(0, 10).map((sale, idx) => {
                   const values = getSaleValues(sale);
                   const saleDate = new Date(sale.date);
+
                   return (
-                    <div 
+                    <div
                       key={sale.id || idx}
                       className="flex items-center justify-between p-3 rounded-xl bg-gradient-to-r from-rose-50 to-pink-50 dark:from-rose-900/20 dark:to-pink-900/20 border border-rose-100 dark:border-rose-800/50"
                     >
@@ -561,6 +571,7 @@ const ProfitLossStatement: React.FC = () => {
                           {sale.clientName || 'Client'}
                         </span>
                       </div>
+
                       <span className="font-bold bg-gradient-to-r from-rose-600 to-pink-600 bg-clip-text text-transparent">
                         {formatEuro(values.profit)}
                       </span>
@@ -569,20 +580,29 @@ const ProfitLossStatement: React.FC = () => {
                 })}
               </div>
             </ScrollArea>
+
             <div className="p-4 rounded-2xl bg-gradient-to-r from-rose-500 via-pink-500 to-red-500 text-white shadow-xl">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <PiggyBank className="h-5 w-5" />
                   <div>
                     <span className="font-bold">Profit moyen/vente</span>
-                    <p className="text-xs opacity-80">Sur {currentData.salesCount} ventes</p>
+                    <p className="text-xs opacity-80">
+                      Sur {currentData.salesCount} ventes
+                    </p>
                   </div>
                 </div>
+
                 <span className="text-2xl font-black">
-                  {formatEuro(currentData.salesCount > 0 ? currentData.profit / currentData.salesCount : 0)}
+                  {formatEuro(
+                    currentData.salesCount > 0
+                      ? currentData.profit / currentData.salesCount
+                      : 0
+                  )}
                 </span>
               </div>
             </div>
+
           </div>
         </DialogContent>
       </Dialog>
@@ -613,7 +633,7 @@ const ProfitLossStatement: React.FC = () => {
               <SelectItem value="current-year">Année en cours</SelectItem>
             </SelectContent>
           </Select>
-          
+
           <Button
             variant="outline"
             size="sm"
@@ -633,7 +653,7 @@ const ProfitLossStatement: React.FC = () => {
 
         {/* Métriques principales - Premium et Cliquables */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div 
+          <div
             onClick={() => setActiveModal('revenue')}
             className="cursor-pointer group p-5 rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-2 border-transparent transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/20 hover:scale-[1.02] hover:border-blue-400/50"
           >
@@ -656,7 +676,7 @@ const ProfitLossStatement: React.FC = () => {
             </div>
           </div>
 
-          <div 
+          <div
             onClick={() => setActiveModal('cost')}
             className="cursor-pointer group p-5 rounded-2xl bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 border-2 border-transparent transition-all duration-300 hover:shadow-2xl hover:shadow-red-500/20 hover:scale-[1.02] hover:border-red-400/50"
           >
@@ -680,7 +700,7 @@ const ProfitLossStatement: React.FC = () => {
             </div>
           </div>
 
-          <div 
+          <div
             onClick={() => setActiveModal('profit')}
             className="cursor-pointer group p-5 rounded-2xl bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 border-2 border-transparent transition-all duration-300 hover:shadow-2xl hover:shadow-emerald-500/20 hover:scale-[1.02] hover:border-emerald-400/50"
           >
@@ -714,7 +734,7 @@ const ProfitLossStatement: React.FC = () => {
               </h4>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {/* Panier Moyen - Cliquable */}
-                <div 
+                <div
                   onClick={() => setActiveModal('avgOrder')}
                   className="cursor-pointer group text-center p-4 bg-gradient-to-br from-purple-50 via-fuchsia-50 to-pink-50 dark:from-purple-900/30 dark:via-fuchsia-900/20 dark:to-pink-900/20 rounded-2xl border-2 border-purple-200/50 dark:border-purple-700/50 shadow-lg hover:shadow-2xl hover:shadow-purple-500/20 hover:scale-[1.03] hover:border-purple-400/70 transition-all duration-300 relative overflow-hidden"
                 >
@@ -737,7 +757,7 @@ const ProfitLossStatement: React.FC = () => {
                 </div>
 
                 {/* Marge Brute - Cliquable */}
-                <div 
+                <div
                   onClick={() => setActiveModal('margin')}
                   className="cursor-pointer group text-center p-4 bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50 dark:from-amber-900/30 dark:via-yellow-900/20 dark:to-orange-900/20 rounded-2xl border-2 border-amber-200/50 dark:border-amber-700/50 shadow-lg hover:shadow-2xl hover:shadow-amber-500/20 hover:scale-[1.03] hover:border-amber-400/70 transition-all duration-300 relative overflow-hidden"
                 >
@@ -760,7 +780,7 @@ const ProfitLossStatement: React.FC = () => {
                 </div>
 
                 {/* Nombre de Ventes - Cliquable */}
-                <div 
+                <div
                   onClick={() => setActiveModal('salesCount')}
                   className="cursor-pointer group text-center p-4 bg-gradient-to-br from-cyan-50 via-sky-50 to-teal-50 dark:from-cyan-900/30 dark:via-sky-900/20 dark:to-teal-900/20 rounded-2xl border-2 border-cyan-200/50 dark:border-cyan-700/50 shadow-lg hover:shadow-2xl hover:shadow-cyan-500/20 hover:scale-[1.03] hover:border-cyan-400/70 transition-all duration-300 relative overflow-hidden"
                 >
@@ -783,7 +803,7 @@ const ProfitLossStatement: React.FC = () => {
                 </div>
 
                 {/* Profit/Vente - Cliquable */}
-                <div 
+                <div
                   onClick={() => setActiveModal('profitPerSale')}
                   className="cursor-pointer group text-center p-4 bg-gradient-to-br from-rose-50 via-pink-50 to-red-50 dark:from-rose-900/30 dark:via-pink-900/20 dark:to-red-900/20 rounded-2xl border-2 border-rose-200/50 dark:border-rose-700/50 shadow-lg hover:shadow-2xl hover:shadow-rose-500/20 hover:scale-[1.03] hover:border-rose-400/70 transition-all duration-300 relative overflow-hidden"
                 >
@@ -816,28 +836,28 @@ const ProfitLossStatement: React.FC = () => {
               <div className="space-y-2">
                 <div className="flex items-center justify-between p-3 bg-gradient-to-r from-gray-50 to-slate-50 dark:from-gray-800/50 dark:to-slate-800/50 rounded-xl">
                   <span className="text-sm font-medium">Rentabilité</span>
-                  <Badge className={`${profitMargin > 20 ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300' : 
-                                   profitMargin > 10 ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300' : 
-                                   'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300'}`}>
+                  <Badge className={`${profitMargin > 20 ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300' :
+                    profitMargin > 10 ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300' :
+                      'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300'}`}>
                     {profitMargin > 20 ? 'Excellente' : profitMargin > 10 ? 'Bonne' : 'À améliorer'}
                   </Badge>
                 </div>
                 <div className="flex items-center justify-between p-3 bg-gradient-to-r from-gray-50 to-slate-50 dark:from-gray-800/50 dark:to-slate-800/50 rounded-xl">
                   <span className="text-sm font-medium">Évolution du CA</span>
-                  <Badge className={`${revenueChange > 10 ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300' : 
-                                   revenueChange > 0 ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300' : 
-                                   'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300'}`}>
-                    {revenueChange > 10 ? 'Forte croissance' : 
-                     revenueChange > 0 ? 'Croissance modérée' : 'En baisse'}
+                  <Badge className={`${revenueChange > 10 ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300' :
+                    revenueChange > 0 ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300' :
+                      'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300'}`}>
+                    {revenueChange > 10 ? 'Forte croissance' :
+                      revenueChange > 0 ? 'Croissance modérée' : 'En baisse'}
                   </Badge>
                 </div>
                 <div className="flex items-center justify-between p-3 bg-gradient-to-r from-gray-50 to-slate-50 dark:from-gray-800/50 dark:to-slate-800/50 rounded-xl">
                   <span className="text-sm font-medium">Volume de ventes</span>
-                  <Badge className={`${currentData.salesCount > 20 ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300' : 
-                                   currentData.salesCount > 10 ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300' : 
-                                   'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300'}`}>
-                    {currentData.salesCount > 20 ? 'Élevé' : 
-                     currentData.salesCount > 10 ? 'Modéré' : 'Faible'}
+                  <Badge className={`${currentData.salesCount > 20 ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300' :
+                    currentData.salesCount > 10 ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300' :
+                      'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300'}`}>
+                    {currentData.salesCount > 20 ? 'Élevé' :
+                      currentData.salesCount > 10 ? 'Modéré' : 'Faible'}
                   </Badge>
                 </div>
               </div>
