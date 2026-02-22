@@ -27,15 +27,15 @@ const SoldeNetModal: React.FC<SoldeNetModalProps> = ({
   selectedYear,
   formatEuro
 }) => {
-  const ratio = comptabiliteData.totalCredit > 0 
-    ? (comptabiliteData.totalDebit / comptabiliteData.totalCredit) * 100 
+  const ratio = comptabiliteData.totalCredit > 0
+    ? (comptabiliteData.totalDebit / comptabiliteData.totalCredit) * 100
     : 0;
   const healthyRatio = ratio <= 70;
   const isPositive = comptabiliteData.soldeNet >= 0;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto bg-white/[0.03] backdrop-blur-3xl border border-white/[0.08] shadow-[0_32px_80px_rgba(0,0,0,0.5)] rounded-2xl">
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto bg-white/30 backdrop-blur border border-white/40 shadow-lg rounded-2xl">
         <DialogHeader>
           <DialogTitle className={`flex items-center gap-3 ${isPositive ? 'text-cyan-400' : 'text-red-400'}`}>
             <div className={`p-2.5 rounded-xl border backdrop-blur-sm ${isPositive ? 'bg-gradient-to-br from-cyan-500/20 to-blue-500/20 border-cyan-500/20' : 'bg-gradient-to-br from-red-500/20 to-rose-500/20 border-red-500/20'}`}>
@@ -63,7 +63,7 @@ const SoldeNetModal: React.FC<SoldeNetModalProps> = ({
                 </div>
               </div>
             </div>
-            
+
             <div className="p-5 bg-red-500/[0.06] border border-red-500/20 rounded-xl backdrop-blur-sm">
               <div className="flex items-center gap-3">
                 <div className="p-2.5 rounded-xl bg-red-500/20 border border-red-500/20">
@@ -111,8 +111,8 @@ const SoldeNetModal: React.FC<SoldeNetModalProps> = ({
             </div>
             <Progress value={Math.min(ratio, 100)} className="h-3" />
             <p className="text-xs text-white/40 mt-2">
-              {healthyRatio 
-                ? '✅ Ratio sain (moins de 70% des revenus dépensés)' 
+              {healthyRatio
+                ? '✅ Ratio sain (moins de 70% des revenus dépensés)'
                 : '⚠️ Attention: plus de 70% des revenus sont dépensés'}
             </p>
           </div>

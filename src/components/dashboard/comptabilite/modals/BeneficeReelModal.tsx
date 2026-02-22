@@ -29,7 +29,7 @@ const BeneficeReelModal: React.FC<BeneficeReelModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto bg-white/[0.03] backdrop-blur-3xl border border-white/[0.08] shadow-[0_32px_80px_rgba(0,0,0,0.5)] rounded-2xl">
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto bg-white/30 backdrop-blur border border-white/30 shadow-lg rounded-2xl">
         <DialogHeader>
           <DialogTitle className={`flex items-center gap-3 ${isPositive ? 'text-emerald-400' : 'text-red-400'}`}>
             <div className={`p-2.5 rounded-xl border backdrop-blur-sm ${isPositive ? 'bg-gradient-to-br from-emerald-500/20 to-green-500/20 border-emerald-500/20' : 'bg-gradient-to-br from-red-500/20 to-rose-500/20 border-red-500/20'}`}>

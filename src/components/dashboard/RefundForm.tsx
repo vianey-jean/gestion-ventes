@@ -97,14 +97,14 @@ const RefundForm: React.FC<RefundFormProps> = ({ isOpen, onClose, editSale }) =>
       const allPrets = await pretProduitApiService.getAll();
       const clientName = sale.clientName?.toLowerCase() || '';
       const saleProducts = sale.products?.map(p => p.description?.toLowerCase()) || [sale.description?.toLowerCase()];
-      
+
       const linked = allPrets.filter(pret => {
         const pretNom = (pret.nom || '').toLowerCase();
         const pretDesc = (pret.description || '').toLowerCase();
         return (pretNom.includes(clientName) || clientName.includes(pretNom)) &&
-               saleProducts.some(sp => sp && (pretDesc.includes(sp) || sp.includes(pretDesc)));
+          saleProducts.some(sp => sp && (pretDesc.includes(sp) || sp.includes(pretDesc)));
       });
-      
+
       setLinkedPrets(linked);
     } catch (error) {
       console.error('Error checking linked prets:', error);
@@ -191,9 +191,9 @@ const RefundForm: React.FC<RefundFormProps> = ({ isOpen, onClose, editSale }) =>
         // Check which products are being refunded
         const refundedDescriptions = refundProducts.map(p => p.description.toLowerCase());
         const pretDesc = (pret.description || '').toLowerCase();
-        
+
         const isLinked = refundedDescriptions.some(desc => pretDesc.includes(desc) || desc.includes(pretDesc));
-        
+
         if (!isLinked) continue;
 
         if (pretAction === 'delete') {
@@ -205,7 +205,7 @@ const RefundForm: React.FC<RefundFormProps> = ({ isOpen, onClose, editSale }) =>
           const refundTotal = totals.totalRefundPrice;
           const newAvance = Math.max(0, (pret.avanceRecue || 0) - refundTotal);
           const newReste = (pret.prixVente || 0) - newAvance;
-          
+
           if (newAvance <= 0) {
             // If no advance left, delete the pret
             await pretProduitApiService.delete(pret.id);
@@ -278,7 +278,11 @@ const RefundForm: React.FC<RefundFormProps> = ({ isOpen, onClose, editSale }) =>
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto bg-white/[0.03] backdrop-blur-3xl border border-white/[0.08] shadow-[0_32px_80px_rgba(0,0,0,0.5)] rounded-2xl">
+      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto 
+bg-white/30 backdrop-blur
+border border-white/20 
+shadow-[0_20px_60px_rgba(0,0,0,0.3)] 
+rounded-2xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3 text-xl">
             <div className="p-2.5 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/20 border border-amber-500/20 backdrop-blur-sm">
@@ -313,7 +317,7 @@ const RefundForm: React.FC<RefundFormProps> = ({ isOpen, onClose, editSale }) =>
                   className="pl-10 bg-white/[0.06] border-white/[0.1] text-white placeholder:text-white/20 rounded-xl"
                 />
               </div>
-              
+
               {isSearching && <p className="text-sm text-white/40">Recherche en cours...</p>}
 
               {searchResults.length > 0 && (
@@ -362,7 +366,7 @@ const RefundForm: React.FC<RefundFormProps> = ({ isOpen, onClose, editSale }) =>
                       Vente sélectionnée - {selectedSale.clientName}
                     </p>
                     <p className="text-xs text-white/40 mt-1">
-                      Date: {formatDate(selectedSale.date)} • 
+                      Date: {formatDate(selectedSale.date)} •
                       Total: {formatCurrency(selectedSale.totalSellingPrice || selectedSale.sellingPrice || 0)}
                     </p>
                   </div>
@@ -394,8 +398,8 @@ const RefundForm: React.FC<RefundFormProps> = ({ isOpen, onClose, editSale }) =>
                       size="sm"
                       variant={pretAction === 'delete' ? 'default' : 'outline'}
                       onClick={() => setPretAction('delete')}
-                      className={pretAction === 'delete' 
-                        ? 'bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30' 
+                      className={pretAction === 'delete'
+                        ? 'bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30'
                         : 'bg-white/[0.04] text-white/50 border-white/[0.1] hover:bg-white/[0.08]'}
                     >
                       <Trash2 className="h-3 w-3 mr-1" /> Supprimer le prêt
@@ -405,8 +409,8 @@ const RefundForm: React.FC<RefundFormProps> = ({ isOpen, onClose, editSale }) =>
                       size="sm"
                       variant={pretAction === 'modify' ? 'default' : 'outline'}
                       onClick={() => setPretAction('modify')}
-                      className={pretAction === 'modify' 
-                        ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30 hover:bg-blue-500/30' 
+                      className={pretAction === 'modify'
+                        ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30 hover:bg-blue-500/30'
                         : 'bg-white/[0.04] text-white/50 border-white/[0.1] hover:bg-white/[0.08]'}
                     >
                       <Edit3 className="h-3 w-3 mr-1" /> Modifier l'avance
@@ -438,7 +442,7 @@ const RefundForm: React.FC<RefundFormProps> = ({ isOpen, onClose, editSale }) =>
                         </Button>
                       )}
                     </div>
-                    
+
                     <div className="grid grid-cols-3 gap-3">
                       <div className="space-y-1">
                         <Label className="text-xs text-white/50">Quantité (max: {product.maxQuantity})</Label>
@@ -471,7 +475,7 @@ const RefundForm: React.FC<RefundFormProps> = ({ isOpen, onClose, editSale }) =>
                     </div>
 
                     <div className="text-xs text-white/40">
-                      Prix d'achat unitaire: {formatCurrency(product.purchasePriceUnit)} • 
+                      Prix d'achat unitaire: {formatCurrency(product.purchasePriceUnit)} •
                       Bénéfice: <span className={product.profit >= 0 ? 'text-green-400' : 'text-red-400'}>
                         {formatCurrency(product.profit)}
                       </span>

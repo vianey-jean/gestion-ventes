@@ -31,7 +31,7 @@ const BeneficeVentesModal: React.FC<BeneficeVentesModalProps> = ({
 }) => {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto bg-white/[0.03] backdrop-blur-3xl border border-white/[0.08] shadow-[0_32px_80px_rgba(0,0,0,0.5)] rounded-2xl">
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto bg-white/30 backdrop-blur border border-white/25 shadow-xl rounded-2xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3 text-blue-400">
             <div className="p-2.5 rounded-xl bg-gradient-to-br from-blue-500/20 to-indigo-500/20 border border-blue-500/20 backdrop-blur-sm">
@@ -48,14 +48,14 @@ const BeneficeVentesModal: React.FC<BeneficeVentesModalProps> = ({
         <div className="space-y-3 mt-4">
           {monthlySales.length > 0 ? (
             monthlySales.map((sale) => {
-              const profit = sale.products && Array.isArray(sale.products) 
-                ? (sale.totalProfit || 0) 
+              const profit = sale.products && Array.isArray(sale.products)
+                ? (sale.totalProfit || 0)
                 : sale.profit;
               return (
                 <div key={sale.id} className="flex items-center justify-between p-4 bg-white/[0.04] border border-white/[0.08] rounded-xl backdrop-blur-sm transition-all duration-300 hover:scale-[1.01] hover:border-blue-500/20">
                   <div>
                     <p className="font-semibold text-white/90">
-                      {sale.products && Array.isArray(sale.products) 
+                      {sale.products && Array.isArray(sale.products)
                         ? sale.products.map((p: any) => p.description).join(', ')
                         : sale.description}
                     </p>

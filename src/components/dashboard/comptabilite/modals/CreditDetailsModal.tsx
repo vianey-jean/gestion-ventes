@@ -29,7 +29,7 @@ const CreditDetailsModal: React.FC<CreditDetailsModalProps> = ({
 }) => {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto bg-white/[0.03] backdrop-blur-3xl border border-white/[0.08] shadow-[0_32px_80px_rgba(0,0,0,0.5)] rounded-2xl">
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto bg-white/30 backdrop-blur border border-white/20 shadow-[0_20px_60px_rgba(0,0,0,0.3)] rounded-2xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3 text-green-400">
             <div className="p-2.5 rounded-xl bg-gradient-to-br from-green-500/20 to-emerald-500/20 border border-green-500/20 backdrop-blur-sm">
@@ -46,18 +46,17 @@ const CreditDetailsModal: React.FC<CreditDetailsModalProps> = ({
         <div className="space-y-3 mt-4">
           {monthlySales.length > 0 ? (
             monthlySales.map((sale) => {
-              const saleTotal = sale.products && Array.isArray(sale.products) 
-                ? (sale.totalSellingPrice || 0) 
+              const saleTotal = sale.products && Array.isArray(sale.products)
+                ? (sale.totalSellingPrice || 0)
                 : sale.sellingPrice * sale.quantitySold;
               const isNegative = saleTotal < 0;
               const isRefund = sale.isRefund || isNegative;
 
               return (
-                <div key={sale.id} className={`relative p-4 rounded-xl border backdrop-blur-sm transition-all duration-300 hover:scale-[1.01] ${
-                  isRefund 
-                    ? 'bg-red-500/[0.06] border-red-500/20 hover:border-red-500/30' 
-                    : 'bg-white/[0.04] border-white/[0.08] hover:border-green-500/20'
-                }`}>
+                <div key={sale.id} className={`relative p-4 rounded-xl border backdrop-blur-sm transition-all duration-300 hover:scale-[1.01] ${isRefund
+                  ? 'bg-red-500/[0.06] border-red-500/20 hover:border-red-500/30'
+                  : 'bg-white/[0.04] border-white/[0.08] hover:border-green-500/20'
+                  }`}>
                   {isRefund && (
                     <div className="flex items-center gap-1.5 mb-2">
                       <AlertTriangle className="h-3.5 w-3.5 text-red-400" />
@@ -67,7 +66,7 @@ const CreditDetailsModal: React.FC<CreditDetailsModalProps> = ({
                   <div className="flex items-center justify-between">
                     <div>
                       <p className={`font-semibold ${isRefund ? 'text-red-300' : 'text-white/90'}`}>
-                        {sale.products && Array.isArray(sale.products) 
+                        {sale.products && Array.isArray(sale.products)
                           ? sale.products.map((p: any) => p.description).join(', ')
                           : sale.description}
                       </p>
