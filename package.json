@@ -1,8 +1,33 @@
 {
-  "name": "gestion-ventes",
+ "name": "gestion-ventes",
   "private": true,
-  "version": "4.0.0",
+  "version": "4.2.0",
+  "description": "Application moderne de gestion des ventes, clients, produits et suivi des profits.",
   "type": "module",
+  "author": {
+    "name": "Jean RABEMANALINA",
+    "email": "VIANEY.JEAN@YMAIL.COM",
+    "url": "https://riziky-gestion-ventes.vercel.app/"
+  },
+  "license": "MIT",
+  "homepage": "https://riziky-gestion-ventes.vercel.app/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vianey-jean/gestion-ventes.git"
+  },
+  "keywords": [
+    "gestion",
+    "ventes",
+    "crm",
+    "dashboard",
+    "react",
+    "nodejs",
+    "business",
+    "ecommerce"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",

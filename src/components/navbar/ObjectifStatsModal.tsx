@@ -280,7 +280,7 @@ const ObjectifStatsModal: React.FC = () => {
                     <Diamond className="h-4 w-4 text-emerald-500 animate-pulse" />
                   </h3>
                   <div className="h-64">
-                    <ResponsiveContainer width="100%" height="100%">
+                    <ResponsiveContainer width="100%" height={256}>
                       <AreaChart data={fullYearData}>
                         <defs>
                           <linearGradient id="colorVentes" x1="0" y1="0" x2="0" y2="1">
@@ -334,7 +334,7 @@ const ObjectifStatsModal: React.FC = () => {
                     <Gem className="h-4 w-4 text-violet-500 animate-pulse" />
                   </h3>
                   <div className="h-64">
-                    <ResponsiveContainer width="100%" height="100%">
+                    <ResponsiveContainer width="100%" height={256}>
                       <LineChart data={fullYearData}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                         <XAxis 

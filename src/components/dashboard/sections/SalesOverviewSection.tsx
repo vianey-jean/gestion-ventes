@@ -275,8 +275,11 @@ const SalesOverviewSection: React.FC<SalesOverviewSectionProps> = ({
       <AnimatePresence>
         {selectedStat && selectedStatDetails && (
           <Dialog open={!!selectedStat} onOpenChange={() => setSelectedStat(null)}>
-            <DialogContent className="bg-gradient-to-br from-white via-gray-50 to-white dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 border-0 shadow-2xl rounded-3xl max-w-md mx-auto overflow-hidden">
-              <motion.div
+            <DialogContent className="bg-gradient-to-br from-white via-gray-50 to-white 
+dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 
+border-0 shadow-2xl rounded-3xl 
+max-w-md mx-auto 
+max-h-[90vh] overflow-y-auto">    <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
