@@ -4,11 +4,11 @@ import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Bell, 
-  BellRing, 
-  Calendar, 
-  Clock, 
+import {
+  Bell,
+  BellRing,
+  Calendar,
+  Clock,
   CheckCircle,
   X,
   Phone,
@@ -168,7 +168,8 @@ const RdvNotifications: React.FC<RdvNotificationsProps> = ({ onCheckNotification
             </SheetTitle>
           </SheetHeader>
 
-          <div className="mt-6 space-y-4">
+          {/* Conteneur scrollable */}
+          <div className="mt-6 space-y-4 max-h-[80vh] overflow-y-auto pr-2">
             {loading ? (
               <Card className="shadow-lg border border-orange-200">
                 <CardContent className="py-8 text-center">
@@ -186,102 +187,98 @@ const RdvNotifications: React.FC<RdvNotificationsProps> = ({ onCheckNotification
                 </CardContent>
               </Card>
             ) : (
-             <div className="space-y-3 max-h-[800px] overflow-y-auto pr-2">
-  <p className="text-sm font-medium text-orange-600 flex items-center gap-2">
-    <Clock className="h-4 w-4" />
-    Rendez-vous dans moins de 24h
-  </p>
-  {notifications.map((notification) => {
-    const shouldBlinkNow = shouldBlink(notification) && blinkState;
-    return (
-      <Card
-        key={notification.id}
-        className={cn(
-          "cursor-pointer transition-all hover:shadow-2xl border-l-4 rounded-xl",
-          shouldBlink(notification)
-            ? shouldBlinkNow
-              ? "border-l-red-600 bg-red-100 dark:bg-red-950/40"
-              : "border-l-red-500 bg-red-50 dark:bg-red-950/20"
-            : "border-l-orange-500 bg-orange-50 dark:bg-orange-950/20"
-        )}
-        onClick={() => handleNotificationClick(notification)}
-      >
-        <CardContent className="p-3 space-y-1">
-          <div className="flex items-start justify-between gap-2">
-            <div className="flex items-start gap-2 flex-1 min-w-0">
-              <Clock
-                className={cn(
-                  "h-4 w-4 mt-0.5",
-                  shouldBlink(notification)
-                    ? shouldBlinkNow
-                      ? "text-red-600 animate-pulse"
-                      : "text-red-500"
-                    : "text-orange-500"
-                )}
-              />
-              <div className="flex-1 min-w-0">
-                <p
-                  className={cn(
-                    "font-semibold text-lg truncate",
-                    shouldBlink(notification) &&
-                      shouldBlinkNow &&
-                      "text-red-700 dark:text-red-400"
-                  )}
-                >
-                  {notification.rdvTitre}
+              <>
+                <p className="text-sm font-medium text-orange-600 flex items-center gap-2">
+                  <Clock className="h-4 w-4" />
+                  Rendez-vous dans moins de 24h
                 </p>
-                <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
-                  <span>{notification.rdvClientNom}</span>
-                  <span>:</span>
-                  <span>
-                    {notification.rdvHeureDebut} - {notification.rdvHeureFin}
-                  </span>
-                </div>
-                <Badge
-                  variant="outline"
-                  className={cn(
-                    "mt-1 text-xs shadow-sm",
-                    shouldBlink(notification) &&
-                      "border-red-500 text-red-600"
-                  )}
-                >
-                  {format(parseISO(notification.rdvDate), "EEEE d MMM", {
-                    locale: fr,
-                  })}
-                </Badge>
-              </div>
-            </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              className={cn(
-                "h-8 w-8 flex-shrink-0 rounded-lg hover:scale-110 transition-transform",
-                shouldBlink(notification)
-                  ? "text-red-600 hover:bg-red-100"
-                  : "text-orange-600 hover:bg-orange-100"
-              )}
-            >
-              <Eye className="h-4 w-4" />
-            </Button>
-          </div>
-          {notification.rdvClientTelephone && (
-            <div className="flex items-center gap-1 text-xs text-muted-foreground mt-2">
-              <Phone className="h-3 w-3 text-purple-600" />
-              <span>{notification.rdvClientTelephone}</span>
-            </div>
-          )}
-          {notification.rdvLieu && (
-            <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
-              <MapPin className="h-3 w-3 text-green-600" />
-              <span className="truncate">{notification.rdvLieu}</span>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    );
-  })}
-</div>
-
+                {notifications.map((notification) => {
+                  const shouldBlinkNow = shouldBlink(notification) && blinkState;
+                  return (
+                    <Card
+                      key={notification.id}
+                      className={cn(
+                        "cursor-pointer transition-all hover:shadow-2xl border-l-4 rounded-xl",
+                        shouldBlink(notification)
+                          ? shouldBlinkNow
+                            ? "border-l-red-600 bg-red-100 dark:bg-red-950/40"
+                            : "border-l-red-500 bg-red-50 dark:bg-red-950/20"
+                          : "border-l-orange-500 bg-orange-50 dark:bg-orange-950/20"
+                      )}
+                      onClick={() => handleNotificationClick(notification)}
+                    >
+                      <CardContent className="p-3 space-y-1">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex items-start gap-2 flex-1 min-w-0">
+                            <Clock
+                              className={cn(
+                                "h-4 w-4 mt-0.5",
+                                shouldBlink(notification)
+                                  ? shouldBlinkNow
+                                    ? "text-red-600 animate-pulse"
+                                    : "text-red-500"
+                                  : "text-orange-500"
+                              )}
+                            />
+                            <div className="flex-1 min-w-0">
+                              <p
+                                className={cn(
+                                  "font-semibold text-lg truncate",
+                                  shouldBlink(notification) &&
+                                  shouldBlinkNow &&
+                                  "text-red-700 dark:text-red-400"
+                                )}
+                              >
+                                {notification.rdvTitre}
+                              </p>
+                              <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
+                                <span>{notification.rdvClientNom}</span>
+                                <span>:</span>
+                                <span>
+                                  {notification.rdvHeureDebut} - {notification.rdvHeureFin}
+                                </span>
+                              </div>
+                              <Badge
+                                variant="outline"
+                                className={cn(
+                                  "mt-1 text-xs shadow-sm",
+                                  shouldBlink(notification) && "border-red-500 text-red-600"
+                                )}
+                              >
+                                {format(parseISO(notification.rdvDate), "EEEE d MMM", { locale: fr })}
+                              </Badge>
+                            </div>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className={cn(
+                              "h-8 w-8 flex-shrink-0 rounded-lg hover:scale-110 transition-transform",
+                              shouldBlink(notification)
+                                ? "text-red-600 hover:bg-red-100"
+                                : "text-orange-600 hover:bg-orange-100"
+                            )}
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        {notification.rdvClientTelephone && (
+                          <div className="flex items-center gap-1 text-xs text-muted-foreground mt-2">
+                            <Phone className="h-3 w-3 text-purple-600" />
+                            <span>{notification.rdvClientTelephone}</span>
+                          </div>
+                        )}
+                        {notification.rdvLieu && (
+                          <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
+                            <MapPin className="h-3 w-3 text-green-600" />
+                            <span className="truncate">{notification.rdvLieu}</span>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </>
             )}
           </div>
         </SheetContent>
@@ -300,8 +297,9 @@ const RdvNotifications: React.FC<RdvNotificationsProps> = ({ onCheckNotification
               Rendez-vous dans moins de 24 heures
             </DialogDescription>
           </DialogHeader>
+
           {selectedNotification && (
-            <div className="space-y-4 py-4">
+            <div className="mt-4 max-h-[70vh] overflow-y-auto pr-2 space-y-4">
               <div className="p-4 rounded-2xl bg-gradient-to-tr from-muted/50 to-white/20 shadow-inner space-y-3">
                 <div className="flex items-center gap-3">
                   <div className="p-2 rounded-lg bg-orange-100 dark:bg-orange-900/30 shadow">
