@@ -248,16 +248,22 @@ const RefundForm: React.FC<RefundFormProps> = ({ isOpen, onClose, editSale }) =>
       await remboursementApiService.create({
         originalSaleId: selectedSale.id,
         date,
-        products: refundProducts.map(p => ({
-          productId: p.productId,
-          description: p.description,
-          quantitySold: p.quantitySold,
-          sellingPrice: p.quantitySold * p.refundPriceUnit,
-          refundPrice: p.quantitySold * p.refundPriceUnit,
-          refundPriceUnit: p.refundPriceUnit,
-          purchasePrice: p.quantitySold * p.purchasePriceUnit,
-          profit: p.profit
-        })),
+        products: refundProducts.map(p => {
+          // Si le prix de remboursement unitaire a été modifié par rapport au prix de vente original,
+          // alors quantitySold = 0 → pas de changement de stock
+          const priceWasModified = Math.abs(p.refundPriceUnit - p.originalSellingPriceUnit) >= 0.01;
+          const effectiveQuantity = priceWasModified ? 0 : p.quantitySold;
+          return {
+            productId: p.productId,
+            description: p.description,
+            quantitySold: effectiveQuantity,
+            sellingPrice: p.quantitySold * p.refundPriceUnit,
+            refundPrice: p.quantitySold * p.refundPriceUnit,
+            refundPriceUnit: p.refundPriceUnit,
+            purchasePrice: priceWasModified ? 0 : (p.quantitySold * p.purchasePriceUnit),
+            profit: p.profit
+          };
+        }),
         totalRefundPrice: totals.totalRefundPrice,
         totalPurchasePrice: totals.totalPurchasePrice,
         totalProfit: totals.totalProfit,
@@ -274,7 +280,7 @@ const RefundForm: React.FC<RefundFormProps> = ({ isOpen, onClose, editSale }) =>
         className: "notification-success",
       });
 
-      if (refreshData) refreshData();
+      if (refreshData) await refreshData();
       onClose();
     } catch (error) {
       toast({
