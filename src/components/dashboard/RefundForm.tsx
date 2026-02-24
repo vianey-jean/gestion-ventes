@@ -252,15 +252,19 @@ const RefundForm: React.FC<RefundFormProps> = ({ isOpen, onClose, editSale }) =>
           // Si le prix de remboursement unitaire a été modifié par rapport au prix de vente original,
           // alors quantitySold = 0 → pas de changement de stock
           const priceWasModified = Math.abs(p.refundPriceUnit - p.originalSellingPriceUnit) >= 0.01;
-          const effectiveQuantity = priceWasModified ? 0 : p.quantitySold;
+          const absoluteQuantity = Math.abs(p.quantitySold);
+          const effectiveQuantity = priceWasModified ? 0 : -absoluteQuantity;
+          const totalRefundAmount = absoluteQuantity * p.refundPriceUnit;
+          const totalPurchaseAmount = absoluteQuantity * p.purchasePriceUnit;
+
           return {
             productId: p.productId,
             description: p.description,
             quantitySold: effectiveQuantity,
-            sellingPrice: p.quantitySold * p.refundPriceUnit,
-            refundPrice: p.quantitySold * p.refundPriceUnit,
+            sellingPrice: totalRefundAmount,
+            refundPrice: totalRefundAmount,
             refundPriceUnit: p.refundPriceUnit,
-            purchasePrice: priceWasModified ? 0 : (p.quantitySold * p.purchasePriceUnit),
+            purchasePrice: priceWasModified ? 0 : totalPurchaseAmount,
             profit: p.profit
           };
         }),

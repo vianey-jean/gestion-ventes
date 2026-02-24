@@ -128,9 +128,12 @@ const SalesTable: React.FC<SalesTableProps> = ({ sales: initialSales, onRowClick
     return description.includes("Avance Perruque ou Tissages");
   };
 
-  // Obtenir la quantité à afficher selon le type de produit
-  const getDisplayQuantity = (sale: Sale) => {
-    return isAdvanceProduct(sale.description) ? 0 : sale.quantitySold;
+  const isRefundSale = (sale: Sale) => {
+    return (sale as any).isRefund || (sale.totalSellingPrice ?? sale.sellingPrice ?? 0) < 0;
+  };
+
+  const normalizeQuantityForDisplay = (quantity: number, sale: Sale) => {
+    return isRefundSale(sale) ? -Math.abs(quantity || 0) : (quantity || 0);
   };
 
   // Calculer les totaux pour le mois en cours uniquement
@@ -143,11 +146,14 @@ const SalesTable: React.FC<SalesTableProps> = ({ sales: initialSales, onRowClick
     if (sale.products) {
       // Pour les ventes multi-produits, sommer toutes les quantités
       return sum + sale.products.reduce((productSum, product) => {
-        return productSum + (isAdvanceProduct(product.description) ? 0 : product.quantitySold);
+        const baseQuantity = isAdvanceProduct(product.description) ? 0 : product.quantitySold;
+        return productSum + normalizeQuantityForDisplay(baseQuantity, sale);
       }, 0);
     }
+
     // Pour les ventes simples
-    return sum + (isAdvanceProduct(sale.description || '') ? 0 : (sale.quantitySold || 0));
+    const baseQuantity = isAdvanceProduct(sale.description || '') ? 0 : (sale.quantitySold || 0);
+    return sum + normalizeQuantityForDisplay(baseQuantity, sale);
   }, 0);
 
   const totalQuantitySold = totalProductsSold; // Alias pour compatibilité
@@ -363,18 +369,18 @@ const SalesTable: React.FC<SalesTableProps> = ({ sales: initialSales, onRowClick
                     </div>
                   </ModernTableCell>
                   <ModernTableCell className="text-right">
-                    <div className="bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30 px-3 py-1 rounded-full inline-block">
-                      <span className="font-semibold text-purple-700 dark:text-purple-400">
+                    <div className={`${isRefund ? 'bg-red-100 dark:bg-red-900/30' : 'bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30'} px-3 py-1 rounded-full inline-block`}>
+                      <span className={`font-semibold ${isRefund ? 'text-red-700 dark:text-red-400' : 'text-purple-700 dark:text-purple-400'}`}>
                         {sale.products ? (
                           <div className="space-y-1">
                             {sale.products.map((product, idx) => (
                               <div key={idx} className="text-xs">
-                                {isAdvanceProduct(product.description) ? 0 : product.quantitySold}
+                                {normalizeQuantityForDisplay(isAdvanceProduct(product.description) ? 0 : product.quantitySold, sale)}
                               </div>
                             ))}
                           </div>
                         ) : (
-                          getDisplayQuantity(sale)
+                          normalizeQuantityForDisplay(isAdvanceProduct(sale.description || '') ? 0 : (sale.quantitySold || 0), sale)
                         )}
                       </span>
                     </div>
