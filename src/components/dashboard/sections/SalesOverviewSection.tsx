@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import ModernContainer from '@/components/dashboard/forms/ModernContainer';
 import { DollarSign, TrendingUp, Package, BarChart3, Warehouse, Crown, Diamond, Sparkles, Gem, Zap, X, Calendar, Target, ShoppingCart, Box, Layers } from 'lucide-react';
 import useCurrencyFormatter from '@/hooks/use-currency-formatter';
@@ -25,6 +26,7 @@ const SalesOverviewSection: React.FC<SalesOverviewSectionProps> = ({
   currentYear
 }) => {
   const { formatEuro } = useCurrencyFormatter();
+  const navigate = useNavigate();
   const [selectedStat, setSelectedStat] = useState<string | null>(null);
 
   // Fonction pour vérifier si le produit est une avance
@@ -318,7 +320,19 @@ const SalesOverviewSection: React.FC<SalesOverviewSectionProps> = ({
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: idx * 0.1 }}
-                      className="flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700 rounded-xl shadow-sm hover:shadow-md transition-shadow"
+                      onClick={() => {
+                        if ((selectedStat === 'produits-disponibles' || selectedStat === 'stock-total') && 
+                            (detail.label === 'Références en stock' || detail.label === 'Stock total unités' || detail.label === 'Inventaire actif' || detail.label === 'Unités en stock' || detail.label === 'Références')) {
+                          setSelectedStat(null);
+                          navigate('/produits');
+                        }
+                      }}
+                      className={`flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700 rounded-xl shadow-sm hover:shadow-md transition-shadow ${
+                        (selectedStat === 'produits-disponibles' || selectedStat === 'stock-total') && 
+                        (detail.label === 'Références en stock' || detail.label === 'Stock total unités' || detail.label === 'Inventaire actif' || detail.label === 'Unités en stock' || detail.label === 'Références')
+                          ? 'cursor-pointer hover:ring-2 hover:ring-purple-400 dark:hover:ring-purple-500'
+                          : ''
+                      }`}
                     >
                       <div className="flex items-center gap-3">
                         <div className={`p-2 rounded-lg bg-gradient-to-br ${selectedStatDetails.gradient} shadow-md`}>

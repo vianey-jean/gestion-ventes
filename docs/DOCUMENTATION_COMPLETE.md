@@ -11,6 +11,7 @@
 7. [Types TypeScript](#types-typescript)
 8. [Contextes React](#contextes-react)
 9. [Pages de l'Application](#pages)
+10. [Système de Remboursement](#système-de-remboursement)
 
 ---
 
@@ -42,13 +43,14 @@
 | Dashboard | `DashboardPage.tsx` | Tableau de bord principal avec 6 onglets |
 | Clients | `ClientsPage.tsx` | Gestion CRUD des clients VIP |
 | Commandes | `CommandesPage.tsx` | Commandes et réservations avec sync RDV |
-| Tendances | `TendancesPage.tsx` | Analytics, graphiques et recommandations IA |
+| Tendances | `TendancesPage.tsx` | Analytics, graphiques, recommandations IA et analyse clients |
 | RDV | `RdvPage.tsx` | Gestion des rendez-vous avec calendrier |
 | Messages | `MessagesPage.tsx` | Messagerie interne |
+| Produits | `ProduitsPage.tsx` | Inventaire produits avec photos, codes uniques |
 | Login | `LoginPage.tsx` | Authentification |
 | Register | `RegisterPage.tsx` | Inscription |
 
-### Composants Décomposés (Nouveau)
+### Composants Décomposés
 
 #### Dashboard (`src/pages/dashboard/`)
 - **DashboardHero.tsx** - Section titre animé avec icônes premium
@@ -61,7 +63,41 @@
 
 #### Tendances (`src/pages/tendances/`)
 - **TendancesHero.tsx** - Section titre animée
+- **TendancesClientsTab.tsx** - Analyse clients : top acheteurs, CA par client, tri, détails cliquables
+- **TendancesOverviewTab.tsx** - Vue d'ensemble des tendances
+- **TendancesProductsTab.tsx** - Analyse par produit
+- **TendancesCategoriesTab.tsx** - Analyse par catégorie
+- **TendancesStockTab.tsx** - Analyse du stock
+- **TendancesRecommendationsTab.tsx** - Recommandations d'achat IA
 - **useTendancesData.ts** - Hook centralisant toute la logique de calcul
+
+#### Dashboard Ventes (`src/components/dashboard/`)
+- **SalesTable.tsx** - Tableau des ventes temps réel, mois en cours, lignes rouges pour remboursements
+- **AddSaleForm.tsx** - Formulaire ajout/modification vente avec bouton Rembourser
+- **RefundForm.tsx** - Formulaire de remboursement avec confirmation de stock
+- **ViewRefundsModal.tsx** - Modal de consultation des remboursements du mois
+- **MultiProductSaleForm.tsx** - Vente multi-produits avec bouton Rembourser
+- **InvoiceGenerator.tsx** - Génération de factures PDF
+- **VentesParClientsModal.tsx** - Ventes groupées par client
+- **ProfitCalculator.tsx** - Calculateur de bénéfices
+- **Inventaire.tsx** - Gestion d'inventaire
+- **DepenseDuMois.tsx** - Dépenses mensuelles
+- **PretFamilles.tsx** - Prêts familles
+- **PretProduits.tsx** - Prêts produits avec avances
+
+#### Sections Dashboard
+- **SalesManagementSection.tsx** - Section boutons d'actions : vente multi, facture, ventes par clients, remboursement, voir remboursements
+- **SalesOverviewSection.tsx** - Aperçu ventes avec stats cliquables, navigation vers /produits
+- **AdvancedDashboardSection.tsx** - Dashboard avancé
+
+#### Comptabilité (`src/components/dashboard/comptabilite/`)
+- **ComptabiliteModule.tsx** - Module principal
+- **ComptabiliteHeader.tsx** - En-tête
+- **ComptabiliteStatsCards.tsx** - Cartes statistiques
+- **ComptabiliteTabs.tsx** - Onglets
+- **AchatFormDialog.tsx** - Formulaire d'achat
+- **DepenseFormDialog.tsx** - Formulaire de dépense
+- Modaux: AchatsProduitsModal, AutresDepensesModal, BeneficeReelModal, etc.
 
 ### Hooks (`src/hooks/`)
 | Hook | Description |
@@ -77,6 +113,9 @@
 | `use-currency-formatter` | Formatage monétaire |
 | `use-messages` | Messages internes |
 | `use-auto-logout` | Déconnexion automatique |
+| `useBusinessCalculations` | Calculs métier |
+| `useClientSync` | Synchronisation clients |
+| `usePhoneActions` | Actions téléphone |
 
 ### Services API (`src/services/api/`)
 | Service | Endpoint | Description |
@@ -91,12 +130,17 @@
 | `depenseApi` | `/api/depenses/*` | Dépenses |
 | `beneficeApi` | `/api/benefices/*` | Bénéfices |
 | `objectifApi` | `/api/objectif/*` | Objectifs |
+| `remboursementApi` | `/api/remboursements/*` | Remboursements |
+| `pretProduitApi` | `/api/pretproduits/*` | Prêts produits |
+| `pretFamilleApi` | `/api/pretfamilles/*` | Prêts familles |
+| `nouvelleAchatApi` | `/api/nouvelle-achat/*` | Nouveaux achats |
+| `rdvNotificationsApi` | `/api/rdv-notifications/*` | Notifications RDV |
 
 ### Contextes (`src/contexts/`)
 | Contexte | Description |
 |----------|-------------|
 | `AuthContext` | Gestion JWT, login/logout, état utilisateur |
-| `AppContext` | Données globales (ventes, produits, clients) |
+| `AppContext` | Données globales (ventes, produits, clients), refreshData |
 | `ThemeContext` | Thème clair/sombre |
 | `FormProtectionContext` | Protection contre perte de formulaire |
 
@@ -109,7 +153,7 @@
 |-------|----------|-------------|
 | `/api/auth` | POST login/register | Authentification |
 | `/api/clients` | GET, POST, PUT, DELETE | Clients |
-| `/api/products` | GET, POST, PUT, DELETE | Produits |
+| `/api/products` | GET, POST, PUT, DELETE | Produits (avec codes uniques auto-générés) |
 | `/api/sales` | GET, POST, PUT, DELETE | Ventes |
 | `/api/commandes` | GET, POST, PUT, DELETE | Commandes |
 | `/api/rdv` | GET, POST, PUT, DELETE | Rendez-vous |
@@ -118,6 +162,7 @@
 | `/api/benefices` | GET, POST, PUT, DELETE | Bénéfices |
 | `/api/objectif` | GET, PUT | Objectifs mensuels |
 | `/api/messages` | GET, POST, PUT, DELETE | Messages |
+| `/api/remboursements` | GET, POST, DELETE | Remboursements |
 
 ### Middleware (`server/middleware/`)
 | Middleware | Description |
@@ -125,14 +170,31 @@
 | `auth.js` | Vérification JWT token |
 | `security.js` | Rate limiting, CORS, headers sécurité |
 | `validation.js` | Validation des entrées |
-| `upload.js` | Upload de fichiers |
-| `sync.js` | Synchronisation temps réel |
+| `upload.js` | Upload de fichiers (photos produits) |
+| `sync.js` | Synchronisation temps réel SSE |
 
 ### Modèles (`server/models/`)
-Chaque modèle gère la lecture/écriture vers un fichier JSON dans `server/db/`.
+| Modèle | Fichier JSON | Description |
+|--------|-------------|-------------|
+| `User.js` | `users.json` | Utilisateurs |
+| `Client.js` | `clients.json` | Clients |
+| `Product.js` | `products.json` | Produits (avec generateProductCode) |
+| `Sale.js` | `sales.json` | Ventes (y compris remboursements négatifs) |
+| `Commande.js` | `commandes.json` | Commandes |
+| `Rdv.js` | `rdv.json` | Rendez-vous |
+| `Compta.js` | `compta.json` | Comptabilité |
+| `DepenseDuMois.js` | `depensedumois.json` | Dépenses mensuelles |
+| `Benefice.js` | `benefice.json` | Bénéfices |
+| `Objectif.js` | `objectif.json` | Objectifs |
+| `Message.js` | `messages.json` | Messages |
+| `NouvelleAchat.js` | `nouvelle_achat.json` | Nouveaux achats |
+| `PretFamille.js` | `pretfamilles.json` | Prêts familles |
+| `PretProduit.js` | `pretproduits.json` | Prêts produits |
+| `Remboursement.js` | `remboursement.json` | Remboursements |
+| `RdvNotification.js` | `rdvNotifications.json` | Notifications RDV |
 
 ### Base de données (`server/db/`)
-Stockage JSON avec les fichiers : `clients.json`, `products.json`, `sales.json`, `commandes.json`, `rdv.json`, `compta.json`, etc.
+Stockage exclusif en fichiers JSON. Pas de Supabase ni de base de données externe.
 
 ---
 
@@ -140,11 +202,64 @@ Stockage JSON avec les fichiers : `clients.json`, `products.json`, `sales.json`,
 | Type | Description |
 |------|-------------|
 | `Client` | id, nom, phone, adresse, dateCreation |
-| `Product` | id, description, purchasePrice, quantity, code |
-| `Sale` | id, date, products[], clientName, profit |
+| `Product` | id, description, purchasePrice, quantity, code, photos |
+| `Sale` | id, date, products[], clientName, profit, isRefund, originalSaleId |
+| `SaleProduct` | productId, description, quantitySold, purchasePrice, sellingPrice, profit |
 | `Commande` | id, clientNom, produits[], type, statut |
 | `RDV` | id, titre, date, heureDebut, heureFin, statut |
 | `Depense` | id, description, montant, date, categorie |
+
+---
+
+## Système de Remboursement
+
+### Flux de remboursement
+
+```
+1. Utilisateur clique "Remboursement" ou "Rembourser" sur une vente
+2. Recherche du client (min. 3 caractères) dans sales.json
+3. Sélection de la vente à rembourser
+4. Modification optionnelle : retrait de produits, changement de quantité/prix
+5. Validation → Confirmation de remise en stock (si prix intégral)
+6. Enregistrement :
+   - Entrée négative dans sales.json (isRefund: true)
+   - Entrée dans remboursement.json
+   - Stock mis à jour si confirmé
+```
+
+### Logique de stock lors du remboursement
+
+| Cas | Stock restauré ? | Explication |
+|-----|-----------------|-------------|
+| Prix remboursé = Prix de vente original | OUI (si confirmé) | Remboursement total → demande confirmation |
+| Prix remboursé < Prix de vente original | NON | Remboursement partiel → pas de remise en stock |
+
+### Calcul du bénéfice remboursé
+```
+bénéfice = (quantité × prix_remboursement_unitaire) - (quantité × prix_achat_unitaire)
+// Stocké en négatif dans sales.json
+```
+
+### Suppression d'un remboursement
+
+| Cas | Stock modifié ? | Explication |
+|-----|----------------|-------------|
+| Remboursement avec stock restauré | OUI (diminution) | Le stock est diminué de la quantité remboursée |
+| Remboursement partiel (pas de stock) | NON | Aucun changement de stock |
+
+### Fichiers impliqués
+
+| Fichier | Rôle |
+|---------|------|
+| `src/components/dashboard/RefundForm.tsx` | Formulaire de remboursement avec confirmation stock |
+| `src/components/dashboard/ViewRefundsModal.tsx` | Consultation remboursements du mois |
+| `src/components/dashboard/AddSaleForm.tsx` | Bouton Rembourser + suppression remboursement |
+| `src/components/dashboard/SalesTable.tsx` | Affichage lignes rouges pour remboursements |
+| `src/components/dashboard/sections/SalesManagementSection.tsx` | Boutons Remboursement et Voir Remboursements |
+| `src/services/api/remboursementApi.ts` | API client (getAll, getByMonth, searchSalesByClient, create, delete) |
+| `server/routes/remboursements.js` | Routes backend (GET, POST, DELETE) |
+| `server/models/Remboursement.js` | Modèle CRUD (getAll, getByMonthYear, create, delete) |
+| `server/db/remboursement.json` | Stockage des remboursements |
 
 ---
 
@@ -159,12 +274,22 @@ Stockage JSON avec les fichiers : `clients.json`, `products.json`, `sales.json`,
 - 6 onglets : Ventes, Prêts Familles, Prêts Produits, Dépenses, Inventaire, Calcul Bénéfice
 - Données temps réel via SSE (Server-Sent Events)
 - Graphiques Recharts interactifs
+- Stats cliquables avec navigation vers /produits
 
 ### 🛒 Gestion des Ventes
 - Vente mono-produit et multi-produits
+- Remboursement total ou partiel avec gestion de stock
 - Export PDF (jsPDF + autoTable)
 - Facture par client
 - Classement ventes par clients
+
+### 💸 Remboursements
+- Recherche par nom de client
+- Sélection de vente spécifique
+- Modification quantité et prix de remboursement
+- Confirmation de remise en stock (remboursement intégral)
+- Visualisation remboursements du mois
+- Suppression avec gestion inverse du stock
 
 ### 📅 Rendez-vous
 - Calendrier interactif avec drag & drop
@@ -175,6 +300,7 @@ Stockage JSON avec les fichiers : `clients.json`, `products.json`, `sales.json`,
 - Graphiques par produit, catégorie, période
 - Recommandations d'achat par ROI
 - Alertes stock critique
+- **Analyse clients** : classement par CA (tri asc/desc), détails cliquables avec historique achats, remboursements, fréquence
 - Intelligence artificielle de suggestions
 
 ### 💰 Comptabilité

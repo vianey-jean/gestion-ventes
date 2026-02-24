@@ -19,6 +19,11 @@ export const remboursementApiService = {
   async create(data: any) {
     const response = await api.post('/api/remboursements', data);
     return response.data;
+  },
+
+  async delete(id: string) {
+    const response = await api.delete(`/api/remboursements/${id}`);
+    return response.data;
   }
 };
 

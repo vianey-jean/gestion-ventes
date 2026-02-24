@@ -1,20 +1,16 @@
 /**
- * =============================================================================
  * TendancesClientsTab - Onglet Analyse Clients
- * =============================================================================
- * 
- * Affiche les statistiques clients : top acheteurs, fréquence d'achat,
- * répartition du CA par client.
- * 
- * @module TendancesClientsTab
  */
 
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 import { ChartTooltip } from '@/components/ui/chart';
-import { Users, Crown, TrendingUp, ShoppingBag } from 'lucide-react';
+import { Users, Crown, TrendingUp, ShoppingBag, ArrowUp, ArrowDown, RotateCcw, CalendarDays, Package } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 
 const clientColors = ['#8B5CF6', '#06D6A0', '#F59E0B', '#EF4444', '#3B82F6', '#EC4899', '#10B981', '#F97316', '#6366F1', '#14B8A6'];
 
@@ -25,6 +21,7 @@ interface ClientData {
   purchaseCount: number;
   avgBasket: number;
   lastPurchase: string;
+  sales?: any[];
 }
 
 interface TendancesClientsTabProps {
@@ -32,12 +29,32 @@ interface TendancesClientsTabProps {
 }
 
 const TendancesClientsTab: React.FC<TendancesClientsTabProps> = ({ clientsData }) => {
-  const top10Clients = clientsData.slice(0, 10);
+  const [sortDirection, setSortDirection] = useState<'desc' | 'asc'>('desc');
+  const [selectedClient, setSelectedClient] = useState<ClientData | null>(null);
+
+  const sortedClients = useMemo(() => {
+    return [...clientsData].sort((a, b) =>
+      sortDirection === 'desc' ? b.totalSpent - a.totalSpent : a.totalSpent - b.totalSpent
+    );
+  }, [clientsData, sortDirection]);
+
+  const top10Clients = sortedClients.slice(0, 10);
   const top5Pie = clientsData.slice(0, 5);
   const othersTotal = clientsData.slice(5).reduce((sum, c) => sum + c.totalSpent, 0);
   const pieData = othersTotal > 0 
     ? [...top5Pie.map(c => ({ name: c.name, value: c.totalSpent })), { name: 'Autres', value: othersTotal }]
     : top5Pie.map(c => ({ name: c.name, value: c.totalSpent }));
+
+  const formatCurrency = (amount: number) => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(amount);
+
+  // Determine if client is regular (bought more than once)
+  const isRegularClient = (client: ClientData) => client.purchaseCount > 1;
+
+  // Check if client has refunds (negative sales)
+  const getClientRefunds = (client: ClientData) => {
+    if (!client.sales) return [];
+    return client.sales.filter((s: any) => s.isRefund || (s.totalSellingPrice || s.sellingPrice || 0) < 0);
+  };
 
   return (
     <div className="space-y-6">
@@ -186,7 +203,7 @@ const TendancesClientsTab: React.FC<TendancesClientsTabProps> = ({ clientsData }
             <Crown className="h-5 w-5 text-amber-500" />
             Classement Complet des Clients
           </CardTitle>
-          <CardDescription>Tous les clients classés par chiffre d'affaires</CardDescription>
+          <CardDescription>Tous les clients classés par chiffre d'affaires — Cliquez sur un client pour voir ses détails</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
@@ -195,7 +212,19 @@ const TendancesClientsTab: React.FC<TendancesClientsTabProps> = ({ clientsData }
                 <tr className="border-b border-gray-200 dark:border-gray-700">
                   <th className="text-left py-3 px-2 font-bold text-gray-600 dark:text-gray-300">#</th>
                   <th className="text-left py-3 px-2 font-bold text-gray-600 dark:text-gray-300">Client</th>
-                  <th className="text-right py-3 px-2 font-bold text-gray-600 dark:text-gray-300">CA Total</th>
+                  <th className="text-right py-3 px-2 font-bold text-gray-600 dark:text-gray-300">
+                    <button
+                      onClick={() => setSortDirection(prev => prev === 'desc' ? 'asc' : 'desc')}
+                      className="inline-flex items-center gap-1 hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
+                    >
+                      CA Total
+                      {sortDirection === 'desc' ? (
+                        <ArrowDown className="h-3.5 w-3.5 text-purple-500" />
+                      ) : (
+                        <ArrowUp className="h-3.5 w-3.5 text-purple-500" />
+                      )}
+                    </button>
+                  </th>
                   <th className="text-right py-3 px-2 font-bold text-gray-600 dark:text-gray-300">Bénéfice</th>
                   <th className="text-right py-3 px-2 font-bold text-gray-600 dark:text-gray-300">Achats</th>
                   <th className="text-right py-3 px-2 font-bold text-gray-600 dark:text-gray-300">Panier Moy.</th>
@@ -203,8 +232,12 @@ const TendancesClientsTab: React.FC<TendancesClientsTabProps> = ({ clientsData }
                 </tr>
               </thead>
               <tbody>
-                {clientsData.slice(0, 20).map((client, idx) => (
-                  <tr key={idx} className="border-b border-gray-100 dark:border-gray-700/50 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
+                {sortedClients.slice(0, 20).map((client, idx) => (
+                  <tr
+                    key={idx}
+                    onClick={() => setSelectedClient(client)}
+                    className="border-b border-gray-100 dark:border-gray-700/50 hover:bg-purple-50/50 dark:hover:bg-purple-900/20 transition-colors cursor-pointer"
+                  >
                     <td className="py-2.5 px-2">
                       <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold ${
                         idx === 0 ? 'bg-amber-100 text-amber-700' :
@@ -228,6 +261,104 @@ const TendancesClientsTab: React.FC<TendancesClientsTabProps> = ({ clientsData }
           </div>
         </CardContent>
       </Card>
+
+      {/* Client Detail Modal */}
+      <Dialog open={!!selectedClient} onOpenChange={() => setSelectedClient(null)}>
+        <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto bg-gradient-to-br from-white to-purple-50/30 dark:from-gray-900 dark:to-purple-950/20 backdrop-blur-xl border border-purple-100/50 dark:border-purple-800/30 shadow-2xl rounded-2xl">
+          {selectedClient && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-3 text-lg">
+                  <div className="p-2 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-lg">
+                    <Users className="h-5 w-5" />
+                  </div>
+                  <span className="font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
+                    {selectedClient.name}
+                  </span>
+                </DialogTitle>
+                <DialogDescription className="text-gray-500 dark:text-white/50">
+                  Détails des achats et historique
+                </DialogDescription>
+              </DialogHeader>
+
+              {/* KPIs */}
+              <div className="grid grid-cols-2 gap-3 my-4">
+                <div className="p-3 bg-purple-50 dark:bg-purple-500/10 border border-purple-200/60 dark:border-purple-500/20 rounded-xl text-center">
+                  <p className="text-xs text-gray-500 dark:text-white/40">CA Total</p>
+                  <p className="text-lg font-black text-purple-600">{formatCurrency(selectedClient.totalSpent)}</p>
+                </div>
+                <div className="p-3 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200/60 dark:border-emerald-500/20 rounded-xl text-center">
+                  <p className="text-xs text-gray-500 dark:text-white/40">Bénéfice</p>
+                  <p className="text-lg font-black text-emerald-600">{formatCurrency(selectedClient.totalProfit)}</p>
+                </div>
+                <div className="p-3 bg-blue-50 dark:bg-blue-500/10 border border-blue-200/60 dark:border-blue-500/20 rounded-xl text-center">
+                  <p className="text-xs text-gray-500 dark:text-white/40">Nb Achats</p>
+                  <p className="text-lg font-black text-blue-600">{selectedClient.purchaseCount}</p>
+                </div>
+                <div className="p-3 bg-orange-50 dark:bg-orange-500/10 border border-orange-200/60 dark:border-orange-500/20 rounded-xl text-center">
+                  <p className="text-xs text-gray-500 dark:text-white/40">Panier Moyen</p>
+                  <p className="text-lg font-black text-orange-600">{formatCurrency(selectedClient.avgBasket)}</p>
+                </div>
+              </div>
+
+              {/* Client status badges */}
+              <div className="flex flex-wrap gap-2 mb-4">
+                {isRegularClient(selectedClient) ? (
+                  <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400 border-0">
+                    <CalendarDays className="h-3 w-3 mr-1" /> Client régulier
+                  </Badge>
+                ) : (
+                  <Badge className="bg-gray-100 text-gray-600 dark:bg-gray-500/20 dark:text-gray-400 border-0">
+                    Achat unique
+                  </Badge>
+                )}
+                {getClientRefunds(selectedClient).length > 0 && (
+                  <Badge className="bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400 border-0">
+                    <RotateCcw className="h-3 w-3 mr-1" /> {getClientRefunds(selectedClient).length} remboursement(s)
+                  </Badge>
+                )}
+                <Badge className="bg-purple-100 text-purple-700 dark:bg-purple-500/20 dark:text-purple-400 border-0">
+                  Dernier achat: {selectedClient.lastPurchase}
+                </Badge>
+              </div>
+
+              {/* Sales list */}
+              <div className="space-y-2">
+                <p className="text-sm font-bold text-gray-700 dark:text-white/70 flex items-center gap-2">
+                  <Package className="h-4 w-4" /> Historique des achats
+                </p>
+                {selectedClient.sales && selectedClient.sales.length > 0 ? (
+                  <div className="max-h-60 overflow-y-auto space-y-2">
+                    {selectedClient.sales.map((sale: any, idx: number) => {
+                      const isRefund = sale.isRefund || (sale.totalSellingPrice || sale.sellingPrice || 0) < 0;
+                      return (
+                        <div key={idx} className={`p-3 rounded-xl border ${isRefund ? 'bg-red-50/80 dark:bg-red-500/10 border-red-200/60 dark:border-red-500/20' : 'bg-gray-50/80 dark:bg-white/[0.04] border-gray-200/60 dark:border-white/[0.08]'}`}>
+                          <div className="flex justify-between items-start">
+                            <div>
+                              {isRefund && <span className="text-[10px] font-bold text-white bg-red-500 rounded px-1.5 py-0.5 mr-1">REMB.</span>}
+                              <span className="text-sm font-semibold text-gray-800 dark:text-white/90">
+                                {sale.products
+                                  ? sale.products.map((p: any) => p.description).join(', ')
+                                  : sale.description}
+                              </span>
+                            </div>
+                            <span className={`text-sm font-bold ${isRefund ? 'text-red-600' : 'text-emerald-600'}`}>
+                              {formatCurrency(sale.totalSellingPrice || sale.sellingPrice || 0)}
+                            </span>
+                          </div>
+                          <p className="text-xs text-gray-400 mt-1">{new Date(sale.date).toLocaleDateString('fr-FR')}</p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-400 dark:text-white/40">Données d'achats détaillées non disponibles dans cette vue</p>
+                )}
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

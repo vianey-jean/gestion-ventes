@@ -207,17 +207,18 @@ export const useTendancesData = (allSales: any[], products: any[]) => {
 
   /** Analyse des clients - classement par CA */
   const clientsData = useMemo(() => {
-    const clients: Record<string, { name: string; totalSpent: number; totalProfit: number; purchaseCount: number; lastPurchase: string }> = {};
+    const clients: Record<string, { name: string; totalSpent: number; totalProfit: number; purchaseCount: number; lastPurchase: string; sales: any[] }> = {};
     filteredSales.forEach(sale => {
       const name = sale.clientName?.trim();
       if (!name) return;
       const values = getSaleValues(sale);
       if (!clients[name]) {
-        clients[name] = { name, totalSpent: 0, totalProfit: 0, purchaseCount: 0, lastPurchase: '' };
+        clients[name] = { name, totalSpent: 0, totalProfit: 0, purchaseCount: 0, lastPurchase: '', sales: [] };
       }
       clients[name].totalSpent += values.revenue;
       clients[name].totalProfit += values.profit;
       clients[name].purchaseCount += 1;
+      clients[name].sales.push(sale);
       const saleDate = new Date(sale.date).toISOString().split('T')[0];
       if (!clients[name].lastPurchase || saleDate > clients[name].lastPurchase) {
         clients[name].lastPurchase = saleDate;

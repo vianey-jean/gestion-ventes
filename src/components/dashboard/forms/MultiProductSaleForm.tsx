@@ -1,18 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useApp } from '@/contexts/AppContext';
 import { Product, SaleProduct, Sale } from '@/types';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Trash2, Package, Euro, Edit3, Camera, RotateCcw } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import ProductPhotoSlideshow from '../ProductPhotoSlideshow';
-import ProductSearchInput from '../ProductSearchInput';
-import SaleQuantityInput from './SaleQuantityInput';
-import ClientSearchInput from '../ClientSearchInput';
 import { calculateSaleProfit } from './utils/saleCalculations';
 import ConfirmDeleteDialog from './ConfirmDeleteDialog';
 import AdvancePaymentModal from './AdvancePaymentModal';
@@ -20,27 +15,19 @@ import PretProduitFromSaleModal from './PretProduitFromSaleModal';
 import axios from 'axios';
 import { setFormProtection } from '@/hooks/use-realtime-sync';
 
+// Sub-components
+import SaleClientSection from './sections/SaleClientSection';
+import SaleProductCard from './sections/SaleProductCard';
+import SaleTotalsSection from './sections/SaleTotalsSection';
+import SaleFormActions from './sections/SaleFormActions';
+import ReservedProductModal from './modals/ReservedProductModal';
+import { FormProduct, createEmptyFormProduct } from './types/saleFormTypes';
+
 interface MultiProductSaleFormProps {
   isOpen: boolean;
   onClose: () => void;
   editSale?: Sale;
   onRefund?: (sale: Sale) => void;
-}
-
-interface FormProduct {
-  productId: string;
-  description: string;
-  sellingPriceUnit: string;
-  quantitySold: string;
-  purchasePriceUnit: string;
-  profit: string;
-  selectedProduct: Product | null;
-  maxQuantity: number;
-  isAdvanceProduct: boolean;
-  isPretProduit: boolean;
-  deliveryLocation: string;
-  deliveryFee: string;
-  avancePretProduit: string;
 }
 
 const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onClose, editSale, onRefund }) => {
@@ -51,21 +38,7 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
   const [clientName, setClientName] = useState('');
   const [clientPhone, setClientPhone] = useState('');
   const [clientAddress, setClientAddress] = useState('');
-  const [formProducts, setFormProducts] = useState<FormProduct[]>([{
-    productId: '',
-    description: '',
-    sellingPriceUnit: '',
-    quantitySold: '1',
-    purchasePriceUnit: '',
-    profit: '',
-    selectedProduct: null,
-    maxQuantity: 0,
-    isAdvanceProduct: false,
-    isPretProduit: false,
-    deliveryLocation: 'Saint-Denis',
-    deliveryFee: '0',
-    avancePretProduit: ''
-  }]);
+  const [formProducts, setFormProducts] = useState<FormProduct[]>([createEmptyFormProduct()]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<{ type: 'sale' | 'product', index?: number } | null>(null);
@@ -99,65 +72,48 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
   // Activer/désactiver la protection de synchronisation quand le formulaire s'ouvre/ferme
   useEffect(() => {
     if (isOpen) {
-      // Activer la protection - bloquer toute synchronisation
       setFormProtection(true);
       console.log('Protection formulaire activée - synchronisation bloquée');
     } else {
-      // Désactiver la protection quand le formulaire se ferme
       setFormProtection(false);
       console.log('Protection formulaire désactivée - synchronisation autorisée');
-      // Réinitialiser les refs quand le formulaire se ferme
       isInitializedRef.current = false;
       lastEditSaleIdRef.current = null;
     }
-
-    // Cleanup: toujours désactiver la protection à la destruction du composant
-    return () => {
-      setFormProtection(false);
-    };
+    return () => { setFormProtection(false); };
   }, [isOpen]);
 
   // Réinitialiser le formulaire UNIQUEMENT à l'ouverture initiale ou changement de vente
   useEffect(() => {
     const loadSaleData = async () => {
-      // Ne charger que si le formulaire vient de s'ouvrir et n'est pas déjà initialisé
-      // OU si on change de vente en édition
       const editSaleId = editSale?.id || null;
       const shouldInitialize = isOpen && (!isInitializedRef.current || lastEditSaleIdRef.current !== editSaleId);
       
-      if (!shouldInitialize) {
-        return; // Ne pas réinitialiser si déjà initialisé
-      }
+      if (!shouldInitialize) return;
 
       isInitializedRef.current = true;
       lastEditSaleIdRef.current = editSaleId;
 
       if (editSale) {
-        // Mode édition - charger les données existantes
         setDate(new Date(editSale.date).toISOString().split('T')[0]);
         setClientName(editSale.clientName || '');
         setClientPhone(editSale.clientPhone || '');
         setClientAddress(editSale.clientAddress || '');
         
-        // Charger les données d'avance si elles existent
         const hasReste = editSale.reste && editSale.reste > 0;
         if (hasReste) {
           setShowAdvanceSection(true);
-          // Le prix d'avance est stocké dans totalSellingPrice de la vente
           setAvancePrice(editSale.totalSellingPrice?.toString() || '0');
           setReste(editSale.reste.toString());
           
-          // Charger la date de prochaine paiement depuis pretproduits
           try {
             const token = localStorage.getItem('token');
             const response = await axios.get(`${API_BASE_URL}/api/pretproduits`, {
               headers: { Authorization: `Bearer ${token}` }
             });
-            
             const pretProduit = response.data.find((p: any) => 
               p.nom === editSale.clientName && p.date === editSale.date
             );
-            
             if (pretProduit && pretProduit.datePaiement) {
               setNextPaymentDate(new Date(pretProduit.datePaiement).toISOString().split('T')[0]);
             }
@@ -171,15 +127,12 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
           setNextPaymentDate('');
         }
         
-        // Charger les produits existants
         if (editSale.products && editSale.products.length > 0) {
           const loadedProducts = editSale.products.map(saleProduct => {
             const product = products.find(p => p.id === saleProduct.productId);
             const isAdvance = saleProduct.description.toLowerCase().includes('avance');
-            
             const purchasePriceUnit = isAdvance ? saleProduct.purchasePrice : (saleProduct.purchasePrice / saleProduct.quantitySold);
             const sellingPriceUnit = isAdvance ? saleProduct.sellingPrice : (saleProduct.sellingPrice / saleProduct.quantitySold);
-            
             const isPret = saleProduct.description.toLowerCase().includes('prêt') || 
                            saleProduct.description.toLowerCase().includes('pret');
             
@@ -202,36 +155,19 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
           setFormProducts(loadedProducts);
         }
       } else {
-        // Mode création - réinitialiser
         setDate(new Date().toISOString().split('T')[0]);
         setClientName('');
         setClientPhone('');
         setClientAddress('');
-        setFormProducts([{
-          productId: '',
-          description: '',
-          sellingPriceUnit: '',
-          quantitySold: '1',
-          purchasePriceUnit: '',
-          profit: '',
-          selectedProduct: null,
-          maxQuantity: 0,
-          isAdvanceProduct: false,
-          isPretProduit: false,
-          deliveryLocation: 'Saint-Denis',
-          deliveryFee: '0',
-          avancePretProduit: ''
-        }]);
-        // Réinitialiser les champs avance
+        setFormProducts([createEmptyFormProduct()]);
         setShowAdvanceSection(false);
         setAvancePrice('');
         setReste('');
         setNextPaymentDate('');
       }
     };
-    
     loadSaleData();
-  }, [isOpen, editSale]); // Retiré 'products' des dépendances pour éviter les réinitialisations
+  }, [isOpen, editSale]);
 
   // Gestion du client
   const handleClientSelect = (client: any) => {
@@ -247,21 +183,7 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
 
   // Ajouter un nouveau produit
   const addNewProduct = () => {
-    setFormProducts(prev => [...prev, {
-      productId: '',
-      description: '',
-      sellingPriceUnit: '',
-      quantitySold: '1',
-      purchasePriceUnit: '',
-      profit: '',
-      selectedProduct: null,
-      maxQuantity: 0,
-      isAdvanceProduct: false,
-      isPretProduit: false,
-      deliveryLocation: 'Saint-Denis',
-      deliveryFee: '0',
-      avancePretProduit: ''
-    }]);
+    setFormProducts(prev => [...prev, createEmptyFormProduct()]);
   };
 
   // Confirmer suppression d'un produit
@@ -276,7 +198,7 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
     setDeleteDialogOpen(true);
   };
 
-  // Exécuter la suppression confirmée
+  // Exécuter la suppression confirmée - avec gestion stock vente vs remboursement
   const executeDelete = async () => {
     if (!deleteTarget) return;
 
@@ -293,15 +215,60 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
           });
         }
       } else if (deleteTarget.type === 'sale' && editSale && deleteSale) {
-        // Supprimer toute la vente
-        const success = await deleteSale(editSale.id);
-        if (success) {
-          toast({
-            title: "Succès",
-            description: "La vente a été supprimée avec succès",
-            className: "notification-success",
-          });
-          onClose();
+        // Vérifier si c'est un remboursement
+        const isRefund = editSale.isRefund === true;
+
+        if (isRefund) {
+          // REMBOURSEMENT: soustraire la quantité du stock
+          // deleteSale va ajouter les quantités au stock (comportement par défaut du backend),
+          // donc on doit compenser en soustrayant 2x la quantité pour obtenir un net de -quantité
+          const token = localStorage.getItem('token');
+          const saleProducts = editSale.products || [];
+
+          // D'abord supprimer la vente (le backend va ajouter les quantités au stock)
+          const success = await deleteSale(editSale.id);
+
+          if (success) {
+            // Maintenant soustraire 2x les quantités pour compenser l'ajout du backend + la soustraction voulue
+            for (const sp of saleProducts) {
+              if (sp.productId && sp.quantitySold > 0) {
+                try {
+                  // Récupérer le produit actuel pour connaître sa quantité après l'ajout du backend
+                  const productResponse = await axios.get(`${API_BASE_URL}/api/products/${sp.productId}`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                  });
+                  const currentProduct = productResponse.data;
+                  const newQuantity = (currentProduct.quantity || 0) - (2 * sp.quantitySold);
+                  
+                  await axios.put(`${API_BASE_URL}/api/products/${sp.productId}`, {
+                    quantity: Math.max(0, newQuantity)
+                  }, {
+                    headers: { Authorization: `Bearer ${token}` }
+                  });
+                  console.log(`📦 Stock ajusté (remboursement supprimé): ${sp.description} → -${sp.quantitySold}`);
+                } catch (err) {
+                  console.error(`Erreur ajustement stock produit ${sp.productId}:`, err);
+                }
+              }
+            }
+            toast({
+              title: "Succès",
+              description: "Le remboursement a été supprimé et le stock a été ajusté",
+              className: "notification-success",
+            });
+            onClose();
+          }
+        } else {
+          // VENTE NORMALE: deleteSale gère déjà la restauration du stock via le backend
+          const success = await deleteSale(editSale.id);
+          if (success) {
+            toast({
+              title: "Succès",
+              description: "La vente a été supprimée et le stock a été restauré",
+              className: "notification-success",
+            });
+            onClose();
+          }
         }
       }
     } catch (error) {
@@ -309,7 +276,7 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
         title: "Erreur",
         description: "Une erreur est survenue lors de la suppression",
         variant: "destructive",
-         className: "notification-erreur",
+        className: "notification-erreur",
       });
     } finally {
       setIsSubmitting(false);
@@ -320,14 +287,11 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
 
   // Sélection d'un produit
   const handleProductSelect = (product: Product, index: number) => {
-    // Vérifier si le produit est réservé ET quantité === 1 - ouvrir modale de confirmation
-    // Si quantité > 1, pas de notification et on peut vendre normalement
     if ((product as any).reserver === 'oui' && product.quantity === 1) {
       setPendingReservedProduct({ product, index });
       setReservedModalOpen(true);
       return;
     }
-
     applyProductSelection(product, index);
   };
 
@@ -354,28 +318,23 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
     const purchasePriceUnit = product.purchasePrice;
     const suggestedSellingPrice = isAdvance ? '' : (product.purchasePrice * 1.2).toFixed(2);
 
-    // Vérifier si c'est "Prêt Produit" - nouveau comportement
     const isPretProduit = product.description.toLowerCase().includes('prêt') || 
                           product.description.toLowerCase().includes('pret');
 
     if (isPretProduit) {
-      // Ouvrir la modale pour créer un nouveau prêt produit
       setCurrentPretProductIndex(index);
       setPretProduitModalOpen(true);
       return;
     }
 
-    // Vérifier si c'est "Avance Perruque ou Tissages"
     const isAdvancePerruqueOuTissages = product.description.toLowerCase().includes('avance') && 
                                          (product.description.toLowerCase().includes('perruque') || 
                                           product.description.toLowerCase().includes('tissage'));
 
     if (isAdvancePerruqueOuTissages) {
-      // Ouvrir la modale pour sélectionner les prêts existants
       setCurrentAdvanceProductIndex(index);
       setAdvancePaymentModalOpen(true);
       
-      // Préremplir les données de base du produit
       setFormProducts(prev => {
         const newProducts = [...prev];
         newProducts[index] = {
@@ -387,7 +346,7 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
           isAdvanceProduct: true,
           isPretProduit: false,
           purchasePriceUnit: purchasePriceUnit.toString(),
-          sellingPriceUnit: '', // Sera rempli après la modale
+          sellingPriceUnit: '',
           quantitySold: '0',
           profit: '0',
         };
@@ -402,7 +361,6 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
       const newPurchasePriceUnit = purchasePriceUnit.toString();
       const newSellingPriceUnit = isAdvance ? '' : suggestedSellingPrice;
       
-      // Pour les produits "Avance", le bénéfice est toujours 0
       let initialProfit = '0';
       if (!isAdvance && suggestedSellingPrice) {
         const A = Number(newPurchasePriceUnit) * Number(newQuantity);
@@ -423,7 +381,6 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
         quantitySold: newQuantity,
         profit: initialProfit,
       };
-      
       return newProducts;
     });
   };
@@ -436,11 +393,10 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
         newProducts[currentAdvanceProductIndex] = {
           ...newProducts[currentAdvanceProductIndex],
           sellingPriceUnit: totalAdvance.toString(),
-          profit: '0', // Les avances n'ont pas de bénéfice
+          profit: '0',
         };
         return newProducts;
       });
-      
       setCurrentAdvanceProductIndex(null);
       toast({
         title: 'Succès',
@@ -470,7 +426,6 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
         };
         return newProducts;
       });
-      
       setCurrentPretProductIndex(null);
       toast({
         title: 'Succès',
@@ -484,7 +439,6 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
   const updateProfit = (index: number, priceUnit: string, quantity: string, purchasePriceUnit: string) => {
     const product = formProducts[index];
     if (product.isAdvanceProduct) {
-      // Pour les produits "Avance", le bénéfice est toujours 0
       setFormProducts(prev => {
         const newProducts = [...prev];
         newProducts[index] = { ...newProducts[index], profit: '0' };
@@ -494,13 +448,12 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
       const profit = calculateSaleProfit(priceUnit, quantity, purchasePriceUnit);
       setFormProducts(prev => {
         const newProducts = [...prev];
-        newProducts[index] = { ...newProducts[index], profit: profit };
+        newProducts[index] = { ...newProducts[index], profit };
         return newProducts;
       });
     }
   };
 
-  // Changement du prix de vente
   const handleSellingPriceChange = (value: string, index: number) => {
     setFormProducts(prev => {
       const newProducts = [...prev];
@@ -511,7 +464,6 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
     updateProfit(index, value, product.quantitySold, product.purchasePriceUnit);
   };
 
-  // Changement de la quantité
   const handleQuantityChange = (value: string, index: number) => {
     const product = formProducts[index];
     if (!product.isAdvanceProduct) {
@@ -524,43 +476,54 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
     }
   };
 
+  const handleAvanceProductChange = (value: string, index: number) => {
+    setFormProducts(prev => {
+      const newProducts = [...prev];
+      newProducts[index] = { ...newProducts[index], avancePretProduit: value };
+      return newProducts;
+    });
+  };
+
+  const handleDeliveryChange = (location: string, fee: string, index: number) => {
+    setFormProducts(prev => {
+      const newProducts = [...prev];
+      newProducts[index] = { ...newProducts[index], deliveryLocation: location, deliveryFee: fee };
+      return newProducts;
+    });
+  };
+
+  const handleShowSlideshow = (product: FormProduct) => {
+    setSlideshowProduct({
+      photos: product.selectedProduct?.photos || [],
+      mainPhoto: product.selectedProduct?.mainPhoto || product.selectedProduct?.photos?.[0],
+      name: product.selectedProduct?.description || ''
+    });
+  };
+
   // Gestion des clients
   const handleClientData = async (clientName: string, clientPhone: string, clientAddress: string) => {
     if (!clientName.trim()) return null;
-
     try {
       const token = localStorage.getItem('token');
-      
       const existingClientsResponse = await axios.get(`${API_BASE_URL}/api/clients`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      
       const existingClient = existingClientsResponse.data.find((client: any) => 
         client.nom.toLowerCase() === clientName.toLowerCase()
       );
-      
-      if (existingClient) {
-        return existingClient;
-      }
+      if (existingClient) return existingClient;
       
       if (clientPhone.trim() && clientAddress.trim()) {
         const newClientResponse = await axios.post(`${API_BASE_URL}/api/clients`, {
-          nom: clientName,
-          phone: clientPhone,
-          adresse: clientAddress
-        }, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        
+          nom: clientName, phone: clientPhone, adresse: clientAddress
+        }, { headers: { Authorization: `Bearer ${token}` } });
         toast({
           title: "Client enregistré",
           description: `Le client ${clientName} a été ajouté à votre base de données`,
           className: "notification-success",
         });
-        
         return newClientResponse.data;
       }
-      
       return null;
     } catch (error) {
       console.error('Erreur lors de la gestion du client:', error);
@@ -577,7 +540,6 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
       const deliveryFee = Number(product.deliveryFee || 0);
       
       let purchasePrice, sellingPrice;
-      
       if (product.isAdvanceProduct) {
         purchasePrice = purchasePriceUnit;
         sellingPrice = sellingPriceUnit;
@@ -595,7 +557,6 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
     }, { totalPurchasePrice: 0, totalSellingPrice: 0, totalProfit: 0, totalDeliveryFee: 0 });
   };
 
-  // Calculer automatiquement le reste quand l'avance change
   const handleAvancePriceChange = (value: string) => {
     setAvancePrice(value);
     const totals = getTotals();
@@ -621,32 +582,26 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
     setIsSubmitting(true);
 
     try {
-      // Gérer le client
       if (clientName.trim()) {
         await handleClientData(clientName, clientPhone, clientAddress);
       }
 
-      // Préparer les données de vente
       const saleProducts: SaleProduct[] = validProducts.map(product => {
         const quantity = product.isAdvanceProduct ? 0 : Number(product.quantitySold);
         const purchasePriceUnit = Number(product.purchasePriceUnit);
         const sellingPriceUnit = Number(product.sellingPriceUnit);
         const deliveryFee = Number(product.deliveryFee || 0);
         
-        // Détecter automatiquement si c'est un prêt produit
         const isPretProduit = product.isPretProduit || 
                               product.description.toLowerCase().includes('prêt') || 
                               product.description.toLowerCase().includes('pret');
         
         let purchasePrice, sellingPrice;
-        
         if (product.isAdvanceProduct) {
           purchasePrice = purchasePriceUnit;
           sellingPrice = sellingPriceUnit;
         } else if (isPretProduit) {
-          // Pour les prêts produits, sellingPrice = avance si rempli, sinon 0
           purchasePrice = purchasePriceUnit * quantity;
-          // Si avance est vide ou 0, sellingPrice = 0, sinon sellingPrice = montant avance
           const avanceValue = product.avancePretProduit?.trim();
           sellingPrice = avanceValue && Number(avanceValue) > 0 ? Number(avanceValue) : 0;
         } else {
@@ -658,17 +613,15 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
           productId: product.productId,
           description: product.description,
           quantitySold: quantity,
-          purchasePrice: purchasePrice,
-          sellingPrice: sellingPrice,
+          purchasePrice,
+          sellingPrice,
           profit: Number(product.profit),
-          deliveryFee: deliveryFee,
+          deliveryFee,
           deliveryLocation: product.deliveryLocation
         };
       });
 
       const totals = getTotals();
-      
-      // Déterminer le prix de vente à enregistrer
       const avancePriceValue = Number(avancePrice) || 0;
       const finalSellingPrice = avancePriceValue > 0 ? avancePriceValue : totals.totalSellingPrice;
       const resteValue = avancePriceValue > 0 ? Number(reste) : 0;
@@ -692,42 +645,28 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
       if (editSale) {
         success = await updateSale({ ...saleData, id: editSale.id });
         
-        // Si c'est une modification avec avance, mettre à jour pretproduits
         if (success && avancePriceValue > 0 && nextPaymentDate) {
           try {
             const token = localStorage.getItem('token');
-            
-            // Chercher le pretproduit existant par nom et date
             const pretProduitsResponse = await axios.get(`${API_BASE_URL}/api/pretproduits`, {
               headers: { Authorization: `Bearer ${token}` }
             });
-            
             const existingPretProduit = pretProduitsResponse.data.find((p: any) => 
               p.nom === clientName && p.date === date
             );
-            
             const productsDescription = validProducts.map(p => p.description).join(', ');
-            
             const pretProduitData = {
-              date: date,
-              datePaiement: nextPaymentDate,
-              phone: clientPhone || '',
-              description: productsDescription,
-              nom: clientName,
-              prixVente: totals.totalSellingPrice,
-              avanceRecue: avancePriceValue,
-              reste: resteValue,
-              estPaye: resteValue === 0,
+              date, datePaiement: nextPaymentDate, phone: clientPhone || '',
+              description: productsDescription, nom: clientName,
+              prixVente: totals.totalSellingPrice, avanceRecue: avancePriceValue,
+              reste: resteValue, estPaye: resteValue === 0,
               productId: validProducts.length === 1 ? validProducts[0].productId : undefined,
             };
-            
             if (existingPretProduit) {
-              // Mettre à jour le pretproduit existant
               await axios.put(`${API_BASE_URL}/api/pretproduits/${existingPretProduit.id}`, pretProduitData, {
                 headers: { Authorization: `Bearer ${token}` }
               });
             } else {
-              // Créer un nouveau pretproduit
               await axios.post(`${API_BASE_URL}/api/pretproduits`, pretProduitData, {
                 headers: { Authorization: `Bearer ${token}` }
               });
@@ -739,36 +678,24 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
       } else {
         success = await addSale(saleData);
         
-        // Si avance est remplie, enregistrer aussi dans pretproduits
         if (success && avancePriceValue > 0 && nextPaymentDate) {
           try {
             const token = localStorage.getItem('token');
-            
-            // Créer la description des produits
             const productsDescription = validProducts.map(p => p.description).join(', ');
-            
             const pretProduitData = {
-              date: date,
-              datePaiement: nextPaymentDate,
-              phone: clientPhone || '',
-              description: productsDescription,
-              nom: clientName,
-              prixVente: totals.totalSellingPrice,
-              avanceRecue: avancePriceValue,
-              reste: resteValue,
-              estPaye: resteValue === 0,
+              date, datePaiement: nextPaymentDate, phone: clientPhone || '',
+              description: productsDescription, nom: clientName,
+              prixVente: totals.totalSellingPrice, avanceRecue: avancePriceValue,
+              reste: resteValue, estPaye: resteValue === 0,
               productId: validProducts.length === 1 ? validProducts[0].productId : undefined,
             };
-
             await axios.post(`${API_BASE_URL}/api/pretproduits`, pretProduitData, {
               headers: { Authorization: `Bearer ${token}` }
             });
-
             toast({
               title: "Succès",
               description: `Vente enregistrée et prêt produit créé avec succès`,
-              variant: "default",
-              className: "notification-success",
+              variant: "default", className: "notification-success",
             });
           } catch (error) {
             console.error('Erreur lors de l\'enregistrement du prêt produit:', error);
@@ -787,8 +714,7 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
           description: editSale 
             ? `Vente avec ${saleProducts.length} produit(s) mise à jour avec succès`
             : `Vente avec ${saleProducts.length} produit(s) ajoutée avec succès`,
-          variant: "default",
-          className: "notification-success",
+          variant: "default", className: "notification-success",
         });
       }
       
@@ -798,12 +724,10 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
           if ((product.selectedProduct as any)?.reserver === 'oui') {
             try {
               const token = localStorage.getItem('token');
-              // Récupérer toutes les commandes
               const commandesResponse = await axios.get(`${API_BASE_URL}/api/commandes`, {
                 headers: { Authorization: `Bearer ${token}` }
               });
               const allCommandes = commandesResponse.data;
-              // Trouver la réservation contenant ce produit
               const reservationToDelete = allCommandes.find((c: any) => 
                 c.type === 'reservation' && 
                 c.statut !== 'valide' && c.statut !== 'annule' &&
@@ -815,7 +739,6 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
                 });
                 console.log('✅ Réservation supprimée après vente:', reservationToDelete.id);
 
-                // Supprimer aussi le RDV lié à cette réservation
                 try {
                   const rdvResponse = await axios.get(`${API_BASE_URL}/api/rdv`, {
                     headers: { Authorization: `Bearer ${token}` }
@@ -831,7 +754,6 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
                   console.error('Erreur suppression RDV lié:', rdvError);
                 }
               }
-              // Enlever le marquage réservé du produit
               await axios.put(`${API_BASE_URL}/api/products/${product.productId}`, { reserver: 'non' }, {
                 headers: { Authorization: `Bearer ${token}` }
               });
@@ -854,632 +776,145 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
   };
 
   const totals = getTotals();
+  const hasValidProducts = formProducts.filter(p => p.selectedProduct && p.sellingPriceUnit).length > 0;
 
   return (
-<Dialog open={isOpen} onOpenChange={onClose}>
-  <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto bg-gray-400">
-    <DialogHeader>
-      <DialogTitle>
-        {editSale ? 'Modifier la vente multi-produits' : 'Ajouter une vente multi-produits'}
-      </DialogTitle>
-      <DialogDescription>
-       <p className="text-white">
-  {editSale
-    ? 'Modifiez les détails de cette vente avec plusieurs produits.'
-    : 'Enregistrez une vente avec un ou plusieurs produits.'}
-</p>
-      </DialogDescription>
-    </DialogHeader>
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto bg-gray-400">
+        <DialogHeader>
+          <DialogTitle>
+            {editSale ? 'Modifier la vente multi-produits' : 'Ajouter une vente multi-produits'}
+          </DialogTitle>
+          <DialogDescription>
+            <p className="text-white">
+              {editSale
+                ? 'Modifiez les détails de cette vente avec plusieurs produits.'
+                : 'Enregistrez une vente avec un ou plusieurs produits.'}
+            </p>
+          </DialogDescription>
+        </DialogHeader>
 
-    <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Date et client */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="date">Date de vente</Label>
-          <Input
-            id="date"
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-          />
-        </div>
-      </div>
-
-      {/* Informations client - Premium Design */}
-      <Card className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-indigo-50/50 to-purple-50/30 dark:from-blue-900/30 dark:via-indigo-900/20 dark:to-purple-900/10 border-0 shadow-xl shadow-blue-500/10 rounded-2xl">
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute -top-16 -right-16 w-32 h-32 bg-blue-300/20 rounded-full blur-2xl" />
-          <div className="absolute -bottom-8 -left-8 w-24 h-24 bg-indigo-300/20 rounded-full blur-2xl" />
-        </div>
-        <CardHeader className="relative pb-2">
-          <CardTitle className="text-base font-bold bg-gradient-to-r from-blue-600 to-indigo-700 bg-clip-text text-transparent flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg">
-              <Package className="h-4 w-4 text-white" />
-            </div>
-            Informations Client
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="relative space-y-4">
-          <ClientSearchInput
-            value={clientName}
-            onChange={setClientName}
-            onClientSelect={handleClientSelect}
-            disabled={isSubmitting}
-          />
-
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Date */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="clientPhone" className="font-semibold text-gray-700 dark:text-gray-300">Numéro de téléphone</Label>
-              <Input
-                id="clientPhone"
-                value={clientPhone}
-                onChange={(e) => setClientPhone(e.target.value)}
-                placeholder="Ex: 0692123456"
-                className="border-2 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 rounded-xl transition-all duration-300"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="clientAddress" className="font-semibold text-gray-700 dark:text-gray-300">Adresse</Label>
-              <Input
-                id="clientAddress"
-                value={clientAddress}
-                onChange={(e) => setClientAddress(e.target.value)}
-                placeholder="Adresse complète du client"
-                className="border-2 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 rounded-xl transition-all duration-300"
-              />
+              <Label htmlFor="date">Date de vente</Label>
+              <Input id="date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
             </div>
           </div>
-        </CardContent>
-      </Card>
 
-      {/* Produits */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold">Produits</h3>
-          {/* <Button
-            type="button"
-            onClick={addNewProduct}
-            className="bg-green-600 hover:bg-green-700"
-            size="sm"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Ajouter un produit
-          </Button> */}
-        </div>
+          {/* Client Section */}
+          <SaleClientSection
+            clientName={clientName}
+            setClientName={setClientName}
+            clientPhone={clientPhone}
+            setClientPhone={setClientPhone}
+            clientAddress={clientAddress}
+            setClientAddress={setClientAddress}
+            onClientSelect={handleClientSelect}
+            isSubmitting={isSubmitting}
+          />
 
-        {formProducts.map((product, index) => (
-          <Card
-            key={index}
-            className="relative overflow-hidden border-0 shadow-lg shadow-gray-200/50 dark:shadow-gray-900/30 rounded-2xl bg-gradient-to-br from-white via-gray-50/50 to-blue-50/30 dark:from-gray-800 dark:via-gray-800/80 dark:to-blue-900/20"
-          >
-            <div className="absolute inset-0 pointer-events-none">
-              <div className="absolute -top-12 -right-12 w-24 h-24 bg-blue-200/10 rounded-full blur-2xl" />
-            </div>
-            <CardHeader className="relative pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-bold flex items-center gap-2">
-                  <div className="w-7 h-7 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center shadow-md">
-                    <Package className="h-3.5 w-3.5 text-white" />
-                  </div>
-                  <span className="bg-gradient-to-r from-indigo-600 to-purple-700 bg-clip-text text-transparent">
-                    Produit {index + 1}
-                  </span>
-                </CardTitle>
-                {formProducts.length > 1 && (
-                  <Button
-                    type="button"
-                    size="sm"
-                    onClick={() => handleDeleteProduct(index)}
-                    className="h-9 px-3 rounded-xl font-bold text-sm bg-gradient-to-r from-red-500 via-red-600 to-rose-600 hover:from-red-600 hover:via-red-700 hover:to-rose-700 text-white border-0 shadow-lg shadow-red-500/20 hover:shadow-xl hover:shadow-red-500/30 transition-all duration-300 transform hover:-translate-y-0.5"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                )}
-              </div>
-              {/* Photo principale cliquable - centrée et agrandie */}
-              {product.selectedProduct?.mainPhoto && (
-                <div className="flex justify-center mt-3">
-                  <button
-                    type="button"
-                    onClick={() => setSlideshowProduct({
-                      photos: product.selectedProduct?.photos || [],
-                      mainPhoto: product.selectedProduct?.mainPhoto,
-                      name: product.selectedProduct?.description || ''
-                    })}
-                    className="w-16 h-16 rounded-xl overflow-hidden border-2 border-purple-300 hover:border-purple-500 hover:scale-110 transition-all duration-200 shadow-lg cursor-pointer"
-                  >
-                    <img
-                      src={`${API_BASE_URL}${product.selectedProduct.mainPhoto}`}
-                      alt={product.selectedProduct.description}
-                      className="w-full h-full object-cover"
-                      onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                    />
-                  </button>
-                </div>
-              )}
-              {product.selectedProduct && !product.selectedProduct.mainPhoto && product.selectedProduct.photos && product.selectedProduct.photos.length > 0 && (
-                <div className="flex justify-center mt-3">
-                  <button
-                    type="button"
-                    onClick={() => setSlideshowProduct({
-                      photos: product.selectedProduct?.photos || [],
-                      mainPhoto: product.selectedProduct?.photos?.[0],
-                      name: product.selectedProduct?.description || ''
-                    })}
-                    className="w-16 h-16 rounded-xl bg-gray-100 dark:bg-gray-700 flex items-center justify-center border-2 border-gray-300 hover:border-purple-500 hover:scale-110 transition-all duration-200 shadow-lg cursor-pointer"
-                  >
-                    <Camera className="h-5 w-5 text-gray-500" />
-                  </button>
-                </div>
-              )}
-              {product.isAdvanceProduct && (
-                <span className="text-xs bg-gradient-to-r from-amber-100 to-orange-100 text-amber-800 px-3 py-1 rounded-full font-semibold shadow-sm flex justify-center">
-                  ⭐ Avance
-                </span>
-              )}
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {/* Sélection produit */}
-              <div className="space-y-2">
-                <Label>Produit</Label>
-                <ProductSearchInput
-                  onProductSelect={(prod) => handleProductSelect(prod, index)}
-                  selectedProduct={product.selectedProduct}
-                />
-              </div>
+          {/* Products */}
+          <div className="space-y-4">
+            {formProducts.map((product, index) => (
+              <SaleProductCard
+                key={index}
+                product={product}
+                index={index}
+                canDelete={formProducts.length > 1}
+                isSubmitting={isSubmitting}
+                onProductSelect={handleProductSelect}
+                onSellingPriceChange={handleSellingPriceChange}
+                onQuantityChange={handleQuantityChange}
+                onDeleteProduct={handleDeleteProduct}
+                onAvanceChange={handleAvanceProductChange}
+                onDeliveryChange={handleDeliveryChange}
+                onShowSlideshow={handleShowSlideshow}
+              />
+            ))}
+          </div>
 
-              {product.selectedProduct && (
-                <div className="grid grid-cols-2 gap-4">
-                  {/* Prix d'achat unitaire */}
-                  <div className="space-y-2">
-                    <Label>Prix d'achat unitaire (€)</Label>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      value={product.purchasePriceUnit}
-                      readOnly
-                      disabled
-                    />
-                  </div>
-
-                  {/* Prix de vente unitaire */}
-                  <div className="space-y-2">
-                    <Label>Prix de vente unitaire (€)</Label>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      value={product.sellingPriceUnit}
-                      onChange={(e) =>
-                        handleSellingPriceChange(e.target.value, index)
-                      }
-                      disabled={isSubmitting}
-                      className={
-                        Number(product.profit) < 0 ? 'border-red-500' : ''
-                      }
-                    />
-                  </div>
-
-                  {/* Quantité */}
-                  <SaleQuantityInput
-                    quantity={product.quantitySold}
-                    maxQuantity={product.maxQuantity}
-                    onChange={(value) =>
-                      handleQuantityChange(value, index)
-                    }
-                    disabled={isSubmitting || product.isAdvanceProduct}
-                    showAvailableStock={!product.isAdvanceProduct}
-                  />
-
-                  {/* Avance (visible uniquement pour les prêts produits) */}
-                  {product.isPretProduit && (
-                    <div className="space-y-2">
-                      <Label>Avance (€)</Label>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        value={product.avancePretProduit}
-                        onChange={(e) => {
-                          const avanceValue = e.target.value;
-                          setFormProducts(prev => {
-                            const newProducts = [...prev];
-                            newProducts[index] = {
-                              ...newProducts[index],
-                              avancePretProduit: avanceValue
-                            };
-                            return newProducts;
-                          });
-                        }}
-                        placeholder="Montant de l'avance"
-                        disabled={isSubmitting}
-                      />
-                      <p className="text-xs text-gray-500">
-                        Facultatif - Si vide, le prix de vente sera 0
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Frais de livraison */}
-                  <div className="space-y-2 col-span-2">
-                    <Label>Frais de livraison</Label>
-                    <select
-                      value={product.deliveryLocation}
-                      onChange={(e) => {
-                        const location = e.target.value;
-                        let fee = '0';
-                        
-                        if (['Saint-Suzanne', 'Sainte-Marie', 'Saint-Denis', 'La Possession', 'Le Port', 'Saint-Paul'].includes(location)) {
-                          fee = '0';
-                        } else if (['Saint-André', 'Saint-Benoît', 'Saint-Leu'].includes(location)) {
-                          fee = '10';
-                        } else if (['Saint-Louis', 'Saint-Pierre', 'Le Tampon', 'Saint-Joseph'].includes(location)) {
-                          fee = '20';
-                        } else if (location === 'Exonération') {
-                          fee = '0';
-                        }
-                        
-                        setFormProducts(prev => {
-                          const newProducts = [...prev];
-                          newProducts[index] = {
-                            ...newProducts[index],
-                            deliveryLocation: location,
-                            deliveryFee: fee
-                          };
-                          return newProducts;
-                        });
-                      }}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      disabled={isSubmitting}
-                    >
-                      <option value="Saint-Suzanne">Saint-Suzanne: gratuit</option>
-                      <option value="Sainte-Marie">Sainte-Marie: gratuit</option>
-                      <option value="Saint-Denis">Saint-Denis: gratuit</option>
-                      <option value="La Possession">La Possession: gratuit</option>
-                      <option value="Le Port">Le Port: gratuit</option>
-                      <option value="Saint-Paul">Saint-Paul: gratuit</option>
-                      <option value="Saint-André">Saint-André: 10€</option>
-                      <option value="Saint-Benoît">Saint-Benoît: 10€</option>
-                      <option value="Saint-Leu">Saint-Leu: 10€</option>
-                      <option value="Saint-Louis">Saint-Louis: 20€</option>
-                      <option value="Saint-Pierre">Saint-Pierre: 20€</option>
-                      <option value="Le Tampon">Le Tampon: 20€</option>
-                      <option value="Saint-Joseph">Saint-Joseph: 20€</option>
-                      <option value="Autres">Autres: montant personnalisé</option>
-                      <option value="Exonération">Exonération: 0€</option>
-                    </select>
-                    {product.deliveryLocation === 'Autres' && (
-                      <Input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        value={product.deliveryFee}
-                        onChange={(e) => {
-                          setFormProducts(prev => {
-                            const newProducts = [...prev];
-                            newProducts[index] = {
-                              ...newProducts[index],
-                              deliveryFee: e.target.value
-                            };
-                            return newProducts;
-                          });
-                        }}
-                        placeholder="Montant personnalisé"
-                        className="mt-2"
-                        disabled={isSubmitting}
-                      />
-                    )}
-                    <p className="text-sm text-gray-500">
-                      Frais: {Number(product.deliveryFee).toFixed(2)} €
-                    </p>
-                  </div>
-
-                  {/* Bénéfice */}
-                  <div className="space-y-2 col-span-2">
-                    <Label>Bénéfice (€)</Label>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      value={product.profit}
-                      readOnly
-                      disabled
-                      className={
-                        Number(product.profit) < 0
-                          ? 'border-red-500 bg-red-50'
-                          : ''
-                      }
-                    />
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {/* Bouton premium pour ajouter un produit */}
-      <div className="text-center py-4">
-        <Button
-          type="button"
-          onClick={addNewProduct}
-          className="rounded-xl font-bold bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 hover:from-green-600 hover:via-emerald-600 hover:to-teal-600 text-white border-0 shadow-lg shadow-green-500/25 hover:shadow-xl hover:shadow-green-500/40 transition-all duration-300 transform hover:-translate-y-0.5 px-6"
-        >
-          <Plus className="h-5 w-5 mr-2" />
-          Ajouter un autre produit
-        </Button>
-      </div>
-
-      {/* Totaux */}
-      {formProducts.some((p) => p.selectedProduct) && (
-        <>
-          <Card className="relative overflow-hidden bg-gradient-to-br from-green-50 via-emerald-50/50 to-teal-50/30 dark:from-green-900/30 dark:via-emerald-900/20 dark:to-teal-900/10 border-0 shadow-xl shadow-green-500/10 rounded-2xl">
-            <div className="absolute inset-0 pointer-events-none">
-              <div className="absolute -top-16 -right-16 w-32 h-32 bg-green-300/20 rounded-full blur-2xl" />
-              <div className="absolute -bottom-8 -left-8 w-24 h-24 bg-emerald-300/20 rounded-full blur-2xl" />
-            </div>
-            <CardHeader className="relative pb-2">
-              <CardTitle className="text-base font-bold bg-gradient-to-r from-green-600 to-emerald-700 bg-clip-text text-transparent flex items-center gap-2">
-                <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center shadow-lg">
-                  <Euro className="h-4 w-4 text-white" />
-                </div>
-                Totaux de la vente
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="relative">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-                <div className="bg-white/60 dark:bg-gray-800/40 rounded-xl p-3 shadow-sm">
-                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
-                    Prix d'achat total
-                  </p>
-                  <p className="text-lg font-black text-gray-800 dark:text-gray-200">
-                    {totals.totalPurchasePrice.toFixed(2)} €
-                  </p>
-                </div>
-                <div className="bg-white/60 dark:bg-gray-800/40 rounded-xl p-3 shadow-sm">
-                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
-                    Frais de livraison
-                  </p>
-                  <p className="text-lg font-black bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                    {totals.totalDeliveryFee.toFixed(2)} €
-                  </p>
-                </div>
-                <div className="bg-white/60 dark:bg-gray-800/40 rounded-xl p-3 shadow-sm">
-                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
-                    Prix de vente total
-                  </p>
-                  <p className="text-lg font-black bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
-                    {totals.totalSellingPrice.toFixed(2)} €
-                  </p>
-                </div>
-                <div className="bg-white/60 dark:bg-gray-800/40 rounded-xl p-3 shadow-sm">
-                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
-                    Bénéfice total
-                  </p>
-                  <p
-                    className={`text-lg font-black ${
-                      totals.totalProfit >= 0
-                        ? 'bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent'
-                        : 'bg-gradient-to-r from-red-600 to-rose-600 bg-clip-text text-transparent'
-                    }`}
-                  >
-                    {totals.totalProfit.toFixed(2)} €
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Bouton Avance Premium */}
-          <div className="text-center">
+          {/* Add product button */}
+          <div className="text-center py-4">
             <Button
               type="button"
-              onClick={() => setShowAdvanceSection(!showAdvanceSection)}
-              className="rounded-xl font-bold bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 hover:from-blue-600 hover:via-indigo-600 hover:to-purple-600 text-white border-0 shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/40 transition-all duration-300 transform hover:-translate-y-0.5 px-6"
+              onClick={addNewProduct}
+              className="rounded-xl font-bold bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 hover:from-green-600 hover:via-emerald-600 hover:to-teal-600 text-white border-0 shadow-lg shadow-green-500/25 hover:shadow-xl hover:shadow-green-500/40 transition-all duration-300 transform hover:-translate-y-0.5 px-6"
             >
-              {showAdvanceSection ? '✕ Masquer Avance' : '💳 Avance'}
+              <Plus className="h-5 w-5 mr-2" />
+              Ajouter un autre produit
             </Button>
           </div>
 
-          {/* Section Avance */}
-          {showAdvanceSection && (
-            <Card className="bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 border-blue-200 dark:border-blue-800">
-              <CardHeader>
-                <CardTitle className="text-sm text-blue-700 dark:text-blue-300">
-                  Paiement avec Avance
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {/* Prix Avance */}
-                  <div className="space-y-2">
-                    <Label htmlFor="avancePrice">Prix Avance (€)</Label>
-                    <Input
-                      id="avancePrice"
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      max={totals.totalSellingPrice}
-                      value={avancePrice}
-                      onChange={(e) => handleAvancePriceChange(e.target.value)}
-                      placeholder="Entrer l'avance"
-                      disabled={isSubmitting}
-                    />
-                  </div>
-
-                  {/* Reste (calculé automatiquement) */}
-                  <div className="space-y-2">
-                    <Label htmlFor="reste">Reste (€)</Label>
-                    <Input
-                      id="reste"
-                      type="number"
-                      step="0.01"
-                      value={reste}
-                      readOnly
-                      disabled
-                      className="bg-gray-100 dark:bg-gray-800"
-                    />
-                  </div>
-
-                  {/* Date prochaine Paiement */}
-                  <div className="space-y-2">
-                    <Label htmlFor="nextPaymentDate">Date prochaine Paiement</Label>
-                    <Input
-                      id="nextPaymentDate"
-                      type="date"
-                      value={nextPaymentDate}
-                      onChange={(e) => setNextPaymentDate(e.target.value)}
-                      disabled={isSubmitting}
-                    />
-                  </div>
-                </div>
-
-                {avancePrice && Number(avancePrice) > 0 && (
-                  <div className="text-sm text-blue-700 dark:text-blue-300 bg-blue-100 dark:bg-blue-900/30 p-3 rounded">
-                    <p className="font-semibold">Information:</p>
-                    <p>Cette vente sera enregistrée avec un prix de vente de {Number(avancePrice).toFixed(2)} € (avance) et un reste de {reste} € sera enregistré.</p>
-                    <p className="mt-2">Un prêt produit sera automatiquement créé dans votre base de données.</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+          {/* Totals & Advance */}
+          {formProducts.some(p => p.selectedProduct) && (
+            <SaleTotalsSection
+              totals={totals}
+              showAdvanceSection={showAdvanceSection}
+              setShowAdvanceSection={setShowAdvanceSection}
+              avancePrice={avancePrice}
+              onAvancePriceChange={handleAvancePriceChange}
+              reste={reste}
+              nextPaymentDate={nextPaymentDate}
+              setNextPaymentDate={setNextPaymentDate}
+              isSubmitting={isSubmitting}
+            />
           )}
-        </>
-      )}
 
-      <DialogFooter className="flex flex-col sm:flex-row gap-3 pt-4">
-        {editSale && (
-          <Button
-            type="button"
-            onClick={handleDeleteSale}
-            disabled={isSubmitting}
-            className="sm:mr-auto rounded-xl font-bold bg-gradient-to-r from-red-500 via-red-600 to-rose-600 hover:from-red-600 hover:via-red-700 hover:to-rose-700 text-white border-0 shadow-lg shadow-red-500/20 hover:shadow-xl hover:shadow-red-500/30 transition-all duration-300 transform hover:-translate-y-0.5"
-          >
-            <Trash2 className="h-4 w-4 mr-2" />
-            Supprimer ce vente
-          </Button>
-        )}
+          {/* Footer Actions */}
+          <SaleFormActions
+            editSale={editSale}
+            isSubmitting={isSubmitting}
+            hasValidProducts={hasValidProducts}
+            onDeleteSale={handleDeleteSale}
+            onRefund={onRefund}
+            onClose={onClose}
+          />
+        </form>
+      </DialogContent>
 
-        {editSale && onRefund && (
-          <Button
-            type="button"
-            onClick={() => onRefund(editSale)}
-            disabled={isSubmitting}
-            className="rounded-xl font-bold bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-600 hover:via-orange-600 hover:to-amber-700 text-white border-0 shadow-lg shadow-amber-500/20 hover:shadow-xl hover:shadow-amber-500/30 transition-all duration-300 transform hover:-translate-y-0.5"
-          >
-            <RotateCcw className="h-4 w-4 mr-2" />
-            Rembourser
-          </Button>
-        )}
+      {/* Modals */}
+      <AdvancePaymentModal
+        isOpen={advancePaymentModalOpen}
+        onClose={() => { setAdvancePaymentModalOpen(false); setCurrentAdvanceProductIndex(null); }}
+        onConfirm={handleAdvancePaymentConfirm}
+      />
 
-        <Button
-          type="button"
-          variant="outline"
-          onClick={onClose}
-          disabled={isSubmitting}
-          className="rounded-xl border-2 border-gray-300 hover:bg-gray-50 font-semibold transition-all duration-300"
-        >
-          Annuler
-        </Button>
+      <PretProduitFromSaleModal
+        isOpen={pretProduitModalOpen}
+        onClose={() => { setPretProduitModalOpen(false); setCurrentPretProductIndex(null); }}
+        onPretCreated={handlePretProduitCreated}
+      />
 
-        <Button
-          type="submit"
-          disabled={
-            isSubmitting ||
-            formProducts.filter(
-              (p) => p.selectedProduct && p.sellingPriceUnit
-            ).length === 0
-          }
-          className="rounded-xl font-bold bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 hover:from-green-600 hover:via-emerald-600 hover:to-teal-600 text-white border-0 shadow-lg shadow-green-500/25 hover:shadow-xl hover:shadow-green-500/40 transition-all duration-300 transform hover:-translate-y-0.5"
-        >
-          {isSubmitting
-            ? 'Enregistrement...'
-            : editSale
-            ? '✓ Mettre à jour'
-            : '✓ Ajouter la vente'}
-        </Button>
-      </DialogFooter>
-    </form>
-  </DialogContent>
+      <ConfirmDeleteDialog
+        isOpen={deleteDialogOpen}
+        onClose={() => { setDeleteDialogOpen(false); setDeleteTarget(null); }}
+        onConfirm={executeDelete}
+        title={deleteTarget?.type === 'sale' ? 'Supprimer toute la vente' : 'Supprimer ce produit'}
+        description={deleteTarget?.type === 'sale'
+          ? 'Êtes-vous sûr de vouloir supprimer définitivement cette vente complète ? Cette action est irréversible.'
+          : 'Êtes-vous sûr de vouloir supprimer ce produit de la vente ? Cette action est irréversible.'}
+        isSubmitting={isSubmitting}
+      />
 
-  {/* Modale de paiement d'avance sur prêts existants */}
-  <AdvancePaymentModal
-    isOpen={advancePaymentModalOpen}
-    onClose={() => {
-      setAdvancePaymentModalOpen(false);
-      setCurrentAdvanceProductIndex(null);
-    }}
-    onConfirm={handleAdvancePaymentConfirm}
-  />
+      <ReservedProductModal
+        isOpen={reservedModalOpen}
+        onOpenChange={setReservedModalOpen}
+        pendingProduct={pendingReservedProduct}
+        onConfirm={handleReservedConfirm}
+        onCancel={handleReservedCancel}
+      />
 
-  {/* Modale de création de prêt produit */}
-  <PretProduitFromSaleModal
-    isOpen={pretProduitModalOpen}
-    onClose={() => {
-      setPretProduitModalOpen(false);
-      setCurrentPretProductIndex(null);
-    }}
-    onPretCreated={handlePretProduitCreated}
-  />
-
-  {/* Dialog de confirmation de suppression */}
-  <ConfirmDeleteDialog
-    isOpen={deleteDialogOpen}
-    onClose={() => {
-      setDeleteDialogOpen(false);
-      setDeleteTarget(null);
-    }}
-    onConfirm={executeDelete}
-    title={
-      deleteTarget?.type === 'sale'
-        ? 'Supprimer toute la vente'
-        : 'Supprimer ce produit'
-    }
-    description={
-      deleteTarget?.type === 'sale'
-        ? 'Êtes-vous sûr de vouloir supprimer définitivement cette vente complète ? Cette action est irréversible.'
-        : 'Êtes-vous sûr de vouloir supprimer ce produit de la vente ? Cette action est irréversible.'
-    }
-    isSubmitting={isSubmitting}
-  />
-  {/* Modale de confirmation produit réservé */}
-  <AlertDialog open={reservedModalOpen} onOpenChange={setReservedModalOpen}>
-    <AlertDialogContent className="bg-card/95 backdrop-blur-xl border-0 shadow-2xl max-w-md">
-      <AlertDialogHeader>
-        <div className="flex items-center gap-3 mb-2">
-          <div className="p-2 rounded-full bg-amber-500/10">
-            <Package className="h-5 w-5 text-amber-500" />
-          </div>
-          <AlertDialogTitle className="text-xl font-bold text-foreground">
-            Produit réservé
-          </AlertDialogTitle>
-        </div>
-        <AlertDialogDescription className="text-base text-muted-foreground">
-          Le produit <span className="font-semibold text-foreground">"{pendingReservedProduct?.product.description}"</span> est déjà réservé. Voulez-vous toujours le vendre ?
-        </AlertDialogDescription>
-      </AlertDialogHeader>
-      <AlertDialogFooter className="gap-3 sm:gap-2">
-        <AlertDialogCancel onClick={handleReservedCancel} className="bg-secondary hover:bg-secondary/80">
-          Non
-        </AlertDialogCancel>
-        <AlertDialogAction onClick={handleReservedConfirm} className="bg-amber-500 text-white hover:bg-amber-600 min-w-[100px]">
-          Oui, vendre
-        </AlertDialogAction>
-      </AlertDialogFooter>
-    </AlertDialogContent>
-  </AlertDialog>
-
-  {/* Slideshow photos produit */}
-  <ProductPhotoSlideshow
-    photos={slideshowProduct?.photos || []}
-    mainPhoto={slideshowProduct?.mainPhoto}
-    productName={slideshowProduct?.name || ''}
-    isOpen={!!slideshowProduct}
-    onClose={() => setSlideshowProduct(null)}
-    baseUrl={API_BASE_URL}
-  />
-</Dialog>
-
+      <ProductPhotoSlideshow
+        photos={slideshowProduct?.photos || []}
+        mainPhoto={slideshowProduct?.mainPhoto}
+        productName={slideshowProduct?.name || ''}
+        isOpen={!!slideshowProduct}
+        onClose={() => setSlideshowProduct(null)}
+        baseUrl={API_BASE_URL}
+      />
+    </Dialog>
   );
 };
 
