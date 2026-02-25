@@ -110,9 +110,7 @@ const ClientSearchInput: React.FC<ClientSearchInputProps> = ({
   return (
 <div className="relative">
   {/* Label avec espace en bas */}
-  <Label htmlFor="clientName" className="mb-3 block">
-    Nom du client
-  </Label>
+  
 
   {/* Champ de saisie */}
   <Input

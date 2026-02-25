@@ -99,26 +99,29 @@ const RdvListView: React.FC<RdvListViewProps> = ({
                     {rdv.lieu && <div className="flex items-center gap-2"><MapPin className="h-4 w-4 text-primary" /><span className="truncate">{rdv.lieu}</span></div>}
                   </div>
 
-                  <div className="flex gap-2 mt-4 pt-3 border-t border-border">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className={cn("flex-1", rdv.statut === 'confirme' ? "text-gray-400 border-gray-200 cursor-not-allowed opacity-50" : "text-blue-600 border-blue-200 hover:bg-blue-50")}
-                      onClick={(e) => { e.stopPropagation(); if (rdv.statut !== 'confirme') onEditRdv(rdv); }}
-                      disabled={rdv.statut === 'confirme'}
-                      title={rdv.statut === 'confirme' ? "Impossible de modifier un rendez-vous confirmé" : "Modifier le rendez-vous"}
-                    >
-                      <Edit className="h-3 w-3 mr-1" />Modifier
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="text-red-600 border-red-200 hover:bg-red-50"
-                      onClick={(e) => { e.stopPropagation(); onDeleteRdv(rdv); }}
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </Button>
-                  </div>
+                  {/* Masquer les boutons modifier/supprimer pour les RDV créés depuis une réservation */}
+                  {!rdv.commandeId && (
+                    <div className="flex gap-2 mt-4 pt-3 border-t border-border">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className={cn("flex-1", rdv.statut === 'confirme' ? "text-gray-400 border-gray-200 cursor-not-allowed opacity-50" : "text-blue-600 border-blue-200 hover:bg-blue-50")}
+                        onClick={(e) => { e.stopPropagation(); if (rdv.statut !== 'confirme') onEditRdv(rdv); }}
+                        disabled={rdv.statut === 'confirme'}
+                        title={rdv.statut === 'confirme' ? "Impossible de modifier un rendez-vous confirmé" : "Modifier le rendez-vous"}
+                      >
+                        <Edit className="h-3 w-3 mr-1" />Modifier
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-red-600 border-red-200 hover:bg-red-50"
+                        onClick={(e) => { e.stopPropagation(); onDeleteRdv(rdv); }}
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </motion.div>

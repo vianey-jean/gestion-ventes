@@ -678,28 +678,33 @@ const RdvCalendar: React.FC<RdvCalendarProps> = ({
               <X className="h-4 w-4 mr-2" />
               Fermer
             </Button>
-            <Button 
-              variant="destructive" 
-              onClick={handleDeleteFromDetail}
-              className="gap-2"
-            >
-              <Trash2 className="h-4 w-4" />
-              Supprimer
-            </Button>
-            <Button 
-              onClick={handleEditFromDetail}
-              className={cn(
-                "gap-2",
-                selectedRdvDetail?.statut === 'confirme'
-                  ? "bg-gray-400 cursor-not-allowed opacity-50"
-                  : "bg-gradient-to-r from-primary to-primary/80"
-              )}
-              disabled={selectedRdvDetail?.statut === 'confirme'}
-              title={selectedRdvDetail?.statut === 'confirme' ? "Impossible de modifier un rendez-vous confirmé" : "Modifier le rendez-vous"}
-            >
-              <Edit className="h-4 w-4" />
-              Modifier
-            </Button>
+            {/* Masquer supprimer/modifier pour les RDV créés depuis une réservation */}
+            {!selectedRdvDetail?.commandeId && (
+              <>
+                <Button 
+                  variant="destructive" 
+                  onClick={handleDeleteFromDetail}
+                  className="gap-2"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Supprimer
+                </Button>
+                <Button 
+                  onClick={handleEditFromDetail}
+                  className={cn(
+                    "gap-2",
+                    selectedRdvDetail?.statut === 'confirme'
+                      ? "bg-gray-400 cursor-not-allowed opacity-50"
+                      : "bg-gradient-to-r from-primary to-primary/80"
+                  )}
+                  disabled={selectedRdvDetail?.statut === 'confirme'}
+                  title={selectedRdvDetail?.statut === 'confirme' ? "Impossible de modifier un rendez-vous confirmé" : "Modifier le rendez-vous"}
+                >
+                  <Edit className="h-4 w-4" />
+                  Modifier
+                </Button>
+              </>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>

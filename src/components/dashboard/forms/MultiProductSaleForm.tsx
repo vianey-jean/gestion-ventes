@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useApp } from '@/contexts/AppContext';
 import { Product, SaleProduct, Sale } from '@/types';
 import { useToast } from '@/hooks/use-toast';
-import { Plus } from 'lucide-react';
+import { Plus, Package } from 'lucide-react';
 import ProductPhotoSlideshow from '../ProductPhotoSlideshow';
 import { calculateSaleProfit } from './utils/saleCalculations';
 import ConfirmDeleteDialog from './ConfirmDeleteDialog';
@@ -60,6 +61,10 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
   // États pour la modale de confirmation produit réservé
   const [reservedModalOpen, setReservedModalOpen] = useState(false);
   const [pendingReservedProduct, setPendingReservedProduct] = useState<{ product: Product; index: number } | null>(null);
+  // État pour la modale de suppression de réservation bloquante
+  const [reservationConflictModalOpen, setReservationConflictModalOpen] = useState(false);
+  const [conflictingReservation, setConflictingReservation] = useState<any>(null);
+  const [pendingConflictProduct, setPendingConflictProduct] = useState<{ product: Product; index: number } | null>(null);
   // État pour le slideshow photo produit
   const [slideshowProduct, setSlideshowProduct] = useState<{ photos: string[]; mainPhoto?: string; name: string } | null>(null);
 
@@ -285,8 +290,43 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
     }
   };
 
-  // Sélection d'un produit
-  const handleProductSelect = (product: Product, index: number) => {
+  // Sélection d'un produit - vérifie les réservations bloquantes
+  const handleProductSelect = async (product: Product, index: number) => {
+    // Vérifier les réservations actives qui bloquent le stock
+    try {
+      const token = localStorage.getItem('token');
+      const commandesResponse = await axios.get(`${API_BASE_URL}/api/commandes`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const allCommandes = commandesResponse.data;
+      
+      // Calculer la quantité réservée pour ce produit
+      let reservedQty = 0;
+      let blockingReservation: any = null;
+      allCommandes.forEach((c: any) => {
+        if (c.statut === 'valide' || c.statut === 'annule') return;
+        if (c.type !== 'reservation') return;
+        c.produits?.forEach((p: any) => {
+          if (p.nom.toLowerCase() === product.description.toLowerCase()) {
+            reservedQty += p.quantite;
+            if (!blockingReservation) blockingReservation = c;
+          }
+        });
+      });
+      
+      const availableQty = product.quantity - reservedQty;
+      
+      // Si tout le stock est réservé, proposer de supprimer la réservation
+      if (availableQty <= 0 && blockingReservation) {
+        setConflictingReservation(blockingReservation);
+        setPendingConflictProduct({ product, index });
+        setReservationConflictModalOpen(true);
+        return;
+      }
+    } catch (error) {
+      console.error('Erreur vérification réservations:', error);
+    }
+
     if ((product as any).reserver === 'oui' && product.quantity === 1) {
       setPendingReservedProduct({ product, index });
       setReservedModalOpen(true);
@@ -309,6 +349,55 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
     setReservedModalOpen(false);
     setPendingReservedProduct(null);
     onClose();
+  };
+
+  // Confirmer la suppression d'une réservation bloquante
+  const handleConflictReservationDelete = async () => {
+    if (!conflictingReservation || !pendingConflictProduct) return;
+    try {
+      const token = localStorage.getItem('token');
+      // Supprimer la réservation
+      await axios.delete(`${API_BASE_URL}/api/commandes/${conflictingReservation.id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      // Supprimer le RDV lié s'il existe
+      try {
+        const rdvResponse = await axios.get(`${API_BASE_URL}/api/rdv`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const rdvToDelete = rdvResponse.data.find((r: any) => r.commandeId === conflictingReservation.id);
+        if (rdvToDelete) {
+          await axios.delete(`${API_BASE_URL}/api/rdv/${rdvToDelete.id}`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+        }
+      } catch (rdvErr) {
+        console.error('Erreur suppression RDV lié:', rdvErr);
+      }
+      // Dé-réserver le produit
+      await axios.put(`${API_BASE_URL}/api/products/${pendingConflictProduct.product.id}`, { reserver: 'non' }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast({
+        title: 'Réservation supprimée',
+        description: `La réservation de ${conflictingReservation.clientNom} a été supprimée`,
+        className: "notification-success",
+      });
+      // Appliquer la sélection du produit maintenant libre
+      applyProductSelection(pendingConflictProduct.product, pendingConflictProduct.index);
+    } catch (error) {
+      console.error('Erreur suppression réservation:', error);
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de supprimer la réservation',
+        variant: 'destructive',
+        className: "notification-erreur",
+      });
+    } finally {
+      setReservationConflictModalOpen(false);
+      setConflictingReservation(null);
+      setPendingConflictProduct(null);
+    }
   };
 
   // Appliquer la sélection du produit (logique extraite)
@@ -905,6 +994,35 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
         onConfirm={handleReservedConfirm}
         onCancel={handleReservedCancel}
       />
+
+      {/* Modale de conflit de réservation */}
+      <AlertDialog open={reservationConflictModalOpen} onOpenChange={setReservationConflictModalOpen}>
+        <AlertDialogContent className="bg-card/95 backdrop-blur-xl border-0 shadow-2xl max-w-md">
+          <AlertDialogHeader>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 rounded-full bg-destructive/10">
+                <Package className="h-5 w-5 text-destructive" />
+              </div>
+              <AlertDialogTitle className="text-xl font-bold text-foreground">
+                Stock réservé
+              </AlertDialogTitle>
+            </div>
+            <AlertDialogDescription className="text-base text-muted-foreground">
+              Le produit <span className="font-semibold text-foreground">"{pendingConflictProduct?.product.description}"</span> est entièrement réservé par <span className="font-semibold text-foreground">{conflictingReservation?.clientNom}</span>.
+              <br /><br />
+              Voulez-vous supprimer cette réservation pour libérer le stock ?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-3 sm:gap-2">
+            <AlertDialogCancel onClick={() => { setReservationConflictModalOpen(false); setConflictingReservation(null); setPendingConflictProduct(null); }} className="bg-secondary hover:bg-secondary/80">
+              Non, annuler
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={handleConflictReservationDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90 min-w-[100px]">
+              Oui, supprimer la réservation
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <ProductPhotoSlideshow
         photos={slideshowProduct?.photos || []}

@@ -92,6 +92,7 @@ const CommandesPage: React.FC = () => {
           filteredProducts={logic.filteredProducts}
           handleProductSelect={logic.handleProductSelect}
           selectedProduct={logic.selectedProduct}
+          availableQuantityForSelected={logic.availableQuantityForSelected}
           produitsListe={logic.produitsListe}
           editingProductIndex={logic.editingProductIndex}
           handleAddProduit={logic.handleAddProduit}

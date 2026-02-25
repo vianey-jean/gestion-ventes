@@ -97,6 +97,7 @@ interface CommandeFormDialogProps {
   filteredProducts: Product[];
   handleProductSelect: (product: Product) => void;
   selectedProduct: Product | null;
+  availableQuantityForSelected?: number | null;
   
   // Products list
   produitsListe: CommandeProduit[];
@@ -167,6 +168,7 @@ const CommandeFormDialog: React.FC<CommandeFormDialogProps> = ({
   setHoraire,
   handleSubmit,
   resetForm,
+  availableQuantityForSelected,
 }) => {
   const [productCategoryFilter, setProductCategoryFilter] = React.useState<ProductCategory>('all');
   const categoryFilteredProducts = React.useMemo(() => filterProductsByCategory(filteredProducts, productCategoryFilter), [filteredProducts, productCategoryFilter]);
@@ -362,12 +364,12 @@ const CommandeFormDialog: React.FC<CommandeFormDialogProps> = ({
 
               <div>
                 <Label htmlFor="quantite" className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">
-                  📊 Quantité {selectedProduct && `(max: ${selectedProduct.quantity})`}
+                  📊 Quantité {selectedProduct && `(disponible: ${availableQuantityForSelected !== null && availableQuantityForSelected !== undefined ? availableQuantityForSelected : selectedProduct.quantity})`}
                 </Label>
                 <SaleQuantityInput
                   quantity={quantite}
                   onChange={setQuantite}
-                  maxQuantity={selectedProduct?.quantity}
+                  maxQuantity={availableQuantityForSelected !== null && availableQuantityForSelected !== undefined ? availableQuantityForSelected : selectedProduct?.quantity}
                   showAvailableStock={false}
                 />
               </div>
