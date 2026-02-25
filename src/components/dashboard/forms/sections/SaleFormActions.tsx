@@ -35,7 +35,7 @@ const SaleFormActions: React.FC<SaleFormActionsProps> = ({
         </Button>
       )}
 
-      {editSale && onRefund && (
+      {editSale && onRefund && !editSale.isRefund && (
         <Button
           type="button"
           onClick={() => onRefund(editSale)}
