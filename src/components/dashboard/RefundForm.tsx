@@ -177,12 +177,9 @@ const RefundForm: React.FC<RefundFormProps> = ({ isOpen, onClose, editSale }) =>
   const formatCurrency = (amount: number) => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(amount);
   const formatDate = (dateStr: string) => new Date(dateStr).toLocaleDateString('fr-FR');
 
-  // Determine which products are full refund (quantity & price match) vs partial (price changed)
+  // All refunds now use original prices, so all products qualify for stock restore
   const getFullRefundProducts = (): RefundProduct[] => {
-    return refundProducts.filter(p => {
-      // Full refund: refund price per unit equals original selling price per unit
-      return Math.abs(p.refundPriceUnit - p.originalSellingPriceUnit) < 0.01;
-    });
+    return refundProducts;
   };
 
   const handlePretOnRefund = async () => {
@@ -251,9 +248,8 @@ const RefundForm: React.FC<RefundFormProps> = ({ isOpen, onClose, editSale }) =>
         products: refundProducts.map(p => {
           // Si le prix de remboursement unitaire a été modifié par rapport au prix de vente original,
           // alors quantitySold = 0 → pas de changement de stock
-          const priceWasModified = Math.abs(p.refundPriceUnit - p.originalSellingPriceUnit) >= 0.01;
           const absoluteQuantity = Math.abs(p.quantitySold);
-          const effectiveQuantity = priceWasModified ? 0 : -absoluteQuantity;
+          const effectiveQuantity = -absoluteQuantity;
           const totalRefundAmount = absoluteQuantity * p.refundPriceUnit;
           const totalPurchaseAmount = absoluteQuantity * p.purchasePriceUnit;
 
@@ -264,7 +260,7 @@ const RefundForm: React.FC<RefundFormProps> = ({ isOpen, onClose, editSale }) =>
             sellingPrice: totalRefundAmount,
             refundPrice: totalRefundAmount,
             refundPriceUnit: p.refundPriceUnit,
-            purchasePrice: priceWasModified ? 0 : totalPurchaseAmount,
+            purchasePrice: totalPurchaseAmount,
             profit: p.profit
           };
         }),
@@ -493,14 +489,9 @@ const RefundForm: React.FC<RefundFormProps> = ({ isOpen, onClose, editSale }) =>
                         </div>
                         <div className="space-y-1">
                           <Label className="text-xs text-gray-500 dark:text-white/50">Prix remb. unitaire (€)</Label>
-                          <Input
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            value={product.refundPriceUnit}
-                            onChange={(e) => updateRefundPrice(index, e.target.value)}
-                            className="bg-white dark:bg-white/[0.06] border-gray-200 dark:border-white/[0.1] text-gray-900 dark:text-white rounded-xl shadow-sm"
-                          />
+                          <div className="h-10 flex items-center px-3 rounded-xl bg-gray-100 dark:bg-white/[0.04] border border-gray-200 dark:border-white/[0.1] font-semibold text-gray-700 dark:text-white/70 text-sm shadow-sm cursor-not-allowed">
+                            {formatCurrency(product.refundPriceUnit)}
+                          </div>
                         </div>
                         <div className="space-y-1">
                           <Label className="text-xs text-gray-500 dark:text-white/50">Total remboursement</Label>

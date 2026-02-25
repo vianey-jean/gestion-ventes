@@ -136,8 +136,9 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
           const loadedProducts = editSale.products.map(saleProduct => {
             const product = products.find(p => p.id === saleProduct.productId);
             const isAdvance = saleProduct.description.toLowerCase().includes('avance');
-            const purchasePriceUnit = isAdvance ? saleProduct.purchasePrice : (saleProduct.purchasePrice / saleProduct.quantitySold);
-            const sellingPriceUnit = isAdvance ? saleProduct.sellingPrice : (saleProduct.sellingPrice / saleProduct.quantitySold);
+            const absQuantity = Math.abs(saleProduct.quantitySold) || 1;
+            const purchasePriceUnit = isAdvance ? saleProduct.purchasePrice : (saleProduct.purchasePrice / absQuantity);
+            const sellingPriceUnit = isAdvance ? saleProduct.sellingPrice : (saleProduct.sellingPrice / absQuantity);
             const isPret = saleProduct.description.toLowerCase().includes('prêt') || 
                            saleProduct.description.toLowerCase().includes('pret');
             
@@ -149,7 +150,7 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
               purchasePriceUnit: purchasePriceUnit.toString(),
               profit: saleProduct.profit.toString(),
               selectedProduct: product || null,
-              maxQuantity: product ? (product.quantity || 0) + saleProduct.quantitySold : 0,
+              maxQuantity: product ? (product.quantity || 0) + Math.abs(saleProduct.quantitySold) : 0,
               isAdvanceProduct: isAdvance,
               isPretProduit: isPret,
               deliveryLocation: saleProduct.deliveryLocation || 'Saint-Denis',
