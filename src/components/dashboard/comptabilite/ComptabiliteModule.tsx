@@ -51,6 +51,9 @@ const ComptabiliteModule: React.FC<ComptabiliteModuleProps> = ({ className }) =>
     monthlyChartData,
     depensesRepartition,
     filteredProducts,
+    filteredFournisseurs,
+    fournisseurSearch,
+    showFournisseurList,
     allSales,
     
     // États de sélection
@@ -80,6 +83,7 @@ const ComptabiliteModule: React.FC<ComptabiliteModuleProps> = ({ className }) =>
     handleSearchChange,
     handleSelectProduct,
     handleAchatFormChange,
+    handleSelectFournisseur,
     handleDepenseFormChange,
     handleSubmitAchat,
     handleSubmitDepense,
@@ -150,6 +154,9 @@ const ComptabiliteModule: React.FC<ComptabiliteModuleProps> = ({ className }) =>
         onSelectProduct={handleSelectProduct}
         showProductList={showProductList}
         formatEuro={formatEuro}
+        filteredFournisseurs={filteredFournisseurs}
+        showFournisseurList={showFournisseurList}
+        onSelectFournisseur={handleSelectFournisseur}
       />
 
       {/* Modal Formulaire Dépense */}

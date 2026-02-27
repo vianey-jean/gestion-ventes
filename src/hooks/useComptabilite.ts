@@ -10,6 +10,7 @@ import { useApp } from '@/contexts/AppContext';
 import useCurrencyFormatter from '@/hooks/use-currency-formatter';
 import nouvelleAchatApiService from '@/services/api/nouvelleAchatApi';
 import comptaApiService from '@/services/api/comptaApi';
+import fournisseurApiService, { Fournisseur } from '@/services/api/fournisseurApi';
 import { NouvelleAchat, NouvelleAchatFormData, DepenseFormData, ComptabiliteData } from '@/types/comptabilite';
 import { Product } from '@/types/product';
 import { toast } from '@/hooks/use-toast';
@@ -59,6 +60,9 @@ export function useComptabilite() {
   
   // États des données
   const [achats, setAchats] = useState<NouvelleAchat[]>([]);
+  const [fournisseurs, setFournisseurs] = useState<Fournisseur[]>([]);
+  const [fournisseurSearch, setFournisseurSearch] = useState('');
+  const [showFournisseurList, setShowFournisseurList] = useState(false);
   const [loading, setLoading] = useState(false);
   
   // États des modales
@@ -137,6 +141,28 @@ export function useComptabilite() {
   useEffect(() => {
     loadAchats();
   }, [loadAchats]);
+
+  // Charger les fournisseurs
+  const loadFournisseurs = useCallback(async () => {
+    try {
+      const data = await fournisseurApiService.getAll();
+      setFournisseurs(data);
+    } catch (error) {
+      console.error('Erreur chargement fournisseurs:', error);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadFournisseurs();
+  }, [loadFournisseurs]);
+
+  // Fournisseurs filtrés pour l'autocomplete
+  const filteredFournisseurs = useMemo(() => {
+    if (!fournisseurSearch || fournisseurSearch.length < 1 || !showFournisseurList) return [];
+    return fournisseurs.filter(f =>
+      f.nom.toLowerCase().includes(fournisseurSearch.toLowerCase())
+    );
+  }, [fournisseurSearch, fournisseurs, showFournisseurList]);
 
   // Ventes du mois
   const monthlySales = useMemo(() => {
@@ -331,9 +357,13 @@ export function useComptabilite() {
       setSelectedProduct(null);
       setSearchTerm('');
       setShowProductList(false);
+      setFournisseurSearch('');
+      setShowFournisseurList(false);
       toggleModal('showAchatForm', false);
       
       loadAchats();
+      fetchProducts();
+      loadFournisseurs();
       fetchProducts();
     } catch (error) {
       console.error('Erreur enregistrement achat:', error);
@@ -450,6 +480,17 @@ export function useComptabilite() {
 
   const handleAchatFormChange = useCallback((field: keyof NouvelleAchatFormData, value: string | number) => {
     setAchatForm(prev => ({ ...prev, [field]: value }));
+    // Sync fournisseur search with form field
+    if (field === 'fournisseur') {
+      setFournisseurSearch(value as string);
+      setShowFournisseurList((value as string).length >= 1);
+    }
+  }, []);
+
+  const handleSelectFournisseur = useCallback((nom: string) => {
+    setAchatForm(prev => ({ ...prev, fournisseur: nom }));
+    setFournisseurSearch(nom);
+    setShowFournisseurList(false);
   }, []);
 
   const handleDepenseFormChange = useCallback((field: keyof DepenseFormData, value: string | number) => {
@@ -467,6 +508,9 @@ export function useComptabilite() {
     monthlyChartData,
     depensesRepartition,
     filteredProducts,
+    filteredFournisseurs,
+    fournisseurSearch,
+    showFournisseurList,
     
     // États de sélection
     selectedMonth,
@@ -495,6 +539,7 @@ export function useComptabilite() {
     handleSearchChange,
     handleSelectProduct,
     handleAchatFormChange,
+    handleSelectFournisseur,
     handleDepenseFormChange,
     handleSubmitAchat,
     handleSubmitDepense,

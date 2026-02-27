@@ -37,7 +37,7 @@
  * - ComptabiliteModule.tsx
  */
 
-import React from 'react';
+import React, { useRef } from 'react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import {
@@ -67,6 +67,7 @@ import {
 } from 'lucide-react';
 import { NouvelleAchatFormData } from '@/types/comptabilite';
 import { Product } from '@/types/product';
+import { Fournisseur } from '@/services/api/fournisseurApi';
 import ProductSearchInput from './ProductSearchInput';
 
 // ============================================
@@ -97,6 +98,12 @@ export interface AchatFormDialogProps {
   showProductList: boolean;
   /** Fonction de formatage des montants */
   formatEuro: (value: number) => string;
+  /** Liste des fournisseurs filtrés */
+  filteredFournisseurs: Fournisseur[];
+  /** Afficher la liste des fournisseurs */
+  showFournisseurList: boolean;
+  /** Callback de sélection d'un fournisseur */
+  onSelectFournisseur: (nom: string) => void;
 }
 
 // ============================================
@@ -114,8 +121,12 @@ const AchatFormDialog: React.FC<AchatFormDialogProps> = ({
   selectedProduct,
   onSelectProduct,
   showProductList,
-  formatEuro
+  formatEuro,
+  filteredFournisseurs,
+  showFournisseurList,
+  onSelectFournisseur
 }) => {
+  const fournisseurRef = useRef<HTMLDivElement>(null);
   // Calcul du coût total
   const totalCost = (achatForm.purchasePrice > 0 
     ? achatForm.purchasePrice 
@@ -229,7 +240,7 @@ const AchatFormDialog: React.FC<AchatFormDialogProps> = ({
 
           {/* Grille Fournisseur / Caractéristiques */}
           <div className="grid grid-cols-2 gap-6">
-            <div className="space-y-3">
+            <div className="space-y-3 relative" ref={fournisseurRef}>
               <Label className="text-sm font-bold text-gray-800 dark:text-gray-100 flex items-center gap-2">
                 <ShoppingCart className="h-4 w-4 text-purple-500" />
                 Fournisseur
@@ -237,9 +248,25 @@ const AchatFormDialog: React.FC<AchatFormDialogProps> = ({
               <Input
                 value={achatForm.fournisseur || ''}
                 onChange={(e) => onFormChange('fournisseur', e.target.value)}
-                placeholder="Nom du fournisseur"
+                placeholder="Rechercher ou saisir un fournisseur"
                 className="h-12 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-600 focus:border-purple-500 dark:focus:border-purple-400 rounded-xl font-medium shadow-sm transition-all duration-200"
+                autoComplete="off"
               />
+              {/* Liste déroulante des fournisseurs */}
+              {showFournisseurList && filteredFournisseurs.length > 0 && (
+                <div className="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border-2 border-purple-300 dark:border-purple-600 rounded-xl shadow-xl max-h-40 overflow-y-auto">
+                  {filteredFournisseurs.map((f) => (
+                    <button
+                      key={f.id}
+                      type="button"
+                      onClick={() => onSelectFournisseur(f.nom)}
+                      className="w-full text-left px-4 py-2.5 hover:bg-purple-50 dark:hover:bg-purple-900/30 text-sm font-medium text-gray-800 dark:text-gray-200 transition-colors border-b border-gray-100 dark:border-gray-700 last:border-b-0"
+                    >
+                      {f.nom}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="space-y-3">
