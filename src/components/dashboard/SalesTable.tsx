@@ -238,6 +238,7 @@ const SalesTable: React.FC<SalesTableProps> = ({ sales: initialSales, onRowClick
         </div>
       </div>
 
+      <div className="max-h-[70vh] overflow-auto">
       <ModernTable>
         <ModernTableHeader>
           <TableRow className="bg-gradient-to-r from-gray-50 to-white dark:from-gray-800 dark:to-gray-700 border-none">
@@ -488,6 +489,7 @@ const SalesTable: React.FC<SalesTableProps> = ({ sales: initialSales, onRowClick
           </TableFooter>
         )}
       </ModernTable>
+      </div>
     </div>
   );
 };

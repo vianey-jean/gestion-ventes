@@ -36,6 +36,7 @@ const RefundForm: React.FC<RefundFormProps> = ({ isOpen, onClose, editSale }) =>
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
   const [refundProducts, setRefundProducts] = useState<RefundProduct[]>([]);
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [linkedPrets, setLinkedPrets] = useState<any[]>([]);
@@ -61,6 +62,7 @@ const RefundForm: React.FC<RefundFormProps> = ({ isOpen, onClose, editSale }) =>
     setSelectedSale(null);
     setRefundProducts([]);
     setDate(new Date().toISOString().split('T')[0]);
+    setSelectedYear(new Date().getFullYear());
     setLinkedPrets([]);
     setPretAction('delete');
     setShowStockConfirm(false);
@@ -118,7 +120,12 @@ const RefundForm: React.FC<RefundFormProps> = ({ isOpen, onClose, editSale }) =>
       setIsSearching(true);
       try {
         const results = await remboursementApiService.searchSalesByClient(value);
-        setSearchResults(results);
+        // Filtrer par l'année sélectionnée
+        const filteredByYear = results.filter((sale: Sale) => {
+          const saleDate = new Date(sale.date);
+          return saleDate.getFullYear() === selectedYear;
+        });
+        setSearchResults(filteredByYear);
       } catch (error) {
         // silently fail
       } finally {
@@ -127,7 +134,7 @@ const RefundForm: React.FC<RefundFormProps> = ({ isOpen, onClose, editSale }) =>
     } else {
       setSearchResults([]);
     }
-  }, []);
+  }, [selectedYear]);
 
   const handleSelectSale = (sale: Sale) => {
     setSelectedSale(sale);
@@ -327,6 +334,28 @@ const RefundForm: React.FC<RefundFormProps> = ({ isOpen, onClose, editSale }) =>
                 onChange={(e) => setDate(e.target.value)}
                 className="bg-gray-100/60 dark:bg-white/[0.06] border-gray-200/80 dark:border-white/[0.1] text-gray-900 dark:text-white rounded-xl shadow-sm"
               />
+            </div>
+
+            {/* Choix année */}
+            <div className="space-y-2">
+              <Label className="text-gray-700 dark:text-white/70 font-semibold">Année de recherche</Label>
+              <select
+                value={selectedYear}
+                onChange={(e) => {
+                  setSelectedYear(Number(e.target.value));
+                  setSearchResults([]);
+                  setSelectedSale(null);
+                  setRefundProducts([]);
+                  if (clientSearch.length >= 3) {
+                    handleSearch(clientSearch);
+                  }
+                }}
+                className="w-full h-10 px-3 rounded-xl bg-gray-100/60 dark:bg-white/[0.06] border border-gray-200/80 dark:border-white/[0.1] text-gray-900 dark:text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+              >
+                {Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - i).map(year => (
+                  <option key={year} value={year}>{year}</option>
+                ))}
+              </select>
             </div>
 
             {/* Search client */}
