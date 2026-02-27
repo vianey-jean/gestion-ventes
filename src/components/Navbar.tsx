@@ -122,7 +122,29 @@
                </motion.div>
              </Link>
 
-             {isAuthenticated && <RdvNotifications />}
+
+                {/**Créer une icons message sur version desktop */}
+              {/** 
+              {isAuthenticated && (
+                <>
+                  <RdvNotifications />
+                  <Link to="/messages">
+                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                      <Button variant="ghost" className="relative rounded-2xl h-10 w-10 hover:bg-gradient-to-r hover:from-blue-500/10 hover:to-cyan-500/10 transition-all duration-300 overflow-hidden group p-0">
+                        <div className="flex items-center justify-center w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 shadow-lg shadow-blue-500/30">
+                          <MessageSquare className="h-4 w-4 text-white" />
+                        </div>
+                        {unreadCount > 0 && (
+                          <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[20px] h-5 px-1 rounded-full bg-red-500 text-white text-xs font-bold shadow-lg shadow-red-500/40 animate-pulse border-2 border-white dark:border-[#030014]">
+                            {unreadCount}
+                          </span>
+                        )}
+                      </Button>
+                    </motion.div>
+                  </Link>
+                </>
+              )}*/}
+
 
              {/* Theme */}
              <motion.div whileHover={{ scale: 1.1, rotate: 15 }} whileTap={{ scale: 0.9 }}>
@@ -174,10 +196,10 @@
                          <MessageSquare className="h-5 w-5 text-white" />
                        </div>
                        <span className="font-bold">Messages</span>
-                       {unreadCount > 0 && (
-                         <Badge className="ml-auto bg-gradient-to-r from-blue-500 to-cyan-500 text-white border-0 shadow-lg animate-pulse">
-                           {unreadCount}
-                         </Badge>
+                        {unreadCount > 0 && (
+                          <Badge className="ml-auto bg-red-500 text-white border-0 shadow-lg shadow-red-500/40 animate-pulse">
+                            {unreadCount}
+                          </Badge>
                        )}
                      </Link>
                    </DropdownMenuItem>
@@ -341,11 +363,13 @@
               <MessageSquare className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
             </div>
             <span className="font-bold text-sm sm:text-base text-blue-700 dark:text-blue-300 relative z-10">Messages</span>
-            {unreadCount > 0 && (
-              <Badge className="ml-auto bg-gradient-to-r from-blue-500 to-cyan-500 text-white border-0 shadow-lg animate-pulse text-xs sm:text-sm">
-                {unreadCount}
-              </Badge>
-            )}
+            <div className="relative ml-auto">
+              {unreadCount > 0 && (
+                <Badge className="bg-red-500 text-white border-0 shadow-lg shadow-red-500/40 animate-pulse text-xs sm:text-sm">
+                  {unreadCount}
+                </Badge>
+              )}
+            </div>
           </Button>
         </Link>
 

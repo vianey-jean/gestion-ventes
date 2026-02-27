@@ -198,49 +198,49 @@ const AchatsHistoriqueList: React.FC<AchatsHistoriqueListProps> = ({
                   transition={{ delay: index * 0.05 }}
                   onClick={() => handleItemClick(achat)}
                   className="
-                    flex items-center justify-between p-4 
+                    flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 sm:p-4
                     bg-white/50 dark:bg-gray-800/50 
                     rounded-xl border border-gray-200 dark:border-gray-700 
                     hover:shadow-lg hover:scale-[1.01] hover:border-primary/50
                     transition-all duration-200 cursor-pointer
-                    group
+                    group gap-2 sm:gap-0
                   "
                 >
-                  {/* Partie gauche: Icône et informations */}
-                  <div className="flex items-center gap-4 flex-1">
-                    <div className={`p-2 rounded-lg ${getTypeClass(achat.type)} transition-transform group-hover:scale-110`}>
+                  {/* Partie haute/gauche: Icône et informations */}
+                  <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
+                    <div className={`p-2 rounded-lg shrink-0 ${getTypeClass(achat.type)} transition-transform group-hover:scale-110`}>
                       {getTypeIcon(achat.type)}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-gray-800 dark:text-white truncate">
+                      <p className="font-semibold text-sm sm:text-base text-gray-800 dark:text-white truncate">
                         {achat.productDescription || achat.description}
                       </p>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-xs sm:text-sm text-gray-500">
                         {new Date(achat.date).toLocaleDateString('fr-FR')}
                         {achat.fournisseur && ` • ${achat.fournisseur}`}
                       </p>
                     </div>
                   </div>
                   
-                  {/* Partie droite: Coût, quantité et actions */}
-                  <div className="flex items-center gap-4">
-                    <div className="text-right">
-                      <p className="font-bold text-red-400">-{formatEuro(achat.totalCost)}</p>
+                  {/* Partie basse/droite: Coût, quantité et actions */}
+                  <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-4 pl-11 sm:pl-0">
+                    <div className="text-left sm:text-right">
+                      <p className="font-bold text-sm sm:text-base text-red-400">-{formatEuro(achat.totalCost)}</p>
                       {achat.quantity && (
-                        <Badge variant="outline" className="mt-1">
+                        <Badge variant="outline" className="mt-1 text-xs">
                           Qté: {achat.quantity}
                         </Badge>
                       )}
                     </div>
                     
-                    {/* Actions rapides */}
-                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    {/* Actions - toujours visibles sur mobile/tablette, hover sur desktop */}
+                    <div className="flex gap-1 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity shrink-0">
                       <Button
                         size="icon"
                         variant="ghost"
                         onClick={(e) => handleEditClick(e, achat)}
                         className="
-                          h-9 w-9 rounded-lg
+                          h-8 w-8 sm:h-9 sm:w-9 rounded-lg
                           text-emerald-600 hover:text-emerald-700
                           hover:bg-emerald-500/15
                           transition-all hover:scale-110
@@ -258,7 +258,7 @@ const AchatsHistoriqueList: React.FC<AchatsHistoriqueListProps> = ({
                           setIsDetailModalOpen(true);
                         }}
                         className="
-                          h-9 w-9 rounded-lg
+                          h-8 w-8 sm:h-9 sm:w-9 rounded-lg
                           text-red-600 hover:text-red-700
                           hover:bg-red-500/15
                           transition-all hover:scale-110
