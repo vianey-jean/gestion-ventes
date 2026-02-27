@@ -122,7 +122,8 @@
                </motion.div>
              </Link>
 
-
+              {isAuthenticated && <RdvNotifications />}
+              
                 {/**Créer une icons message sur version desktop */}
               {/** 
               {isAuthenticated && (
