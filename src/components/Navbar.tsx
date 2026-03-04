@@ -17,26 +17,27 @@
  import RdvNotifications from '@/components/rdv/RdvNotifications';
  import ObjectifIndicator from '@/components/navbar/ObjectifIndicator';
  
- import {
-   LayoutDashboard,
-   Users,
-   CalendarDays,
-   MessageSquare,
-   LogIn,
-   LogOut,
-   Moon,
-   Sun,
-   Menu,
-   X,
-   Package,
-   ChevronDown,
-   TrendingUp,
-   Sparkles,
-   Crown,
-   Diamond,
-   Gem,
-   Star,
- } from 'lucide-react';
+import {
+  LayoutDashboard,
+  Users,
+  CalendarDays,
+  MessageSquare,
+  LogIn,
+  LogOut,
+  Moon,
+  Sun,
+  Menu,
+  X,
+  Package,
+  ChevronDown,
+  TrendingUp,
+  Sparkles,
+  Crown,
+  Diamond,
+  Gem,
+  Star,
+  Clock,
+} from 'lucide-react';
  import { cn } from '@/lib/utils';
  
  const Navbar: React.FC = () => {
@@ -107,7 +108,17 @@
                    </motion.div>
                   </Link>
 
-                
+                  <Link to="/pointage">
+                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                      <Button variant="ghost" className="relative rounded-2xl hover:bg-gradient-to-r hover:from-cyan-500/10 hover:to-blue-500/10 transition-all duration-300 group overflow-hidden px-4 py-2 mirror-shine">
+                        <div className="flex items-center justify-center w-8 h-8 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-500 mr-2 shadow-lg shadow-cyan-500/30">
+                          <Clock className="h-4 w-4 text-white" />
+                        </div>
+                        <span className="font-bold relative z-10">Pointage</span>
+                      </Button>
+                    </motion.div>
+                  </Link>
+
                 </>
               )}
 
@@ -231,9 +242,18 @@
                         </div>
                         <span className="font-bold">Produits</span>
                       </Link>
+                     </DropdownMenuItem>
+
+                    <DropdownMenuItem asChild className="rounded-xl hover:bg-gradient-to-r hover:from-cyan-500/10 hover:to-blue-500/10 focus:bg-cyan-500/10 cursor-pointer transition-all duration-300 py-3">
+                      <Link to="/pointage" className="flex items-center w-full py-2">
+                        <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-500 mr-3 shadow-lg shadow-cyan-500/30">
+                          <Clock className="h-5 w-5 text-white" />
+                        </div>
+                        <span className="font-bold">Pointage</span>
+                      </Link>
                     </DropdownMenuItem>
 
-                 </DropdownMenuContent>
+                  </DropdownMenuContent>
                </DropdownMenu>
              ) : (
                <Link to="/login">
@@ -338,6 +358,19 @@
               <Package className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
             </div>
             <span className="font-bold text-sm sm:text-base text-pink-700 dark:text-pink-300 relative z-10">Produits</span>
+          </Button>
+        </Link>
+
+        {/* POINTAGE */}
+        <Link to="/pointage" onClick={() => setIsMobileMenuOpen(false)}>
+          <Button
+            variant="outline"
+            className="w-full py-4 sm:py-6 flex items-center justify-start gap-2 sm:gap-3 rounded-2xl border border-cyan-300/30 dark:border-cyan-700/30 shadow-lg shadow-cyan-500/10 bg-gradient-to-r from-white/90 to-cyan-50/80 dark:from-[#0a0020]/80 dark:to-cyan-950/60 hover:scale-105 transition-all duration-300 mirror-shine"
+          >
+            <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-500 shadow-lg shadow-cyan-500/30">
+              <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
+            </div>
+            <span className="font-bold text-sm sm:text-base text-cyan-700 dark:text-cyan-300 relative z-10">Pointage</span>
           </Button>
         </Link>
 

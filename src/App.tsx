@@ -38,6 +38,7 @@ const MessagesPage = lazy(() => import('@/pages/MessagesPage'));
 const CommandesPage = lazy(() => import('@/pages/CommandesPage'));
 const RdvPage = lazy(() => import('@/pages/RdvPage'));
 const ProduitsPage = lazy(() => import('@/pages/ProduitsPage'));
+const PointagePage = lazy(() => import('@/pages/PointagePage'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
 
 function App() {
@@ -122,6 +123,14 @@ function App() {
                       element={
                         <ProtectedRoute>
                           <ProduitsPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/pointage"
+                      element={
+                        <ProtectedRoute>
+                          <PointagePage />
                         </ProtectedRoute>
                       }
                     />
