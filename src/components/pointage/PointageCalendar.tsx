@@ -81,7 +81,7 @@ const PointageCalendar: React.FC<PointageCalendarProps> = ({
               )}
             >
               {hasData && (
-                <span className="absolute top-0 right-0 sm:top-0.5 sm:right-0.5 min-w-[16px] h-4 px-1 flex items-center justify-center rounded-full bg-emerald-500 text-white text-[9px] sm:text-[10px] font-black shadow-lg">
+                <span className="absolute top-0 right-0 sm:top-0.5 sm:right-0.5 min-w-[16px] h-4 px-1 flex items-center justify-center rounded-full bg-red-500 text-white text-[9px] sm:text-[10px] font-black shadow-lg">
                   {dayPointages.length}
                 </span>
               )}
