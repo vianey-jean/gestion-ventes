@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils';
 interface TravailleurModalProps {
   open: boolean;
   onOpenChange: (v: boolean) => void;
-  form: { nom: string; prenom: string; adresse: string; phone: string; genre: 'homme' | 'femme' };
+  form: { nom: string; prenom: string; adresse: string; phone: string; genre: 'homme' | 'femme'; role?: 'administrateur' | 'autre' };
   setForm: (f: any) => void;
   onSubmit: () => void;
   premiumBtnClass: string;
@@ -51,6 +51,16 @@ const TravailleurModal: React.FC<TravailleurModalProps> = ({
             <Label className="text-sm font-bold text-white/80 flex items-center gap-2"><Phone className="h-4 w-4 text-blue-400" /> Numéro de téléphone</Label>
             <Input value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} placeholder="Ex: 0692123456" type="tel"
               className="bg-white/10 border border-white/20 focus:border-blue-400 rounded-xl text-white placeholder:text-white/40" />
+          </div>
+          <div className="space-y-2">
+            <Label className="text-sm font-bold text-white/80 flex items-center gap-2">🏷️ Rôle</Label>
+            <Select value={form.role || 'autre'} onValueChange={v => setForm({ ...form, role: v as 'administrateur' | 'autre' })}>
+              <SelectTrigger className="bg-white/10 border border-white/20 rounded-xl text-white"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="administrateur">👑 Administrateur</SelectItem>
+                <SelectItem value="autre">👤 Autre</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div className="space-y-2">
             <Label className="text-sm font-bold text-white/80">Genre</Label>

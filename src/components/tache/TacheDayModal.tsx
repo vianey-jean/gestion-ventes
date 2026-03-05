@@ -6,6 +6,7 @@ import { Clock, Plus, Pencil, Trash2, GripVertical, AlertTriangle, CheckCircle, 
 import { Tache } from '@/services/api/tacheApi';
 import tacheApi from '@/services/api/tacheApi';
 import rdvApiService from '@/services/api/rdvApi';
+import { Travailleur } from '@/services/api/travailleurApi';
 import { useToast } from '@/hooks/use-toast';
 
 interface TacheDayModalProps {
@@ -13,6 +14,7 @@ interface TacheDayModalProps {
   onOpenChange: (v: boolean) => void;
   selectedDay: string | null;
   taches: Tache[];
+  travailleurs: Travailleur[];
   onEdit: (t: Tache) => void;
   onDelete: (id: string) => void;
   onAddTache: () => void;
@@ -23,11 +25,15 @@ interface TacheDayModalProps {
 }
 
 const HOURS = Array.from({ length: 20 }, (_, i) => i + 4); // 4h to 23h
-const MAIN_USER_NAME = 'Jean Marie Vianey RABEMANALINA';
 
-const isMainUser = (name: string) => {
+const isAdminTravailleur = (name: string, travailleursList: Travailleur[]) => {
   if (!name) return false;
-  return name.trim().toLowerCase() === MAIN_USER_NAME.toLowerCase();
+  const nameLower = name.trim().toLowerCase();
+  return travailleursList.some(t => {
+    const fullName = `${t.prenom} ${t.nom}`.trim().toLowerCase();
+    const fullNameReverse = `${t.nom} ${t.prenom}`.trim().toLowerCase();
+    return (fullName === nameLower || fullNameReverse === nameLower) && t.role === 'administrateur';
+  });
 };
 
 const timeToMinutes = (time: string) => {
@@ -83,7 +89,7 @@ const CountdownDisplay: React.FC<{ heureFin: string; date: string; open: boolean
 };
 
 const TacheDayModal: React.FC<TacheDayModalProps> = ({
-  open, onOpenChange, selectedDay, taches, onEdit, onDelete, onAddTache, onMoveTache, onValidateTache, premiumBtnClass, mirrorShine
+  open, onOpenChange, selectedDay, taches, travailleurs, onEdit, onDelete, onAddTache, onMoveTache, onValidateTache, premiumBtnClass, mirrorShine
 }) => {
   const { toast } = useToast();
   const dayTaches = taches.filter(t => t.date === selectedDay);
@@ -159,8 +165,8 @@ const TacheDayModal: React.FC<TacheDayModalProps> = ({
       return;
     }
 
-    // For main user, also check RDV conflicts
-    if (isMainUser(tache.travailleurNom || '')) {
+    // For admin users, also check RDV conflicts
+    if (isAdminTravailleur(tache.travailleurNom || '', travailleurs)) {
       try {
         const rdvs = await rdvApiService.getAll();
         const rdvConflict = rdvs.find(r => {

@@ -43,7 +43,7 @@ const TacheView: React.FC = () => {
 
   // Travailleur modal
   const [showTravailleurModal, setShowTravailleurModal] = useState(false);
-  const [travailleurForm, setTravailleurForm] = useState({ nom: '', prenom: '', adresse: '', phone: '', genre: 'homme' as 'homme' | 'femme' });
+  const [travailleurForm, setTravailleurForm] = useState({ nom: '', prenom: '', adresse: '', phone: '', genre: 'homme' as 'homme' | 'femme', role: 'autre' as 'administrateur' | 'autre' });
 
   // Follow-up form (pre-filled)
   const [followUpTache, setFollowUpTache] = useState<Tache | null>(null);
@@ -245,7 +245,7 @@ const TacheView: React.FC = () => {
       await travailleurApi.create(travailleurForm);
       toast({ title: '✅ Travailleur ajouté' });
       setShowTravailleurModal(false);
-      setTravailleurForm({ nom: '', prenom: '', adresse: '', phone: '', genre: 'homme' });
+      setTravailleurForm({ nom: '', prenom: '', adresse: '', phone: '', genre: 'homme', role: 'autre' });
       // Refresh travailleurs
       const travRes = await travailleurApi.getAll();
       setTravailleurs(travRes.data);
@@ -317,6 +317,7 @@ const TacheView: React.FC = () => {
         onOpenChange={setShowDayModal}
         selectedDay={selectedDay}
         taches={taches}
+        travailleurs={travailleurs}
         onEdit={(t) => { setEditingTache(t); setFollowUpTache(null); setShowDayModal(false); setShowFormModal(true); }}
         onDelete={(id) => setDeleteConfirm(id)}
         onAddTache={() => { setEditingTache(null); setFollowUpTache(null); setShowDayModal(false); setShowFormModal(true); }}

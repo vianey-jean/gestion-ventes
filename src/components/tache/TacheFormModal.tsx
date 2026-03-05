@@ -28,11 +28,14 @@ interface TacheFormModalProps {
 const DAY_START_MINUTES = 4 * 60;
 const DAY_END_MINUTES = 23 * 60 + 59;
 
-const MAIN_USER_NAME = 'Jean Marie Vianey RABEMANALINA';
-
-const isMainUser = (name: string) => {
+const isAdminTravailleur = (name: string, travailleursList: Travailleur[]) => {
   if (!name) return false;
-  return name.trim().toLowerCase() === MAIN_USER_NAME.toLowerCase();
+  const nameLower = name.trim().toLowerCase();
+  return travailleursList.some(t => {
+    const fullName = `${t.prenom} ${t.nom}`.trim().toLowerCase();
+    const fullNameReverse = `${t.nom} ${t.prenom}`.trim().toLowerCase();
+    return (fullName === nameLower || fullNameReverse === nameLower) && t.role === 'administrateur';
+  });
 };
 
 interface OccupiedSlot {
@@ -100,7 +103,7 @@ const TacheFormModal: React.FC<TacheFormModalProps> = ({
 
     Promise.all([
       tacheApi.getByDate(form.date),
-      isMainUser(form.travailleurNom) ? rdvApiService.getAll() : Promise.resolve([])
+      isAdminTravailleur(form.travailleurNom, travailleurs) ? rdvApiService.getAll() : Promise.resolve([])
     ])
       .then(([tacheRes, rdvs]) => {
         if (cancelled) return;
@@ -121,7 +124,7 @@ const TacheFormModal: React.FC<TacheFormModalProps> = ({
 
         // For main user: also add RDV slots (date+time only, no name filter)
         let rdvSlots: OccupiedSlot[] = [];
-        if (isMainUser(form.travailleurNom)) {
+        if (isAdminTravailleur(form.travailleurNom, travailleurs)) {
           const rdvArray = Array.isArray(rdvs) ? rdvs : [];
           rdvSlots = rdvArray
             .filter(r => r.date === form.date && r.statut !== 'annule' && r.statut !== 'termine')
@@ -226,7 +229,7 @@ const TacheFormModal: React.FC<TacheFormModalProps> = ({
   };
 
   const personLabel = form.travailleurNom
-    ? (isMainUser(form.travailleurNom) ? `${form.travailleurNom} (tâches + RDV)` : `${form.travailleurNom} (tâches)`)
+    ? (isAdminTravailleur(form.travailleurNom, travailleurs) ? `${form.travailleurNom} (tâches + RDV)` : `${form.travailleurNom} (tâches)`)
     : 'jour choisi';
 
   return (

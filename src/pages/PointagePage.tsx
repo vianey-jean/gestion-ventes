@@ -52,7 +52,7 @@ const PointagePage: React.FC = () => {
   // Forms
   const [entForm, setEntForm] = useState({ nom: '', adresse: '', typePaiement: 'journalier' as 'journalier' | 'horaire', prix: '' });
   const [ptForm, setPtForm] = useState({ date: new Date().toISOString().split('T')[0], entrepriseId: '', heures: '', prixJournalier: '', travailleurId: '', travailleurNom: '' });
-  const [travForm, setTravForm] = useState({ nom: '', prenom: '', adresse: '', phone: '', genre: 'homme' as 'homme' | 'femme' });
+  const [travForm, setTravForm] = useState({ nom: '', prenom: '', adresse: '', phone: '', genre: 'homme' as 'homme' | 'femme', role: 'autre' as 'administrateur' | 'autre' });
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -105,7 +105,7 @@ const PointagePage: React.FC = () => {
     try {
       await travailleurApi.create(travForm);
       toast({ title: '✅ Travailleur ajouté', description: `${travForm.prenom} ${travForm.nom}` });
-      setTravForm({ nom: '', prenom: '', adresse: '', phone: '', genre: 'homme' });
+      setTravForm({ nom: '', prenom: '', adresse: '', phone: '', genre: 'homme', role: 'autre' });
       setShowTravailleurModal(false);
       fetchData();
     } catch {

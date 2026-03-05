@@ -37,12 +37,20 @@ const PointageTravailleursList: React.FC<PointageTravailleurs_ListProps> = ({ tr
                     {trav.phone && <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5"><Phone className="h-3 w-3" />{trav.phone}</p>}
                   </div>
                 </div>
-                <span className={cn(
-                  'text-[10px] px-2 py-1 rounded-full font-bold',
-                  trav.genre === 'homme' ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400' : 'bg-pink-500/10 text-pink-600 dark:text-pink-400'
-                )}>
-                  {trav.genre === 'homme' ? '👨 Homme' : '👩 Femme'}
-                </span>
+                <div className="flex items-center gap-1.5">
+                  <span className={cn(
+                    'text-[10px] px-2 py-1 rounded-full font-bold',
+                    trav.role === 'administrateur' ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400' : 'bg-slate-500/10 text-slate-600 dark:text-slate-400'
+                  )}>
+                    {trav.role === 'administrateur' ? '👑 Admin' : '👤 Autre'}
+                  </span>
+                  <span className={cn(
+                    'text-[10px] px-2 py-1 rounded-full font-bold',
+                    trav.genre === 'homme' ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400' : 'bg-pink-500/10 text-pink-600 dark:text-pink-400'
+                  )}>
+                    {trav.genre === 'homme' ? '👨 Homme' : '👩 Femme'}
+                  </span>
+                </div>
               </div>
               {trav.adresse && (
                 <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1"><MapPin className="h-3 w-3" />{trav.adresse}</p>
