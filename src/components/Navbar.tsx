@@ -108,7 +108,7 @@ import {
                    </motion.div>
                   </Link>
 
-                  <Link to="/pointage">
+                  {/*<Link to="/pointage">
                     <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                       <Button variant="ghost" className="relative rounded-2xl hover:bg-gradient-to-r hover:from-cyan-500/10 hover:to-blue-500/10 transition-all duration-300 group overflow-hidden px-4 py-2 mirror-shine">
                         <div className="flex items-center justify-center w-8 h-8 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-500 mr-2 shadow-lg shadow-cyan-500/30">
@@ -117,7 +117,7 @@ import {
                         <span className="font-bold relative z-10">Pointage</span>
                       </Button>
                     </motion.div>
-                  </Link>
+                  </Link>*/}
 
                 </>
               )}

@@ -5,6 +5,7 @@ import entrepriseApi, { Entreprise } from '@/services/api/entrepriseApi';
 import pointageApi, { PointageEntry } from '@/services/api/pointageApi';
 import travailleurApi, { Travailleur } from '@/services/api/travailleurApi';
 
+import PointageTabNav from '@/components/pointage/PointageTabNav';
 import PointageHero from '@/components/pointage/PointageHero';
 import PointageCalendar from '@/components/pointage/PointageCalendar';
 import PointageEntreprisesList from '@/components/pointage/PointageEntreprisesList';
@@ -17,12 +18,14 @@ import EditPointageModal from '@/components/pointage/modals/EditPointageModal';
 import ParPersonneModal from '@/components/pointage/modals/ParPersonneModal';
 import YearlyTotalModal from '@/components/pointage/modals/YearlyTotalModal';
 import PointageConfirmDialogs from '@/components/pointage/modals/PointageConfirmDialogs';
+import TacheView from '@/components/tache/TacheView';
 
 const premiumBtnClass = "group relative overflow-hidden rounded-xl sm:rounded-2xl backdrop-blur-xl border transition-all duration-300 hover:scale-105 px-4 py-2 sm:px-5 sm:py-3 text-xs sm:text-sm font-semibold";
 const mirrorShine = "absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500";
 
 const PointagePage: React.FC = () => {
   const { toast } = useToast();
+  const [activeTab, setActiveTab] = useState<'pointage' | 'tache'>('pointage');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [entreprises, setEntreprises] = useState<Entreprise[]>([]);
   const [pointages, setPointages] = useState<PointageEntry[]>([]);
@@ -196,81 +199,89 @@ const PointagePage: React.FC = () => {
   return (
     <Layout>
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20 dark:from-[#030014] dark:via-[#0a0025] dark:to-[#0e0035]">
-        <PointageHero
-          entreprisesCount={entreprises.length}
-          travailleursCount={travailleurs.length}
-          pointagesCount={pointages.length}
-          monthTotal={getMonthTotal()}
-          premiumBtnClass={premiumBtnClass}
-          mirrorShine={mirrorShine}
-          onAddEntreprise={() => setShowEntrepriseModal(true)}
-          onAddTravailleur={() => setShowTravailleurModal(true)}
-          onNewPointage={() => { setPtForm({ ...ptForm, date: new Date().toISOString().split('T')[0] }); setShowPointageModal(true); }}
-          onShowParPersonne={() => setShowParPersonneModal(true)}
-          onShowYearlyTotal={handleShowYearlyTotal}
-          year={year}
-        />
+        <PointageTabNav activeTab={activeTab} onTabChange={setActiveTab} />
 
-        <div className="max-w-7xl mx-auto px-4 pb-12">
-          <PointageCalendar
-            currentDate={currentDate}
-            pointages={pointages}
-            onPrevMonth={() => setCurrentDate(new Date(year, month - 1, 1))}
-            onNextMonth={() => setCurrentDate(new Date(year, month + 1, 1))}
-            onDayClick={(dateStr) => { setSelectedDay(dateStr); setShowDayModal(true); }}
-          />
-          <PointageEntreprisesList entreprises={entreprises} />
-          <PointageTravailleursList travailleurs={travailleurs} />
-        </div>
+        {activeTab === 'pointage' ? (
+          <>
+            <PointageHero
+              entreprisesCount={entreprises.length}
+              travailleursCount={travailleurs.length}
+              pointagesCount={pointages.length}
+              monthTotal={getMonthTotal()}
+              premiumBtnClass={premiumBtnClass}
+              mirrorShine={mirrorShine}
+              onAddEntreprise={() => setShowEntrepriseModal(true)}
+              onAddTravailleur={() => setShowTravailleurModal(true)}
+              onNewPointage={() => { setPtForm({ ...ptForm, date: new Date().toISOString().split('T')[0] }); setShowPointageModal(true); }}
+              onShowParPersonne={() => setShowParPersonneModal(true)}
+              onShowYearlyTotal={handleShowYearlyTotal}
+              year={year}
+            />
 
-        {/* Modals */}
-        <EntrepriseModal
-          open={showEntrepriseModal} onOpenChange={setShowEntrepriseModal}
-          form={entForm} setForm={setEntForm} onSubmit={handleAddEntreprise}
-          premiumBtnClass={premiumBtnClass} mirrorShine={mirrorShine}
-        />
-        <TravailleurModal
-          open={showTravailleurModal} onOpenChange={setShowTravailleurModal}
-          form={travForm} setForm={setTravForm} onSubmit={handleAddTravailleur}
-          premiumBtnClass={premiumBtnClass} mirrorShine={mirrorShine}
-        />
-        <PointageFormModal
-          open={showPointageModal} onOpenChange={setShowPointageModal}
-          form={ptForm} setForm={setPtForm} entreprises={entreprises} travailleurs={travailleurs}
-          onSubmit={handleAddPointage}
-          premiumBtnClass={premiumBtnClass} mirrorShine={mirrorShine}
-        />
-        <DayDetailModal
-          open={showDayModal} onOpenChange={setShowDayModal}
-          selectedDay={selectedDay} pointages={pointages}
-          onEdit={(pt) => { setEditingPointage({ ...pt }); setShowDayModal(false); setShowEditModal(true); }}
-          onDelete={(id) => setDeleteConfirm(id)}
-          onAddPointage={() => { setPtForm({ ...ptForm, date: selectedDay || '' }); setShowDayModal(false); setShowPointageModal(true); }}
-          premiumBtnClass={premiumBtnClass} mirrorShine={mirrorShine}
-        />
-        <EditPointageModal
-          open={showEditModal} onOpenChange={setShowEditModal}
-          editingPointage={editingPointage} setEditingPointage={setEditingPointage}
-          travailleurs={travailleurs}
-          onConfirm={() => setEditConfirm(true)}
-          premiumBtnClass={premiumBtnClass} mirrorShine={mirrorShine}
-        />
-        <ParPersonneModal
-          open={showParPersonneModal} onOpenChange={setShowParPersonneModal}
-          travailleurs={travailleurs}
-          premiumBtnClass={premiumBtnClass} mirrorShine={mirrorShine}
-        />
-        <YearlyTotalModal
-          open={showYearlyModal} onOpenChange={setShowYearlyModal}
-          year={year} yearlyPointages={yearlyPointages} loading={yearlyLoading}
-        />
-        <PointageConfirmDialogs
-          deleteConfirm={deleteConfirm} setDeleteConfirm={setDeleteConfirm}
-          onDelete={handleDeletePointage}
-          editConfirm={editConfirm} setEditConfirm={setEditConfirm}
-          onEditConfirm={handleEditPointage}
-          premiumBtnClass={premiumBtnClass} mirrorShine={mirrorShine}
-        />
+            <div className="max-w-7xl mx-auto px-4 pb-12">
+              <PointageCalendar
+                currentDate={currentDate}
+                pointages={pointages}
+                onPrevMonth={() => setCurrentDate(new Date(year, month - 1, 1))}
+                onNextMonth={() => setCurrentDate(new Date(year, month + 1, 1))}
+                onDayClick={(dateStr) => { setSelectedDay(dateStr); setShowDayModal(true); }}
+              />
+              <PointageEntreprisesList entreprises={entreprises} />
+              <PointageTravailleursList travailleurs={travailleurs} />
+            </div>
+
+            {/* Modals */}
+            <EntrepriseModal
+              open={showEntrepriseModal} onOpenChange={setShowEntrepriseModal}
+              form={entForm} setForm={setEntForm} onSubmit={handleAddEntreprise}
+              premiumBtnClass={premiumBtnClass} mirrorShine={mirrorShine}
+            />
+            <TravailleurModal
+              open={showTravailleurModal} onOpenChange={setShowTravailleurModal}
+              form={travForm} setForm={setTravForm} onSubmit={handleAddTravailleur}
+              premiumBtnClass={premiumBtnClass} mirrorShine={mirrorShine}
+            />
+            <PointageFormModal
+              open={showPointageModal} onOpenChange={setShowPointageModal}
+              form={ptForm} setForm={setPtForm} entreprises={entreprises} travailleurs={travailleurs}
+              onSubmit={handleAddPointage}
+              premiumBtnClass={premiumBtnClass} mirrorShine={mirrorShine}
+            />
+            <DayDetailModal
+              open={showDayModal} onOpenChange={setShowDayModal}
+              selectedDay={selectedDay} pointages={pointages}
+              onEdit={(pt) => { setEditingPointage({ ...pt }); setShowDayModal(false); setShowEditModal(true); }}
+              onDelete={(id) => setDeleteConfirm(id)}
+              onAddPointage={() => { setPtForm({ ...ptForm, date: selectedDay || '' }); setShowDayModal(false); setShowPointageModal(true); }}
+              premiumBtnClass={premiumBtnClass} mirrorShine={mirrorShine}
+            />
+            <EditPointageModal
+              open={showEditModal} onOpenChange={setShowEditModal}
+              editingPointage={editingPointage} setEditingPointage={setEditingPointage}
+              travailleurs={travailleurs}
+              onConfirm={() => setEditConfirm(true)}
+              premiumBtnClass={premiumBtnClass} mirrorShine={mirrorShine}
+            />
+            <ParPersonneModal
+              open={showParPersonneModal} onOpenChange={setShowParPersonneModal}
+              travailleurs={travailleurs}
+              premiumBtnClass={premiumBtnClass} mirrorShine={mirrorShine}
+            />
+            <YearlyTotalModal
+              open={showYearlyModal} onOpenChange={setShowYearlyModal}
+              year={year} yearlyPointages={yearlyPointages} loading={yearlyLoading}
+            />
+            <PointageConfirmDialogs
+              deleteConfirm={deleteConfirm} setDeleteConfirm={setDeleteConfirm}
+              onDelete={handleDeletePointage}
+              editConfirm={editConfirm} setEditConfirm={setEditConfirm}
+              onEditConfirm={handleEditPointage}
+              premiumBtnClass={premiumBtnClass} mirrorShine={mirrorShine}
+            />
+          </>
+        ) : (
+          <TacheView />
+        )}
       </div>
     </Layout>
   );
