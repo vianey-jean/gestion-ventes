@@ -172,6 +172,14 @@ const TacheView: React.FC = () => {
     setShowDayModal(true);
   };
 
+  const handleNavigateToDate = (dateStr: string) => {
+    // Navigate calendar to the month of that date, then open day modal
+    const d = new Date(dateStr + 'T00:00:00');
+    setCurrentDate(new Date(d.getFullYear(), d.getMonth(), 1));
+    setSelectedDay(dateStr);
+    setShowDayModal(true);
+  };
+
   const handleCalendarDrag = (tacheId: string, newDate: string) => {
     const tache = taches.find(t => t.id === tacheId);
     if (!tache || tache.importance === 'pertinent') {
@@ -289,6 +297,8 @@ const TacheView: React.FC = () => {
         onShowToday={() => { setSelectedDay(todayStr); setShowDayModal(true); }}
         onShowWeek={() => setShowWeekModal(true)}
         onAddTravailleur={() => setShowTravailleurModal(true)}
+        allTaches={taches}
+        onNavigateToDate={handleNavigateToDate}
       />
 
       <div className="max-w-7xl mx-auto px-4 pb-12">

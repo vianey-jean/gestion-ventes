@@ -1,4 +1,4 @@
- import React, { useState } from 'react';
+ import React, { useState, useEffect } from 'react';
  import { Link } from 'react-router-dom';
  import { Button } from '@/components/ui/button';
  import { Badge } from '@/components/ui/badge';
@@ -37,14 +37,37 @@ import {
   Gem,
   Star,
   Clock,
+  ListTodo,
 } from 'lucide-react';
  import { cn } from '@/lib/utils';
+ import tacheApi from '@/services/api/tacheApi';
  
  const Navbar: React.FC = () => {
    const { isAuthenticated, user, logout } = useAuth();
    const { theme, toggleTheme } = useTheme();
    const { unreadCount } = useMessages();
    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+   const [tacheNotifCount, setTacheNotifCount] = useState(0);
+
+   // Fetch unfinished tasks count (today + future)
+   useEffect(() => {
+     if (!isAuthenticated) return;
+     
+     const fetchTacheCount = async () => {
+       try {
+         const res = await tacheApi.getAll();
+         const todayStr = new Date().toISOString().split('T')[0];
+         const count = res.data.filter(t => !t.completed && t.date >= todayStr).length;
+         setTacheNotifCount(count);
+       } catch {
+         // silent
+       }
+     };
+
+     fetchTacheCount();
+     const interval = setInterval(fetchTacheCount, 30000);
+     return () => clearInterval(interval);
+   }, [isAuthenticated]);
  
    return (
      <header className="sticky top-0 z-50 backdrop-blur-2xl bg-gradient-to-r from-white/90 via-slate-50/90 to-violet-50/90 dark:from-[#030014]/95 dark:via-[#0a0020]/95 dark:to-[#0e0030]/95 border-b border-violet-200/20 dark:border-violet-800/20 shadow-2xl shadow-violet-500/5">
@@ -108,19 +131,8 @@ import {
                    </motion.div>
                   </Link>
 
-                  {/*<Link to="/pointage">
-                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                      <Button variant="ghost" className="relative rounded-2xl hover:bg-gradient-to-r hover:from-cyan-500/10 hover:to-blue-500/10 transition-all duration-300 group overflow-hidden px-4 py-2 mirror-shine">
-                        <div className="flex items-center justify-center w-8 h-8 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-500 mr-2 shadow-lg shadow-cyan-500/30">
-                          <Clock className="h-4 w-4 text-white" />
-                        </div>
-                        <span className="font-bold relative z-10">Pointage</span>
-                      </Button>
-                    </motion.div>
-                  </Link>*/}
-
-                </>
-              )}
+               </>
+             )}
 
              <Link to="/rdv">
                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
@@ -134,29 +146,6 @@ import {
              </Link>
 
               {isAuthenticated && <RdvNotifications />}
-              
-                {/**Créer une icons message sur version desktop */}
-              {/** 
-              {isAuthenticated && (
-                <>
-                  <RdvNotifications />
-                  <Link to="/messages">
-                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                      <Button variant="ghost" className="relative rounded-2xl h-10 w-10 hover:bg-gradient-to-r hover:from-blue-500/10 hover:to-cyan-500/10 transition-all duration-300 overflow-hidden group p-0">
-                        <div className="flex items-center justify-center w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 shadow-lg shadow-blue-500/30">
-                          <MessageSquare className="h-4 w-4 text-white" />
-                        </div>
-                        {unreadCount > 0 && (
-                          <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[20px] h-5 px-1 rounded-full bg-red-500 text-white text-xs font-bold shadow-lg shadow-red-500/40 animate-pulse border-2 border-white dark:border-[#030014]">
-                            {unreadCount}
-                          </span>
-                        )}
-                      </Button>
-                    </motion.div>
-                  </Link>
-                </>
-              )}*/}
-
 
              {/* Theme */}
              <motion.div whileHover={{ scale: 1.1, rotate: 15 }} whileTap={{ scale: 0.9 }}>
@@ -245,16 +234,21 @@ import {
                      </DropdownMenuItem>
 
                     <DropdownMenuItem asChild className="rounded-xl hover:bg-gradient-to-r hover:from-cyan-500/10 hover:to-blue-500/10 focus:bg-cyan-500/10 cursor-pointer transition-all duration-300 py-3">
-                      <Link to="/pointage" className="flex items-center w-full py-2">
+                      <Link to="/pointage" className="flex items-center w-full py-2 relative">
                         <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-500 mr-3 shadow-lg shadow-cyan-500/30">
                           <Clock className="h-5 w-5 text-white" />
                         </div>
                         <span className="font-bold">Pointage</span>
+                        {tacheNotifCount > 0 && (
+                          <Badge className="ml-auto bg-red-500 text-white border-0 shadow-lg shadow-red-500/40 animate-pulse">
+                            {tacheNotifCount}
+                          </Badge>
+                        )}
                       </Link>
                     </DropdownMenuItem>
 
-                  </DropdownMenuContent>
-               </DropdownMenu>
+                 </DropdownMenuContent>
+              </DropdownMenu>
              ) : (
                <Link to="/login">
                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
@@ -365,12 +359,17 @@ import {
         <Link to="/pointage" onClick={() => setIsMobileMenuOpen(false)}>
           <Button
             variant="outline"
-            className="w-full py-4 sm:py-6 flex items-center justify-start gap-2 sm:gap-3 rounded-2xl border border-cyan-300/30 dark:border-cyan-700/30 shadow-lg shadow-cyan-500/10 bg-gradient-to-r from-white/90 to-cyan-50/80 dark:from-[#0a0020]/80 dark:to-cyan-950/60 hover:scale-105 transition-all duration-300 mirror-shine"
+            className="w-full py-4 sm:py-6 flex items-center justify-start gap-2 sm:gap-3 rounded-2xl border border-cyan-300/30 dark:border-cyan-700/30 shadow-lg shadow-cyan-500/10 bg-gradient-to-r from-white/90 to-cyan-50/80 dark:from-[#0a0020]/80 dark:to-cyan-950/60 hover:scale-105 transition-all duration-300 mirror-shine relative"
           >
             <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-500 shadow-lg shadow-cyan-500/30">
               <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
             </div>
             <span className="font-bold text-sm sm:text-base text-cyan-700 dark:text-cyan-300 relative z-10">Pointage</span>
+            {tacheNotifCount > 0 && (
+              <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[20px] h-5 px-1 rounded-full bg-red-500 text-white text-xs font-bold shadow-lg shadow-red-500/40 animate-pulse border-2 border-white dark:border-[#030014]">
+                {tacheNotifCount}
+              </span>
+            )}
           </Button>
         </Link>
 
