@@ -28,6 +28,13 @@ interface TacheFormModalProps {
 const DAY_START_MINUTES = 4 * 60;
 const DAY_END_MINUTES = 23 * 60 + 59;
 
+const MAIN_USER_NAME = 'Jean Marie Vianey RABEMANALINA';
+
+const isMainUser = (name: string) => {
+  if (!name) return false;
+  return name.trim().toLowerCase() === MAIN_USER_NAME.toLowerCase();
+};
+
 interface OccupiedSlot {
   heureDebut: string;
   heureFin: string;
@@ -79,7 +86,7 @@ const TacheFormModal: React.FC<TacheFormModalProps> = ({
   const isFieldDisabledByFollowUp = !!isFollowUp;
   const excludedTacheId = !isFollowUp ? (editingTache?.id || '') : '';
 
-  // Fetch both taches AND rdvs for the selected date
+  // Fetch occupied slots filtered by person
   useEffect(() => {
     if (!open || !form.date) {
       setOccupiedSlots([]);
@@ -89,15 +96,22 @@ const TacheFormModal: React.FC<TacheFormModalProps> = ({
     let cancelled = false;
     setAvailabilityLoading(true);
 
+    const personName = (form.travailleurNom || '').trim().toLowerCase();
+
     Promise.all([
       tacheApi.getByDate(form.date),
-      rdvApiService.getAll()
+      isMainUser(form.travailleurNom) ? rdvApiService.getAll() : Promise.resolve([])
     ])
       .then(([tacheRes, rdvs]) => {
         if (cancelled) return;
 
+        // Filter taches for THIS person only
         const tacheSlots: OccupiedSlot[] = tacheRes.data
-          .filter(t => t.id !== excludedTacheId)
+          .filter(t => {
+            if (t.id === excludedTacheId) return false;
+            const tName = (t.travailleurNom || '').trim().toLowerCase();
+            return tName === personName;
+          })
           .map(t => ({
             heureDebut: t.heureDebut,
             heureFin: t.heureFin,
@@ -105,14 +119,19 @@ const TacheFormModal: React.FC<TacheFormModalProps> = ({
             source: 'tache' as const
           }));
 
-        const rdvSlots: OccupiedSlot[] = rdvs
-          .filter(r => r.date === form.date && r.statut !== 'annule' && r.statut !== 'termine')
-          .map(r => ({
-            heureDebut: r.heureDebut,
-            heureFin: r.heureFin,
-            description: r.titre || 'RDV',
-            source: 'rdv' as const
-          }));
+        // For main user: also add RDV slots (date+time only, no name filter)
+        let rdvSlots: OccupiedSlot[] = [];
+        if (isMainUser(form.travailleurNom)) {
+          const rdvArray = Array.isArray(rdvs) ? rdvs : [];
+          rdvSlots = rdvArray
+            .filter(r => r.date === form.date && r.statut !== 'annule' && r.statut !== 'termine')
+            .map(r => ({
+              heureDebut: r.heureDebut,
+              heureFin: r.heureFin,
+              description: r.titre || 'RDV',
+              source: 'rdv' as const
+            }));
+        }
 
         setOccupiedSlots([...tacheSlots, ...rdvSlots]);
       })
@@ -124,7 +143,7 @@ const TacheFormModal: React.FC<TacheFormModalProps> = ({
       });
 
     return () => { cancelled = true; };
-  }, [open, form.date, excludedTacheId]);
+  }, [open, form.date, excludedTacheId, form.travailleurNom]);
 
   const timeToMinutes = (time: string) => {
     const [hours, minutes] = time.split(':').map(Number);
@@ -206,6 +225,10 @@ const TacheFormModal: React.FC<TacheFormModalProps> = ({
     onSubmit(form);
   };
 
+  const personLabel = form.travailleurNom
+    ? (isMainUser(form.travailleurNom) ? `${form.travailleurNom} (tâches + RDV)` : `${form.travailleurNom} (tâches)`)
+    : 'jour choisi';
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="bg-gradient-to-br from-slate-900 via-violet-900/30 to-purple-900/20 backdrop-blur-2xl border border-white/10 shadow-2xl rounded-3xl max-w-md">
@@ -281,7 +304,9 @@ const TacheFormModal: React.FC<TacheFormModalProps> = ({
           </div>
 
           <div className="rounded-2xl border border-white/10 bg-white/5 p-3 space-y-2">
-            <p className="text-xs font-bold text-white/80">Créneaux libres pour le {form.date || 'jour choisi'} <span className="text-white/50">(tâches + RDV)</span></p>
+            <p className="text-xs font-bold text-white/80">
+              Créneaux libres pour {personLabel} le {form.date || 'jour choisi'}
+            </p>
             {availabilityLoading ? (
               <p className="text-xs text-white/50">Chargement des horaires...</p>
             ) : availableRanges.length > 0 ? (

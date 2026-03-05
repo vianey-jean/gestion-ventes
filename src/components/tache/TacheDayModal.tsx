@@ -4,6 +4,9 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Clock, Plus, Pencil, Trash2, GripVertical, AlertTriangle, CheckCircle, Timer, Check } from 'lucide-react';
 import { Tache } from '@/services/api/tacheApi';
+import tacheApi from '@/services/api/tacheApi';
+import rdvApiService from '@/services/api/rdvApi';
+import { useToast } from '@/hooks/use-toast';
 
 interface TacheDayModalProps {
   open: boolean;
@@ -20,6 +23,17 @@ interface TacheDayModalProps {
 }
 
 const HOURS = Array.from({ length: 20 }, (_, i) => i + 4); // 4h to 23h
+const MAIN_USER_NAME = 'Jean Marie Vianey RABEMANALINA';
+
+const isMainUser = (name: string) => {
+  if (!name) return false;
+  return name.trim().toLowerCase() === MAIN_USER_NAME.toLowerCase();
+};
+
+const timeToMinutes = (time: string) => {
+  const [hours, minutes] = time.split(':').map(Number);
+  return hours * 60 + minutes;
+};
 
 const useCountdown = (heureFin: string, date: string, open: boolean) => {
   const [remaining, setRemaining] = useState<number>(0);
@@ -71,6 +85,7 @@ const CountdownDisplay: React.FC<{ heureFin: string; date: string; open: boolean
 const TacheDayModal: React.FC<TacheDayModalProps> = ({
   open, onOpenChange, selectedDay, taches, onEdit, onDelete, onAddTache, onMoveTache, onValidateTache, premiumBtnClass, mirrorShine
 }) => {
+  const { toast } = useToast();
   const dayTaches = taches.filter(t => t.date === selectedDay);
   const dragRef = useRef<{ tacheId: string; originHeure: string } | null>(null);
 
@@ -100,13 +115,76 @@ const TacheDayModal: React.FC<TacheDayModalProps> = ({
     e.preventDefault();
   };
 
-  const handleDrop = (e: React.DragEvent, hour: number) => {
+  const handleDrop = async (e: React.DragEvent, hour: number) => {
     e.preventDefault();
     const tacheId = e.dataTransfer.getData('tacheId');
-    if (tacheId) {
-      const newHeure = `${String(hour).padStart(2, '0')}:00`;
-      onMoveTache(tacheId, newHeure);
+    if (!tacheId || !selectedDay) return;
+
+    const tache = dayTaches.find(t => t.id === tacheId);
+    if (!tache) return;
+
+    const newHeureDebut = `${String(hour).padStart(2, '0')}:00`;
+    const duration = Math.max(1, timeToMinutes(tache.heureFin) - timeToMinutes(tache.heureDebut));
+    const newEndMinutes = timeToMinutes(newHeureDebut) + duration;
+
+    if (newEndMinutes > 23 * 60 + 59) {
+      toast({ title: 'Erreur', description: 'Ce déplacement dépasse la fin de journée autorisée.', variant: 'destructive' });
+      return;
     }
+
+    const personName = (tache.travailleurNom || '').trim().toLowerCase();
+
+    // Check conflicts for this person's taches (excluding the dragged one)
+    const personTaches = dayTaches.filter(t => {
+      if (t.id === tacheId) return false;
+      return (t.travailleurNom || '').trim().toLowerCase() === personName;
+    });
+
+    const newStart = timeToMinutes(newHeureDebut);
+    const newEnd = newStart + duration;
+
+    // Check tache conflicts for this person
+    const tacheConflict = personTaches.find(t => {
+      const s = timeToMinutes(t.heureDebut);
+      const e = timeToMinutes(t.heureFin);
+      return newStart <= e && newEnd >= s;
+    });
+
+    if (tacheConflict) {
+      toast({
+        title: '⚠️ Créneau occupé',
+        description: `${tache.travailleurNom || 'Cette personne'} a déjà une tâche "${tacheConflict.description}" (${tacheConflict.heureDebut} - ${tacheConflict.heureFin})`,
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    // For main user, also check RDV conflicts
+    if (isMainUser(tache.travailleurNom || '')) {
+      try {
+        const rdvs = await rdvApiService.getAll();
+        const rdvConflict = rdvs.find(r => {
+          if (r.date !== selectedDay) return false;
+          if (r.statut === 'annule' || r.statut === 'termine') return false;
+          const s = timeToMinutes(r.heureDebut);
+          const e = timeToMinutes(r.heureFin);
+          return newStart <= e && newEnd >= s;
+        });
+
+        if (rdvConflict) {
+          toast({
+            title: '⚠️ RDV en conflit',
+            description: `Un rendez-vous "${rdvConflict.titre}" occupe ce créneau (${rdvConflict.heureDebut} - ${rdvConflict.heureFin})`,
+            variant: 'destructive'
+          });
+          return;
+        }
+      } catch {
+        // If RDV check fails, let the backend validate
+      }
+    }
+
+    onMoveTache(tacheId, newHeureDebut);
   };
 
   return (
@@ -192,7 +270,6 @@ const TacheDayModal: React.FC<TacheDayModalProps> = ({
                         </div>
                       </div>
                       <div className="flex items-center gap-1 shrink-0">
-                        {/* Validate button - always visible */}
                         {!tache.completed && (
                           <button
                             onClick={(e) => { e.stopPropagation(); onValidateTache(tache); }}
@@ -205,7 +282,6 @@ const TacheDayModal: React.FC<TacheDayModalProps> = ({
                             <Check className="h-3.5 w-3.5 text-emerald-400" />
                           </button>
                         )}
-                        {/* Edit/Delete - on hover for non-pertinent */}
                         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                           {tache.importance === 'pertinent' ? (
                             <AlertTriangle className="h-3.5 w-3.5 text-red-400" />
