@@ -159,6 +159,18 @@ const DashboardPage = () => {
     return () => clearInterval(interval);
   }, []);
 
+  // Adjust main content margin for fixed sidebar on desktop
+  React.useEffect(() => {
+    const mainContent = document.getElementById('main-content');
+    if (!isMobile && mainContent) {
+      const sidebarWidth = sidebarCollapsed ? 80 : 288;
+      mainContent.style.marginLeft = `${sidebarWidth}px`;
+      return () => {
+        mainContent.style.marginLeft = '0';
+      };
+    }
+  }, [isMobile, sidebarCollapsed]);
+
   const activeItem = SIDEBAR_ITEMS.find(i => i.id === activeSection)!;
 
   const handleSectionChange = (id: string) => {
@@ -292,7 +304,7 @@ const DashboardPage = () => {
               initial={{ x: -20, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               className={cn(
-                'sticky top-16 h-[calc(100vh-4rem)] flex-shrink-0 transition-all duration-500 z-30',
+                'fixed top-16 left-0 h-[calc(100vh-4rem)] flex-shrink-0 transition-all duration-500 z-30',
                 sidebarCollapsed ? 'w-20' : 'w-72'
               )}
             >

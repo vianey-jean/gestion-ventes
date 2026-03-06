@@ -5,9 +5,32 @@ import { useAuth } from '@/contexts/AuthContext';
 
 const Footer: React.FC = () => {
   const { user } = useAuth();
+  const [sidebarWidth, setSidebarWidth] = React.useState(0);
+
+  React.useEffect(() => {
+    const updateSidebarWidth = () => {
+      const mainContent = document.getElementById('main-content');
+      if (mainContent) {
+        const marginLeft = window.getComputedStyle(mainContent).marginLeft;
+        setSidebarWidth(parseInt(marginLeft) || 0);
+      }
+    };
+    
+    updateSidebarWidth();
+    const resizeObserver = new ResizeObserver(updateSidebarWidth);
+    const mainContent = document.getElementById('main-content');
+    if (mainContent) {
+      resizeObserver.observe(mainContent);
+    }
+    
+    return () => resizeObserver.disconnect();
+  }, []);
 
   return (
-    <footer className="relative bg-gradient-to-br from-[#030014] via-[#0a0020] to-[#0e0030] text-white mt-auto overflow-hidden">
+    <footer 
+      className="relative bg-gradient-to-br from-[#030014] via-[#0a0020] to-[#0e0030] text-white mt-auto overflow-hidden transition-all duration-500"
+      style={{ marginLeft: `${sidebarWidth}px` }}
+    >
       {/* Mirror top reflection */}
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" />
       <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-white/[0.03] to-transparent pointer-events-none" />
