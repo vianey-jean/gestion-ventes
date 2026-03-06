@@ -11,6 +11,7 @@ export interface Tache {
   travailleurNom: string;
   completed?: boolean;
   parentId?: string;
+  commandeId?: string;
   createdAt?: string;
 }
 

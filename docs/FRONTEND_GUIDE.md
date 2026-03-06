@@ -21,6 +21,18 @@ src/components/
 ├── forms/                  # Composants de formulaires
 │   ├── AddSaleForm.tsx
 │   └── ProductForm.tsx
+├── tache/                  # Composants gestion des tâches
+│   ├── TacheView.tsx           # Orchestrateur principal
+│   ├── TacheHero.tsx           # En-tête avec compteurs cliquables
+│   ├── TacheCalendar.tsx       # Calendrier mensuel avec drag & drop
+│   ├── TacheDayModal.tsx       # Vue détaillée du jour (timeline)
+│   ├── TacheFormModal.tsx      # Formulaire création/modification
+│   ├── TacheWeekModal.tsx      # Vue hebdomadaire
+│   ├── TacheValidationModal.tsx # Validation terminée/reporter
+│   ├── TacheConfirmDialog.tsx  # Confirmations suppression/déplacement
+│   └── TacheNotificationBar.tsx # Notifications tâches expirées
+├── commandes/              # Composants commandes/réservations
+│   └── TacheConflictModal.tsx  # Conflit horaire lors création RDV→tâche
 └── layout/                 # Composants de mise en page
     ├── Header.tsx
     └── Sidebar.tsx

@@ -89,7 +89,33 @@ Application web de gestion commerciale complète permettant de gérer les ventes
 - Suivi des avances et restes
 - Impact sur les remboursements
 
-### 3.11 Dashboard
+### 3.11 Gestion des Tâches
+- Calendrier mensuel interactif avec drag & drop
+- Création, modification, suppression de tâches (optionnel/pertinent)
+- **Importance** : tâches "pertinentes" (non supprimables, non déplaçables, seule description modifiable) et "optionnelles" (modifiables, supprimables, déplaçables)
+- **Validation anticipée** : lorsqu'une tâche est terminée en avance, l'heure de fin réelle est capturée automatiquement (heure de validation)
+- **Vérification croisée des créneaux** : lors de la création/modification/report, les horaires sont vérifiés dans `tache.json` ET `rdv.json` pour éviter les doubles réservations
+- **Créneaux par personne** : chaque travailleur a ses propres créneaux ; l'administrateur voit aussi les conflits RDV
+- **Indicateurs visuels** : icônes 📋 (tâches) et 📅 (RDV) pour identifier la source d'occupation
+- **Compteurs cliquables** : "Total tâches" et "Aujourd'hui" ouvrent une modale avec liste des tâches, clic pour naviguer au jour
+- **Notifications** : badge rouge dans la navbar sur "Pointage" pour les tâches non terminées (aujourd'hui + futures)
+- **Countdown en temps réel** : affichage du temps restant pour chaque tâche en cours
+- **Intégration Commandes** : lors de la création d'un RDV depuis une réservation, une tâche correspondante est automatiquement créée. Si conflit d'horaire, une modale propose de déplacer la tâche existante
+- **Composants** :
+  - `TacheView` : composant principal orchestrant toute la logique
+  - `TacheHero` : en-tête avec compteurs et boutons d'action
+  - `TacheCalendar` : calendrier mensuel avec indicateurs de tâches
+  - `TacheDayModal` : vue détaillée d'un jour (timeline horaire, drag & drop)
+  - `TacheFormModal` : formulaire de création/modification avec créneaux libres
+  - `TacheWeekModal` : vue hebdomadaire
+  - `TacheValidationModal` : validation de fin de tâche (terminée ou reporter)
+  - `TacheConfirmDialog` : confirmations de suppression/déplacement
+  - `TacheNotificationBar` : barre de notifications pour tâches expirées
+  - `TacheConflictModal` : gestion des conflits horaires lors de création RDV→tâche
+- **Base de données** : `server/db/tache.json`
+- **API** : `/api/taches` (GET, POST, PUT, DELETE) avec validation des créneaux côté serveur
+
+### 3.12 Dashboard
 - Stats cliquables avec modals de détails
 - Navigation vers /produits depuis les stats stock
 - Temps réel via SSE

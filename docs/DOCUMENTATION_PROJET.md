@@ -31,6 +31,7 @@ Application web complète de gestion commerciale permettant de gérer:
 - **Clients** - Base de données clients avec informations de contact
 - **Commandes et réservations** - Gestion des commandes avec synchronisation RDV
 - **Rendez-vous** - Planification et notifications automatiques
+- **Tâches** - Calendrier de tâches avec validation anticipée, créneaux croisés (tâches+RDV), notifications et intégration commandes
 - **Prêts familles/produits** - Suivi des prêts et remboursements
 - **Dépenses** - Gestion des dépenses mensuelles
 - **Analyses et tendances** - Tableaux de bord et rapports

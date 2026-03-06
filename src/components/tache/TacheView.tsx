@@ -202,7 +202,23 @@ const TacheView: React.FC = () => {
 
   const handleConfirmValidation = async (tache: Tache) => {
     try {
-      await tacheApi.update(tache.id, { completed: true });
+      // Capture current time as heureFin if completing before scheduled end
+      const now = new Date();
+      const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+      const todayStr = now.toISOString().split('T')[0];
+      
+      const updateData: Partial<Tache> = { completed: true };
+      
+      // Only update heureFin if the task is for today and current time is before scheduled end
+      if (tache.date === todayStr) {
+        const currentMinutes = now.getHours() * 60 + now.getMinutes();
+        const scheduledEndMinutes = timeToMinutes(tache.heureFin);
+        if (currentMinutes < scheduledEndMinutes) {
+          updateData.heureFin = currentTime;
+        }
+      }
+      
+      await tacheApi.update(tache.id, updateData);
       toast({ title: '✅ Tâche validée comme terminée' });
       setShowValidationModal(false);
       setValidationTache(null);

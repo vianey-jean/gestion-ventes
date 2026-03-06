@@ -27,6 +27,7 @@ import {
   RdvCreationModal,
   RdvConfirmationModal
 } from '@/components/commandes';
+import TacheConflictModal from '@/components/commandes/TacheConflictModal';
 
 const CommandesPage: React.FC = () => {
   const logic = useCommandesLogic();
@@ -166,6 +167,15 @@ const CommandesPage: React.FC = () => {
           produits: logic.pendingReservationForRdv.produits
         } : null}
         isLoading={logic.isRdvLoading}
+      />
+
+      {/* Modale conflit tâche */}
+      <TacheConflictModal
+        isOpen={logic.showTacheConflictModal}
+        onClose={logic.handleSkipTacheConflict}
+        conflictingTache={logic.conflictingTache}
+        onReschedule={logic.handleRescheduleTacheAndCreate}
+        onSkip={logic.handleSkipTacheConflict}
       />
     </Layout>
   );
