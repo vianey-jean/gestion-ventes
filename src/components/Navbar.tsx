@@ -19,8 +19,6 @@
  
 import {
   LayoutDashboard,
-  Users,
-  CalendarDays,
   MessageSquare,
   LogIn,
   LogOut,
@@ -28,46 +26,19 @@ import {
   Sun,
   Menu,
   X,
-  Package,
   ChevronDown,
-  TrendingUp,
   Sparkles,
   Crown,
   Diamond,
   Gem,
-  Star,
-  Clock,
-  ListTodo,
 } from 'lucide-react';
  import { cn } from '@/lib/utils';
- import tacheApi from '@/services/api/tacheApi';
  
  const Navbar: React.FC = () => {
    const { isAuthenticated, user, logout } = useAuth();
    const { theme, toggleTheme } = useTheme();
    const { unreadCount } = useMessages();
    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-   const [tacheNotifCount, setTacheNotifCount] = useState(0);
-
-   // Fetch unfinished tasks count (today + future)
-   useEffect(() => {
-     if (!isAuthenticated) return;
-     
-     const fetchTacheCount = async () => {
-       try {
-         const res = await tacheApi.getAll();
-         const todayStr = new Date().toISOString().split('T')[0];
-         const count = res.data.filter(t => !t.completed && t.date >= todayStr).length;
-         setTacheNotifCount(count);
-       } catch {
-         // silent
-       }
-     };
-
-     fetchTacheCount();
-     const interval = setInterval(fetchTacheCount, 30000);
-     return () => clearInterval(interval);
-   }, [isAuthenticated]);
  
    return (
      <header className="sticky top-0 z-50 backdrop-blur-2xl bg-gradient-to-r from-white/90 via-slate-50/90 to-violet-50/90 dark:from-[#030014]/95 dark:via-[#0a0020]/95 dark:to-[#0e0030]/95 border-b border-violet-200/20 dark:border-violet-800/20 shadow-2xl shadow-violet-500/5">
@@ -120,32 +91,25 @@ import {
                    </motion.div>
                  </Link>
 
-                 <Link to="/commandes">
+                 <Link to="/messages">
                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                     <Button variant="ghost" className="relative rounded-2xl hover:bg-gradient-to-r hover:from-emerald-500/10 hover:to-teal-500/10 transition-all duration-300 group overflow-hidden px-4 py-2 mirror-shine">
-                       <div className="flex items-center justify-center w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 mr-2 shadow-lg shadow-emerald-500/30">
-                         <Package className="h-4 w-4 text-white" />
+                     <Button variant="ghost" className="relative rounded-2xl hover:bg-gradient-to-r hover:from-blue-500/10 hover:to-cyan-500/10 transition-all duration-300 group overflow-hidden px-4 py-2 mirror-shine">
+                       <div className="flex items-center justify-center w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 mr-2 shadow-lg shadow-blue-500/30">
+                         <MessageSquare className="h-4 w-4 text-white" />
                        </div>
-                       <span className="font-bold relative z-10">Commandes</span>
+                       <span className="font-bold relative z-10">Messages</span>
+                       {unreadCount > 0 && (
+                         <Badge className="ml-2 bg-red-500 text-white border-0 shadow-lg shadow-red-500/40 animate-pulse">
+                           {unreadCount}
+                         </Badge>
+                       )}
                      </Button>
                    </motion.div>
-                  </Link>
+                 </Link>
 
+                 <RdvNotifications />
                </>
              )}
-
-             <Link to="/rdv">
-               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                 <Button variant="ghost" className="relative rounded-2xl hover:bg-gradient-to-r hover:from-orange-500/10 hover:to-amber-500/10 transition-all duration-300 group overflow-hidden px-4 py-2 mirror-shine">
-                   <div className="flex items-center justify-center w-8 h-8 rounded-xl bg-gradient-to-br from-orange-500 to-amber-500 mr-2 shadow-lg shadow-orange-500/30">
-                     <CalendarDays className="h-4 w-4 text-white" />
-                   </div>
-                   <span className="font-bold relative z-10">Rendez-vous</span>
-                 </Button>
-               </motion.div>
-             </Link>
-
-              {isAuthenticated && <RdvNotifications />}
 
              {/* Theme */}
              <motion.div whileHover={{ scale: 1.1, rotate: 15 }} whileTap={{ scale: 0.9 }}>
@@ -175,14 +139,13 @@ import {
                          <Crown className="h-4 w-4 text-white" />
                        </div>
                        <span className="font-bold bg-gradient-to-r from-violet-600 to-fuchsia-600 bg-clip-text text-transparent relative z-10">{user?.firstName}</span>
-                       <ChevronDown className="ml-2 h-4 w-4 text-violet-500" />
+                       {/*<ChevronDown className="ml-2 h-4 w-4 text-violet-500" />*/}
                        <Sparkles className="ml-1 h-3 w-3 text-amber-500 animate-pulse" />
                      </Button>
                    </motion.div>
                  </DropdownMenuTrigger>
 
-                 <DropdownMenuContent align="end" className="w-64 rounded-2xl border border-violet-200/30 dark:border-violet-800/30 bg-white/95 dark:bg-[#0a0020]/95 backdrop-blur-2xl shadow-2xl shadow-violet-500/10 p-2">
-                   {/* Premium Header in Dropdown */}
+                 {/* <DropdownMenuContent align="end" className="w-56 rounded-2xl border border-violet-200/30 dark:border-violet-800/30 bg-white/95 dark:bg-[#0a0020]/95 backdrop-blur-2xl shadow-2xl shadow-violet-500/10 p-2">
                    <div className="px-3 py-3 mb-2 rounded-xl bg-gradient-to-r from-violet-500/10 via-purple-500/10 to-fuchsia-500/10 border border-violet-200/20 dark:border-violet-800/20">
                      <div className="flex items-center gap-2">
                        <Diamond className="h-4 w-4 text-violet-500" />
@@ -190,6 +153,15 @@ import {
                        <Gem className="h-3 w-3 text-fuchsia-500 animate-pulse" />
                      </div>
                    </div>
+
+                  <DropdownMenuItem asChild className="rounded-xl hover:bg-gradient-to-r hover:from-violet-500/10 hover:to-purple-500/10 focus:bg-violet-500/10 cursor-pointer transition-all duration-300 py-3">
+                     <Link to="/dashboard" className="flex items-center w-full py-2">
+                       <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-500 mr-3 shadow-lg shadow-violet-500/30">
+                         <LayoutDashboard className="h-5 w-5 text-white" />
+                       </div>
+                       <span className="font-bold">Dashboard</span>
+                     </Link>
+                   </DropdownMenuItem>
 
                    <DropdownMenuItem asChild className="rounded-xl hover:bg-gradient-to-r hover:from-blue-500/10 hover:to-cyan-500/10 focus:bg-blue-500/10 cursor-pointer transition-all duration-300 py-3">
                      <Link to="/messages" className="flex items-center w-full py-2">
@@ -205,49 +177,7 @@ import {
                      </Link>
                    </DropdownMenuItem>
 
-                   <DropdownMenuItem asChild className="rounded-xl hover:bg-gradient-to-r hover:from-emerald-500/10 hover:to-teal-500/10 focus:bg-emerald-500/10 cursor-pointer transition-all duration-300 py-3">
-                     <Link to="/tendances" className="flex items-center w-full py-2">
-                       <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 mr-3 shadow-lg shadow-emerald-500/30">
-                         <TrendingUp className="h-5 w-5 text-white" />
-                       </div>
-                       <span className="font-bold">Tendances</span>
-                       <Star className="ml-auto h-4 w-4 text-amber-500" />
-                     </Link>
-                   </DropdownMenuItem>
-
-                    <DropdownMenuItem asChild className="rounded-xl hover:bg-gradient-to-r hover:from-violet-500/10 hover:to-purple-500/10 focus:bg-violet-500/10 cursor-pointer transition-all duration-300 py-3">
-                      <Link to="/clients" className="flex items-center w-full py-2">
-                        <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-500 mr-3 shadow-lg shadow-violet-500/30">
-                          <Users className="h-5 w-5 text-white" />
-                        </div>
-                        <span className="font-bold">Clients</span>
-                      </Link>
-                    </DropdownMenuItem>
-
-                    <DropdownMenuItem asChild className="rounded-xl hover:bg-gradient-to-r hover:from-pink-500/10 hover:to-rose-500/10 focus:bg-pink-500/10 cursor-pointer transition-all duration-300 py-3">
-                      <Link to="/produits" className="flex items-center w-full py-2">
-                        <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-pink-500 to-rose-500 mr-3 shadow-lg shadow-pink-500/30">
-                          <Package className="h-5 w-5 text-white" />
-                        </div>
-                        <span className="font-bold">Produits</span>
-                      </Link>
-                     </DropdownMenuItem>
-
-                    <DropdownMenuItem asChild className="rounded-xl hover:bg-gradient-to-r hover:from-cyan-500/10 hover:to-blue-500/10 focus:bg-cyan-500/10 cursor-pointer transition-all duration-300 py-3">
-                      <Link to="/pointage" className="flex items-center w-full py-2 relative">
-                        <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-500 mr-3 shadow-lg shadow-cyan-500/30">
-                          <Clock className="h-5 w-5 text-white" />
-                        </div>
-                        <span className="font-bold">Pointage</span>
-                        {tacheNotifCount > 0 && (
-                          <Badge className="ml-auto bg-red-500 text-white border-0 shadow-lg shadow-red-500/40 animate-pulse">
-                            {tacheNotifCount}
-                          </Badge>
-                        )}
-                      </Link>
-                    </DropdownMenuItem>
-
-                 </DropdownMenuContent>
+                 </DropdownMenuContent>*/}
               </DropdownMenu>
              ) : (
                <Link to="/login">
@@ -316,76 +246,6 @@ import {
           </Button>
         </Link>
 
-        {/* COMMANDES */}
-        <Link to="/commandes" onClick={() => setIsMobileMenuOpen(false)}>
-          <Button
-            variant="outline"
-            className="w-full py-4 sm:py-6 flex items-center justify-start gap-2 sm:gap-3 rounded-2xl border border-emerald-300/30 dark:border-emerald-700/30 shadow-lg shadow-emerald-500/10 bg-gradient-to-r from-white/90 to-emerald-50/80 dark:from-[#0a0020]/80 dark:to-emerald-950/60 hover:scale-105 transition-all duration-300 mirror-shine"
-          >
-            <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 shadow-lg shadow-emerald-500/30">
-              <Package className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
-            </div>
-            <span className="font-bold text-sm sm:text-base text-emerald-700 dark:text-emerald-300 relative z-10">Commandes</span>
-          </Button>
-        </Link>
-
-        {/* CLIENTS */}
-        <Link to="/clients" onClick={() => setIsMobileMenuOpen(false)}>
-          <Button
-            variant="outline"
-            className="w-full py-4 sm:py-6 flex items-center justify-start gap-2 sm:gap-3 rounded-2xl border border-violet-300/30 dark:border-violet-700/30 shadow-lg shadow-violet-500/10 bg-gradient-to-r from-white/90 to-violet-50/80 dark:from-[#0a0020]/80 dark:to-violet-950/60 hover:scale-105 transition-all duration-300 mirror-shine"
-          >
-            <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-500 shadow-lg shadow-violet-500/30">
-              <Users className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
-            </div>
-            <span className="font-bold text-sm sm:text-base text-violet-700 dark:text-violet-300 relative z-10">Clients</span>
-          </Button>
-        </Link>
-
-        {/* PRODUITS */}
-        <Link to="/produits" onClick={() => setIsMobileMenuOpen(false)}>
-          <Button
-            variant="outline"
-            className="w-full py-4 sm:py-6 flex items-center justify-start gap-2 sm:gap-3 rounded-2xl border border-pink-300/30 dark:border-pink-700/30 shadow-lg shadow-pink-500/10 bg-gradient-to-r from-white/90 to-pink-50/80 dark:from-[#0a0020]/80 dark:to-pink-950/60 hover:scale-105 transition-all duration-300 mirror-shine"
-          >
-            <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-pink-500 to-rose-500 shadow-lg shadow-pink-500/30">
-              <Package className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
-            </div>
-            <span className="font-bold text-sm sm:text-base text-pink-700 dark:text-pink-300 relative z-10">Produits</span>
-          </Button>
-        </Link>
-
-        {/* POINTAGE */}
-        <Link to="/pointage" onClick={() => setIsMobileMenuOpen(false)}>
-          <Button
-            variant="outline"
-            className="w-full py-4 sm:py-6 flex items-center justify-start gap-2 sm:gap-3 rounded-2xl border border-cyan-300/30 dark:border-cyan-700/30 shadow-lg shadow-cyan-500/10 bg-gradient-to-r from-white/90 to-cyan-50/80 dark:from-[#0a0020]/80 dark:to-cyan-950/60 hover:scale-105 transition-all duration-300 mirror-shine relative"
-          >
-            <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-500 shadow-lg shadow-cyan-500/30">
-              <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
-            </div>
-            <span className="font-bold text-sm sm:text-base text-cyan-700 dark:text-cyan-300 relative z-10">Pointage</span>
-            {tacheNotifCount > 0 && (
-              <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[20px] h-5 px-1 rounded-full bg-red-500 text-white text-xs font-bold shadow-lg shadow-red-500/40 animate-pulse border-2 border-white dark:border-[#030014]">
-                {tacheNotifCount}
-              </span>
-            )}
-          </Button>
-        </Link>
-
-        {/* RENDEZ-VOUS */}
-        <Link to="/rdv" onClick={() => setIsMobileMenuOpen(false)}>
-          <Button
-            variant="outline"
-            className="w-full py-4 sm:py-6 flex items-center justify-start gap-2 sm:gap-3 rounded-2xl border border-orange-300/30 dark:border-orange-700/30 shadow-lg shadow-orange-500/10 bg-gradient-to-r from-white/90 to-orange-50/80 dark:from-[#0a0020]/80 dark:to-orange-950/60 hover:scale-105 transition-all duration-300 mirror-shine"
-          >
-            <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-orange-500 to-amber-500 shadow-lg shadow-orange-500/30">
-              <CalendarDays className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
-            </div>
-            <span className="font-bold text-sm sm:text-base text-orange-700 dark:text-orange-300 relative z-10">Rendez-vous</span>
-          </Button>
-        </Link>
-
         {/* MESSAGES */}
         <Link to="/messages" onClick={() => setIsMobileMenuOpen(false)}>
           <Button
@@ -403,19 +263,6 @@ import {
                 </Badge>
               )}
             </div>
-          </Button>
-        </Link>
-
-        {/* TENDANCES */}
-        <Link to="/tendances" onClick={() => setIsMobileMenuOpen(false)}>
-          <Button
-            variant="outline"
-            className="w-full py-4 sm:py-6 flex items-center justify-start gap-2 sm:gap-3 rounded-2xl border border-emerald-300/30 dark:border-emerald-700/30 shadow-lg shadow-emerald-500/10 bg-gradient-to-r from-white/90 to-emerald-50/80 dark:from-[#0a0020]/80 dark:to-emerald-950/60 hover:scale-105 transition-all duration-300 mirror-shine"
-          >
-            <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 shadow-lg shadow-emerald-500/30">
-              <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
-            </div>
-            <span className="font-bold text-sm sm:text-base text-emerald-700 dark:text-emerald-300 relative z-10">Tendances</span>
           </Button>
         </Link>
 

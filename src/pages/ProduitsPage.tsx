@@ -35,7 +35,7 @@ const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://server-gestion-ve
 
 type FilterType = 'tous' | 'perruque' | 'tissage' | 'extension' | 'autres';
 
-const ProduitsPage: React.FC = () => {
+const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => {
   const { products, fetchProducts } = useApp();
   const { toast } = useToast();
 
@@ -260,8 +260,8 @@ const ProduitsPage: React.FC = () => {
     { key: 'autres', label: 'Autres', icon: <Filter className="h-3.5 w-3.5" /> },
   ];
 
-  return (
-    <Layout>
+  const content = (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-violet-50/30 to-fuchsia-50/20 dark:from-[#030014] dark:via-[#0a0025] dark:to-[#0e0030]">
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-violet-50/30 to-fuchsia-50/20 dark:from-[#030014] dark:via-[#0a0025] dark:to-[#0e0030]">
         {/* Hero */}
         <div className="relative overflow-hidden">
@@ -874,8 +874,11 @@ const ProduitsPage: React.FC = () => {
         isOpen={isEditProductOpen}
         onClose={() => setIsEditProductOpen(false)}
       />
-    </Layout>
+    </div>
   );
+
+  if (embedded) return content;
+  return <Layout>{content}</Layout>;
 };
 
 export default ProduitsPage;

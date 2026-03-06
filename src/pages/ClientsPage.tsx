@@ -48,7 +48,7 @@ interface Client {
 // Composant Principal
 // ============================================================================
 
-const ClientsPage: React.FC = () => {
+const ClientsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => {
   const { isAuthenticated } = useAuth();
   const { clients, isLoading, refetch } = useClientSync();
   const { toast } = useToast();
@@ -174,6 +174,7 @@ const ClientsPage: React.FC = () => {
   // Loading
   // =========================================================================
   if (isLoading) {
+    if (embedded) return <PremiumLoading text="Bienvenue sur Listes des Clients" size="xl" overlay={false} variant="default" />;
     return (
       <Layout>
         <PremiumLoading text="Bienvenue sur Listes des Clients" size="xl" overlay={true} variant="default" />
@@ -184,10 +185,11 @@ const ClientsPage: React.FC = () => {
   // =========================================================================
   // Rendu
   // =========================================================================
-  return (
+  const mainContent = (
+    <>
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-purple-50/30 to-indigo-50/50 dark:from-[#030014] dark:via-[#0a0020]/80 dark:to-[#0e0030]">
-      <Navbar />
-      <ScrollToTop />
+      {!embedded && <Navbar />}
+      {!embedded && <ScrollToTop />}
 
       {/* Section héroïque décomposée */}
       <ClientHero clientCount={clients.length} onAddClient={handleAddClient} />
@@ -317,7 +319,7 @@ const ClientsPage: React.FC = () => {
         )}
       </div>
 
-      <Footer />
+      {!embedded && <Footer />}
       
       {/* Dialog principal ajout/modification */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
@@ -401,7 +403,11 @@ const ClientsPage: React.FC = () => {
         </DialogContent>
       </Dialog>
     </div>
+    </>
   );
+
+  if (embedded) return mainContent;
+  return mainContent;
 };
 
 export default ClientsPage;

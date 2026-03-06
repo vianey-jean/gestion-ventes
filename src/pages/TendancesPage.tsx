@@ -35,7 +35,7 @@ import TendancesRecommendationsTab from '@/pages/tendances/TendancesRecommendati
 import TendancesStockTab from '@/pages/tendances/TendancesStockTab';
 import TendancesClientsTab from '@/pages/tendances/TendancesClientsTab';
 
-const TendancesPage = () => {
+const TendancesPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => {
   const { allSales, products, loading } = useApp();
   const [activeTab, setActiveTab] = useState('overview');
   const isMobile = useIsMobile();
@@ -61,6 +61,7 @@ const TendancesPage = () => {
   };
 
   if (loading) {
+    if (embedded) return <PremiumLoading text="Chargement des Tendances" size="lg" overlay={false} variant="tendances" />;
     return (
       <Layout requireAuth>
         <PremiumLoading text="Chargement des Tendances" size="lg" overlay={true} variant="tendances" />
@@ -68,10 +69,10 @@ const TendancesPage = () => {
     );
   }
 
-  return (
-    <Layout requireAuth>
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-emerald-50/20 to-purple-50/30 dark:from-[#030014] dark:via-[#0a0020]/80 dark:to-[#0e0030]">
-        <div className="container mx-auto px-4 py-8">
+  const content = (
+    <>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-emerald-50/20 to-purple-50/30 dark:from-[#030014] dark:via-[#0a0020]/80 dark:to-[#0e0030]">
+      <div className="container mx-auto px-4 py-8">
           {/* Hero */}
           <TendancesHero />
 
@@ -115,16 +116,19 @@ const TendancesPage = () => {
               <TendancesStockTab stockAnalysis={stockAnalysis} dailySalesAnalysis={dailySalesAnalysis} salesData={salesData} />
             </TabsContent>
           </Tabs>
-        </div>
       </div>
+    </div>
 
-      {/* Stats Modals */}
-      <VentesTotalesModal isOpen={activeModal === 'ventes'} onClose={() => setActiveModal(null)} revenue={salesData.totals.revenue} sales={salesData.totals.sales} salesByProduct={salesByProduct} />
-      <BeneficesModal isOpen={activeModal === 'benefices'} onClose={() => setActiveModal(null)} profit={salesData.totals.profit} margin={salesData.totals.revenue > 0 ? (salesData.totals.profit / salesData.totals.revenue) * 100 : 0} salesByProduct={salesByProduct} />
-      <ProduitsVendusModal isOpen={activeModal === 'produits'} onClose={() => setActiveModal(null)} quantity={salesData.totals.quantity} uniqueProducts={salesByProduct.length} salesByProduct={salesByProduct} />
-      <MeilleurRoiModal isOpen={activeModal === 'roi'} onClose={() => setActiveModal(null)} buyingRecommendations={buyingRecommendations} />
-    </Layout>
+    {/* Stats Modals */}
+    <VentesTotalesModal isOpen={activeModal === 'ventes'} onClose={() => setActiveModal(null)} revenue={salesData.totals.revenue} sales={salesData.totals.sales} salesByProduct={salesByProduct} />
+    <BeneficesModal isOpen={activeModal === 'benefices'} onClose={() => setActiveModal(null)} profit={salesData.totals.profit} margin={salesData.totals.revenue > 0 ? (salesData.totals.profit / salesData.totals.revenue) * 100 : 0} salesByProduct={salesByProduct} />
+    <ProduitsVendusModal isOpen={activeModal === 'produits'} onClose={() => setActiveModal(null)} quantity={salesData.totals.quantity} uniqueProducts={salesByProduct.length} salesByProduct={salesByProduct} />
+    <MeilleurRoiModal isOpen={activeModal === 'roi'} onClose={() => setActiveModal(null)} buyingRecommendations={buyingRecommendations} />
+    </>
   );
+
+  if (embedded) return content;
+  return <Layout requireAuth>{content}</Layout>;
 };
 
 export default TendancesPage;

@@ -23,7 +23,7 @@ import TacheView from '@/components/tache/TacheView';
 const premiumBtnClass = "group relative overflow-hidden rounded-xl sm:rounded-2xl backdrop-blur-xl border transition-all duration-300 hover:scale-105 px-4 py-2 sm:px-5 sm:py-3 text-xs sm:text-sm font-semibold";
 const mirrorShine = "absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500";
 
-const PointagePage: React.FC = () => {
+const PointagePage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<'pointage' | 'tache'>('pointage');
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -196,9 +196,8 @@ const PointagePage: React.FC = () => {
     }
   };
 
-  return (
-    <Layout>
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20 dark:from-[#030014] dark:via-[#0a0025] dark:to-[#0e0035]">
+  const content = (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20 dark:from-[#030014] dark:via-[#0a0025] dark:to-[#0e0035]">
         <PointageTabNav activeTab={activeTab} onTabChange={setActiveTab} />
 
         {activeTab === 'pointage' ? (
@@ -283,8 +282,10 @@ const PointagePage: React.FC = () => {
           <TacheView />
         )}
       </div>
-    </Layout>
   );
+
+  if (embedded) return content;
+  return <Layout>{content}</Layout>;
 };
 
 export default PointagePage;
