@@ -19,13 +19,13 @@ import ParPersonneModal from '@/components/pointage/modals/ParPersonneModal';
 import YearlyTotalModal from '@/components/pointage/modals/YearlyTotalModal';
 import PointageConfirmDialogs from '@/components/pointage/modals/PointageConfirmDialogs';
 import TacheView from '@/components/tache/TacheView';
-
+import NotesKanbanView from '@/components/notes/NotesKanbanView';
 const premiumBtnClass = "group relative overflow-hidden rounded-xl sm:rounded-2xl backdrop-blur-xl border transition-all duration-300 hover:scale-105 px-4 py-2 sm:px-5 sm:py-3 text-xs sm:text-sm font-semibold";
 const mirrorShine = "absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500";
 
 const PointagePage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => {
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState<'pointage' | 'tache'>('pointage');
+  const [activeTab, setActiveTab] = useState<'pointage' | 'tache' | 'notes'>('pointage');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [entreprises, setEntreprises] = useState<Entreprise[]>([]);
   const [pointages, setPointages] = useState<PointageEntry[]>([]);
@@ -278,8 +278,10 @@ const PointagePage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
               premiumBtnClass={premiumBtnClass} mirrorShine={mirrorShine}
             />
           </>
-        ) : (
+        ) : activeTab === 'tache' ? (
           <TacheView />
+        ) : (
+          <NotesKanbanView />
         )}
       </div>
   );

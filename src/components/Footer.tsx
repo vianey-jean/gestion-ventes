@@ -77,9 +77,9 @@ Optimisez votre activité grâce à une technologie performante, élégante et p
               {[
                 { label: 'Accueil', to: '/' },
                 { label: 'À propos', to: '/about' },
-                { label: 'Contact', to: '/contact' },
-                { label: 'Rendez-Vous', to: '/rdv' },
-                { label: 'Commandes', to: '/commandes' },
+                 { label: 'Contact', to: '/contact' },
+                // { label: 'Rendez-Vous', to: '/rdv' },
+                // { label: 'Commandes', to: '/commandes' },
               ].map((item, i) => (
                 <li key={i}>
                   <Link
