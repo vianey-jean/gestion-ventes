@@ -139,13 +139,13 @@ import {
                          <Crown className="h-4 w-4 text-white" />
                        </div>
                        <span className="font-bold bg-gradient-to-r from-violet-600 to-fuchsia-600 bg-clip-text text-transparent relative z-10">{user?.firstName}</span>
-                       <ChevronDown className="ml-2 h-4 w-4 text-violet-500" />
+                       {/*<ChevronDown className="ml-2 h-4 w-4 text-violet-500" />*/}
                        <Sparkles className="ml-1 h-3 w-3 text-amber-500 animate-pulse" />
                      </Button>
                    </motion.div>
                  </DropdownMenuTrigger>
 
-                 <DropdownMenuContent align="end" className="w-56 rounded-2xl border border-violet-200/30 dark:border-violet-800/30 bg-white/95 dark:bg-[#0a0020]/95 backdrop-blur-2xl shadow-2xl shadow-violet-500/10 p-2">
+                 {/* <DropdownMenuContent align="end" className="w-56 rounded-2xl border border-violet-200/30 dark:border-violet-800/30 bg-white/95 dark:bg-[#0a0020]/95 backdrop-blur-2xl shadow-2xl shadow-violet-500/10 p-2">
                    <div className="px-3 py-3 mb-2 rounded-xl bg-gradient-to-r from-violet-500/10 via-purple-500/10 to-fuchsia-500/10 border border-violet-200/20 dark:border-violet-800/20">
                      <div className="flex items-center gap-2">
                        <Diamond className="h-4 w-4 text-violet-500" />
@@ -154,7 +154,7 @@ import {
                      </div>
                    </div>
 
-                   <DropdownMenuItem asChild className="rounded-xl hover:bg-gradient-to-r hover:from-violet-500/10 hover:to-purple-500/10 focus:bg-violet-500/10 cursor-pointer transition-all duration-300 py-3">
+                  <DropdownMenuItem asChild className="rounded-xl hover:bg-gradient-to-r hover:from-violet-500/10 hover:to-purple-500/10 focus:bg-violet-500/10 cursor-pointer transition-all duration-300 py-3">
                      <Link to="/dashboard" className="flex items-center w-full py-2">
                        <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-500 mr-3 shadow-lg shadow-violet-500/30">
                          <LayoutDashboard className="h-5 w-5 text-white" />
@@ -177,7 +177,7 @@ import {
                      </Link>
                    </DropdownMenuItem>
 
-                 </DropdownMenuContent>
+                 </DropdownMenuContent>*/}
               </DropdownMenu>
              ) : (
                <Link to="/login">
