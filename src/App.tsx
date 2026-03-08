@@ -32,7 +32,7 @@ const LoginPage = lazy(() => import('@/pages/LoginPage'));
 const RegisterPage = lazy(() => import('@/pages/RegisterPage'));
 const ResetPasswordPage = lazy(() => import('@/pages/ResetPasswordPage'));
 const DashboardPage = lazy(() => import('@/pages/DashboardPage'));
-const TendancesPage = lazy(() => import('@/pages/TendancesPage'));
+// TendancesPage removed - content moved to Comptabilité & Finances in Dashboard
 const ClientsPage = lazy(() => import('@/pages/ClientsPage'));
 const MessagesPage = lazy(() => import('@/pages/MessagesPage'));
 const CommandesPage = lazy(() => import('@/pages/CommandesPage'));
@@ -78,14 +78,7 @@ function App() {
                         </ProtectedRoute>
                       }
                     />
-                    <Route
-                      path="/tendances"
-                      element={
-                        <ProtectedRoute>
-                          <TendancesPage />
-                        </ProtectedRoute>
-                      }
-                    />
+                    {/* Route Tendances supprimée - contenu dans Dashboard > Comptabilité & Finances */}
                     <Route
                       path="/clients"
                       element={

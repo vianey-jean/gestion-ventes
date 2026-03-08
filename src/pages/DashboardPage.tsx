@@ -40,7 +40,7 @@ import tacheApi from '@/services/api/tacheApi';
 const VentesContent = lazy(() => import('@/pages/VentesEmbedded'));
 const CommandesPage = lazy(() => import('@/pages/CommandesPage'));
 const RdvPage = lazy(() => import('@/pages/RdvPage'));
-const TendancesPage = lazy(() => import('@/pages/TendancesPage'));
+const ComptabiliteFinancesContent = lazy(() => import('@/components/dashboard/AdvancedDashboard'));
 const ClientsPage = lazy(() => import('@/pages/ClientsPage'));
 const ProduitsPage = lazy(() => import('@/pages/ProduitsPage'));
 const PointagePage = lazy(() => import('@/pages/PointagePage'));
@@ -93,9 +93,9 @@ const SIDEBAR_ITEMS: SidebarItem[] = [
     activeText: 'text-orange-600 dark:text-orange-400',
   },
   {
-    id: 'tendances',
-    label: 'Tendances',
-    shortLabel: 'Tendances',
+    id: 'comptabilite',
+    label: 'Comptabilité & Finances',
+    shortLabel: 'Compta',
     icon: TrendingUp,
     gradient: 'from-cyan-500 to-blue-600',
     iconBg: 'bg-gradient-to-br from-cyan-500 to-blue-600',
@@ -188,8 +188,8 @@ const DashboardPage = () => {
         return <Suspense fallback={fallback}><CommandesPage embedded /></Suspense>;
       case 'rdv':
         return <Suspense fallback={fallback}><RdvPage embedded /></Suspense>;
-      case 'tendances':
-        return <Suspense fallback={fallback}><TendancesPage embedded /></Suspense>;
+      case 'comptabilite':
+        return <Suspense fallback={fallback}><ComptabiliteFinancesContent /></Suspense>;
       case 'clients':
         return <Suspense fallback={fallback}><ClientsPage embedded /></Suspense>;
       case 'produits':

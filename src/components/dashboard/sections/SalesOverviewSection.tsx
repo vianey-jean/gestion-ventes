@@ -190,7 +190,7 @@ const SalesOverviewSection: React.FC<SalesOverviewSectionProps> = ({
   return (
     <section aria-labelledby="sales-overview-title" className="space-y-6">
       {/* Header Premium */}
-      <motion.div
+      {/* <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
@@ -219,7 +219,7 @@ const SalesOverviewSection: React.FC<SalesOverviewSectionProps> = ({
             Premium Dashboard
           </span>
         </div>
-      </motion.div>
+      </motion.div> */}
 
       {/* Stats Cards Grid Responsive - CLIQUABLES */}
       <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 md:gap-6">
