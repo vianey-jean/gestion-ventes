@@ -5,9 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
-import { Note, NoteColumn } from '@/services/api/noteApi';
+import noteApi, { Note, NoteColumn, getDrawingUrl } from '@/services/api/noteApi';
 import { NOTE_COLORS, applySmartPunctuation } from './constants';
 import DrawingCanvas from './DrawingCanvas';
+import { useToast } from '@/hooks/use-toast';
 
 interface NoteFormModalProps {
   open: boolean;
@@ -18,12 +19,14 @@ interface NoteFormModalProps {
 }
 
 const NoteFormModal: React.FC<NoteFormModalProps> = ({ open, onOpenChange, note, columns, onSave }) => {
+  const { toast } = useToast();
   const [form, setForm] = useState<Partial<Note>>({
     title: '', content: '', columnId: columns[0]?.id || '', color: '#ffffff',
     bold: false, boldLines: [], underlineLines: [], drawing: null, voiceText: ''
   });
   const [showDrawing, setShowDrawing] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
+  const [uploadingDrawing, setUploadingDrawing] = useState(false);
   const recognitionRef = useRef<any>(null);
 
   useEffect(() => {
@@ -89,6 +92,26 @@ const NoteFormModal: React.FC<NoteFormModalProps> = ({ open, onOpenChange, note,
       return { ...prev, underlineLines: lines.includes(lineIndex) ? lines.filter(l => l !== lineIndex) : [...lines, lineIndex] };
     });
   };
+
+  const handleSaveDrawing = async (dataUrl: string) => {
+    setUploadingDrawing(true);
+    try {
+      // Upload to server as JPEG file
+      const res = await noteApi.uploadDrawing(dataUrl);
+      const serverUrl = res.data.url; // e.g. /uploads/notes/dessin/dessin_123.jpeg
+      setForm(prev => ({ ...prev, drawing: serverUrl }));
+      setShowDrawing(false);
+      toast({ title: '✅ Dessin enregistré' });
+    } catch (err) {
+      console.error('Error uploading drawing:', err);
+      toast({ title: 'Erreur', description: "Impossible d'enregistrer le dessin", variant: 'destructive' });
+    } finally {
+      setUploadingDrawing(false);
+    }
+  };
+
+  // Resolve drawing URL for display
+  const drawingDisplayUrl = getDrawingUrl(form.drawing);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -222,14 +245,17 @@ const NoteFormModal: React.FC<NoteFormModalProps> = ({ open, onOpenChange, note,
           {/* Drawing */}
           {showDrawing && (
             <DrawingCanvas
-              initialData={form.drawing}
-              onSave={(dataUrl) => { setForm({ ...form, drawing: dataUrl }); setShowDrawing(false); }}
+              initialData={drawingDisplayUrl}
+              onSave={handleSaveDrawing}
               onClose={() => setShowDrawing(false)}
             />
           )}
-          {form.drawing && !showDrawing && (
+          {uploadingDrawing && (
+            <div className="text-center py-3 text-sm text-cyan-600 animate-pulse font-semibold">⏳ Enregistrement du dessin...</div>
+          )}
+          {form.drawing && !showDrawing && !uploadingDrawing && (
             <div className="rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-700 shadow-sm">
-              <img src={form.drawing} alt="Dessin" className="w-full h-32 object-contain bg-white" />
+              <img src={drawingDisplayUrl || ''} alt="Dessin" className="w-full h-32 object-contain bg-white" />
               <button onClick={() => setForm({ ...form, drawing: null })} className="w-full py-2 text-xs text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 font-medium transition-colors">
                 Supprimer le dessin
               </button>
@@ -252,6 +278,7 @@ const NoteFormModal: React.FC<NoteFormModalProps> = ({ open, onOpenChange, note,
             <Button onClick={() => onOpenChange(false)} variant="outline" className="flex-1 rounded-xl">Annuler</Button>
             <Button
               onClick={() => onSave(form)}
+              disabled={uploadingDrawing}
               className="flex-1 bg-gradient-to-r from-cyan-500 to-blue-600 text-white hover:from-cyan-600 hover:to-blue-700 rounded-xl shadow-lg"
             >
               <Check className="h-4 w-4 mr-1" /> {note?.id ? 'Modifier' : 'Créer'}

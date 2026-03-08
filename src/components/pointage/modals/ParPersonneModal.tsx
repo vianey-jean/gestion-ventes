@@ -4,10 +4,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { BarChart3, Building2, Search, User, X } from 'lucide-react';
+import { BarChart3, Building2, Search, User, X, Banknote } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { PointageEntry } from '@/services/api/pointageApi';
 import pointageApi from '@/services/api/pointageApi';
+import avanceApi, { Avance } from '@/services/api/avanceApi';
 import { Travailleur } from '@/services/api/travailleurApi';
 import { useToast } from '@/hooks/use-toast';
 
@@ -32,6 +33,7 @@ const ParPersonneModal: React.FC<ParPersonneModalProps> = ({
   const [ppTravailleurNom, setPpTravailleurNom] = useState('');
   const [ppShowDropdown, setPpShowDropdown] = useState(false);
   const [ppResults, setPpResults] = useState<PointageEntry[]>([]);
+  const [ppAvances, setPpAvances] = useState<Avance[]>([]);
   const [ppLoading, setPpLoading] = useState(false);
   const [ppSearched, setPpSearched] = useState(false);
   const ppDropdownRef = useRef<HTMLDivElement>(null);
@@ -42,6 +44,7 @@ const ParPersonneModal: React.FC<ParPersonneModalProps> = ({
       setPpTravailleurId('');
       setPpTravailleurNom('');
       setPpResults([]);
+      setPpAvances([]);
       setPpSearched(false);
     }
   }, [open]);
@@ -68,9 +71,13 @@ const ParPersonneModal: React.FC<ParPersonneModalProps> = ({
     }
     setPpLoading(true);
     try {
-      const res = await pointageApi.getByMonth(ppYear, ppMonth);
-      const filtered = res.data.filter((p: any) => p.travailleurId === ppTravailleurId);
+      const [ptRes, avRes] = await Promise.all([
+        pointageApi.getByMonth(ppYear, ppMonth),
+        avanceApi.getByTravailleur(ppTravailleurId, ppMonth, ppYear)
+      ]);
+      const filtered = ptRes.data.filter((p: any) => p.travailleurId === ppTravailleurId);
       setPpResults(filtered);
+      setPpAvances(avRes.data);
       setPpSearched(true);
     } catch (err) {
       toast({ title: 'Erreur', variant: 'destructive' });
@@ -87,6 +94,8 @@ const ParPersonneModal: React.FC<ParPersonneModalProps> = ({
   }, {} as Record<string, PointageEntry[]>);
 
   const ppGlobalTotal = ppResults.reduce((s, p) => s + p.montantTotal, 0);
+  const ppTotalAvances = ppAvances.reduce((s, a) => s + a.montant, 0);
+  const ppResteDisponible = Math.max(0, ppGlobalTotal - ppTotalAvances);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -190,6 +199,9 @@ const ParPersonneModal: React.FC<ParPersonneModalProps> = ({
                     const totalHeures = pts.reduce((s, p) => s + (p.heures || 0), 0);
                     const totalJours = pts.filter(p => p.typePaiement === 'journalier').length;
                     const totalEntreprise = pts.reduce((s, p) => s + p.montantTotal, 0);
+                    const entAvances = ppAvances.filter(a => a.entrepriseNom === entName);
+                    const entAvTotal = entAvances.reduce((s, a) => s + a.montant, 0);
+                    const entReste = Math.max(0, totalEntreprise - entAvTotal);
                     return (
                       <div key={entName} className="p-4 rounded-2xl bg-white/10 border border-white/10 backdrop-blur-xl">
                         <div className="flex items-center justify-between mb-3">
@@ -219,13 +231,63 @@ const ParPersonneModal: React.FC<ParPersonneModalProps> = ({
                             </div>
                           ))}
                         </div>
+                        {/* Avances pour cette entreprise */}
+                        {entAvTotal > 0 && (
+                          <div className="mt-3 space-y-1">
+                            <div className="flex items-center gap-1 text-xs text-amber-300 font-bold px-2">
+                              <Banknote className="h-3 w-3" /> Avances reçues
+                            </div>
+                            {entAvances.map(a => (
+                              <div key={a.id} className="flex justify-between text-xs text-white/60 px-2 py-1 rounded bg-amber-500/5">
+                                <span>{new Date(a.date || a.createdAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}</span>
+                                <span className="font-bold text-amber-400">-{a.montant.toFixed(2)}€</span>
+                              </div>
+                            ))}
+                            <div className="flex justify-between items-center px-2 py-1.5 rounded-lg bg-cyan-500/10 border border-cyan-500/20 text-xs mt-1">
+                              <span className="text-cyan-300 font-bold">Reste</span>
+                              <span className="text-cyan-400 font-black">{entReste.toFixed(2)}€</span>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     );
                   })}
 
+                  {/* Total pointage */}
                   <div className="p-4 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 text-center">
-                    <p className="text-xs text-white/60 mb-1">TOTAL GLOBAL</p>
+                    <p className="text-xs text-white/60 mb-1">TOTAL POINTAGE</p>
                     <p className="text-2xl font-black text-emerald-400">{ppGlobalTotal.toFixed(2)}€</p>
+                  </div>
+
+                  {/* Avances section */}
+                  {ppAvances.length > 0 && (
+                    <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Banknote className="h-5 w-5 text-amber-400" />
+                        <span className="text-sm font-black text-amber-300">Avances reçues</span>
+                      </div>
+                      <div className="space-y-1">
+                        {ppAvances.map(a => (
+                          <div key={a.id} className="flex justify-between text-xs text-white/70 px-2 py-1.5 rounded bg-white/5">
+                            <span>{new Date(a.date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}</span>
+                            <span className="text-white/50">{a.entrepriseNom || 'Toutes'}</span>
+                            <span className="font-bold text-amber-400">-{a.montant.toFixed(2)}€</span>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="mt-2 flex justify-between items-center px-2 pt-2 border-t border-white/10">
+                        <span className="text-xs font-bold text-amber-300">Total avances</span>
+                        <span className="text-lg font-black text-amber-400">-{ppTotalAvances.toFixed(2)}€</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Reste disponible */}
+                  <div className="p-4 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-blue-500/20 border border-cyan-500/30 text-center">
+                    <p className="text-xs text-white/60 mb-1">RESTE DISPONIBLE</p>
+                    <p className={cn("text-2xl font-black", ppResteDisponible > 0 ? "text-cyan-400" : "text-red-400")}>
+                      {ppResteDisponible.toFixed(2)}€
+                    </p>
                   </div>
                 </>
               )}

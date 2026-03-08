@@ -8,6 +8,16 @@ import NoteFormModal from './NoteFormModal';
 import ColumnFormModal from './ColumnFormModal';
 import ConfirmModal from './ConfirmModal';
 
+const SEPARATOR_COLORS = [
+  'from-cyan-400 to-blue-500',
+  'from-violet-400 to-purple-500',
+  'from-emerald-400 to-teal-500',
+  'from-amber-400 to-orange-500',
+  'from-rose-400 to-pink-500',
+  'from-indigo-400 to-blue-600',
+  'from-fuchsia-400 to-purple-600',
+];
+
 const NotesKanbanView: React.FC = () => {
   const { toast } = useToast();
   const [notes, setNotes] = useState<Note[]>([]);
@@ -196,25 +206,43 @@ const NotesKanbanView: React.FC = () => {
         </div>
       </div>
 
-      {/* Kanban Board */}
+      {/* Kanban Board with vertical separators */}
       <div className="overflow-x-auto pb-4 -mx-2 sm:-mx-4 px-2 sm:px-4">
-        <div className="flex gap-3 sm:gap-4 min-w-max">
-          {sortedColumns.map(col => (
-            <KanbanColumn
-              key={col.id}
-              column={col}
-              notes={notes.filter(n => n.columnId === col.id)}
-              onAddNote={() => { setEditingNote({ columnId: col.id }); setShowNoteForm(true); }}
-              onEditNote={(note) => { setEditingNote(note); setShowNoteForm(true); }}
-              onDeleteNote={handleDeleteNote}
-              onDragStart={handleDragStart}
-              onDragOver={(e) => handleDragOver(e, col.id)}
-              onDrop={(e) => handleDrop(e, col.id)}
-              onEditColumn={() => { setEditingCol(col); setShowColForm(true); }}
-              onDeleteColumn={() => handleDeleteColumn(col)}
-              isDragOver={dragOverColId === col.id}
-            />
-          ))}
+        <div className="flex min-w-max">
+          {sortedColumns.map((col, colIndex) => {
+            const colNotes = notes.filter(n => n.columnId === col.id);
+            const colorClass = SEPARATOR_COLORS[colIndex % SEPARATOR_COLORS.length];
+            
+            return (
+              <React.Fragment key={col.id}>
+                {/* Left separator for first column, right separator for all */}
+                {colIndex === 0 && (
+                  <div className="flex-shrink-0 w-1.5 mr-3 self-stretch">
+                    <div className={`w-full h-full rounded-full bg-gradient-to-b ${colorClass} opacity-80 shadow-lg`} />
+                  </div>
+                )}
+                
+                <KanbanColumn
+                  column={col}
+                  notes={colNotes}
+                  onAddNote={() => { setEditingNote({ columnId: col.id }); setShowNoteForm(true); }}
+                  onEditNote={(note) => { setEditingNote(note); setShowNoteForm(true); }}
+                  onDeleteNote={handleDeleteNote}
+                  onDragStart={handleDragStart}
+                  onDragOver={(e) => handleDragOver(e, col.id)}
+                  onDrop={(e) => handleDrop(e, col.id)}
+                  onEditColumn={() => { setEditingCol(col); setShowColForm(true); }}
+                  onDeleteColumn={() => handleDeleteColumn(col)}
+                  isDragOver={dragOverColId === col.id}
+                />
+
+                {/* Right separator */}
+                <div className="flex-shrink-0 w-1.5 mx-3 self-stretch">
+                  <div className={`w-full h-full rounded-full bg-gradient-to-b ${SEPARATOR_COLORS[(colIndex + 1) % SEPARATOR_COLORS.length]} opacity-80 shadow-lg`} />
+                </div>
+              </React.Fragment>
+            );
+          })}
         </div>
       </div>
 

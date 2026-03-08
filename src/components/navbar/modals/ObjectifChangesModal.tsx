@@ -30,6 +30,15 @@ const ObjectifChangesModal: React.FC<ObjectifChangesModalProps> = ({
   currentObjectif,
   annee
 }) => {
+  const now = new Date();
+  const currentMonth = now.getMonth() + 1;
+  const currentYear = now.getFullYear();
+
+  // Filter: only show changes from the current month
+  const filteredChanges = objectifChanges.filter(change => {
+    return change.mois === currentMonth && change.annee === currentYear;
+  });
+
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('fr-FR', {
       style: 'currency',
@@ -58,7 +67,7 @@ const ObjectifChangesModal: React.FC<ObjectifChangesModalProps> = ({
               <History className="h-5 w-5 text-white" />
             </div>
             <span className="bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent">
-              Historique Objectifs {annee}
+              Objectifs — {MOIS_NOMS[currentMonth - 1]} {currentYear}
             </span>
             <Sparkles className="h-4 w-4 text-amber-500 animate-pulse" />
           </DialogTitle>
@@ -80,15 +89,19 @@ const ObjectifChangesModal: React.FC<ObjectifChangesModalProps> = ({
             </div>
           </div>
 
+          <div className="text-xs text-muted-foreground text-center px-4 py-2 rounded-xl bg-amber-50 dark:bg-amber-900/10 border border-amber-200/50 dark:border-amber-800/30">
+            🔄 Les objectifs se réinitialisent à 2 000 € au 1er de chaque mois. Seules les modifications du mois en cours sont affichées.
+          </div>
+
           {/* Timeline */}
           <div className="max-h-[300px] overflow-y-auto pr-1">
-            {objectifChanges.length > 0 ? (
+            {filteredChanges.length > 0 ? (
               <div className="relative">
                 {/* Timeline line */}
                 <div className="absolute left-5 top-0 bottom-0 w-0.5 bg-gradient-to-b from-violet-500 to-purple-500 rounded-full" />
                 
                 <div className="space-y-4">
-                  {objectifChanges.map((change, index) => (
+                  {filteredChanges.map((change, index) => (
                     <div
                       key={index}
                       className={cn(
@@ -128,7 +141,8 @@ const ObjectifChangesModal: React.FC<ObjectifChangesModalProps> = ({
             ) : (
               <div className="text-center py-8 text-muted-foreground">
                 <Target className="h-12 w-12 mx-auto mb-2 opacity-30" />
-                <p>Aucun changement d'objectif</p>
+                <p>Aucun changement d'objectif ce mois-ci</p>
+                <p className="text-xs mt-1">Objectif de départ : 2 000 €</p>
               </div>
             )}
           </div>

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
-import { Clock, Building2, Plus, Timer, Sparkles, UserPlus, Users, BarChart3 } from 'lucide-react';
+import { Clock, Building2, Plus, Timer, Sparkles, UserPlus, Users, BarChart3, Banknote } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
@@ -17,13 +17,15 @@ interface PointageHeroProps {
   onNewPointage: () => void;
   onShowParPersonne: () => void;
   onShowYearlyTotal: () => void;
+  onPriseAvance: () => void;
+  onShowMonthDetail: () => void;
   year: number;
 }
 
 const PointageHero: React.FC<PointageHeroProps> = ({
   entreprisesCount, travailleursCount, pointagesCount, monthTotal,
   premiumBtnClass, mirrorShine,
-  onAddEntreprise, onAddTravailleur, onNewPointage, onShowParPersonne, onShowYearlyTotal, year
+  onAddEntreprise, onAddTravailleur, onNewPointage, onShowParPersonne, onShowYearlyTotal, onPriseAvance, onShowMonthDetail, year
 }) => {
   return (
     <div className="relative overflow-hidden py-8 sm:py-12">
@@ -53,9 +55,11 @@ const PointageHero: React.FC<PointageHeroProps> = ({
               <p className="text-xs text-muted-foreground">Pointages ce mois</p>
               <p className="text-xl font-black text-blue-500">{pointagesCount}</p>
             </div>
-            <div className="px-5 py-3 rounded-2xl bg-white/60 dark:bg-white/5 backdrop-blur-xl border border-white/20 shadow-xl">
+            <div className="px-5 py-3 rounded-2xl bg-white/60 dark:bg-white/5 backdrop-blur-xl border border-white/20 shadow-xl cursor-pointer hover:scale-105 transition-transform hover:shadow-2xl hover:border-emerald-500/30"
+              onClick={onShowMonthDetail}>
               <p className="text-xs text-muted-foreground">Total du mois</p>
               <p className="text-xl font-black text-emerald-500">{monthTotal.toFixed(2)}€</p>
+              <p className="text-[10px] text-emerald-500/60 font-semibold">Cliquer pour détails</p>
             </div>
             <div className="px-5 py-3 rounded-2xl bg-white/60 dark:bg-white/5 backdrop-blur-xl border border-white/20 shadow-xl cursor-pointer hover:scale-105 transition-transform hover:shadow-2xl"
               onClick={onShowYearlyTotal}>
@@ -90,6 +94,12 @@ const PointageHero: React.FC<PointageHeroProps> = ({
                 className={cn(premiumBtnClass, "bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-700 border-emerald-300/40 text-white shadow-[0_20px_70px_rgba(16,185,129,0.6)] hover:shadow-[0_35px_100px_rgba(16,185,129,0.75)]")}>
                 <span className={mirrorShine} />
                 <span className="relative flex items-center"><Timer className="h-4 w-4 sm:h-5 sm:w-5 mr-2" /> Nouveau Pointage</span>
+              </Button>
+
+              <Button onClick={onPriseAvance}
+                className={cn(premiumBtnClass, "bg-gradient-to-br from-amber-500 via-orange-500 to-orange-600 border-amber-300/40 text-white shadow-[0_20px_70px_rgba(245,158,11,0.5)] hover:shadow-[0_35px_100px_rgba(245,158,11,0.7)]")}>
+                <span className={mirrorShine} />
+                <span className="relative flex items-center"><Banknote className="h-4 w-4 sm:h-5 sm:w-5 mr-2" /> Prise Avance</span>
               </Button>
 
               <Button onClick={onShowParPersonne}

@@ -81,7 +81,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ initialData, onSave, onCl
         <input type="range" min="1" max="10" value={lineWidth} onChange={e => setLineWidth(Number(e.target.value))} className="w-24 accent-cyan-500" />
         <Button variant="outline" size="sm" onClick={clearCanvas} className="rounded-xl text-xs">Effacer</Button>
         <div className="flex-1" />
-        <Button size="sm" onClick={() => onSave(canvasRef.current!.toDataURL())} className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-xl text-xs">
+        <Button size="sm" onClick={() => onSave(canvasRef.current!.toDataURL('image/jpeg', 0.9))} className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-xl text-xs">
           <Check className="h-3.5 w-3.5 mr-1" /> Sauvegarder
         </Button>
         <Button variant="ghost" size="sm" onClick={onClose} className="rounded-xl"><X className="h-4 w-4" /></Button>

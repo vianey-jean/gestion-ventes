@@ -1,155 +1,225 @@
-# Cahier des Charges - Application de Gestion Commerciale
+# 📋 Cahier des Charges — Application de Gestion Commerciale
 
-## 1. Présentation du Projet
+> **Version** : 5.0.0  
+> **Dernière mise à jour** : Mars 2026  
+> **Client** : Gestion Ventes & Agendas  
+> **Activité** : Vente de perruques, tissages et extensions capillaires
 
-Application web de gestion commerciale complète permettant de gérer les ventes, produits, clients, remboursements, comptabilité, rendez-vous et messages pour une activité de vente de perruques et tissages.
+---
 
-## 2. Objectifs
+## 📌 1. Présentation du Projet
 
+Application web professionnelle de gestion commerciale complète permettant de centraliser toutes les opérations d'une activité commerciale : ventes, stocks, clients, rendez-vous, comptabilité, pointage des travailleurs, tâches et notes.
+
+### Objectifs principaux
 - Centraliser la gestion des ventes (mono et multi-produits)
-- Suivre les stocks en temps réel
-- Gérer les remboursements avec traçabilité
+- Suivre les stocks en temps réel avec alertes
+- Gérer les clients avec historique complet
+- Planifier et suivre les rendez-vous
+- Gérer les commandes et réservations
+- Suivre la comptabilité (achats, dépenses, bénéfices)
+- Gérer le pointage des travailleurs et les avances
+- Planifier et assigner des tâches
+- Prendre des notes avec Kanban et dessins
 - Analyser les tendances et performances
-- Gérer la comptabilité (achats, dépenses, bénéfices)
-- Planifier les rendez-vous clients
-- Fournir un tableau de bord temps réel
 
-## 3. Spécifications Fonctionnelles
+---
 
-### 3.1 Authentification
-- Inscription / Connexion JWT
-- Auto-déconnexion après inactivité
-- Routes protégées
+## 📌 2. Spécifications Fonctionnelles
 
-### 3.2 Gestion des Produits
-- CRUD complet avec photos multiples
-- Code produit auto-généré (P/T/E/X-XX-XXXXXX)
-- Recherche par description et code
-- Gestion du stock (quantité)
-- Slideshow de photos
+### 2.1 Authentification (Module Auth)
+| Fonctionnalité | Description |
+|----------------|-------------|
+| Inscription | Formulaire complet (nom, prénom, email, mot de passe, genre, adresse, téléphone) |
+| Connexion | Email + mot de passe, token JWT 8h |
+| Déconnexion | Suppression du token local |
+| Réinitialisation | Demande par email + nouveau mot de passe |
+| Auto-déconnexion | Après inactivité prolongée |
+| Routes protégées | Redirection automatique vers /login si non authentifié |
 
-### 3.3 Gestion des Ventes
-- Vente mono-produit (AddSaleForm)
-- Vente multi-produits (MultiProductSaleForm)
-- Recherche de produit par description/code
-- Calcul automatique des prix et bénéfices
-- Gestion des avances (produits spéciaux)
-- Export PDF de factures
-- Tableau des ventes temps réel (mois en cours)
+### 2.2 Gestion des Produits
+| Fonctionnalité | Description |
+|----------------|-------------|
+| CRUD complet | Création, lecture, modification, suppression |
+| Photos multiples | Upload de plusieurs photos avec slideshow |
+| Code auto-généré | Format P/T/E/X-XX-XXXXXX |
+| Recherche | Par description et code produit |
+| Stock | Suivi des quantités avec alertes de rupture |
+| Prix d'achat | Pour calcul automatique des bénéfices |
 
-### 3.4 Système de Remboursement
-- **Accès** : Bouton "Remboursement" dans SalesManagementSection + Bouton "Rembourser" sur chaque vente
-- **Recherche** : Par nom de client (min. 3 caractères) dans les ventes positives
-- **Sélection** : Choix de la vente spécifique à rembourser
-- **Modification** : 
-  - Retrait de produits (minimum 1 obligatoire)
-  - Modification de la quantité (max = quantité vendue)
-  - Modification du prix de remboursement unitaire
-- **Stock** :
-  - Si prix remboursé = prix de vente original → confirmation modale "Remettre en stock ?"
-  - Si prix remboursé < prix de vente → pas de remise en stock (remboursement partiel)
-- **Enregistrement** :
-  - Vente négative dans sales.json (isRefund: true, valeurs négatives)
-  - Détails dans remboursement.json
-- **Suppression de remboursement** :
-  - Confirmation de suppression
-  - Si stock avait été restauré → diminution du stock
-  - Suppression de la vente négative et du remboursement
+### 2.3 Gestion des Ventes
+| Fonctionnalité | Description |
+|----------------|-------------|
+| Vente simple | Un seul produit |
+| Vente multiple | Plusieurs produits dans une seule vente |
+| Client associé | Lien automatique avec la base clients |
+| Filtrage | Par mois, par année, par client |
+| Export | Génération de factures PDF |
+| Remboursement | Gestion des retours avec traçabilité |
 
-### 3.5 Gestion des Clients
-- CRUD complet
-- Fiche client détaillée
-- Recherche et filtrage
-- Historique d'achats dans Tendances
+### 2.4 Gestion des Clients
+| Fonctionnalité | Description |
+|----------------|-------------|
+| CRUD complet | Nom, téléphone, adresse |
+| Historique | Toutes les ventes du client |
+| Recherche | Par nom et téléphone |
+| Carte client | Affichage visuel avec détails |
 
-### 3.6 Commandes et Réservations
-- CRUD complet avec statuts
-- Synchronisation avec les RDV
-- Notifications
+### 2.5 Commandes & Réservations
+| Fonctionnalité | Description |
+|----------------|-------------|
+| CRUD complet | Client, produit, prix, avance, date livraison |
+| Statuts | En attente → En cours → Livrée / Annulée |
+| Lien RDV | Création automatique de RDV depuis une commande |
+| Lien tâche | Création de tâche depuis une commande |
+| Reporter | Possibilité de reporter une commande |
 
-### 3.7 Rendez-vous
-- Calendrier interactif
-- Notifications et rappels
-- Liaison avec les commandes
+### 2.6 Rendez-vous
+| Fonctionnalité | Description |
+|----------------|-------------|
+| Calendrier | Vue mensuelle interactive avec marqueurs |
+| CRUD complet | Date, heure, client, description, lieu |
+| Notifications | Alertes de RDV à venir |
+| Statistiques | Nombre de RDV par mois avec détails |
 
-### 3.8 Comptabilité
-- Gestion des achats et dépenses
-- Bilan mensuel automatique
-- Export PDF comptable
-- Graphiques d'évolution
+### 2.7 Prêts Familles
+| Fonctionnalité | Description |
+|----------------|-------------|
+| Suivi des prêts | Montant total, remboursé, restant |
+| Historique | Tous les remboursements |
 
-### 3.9 Tendances et Analytics
-- Graphiques par produit, catégorie, période
-- **Analyse clients** : classement par CA, tri, détails avec historique et remboursements
-- Recommandations d'achat par ROI
-- Alertes stock critique
+### 2.8 Prêts Produits (Crédits clients)
+| Fonctionnalité | Description |
+|----------------|-------------|
+| Vente à crédit | Produit livré, paiement échelonné |
+| Suivi | Avance reçue, reste à payer |
+| Alertes retard | Notification si paiement en retard |
+| Groupé par client | Vue synthétique par client |
 
-### 3.10 Prêts
-- Prêts familles et prêts produits
-- Suivi des avances et restes
-- Impact sur les remboursements
+### 2.9 Dépenses
+| Fonctionnalité | Description |
+|----------------|-------------|
+| Dépenses variables | Saisie quotidienne avec catégorie |
+| Dépenses fixes | Free, Internet, Assurances (montants fixes mensuels) |
+| Catégories | Salaire, courses, restaurant, free, internet, assurance, autre |
+| Solde calculé | Calcul automatique du solde après chaque opération |
 
-### 3.11 Gestion des Tâches
-- Calendrier mensuel interactif avec drag & drop
-- Création, modification, suppression de tâches (optionnel/pertinent)
-- **Importance** : tâches "pertinentes" (non supprimables, non déplaçables, seule description modifiable) et "optionnelles" (modifiables, supprimables, déplaçables)
-- **Validation anticipée** : lorsqu'une tâche est terminée en avance, l'heure de fin réelle est capturée automatiquement (heure de validation)
-- **Vérification croisée des créneaux** : lors de la création/modification/report, les horaires sont vérifiés dans `tache.json` ET `rdv.json` pour éviter les doubles réservations
-- **Créneaux par personne** : chaque travailleur a ses propres créneaux ; l'administrateur voit aussi les conflits RDV
-- **Indicateurs visuels** : icônes 📋 (tâches) et 📅 (RDV) pour identifier la source d'occupation
-- **Compteurs cliquables** : "Total tâches" et "Aujourd'hui" ouvrent une modale avec liste des tâches, clic pour naviguer au jour
-- **Notifications** : badge rouge dans la navbar sur "Pointage" pour les tâches non terminées (aujourd'hui + futures)
-- **Countdown en temps réel** : affichage du temps restant pour chaque tâche en cours
-- **Intégration Commandes** : lors de la création d'un RDV depuis une réservation, une tâche correspondante est automatiquement créée. Si conflit d'horaire, une modale propose de déplacer la tâche existante
-- **Composants** :
-  - `TacheView` : composant principal orchestrant toute la logique
-  - `TacheHero` : en-tête avec compteurs et boutons d'action
-  - `TacheCalendar` : calendrier mensuel avec indicateurs de tâches
-  - `TacheDayModal` : vue détaillée d'un jour (timeline horaire, drag & drop)
-  - `TacheFormModal` : formulaire de création/modification avec créneaux libres
-  - `TacheWeekModal` : vue hebdomadaire
-  - `TacheValidationModal` : validation de fin de tâche (terminée ou reporter)
-  - `TacheConfirmDialog` : confirmations de suppression/déplacement
-  - `TacheNotificationBar` : barre de notifications pour tâches expirées
-  - `TacheConflictModal` : gestion des conflits horaires lors de création RDV→tâche
-- **Base de données** : `server/db/tache.json`
-- **API** : `/api/taches` (GET, POST, PUT, DELETE) avec validation des créneaux côté serveur
+### 2.10 Comptabilité
+| Fonctionnalité | Description |
+|----------------|-------------|
+| Bilan mensuel | Entrées vs sorties |
+| Achats | Suivi des achats fournisseurs |
+| Fournisseurs | Base de données fournisseurs |
+| Bénéfices | Calcul automatique (prix vente - prix achat) |
+| Historique | Graphiques et tableaux mensuels |
 
-### 3.12 Dashboard
-- Stats cliquables avec modals de détails
-- Navigation vers /produits depuis les stats stock
-- Temps réel via SSE
+### 2.11 Messages
+| Fonctionnalité | Description |
+|----------------|-------------|
+| Messagerie interne | Envoi et réception de messages |
+| Marquage lu/non lu | Gestion du statut de lecture |
 
-## 4. Spécifications Techniques
+### 2.12 Objectifs
+| Fonctionnalité | Description |
+|----------------|-------------|
+| Objectif mensuel | Barre de progression dans la navbar |
+| Réinitialisation | Automatique au 1er du mois |
+| Valeur initiale | Commence toujours à 2000€ |
+| Historique | Changements visibles du mois en cours uniquement |
 
-### 4.1 Frontend
-- React 19 + TypeScript + Vite
-- Tailwind CSS + shadcn/ui
+### 2.13 Pointage & Travail ⭐ NOUVEAU
+| Fonctionnalité | Description |
+|----------------|-------------|
+| Pointage journalier | Enregistrement des heures travaillées |
+| Type de paiement | Journalier (forfait/jour) ou horaire (prix/heure) |
+| Entreprises | Gestion des entreprises employeuses |
+| Travailleurs | Base de données des travailleurs |
+| **Avances sur salaire** | Prise d'avance avec contrôle du plafond |
+| Total du mois | Vue cliquable avec détails et avances |
+| Total de l'année | Récapitulatif annuel par entreprise avec avances |
+| Par personne | Détail par travailleur avec avances et reste |
+| Calendrier | Vue mensuelle avec pointages coloriés |
+
+### 2.14 Tâches ⭐ NOUVEAU
+| Fonctionnalité | Description |
+|----------------|-------------|
+| Planification | Date, heure début/fin, description |
+| Importance | Pertinent ou optionnel |
+| Assignation | Lien avec un travailleur |
+| Vue semaine | Planning hebdomadaire |
+| Vue jour | Timeline détaillée |
+| Complétion | Marquage comme terminée |
+| Lien commande | Tâche liée à une commande |
+
+### 2.15 Notes Kanban ⭐ NOUVEAU
+| Fonctionnalité | Description |
+|----------------|-------------|
+| Tableau Kanban | Colonnes personnalisables avec drag & drop |
+| Notes riches | Titre, contenu, couleur, priorité |
+| Dessins | Canvas de dessin intégré, sauvegardé en JPEG |
+| Vue détail | Clic sur note pour voir les détails |
+| Séparateurs | Lignes verticales colorées entre les colonnes |
+| Confirmation | Dialogue de confirmation pour toute action |
+
+### 2.16 Tendances & Analyses
+| Fonctionnalité | Description |
+|----------------|-------------|
+| Graphiques | Ventes par mois, par produit, par client |
+| Comparaison | Mois en cours vs mois précédent |
+| Top produits | Classement des meilleures ventes |
+| Top clients | Clients les plus actifs |
+
+---
+
+## 📌 3. Spécifications Techniques
+
+### Frontend
+- React 19 + TypeScript (strict mode)
+- Vite (build tool)
+- Tailwind CSS 4 (design system)
+- shadcn/ui (composants)
 - Framer Motion (animations)
 - Recharts (graphiques)
 - Axios (HTTP)
-- jsPDF (export PDF)
+- React Router 7 (navigation)
 
-### 4.2 Backend
-- Node.js + Express.js
-- JWT (authentification)
-- Multer (upload fichiers)
-- SSE (temps réel)
+### Backend
+- Node.js 18+ avec Express.js
+- JWT pour l'authentification (8h expiration)
+- bcryptjs pour le hash des mots de passe
+- Fichiers JSON comme base de données
+- SSE pour la synchronisation temps réel
+- Multer pour l'upload de fichiers
+- Rate limiting et sanitization intégrés
 
-### 4.3 Base de données
-- Fichiers JSON exclusivement
-- Aucune base de données externe
+### Déploiement
+- Frontend : Lovable / Vercel
+- Backend : Render (avec persistent disk)
+- HTTPS obligatoire en production
 
-### 4.4 Sécurité
-- JWT tokens
-- Rate limiting
-- CORS configuré
-- Validation des entrées
-- Headers de sécurité
+---
 
-## 5. Contraintes
+## 📌 4. Contraintes et exigences
 
-- Stockage exclusif en fichiers JSON
-- Application web responsive (mobile + desktop)
-- Mode sombre/clair
-- Accessibilité WCAG
+### Performance
+- Temps de chargement initial < 3 secondes
+- Synchronisation temps réel < 100ms
+- Compression gzip activée
+
+### Sécurité
+- Mots de passe hashés (bcrypt, 10 rounds)
+- Token JWT signé avec secret
+- Rate limiting anti-DDoS
+- Sanitization des inputs
+- Headers de sécurité HTTP
+- CORS restrictif
+
+### Compatibilité
+- Navigateurs modernes (Chrome, Firefox, Safari, Edge)
+- Responsive design (mobile, tablette, desktop)
+- Mode sombre / clair
+
+### Fiabilité
+- Gestion gracieuse des erreurs réseau
+- Retry automatique (2 tentatives) avec backoff exponentiel
+- Sauvegarde automatique des données
