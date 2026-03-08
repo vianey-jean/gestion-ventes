@@ -25,6 +25,8 @@ import { useApp } from '@/contexts/AppContext';
 import { cn } from '@/lib/utils';
 import { productService } from '@/service/api';
 import PhotoUploadSection from './PhotoUploadSection';
+import FournisseurAutocomplete from './FournisseurAutocomplete';
+import { fournisseurApiService } from '@/services/api/fournisseurApi';
 
 interface AddProductFormProps {
   isOpen: boolean;
@@ -38,6 +40,7 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ isOpen, onClose }) => {
     description: '',
     purchasePrice: '',
     quantity: '',
+    fournisseur: '',
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -98,10 +101,16 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ isOpen, onClose }) => {
     setIsSubmitting(true);
 
     try {
+      // Auto-create fournisseur if new
+      if (formData.fournisseur.trim()) {
+        try { await fournisseurApiService.create(formData.fournisseur.trim()); } catch (e) { console.error('Fournisseur create error:', e); }
+      }
+
       const newProduct = await addProduct({
         description: formData.description,
         purchasePrice: Number(formData.purchasePrice),
         quantity: Number(formData.quantity),
+        fournisseur: formData.fournisseur.trim() || undefined,
       });
 
       // Upload photos if any were selected
@@ -125,6 +134,7 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ isOpen, onClose }) => {
         description: '',
         purchasePrice: '',
         quantity: '',
+        fournisseur: '',
       });
       setAddPhotos({ files: [], existingUrls: [], mainIndex: 0 });
 
@@ -268,6 +278,13 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ isOpen, onClose }) => {
               </div>
             </div>
 
+            {/* Fournisseur Autocomplete */}
+            <FournisseurAutocomplete
+              value={formData.fournisseur}
+              onChange={(val) => setFormData({ ...formData, fournisseur: val })}
+              variant="light"
+            />
+
             {/* Photo Upload Section */}
             <div className="p-4 bg-gradient-to-r from-emerald-50/50 to-green-50/50 border-2 border-emerald-100 rounded-2xl">
               <PhotoUploadSection
@@ -353,6 +370,12 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ isOpen, onClose }) => {
                   <span className="text-gray-500 text-sm">Quantité:</span>
                   <span className="font-bold text-blue-600">{formData.quantity}</span>
                 </div>
+                {formData.fournisseur && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-500 text-sm">Fournisseur:</span>
+                    <span className="font-bold text-orange-600">{formData.fournisseur}</span>
+                  </div>
+                )}
                 {addPhotos.files.length > 0 && (
                   <div className="flex justify-between">
                     <span className="text-gray-500 text-sm">Photos:</span>

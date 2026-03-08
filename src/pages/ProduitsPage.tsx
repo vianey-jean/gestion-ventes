@@ -6,6 +6,8 @@ import Layout from '@/components/Layout';
 import { useApp } from '@/contexts/AppContext';
 import { productService } from '@/service/api';
 import { Product } from '@/types';
+import { fournisseurApiService } from '@/services/api/fournisseurApi';
+import FournisseurAutocomplete from '@/components/dashboard/FournisseurAutocomplete';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import {
@@ -57,12 +59,12 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   // Add form
-  const [addForm, setAddForm] = useState({ description: '', purchasePrice: '', quantity: '' });
+  const [addForm, setAddForm] = useState({ description: '', purchasePrice: '', quantity: '', fournisseur: '' });
   const [addPhotos, setAddPhotos] = useState<{ files: File[]; existingUrls: string[]; mainIndex: number }>({ files: [], existingUrls: [], mainIndex: 0 });
   const [addErrors, setAddErrors] = useState<Record<string, string>>({});
 
   // Edit form
-  const [editForm, setEditForm] = useState({ description: '', purchasePrice: 0, quantity: 0, additionalQuantity: 0 });
+  const [editForm, setEditForm] = useState({ description: '', purchasePrice: 0, quantity: 0, additionalQuantity: 0, fournisseur: '' });
   const [editPhotos, setEditPhotos] = useState<{ files: File[]; existingUrls: string[]; mainIndex: number }>({ files: [], existingUrls: [], mainIndex: 0 });
 
   // Loading
@@ -154,10 +156,16 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
   const confirmAdd = async () => {
     setIsSubmitting(true);
     try {
+      // Auto-create fournisseur if new
+      if (addForm.fournisseur.trim()) {
+        try { await fournisseurApiService.create(addForm.fournisseur.trim()); } catch (e) { console.error('Fournisseur create error:', e); }
+      }
+
       const newProduct = await productService.addProduct({
         description: addForm.description,
         purchasePrice: Number(addForm.purchasePrice),
         quantity: Number(addForm.quantity),
+        fournisseur: addForm.fournisseur.trim() || undefined,
       });
 
       if (newProduct && addPhotos.files.length > 0) {
@@ -167,7 +175,7 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
       toast({ title: 'Succès', description: 'Produit ajouté avec succès', className: 'notification-success' });
       setIsAddConfirmOpen(false);
       setIsAddOpen(false);
-      setAddForm({ description: '', purchasePrice: '', quantity: '' });
+      setAddForm({ description: '', purchasePrice: '', quantity: '', fournisseur: '' });
       setAddPhotos({ files: [], existingUrls: [], mainIndex: 0 });
       if (fetchProducts) await fetchProducts();
     } catch {
@@ -185,6 +193,7 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
       purchasePrice: product.purchasePrice,
       quantity: product.quantity,
       additionalQuantity: 0,
+      fournisseur: product.fournisseur || '',
     });
     setEditPhotos({ files: [], existingUrls: product.photos || [], mainIndex: 0 });
     setIsEditOpen(true);
@@ -199,11 +208,17 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
     if (!selectedProduct) return;
     setIsSubmitting(true);
     try {
+      // Auto-create fournisseur if new
+      if (editForm.fournisseur.trim()) {
+        try { await fournisseurApiService.create(editForm.fournisseur.trim()); } catch (e) { console.error('Fournisseur create error:', e); }
+      }
+
       await productService.updateProduct({
         ...selectedProduct,
         description: editForm.description,
         purchasePrice: editForm.purchasePrice,
         quantity: editForm.quantity + editForm.additionalQuantity,
+        fournisseur: editForm.fournisseur.trim() || undefined,
       });
 
       const hasNewPhotos = editPhotos.files.length > 0;
@@ -579,6 +594,11 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
                 />
                 {addErrors.quantity && <p className="text-sm text-red-400">{addErrors.quantity}</p>}
               </div>
+              <FournisseurAutocomplete
+                value={addForm.fournisseur}
+                onChange={(val) => setAddForm({ ...addForm, fournisseur: val })}
+                variant="dark"
+              />
               <div className="p-4 bg-white/5 border border-white/10 rounded-2xl">
                 <PhotoUploadSection
                   onPhotosChange={(files, existingUrls, mainIndex) => setAddPhotos({ files, existingUrls, mainIndex })}
@@ -619,6 +639,7 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
                 <div className="flex justify-between"><span className="text-muted-foreground text-sm">Produit:</span><span className="font-bold">{addForm.description}</span></div>
                 <div className="flex justify-between"><span className="text-muted-foreground text-sm">Prix:</span><span className="font-bold text-amber-600">{addForm.purchasePrice}€</span></div>
                 <div className="flex justify-between"><span className="text-muted-foreground text-sm">Quantité:</span><span className="font-bold text-blue-600">{addForm.quantity}</span></div>
+                {addForm.fournisseur && <div className="flex justify-between"><span className="text-muted-foreground text-sm">Fournisseur:</span><span className="font-bold text-orange-600">{addForm.fournisseur}</span></div>}
                 {addPhotos.files.length > 0 && <div className="flex justify-between"><span className="text-muted-foreground text-sm">Photos:</span><span className="font-bold text-purple-600">{addPhotos.files.length}</span></div>}
               </div>
             </AlertDialogHeader>
@@ -677,6 +698,11 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
                     <Sparkles className="h-3 w-3 text-blue-400" /> Quantité finale: <b className="text-white/80">{editForm.quantity + editForm.additionalQuantity}</b>
                   </p>
                 </div>
+                <FournisseurAutocomplete
+                  value={editForm.fournisseur}
+                  onChange={(val) => setEditForm({ ...editForm, fournisseur: val })}
+                  variant="dark"
+                />
                 <div className="p-4 bg-white/5 border border-white/10 rounded-2xl">
                   <PhotoUploadSection
                     existingPhotos={selectedProduct.photos || []}
@@ -848,6 +874,12 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
                     <p className="text-white/50 text-xs font-medium">Photos</p>
                     <p className="text-purple-400 font-bold text-lg">{selectedProduct.photos?.length || 0}</p>
                   </div>
+                </div>
+
+                {/* Fournisseur */}
+                <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
+                  <p className="text-white/50 text-xs font-medium">Fournisseur</p>
+                  <p className="text-cyan-400 font-bold text-lg">{selectedProduct.fournisseur || '—'}</p>
                 </div>
 
                 {/* Action buttons */}
