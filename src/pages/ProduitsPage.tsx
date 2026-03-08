@@ -1,4 +1,4 @@
-{/** Ajouter les pagionation de la page*/}
+{/** Ajouter les pagionation de la page*/ }
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -788,8 +788,9 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
           <Dialog open={isViewOpen} onOpenChange={setIsViewOpen}>
             <DialogContent className="sm:max-w-2xl bg-gradient-to-br from-slate-900 via-violet-900/30 to-purple-900/20 backdrop-blur-2xl border border-white/10 shadow-2xl rounded-3xl max-h-[90vh] overflow-y-auto">
               <DialogHeader className="text-center space-y-4 pb-2">
-                <div className="mx-auto w-16 h-16 bg-gradient-to-br from-violet-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-xl shadow-violet-500/30">
+                <div className="mx-auto flex items-center gap-3 px-4 py-3 bg-gradient-to-br from-violet-500 to-purple-600 rounded-2xl shadow-xl shadow-violet-500/30">
                   <Eye className="h-8 w-8 text-white" />
+                  <span className="text-white font-bold text-lg">Voir Produit</span>
                 </div>
                 <DialogTitle className="text-2xl font-black bg-gradient-to-r from-violet-400 to-purple-400 bg-clip-text text-transparent">
                   {selectedProduct.description}
