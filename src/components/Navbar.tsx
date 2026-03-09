@@ -193,6 +193,35 @@ import {
            {/* ================= MOBILE HEADER ================= */}
            <div className="lg:hidden flex items-center gap-2">
              {isAuthenticated && <RdvNotifications />}
+             
+             {/* Profile button - tablette: photo + nom, mobile: photo seulement */}
+             {isAuthenticated && (
+               <Link to="/profile">
+                 <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                   <Button 
+                     variant="outline" 
+                     className="relative rounded-2xl border border-violet-300/30 dark:border-violet-700/30 hover:bg-gradient-to-r hover:from-violet-500/10 hover:to-fuchsia-500/10 transition-all duration-300 shadow-lg shadow-violet-500/5 overflow-hidden group px-2 md:px-4 mirror-shine"
+                   >
+                     {/* Avatar with green pulse rings */}
+                     <div className="relative w-8 h-8">
+                       <div className="absolute inset-0 rounded-full border-2 border-emerald-400" style={{ animation: 'navGreenPulse 1s ease-in-out infinite' }} />
+                       <div className="absolute rounded-full border-2 border-emerald-500" style={{ inset: 2, animation: 'navGreenPulse 1s ease-in-out infinite 0.5s' }} />
+                       <div className="absolute rounded-full overflow-hidden bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center" style={{ inset: 4 }}>
+                         {profilePhoto ? (
+                           <img src={profilePhoto} alt="" className="w-full h-full object-cover" />
+                         ) : (
+                           <Crown className="h-3 w-3 text-white" />
+                         )}
+                       </div>
+                     </div>
+                     {/* Nom visible sur tablette, caché sur mobile */}
+                     <span className="hidden md:inline-block md:ml-2 font-bold bg-gradient-to-r from-violet-600 to-fuchsia-600 bg-clip-text text-transparent relative z-10">{user?.firstName}</span>
+                     <Sparkles className="hidden md:inline-block md:ml-1 h-3 w-3 text-amber-500 animate-pulse" />
+                   </Button>
+                 </motion.div>
+               </Link>
+             )}
+             
              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                <Button
                  variant="ghost"
