@@ -190,9 +190,8 @@ import {
              )}
            </div>
 
-           {/* ================= MOBILE HEADER ================= */}
-           <div className="lg:hidden flex items-center gap-2">
-             {isAuthenticated && <RdvNotifications />}
+            {/* ================= MOBILE HEADER ================= */}
+            <div className="lg:hidden flex items-center gap-2">
              
              {/* Profile button - tablette: photo + nom, mobile: photo seulement */}
              {isAuthenticated && (
@@ -245,18 +244,35 @@ import {
   >
     {isAuthenticated && (
       <>
-        {/* DASHBOARD */}
-        <Link to="/dashboard" onClick={() => setIsMobileMenuOpen(false)}>
-          <Button
-            variant="outline"
-            className="w-full py-4 sm:py-6 flex items-center justify-start gap-2 sm:gap-3 rounded-2xl border border-violet-300/30 dark:border-violet-700/30 shadow-lg shadow-violet-500/10 bg-gradient-to-r from-white/90 to-violet-50/80 dark:from-[#0a0020]/80 dark:to-violet-950/60 hover:scale-105 transition-all duration-300 mirror-shine"
-          >
-            <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-500 shadow-lg shadow-violet-500/30">
-              <LayoutDashboard className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
-            </div>
-            <span className="font-bold text-sm sm:text-base text-violet-700 dark:text-violet-300 relative z-10">Dashboard</span>
-          </Button>
-        </Link>
+         {/* DASHBOARD + THEME + NOTIFICATIONS */}
+         <div className="col-span-2 flex items-center gap-2 sm:gap-3">
+           <Link to="/dashboard" onClick={() => setIsMobileMenuOpen(false)} className="flex-1">
+             <Button
+               variant="outline"
+               className="w-full py-4 sm:py-6 flex items-center justify-start gap-2 sm:gap-3 rounded-2xl border border-violet-300/30 dark:border-violet-700/30 shadow-lg shadow-violet-500/10 bg-gradient-to-r from-white/90 to-violet-50/80 dark:from-[#0a0020]/80 dark:to-violet-950/60 hover:scale-105 transition-all duration-300 mirror-shine"
+             >
+               <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-500 shadow-lg shadow-violet-500/30">
+                 <LayoutDashboard className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
+               </div>
+               <span className="font-bold text-sm sm:text-base text-violet-700 dark:text-violet-300 relative z-10">Dashboard</span>
+             </Button>
+           </Link>
+
+           {/* Theme toggle */}
+           <Button
+             variant="outline"
+             size="icon"
+             onClick={toggleTheme}
+             className="shrink-0 rounded-2xl h-12 w-12 sm:h-14 sm:w-14 border border-amber-300/30 dark:border-amber-700/30 bg-gradient-to-br from-yellow-400 to-amber-500 shadow-lg shadow-amber-500/20 hover:scale-105 transition-all duration-300"
+           >
+             {theme === 'dark' ? <Sun className="h-5 w-5 sm:h-6 sm:w-6 text-indigo-900" /> : <Moon className="h-5 w-5 sm:h-6 sm:w-6 text-indigo-900" />}
+           </Button>
+
+           {/* RDV Notifications */}
+           <div className="shrink-0">
+             <RdvNotifications />
+           </div>
+         </div>
 
         {/* MESSAGES */}
         <Link to="/messages" onClick={() => setIsMobileMenuOpen(false)}>
@@ -278,31 +294,21 @@ import {
           </Button>
         </Link>
 
-        {/* THEME + DECONNEXION */}
-        <div className="col-span-2 grid grid-cols-4 gap-2 sm:gap-3 mt-2">
-          {/* 1/4 THEME */}
-          <Button
-            variant="outline"
-            onClick={toggleTheme}
-            className="col-span-1 rounded-2xl flex items-center justify-center bg-gradient-to-br from-yellow-400 to-amber-500 shadow-lg hover:scale-105 transition-all duration-300"
-          >
-            {theme === 'dark' ? <Sun className="h-5 w-5 sm:h-6 sm:w-6 text-indigo-900" /> : <Moon className="h-5 w-5 sm:h-6 sm:w-6 text-indigo-900" />}
-          </Button>
-
-          {/* 3/4 DECONNEXION */}
-          <button
-            className="col-span-3 btn-mirror mirror-shine rounded-2xl text-white flex items-center justify-center gap-2 font-bold py-4 sm:py-6"
-            onClick={() => {
-              logout();
-              setIsMobileMenuOpen(false);
-            }}
-          >
-            <span className="relative z-10 flex items-center gap-2">
-              <LogOut className="h-5 w-5 sm:h-6 sm:w-6" />
-              Déconnexion
-            </span>
-          </button>
-        </div>
+         {/* DECONNEXION */}
+         <div className="col-span-2 mt-2">
+           <button
+             className="w-full btn-mirror mirror-shine rounded-2xl text-white flex items-center justify-center gap-2 font-bold py-4 sm:py-6"
+             onClick={() => {
+               logout();
+               setIsMobileMenuOpen(false);
+             }}
+           >
+             <span className="relative z-10 flex items-center gap-2">
+               <LogOut className="h-5 w-5 sm:h-6 sm:w-6" />
+               Déconnexion
+             </span>
+           </button>
+         </div>
       </>
     )}
 
