@@ -1,15 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Mail, Phone, MapPin, Send, CheckCircle, Clock, Globe, Shield, Sparkles, Crown } from 'lucide-react';
+import { Mail, Phone, MapPin, Send, CheckCircle, Clock, Globe, Shield, Sparkles, Crown, MessageCircle, Radio } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import Layout from '@/components/Layout';
 import { useMessages } from '@/hooks/use-messages';
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import LiveChatVisitor from '@/components/livechat/LiveChatVisitor';
+
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'https://server-gestion-ventes.onrender.com';
 
 const ContactPage: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -22,6 +25,9 @@ const ContactPage: React.FC = () => {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [adminOnline, setAdminOnline] = useState(false);
+  const [showLiveChat, setShowLiveChat] = useState(false);
+  const [submittedName, setSubmittedName] = useState(localStorage.getItem('livechat_pseudo') || '');
 
   const { toast } = useToast();
   const { sendMessage } = useMessages();
@@ -35,6 +41,22 @@ const ContactPage: React.FC = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  // Check admin online status
+  useEffect(() => {
+    const checkAdmin = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/api/messagerie/admin-status`);
+        if (res.ok) {
+          const data = await res.json();
+          setAdminOnline(data.online);
+        }
+      } catch { setAdminOnline(false); }
+    };
+    checkAdmin();
+    const interval = setInterval(checkAdmin, 10000);
+    return () => clearInterval(interval);
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.expediteurNom || !formData.expediteurEmail || !formData.sujet || !formData.contenu) {
@@ -44,6 +66,8 @@ const ContactPage: React.FC = () => {
     setIsSubmitting(true);
     try {
       await sendMessage(formData);
+      setSubmittedName(formData.expediteurNom);
+      localStorage.setItem('livechat_pseudo', formData.expediteurNom);
       setIsSubmitted(true);
       toast({ title: "Message envoyé", description: "Votre message a été envoyé avec succès." });
       setFormData({ expediteurNom: '', expediteurEmail: '', expediteurTelephone: '', sujet: '', contenu: '', destinataireId: '1' });
@@ -75,16 +99,54 @@ const ContactPage: React.FC = () => {
                 <div className="text-emerald-200/50 mb-8 text-lg leading-relaxed">
                   Merci pour votre message. Notre équipe vous répondra dans les plus brefs délais.
                 </div>
-                <Button
-                  onClick={() => setIsSubmitted(false)}
-                  className="w-full h-14 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white text-lg font-semibold shadow-[0_20px_40px_rgba(16,185,129,0.3)] border border-white/10 rounded-xl transition-all duration-300 hover:scale-[1.02]"
-                >
-                  <Send className="mr-3 h-5 w-5" />
-                  Envoyer un autre message
-                </Button>
+                <div className="space-y-4">
+                  <Button
+                    onClick={() => setIsSubmitted(false)}
+                    className="w-full h-14 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white text-lg font-semibold shadow-[0_20px_40px_rgba(16,185,129,0.3)] border border-white/10 rounded-xl transition-all duration-300 hover:scale-[1.02]"
+                  >
+                    <Send className="mr-3 h-5 w-5" />
+                    Envoyer un autre message
+                  </Button>
+
+                  <Button
+                    onClick={() => setShowLiveChat(true)}
+                    disabled={!adminOnline}
+                    className={`w-full h-14 text-lg font-semibold rounded-xl border border-white/10 transition-all duration-300 hover:scale-[1.02] ${
+                      adminOnline
+                        ? 'bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white shadow-[0_20px_40px_rgba(139,92,246,0.3)]'
+                        : 'bg-white/[0.05] text-white/30 cursor-not-allowed'
+                    }`}
+                  >
+                    <div className="flex items-center justify-center gap-3">
+                      <div className="relative">
+                        <MessageCircle className="h-5 w-5" />
+                        {adminOnline && (
+                          <Radio className="absolute -top-1 -right-1 h-3 w-3 text-emerald-400 animate-pulse" />
+                        )}
+                      </div>
+                      {adminOnline ? 'Chat en direct' : 'Chat hors ligne'}
+                      {adminOnline && (
+                        <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-300 text-xs rounded-full border border-emerald-500/30">
+                          LIVE
+                        </span>
+                      )}
+                    </div>
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </motion.div>
+
+          {/* Live Chat Visitor Widget */}
+          <AnimatePresence>
+            {showLiveChat && adminOnline && (
+              <LiveChatVisitor
+                visitorNom={submittedName || 'Visiteur'}
+                adminId="1"
+                onClose={() => setShowLiveChat(false)}
+              />
+            )}
+          </AnimatePresence>
         </div>
       </Layout>
     );

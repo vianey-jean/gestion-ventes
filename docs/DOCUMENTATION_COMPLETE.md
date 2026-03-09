@@ -307,3 +307,37 @@ bénéfice = (quantité × prix_remboursement_unitaire) - (quantité × prix_ach
 - Module complet achats/dépenses
 - Bilan mensuel automatique
 - Export PDF comptable
+
+---
+
+## 💬 Widget Messagerie Instantanée (Live Chat)
+
+### Composants
+- `LiveChatVisitor.tsx` — Widget public pour les visiteurs
+- `LiveChatAdmin.tsx` — Widget admin avec liste de conversations
+
+### Fonctionnalités
+- Envoi/réception instantanée via SSE + polling fallback 2s
+- **Emoji picker** : 20 emojis intégrés
+- **Like** : Aimer le message de l'autre (❤️ toggle)
+- **Modifier** : Modifier ses propres messages (affiche "modifié")
+- **Supprimer** : Supprimer ses propres messages (affiche "Ce message a été supprimé")
+- Indicateur de frappe en temps réel (points rouges animés)
+
+### API Backend (`server/routes/messagerie.js`)
+- `POST /api/messagerie/send` — Envoyer
+- `PUT /api/messagerie/edit/:id` — Modifier (propre message)
+- `DELETE /api/messagerie/delete/:id` — Supprimer (propre message)
+- `POST /api/messagerie/like/:id` — Like/unlike
+- `GET /api/messagerie/events` — SSE temps réel
+
+### Base de données : `server/db/messagerie.json`
+
+---
+
+## 🏭 Fournisseurs
+
+- Auto-créés lors d'ajout produit ou achat comptabilité
+- Recherche autocomplétion, CRUD complet
+- API : `server/routes/fournisseurs.js`
+- Base : `server/db/fournisseurs.json`

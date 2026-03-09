@@ -878,3 +878,124 @@ await fetch('https://server-gestion-ventes.onrender.com/api/avances', {
   })
 });
 ```
+
+---
+
+## 📡 Messagerie Instantanée (Widget Live Chat)
+
+### Endpoints
+
+#### SSE - Connexion temps réel
+```
+GET /api/messagerie/events?visitorId={id}&adminId={id}
+```
+Retourne un flux SSE avec les événements : `connected`, `new_message`, `typing`, `admin_status`, `message_edited`, `message_deleted`, `message_liked`.
+
+#### Envoyer un message
+```
+POST /api/messagerie/send
+Body: { visitorId, visitorNom, adminId, contenu, from }
+```
+
+#### Modifier un message (propres messages uniquement)
+```
+PUT /api/messagerie/edit/:messageId
+Body: { contenu, from }
+Response: Message mis à jour avec edited: true, editedAt
+```
+
+#### Supprimer un message (propres messages uniquement)
+```
+DELETE /api/messagerie/delete/:messageId
+Body: { from }
+Response: Message avec deleted: true, contenu vidé
+```
+
+#### Aimer/Retirer un like
+```
+POST /api/messagerie/like/:messageId
+Body: { from }  // "visitor" ou "admin"
+Response: Message avec tableau likes[] mis à jour
+```
+
+#### Indicateur de frappe
+```
+POST /api/messagerie/typing
+Body: { visitorId, adminId, from, isTyping }
+```
+
+#### Marquer comme lu
+```
+PUT /api/messagerie/mark-read/:visitorId/:adminId
+Body: { reader }  // "visitor" ou "admin"
+```
+
+#### Conversations admin
+```
+GET /api/messagerie/conversations (Auth requis)
+```
+
+#### Messages d'une conversation
+```
+GET /api/messagerie/messages/:visitorId/:adminId
+```
+
+#### Statut admin en ligne
+```
+GET /api/messagerie/admin-status
+```
+
+#### Compteur non lus admin
+```
+GET /api/messagerie/unread-count/:adminId
+```
+
+### Structure d'un message
+```json
+{
+  "id": "msg_123456_abc",
+  "visitorId": "visitor_123",
+  "visitorNom": "Visiteur",
+  "adminId": "1",
+  "contenu": "Bonjour !",
+  "from": "visitor",
+  "date": "2026-03-09T10:00:00Z",
+  "lu": false,
+  "edited": false,
+  "deleted": false,
+  "likes": ["admin"]
+}
+```
+
+### Fonctionnalités du Widget
+- **Emoji** : Sélecteur d'emojis intégré (20 emojis courants)
+- **Like/Aimer** : Cliquer sur un message pour l'aimer (toggle ❤️)
+- **Modifier** : Modifier ses propres messages (affiche "modifié")
+- **Supprimer** : Supprimer ses propres messages (affiche "Ce message a été supprimé")
+- **Temps réel** : SSE + polling fallback 2s
+- **Indicateur de frappe** : Points rouges animés
+
+---
+
+## 🏭 Fournisseurs
+
+### Gestion des fournisseurs dans les produits et la comptabilité
+
+Les fournisseurs sont gérés automatiquement : lors de l'ajout d'un produit ou d'un achat en comptabilité, le nom du fournisseur saisi est enregistré dans `fournisseurs.json` s'il n'existe pas déjà.
+
+### Endpoints
+```
+GET    /api/fournisseurs           → Liste tous les fournisseurs
+GET    /api/fournisseurs/search?q= → Recherche par nom
+POST   /api/fournisseurs           → Créer (si n'existe pas)
+DELETE /api/fournisseurs/:id       → Supprimer
+```
+
+### Structure
+```json
+{
+  "id": "1772979865742",
+  "nom": "Happy Friday hair Store",
+  "dateCreation": "2026-03-08T14:24:25.742Z"
+}
+```

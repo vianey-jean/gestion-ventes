@@ -357,3 +357,29 @@ Les animations sont gérées par Framer Motion pour :
 - Apparition de modales
 - Animations de cartes
 - Effets de hover premium (boutons gradient avec mirrorShine)
+
+---
+
+## 💬 Widget Messagerie Instantanée (Live Chat)
+
+### Composants
+- `src/components/livechat/LiveChatVisitor.tsx` — Widget flottant pour visiteurs
+- `src/components/livechat/LiveChatAdmin.tsx` — Widget flottant pour administrateurs
+
+### Fonctionnalités UI
+- **Emoji picker** : Bouton 😊 ouvrant un panneau de 20 emojis
+- **Like ❤️** : Clic sur message → menu contextuel → Aimer/Retirer
+- **Modifier** : Menu contextuel → Modifier (propres messages uniquement) → champ inline
+- **Supprimer** : Menu contextuel → Supprimer → affiche "🚫 Ce message a été supprimé"
+- **Menu contextuel** : Apparaît au clic sur un message, avec options contextuelles
+- **Indicateur de frappe** : 3 points rouges animés (bounce)
+- **Temps réel** : SSE + polling fallback 2s
+
+### État local
+- `messages`, `showEmojis`, `editingId`, `editText`, `contextMenuId`
+
+---
+
+## 🏭 Fournisseurs (Frontend)
+- Service API : `src/services/api/fournisseurApi.ts`
+- Intégré dans formulaires produits et comptabilité avec autocomplétion

@@ -902,3 +902,30 @@ totalPurchasePrice = Σ(quantitySold × purchasePrice) pour chaque produit
 | Auth JWT | `server/middleware/auth.js` |
 | CORS configuré | `server/server.js` |
 | Déconnexion auto | `src/hooks/use-auto-logout.tsx` |
+
+---
+
+## 💬 Widget Messagerie Instantanée (Live Chat)
+
+### Composants
+- `LiveChatVisitor.tsx` — Widget visiteur public avec emoji, like, edit, delete
+- `LiveChatAdmin.tsx` — Widget admin avec liste conversations, emoji, like, edit, delete
+
+### CRUD Messages
+| Action | Route | Méthode |
+|--------|-------|---------|
+| Envoyer | `/api/messagerie/send` | POST |
+| Modifier | `/api/messagerie/edit/:id` | PUT |
+| Supprimer | `/api/messagerie/delete/:id` | DELETE |
+| Aimer | `/api/messagerie/like/:id` | POST |
+
+### Fonctionnalités
+- Emoji picker (20 emojis), Like ❤️ toggle, Modifier (propres messages), Supprimer (propres messages)
+- SSE temps réel + polling 2s, indicateur de frappe, menu contextuel
+
+---
+
+## 🏭 Fournisseurs
+- CRUD complet : `server/routes/fournisseurs.js`
+- Auto-création lors ajout produit/achat
+- Autocomplétion dans formulaires

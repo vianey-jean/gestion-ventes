@@ -540,3 +540,27 @@ Cliquer sur l'icône soleil/lune dans la navbar pour basculer.
 ---
 
 *Documentation générée automatiquement - Janvier 2026*
+
+---
+
+## 💬 Widget Messagerie Instantanée
+
+### Composants Frontend
+- `src/components/livechat/LiveChatVisitor.tsx` — Chat visiteur
+- `src/components/livechat/LiveChatAdmin.tsx` — Chat admin
+
+### Fonctionnalités
+- Emoji picker (20 emojis), Like ❤️, Modifier/Supprimer ses messages
+- Temps réel SSE + polling 2s, indicateur de frappe
+
+### Backend
+- Route : `server/routes/messagerie.js`
+- DB : `server/db/messagerie.json`
+- Endpoints : send, edit, delete, like, typing, mark-read, events (SSE)
+
+---
+
+## 🏭 Fournisseurs
+- Route : `server/routes/fournisseurs.js` | Modèle : `server/models/Fournisseur.js`
+- DB : `server/db/fournisseurs.json`
+- Auto-créés lors d'ajout produit/achat, recherche autocomplétion

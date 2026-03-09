@@ -8,6 +8,7 @@ export interface User {
   gender?: string;
   address?: string;
   phone?: string;
+  role?: string;
 }
 
 export interface LoginCredentials {

@@ -485,3 +485,34 @@ Enregistre les heures de travail des travailleurs dans différentes entreprises.
 - **Cause** : Connexion SSE perdue
 - **Solution** : Recharger la page
 - **Fichier** : `server/routes/sync.js`
+
+---
+
+## 💬 Maintenance Widget Messagerie Instantanée
+
+### Fichiers concernés
+| Fichier | Rôle |
+|---------|------|
+| `src/components/livechat/LiveChatVisitor.tsx` | Widget visiteur |
+| `src/components/livechat/LiveChatAdmin.tsx` | Widget admin |
+| `server/routes/messagerie.js` | Routes API backend |
+| `server/db/messagerie.json` | Base de données messages |
+
+### Fonctionnalités
+- Emoji, Like ❤️, Modifier/Supprimer ses messages, temps réel SSE
+
+### Problèmes courants
+- **Messages non instantanés** : Vérifier SSE + polling 2s dans les composants
+- **Like/Edit/Delete non fonctionnel** : Vérifier routes `/api/messagerie/edit`, `/delete`, `/like`
+
+---
+
+## 🏭 Maintenance Fournisseurs
+
+### Fichiers
+| Fichier | Rôle |
+|---------|------|
+| `server/routes/fournisseurs.js` | Routes API |
+| `server/models/Fournisseur.js` | Modèle CRUD |
+| `server/db/fournisseurs.json` | Base de données |
+| `src/services/api/fournisseurApi.ts` | Service frontend |

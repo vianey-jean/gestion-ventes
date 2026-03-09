@@ -261,3 +261,34 @@ Chaque client recharge les données affectées
 | **Avances** | (dans Pointage) | pointage/modals/ | avance.js | avance.json |
 | **Tâches** | PointagePage | tache/ | tache.js | tache.json |
 | **Notes Kanban** | PointagePage | notes/ | notes.js | notes.json, noteColumns.json |
+| **Messagerie Widget** | LiveChatVisitor/Admin | livechat/ | messagerie.js | messagerie.json |
+| **Fournisseurs** | (dans Produits/Compta) | — | fournisseurs.js | fournisseurs.json |
+
+---
+
+## 📌 14. Widget Messagerie Instantanée
+
+### Architecture
+```
+┌─────────────────┐    SSE + HTTP     ┌──────────────────┐
+│ LiveChatVisitor  │ ◄──────────────► │  messagerie.js   │
+│ (Widget public)  │                  │  (Express route) │
+├─────────────────┤                  │                  │
+│ LiveChatAdmin    │ ◄──────────────► │  messagerie.json │
+│ (Widget admin)   │                  └──────────────────┘
+└─────────────────┘
+```
+
+### Fonctionnalités
+- Envoi/réception instantanée (SSE + polling fallback 2s)
+- Emoji picker intégré
+- Like/Aimer un message (toggle ❤️)
+- Modifier ses propres messages
+- Supprimer ses propres messages (affiche notice de suppression)
+- Indicateur de frappe en temps réel
+- Liste des conversations côté admin
+
+### Fournisseurs
+- Auto-créés lors d'ajout produit ou achat comptabilité
+- Recherche avec autocomplétion
+- Base de données : `server/db/fournisseurs.json`

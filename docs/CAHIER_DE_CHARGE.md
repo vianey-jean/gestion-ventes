@@ -223,3 +223,45 @@ Application web professionnelle de gestion commerciale complète permettant de c
 - Gestion gracieuse des erreurs réseau
 - Retry automatique (2 tentatives) avec backoff exponentiel
 - Sauvegarde automatique des données
+
+---
+
+## 📱 Widget Messagerie Instantanée (Live Chat)
+
+### Description
+Widget de chat en direct entre visiteurs du site et administrateurs, avec communication instantanée via SSE.
+
+### Fonctionnalités
+| Fonctionnalité | Description |
+|----------------|-------------|
+| Envoi de messages | Texte + emojis intégrés |
+| Emoji picker | 20 emojis courants accessibles via bouton 😊 |
+| Like/Aimer | Aimer le message de l'autre personne (❤️ toggle) |
+| Modifier message | Modifier ses propres messages (mention "modifié") |
+| Supprimer message | Supprimer ses propres messages (notice "message supprimé") |
+| Indicateur de frappe | Points rouges animés en temps réel |
+| Temps réel | SSE + polling fallback 2s |
+
+### Composants
+- `LiveChatVisitor.tsx` : Widget côté visiteur public
+- `LiveChatAdmin.tsx` : Widget côté administrateur connecté
+
+### Base de données
+- `server/db/messagerie.json` : Stockage des messages
+
+---
+
+## 🏭 Fournisseurs
+
+### Description
+Gestion automatique des fournisseurs lors de l'ajout de produits et d'achats en comptabilité.
+
+### Fonctionnalités
+| Fonctionnalité | Description |
+|----------------|-------------|
+| Auto-création | Créé automatiquement lors d'un achat si inexistant |
+| Recherche | Autocomplétion par nom partiel |
+| Suppression | Suppression par ID |
+
+### Base de données
+- `server/db/fournisseurs.json`

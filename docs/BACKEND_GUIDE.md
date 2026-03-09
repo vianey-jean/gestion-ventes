@@ -353,3 +353,37 @@ app.use('/api/categories', categoriesRoutes);
 # src/services/api/categorieApi.ts
 # Copier le pattern d'un API existant (ex: entrepriseApi.ts)
 ```
+
+---
+
+## 📌 Widget Messagerie Instantanée (Backend)
+
+### Route : `server/routes/messagerie.js`
+
+Gère le chat en direct entre visiteurs et administrateurs.
+
+**Endpoints :**
+| Méthode | Route | Description |
+|---------|-------|-------------|
+| GET | `/events` | SSE pour temps réel |
+| GET | `/conversations` | Liste conversations (admin, auth) |
+| GET | `/messages/:visitorId/:adminId` | Messages d'une conversation |
+| POST | `/send` | Envoyer un message |
+| PUT | `/edit/:messageId` | Modifier un message (propre) |
+| DELETE | `/delete/:messageId` | Supprimer un message (propre) |
+| POST | `/like/:messageId` | Aimer/retirer like |
+| POST | `/typing` | Indicateur de frappe |
+| PUT | `/mark-read/:visitorId/:adminId` | Marquer comme lu |
+| GET | `/admin-status` | Statut admin en ligne |
+| GET | `/unread-count/:adminId` | Compteur non lus |
+
+**Événements SSE :** `new_message`, `message_edited`, `message_deleted`, `message_liked`, `typing`, `admin_status`
+
+### Route : `server/routes/fournisseurs.js`
+
+| Méthode | Route | Description |
+|---------|-------|-------------|
+| GET | `/` | Liste tous les fournisseurs |
+| GET | `/search?q=` | Recherche par nom |
+| POST | `/` | Créer si n'existe pas |
+| DELETE | `/:id` | Supprimer |

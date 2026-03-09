@@ -231,3 +231,26 @@ server/
 | `DEPLOYMENT.md` | Guide de déploiement |
 | `SECURITY.md` | Guide de sécurité |
 | `TESTS_GUIDE.md` | Guide de tests |
+
+---
+
+## 💬 Widget Messagerie Instantanée (Live Chat)
+
+Chat en direct visiteur ↔ admin avec :
+- Envoi instantané (SSE + polling 2s)
+- **Emoji picker** (20 emojis)
+- **Like ❤️** un message
+- **Modifier** ses propres messages
+- **Supprimer** ses propres messages (affiche notice)
+- Indicateur de frappe temps réel
+
+**Composants** : `LiveChatVisitor.tsx`, `LiveChatAdmin.tsx`  
+**Backend** : `server/routes/messagerie.js`  
+**Base** : `server/db/messagerie.json`
+
+---
+
+## 🏭 Fournisseurs
+
+Gestion automatique des fournisseurs (auto-créés lors d'ajout produit/achat).  
+**API** : `server/routes/fournisseurs.js` | **Base** : `server/db/fournisseurs.json`
