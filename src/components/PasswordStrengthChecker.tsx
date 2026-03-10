@@ -1,6 +1,7 @@
 
 import React, { useEffect } from 'react';
 import { Shield, Check, X } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface PasswordStrengthCheckerProps {
   password: string;
@@ -11,17 +12,14 @@ const PasswordStrengthChecker: React.FC<PasswordStrengthCheckerProps> = ({
   password, 
   onValidityChange 
 }) => {
-  // Vérifie les différents critères du mot de passe
   const hasLowerCase = /[a-z]/.test(password);
   const hasUpperCase = /[A-Z]/.test(password);
   const hasNumber = /[0-9]/.test(password);
   const hasSpecialChar = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password);
   const hasMinLength = password.length >= 6;
   
-  // Détermine si tous les critères sont remplis
   const isPasswordValid = hasLowerCase && hasUpperCase && hasNumber && hasSpecialChar && hasMinLength;
   
-  // Calcule le score de force
   const strengthScore = [hasMinLength, hasUpperCase, hasLowerCase, hasNumber, hasSpecialChar].filter(Boolean).length;
   
   const getStrengthColor = () => {
@@ -38,7 +36,6 @@ const PasswordStrengthChecker: React.FC<PasswordStrengthCheckerProps> = ({
     return 'Excellent';
   };
   
-  // Notifie le parent quand la validité change
   useEffect(() => {
     if (onValidityChange) {
       onValidityChange(isPasswordValid);
@@ -48,91 +45,69 @@ const PasswordStrengthChecker: React.FC<PasswordStrengthCheckerProps> = ({
   if (!password) return null;
   
   return (
-    <div className="mt-4 p-4 bg-gradient-to-r from-gray-50 to-blue-50 dark:from-gray-800 dark:to-blue-900/20 rounded-xl border border-gray-200 dark:border-gray-700">
-      {/* Header avec indicateur de force */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center">
-          <Shield className="h-5 w-5 text-purple-500 mr-2" />
-          <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-            Sécurité du mot de passe
-          </span>
-        </div>
-        <div className="flex items-center space-x-2">
-          <div className="w-20 h-2 bg-gray-200 dark:bg-gray-600 rounded-full overflow-hidden">
-            <div 
-              className={`h-full bg-gradient-to-r ${getStrengthColor()} transition-all duration-300 rounded-full`}
-              style={{ width: `${(strengthScore / 5) * 100}%` }}
-            />
-          </div>
-          <span className={`text-xs font-bold ${
-            strengthScore <= 2 ? 'text-red-500' :
-            strengthScore <= 3 ? 'text-yellow-500' :
-            strengthScore <= 4 ? 'text-blue-500' : 'text-green-500'
-          }`}>
-            {getStrengthText()}
-          </span>
-        </div>
-      </div>
-      
-      {/* Critères de validation */}
-      <div className="space-y-2">
-        <div className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-3">
-          Critères requis :
-        </div>
-        
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          <CriteriaItem 
-            met={hasMinLength} 
-            text="Au moins 6 caractères"
-          />
-          <CriteriaItem 
-            met={hasUpperCase} 
-            text="Une majuscule (A-Z)"
-          />
-          <CriteriaItem 
-            met={hasLowerCase} 
-            text="Une minuscule (a-z)"
-          />
-          <CriteriaItem 
-            met={hasNumber} 
-            text="Un chiffre (0-9)"
-          />
-          <CriteriaItem 
-            met={hasSpecialChar} 
-            text="Un caractère spécial (!@#$%)"
-          />
-        </div>
-        
-        {/* Indicateur global de validité */}
-        {password.length > 0 && (
-          <div className={`mt-4 p-3 rounded-xl border-2 transition-all duration-300 ${
-            isPasswordValid 
-              ? 'bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-700' 
-              : 'bg-orange-50 border-orange-200 dark:bg-orange-900/20 dark:border-orange-700'
-          }`}>
-            <div className="flex items-center">
-              {isPasswordValid ? (
-                <Check className="h-5 w-5 text-green-500 mr-2" />
-              ) : (
-                <X className="h-5 w-5 text-orange-500 mr-2" />
-              )}
-              <span className={`text-sm font-medium ${
-                isPasswordValid ? 'text-green-700 dark:text-green-400' : 'text-orange-700 dark:text-orange-400'
-              }`}>
-                {isPasswordValid 
-                  ? '✨ Mot de passe sécurisé ! Prêt à utiliser.' 
-                  : '🔒 Complétez tous les critères pour sécuriser votre compte.'
-                }
-              </span>
+    <AnimatePresence>
+      {!isPasswordValid && (
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: 'auto' }}
+          exit={{ opacity: 0, height: 0 }}
+          transition={{ duration: 0.3 }}
+          className="overflow-hidden"
+        >
+          <div className="mt-4 p-4 bg-gradient-to-r from-gray-50 to-blue-50 dark:from-gray-800 dark:to-blue-900/20 rounded-xl border border-gray-200 dark:border-gray-700">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center">
+                <Shield className="h-5 w-5 text-purple-500 mr-2" />
+                <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  Sécurité du mot de passe
+                </span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <div className="w-20 h-2 bg-gray-200 dark:bg-gray-600 rounded-full overflow-hidden">
+                  <div 
+                    className={`h-full bg-gradient-to-r ${getStrengthColor()} transition-all duration-300 rounded-full`}
+                    style={{ width: `${(strengthScore / 5) * 100}%` }}
+                  />
+                </div>
+                <span className={`text-xs font-bold ${
+                  strengthScore <= 2 ? 'text-red-500' :
+                  strengthScore <= 3 ? 'text-yellow-500' :
+                  strengthScore <= 4 ? 'text-blue-500' : 'text-green-500'
+                }`}>
+                  {getStrengthText()}
+                </span>
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <div className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-3">
+                Critères requis :
+              </div>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <CriteriaItem met={hasMinLength} text="Au moins 6 caractères" />
+                <CriteriaItem met={hasUpperCase} text="Une majuscule (A-Z)" />
+                <CriteriaItem met={hasLowerCase} text="Une minuscule (a-z)" />
+                <CriteriaItem met={hasNumber} text="Un chiffre (0-9)" />
+                <CriteriaItem met={hasSpecialChar} text="Un caractère spécial (!@#$%)" />
+              </div>
+              
+              <div className="mt-4 p-3 rounded-xl border-2 transition-all duration-300 bg-orange-50 border-orange-200 dark:bg-orange-900/20 dark:border-orange-700">
+                <div className="flex items-center">
+                  <X className="h-5 w-5 text-orange-500 mr-2" />
+                  <span className="text-sm font-medium text-orange-700 dark:text-orange-400">
+                    🔒 Complétez tous les critères pour sécuriser votre compte.
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
-        )}
-      </div>
-    </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 };
 
-// Composant pour chaque critère
 const CriteriaItem: React.FC<{ met: boolean; text: string }> = ({ met, text }) => (
   <div className={`flex items-center p-2 rounded-lg transition-all duration-200 ${
     met 
