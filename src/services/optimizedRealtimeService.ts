@@ -31,8 +31,8 @@ class OptimizedRealtimeService {
   private reconnectInterval: number = 3000;
   private reconnectAttempts: number = 0;
   private maxReconnectAttempts: number = 5;
-  private connectionTimeout: NodeJS.Timeout | null = null;
-  private heartbeatInterval: NodeJS.Timeout | null = null;
+  private connectionTimeout: ReturnType<typeof setTimeout> | null = null;
+  private heartbeatInterval: ReturnType<typeof setTimeout> | null = null;
   private performanceMetrics: PerformanceMetrics;
   private retryDelays = [1000, 2000, 4000, 8000, 16000];
 
