@@ -8,7 +8,7 @@ import { SyncEvent, ConnectionConfig } from './types';
  */
 export class EventSourceManager {
   private isConnected: boolean = false;
-  private pollingInterval: ReturnType<typeof setInterval> | null = null;
+  private pollingInterval: NodeJS.Timeout | null = null;
 
   constructor(
     private config: ConnectionConfig,

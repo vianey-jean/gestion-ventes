@@ -61,7 +61,7 @@ export const ErrorBoundaryProvider: React.FC<{ children: React.ReactNode }> = ({
     console.error('Error reported:', errorInfo);
 
     // En production, envoyer à un service de monitoring
-    if (import.meta.env.PROD) {
+    if (process.env.NODE_ENV === 'production') {
       // Ici on pourrait envoyer à Sentry, LogRocket, etc.
     }
   }, [toast]);
