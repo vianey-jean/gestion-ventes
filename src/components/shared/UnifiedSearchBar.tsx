@@ -56,7 +56,7 @@ const UnifiedSearchBar: React.FC<UnifiedSearchBarProps> = memo(({
   id = 'unified-search'
 }) => {
   const [internalValue, setInternalValue] = useState(value);
-  const [debounceTimer, setDebounceTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
+  const [debounceTimer, setDebounceTimer] = useState<NodeJS.Timeout | null>(null);
 
   const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;

@@ -17,8 +17,8 @@ const mockPerformance = {
 const mockRequestAnimationFrame = vi.fn();
 
 // Setup global mocks
-(globalThis as any).performance = mockPerformance as any;
-(globalThis as any).requestAnimationFrame = mockRequestAnimationFrame;
+global.performance = mockPerformance as any;
+global.requestAnimationFrame = mockRequestAnimationFrame;
 
 describe('Tests de Performance', () => {
   beforeEach(() => {
@@ -78,8 +78,8 @@ describe('Tests de Performance', () => {
       const mockAddEventListener = vi.fn();
       const mockRemoveEventListener = vi.fn();
       
-      (globalThis as any).addEventListener = mockAddEventListener;
-      (globalThis as any).removeEventListener = mockRemoveEventListener;
+      global.addEventListener = mockAddEventListener;
+      global.removeEventListener = mockRemoveEventListener;
       
       const { unmount } = render(React.createElement('div', {}, 'Test Component'));
       unmount();
@@ -140,7 +140,7 @@ describe('Tests de Performance', () => {
         json: async () => ({ data: 'test' })
       });
       
-      (globalThis as any).fetch = mockFetch;
+      global.fetch = mockFetch;
       
       // Simulate API calls
       await fetch('/api/test');
@@ -157,7 +157,7 @@ describe('Tests de Performance', () => {
         )
       );
       
-      (globalThis as any).fetch = mockFetch;
+      global.fetch = mockFetch;
       
       const startTime = Date.now();
       
@@ -181,7 +181,7 @@ describe('Tests de Performance', () => {
         removeItem: vi.fn()
       };
       
-      (globalThis as any).localStorage = mockLocalStorage as any;
+      global.localStorage = mockLocalStorage as any;
       
       // Simulate storage operations
       localStorage.setItem('test', 'value');

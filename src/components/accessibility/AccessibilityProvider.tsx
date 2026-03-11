@@ -35,7 +35,7 @@ export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({
   });
 
   const [ariaLiveRegion, setAriaLiveRegion] = useState<string>('');
-  const announcementTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const announcementTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastAnnouncementRef = useRef<string>('');
 
   useEffect(() => {
