@@ -30,7 +30,7 @@ class RealtimeService {
     );
   }
 
-  private fallbackInterval: NodeJS.Timeout | null = null;
+  private fallbackInterval: ReturnType<typeof setInterval> | null = null;
 
   private handleConnectionChange(connected: boolean) {
     this.isConnected = connected;
