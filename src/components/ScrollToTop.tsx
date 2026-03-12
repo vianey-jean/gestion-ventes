@@ -38,7 +38,7 @@ const ScrollToTop: React.FC = () => {
         className="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-full shadow-2xl transition-all duration-300 hover:scale-110 flex items-center gap-2"
       >
         <ArrowUp className="h-5 w-5" />
-        Vers Haut
+       
       </Button>
     </div>
   );
