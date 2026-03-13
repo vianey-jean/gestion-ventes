@@ -11,6 +11,7 @@ import TacheConfirmDialog from './TacheConfirmDialog';
 import TacheNotificationBar, { TacheNotification } from './TacheNotificationBar';
 import TacheValidationModal from './TacheValidationModal';
 import TravailleurModal from '@/components/pointage/modals/TravailleurModal';
+import ShareLinkModal from '@/components/shared/ShareLinkModal';
 
 const premiumBtnClass = "group relative overflow-hidden rounded-xl sm:rounded-2xl backdrop-blur-xl border transition-all duration-300 hover:scale-105 px-4 py-2 sm:px-5 sm:py-3 text-xs sm:text-sm font-semibold";
 const mirrorShine = "absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500";
@@ -43,6 +44,7 @@ const TacheView: React.FC = () => {
 
   // Travailleur modal
   const [showTravailleurModal, setShowTravailleurModal] = useState(false);
+  const [showShareTachesModal, setShowShareTachesModal] = useState(false);
   const [travailleurForm, setTravailleurForm] = useState({ nom: '', prenom: '', adresse: '', phone: '', genre: 'homme' as 'homme' | 'femme', role: 'autre' as 'administrateur' | 'autre' });
 
   // Follow-up form (pre-filled)
@@ -313,6 +315,7 @@ const TacheView: React.FC = () => {
         onShowToday={() => { setSelectedDay(todayStr); setShowDayModal(true); }}
         onShowWeek={() => setShowWeekModal(true)}
         onAddTravailleur={() => setShowTravailleurModal(true)}
+        onShareTaches={() => setShowShareTachesModal(true)}
         allTaches={taches}
         onNavigateToDate={handleNavigateToDate}
       />
@@ -423,6 +426,13 @@ const TacheView: React.FC = () => {
         notifications={notifications}
         onClickNotification={handleNotificationClick}
         onDismiss={handleDismissNotification}
+      />
+
+      <ShareLinkModal
+        open={showShareTachesModal}
+        onClose={() => setShowShareTachesModal(false)}
+        type="taches"
+        typeLabel="Tâches"
       />
     </>
   );

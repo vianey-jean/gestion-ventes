@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import noteApi, { Note, NoteColumn } from '@/services/api/noteApi';
-import noteShareApi from '@/services/api/noteShareApi';
-import { Plus, StickyNote, Columns3, Sparkles, Share2, Copy, Check, LinkIcon, X } from 'lucide-react';
+import { Plus, StickyNote, Columns3, Sparkles, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import ShareLinkModal from '@/components/shared/ShareLinkModal';
 import KanbanColumn from './KanbanColumn';
 import NoteFormModal from './NoteFormModal';
 import ColumnFormModal from './ColumnFormModal';
@@ -32,9 +32,6 @@ const NotesKanbanView: React.FC = () => {
   const [confirmAction, setConfirmAction] = useState<{ message: string; action: () => void } | null>(null);
   const [dragOverColId, setDragOverColId] = useState<string | null>(null);
   const [showShareModal, setShowShareModal] = useState(false);
-  const [shareLink, setShareLink] = useState<string | null>(null);
-  const [shareCopied, setShareCopied] = useState(false);
-  const [shareLoading, setShareLoading] = useState(false);
 
   const fetchData = useCallback(async () => {
     try {
@@ -162,39 +159,8 @@ const NotesKanbanView: React.FC = () => {
     });
   };
 
-  const handleShareNotes = async () => {
-    setShareLoading(true);
-    try {
-      const res = await noteShareApi.generate();
-      const token = res.data.token;
-      const link = `${window.location.origin}/shared/notes/${token}`;
-      setShareLink(link);
-      setShowShareModal(true);
-    } catch {
-      toast({ title: 'Erreur lors de la génération du lien', variant: 'destructive' });
-    } finally {
-      setShareLoading(false);
-    }
-  };
-
-  const handleCopyShareLink = () => {
-    if (shareLink) {
-      navigator.clipboard.writeText(shareLink);
-      setShareCopied(true);
-      setTimeout(() => setShareCopied(false), 2000);
-      toast({ title: '✅ Lien copié !' });
-    }
-  };
-
-  const handleRevokeShare = async () => {
-    try {
-      await noteShareApi.revoke();
-      setShareLink(null);
-      setShowShareModal(false);
-      toast({ title: '✅ Lien de partage révoqué' });
-    } catch {
-      toast({ title: 'Erreur', variant: 'destructive' });
-    }
+  const handleShareNotes = () => {
+    setShowShareModal(true);
   };
 
   const sortedColumns = [...columns].sort((a, b) => a.order - b.order);
@@ -243,10 +209,9 @@ const NotesKanbanView: React.FC = () => {
               </Button>
               <Button
                 onClick={handleShareNotes}
-                disabled={shareLoading}
                 className="relative overflow-hidden bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-700 border border-emerald-300/40 text-white shadow-[0_20px_70px_rgba(16,185,129,0.5)] hover:shadow-[0_35px_100px_rgba(16,185,129,0.7)] rounded-2xl px-5 py-2.5 font-bold text-sm transition-all hover:scale-105 active:scale-95"
               >
-                <Share2 className="h-4 w-4 mr-2" /> {shareLoading ? 'Génération...' : 'Partager notes'}
+                <Share2 className="h-4 w-4 mr-2" /> Partager notes
               </Button>
             </div>
           </div>
@@ -301,44 +266,12 @@ const NotesKanbanView: React.FC = () => {
       )}
 
       {/* Share Modal */}
-      {showShareModal && shareLink && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={() => setShowShareModal(false)}>
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 p-6 max-w-md w-full mx-4" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <LinkIcon className="h-5 w-5 text-emerald-500" />
-                <h3 className="font-bold text-gray-800 dark:text-white">Lien de partage</h3>
-              </div>
-              <button onClick={() => setShowShareModal(false)} className="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
-                <X className="h-4 w-4 text-gray-500" />
-              </button>
-            </div>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
-              Ce lien permet de voir vos notes en lecture seule. Aucune modification possible.
-            </p>
-            <div className="flex items-center gap-2 p-3 rounded-xl bg-gray-100 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600">
-              <input
-                type="text"
-                value={shareLink}
-                readOnly
-                className="flex-1 bg-transparent text-xs text-gray-700 dark:text-gray-200 outline-none select-all"
-              />
-              <button
-                onClick={handleCopyShareLink}
-                className="flex-shrink-0 p-2 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white transition-colors"
-              >
-                {shareCopied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-              </button>
-            </div>
-            <button
-              onClick={handleRevokeShare}
-              className="mt-4 w-full text-xs text-red-500 hover:text-red-600 font-medium py-2 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-            >
-              Révoquer ce lien de partage
-            </button>
-          </div>
-        </div>
-      )}
+      <ShareLinkModal
+        open={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        type="notes"
+        typeLabel="Notes"
+      />
     </div>
   );
 };

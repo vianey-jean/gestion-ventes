@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
-import { Clock, Building2, Plus, Timer, Sparkles, UserPlus, Users, BarChart3, Banknote } from 'lucide-react';
+import { Clock, Building2, Plus, Timer, Sparkles, UserPlus, Users, BarChart3, Banknote, Share2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
@@ -19,13 +19,14 @@ interface PointageHeroProps {
   onShowYearlyTotal: () => void;
   onPriseAvance: () => void;
   onShowMonthDetail: () => void;
+  onSharePointage?: () => void;
   year: number;
 }
 
 const PointageHero: React.FC<PointageHeroProps> = ({
   entreprisesCount, travailleursCount, pointagesCount, monthTotal,
   premiumBtnClass, mirrorShine,
-  onAddEntreprise, onAddTravailleur, onNewPointage, onShowParPersonne, onShowYearlyTotal, onPriseAvance, onShowMonthDetail, year
+  onAddEntreprise, onAddTravailleur, onNewPointage, onShowParPersonne, onShowYearlyTotal, onPriseAvance, onShowMonthDetail, onSharePointage, year
 }) => {
   return (
     <div className="relative overflow-hidden py-8 sm:py-12">
@@ -107,6 +108,14 @@ const PointageHero: React.FC<PointageHeroProps> = ({
                 <span className={mirrorShine} />
                 <span className="relative flex items-center"><BarChart3 className="h-4 w-4 sm:h-5 sm:w-5 mr-2" /> Afficher pointage Par Personne</span>
               </Button>
+
+              {onSharePointage && (
+                <Button onClick={onSharePointage}
+                  className={cn(premiumBtnClass, "bg-gradient-to-br from-teal-500 via-teal-600 to-cyan-700 border-teal-300/40 text-white shadow-[0_20px_70px_rgba(20,184,166,0.5)] hover:shadow-[0_35px_100px_rgba(20,184,166,0.7)]")}>
+                  <span className={mirrorShine} />
+                  <span className="relative flex items-center"><Share2 className="h-4 w-4 sm:h-5 sm:w-5 mr-2" /> Partager pointage</span>
+                </Button>
+              )}
             </div>
           </div>
         </motion.div>

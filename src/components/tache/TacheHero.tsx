@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { motion } from 'framer-motion';
-import { ListTodo, Plus, CalendarDays, Eye, Sparkles, UserPlus, Clock, CheckCircle } from 'lucide-react';
+import { ListTodo, Plus, CalendarDays, Eye, Sparkles, UserPlus, Clock, CheckCircle, Share2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Tache } from '@/services/api/tacheApi';
 
@@ -17,6 +17,7 @@ interface TacheHeroProps {
   onShowToday: () => void;
   onShowWeek: () => void;
   onAddTravailleur?: () => void;
+  onShareTaches?: () => void;
   allTaches?: Tache[];
   onNavigateToDate?: (dateStr: string) => void;
 }
@@ -24,7 +25,7 @@ interface TacheHeroProps {
 const TacheHero: React.FC<TacheHeroProps> = ({
   totalTaches, todayCount, pertinentCount, optionnelCount,
   premiumBtnClass, mirrorShine,
-  onAddTache, onShowToday, onShowWeek, onAddTravailleur,
+  onAddTache, onShowToday, onShowWeek, onAddTravailleur, onShareTaches,
   allTaches = [], onNavigateToDate
 }) => {
   const [showTotalModal, setShowTotalModal] = useState(false);
@@ -149,6 +150,13 @@ const TacheHero: React.FC<TacheHeroProps> = ({
                     className={cn(premiumBtnClass, "bg-gradient-to-br from-rose-500 via-pink-600 to-red-700 border-rose-300/40 text-white shadow-[0_20px_70px_rgba(244,63,94,0.5)]")}>
                     <span className={mirrorShine} />
                     <span className="relative flex items-center"><UserPlus className="h-4 w-4 sm:h-5 sm:w-5 mr-2" /> Ajouter Travailleur</span>
+                  </Button>
+                )}
+                {onShareTaches && (
+                  <Button onClick={onShareTaches}
+                    className={cn(premiumBtnClass, "bg-gradient-to-br from-teal-500 via-teal-600 to-cyan-700 border-teal-300/40 text-white shadow-[0_20px_70px_rgba(20,184,166,0.5)] hover:shadow-[0_35px_100px_rgba(20,184,166,0.7)]")}>
+                    <span className={mirrorShine} />
+                    <span className="relative flex items-center"><Share2 className="h-4 w-4 sm:h-5 sm:w-5 mr-2" /> Partager tâches</span>
                   </Button>
                 )}
               </div>
