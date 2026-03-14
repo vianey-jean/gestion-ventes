@@ -1,9 +1,26 @@
 import React, { useState } from 'react';
-import { GripVertical, Edit3, Trash2, Mic, X, Eye } from 'lucide-react';
+import { GripVertical, Edit3, Trash2, Mic, X, Eye, ArrowRight, Clock, MapPin } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Note, getDrawingUrl } from '@/services/api/noteApi';
+import { Note, NoteHistoryEntry, getDrawingUrl } from '@/services/api/noteApi';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+
+const HISTORY_COLORS = [
+  { bg: 'bg-red-500/10', text: 'text-red-600 dark:text-red-400', dot: 'bg-red-500', border: 'border-red-200 dark:border-red-800' },
+  { bg: 'bg-amber-500/10', text: 'text-amber-600 dark:text-amber-400', dot: 'bg-amber-500', border: 'border-amber-200 dark:border-amber-800' },
+  { bg: 'bg-blue-500/10', text: 'text-blue-600 dark:text-blue-400', dot: 'bg-blue-500', border: 'border-blue-200 dark:border-blue-800' },
+  { bg: 'bg-emerald-500/10', text: 'text-emerald-600 dark:text-emerald-400', dot: 'bg-emerald-500', border: 'border-emerald-200 dark:border-emerald-800' },
+  { bg: 'bg-violet-500/10', text: 'text-violet-600 dark:text-violet-400', dot: 'bg-violet-500', border: 'border-violet-200 dark:border-violet-800' },
+  { bg: 'bg-pink-500/10', text: 'text-pink-600 dark:text-pink-400', dot: 'bg-pink-500', border: 'border-pink-200 dark:border-pink-800' },
+];
+
+const formatShortDate = (dateStr: string) => {
+  return new Date(dateStr).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+};
+
+const formatFullDate = (dateStr: string) => {
+  return new Date(dateStr).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+};
 
 interface NoteCardProps {
   note: Note;
@@ -77,7 +94,25 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, onEdit, onDelete, onDragStart
             </div>
           )}
 
-          <div className="mt-2 text-[10px] text-gray-400 font-medium">
+          {/* Compact history trail on card */}
+          {note.history && note.history.length > 0 && (
+            <div className="mt-2.5 flex items-center gap-1 flex-wrap">
+              {note.history.map((h, i) => {
+                const color = HISTORY_COLORS[i % HISTORY_COLORS.length];
+                return (
+                  <React.Fragment key={i}>
+                    {i > 0 && <ArrowRight className="h-2.5 w-2.5 text-gray-300 dark:text-gray-600 flex-shrink-0" />}
+                    <span className={cn("inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[9px] font-semibold", color.bg, color.text)}>
+                      <span className={cn("w-1.5 h-1.5 rounded-full flex-shrink-0", color.dot)} />
+                      {h.columnTitle}
+                    </span>
+                  </React.Fragment>
+                );
+              })}
+            </div>
+          )}
+
+          <div className="mt-1.5 text-[10px] text-gray-400 font-medium">
             {new Date(note.updatedAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
           </div>
         </div>
@@ -122,6 +157,53 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, onEdit, onDelete, onDragStart
             {drawingUrl && (
               <div className="rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-700">
                 <img src={drawingUrl} alt="Dessin" className="w-full h-48 object-contain bg-white" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+              </div>
+            )}
+
+            {/* Full history timeline in detail */}
+            {note.history && note.history.length > 0 && (
+              <div className="p-4 rounded-2xl bg-gradient-to-br from-gray-50/80 to-slate-50/80 dark:from-gray-800/40 dark:to-slate-800/40 border border-gray-200/50 dark:border-gray-700/50">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center">
+                    <MapPin className="h-3 w-3 text-white" />
+                  </div>
+                  <span className="text-xs font-bold text-gray-700 dark:text-gray-200">Parcours de la note</span>
+                </div>
+                <div className="relative pl-4">
+                  {/* Vertical line */}
+                  <div className="absolute left-[7px] top-1 bottom-1 w-0.5 bg-gradient-to-b from-cyan-400 via-blue-400 to-violet-400 rounded-full" />
+                  <div className="space-y-3">
+                    {note.history.map((h, i) => {
+                      const color = HISTORY_COLORS[i % HISTORY_COLORS.length];
+                      const isLast = i === note.history.length - 1;
+                      return (
+                        <div key={i} className="relative flex items-start gap-3">
+                          {/* Dot */}
+                          <div className={cn(
+                            "absolute -left-4 top-1 w-3.5 h-3.5 rounded-full border-2 border-white dark:border-gray-900 shadow-md z-10",
+                            color.dot,
+                            isLast && "ring-2 ring-offset-1 ring-offset-white dark:ring-offset-gray-900 ring-cyan-400/50 animate-pulse"
+                          )} />
+                          {/* Content */}
+                          <div className={cn("flex-1 p-2.5 rounded-xl border", color.bg, color.border)}>
+                            <div className="flex items-center justify-between gap-2 flex-wrap">
+                              <span className={cn("text-xs font-bold", color.text)}>{h.columnTitle}</span>
+                              <div className="flex items-center gap-1 text-[10px] text-gray-500 dark:text-gray-400">
+                                <Clock className="h-2.5 w-2.5" />
+                                {formatFullDate(h.movedAt)}
+                              </div>
+                            </div>
+                            {i > 0 && (
+                              <div className="mt-1 text-[10px] text-gray-400">
+                                Après {Math.round((new Date(h.movedAt).getTime() - new Date(note.history[i - 1].movedAt).getTime()) / (1000 * 60 * 60 * 24))} jour(s) en "{note.history[i - 1].columnTitle}"
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
             )}
 

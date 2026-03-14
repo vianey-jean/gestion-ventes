@@ -7,6 +7,12 @@ export interface NoteColumn {
   order: number;
 }
 
+export interface NoteHistoryEntry {
+  columnId: string;
+  columnTitle: string;
+  movedAt: string;
+}
+
 export interface Note {
   id: string;
   title: string;
@@ -19,6 +25,7 @@ export interface Note {
   underlineLines: number[];
   drawing: string | null;
   voiceText: string;
+  history: NoteHistoryEntry[];
   createdAt: string;
   updatedAt: string;
 }
