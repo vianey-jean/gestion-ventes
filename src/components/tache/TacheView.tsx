@@ -4,6 +4,7 @@ import tacheApi, { Tache } from '@/services/api/tacheApi';
 import travailleurApi, { Travailleur } from '@/services/api/travailleurApi';
 import TacheCalendar from './TacheCalendar';
 import TacheHero from './TacheHero';
+import TacheTicker from './TacheTicker';
 import TacheDayModal from './TacheDayModal';
 import TacheFormModal from './TacheFormModal';
 import TacheWeekModal from './TacheWeekModal';
@@ -319,6 +320,8 @@ const TacheView: React.FC = () => {
         allTaches={taches}
         onNavigateToDate={handleNavigateToDate}
       />
+
+      <TacheTicker taches={taches} />
 
       <div className="max-w-7xl mx-auto px-4 pb-12">
         <TacheCalendar
