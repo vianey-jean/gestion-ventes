@@ -387,3 +387,29 @@ Gère le chat en direct entre visiteurs et administrateurs.
 | GET | `/search?q=` | Recherche par nom |
 | POST | `/` | Créer si n'existe pas |
 | DELETE | `/:id` | Supprimer |
+
+---
+
+### Route : `server/routes/profile.js`
+
+| Méthode | Route | Description |
+|---------|-------|-------------|
+| GET | `/` | Récupérer le profil de l'utilisateur connecté |
+| PUT | `/` | Modifier les informations personnelles |
+| PUT | `/password` | Changer le mot de passe |
+| POST | `/photo` | Upload de la photo de profil (multipart) |
+
+### Route : `server/routes/settings.js`
+
+| Méthode | Route | Description |
+|---------|-------|-------------|
+| GET | `/` | Récupérer les paramètres globaux |
+| PUT | `/` | Modifier les paramètres (admin) |
+| GET | `/users` | Liste des utilisateurs (admin principale) |
+| PUT | `/user-role` | Changer le rôle d'un utilisateur (admin principale) |
+| POST | `/backup` | Sauvegarder toutes les données (scan dynamique de `server/db/*.json`) |
+| POST | `/restore` | Restaurer des données depuis un fichier chiffré |
+| POST | `/delete-all` | Supprimer toutes les données (admin principale) |
+| POST | `/verify-password` | Vérifier le mot de passe admin |
+
+**Note** : La sauvegarde et suppression utilisent `fs.readdirSync()` pour scanner dynamiquement tous les fichiers `.json` dans `server/db/`. Tout nouveau fichier de base de données est automatiquement inclus.

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Building2, Briefcase, Euro, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import parametresApi from '@/services/api/parametresApi';
 
 interface EntrepriseModalProps {
   open: boolean;
@@ -20,6 +21,28 @@ interface EntrepriseModalProps {
 const EntrepriseModal: React.FC<EntrepriseModalProps> = ({
   open, onOpenChange, form, setForm, onSubmit, premiumBtnClass, mirrorShine
 }) => {
+  const [prixDefaults, setPrixDefaults] = useState({ prixHeure: 10, prixJournalier: 80 });
+
+  useEffect(() => {
+    if (open) {
+      parametresApi.getPrixPointage()
+        .then(data => {
+          setPrixDefaults(data);
+          // Auto-fill price based on current type
+          if (!form.prix) {
+            const defaultPrix = form.typePaiement === 'journalier' ? data.prixJournalier : data.prixHeure;
+            setForm({ ...form, prix: String(defaultPrix) });
+          }
+        })
+        .catch(() => {});
+    }
+  }, [open]);
+
+  const handleTypeChange = (v: 'journalier' | 'horaire') => {
+    const newPrix = v === 'journalier' ? prixDefaults.prixJournalier : prixDefaults.prixHeure;
+    setForm({ ...form, typePaiement: v, prix: String(newPrix) });
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="bg-gradient-to-br from-slate-900 via-cyan-900/30 to-blue-900/20 backdrop-blur-2xl border border-white/10 shadow-2xl rounded-3xl max-w-md">
@@ -48,7 +71,7 @@ const EntrepriseModal: React.FC<EntrepriseModalProps> = ({
           </div>
           <div className="space-y-2">
             <Label className="text-sm font-bold text-white/80">Type de paiement</Label>
-            <Select value={form.typePaiement} onValueChange={v => setForm({ ...form, typePaiement: v as 'journalier' | 'horaire' })}>
+            <Select value={form.typePaiement} onValueChange={v => handleTypeChange(v as 'journalier' | 'horaire')}>
               <SelectTrigger className="bg-white/10 border border-white/20 rounded-xl text-white"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="journalier">💰 Paiement Journalier</SelectItem>
@@ -63,6 +86,9 @@ const EntrepriseModal: React.FC<EntrepriseModalProps> = ({
             </Label>
             <Input type="number" step="0.01" value={form.prix} onChange={e => setForm({ ...form, prix: e.target.value })} placeholder="Ex: 25"
               className="bg-white/10 border border-white/20 focus:border-emerald-400 rounded-xl text-white placeholder:text-white/40" />
+            <p className="text-xs text-white/40">
+              Prix par défaut : {form.typePaiement === 'journalier' ? `${prixDefaults.prixJournalier}€/jour` : `${prixDefaults.prixHeure}€/h`}
+            </p>
           </div>
           <div className="flex gap-3 pt-2">
             <Button onClick={onSubmit}

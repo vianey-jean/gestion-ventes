@@ -20,6 +20,9 @@ const PasswordInput: React.FC<PasswordInputProps> = ({ className, error, ...prop
       <div className="relative">
         <Input
           type={showPassword ? "text" : "password"}
+          autoComplete="new-password"
+          data-lpignore="true"
+          data-form-type="other"
           className={cn(
             "pl-10 pr-12 h-12 rounded-xl border-2 transition-all duration-200",
             "focus:border-purple-500 focus:ring-purple-500/20 focus:ring-4",

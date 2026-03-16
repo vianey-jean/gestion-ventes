@@ -999,3 +999,56 @@ DELETE /api/fournisseurs/:id       → Supprimer
   "dateCreation": "2026-03-08T14:24:25.742Z"
 }
 ```
+
+---
+
+## 👤 Profil Utilisateur
+
+### Endpoints
+```
+GET    /api/profile              → Récupérer le profil de l'utilisateur connecté
+PUT    /api/profile              → Modifier les informations du profil (firstName, lastName, gender, address, phone)
+PUT    /api/profile/password     → Changer le mot de passe (currentPassword, newPassword, confirmPassword)
+POST   /api/profile/photo        → Upload de la photo de profil (multipart/form-data, champ "photo")
+```
+
+### Structure ProfileData
+```json
+{
+  "id": "123",
+  "firstName": "Jean",
+  "lastName": "Dupont",
+  "email": "jean@example.com",
+  "gender": "male",
+  "address": "12 rue de la Paix",
+  "phone": "0692123456",
+  "profilePhoto": "photo-123.jpg",
+  "role": "administrateur principale"
+}
+```
+
+### Réponses
+- `PUT /api/profile` → `{ success: true, user: ProfileData }`
+- `PUT /api/profile/password` → `{ success: true }`
+- `POST /api/profile/photo` → `{ photoUrl: "photo-123.jpg" }`
+
+---
+
+## ⚙️ Paramètres (Settings)
+
+### Endpoints
+```
+GET    /api/settings                → Récupérer les paramètres + isAdmin
+PUT    /api/settings                → Modifier les paramètres (admin requis)
+GET    /api/settings/users          → Liste des utilisateurs (admin principale)
+PUT    /api/settings/user-role      → Changer le rôle d'un utilisateur (admin principale)
+POST   /api/settings/backup         → Sauvegarder toutes les données (encryptionCode requis, min 6 chars)
+POST   /api/settings/restore        → Restaurer des données (encryptedData + decryptionCode)
+POST   /api/settings/delete-all     → Supprimer toutes les données (password requis, admin principale)
+POST   /api/settings/verify-password → Vérifier le mot de passe admin
+```
+
+### Notes importantes
+- La sauvegarde/restauration scanne dynamiquement tous les fichiers `.json` dans `server/db/`
+- Les nouveaux fichiers de base de données sont automatiquement inclus dans les sauvegardes
+- La suppression réinitialise chaque fichier (tableau vide ou objet vide selon le type), tout en préservant le compte admin principale

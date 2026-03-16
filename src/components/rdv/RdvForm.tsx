@@ -18,11 +18,12 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { AlertTriangle, Calendar, Clock, User, MapPin, Phone, Search, CheckCircle, Sparkles } from 'lucide-react';
+import { AlertTriangle, Calendar, CalendarOff, Clock, User, MapPin, Phone, Search, CheckCircle, Sparkles } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 import { cn } from '@/lib/utils';
+import indisponibleApi from '@/services/api/indisponibleApi';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://server-gestion-ventes.onrender.com';
 
@@ -80,6 +81,10 @@ const RdvForm: React.FC<RdvFormProps> = ({
   const [timeConflicts, setTimeConflicts] = useState<RDV[]>([]);
   const [isCheckingConflict, setIsCheckingConflict] = useState(false);
   const [hasConflict, setHasConflict] = useState(false);
+
+  // Indisponibilité checking
+  const [isIndisponible, setIsIndisponible] = useState(false);
+  const [indispoMessage, setIndispoMessage] = useState('');
 
   useEffect(() => {
     if (rdv) {
@@ -159,24 +164,40 @@ const RdvForm: React.FC<RdvFormProps> = ({
     return () => clearTimeout(debounce);
   }, [clientSearch, selectedClient]);
 
-  // Check for time conflicts when date, heureDebut, or heureFin changes
+  // Check for time conflicts and indisponibilité when date, heureDebut, or heureFin changes
   useEffect(() => {
     const checkTimeConflict = async () => {
       if (!formData.date || !formData.heureDebut || !formData.heureFin) {
         setTimeConflicts([]);
         setHasConflict(false);
+        setIsIndisponible(false);
         return;
       }
 
       setIsCheckingConflict(true);
       try {
+        // Check indisponibilité
+        const indispoResult = await indisponibleApi.checkDisponibilite(formData.date, formData.heureDebut, formData.heureFin);
+        if (!indispoResult.disponible) {
+          setIsIndisponible(true);
+          const indispo = indispoResult.indisponibilites[0];
+          setIndispoMessage(
+            indispo?.journeeComplete
+              ? `Cette journée est marquée comme indisponible${indispo.motif ? ` (${indispo.motif})` : ''}`
+              : `Créneau indisponible: ${indispo?.heureDebut} - ${indispo?.heureFin}${indispo?.motif ? ` (${indispo.motif})` : ''}`
+          );
+        } else {
+          setIsIndisponible(false);
+          setIndispoMessage('');
+        }
+
+        // Check RDV conflicts
         const token = localStorage.getItem('token');
         const params = new URLSearchParams({
           date: formData.date,
           heureDebut: formData.heureDebut,
           heureFin: formData.heureFin,
         });
-        // Exclude current RDV when editing
         if (rdv?.id) {
           params.append('excludeId', rdv.id);
         }
@@ -282,6 +303,26 @@ const RdvForm: React.FC<RdvFormProps> = ({
                   <div className="mt-2 text-xs">
                     Veuillez choisir une autre date ou un autre horaire.
                   </div>
+                </AlertDescription>
+              </Alert>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Indisponibilité warning */}
+        <AnimatePresence>
+          {isIndisponible && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+            >
+              <Alert variant="destructive" className="mb-4 border-orange-500/50 bg-orange-500/10">
+                <CalendarOff className="h-4 w-4" />
+                <AlertDescription>
+                  <span className="font-bold">🚫 Jour / créneau indisponible !</span>
+                  <div className="mt-1 text-sm">{indispoMessage}</div>
+                  <div className="mt-1 text-xs">Veuillez choisir une autre date ou un autre horaire.</div>
                 </AlertDescription>
               </Alert>
             </motion.div>
@@ -556,10 +597,10 @@ const RdvForm: React.FC<RdvFormProps> = ({
             {!viewOnly && (
               <Button 
                 type="submit" 
-                disabled={isSubmitting || hasConflict || isCheckingConflict}
+                disabled={isSubmitting || hasConflict || isIndisponible || isCheckingConflict}
                 className={cn(
                   "h-12 px-8 shadow-lg transition-all",
-                  hasConflict 
+                  (hasConflict || isIndisponible)
                     ? "bg-gray-400 cursor-not-allowed" 
                     : "bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
                 )}
@@ -569,7 +610,7 @@ const RdvForm: React.FC<RdvFormProps> = ({
                     <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                     Enregistrement...
                   </span>
-                ) : hasConflict ? (
+                ) : (hasConflict || isIndisponible) ? (
                   <span className="flex items-center gap-2">
                     <AlertTriangle className="h-4 w-4" />
                     Créneau non disponible

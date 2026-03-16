@@ -4,13 +4,12 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import profileApi, { ProfileData } from '@/services/api/profileApi';
 import { motion } from 'framer-motion';
-import {
-  User, Mail, Phone, MapPin, Camera, Lock, Save, Edit3, Check, X, Eye, EyeOff, Shield, Sparkles, Crown, Settings
-} from 'lucide-react';
-import PasswordStrengthChecker from '@/components/PasswordStrengthChecker';
+import { User, Camera, Lock, Shield, Sparkles, Crown, Settings } from 'lucide-react';
 import ParametresSection from '@/components/profile/ParametresSection';
+import ProfileCard from '@/components/profile/ProfileCard';
+import ProfileInfoCard from '@/components/profile/ProfileInfoCard';
+import PasswordSection from '@/components/profile/PasswordSection';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -127,20 +126,6 @@ const ProfilePage: React.FC = () => {
 
   const photoUrl = profile?.profilePhoto ? profileApi.getPhotoUrl(profile.profilePhoto) : null;
 
-  const GreenPulseRings = ({ size = 160 }: { size?: number }) => (
-    <div className="relative" style={{ width: size, height: size }}>
-      <div className="absolute inset-0 rounded-full border-[3px] border-emerald-400" style={{ animation: 'greenPulse 1s ease-in-out infinite' }} />
-      <div className="absolute rounded-full border-[3px] border-emerald-500" style={{ inset: 6, animation: 'greenPulse 1s ease-in-out infinite 0.5s' }} />
-      <div className="absolute rounded-full overflow-hidden bg-gradient-to-br from-violet-600 to-fuchsia-600 flex items-center justify-center" style={{ inset: 12 }}>
-        {photoUrl ? (
-          <img src={photoUrl} alt="Profile" className="w-full h-full object-cover" />
-        ) : (
-          <User className="w-1/2 h-1/2 text-white" />
-        )}
-      </div>
-    </div>
-  );
-
   if (loading) {
     return (
       <Layout>
@@ -207,154 +192,37 @@ const ProfilePage: React.FC = () => {
           {/* PROFIL TAB */}
           {activeTab === 'profil' && (
             <>
-              {/* PROFILE CARD */}
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-                className="relative rounded-3xl backdrop-blur-2xl bg-white/70 dark:bg-white/5 border border-violet-200/30 dark:border-violet-800/20 shadow-2xl shadow-violet-500/5 overflow-hidden p-8"
-              >
-                <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-violet-500 via-fuchsia-500 to-pink-500" />
+              <ProfileCard
+                photoUrl={photoUrl}
+                firstName={profile?.firstName}
+                lastName={profile?.lastName}
+                email={profile?.email}
+                userRole={userRole}
+                onClickUpload={() => fileInputRef.current?.click()}
+              />
+              <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handlePhotoSelect} />
 
-                <div className="flex flex-col items-center gap-6">
-                  <div className="relative cursor-pointer" onClick={() => fileInputRef.current?.click()}>
-                    <GreenPulseRings size={160} />
-                    <div className="absolute bottom-1 right-1 w-10 h-10 rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center shadow-lg border-2 border-white dark:border-[#0a0020] hover:scale-110 transition-transform">
-                      <Camera className="w-5 h-5 text-white" />
-                    </div>
-                    <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handlePhotoSelect} />
-                  </div>
+              <ProfileInfoCard
+                profile={profile}
+                editing={editing}
+                editForm={editForm}
+                setEditForm={setEditForm}
+                onEdit={() => setEditing(true)}
+                onCancel={() => setEditing(false)}
+                onSave={() => setConfirmProfile(true)}
+              />
 
-                  <div className="text-center">
-                    <h2 className="text-2xl font-black bg-gradient-to-r from-violet-600 to-fuchsia-600 bg-clip-text text-transparent">
-                      {profile?.firstName} {profile?.lastName}
-                    </h2>
-                    <p className="text-sm text-muted-foreground mt-1">{profile?.email}</p>
-                    {userRole && (
-                      <span className="inline-flex items-center gap-1 mt-2 px-3 py-1 rounded-full bg-violet-500/10 text-violet-600 text-xs font-bold border border-violet-500/20">
-                        <Shield className="w-3 h-3" /> {userRole}
-                      </span>
-                    )}
-                    <div className="mt-2">
-                      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 text-xs font-bold border border-emerald-500/20">
-                        <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" /> En ligne
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-
-              {/* INFO CARD */}
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-                className="relative rounded-3xl backdrop-blur-2xl bg-white/70 dark:bg-white/5 border border-violet-200/30 dark:border-violet-800/20 shadow-2xl shadow-violet-500/5 overflow-hidden p-8"
-              >
-                <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500" />
-
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
-                    <Shield className="w-5 h-5 text-violet-500" /> Informations Personnelles
-                  </h3>
-                  {!editing ? (
-                    <Button onClick={() => setEditing(true)} className={`${premiumBtnClass} bg-gradient-to-r from-violet-500/10 to-fuchsia-500/10 border-violet-300/30 text-violet-600 dark:text-violet-400`}>
-                      <Edit3 className="w-4 h-4 mr-2" /> Modifier
-                    </Button>
-                  ) : (
-                    <div className="flex gap-2">
-                      <Button onClick={() => setEditing(false)} variant="ghost" className="rounded-xl text-rose-500"><X className="w-4 h-4 mr-1" /> Annuler</Button>
-                      <Button onClick={() => setConfirmProfile(true)} className={`${premiumBtnClass} bg-gradient-to-r from-emerald-500 to-teal-500 text-white border-emerald-400/30`}>
-                        <Save className="w-4 h-4 mr-2" /> Enregistrer
-                      </Button>
-                    </div>
-                  )}
-                </div>
-
-                <div className="grid grid-cols-2 gap-6">
-                  {[
-                    { icon: User, label: 'Prénom', key: 'firstName' as const },
-                    { icon: User, label: 'Nom', key: 'lastName' as const },
-                    { icon: Mail, label: 'Email', key: 'email' as const, readonly: true },
-                    { icon: Phone, label: 'Téléphone', key: 'phone' as const },
-                    { icon: MapPin, label: 'Adresse', key: 'address' as const },
-                    { icon: User, label: 'Genre', key: 'gender' as const },
-                  ].map(({ icon: Icon, label, key, readonly }) => (
-                    <div key={key} className="rounded-2xl bg-gradient-to-br from-slate-50 to-white dark:from-white/5 dark:to-white/[0.02] border border-slate-200/50 dark:border-violet-800/20 p-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500/20 to-fuchsia-500/20 flex items-center justify-center">
-                          <Icon className="w-4 h-4 text-violet-500" />
-                        </div>
-                        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{label}</span>
-                      </div>
-                      {editing && !readonly ? (
-                        key === 'gender' ? (
-                          <select value={editForm.gender} onChange={e => setEditForm(p => ({ ...p, gender: e.target.value }))}
-                            className="w-full rounded-xl border border-violet-200/30 dark:border-violet-800/20 bg-white dark:bg-white/5 px-3 py-2 text-sm">
-                            <option value="male">Homme</option>
-                            <option value="female">Femme</option>
-                            <option value="other">Autre</option>
-                          </select>
-                        ) : (
-                          <Input value={editForm[key as keyof typeof editForm] || ''} onChange={e => setEditForm(p => ({ ...p, [key]: e.target.value }))}
-                            className="rounded-xl border-violet-200/30 dark:border-violet-800/20" />
-                        )
-                      ) : (
-                        <p className="text-sm font-semibold text-foreground">
-                          {key === 'email' ? profile?.email : key === 'gender'
-                            ? (profile?.gender === 'male' ? 'Homme' : profile?.gender === 'female' ? 'Femme' : 'Autre')
-                            : (profile as any)?.[key] || '—'}
-                        </p>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </motion.div>
-
-              {/* PASSWORD CARD */}
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
-                className="relative rounded-3xl backdrop-blur-2xl bg-white/70 dark:bg-white/5 border border-violet-200/30 dark:border-violet-800/20 shadow-2xl shadow-violet-500/5 overflow-hidden p-8"
-              >
-                <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-rose-500 via-orange-500 to-amber-500" />
-
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
-                    <Lock className="w-5 h-5 text-rose-500" /> Sécurité — Mot de passe
-                  </h3>
-                  {!showPasswordForm && (
-                    <Button onClick={() => setShowPasswordForm(true)} className={`${premiumBtnClass} bg-gradient-to-r from-rose-500/10 to-orange-500/10 border-rose-300/30 text-rose-600 dark:text-rose-400`}>
-                      <Lock className="w-4 h-4 mr-2" /> Changer le mot de passe
-                    </Button>
-                  )}
-                </div>
-
-                {showPasswordForm && (
-                  <div className="space-y-4 max-w-md">
-                    {[
-                      { key: 'currentPassword' as const, label: 'Mot de passe actuel', show: showPw.current, toggle: () => setShowPw(p => ({ ...p, current: !p.current })) },
-                      { key: 'newPassword' as const, label: 'Nouveau mot de passe', show: showPw.new, toggle: () => setShowPw(p => ({ ...p, new: !p.new })) },
-                      { key: 'confirmPassword' as const, label: 'Confirmer le nouveau mot de passe', show: showPw.confirm, toggle: () => setShowPw(p => ({ ...p, confirm: !p.confirm })) },
-                    ].map(({ key, label, show, toggle }) => (
-                      <div key={key}>
-                        <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1 block">{label}</label>
-                        <div className="relative">
-                          <Input type={show ? 'text' : 'password'} value={pwForm[key]} onChange={e => setPwForm(p => ({ ...p, [key]: e.target.value }))}
-                            className="rounded-xl border-violet-200/30 dark:border-violet-800/20 pr-10" />
-                          <button type="button" onClick={toggle} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-                            {show ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                          </button>
-                        </div>
-                        <PasswordStrengthChecker password={pwForm[key]} onValidityChange={(isValid) => { if (key === "newPassword") setIsNewPasswordValid(isValid); }} />
-                      </div>
-                    ))}
-                    <div className="flex gap-2 pt-2">
-                      <Button onClick={() => { setShowPasswordForm(false); setPwForm({ currentPassword: '', newPassword: '', confirmPassword: '' }); setIsNewPasswordValid(false); }}
-                        variant="ghost" className="rounded-xl text-rose-500">
-                        <X className="w-4 h-4 mr-1" /> Annuler
-                      </Button>
-                      <Button onClick={() => setConfirmPassword(true)}
-                        disabled={!pwForm.currentPassword || !pwForm.newPassword || !pwForm.confirmPassword || !isNewPasswordValid}
-                        className={`${premiumBtnClass} bg-gradient-to-r from-emerald-500 to-teal-500 text-white border-emerald-400/30`}>
-                        <Check className="w-4 h-4 mr-2" /> Valider
-                      </Button>
-                    </div>
-                  </div>
-                )}
-              </motion.div>
+              <PasswordSection
+                showPasswordForm={showPasswordForm}
+                setShowPasswordForm={setShowPasswordForm}
+                pwForm={pwForm}
+                setPwForm={setPwForm}
+                showPw={showPw}
+                setShowPw={setShowPw}
+                isNewPasswordValid={isNewPasswordValid}
+                setIsNewPasswordValid={setIsNewPasswordValid}
+                onSubmit={() => setConfirmPassword(true)}
+              />
             </>
           )}
 

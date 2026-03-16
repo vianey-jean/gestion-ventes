@@ -341,3 +341,23 @@ bénéfice = (quantité × prix_remboursement_unitaire) - (quantité × prix_ach
 - Recherche autocomplétion, CRUD complet
 - API : `server/routes/fournisseurs.js`
 - Base : `server/db/fournisseurs.json`
+
+---
+
+## 👤 Profil & Paramètres
+
+### Page : `src/pages/ProfilePage.tsx`
+Décomposée en composants réutilisables :
+- `ProfileCard.tsx` — Avatar animé + identité + rôle
+- `ProfileAvatar.tsx` — Anneaux pulsants verts autour de la photo
+- `ProfileInfoCard.tsx` — Édition des informations personnelles
+- `PasswordSection.tsx` — Changement de mot de passe avec force check
+- `ParametresSection.tsx` — Configuration admin (sauvegarde, rôles, modules)
+
+### API
+- Frontend : `src/services/api/profileApi.ts`, `src/services/api/settingsApi.ts`
+- Backend : `server/routes/profile.js`, `server/routes/settings.js`
+- La sauvegarde/restauration scanne dynamiquement `server/db/*.json`
+
+### Base de données
+- `users.json`, `settings.json`, `moduleSettings.json`, `indisponible.json`, `parametretache.json`, `prixpointage.json`

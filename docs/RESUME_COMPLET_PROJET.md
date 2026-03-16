@@ -254,3 +254,17 @@ Chat en direct visiteur ↔ admin avec :
 
 Gestion automatique des fournisseurs (auto-créés lors d'ajout produit/achat).  
 **API** : `server/routes/fournisseurs.js` | **Base** : `server/db/fournisseurs.json`
+
+---
+
+## 👤 Profil & Paramètres
+
+Gestion complète du profil utilisateur et des paramètres de l'application.
+
+**Fonctionnalités** : Édition profil, upload photo, changement mot de passe, sauvegarde/restauration/suppression BDD (chiffrement AES-256), gestion des rôles, configuration des modules.
+
+**Composants décomposés** : `ProfileCard`, `ProfileAvatar`, `ProfileInfoCard`, `PasswordSection`, `ParametresSection`, `IndisponibiliteSection`, `ModuleSettingsSection`
+
+**Backend** : `server/routes/profile.js`, `server/routes/settings.js`  
+**Base** : `users.json`, `settings.json`, `moduleSettings.json`, `indisponible.json`, `parametretache.json`, `prixpointage.json`  
+**Note** : La sauvegarde scanne dynamiquement tous les `*.json` dans `server/db/` — les nouveaux fichiers de BDD sont automatiquement inclus.

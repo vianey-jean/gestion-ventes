@@ -234,7 +234,7 @@ const PointagePage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
                 onNextMonth={() => setCurrentDate(new Date(year, month + 1, 1))}
                 onDayClick={(dateStr) => { setSelectedDay(dateStr); setShowDayModal(true); }}
               />
-              <PointageEntreprisesList entreprises={entreprises} />
+              <PointageEntreprisesList entreprises={entreprises} onRefresh={fetchData} />
               <PointageTravailleursList travailleurs={travailleurs} />
             </div>
 

@@ -265,3 +265,28 @@ Gestion automatique des fournisseurs lors de l'ajout de produits et d'achats en 
 
 ### Base de données
 - `server/db/fournisseurs.json`
+
+---
+
+## 👤 Module Profil & Paramètres
+
+### Profil Utilisateur
+| Fonctionnalité | Description |
+|----------------|-------------|
+| Visualisation | Affichage des informations personnelles avec avatar animé |
+| Édition | Modification du prénom, nom, genre, adresse, téléphone avec confirmation |
+| Photo de profil | Upload avec aperçu et confirmation |
+| Mot de passe | Changement sécurisé avec vérification de force (PasswordStrengthChecker) |
+
+### Paramètres (Admin)
+| Fonctionnalité | Description |
+|----------------|-------------|
+| Sauvegarde | Chiffrement AES-256 + téléchargement JSON (scan dynamique de toute la BDD) |
+| Restauration | Injection de données depuis fichier chiffré |
+| Suppression totale | Réinitialisation complète (admin principale uniquement, 1 tentative) |
+| Gestion des rôles | Promouvoir/rétrograder des utilisateurs (admin principale) |
+| Modules | Configuration par module (commandes, pointage, tâches, notes) |
+| Indisponibilités | Gestion des congés et absences |
+
+### Base de données
+- `server/db/users.json`, `server/db/settings.json`, `server/db/moduleSettings.json`, `server/db/indisponible.json`

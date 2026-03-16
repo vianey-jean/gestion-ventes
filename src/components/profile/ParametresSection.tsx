@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import {
   Settings, Trash2, Upload, Download, Shield, Eye, EyeOff, AlertTriangle,
  ChevronDown, ChevronUp,
-  UserCog, ArrowUpCircle, ArrowDownCircle
+  UserCog, ArrowUpCircle, ArrowDownCircle, CalendarOff
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,6 +16,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import PasswordStrengthChecker from '@/components/PasswordStrengthChecker';
 import settingsApi, { AppSettings } from '@/services/api/settingsApi';
 import api from '@/service/api';
+import IndisponibiliteSection from './IndisponibiliteSection';
+import ModuleSettingsSection from './ModuleSettingsSection';
 
 const premiumBtnClass = "group relative overflow-hidden rounded-xl sm:rounded-2xl backdrop-blur-xl border transition-all duration-300 hover:scale-105 px-4 py-2 sm:px-5 sm:py-3 text-xs sm:text-sm font-semibold";
 
@@ -32,7 +34,7 @@ const ParametresSection: React.FC<ParametresSectionProps> = ({ userRole }) => {
   const isAdmin = userRole === 'administrateur' || isAdminPrincipal;
 
   const [settings, setSettings] = useState<AppSettings | null>(null);
-  const [ setIsAdminFromServer] = useState(false);
+  const [, setIsAdminFromServer] = useState(false);
   const [loading, setLoading] = useState(true);
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     notifications: true,
@@ -316,7 +318,23 @@ const ParametresSection: React.FC<ParametresSectionProps> = ({ userRole }) => {
               <h3 className="text-lg font-bold text-foreground">Paramètres</h3>
               <p className="text-xs text-muted-foreground">Configuration du site et gestion des données</p>
             </div>
-          </div>      
+           </div>
+
+          {/* Indisponibilités / Congés */}
+          <div className="mt-6 pt-6 border-t border-border/50">
+            <IndisponibiliteSection />
+          </div>
+
+          {/* Module Settings */}
+          <div className="mt-6 pt-6 border-t border-border/50">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-purple-500 flex items-center justify-center">
+                <Settings className="w-4 h-4 text-white" />
+              </div>
+              <span className="text-sm font-bold text-foreground">Paramètres des modules</span>
+            </div>
+            <ModuleSettingsSection />
+          </div>
 
           {/* ADMIN BUTTONS: Backup/Restore for both admin roles, Delete only for admin principale */}
           {isAdmin && (

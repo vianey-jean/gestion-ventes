@@ -383,3 +383,28 @@ Les animations sont gérées par Framer Motion pour :
 ## 🏭 Fournisseurs (Frontend)
 - Service API : `src/services/api/fournisseurApi.ts`
 - Intégré dans formulaires produits et comptabilité avec autocomplétion
+
+---
+
+## 👤 Page Profil (ProfilePage)
+
+### Architecture décomposée
+La page profil est décomposée en composants réutilisables :
+
+| Composant | Fichier | Rôle |
+|-----------|---------|------|
+| `ProfileCard` | `src/components/profile/ProfileCard.tsx` | Carte d'identité : avatar, nom, email, rôle, statut |
+| `ProfileAvatar` | `src/components/profile/ProfileAvatar.tsx` | Avatar animé avec anneaux pulsants verts |
+| `ProfileInfoCard` | `src/components/profile/ProfileInfoCard.tsx` | Informations personnelles éditables (prénom, nom, email, téléphone, adresse, genre) |
+| `PasswordSection` | `src/components/profile/PasswordSection.tsx` | Changement de mot de passe sécurisé avec PasswordStrengthChecker |
+| `ParametresSection` | `src/components/profile/ParametresSection.tsx` | Paramètres globaux (admin uniquement) |
+| `IndisponibiliteSection` | `src/components/profile/IndisponibiliteSection.tsx` | Gestion des congés/indisponibilités |
+| `ModuleSettingsSection` | `src/components/profile/ModuleSettingsSection.tsx` | Configuration par module |
+
+### Onglets
+- **Profil** : Visible par tous les utilisateurs — avatar, infos, mot de passe
+- **Paramètres** : Visible uniquement par les administrateurs — config, backup, rôles
+
+### Services API
+- `src/services/api/profileApi.ts` — Profil utilisateur
+- `src/services/api/settingsApi.ts` — Paramètres globaux

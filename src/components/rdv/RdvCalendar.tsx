@@ -15,7 +15,8 @@ import {
   Trash2,
   X,
   AlertTriangle,
-  Lock
+  Lock,
+  CalendarOff
 } from 'lucide-react';
 import { format, addDays, startOfWeek, isSameDay, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -37,6 +38,7 @@ import { motion } from 'framer-motion';
 import { ConfirmDialog } from '@/components/shared';
 import axios from 'axios';
 import { toast } from 'sonner';
+import indisponibleApi, { Indisponibilite } from '@/services/api/indisponibleApi';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://server-gestion-ventes.onrender.com';
 
@@ -84,6 +86,13 @@ const RdvCalendar: React.FC<RdvCalendarProps> = ({
   const isMobile = useIsMobile();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [draggedRdv, setDraggedRdv] = useState<RDV | null>(null);
+  
+  // Indisponibilités
+  const [indisponibilites, setIndisponibilites] = useState<Indisponibilite[]>([]);
+  
+  useEffect(() => {
+    indisponibleApi.getAll().then(setIndisponibilites).catch(() => {});
+  }, []);
   const [dropTarget, setDropTarget] = useState<{ date: string; hour: number } | null>(null);
   const [showTimeDialog, setShowTimeDialog] = useState(false);
   const [pendingDrop, setPendingDrop] = useState<{ rdv: RDV; date: string; time: string } | null>(null);
@@ -215,6 +224,25 @@ const RdvCalendar: React.FC<RdvCalendarProps> = ({
   };
 
   const goToToday = () => setCurrentDate(new Date());
+
+  // Check if a specific hour on a date is indisponible
+  const getIndispoForSlot = (dateStr: string, hour: number) => {
+    return indisponibilites.filter(ind => {
+      if (ind.date !== dateStr) return false;
+      if (ind.journeeComplete) return true;
+      const slotStart = hour * 60;
+      const slotEnd = (hour + 1) * 60;
+      const [indStartH, indStartM] = ind.heureDebut.split(':').map(Number);
+      const [indEndH, indEndM] = ind.heureFin.split(':').map(Number);
+      const indStart = indStartH * 60 + indStartM;
+      const indEnd = indEndH * 60 + indEndM;
+      return slotStart < indEnd && slotEnd > indStart;
+    });
+  };
+
+  const isDayFullyIndisponible = (dateStr: string) => {
+    return indisponibilites.some(ind => ind.date === dateStr && ind.journeeComplete);
+  };
 
   const handleDragStart = (e: React.DragEvent, rdv: RDV) => {
     // Bloquer le drag pour les RDV créés depuis la page Commandes (synchronisés)
@@ -356,25 +384,46 @@ const RdvCalendar: React.FC<RdvCalendarProps> = ({
             <div className="p-3 text-center text-xs font-semibold text-muted-foreground border-r border-primary/20 bg-muted/30">
               Heure
             </div>
-            {weekDays.map((day, idx) => (
-              <div
-                key={idx}
-                className={cn(
-                  "p-3 text-center border-r border-primary/20 last:border-r-0 transition-colors",
-                  isSameDay(day, new Date()) && "bg-gradient-to-b from-primary/20 to-primary/10"
-                )}
-              >
-                <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                  {format(day, 'EEE', { locale: fr })}
+            {weekDays.map((day, idx) => {
+              const dateStr = format(day, 'yyyy-MM-dd');
+              const isFullDayIndispo = isDayFullyIndisponible(dateStr);
+              const hasPartialIndispo = !isFullDayIndispo && indisponibilites.some(ind => ind.date === dateStr);
+              return (
+                <div
+                  key={idx}
+                  className={cn(
+                    "p-3 text-center border-r border-primary/20 last:border-r-0 transition-colors relative",
+                    isFullDayIndispo && "bg-red-500/20 dark:bg-red-900/30",
+                    isSameDay(day, new Date()) && !isFullDayIndispo && "bg-gradient-to-b from-primary/20 to-primary/10"
+                  )}
+                >
+                  <div className={cn(
+                    "text-xs font-semibold uppercase tracking-wider",
+                    isFullDayIndispo ? "text-red-500" : "text-muted-foreground"
+                  )}>
+                    {format(day, 'EEE', { locale: fr })}
+                  </div>
+                  <div className={cn(
+                    "text-2xl font-bold mt-1",
+                    isFullDayIndispo ? "text-red-500" : isSameDay(day, new Date()) ? "text-primary" : "text-foreground"
+                  )}>
+                    {format(day, 'd')}
+                  </div>
+                  {isFullDayIndispo && (
+                    <div className="flex items-center justify-center mt-1">
+                      <CalendarOff className="w-3 h-3 text-red-500 mr-1" />
+                      <span className="text-[9px] font-bold text-red-500">INDISPONIBLE</span>
+                    </div>
+                  )}
+                  {hasPartialIndispo && (
+                    <div className="flex items-center justify-center mt-1">
+                      <Clock className="w-3 h-3 text-orange-500 mr-1" />
+                      <span className="text-[9px] font-bold text-orange-500">Partiel</span>
+                    </div>
+                  )}
                 </div>
-                <div className={cn(
-                  "text-2xl font-bold mt-1",
-                  isSameDay(day, new Date()) ? "text-primary" : "text-foreground"
-                )}>
-                  {format(day, 'd')}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {/* Time Grid */}
@@ -387,16 +436,27 @@ const RdvCalendar: React.FC<RdvCalendarProps> = ({
                 {weekDays.map((day, dayIdx) => {
                   const dateStr = format(day, 'yyyy-MM-dd');
                   const isDropTarget = dropTarget?.date === dateStr && dropTarget?.hour === hour;
+                  const slotIndispos = getIndispoForSlot(dateStr, hour);
+                  const isIndispo = slotIndispos.length > 0;
                   
                   return (
                     <div
                       key={dayIdx}
                       className={cn(
-                        "relative border-r border-primary/10 last:border-r-0 cursor-pointer transition-all duration-200",
-                        isDropTarget && "bg-primary/30 ring-2 ring-primary ring-inset",
-                        isSameDay(day, new Date()) && "bg-primary/5"
+                        "relative border-r border-primary/10 last:border-r-0 transition-all duration-200",
+                        isIndispo 
+                          ? "bg-red-500/15 dark:bg-red-900/25 cursor-not-allowed" 
+                          : "cursor-pointer",
+                        isDropTarget && !isIndispo && "bg-primary/30 ring-2 ring-primary ring-inset",
+                        isSameDay(day, new Date()) && !isIndispo && "bg-primary/5"
                       )}
-                      onClick={() => onSlotClick(dateStr, `${hour.toString().padStart(2, '0')}:00`)}
+                      onClick={() => {
+                        if (isIndispo) {
+                          toast.error(`Créneau indisponible${slotIndispos[0]?.motif ? ` : ${slotIndispos[0].motif}` : ''}`);
+                          return;
+                        }
+                        onSlotClick(dateStr, `${hour.toString().padStart(2, '0')}:00`);
+                      }}
                       onDragOver={(e) => handleDragOver(e, dateStr, hour)}
                       onDragLeave={handleDragLeave}
                       onDrop={(e) => handleDrop(e, dateStr, hour)}

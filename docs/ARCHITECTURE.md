@@ -292,3 +292,34 @@ Chaque client recharge les données affectées
 - Auto-créés lors d'ajout produit ou achat comptabilité
 - Recherche avec autocomplétion
 - Base de données : `server/db/fournisseurs.json`
+
+---
+
+## 👤 Page Profil (ProfilePage)
+
+### Architecture des composants
+
+```
+ProfilePage.tsx
+├── ProfileCard.tsx          → Avatar + nom + email + rôle + statut en ligne
+│   └── ProfileAvatar.tsx    → Avatar animé avec anneaux pulsants verts
+├── ProfileInfoCard.tsx      → Formulaire d'édition des informations personnelles
+├── PasswordSection.tsx      → Changement de mot de passe avec vérification de force
+└── ParametresSection.tsx    → Onglet Paramètres (admin uniquement)
+    ├── IndisponibiliteSection.tsx → Gestion des congés/indisponibilités
+    └── ModuleSettingsSection.tsx  → Configuration par module (commandes, pointage, tâches, notes)
+```
+
+### Fonctionnalités
+- **Profil** : Visualisation et édition des informations personnelles avec confirmation
+- **Photo** : Upload avec aperçu et confirmation avant envoi
+- **Mot de passe** : Changement sécurisé avec vérification de force (PasswordStrengthChecker)
+- **Paramètres** (admin) : Configuration globale, gestion des rôles, sauvegarde/restauration/suppression des données
+- **Sauvegarde dynamique** : Scanne automatiquement tous les fichiers `.json` dans `server/db/` pour inclure les nouvelles bases de données
+- **Rôles** : 3 niveaux — simple utilisateur, administrateur, administrateur principale
+
+### Base de données associées
+- `server/db/users.json` — Comptes utilisateurs
+- `server/db/settings.json` — Paramètres globaux
+- `server/db/moduleSettings.json` — Paramètres par module
+- `server/db/indisponible.json` — Congés et indisponibilités

@@ -929,3 +929,40 @@ totalPurchasePrice = Σ(quantitySold × purchasePrice) pour chaque produit
 - CRUD complet : `server/routes/fournisseurs.js`
 - Auto-création lors ajout produit/achat
 - Autocomplétion dans formulaires
+
+---
+
+## 👤 Profil Utilisateur & Paramètres
+
+### Page Profil (`ProfilePage.tsx`)
+**Onglet Profil** (tous les utilisateurs) :
+- `ProfileCard` : Avatar animé (anneaux pulsants), nom, email, rôle, statut en ligne
+- `ProfileInfoCard` : Édition des infos (prénom, nom, email, téléphone, adresse, genre) avec confirmation
+- `PasswordSection` : Changement sécurisé avec PasswordStrengthChecker
+
+**Onglet Paramètres** (admin uniquement) :
+- `ParametresSection` : Configuration globale du site
+- Sauvegarde/Restauration/Suppression des données (chiffrement AES-256)
+- Gestion des rôles (promouvoir/rétrograder)
+- `ModuleSettingsSection` : Config par module (commandes, pointage, tâches, notes)
+- `IndisponibiliteSection` : Gestion des congés
+
+### API Profil
+| Action | Endpoint | Méthode |
+|--------|----------|---------|
+| Récupérer profil | `/api/profile` | GET |
+| Modifier profil | `/api/profile` | PUT |
+| Changer mot de passe | `/api/profile/password` | PUT |
+| Upload photo | `/api/profile/photo` | POST |
+
+### API Paramètres
+| Action | Endpoint | Méthode |
+|--------|----------|---------|
+| Paramètres | `/api/settings` | GET/PUT |
+| Liste users | `/api/settings/users` | GET |
+| Changer rôle | `/api/settings/user-role` | PUT |
+| Sauvegarder | `/api/settings/backup` | POST |
+| Restaurer | `/api/settings/restore` | POST |
+| Supprimer tout | `/api/settings/delete-all` | POST |
+
+**Important** : La sauvegarde scanne dynamiquement `server/db/*.json` — tout nouveau fichier de BDD est automatiquement inclus.

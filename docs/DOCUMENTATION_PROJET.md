@@ -564,3 +564,17 @@ Cliquer sur l'icône soleil/lune dans la navbar pour basculer.
 - Route : `server/routes/fournisseurs.js` | Modèle : `server/models/Fournisseur.js`
 - DB : `server/db/fournisseurs.json`
 - Auto-créés lors d'ajout produit/achat, recherche autocomplétion
+
+---
+
+## 👤 Profil & Paramètres
+
+### Frontend
+- Page : `src/pages/ProfilePage.tsx`
+- Composants : `ProfileCard`, `ProfileAvatar`, `ProfileInfoCard`, `PasswordSection`, `ParametresSection`, `IndisponibiliteSection`, `ModuleSettingsSection`
+- Services : `profileApi.ts`, `settingsApi.ts`
+
+### Backend
+- Routes : `server/routes/profile.js`, `server/routes/settings.js`
+- DB : `users.json`, `settings.json`, `moduleSettings.json`, `indisponible.json`
+- Sauvegarde dynamique : scan automatique de tous les `*.json` dans `server/db/`
