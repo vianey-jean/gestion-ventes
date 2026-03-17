@@ -5,13 +5,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
-import { ListTodo, CalendarDays, Clock, FileText, AlertTriangle, X } from 'lucide-react';
+import { ListTodo, CalendarDays, Clock, FileText, AlertTriangle, X, Ban } from 'lucide-react';
 import { Tache } from '@/services/api/tacheApi';
 import tacheApi from '@/services/api/tacheApi';
 import rdvApiService from '@/services/api/rdvApi';
 import { Travailleur } from '@/services/api/travailleurApi';
 import TravailleurSearchInput from '@/components/pointage/TravailleurSearchInput';
 import { useToast } from '@/hooks/use-toast';
+import indisponibleApi, { Indisponibilite } from '@/services/api/indisponibleApi';
 
 interface TacheFormModalProps {
   open: boolean;
@@ -60,6 +61,13 @@ const TacheFormModal: React.FC<TacheFormModalProps> = ({
   });
   const [occupiedSlots, setOccupiedSlots] = useState<OccupiedSlot[]>([]);
   const [availabilityLoading, setAvailabilityLoading] = useState(false);
+  const [indisponibilites, setIndisponibilites] = useState<Indisponibilite[]>([]);
+
+  // Fetch indisponibilités
+  useEffect(() => {
+    if (!open) return;
+    indisponibleApi.getAll().then(setIndisponibilites).catch(() => {});
+  }, [open]);
 
   useEffect(() => {
     if (editingTache) {
@@ -191,8 +199,17 @@ const TacheFormModal: React.FC<TacheFormModalProps> = ({
     return ranges;
   })();
 
+  // Check indisponibilité for selected date
+  const indispoForDate = form.date ? indisponibilites.filter(i => i.date === form.date) : [];
+  const isDayFullyIndispo = indispoForDate.some(i => i.journeeComplete);
+
   const validationMessage = (() => {
     if (!form.heureDebut || !form.heureFin) return '';
+
+    // Check full day indispo
+    if (isDayFullyIndispo) {
+      return '🚫 Cette journée est marquée comme indisponible. Impossible d\'ajouter une tâche.';
+    }
 
     const startMinutes = timeToMinutes(form.heureDebut);
     const endMinutes = timeToMinutes(form.heureFin);
@@ -203,6 +220,18 @@ const TacheFormModal: React.FC<TacheFormModalProps> = ({
 
     if (endMinutes < startMinutes + 1) {
       return "L'heure de fin doit être au moins 1 minute après l'heure de début.";
+    }
+
+    // Check partial indisponibilité overlap
+    const indispoConflict = indispoForDate.find(i => {
+      if (i.journeeComplete) return false;
+      const iStart = timeToMinutes(i.heureDebut);
+      const iEnd = timeToMinutes(i.heureFin);
+      return startMinutes < iEnd && endMinutes > iStart;
+    });
+
+    if (indispoConflict) {
+      return `🚫 Ce créneau chevauche une indisponibilité (${indispoConflict.heureDebut} - ${indispoConflict.heureFin}${indispoConflict.motif ? ' : ' + indispoConflict.motif : ''}).`;
     }
 
     const overlapConflict = sortedSlots.find(slot => {

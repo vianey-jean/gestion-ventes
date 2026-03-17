@@ -128,6 +128,7 @@ const NotesKanbanView: React.FC = () => {
 
   const handleDragStart = (e: React.DragEvent, noteId: string) => {
     e.dataTransfer.setData('noteId', noteId);
+    e.dataTransfer.effectAllowed = 'move';
   };
 
   const handleDragOver = (e: React.DragEvent, colId: string) => {
@@ -135,13 +136,42 @@ const NotesKanbanView: React.FC = () => {
     setDragOverColId(colId);
   };
 
-  const handleDrop = (e: React.DragEvent, targetColId: string) => {
+  const handleDrop = (e: React.DragEvent, targetColId: string, dropIndex?: number) => {
     e.preventDefault();
     const noteId = e.dataTransfer.getData('noteId');
     setDragOverColId(null);
     if (!noteId) return;
     const note = notes.find(n => n.id === noteId);
-    if (!note || note.columnId === targetColId) return;
+    if (!note) return;
+
+    // Same column reorder
+    if (note.columnId === targetColId) {
+      const colNotes = notes.filter(n => n.columnId === targetColId).sort((a, b) => a.order - b.order);
+      const oldIndex = colNotes.findIndex(n => n.id === noteId);
+      const newIndex = dropIndex !== undefined ? dropIndex : colNotes.length - 1;
+      if (oldIndex === newIndex) return;
+
+      // Reorder
+      const reordered = [...colNotes];
+      const [moved] = reordered.splice(oldIndex, 1);
+      reordered.splice(newIndex, 0, moved);
+      const updates = reordered.map((n, i) => ({ id: n.id, columnId: targetColId, order: i }));
+
+      // Optimistic update
+      setNotes(prev => {
+        const other = prev.filter(n => n.columnId !== targetColId);
+        const updated = reordered.map((n, i) => ({ ...n, order: i }));
+        return [...other, ...updated];
+      });
+
+      noteApi.reorder(updates).then(() => fetchData()).catch(() => {
+        toast({ title: 'Erreur de réordonnancement', variant: 'destructive' });
+        fetchData();
+      });
+      return;
+    }
+
+    // Different column move
     const targetCol = columns.find(c => c.id === targetColId);
     setConfirmAction({
       message: `Déplacer cette note vers "${targetCol?.title}" ?`,
@@ -242,7 +272,7 @@ const NotesKanbanView: React.FC = () => {
                   onDeleteNote={handleDeleteNote}
                   onDragStart={handleDragStart}
                   onDragOver={(e) => handleDragOver(e, col.id)}
-                  onDrop={(e) => handleDrop(e, col.id)}
+                  onDrop={(e, dropIndex) => handleDrop(e, col.id, dropIndex)}
                   onEditColumn={() => { setEditingCol(col); setShowColForm(true); }}
                   onDeleteColumn={() => handleDeleteColumn(col)}
                   isDragOver={dragOverColId === col.id}

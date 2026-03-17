@@ -2,12 +2,13 @@ import React, { useRef, useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { Clock, Plus, Pencil, Trash2, GripVertical, AlertTriangle, CheckCircle, Timer, Check } from 'lucide-react';
+import { Clock, Plus, Pencil, Trash2, GripVertical, AlertTriangle, CheckCircle, Timer, Check, Ban } from 'lucide-react';
 import { Tache } from '@/services/api/tacheApi';
 import tacheApi from '@/services/api/tacheApi';
 import rdvApiService from '@/services/api/rdvApi';
 import { Travailleur } from '@/services/api/travailleurApi';
 import { useToast } from '@/hooks/use-toast';
+import indisponibleApi, { Indisponibilite } from '@/services/api/indisponibleApi';
 
 interface TacheDayModalProps {
   open: boolean;
@@ -94,6 +95,28 @@ const TacheDayModal: React.FC<TacheDayModalProps> = ({
   const { toast } = useToast();
   const dayTaches = taches.filter(t => t.date === selectedDay);
   const dragRef = useRef<{ tacheId: string; originHeure: string } | null>(null);
+  const [indisponibilites, setIndisponibilites] = useState<Indisponibilite[]>([]);
+
+  useEffect(() => {
+    if (!open || !selectedDay) return;
+    indisponibleApi.getAll().then(data => {
+      setIndisponibilites(data.filter(i => i.date === selectedDay));
+    }).catch(() => {});
+  }, [open, selectedDay]);
+
+  const isDayFullyIndispo = indisponibilites.some(i => i.journeeComplete);
+
+  const isHourIndispo = (hour: number) => {
+    if (isDayFullyIndispo) return true;
+    const hourStart = hour * 60;
+    const hourEnd = (hour + 1) * 60;
+    return indisponibilites.some(i => {
+      if (i.journeeComplete) return true;
+      const iStart = timeToMinutes(i.heureDebut);
+      const iEnd = timeToMinutes(i.heureFin);
+      return hourStart < iEnd && hourEnd > iStart;
+    });
+  };
 
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return '';
@@ -200,9 +223,15 @@ const TacheDayModal: React.FC<TacheDayModalProps> = ({
           <DialogTitle className="text-lg font-black bg-gradient-to-r from-violet-400 to-purple-400 bg-clip-text text-transparent">
             📋 {formatDate(selectedDay)}
           </DialogTitle>
+          {isDayFullyIndispo && (
+            <div className="flex items-center justify-center gap-2 text-xs font-bold text-red-400 bg-red-500/10 border border-red-500/20 rounded-xl px-3 py-2">
+              <Ban className="h-4 w-4" /> Journée indisponible
+            </div>
+          )}
           <div className="flex justify-center">
             <Button onClick={onAddTache}
-              className={cn(premiumBtnClass, "bg-gradient-to-br from-emerald-500 to-teal-600 border-emerald-300/40 text-white shadow-lg !py-1.5 !px-3 !text-xs")}>
+              disabled={isDayFullyIndispo}
+              className={cn(premiumBtnClass, "bg-gradient-to-br from-emerald-500 to-teal-600 border-emerald-300/40 text-white shadow-lg !py-1.5 !px-3 !text-xs", isDayFullyIndispo && "opacity-50 cursor-not-allowed")}>
               <span className={mirrorShine} />
               <span className="relative flex items-center"><Plus className="h-3 w-3 mr-1" /> Ajouter</span>
             </Button>
@@ -212,18 +241,22 @@ const TacheDayModal: React.FC<TacheDayModalProps> = ({
         <div className="overflow-y-auto max-h-[60vh] pr-2 space-y-0.5">
           {HOURS.map(hour => {
             const hourTaches = getTachesAtHour(hour);
+            const hourIndispo = isHourIndispo(hour);
             return (
               <div
                 key={hour}
-                onDragOver={handleDragOver}
-                onDrop={(e) => handleDrop(e, hour)}
+                onDragOver={hourIndispo ? undefined : handleDragOver}
+                onDrop={hourIndispo ? undefined : (e) => handleDrop(e, hour)}
                 className={cn(
                   'flex gap-3 py-2 px-3 rounded-xl transition-all border border-transparent',
-                  hourTaches.length > 0 ? 'bg-white/5' : 'hover:bg-white/5',
+                  hourIndispo
+                    ? 'bg-red-500/10 border-red-500/20 opacity-60 cursor-not-allowed'
+                    : hourTaches.length > 0 ? 'bg-white/5' : 'hover:bg-white/5',
                 )}
               >
-                <div className="w-14 shrink-0 text-right">
-                  <span className="text-xs font-bold text-white/40">{String(hour).padStart(2, '0')}:00</span>
+                <div className="w-14 shrink-0 text-right flex items-start gap-1 justify-end">
+                  {hourIndispo && <Ban className="h-3 w-3 text-red-400 mt-0.5" />}
+                  <span className={cn("text-xs font-bold", hourIndispo ? "text-red-400" : "text-white/40")}>{String(hour).padStart(2, '0')}:00</span>
                 </div>
                 <div className="flex-1 min-h-[36px] flex flex-col gap-1">
                   {hourTaches.length === 0 && (

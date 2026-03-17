@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Plus, Edit3, Trash2, MoreVertical, StickyNote } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Note, NoteColumn } from '@/services/api/noteApi';
@@ -12,7 +12,7 @@ interface KanbanColumnProps {
   onDeleteNote: (id: string) => void;
   onDragStart: (e: React.DragEvent, noteId: string) => void;
   onDragOver: (e: React.DragEvent) => void;
-  onDrop: (e: React.DragEvent) => void;
+  onDrop: (e: React.DragEvent, dropIndex?: number) => void;
   onEditColumn: () => void;
   onDeleteColumn: () => void;
   isDragOver: boolean;
@@ -23,12 +23,44 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
   onDragStart, onDragOver, onDrop, onEditColumn, onDeleteColumn, isDragOver
 }) => {
   const [showColMenu, setShowColMenu] = useState(false);
+  const [dropIndicatorIndex, setDropIndicatorIndex] = useState<number | null>(null);
   const sortedNotes = [...notes].sort((a, b) => a.order - b.order);
+
+  const handleNoteDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onDragOver(e);
+    setDropIndicatorIndex(index);
+  };
+
+  const handleBottomDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    onDragOver(e);
+    setDropIndicatorIndex(sortedNotes.length);
+  };
+
+  const handleNoteDrop = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDropIndicatorIndex(null);
+    onDrop(e, index);
+  };
+
+  const handleColumnDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDropIndicatorIndex(null);
+    onDrop(e, sortedNotes.length);
+  };
+
+  const handleDragLeave = () => {
+    setDropIndicatorIndex(null);
+  };
 
   return (
     <div
       onDragOver={onDragOver}
-      onDrop={onDrop}
+      onDrop={handleColumnDrop}
+      onDragLeave={handleDragLeave}
       className={cn(
         "flex-shrink-0 w-[280px] sm:w-[310px] lg:w-[320px] rounded-2xl backdrop-blur-2xl border transition-all duration-300 flex flex-col max-h-[70vh]",
         isDragOver
@@ -69,16 +101,44 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
       </div>
 
       {/* Notes List */}
-      <div className="flex-1 overflow-y-auto p-2 sm:p-3 space-y-2.5 custom-scrollbar">
-        {sortedNotes.map(note => (
-          <NoteCard
-            key={note.id}
-            note={note}
-            onEdit={() => onEditNote(note)}
-            onDelete={() => onDeleteNote(note.id)}
-            onDragStart={(e) => onDragStart(e, note.id)}
-          />
+      <div className="flex-1 overflow-y-auto p-2 sm:p-3 space-y-0 custom-scrollbar">
+        {sortedNotes.map((note, index) => (
+          <div key={note.id}>
+            {/* Drop indicator line */}
+            {dropIndicatorIndex === index && (
+              <div className="h-1 bg-cyan-400 rounded-full mx-2 my-1 shadow-lg shadow-cyan-400/50 animate-pulse" />
+            )}
+            <div
+              onDragOver={(e) => handleNoteDragOver(e, index)}
+              onDrop={(e) => handleNoteDrop(e, index)}
+              className="mb-2.5"
+            >
+              <div className="flex items-start gap-1.5">
+                <span className="mt-3 text-[10px] font-bold text-gray-400 dark:text-gray-500 w-4 text-center flex-shrink-0">
+                  {index + 1}
+                </span>
+                <div className="flex-1">
+                  <NoteCard
+                    note={note}
+                    onEdit={() => onEditNote(note)}
+                    onDelete={() => onDeleteNote(note.id)}
+                    onDragStart={(e) => onDragStart(e, note.id)}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
         ))}
+        {/* Drop indicator at bottom */}
+        {dropIndicatorIndex === sortedNotes.length && sortedNotes.length > 0 && (
+          <div className="h-1 bg-cyan-400 rounded-full mx-2 my-1 shadow-lg shadow-cyan-400/50 animate-pulse" />
+        )}
+        {/* Bottom drop zone */}
+        <div
+          onDragOver={handleBottomDragOver}
+          onDrop={(e) => handleNoteDrop(e, sortedNotes.length)}
+          className="min-h-[20px]"
+        />
         {sortedNotes.length === 0 && (
           <div className="text-center py-8 text-gray-400 dark:text-gray-500 text-xs">
             <StickyNote className="h-8 w-8 mx-auto mb-2 opacity-30" />
