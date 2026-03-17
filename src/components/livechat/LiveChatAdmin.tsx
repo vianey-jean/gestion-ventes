@@ -55,7 +55,7 @@ const LiveChatAdmin: React.FC = () => {
   useEffect(() => { selectedConvRef.current = selectedConv; }, [selectedConv]);
   useEffect(() => { messagesRef.current = messages; }, [messages]);
 
-  const isAdmin = user?.role === 'administrateur';
+  const isAdmin = user?.role === 'administrateur' || user?.role === 'administrateur principale';
 
   const loadConversations = useCallback(async () => {
     if (!user) return;
