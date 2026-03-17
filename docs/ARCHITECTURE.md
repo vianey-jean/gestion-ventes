@@ -219,7 +219,7 @@ Chaque client recharge les données affectées
 |--------|-----------|
 | Authentification | JWT avec expiration 8h |
 | Mots de passe | Hashés avec bcrypt (salt 10 rounds) |
-| CORS | Origins whitelist + Lovable wildcard |
+| CORS | Origins whitelist|
 | Rate Limiting | 100 req/min par IP |
 | Sanitization | Nettoyage de tous les inputs (sauf base64) |
 | Headers | Security headers (X-Frame-Options, CSP, etc.) |
@@ -231,7 +231,7 @@ Chaque client recharge les données affectées
 
 | Composant | Plateforme | URL |
 |-----------|-----------|-----|
-| Frontend | Lovable / Vercel | `https://riziky-boutic.vercel.app` |
+| Frontend |  Vercel | `https://riziky-boutic.vercel.app` |
 | Backend | Render | `https://server-gestion-ventes.onrender.com` |
 | Base de données | Fichiers JSON sur Render | Persistent disk |
 

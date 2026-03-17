@@ -198,7 +198,7 @@ server/
 |--------|-----------|
 | Auth | JWT signé (8h expiration) |
 | Mots de passe | bcrypt (10 rounds salt) |
-| CORS | Whitelist + wildcard Lovable |
+| CORS | Whitelist|
 | Rate Limiting | 100 req/min par IP |
 | Sanitization | Nettoyage XSS/injection |
 | Headers | X-Frame-Options, CSP, etc. |
@@ -210,7 +210,7 @@ server/
 
 | Composant | Plateforme |
 |-----------|-----------|
-| Frontend | Lovable / Vercel |
+| Frontend |  Vercel |
 | Backend | Render (persistent disk) |
 | BDD | Fichiers JSON sur Render |
 

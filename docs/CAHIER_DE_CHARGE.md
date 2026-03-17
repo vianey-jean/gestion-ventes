@@ -193,7 +193,7 @@ Application web professionnelle de gestion commerciale complète permettant de c
 - Rate limiting et sanitization intégrés
 
 ### Déploiement
-- Frontend : Lovable / Vercel
+- Frontend :  Vercel
 - Backend : Render (avec persistent disk)
 - HTTPS obligatoire en production
 
