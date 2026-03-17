@@ -52,6 +52,7 @@ const PasswordSection: React.FC<PasswordSectionProps> = ({
               <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1 block">{label}</label>
               <div className="relative">
                 <Input type={show ? 'text' : 'password'} value={pwForm[key]} onChange={e => setPwForm(p => ({ ...p, [key]: e.target.value }))}
+                  autoComplete="new-password" data-lpignore="true" data-form-type="other"
                   className="rounded-xl border-violet-200/30 dark:border-violet-800/20 pr-10" />
                 <button type="button" onClick={toggle} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
                   {show ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}

@@ -471,6 +471,9 @@ const ParametresSection: React.FC<ParametresSectionProps> = ({ userRole }) => {
                   value={deletePassword}
                   onChange={e => setDeletePassword(e.target.value)}
                   placeholder="Saisissez votre mot de passe"
+                  autoComplete="new-password"
+                  data-lpignore="true"
+                  data-form-type="other"
                   className="rounded-xl border-red-200/30 dark:border-red-800/20 pr-10"
                 />
                 <button type="button" onClick={() => setShowDeletePw(!showDeletePw)}
@@ -478,6 +481,7 @@ const ParametresSection: React.FC<ParametresSectionProps> = ({ userRole }) => {
                   {showDeletePw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
+              <PasswordStrengthChecker password={deletePassword} />
             </div>
           ) : (
             <div className="py-4 text-center">
@@ -571,6 +575,9 @@ const ParametresSection: React.FC<ParametresSectionProps> = ({ userRole }) => {
                 value={backupCode}
                 onChange={e => setBackupCode(e.target.value)}
                 placeholder="Créez un code de cryptage sécurisé"
+                autoComplete="new-password"
+                data-lpignore="true"
+                data-form-type="other"
                 className="rounded-xl border-emerald-200/30 dark:border-emerald-800/20 pr-10"
               />
               <button type="button" onClick={() => setShowBackupCode(!showBackupCode)}
@@ -623,6 +630,9 @@ const ParametresSection: React.FC<ParametresSectionProps> = ({ userRole }) => {
                 value={restoreCode}
                 onChange={e => setRestoreCode(e.target.value)}
                 placeholder="Saisissez le code de sauvegarde"
+                autoComplete="new-password"
+                data-lpignore="true"
+                data-form-type="other"
                 className="rounded-xl border-blue-200/30 dark:border-blue-800/20 pr-10"
               />
               <button type="button" onClick={() => setShowRestoreCode(!showRestoreCode)}
