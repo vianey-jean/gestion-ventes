@@ -36,6 +36,11 @@ const DebitDetailsModal: React.FC<DebitDetailsModalProps> = ({
     }
   };
 
+  const capitalizeFirst = (str) => {
+    if (!str) return "";
+    return str.charAt(0).toUpperCase() + str.slice(1);
+  };
+
   const getTypeClass = (type: string) => {
     switch (type) {
       case 'achat_produit': return 'bg-blue-100 dark:bg-blue-500/20 border-blue-200 dark:border-blue-500/20';
@@ -83,7 +88,7 @@ const DebitDetailsModal: React.FC<DebitDetailsModalProps> = ({
                   </div>
                   <div>
                     <p className="font-semibold text-gray-800 dark:text-white/90">
-                      {achat.productDescription || achat.description}
+                      {capitalizeFirst(achat.productDescription || achat.description)}
                     </p>
                     <p className="text-sm text-gray-500 dark:text-white/40 mt-0.5">
                       {new Date(achat.date).toLocaleDateString('fr-FR')}

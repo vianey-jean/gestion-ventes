@@ -45,6 +45,11 @@ const AutresDepensesModal: React.FC<AutresDepensesModalProps> = ({
     }
   };
 
+  const capitalizeFirst = (str) => {
+    if (!str) return "";
+    return str.charAt(0).toUpperCase() + str.slice(1);
+  };
+
   const getColorClasses = (type: string) => {
     switch (type) {
       case 'carburant':
@@ -108,7 +113,7 @@ const AutresDepensesModal: React.FC<AutresDepensesModalProps> = ({
                     </div>
                     <div>
                       <p className="font-semibold text-gray-800 dark:text-white/90">
-                        {depense.productDescription || depense.description}
+                        {capitalizeFirst(depense.productDescription || depense.description)}
                       </p>
                       <p className="text-sm text-gray-500 dark:text-white/40 mt-0.5">
                         {new Date(depense.date).toLocaleDateString('fr-FR')}

@@ -11,6 +11,9 @@ interface ProfileCardProps {
   userRole: string;
   onClickUpload: () => void;
 }
+const capitalizeWords = (str) => {
+  return str.replace(/\b\w/g, (char) => char.toUpperCase());
+};
 
 const ProfileCard: React.FC<ProfileCardProps> = ({
   photoUrl, firstName, lastName, email, userRole, onClickUpload
@@ -29,7 +32,7 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
           <p className="text-sm text-muted-foreground mt-1">{email}</p>
           {userRole && (
             <span className="inline-flex items-center gap-1 mt-2 px-3 py-1 rounded-full bg-violet-500/10 text-violet-600 text-xs font-bold border border-violet-500/20">
-              <Shield className="w-3 h-3" /> {userRole}
+              <Shield className="w-3 h-3" /> {capitalizeWords(userRole)}
             </span>
           )}
           <div className="mt-2">
