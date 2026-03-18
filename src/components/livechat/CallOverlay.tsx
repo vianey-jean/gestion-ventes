@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Phone, PhoneOff, Video, VideoOff, Mic, MicOff, X } from 'lucide-react';
+import { Phone, PhoneOff, Video, VideoOff, Mic, MicOff } from 'lucide-react';
 import type { CallStatus, CallType } from './useWebRTC';
 
 interface CallOverlayProps {
@@ -12,6 +12,7 @@ interface CallOverlayProps {
   incomingCall: { from: string; type: CallType } | null;
   localVideoRef: React.RefObject<HTMLVideoElement | null>;
   remoteVideoRef: React.RefObject<HTMLVideoElement | null>;
+  remoteAudioRef: React.RefObject<HTMLAudioElement | null>;
   callerName: string;
   onAccept: () => void;
   onReject: () => void;
@@ -35,6 +36,7 @@ const CallOverlay: React.FC<CallOverlayProps> = ({
   incomingCall,
   localVideoRef,
   remoteVideoRef,
+  remoteAudioRef,
   callerName,
   onAccept,
   onReject,
@@ -52,6 +54,9 @@ const CallOverlay: React.FC<CallOverlayProps> = ({
         exit={{ opacity: 0 }}
         className="absolute inset-0 z-50 flex flex-col bg-slate-950/95 backdrop-blur-md rounded-3xl overflow-hidden"
       >
+        {/* Hidden audio element - always present for audio playback */}
+        <audio ref={remoteAudioRef} autoPlay playsInline className="hidden" />
+
         {/* Video area */}
         {callType === 'video' && callStatus === 'connected' ? (
           <div className="flex-1 relative">
@@ -72,16 +77,24 @@ const CallOverlay: React.FC<CallOverlayProps> = ({
                 className="w-full h-full object-cover"
               />
             </div>
+            {/* Duration on video */}
+            <div className="absolute top-3 left-3 bg-black/50 rounded-lg px-3 py-1">
+              <span className="text-emerald-400 text-sm font-mono">{formatDuration(callDuration)}</span>
+            </div>
           </div>
         ) : (
           /* Audio call / calling / ringing UI */
           <div className="flex-1 flex flex-col items-center justify-center gap-4">
             {/* Avatar */}
-            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-violet-500/40 to-fuchsia-500/40 border-2 border-white/10 flex items-center justify-center">
+            <motion.div
+              animate={callStatus === 'ringing' ? { scale: [1, 1.1, 1] } : {}}
+              transition={{ duration: 1.5, repeat: Infinity }}
+              className="w-20 h-20 rounded-full bg-gradient-to-br from-violet-500/40 to-fuchsia-500/40 border-2 border-white/10 flex items-center justify-center"
+            >
               <span className="text-3xl font-bold text-white">
                 {callerName.charAt(0).toUpperCase()}
               </span>
-            </div>
+            </motion.div>
             <div className="text-white font-semibold text-lg">{callerName}</div>
 
             {callStatus === 'calling' && (
@@ -108,14 +121,6 @@ const CallOverlay: React.FC<CallOverlayProps> = ({
               <div className="text-emerald-400 text-sm font-mono">
                 {formatDuration(callDuration)}
               </div>
-            )}
-
-            {/* Hidden audio elements for audio-only calls */}
-            {callType === 'audio' && (
-              <>
-                <audio ref={remoteVideoRef as React.RefObject<HTMLAudioElement>} autoPlay className="hidden" />
-                <audio ref={localVideoRef as React.RefObject<HTMLAudioElement>} autoPlay muted className="hidden" />
-              </>
             )}
           </div>
         )}

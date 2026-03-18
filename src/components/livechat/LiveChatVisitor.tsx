@@ -280,6 +280,7 @@ const LiveChatVisitor: React.FC<LiveChatVisitorProps> = ({ visitorNom, adminId, 
         incomingCall={webrtc.incomingCall}
         localVideoRef={webrtc.localVideoRef}
         remoteVideoRef={webrtc.remoteVideoRef}
+        remoteAudioRef={webrtc.remoteAudioRef}
         callerName="Admin"
         onAccept={webrtc.acceptCall}
         onReject={webrtc.rejectCall}

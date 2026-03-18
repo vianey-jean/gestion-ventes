@@ -349,6 +349,7 @@ const LiveChatAdmin: React.FC = () => {
           incomingCall={webrtc.incomingCall}
           localVideoRef={webrtc.localVideoRef}
           remoteVideoRef={webrtc.remoteVideoRef}
+          remoteAudioRef={webrtc.remoteAudioRef}
           callerName={selectedConversation?.visitorNom || 'Visiteur'}
           onAccept={webrtc.acceptCall}
           onReject={webrtc.rejectCall}
