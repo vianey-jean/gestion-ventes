@@ -125,10 +125,6 @@ const AchatsHistoriqueList: React.FC<AchatsHistoriqueListProps> = ({
       await onDelete(id);
     }
   };
-  const capitalizeFirst = (str) => {
-    if (!str) return "";
-    return str.charAt(0).toUpperCase() + str.slice(1);
-  };
 
   const handleEditFromDetail = (achat: NouvelleAchat) => {
     setIsDetailModalOpen(false);
@@ -189,7 +185,7 @@ const AchatsHistoriqueList: React.FC<AchatsHistoriqueListProps> = ({
             </CardTitle>
           </motion.div>
         </CardHeader>
-
+        
         <CardContent>
           {/* Liste des achats/dépenses ou message si vide */}
           {achats.length > 0 ? (
@@ -217,7 +213,7 @@ const AchatsHistoriqueList: React.FC<AchatsHistoriqueListProps> = ({
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-semibold text-sm sm:text-base text-gray-800 dark:text-white truncate">
-                        {capitalizeFirst(achat.productDescription || achat.description)}
+                        {achat.productDescription || achat.description}
                       </p>
                       <p className="text-xs sm:text-sm text-gray-500">
                         {new Date(achat.date).toLocaleDateString('fr-FR')}
@@ -225,7 +221,7 @@ const AchatsHistoriqueList: React.FC<AchatsHistoriqueListProps> = ({
                       </p>
                     </div>
                   </div>
-
+                  
                   {/* Partie basse/droite: Coût, quantité et actions */}
                   <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-4 pl-11 sm:pl-0">
                     <div className="text-left sm:text-right">
@@ -236,7 +232,7 @@ const AchatsHistoriqueList: React.FC<AchatsHistoriqueListProps> = ({
                         </Badge>
                       )}
                     </div>
-
+                    
                     {/* Actions - toujours visibles sur mobile/tablette, hover sur desktop */}
                     <div className="flex gap-1 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity shrink-0">
                       <Button

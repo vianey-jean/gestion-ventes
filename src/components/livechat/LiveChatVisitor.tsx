@@ -48,6 +48,7 @@ const LiveChatVisitor: React.FC<LiveChatVisitorProps> = ({ visitorNom, adminId, 
     `visitor_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
   );
 
+
   useEffect(() => {
     localStorage.setItem('livechat_visitor_id', visitorId.current);
     localStorage.setItem('livechat_pseudo', visitorNom);
@@ -254,6 +255,7 @@ const LiveChatVisitor: React.FC<LiveChatVisitorProps> = ({ visitorNom, adminId, 
           </button>
         </div>
       </div>
+
 
       {/* Messages area */}
       <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-gradient-to-b from-slate-900 via-slate-900/95 to-slate-950">

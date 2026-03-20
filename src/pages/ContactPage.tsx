@@ -28,6 +28,7 @@ const ContactPage: React.FC = () => {
   const [adminOnline, setAdminOnline] = useState(false);
   const [showLiveChat, setShowLiveChat] = useState(false);
   const [submittedName, setSubmittedName] = useState(localStorage.getItem('livechat_pseudo') || '');
+  const [liveAdminId, setLiveAdminId] = useState<string>('1');
 
   const { toast } = useToast();
   const { sendMessage } = useMessages();
@@ -49,6 +50,7 @@ const ContactPage: React.FC = () => {
         if (res.ok) {
           const data = await res.json();
           setAdminOnline(data.online);
+          if (data.adminId) setLiveAdminId(data.adminId);
         }
       } catch { setAdminOnline(false); }
     };
@@ -142,7 +144,7 @@ const ContactPage: React.FC = () => {
             {showLiveChat && adminOnline && (
               <LiveChatVisitor
                 visitorNom={submittedName || 'Visiteur'}
-                adminId="1"
+                adminId={liveAdminId}
                 onClose={() => setShowLiveChat(false)}
               />
             )}
