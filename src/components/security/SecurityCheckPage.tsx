@@ -13,6 +13,27 @@ const images = [
   "https://images.unsplash.com/photo-1501785888041-af3ef285b470",
 ];
 
+// ⭐ Composant étoile
+const Star = ({ type = "fixed" }: { type?: "fixed" | "moving" }) => {
+  const isMoving = type === "moving";
+
+  return (
+    <svg
+      width="50"
+      height="50"
+      viewBox="0 0 24 24"
+      className={`drop-shadow-[0_0_10px_${isMoving ? "rgba(255,0,0,0.9)" : "rgba(0,0,0,0.6)"}]`}
+    >
+      <path
+        d="M12 2 L15 9 L22 9 L17 14 L19 22 L12 18 L5 22 L7 14 L2 9 L9 9 Z"
+        fill={isMoving ? "#ff4d4d" : "#ffffff"}   // intérieur blanc pour fixe
+        stroke={isMoving ? "#ff0000" : "#999999"} // contour gris pour fixe
+        strokeWidth="2"
+      />
+    </svg>
+  );
+};
+
 const SecurityCheckPage: React.FC<SecurityCheckPageProps> = ({ onVerified }) => {
   const [phase, setPhase] = useState<'checking' | 'challenge' | 'verifying' | 'passed' | 'failed'>('checking');
   const [challengeClicked, setChallengeClicked] = useState(false);
@@ -24,7 +45,6 @@ const SecurityCheckPage: React.FC<SecurityCheckPageProps> = ({ onVerified }) => 
 
   const startTime = useRef(Date.now());
 
-  // Init puzzle aléatoire
   useEffect(() => {
     const img = images[Math.floor(Math.random() * images.length)];
     setImage(img + "?w=800&q=80");
@@ -38,11 +58,10 @@ const SecurityCheckPage: React.FC<SecurityCheckPageProps> = ({ onVerified }) => 
     return () => clearTimeout(timer);
   }, []);
 
-  // Vérif puzzle
   const handleSlider = (val: number) => {
     setSlider(val);
 
-    if (Math.abs(val - targetX) < 10) {
+    if (Math.abs(val - targetX) < 8) {
       setVerifiedPuzzle(true);
     } else {
       setVerifiedPuzzle(false);
@@ -123,27 +142,37 @@ const SecurityCheckPage: React.FC<SecurityCheckPageProps> = ({ onVerified }) => 
               <motion.div key="challenge" className="space-y-5">
 
                 <p className="text-sm text-white/60 text-center">
-                  Cette page s'affiche pendant que le site vérifie que vous n'êtes pas un bot.
+                  Alignez l'étoile rouge avec l'étoile blanche
                 </p>
 
-                {/* IMAGE PUZZLE */}
                 <div className="relative w-full h-48 rounded-xl overflow-hidden border border-white/10">
                   <img src={image} className="w-full h-full object-cover" />
 
-                  {/* Trou */}
+                  {/* ⭐ étoile fixe (blanc + contour gris) */}
                   <div
-                    className="absolute top-16 w-12 h-12 border-2 border-white/40 bg-white/20 backdrop-blur-sm"
+                    className="absolute top-1/2 -translate-y-1/2"
                     style={{ left: targetX }}
-                  />
+                  >
+                    <Star type="fixed" />
+                  </div>
 
-                  {/* Pièce mobile */}
+                  {/* 🔴 étoile mobile */}
                   <div
-                    className="absolute bottom-0 w-12 h-12 bg-white/80 border border-white shadow-lg"
+                    className="absolute top-1/2 -translate-y-1/2 transition-all duration-150"
                     style={{ left: slider }}
-                  />
+                  >
+                    <Star type="moving" />
+                  </div>
+
+                  {/* Glow quand aligné */}
+                  {verifiedPuzzle && (
+                    <div
+                      className="absolute top-1/2 -translate-y-1/2 w-14 h-14 bg-green-400/30 blur-xl rounded-full"
+                      style={{ left: slider }}
+                    />
+                  )}
                 </div>
 
-                {/* Slider */}
                 <input
                   type="range"
                   min={0}
@@ -164,9 +193,6 @@ const SecurityCheckPage: React.FC<SecurityCheckPageProps> = ({ onVerified }) => 
                   </span>
                 </button>
 
-                <p className="text-xs text-white/40 text-center">
-                  En cliquant, vous confirmez que vous n'êtes pas un robot.
-                </p>
               </motion.div>
             )}
 
