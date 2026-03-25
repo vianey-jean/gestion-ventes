@@ -15,7 +15,6 @@ const images = [
   "https://images.unsplash.com/photo-1470770841072-f978cf4d019e",
   "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee",
   "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429",
-  "https://images.unsplash.com/photo-1493244040629-496f6d136cc3",
   "https://images.unsplash.com/photo-1439066615861-d1af74d74000",
   "https://images.unsplash.com/photo-1469474968028-56623f02e42e",
 ];
