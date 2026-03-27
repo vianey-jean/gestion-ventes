@@ -3,7 +3,8 @@ import { motion } from 'framer-motion';
 import {
   Settings, Trash2, Upload, Download, Shield, Eye, EyeOff, AlertTriangle,
  ChevronDown, ChevronUp,
-  UserCog, ArrowUpCircle, ArrowDownCircle, CalendarOff, Radio
+  UserCog, ArrowUpCircle, ArrowDownCircle, CalendarOff, Radio,
+  StopCircle, PlayCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -90,6 +91,24 @@ const ParametresSection: React.FC<ParametresSectionProps> = ({ userRole }) => {
   const manualBackupDoneRef = useRef(false);
   const [autoBackupPending, setAutoBackupPending] = useState(false);
   const [countdownSeconds, setCountdownSeconds] = useState(0);
+  const [autoBackupPaused, setAutoBackupPaused] = useState(false);
+
+  // Load auto-sauvegarde status from server on mount
+  useEffect(() => {
+    const loadAutoSauvegardeStatus = async () => {
+      try {
+        const response = await api.get('/api/settings/auto-sauvegarde');
+        if (response.data && typeof response.data.autoSauvegarde === 'boolean') {
+          setAutoBackupPaused(!response.data.autoSauvegarde);
+        }
+      } catch (e) {
+        console.error('Error loading auto-sauvegarde status:', e);
+      }
+    };
+    if (isAdmin) {
+      loadAutoSauvegardeStatus();
+    }
+  }, [isAdmin]);
 
   useEffect(() => {
     fetchSettings();
@@ -113,7 +132,7 @@ const ParametresSection: React.FC<ParametresSectionProps> = ({ userRole }) => {
   }, []);
 
   const triggerAutoBackup = useCallback(async () => {
-    if (manualBackupDoneRef.current || autoBackupInProgressRef.current) {
+    if (manualBackupDoneRef.current || autoBackupInProgressRef.current || autoBackupPaused) {
       setAutoBackupPending(false);
       return;
     }
@@ -168,10 +187,10 @@ const ParametresSection: React.FC<ParametresSectionProps> = ({ userRole }) => {
     } finally {
       autoBackupInProgressRef.current = false;
     }
-  }, [clearAutoBackupCountdown, toast]);
+  }, [clearAutoBackupCountdown, toast, autoBackupPaused]);
 
   const startAutoBackupCountdown = useCallback((serverState: any) => {
-    if (!serverState?.activationId || manualBackupDoneRef.current) {
+    if (!serverState?.activationId || manualBackupDoneRef.current || autoBackupPaused) {
       return;
     }
 
@@ -211,7 +230,7 @@ const ParametresSection: React.FC<ParametresSectionProps> = ({ userRole }) => {
         triggerAutoBackup();
       }
     }, 1000);
-  }, [clearAutoBackupCountdown, triggerAutoBackup]);
+  }, [clearAutoBackupCountdown, triggerAutoBackup, autoBackupPaused]);
 
   // ========== AUTO-BACKUP: piloté par l'état stable du serveur ==========
   useEffect(() => {
@@ -221,6 +240,17 @@ const ParametresSection: React.FC<ParametresSectionProps> = ({ userRole }) => {
 
     const syncAutoBackupState = async () => {
       try {
+        // Check server-side auto-sauvegarde flag
+        try {
+          const autoSavResponse = await api.get('/api/settings/auto-sauvegarde');
+          if (!isMounted) return;
+          if (autoSavResponse.data && autoSavResponse.data.autoSauvegarde === false) {
+            setAutoBackupPaused(true);
+            clearAutoBackupCountdown();
+            return;
+          }
+        } catch { /* silent */ }
+
         const response = await api.get('/api/sync/status');
         if (!isMounted) return;
 
@@ -565,9 +595,46 @@ const ParametresSection: React.FC<ParametresSectionProps> = ({ userRole }) => {
               <div className="flex items-center gap-2 mb-4">
                 <Shield className="w-4 h-4 text-amber-500" />
                 <span className="text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">Zone Administrateur</span>
-                {autoBackupPending && countdownSeconds > 0 && (
+                {!autoBackupPaused ? (
+                  <button
+                    onClick={async () => {
+                      setAutoBackupPaused(true);
+                      clearAutoBackupCountdown();
+                      try {
+                        await api.put('/api/settings/auto-sauvegarde', { autoSauvegarde: false });
+                      } catch (e) { console.error('Error saving auto-sauvegarde:', e); }
+                      toast({ title: '⏹ Sauvegarde auto arrêtée', description: 'La sauvegarde automatique est désactivée', className: 'bg-red-600 text-white border-red-600' });
+                    }}
+                    title="Arrêter la sauvegarde automatique"
+                    className="p-0.5 rounded-full hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors"
+                  >
+                    <StopCircle className="w-4 h-4 text-red-500" />
+                  </button>
+                ) : (
+                  <button
+                    onClick={async () => {
+                      setAutoBackupPaused(false);
+                      manualBackupDoneRef.current = false;
+                      lastServerChangeAtRef.current = null;
+                      try {
+                        await api.put('/api/settings/auto-sauvegarde', { autoSauvegarde: true });
+                      } catch (e) { console.error('Error saving auto-sauvegarde:', e); }
+                      toast({ title: '▶ Sauvegarde auto relancée', description: 'La sauvegarde automatique est réactivée', className: 'bg-green-600 text-white border-green-600' });
+                    }}
+                    title="Relancer la sauvegarde automatique"
+                    className="p-0.5 rounded-full hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors"
+                  >
+                    <PlayCircle className="w-4 h-4 text-green-500" />
+                  </button>
+                )}
+                {autoBackupPending && countdownSeconds > 0 && !autoBackupPaused && (
                   <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 animate-pulse font-mono">
                     Sauvegarde auto dans {Math.floor(countdownSeconds / 60)} min {String(countdownSeconds % 60).padStart(2, '0')} s
+                  </span>
+                )}
+                {autoBackupPaused && (
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 font-mono">
+                    Auto-sauvegarde arrêté
                   </span>
                 )}
               </div>
