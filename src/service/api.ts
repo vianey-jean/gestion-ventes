@@ -322,6 +322,21 @@ export const depenseService = {
     await api.post('/api/depenses/reset');
     return true;
   },
+
+  async getRsa(): Promise<{ montant: number; lastUpdated: string | null }> {
+    const response = await api.get('/api/depenses/rsa');
+    return response.data;
+  },
+
+  async updateRsa(montant: number): Promise<{ montant: number; lastUpdated: string | null }> {
+    const response = await api.put('/api/depenses/rsa', { montant });
+    return response.data;
+  },
+
+  async autoAddEntries(): Promise<{ rsa: boolean; chargeFixe: boolean }> {
+    const response = await api.post('/api/depenses/auto-entries');
+    return response.data;
+  },
 };
 
 // PretFamille Service

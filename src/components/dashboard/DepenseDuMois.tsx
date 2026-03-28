@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { useToast } from '@/components/ui/use-toast';
-import { Plus, Edit, Trash2, RotateCcw, CreditCard, Save, Wallet, ArrowUp, ArrowDown, DollarSign, Calendar, Sparkles, Award, TrendingUp, TrendingDown } from 'lucide-react';
+import { Plus, Edit, Trash2, RotateCcw, CreditCard, Save, Wallet, ArrowUp, ArrowDown, DollarSign, Calendar, Sparkles, Award, TrendingUp, TrendingDown, HandCoins } from 'lucide-react';
 import MonthlyResetHandler from './MonthlyResetHandler';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { depenseService } from '@/service/api';
@@ -36,6 +36,8 @@ const DepenseDuMois = () => {
   const [deleteId, setDeleteId] = useState(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isFixeDialogOpen, setIsFixeDialogOpen] = useState(false);
+  const [isRsaDialogOpen, setIsRsaDialogOpen] = useState(false);
+  const [rsaMontant, setRsaMontant] = useState('607.75');
   const [depensesFixe, setDepensesFixe] = useState({
     free: '',
     internetZeop: '',
@@ -51,6 +53,10 @@ const DepenseDuMois = () => {
   const solde = Array.isArray(mouvements)
     ? mouvements.reduce((total, m) => total + (parseFloat(m.credit) || 0) - (parseFloat(m.debit) || 0), 0)
     : 0;
+
+  // Vérifier si RSA ou charge fixe existent déjà dans les mouvements du mois
+  const rsaExists = Array.isArray(mouvements) && mouvements.some(m => m.categorie === 'RSA');
+  const chargeFixeExists = Array.isArray(mouvements) && mouvements.some(m => m.categorie === 'chargeFixe');
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -92,12 +98,52 @@ const DepenseDuMois = () => {
       });
     } catch (error) {
       console.error("Erreur lors de la récupération des dépenses fixes:", error);
+    }
+  };
+
+  const fetchRsa = async () => {
+    try {
+      const rsaData = await depenseService.getRsa();
+      setRsaMontant((rsaData.montant || 607.75).toString());
+    } catch (error) {
+      console.error("Erreur lors de la récupération du RSA:", error);
+    }
+  };
+
+  const handleUpdateRsa = async () => {
+    try {
+      await depenseService.updateRsa(parseFloat(rsaMontant) || 607.75);
+      toast({
+        title: "Succès",
+        description: "Montant RSA mis à jour avec succès",
+        className: "bg-app-green text-white",
+      });
+      setIsRsaDialogOpen(false);
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour du RSA:", error);
       toast({
         title: "Erreur",
-        description: "Impossible de récupérer les dépenses fixes",
+        description: "Impossible de mettre à jour le RSA",
         variant: "destructive",
-         className: "notification-erreur",
+        className: "notification-erreur",
       });
+    }
+  };
+
+  const triggerAutoEntries = async () => {
+    try {
+      const result = await depenseService.autoAddEntries();
+      if (result.rsa || result.chargeFixe) {
+        fetchMouvements();
+        if (result.rsa) {
+          toast({ title: "Auto-ajout", description: "RSA ajouté automatiquement (6 du mois)", className: "bg-app-blue text-white" });
+        }
+        if (result.chargeFixe) {
+          toast({ title: "Auto-ajout", description: "Charges fixes ajoutées automatiquement (10 du mois)", className: "bg-app-blue text-white" });
+        }
+      }
+    } catch (error) {
+      console.error("Erreur auto-entries:", error);
     }
   };
 
@@ -216,8 +262,21 @@ const DepenseDuMois = () => {
   };
 
   useEffect(() => {
-    setLoading(true);
-    Promise.all([fetchMouvements(), fetchDepensesFixe()]).finally(() => setLoading(false));
+    let cancelled = false;
+    const init = async () => {
+      setLoading(true);
+      try {
+        await Promise.all([fetchMouvements(), fetchDepensesFixe(), fetchRsa()]);
+        if (!cancelled) {
+          // Auto-entries only once after initial load
+          await triggerAutoEntries();
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+    init();
+    return () => { cancelled = true; };
   }, []);
 
   const handleReset = async () => {
@@ -249,6 +308,16 @@ const DepenseDuMois = () => {
           description: "Charge fixe",
           debit: (depensesFixeData.total || 0).toString(),
           credit: ''
+        });
+      });
+    } else if (value === "RSA") {
+      depenseService.getRsa().then(rsaData => {
+        setNewMouvement({
+          ...newMouvement,
+          categorie: value,
+          description: "RSA - Revenu mensuel",
+          credit: (rsaData.montant || 607.75).toString(),
+          debit: ''
         });
       });
     } else {
@@ -323,6 +392,27 @@ const DepenseDuMois = () => {
     {/* Boutons ultra-luxe */}
     <div className="flex flex-wrap gap-3 sm:gap-4 w-full lg:w-auto">
 
+      {/* RSA */}
+      <Button
+        onClick={() => setIsRsaDialogOpen(true)}
+        className="group relative flex-1 sm:flex-none overflow-hidden
+                   rounded-xl sm:rounded-2xl
+                   bg-gradient-to-br from-amber-500/90 to-orange-600/90
+                   border border-amber-300/40
+                   text-white font-medium
+                   shadow-[0_20px_60px_rgba(245,158,11,0.5)]
+                   transition-all duration-300
+                   hover:scale-105 hover:shadow-[0_30px_90px_rgba(245,158,11,0.7)]
+                   px-4 py-2 sm:px-5 sm:py-3 text-xs sm:text-sm"
+      >
+        <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+        <span className="relative flex items-center justify-center">
+          <HandCoins className="h-4 w-4 sm:h-5 sm:w-5 mr-2 text-white/90" />
+          <span className="hidden xs:inline">RSA</span>
+          <span className="xs:hidden">RSA</span>
+        </span>
+      </Button>
+
       {/* Dépenses fixes */}
       <Button
         onClick={() => setIsFixeDialogOpen(true)}
@@ -340,8 +430,8 @@ const DepenseDuMois = () => {
         <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
         <span className="relative flex items-center justify-center">
           <CreditCard className="h-4 w-4 sm:h-5 sm:w-5 mr-2 text-white/90" />
-          <span className="hidden xs:inline">Dépenses fixes</span>
-          <span className="xs:hidden">Fixes</span>
+          <span className="hidden xs:inline">Fixe</span>
+          <span className="xs:hidden">Fixe</span>
         </span>
       </Button>
 
@@ -722,7 +812,12 @@ const DepenseDuMois = () => {
               <SelectValue placeholder="Sélectionner une catégorie" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="chargeFixe">Charge Fixe</SelectItem>
+              <SelectItem value="RSA" disabled={rsaExists && !editMouvementId}>
+                RSA {rsaExists && !editMouvementId ? '(déjà ajouté)' : ''}
+              </SelectItem>
+              <SelectItem value="chargeFixe" disabled={chargeFixeExists && !editMouvementId}>
+                Charge Fixe {chargeFixeExists && !editMouvementId ? '(déjà ajouté)' : ''}
+              </SelectItem>
               <SelectItem value="Autres">Autres</SelectItem>
             </SelectContent>
           </Select>
@@ -736,7 +831,7 @@ const DepenseDuMois = () => {
             value={newMouvement.description}
             onChange={(e) => setNewMouvement({...newMouvement, description: e.target.value})}
             required
-            disabled={newMouvement.categorie === "chargeFixe"}
+            disabled={newMouvement.categorie === "chargeFixe" || newMouvement.categorie === "RSA"}
             className="px-4 py-3 bg-white/50 backdrop-blur-xl border border-gray-200/40 rounded-2xl shadow-inner"
           />
         </div>
@@ -757,8 +852,8 @@ const DepenseDuMois = () => {
         {/* Débit & Crédit */}
         <div className="grid grid-cols-2 gap-4">
           {[
-            { id: 'debit', label: 'Débit (€)', icon: ArrowDown, color: 'text-red-500', value: newMouvement.debit, onChange: (v) => setNewMouvement({...newMouvement, debit: v, credit: ''}), disabled: newMouvement.categorie === 'chargeFixe' || !!newMouvement.credit },
-            { id: 'credit', label: 'Crédit (€)', icon: ArrowUp, color: 'text-emerald-500', value: newMouvement.credit, onChange: (v) => setNewMouvement({...newMouvement, credit: v, debit: ''}), disabled: newMouvement.categorie === 'chargeFixe' || !!newMouvement.debit },
+            { id: 'debit', label: 'Débit (€)', icon: ArrowDown, color: 'text-red-500', value: newMouvement.debit, onChange: (v) => setNewMouvement({...newMouvement, debit: v, credit: ''}), disabled: newMouvement.categorie === 'chargeFixe' || newMouvement.categorie === 'RSA' || !!newMouvement.credit },
+            { id: 'credit', label: 'Crédit (€)', icon: ArrowUp, color: 'text-emerald-500', value: newMouvement.credit, onChange: (v) => setNewMouvement({...newMouvement, credit: v, debit: ''}), disabled: newMouvement.categorie === 'chargeFixe' || newMouvement.categorie === 'RSA' || !!newMouvement.debit },
           ].map(({id, label, icon: Icon, color, value, onChange, disabled}) => (
             <div key={id} className="space-y-2">
               <Label htmlFor={id} className="text-sm font-semibold text-gray-700 dark:text-gray-300">{label}</Label>
@@ -881,6 +976,60 @@ const DepenseDuMois = () => {
         type="button"
         onClick={handleUpdateDepensesFixe}
         className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white rounded-2xl shadow-lg transition-all duration-300 hover:scale-105 flex items-center gap-2"
+      >
+        <Save className="h-4 w-4" /> Enregistrer
+      </Button>
+    </DialogFooter>
+  </DialogContent>
+</Dialog>
+
+{/* Dialogue RSA */}
+<Dialog open={isRsaDialogOpen} onOpenChange={setIsRsaDialogOpen}>
+  <DialogContent className="sm:max-w-md bg-gradient-to-br from-white/95 to-gray-50/95 dark:from-gray-900/95 dark:to-gray-800/95
+                             backdrop-blur-2xl border border-white/30 shadow-[0_40px_120px_rgba(0,0,0,0.25)] rounded-2xl sm:rounded-3xl">
+    <DialogHeader>
+      <DialogTitle className="flex items-center gap-3 text-xl font-extrabold text-gray-800 dark:text-gray-200">
+        <div className="rounded-full p-3 bg-gradient-to-br from-amber-500 via-orange-500 to-yellow-500 shadow-lg">
+          <HandCoins className="h-5 w-5 text-white" />
+        </div>
+        RSA - Revenu mensuel
+      </DialogTitle>
+    </DialogHeader>
+
+    <div className="space-y-6 py-6">
+      <p className="text-sm text-gray-600 dark:text-gray-400">
+        Définissez le montant du RSA. Ce montant sera automatiquement ajouté comme crédit le 6 de chaque mois.
+      </p>
+      <div className="space-y-2">
+        <Label htmlFor="rsa-montant" className="text-sm font-semibold text-gray-700 dark:text-gray-300">Montant RSA (€)</Label>
+        <div className="relative">
+          <ArrowUp className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-emerald-500" />
+          <Input
+            id="rsa-montant"
+            type="number"
+            min="0"
+            step="0.01"
+            value={rsaMontant}
+            onChange={(e) => setRsaMontant(e.target.value)}
+            className="pl-10 px-4 py-3 bg-white/50 backdrop-blur-xl border border-gray-200/40 rounded-2xl shadow-inner"
+          />
+        </div>
+      </div>
+    </div>
+
+    <DialogFooter className="flex gap-3">
+      <Button
+        type="button"
+        variant="outline"
+        onClick={() => setIsRsaDialogOpen(false)}
+        className="bg-white/50 backdrop-blur-xl border border-gray-200/40 rounded-2xl shadow-inner"
+      >
+        Annuler
+      </Button>
+      <Button
+        type="button"
+        onClick={handleUpdateRsa}
+        className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-2xl shadow-lg transition-all duration-300 hover:scale-105 flex items-center gap-2"
       >
         <Save className="h-4 w-4" /> Enregistrer
       </Button>
