@@ -387,7 +387,55 @@ Enregistre les heures de travail des travailleurs dans différentes entreprises.
 
 ---
 
-## 📌 18. Page Contact
+## 📌 18. Profil & Paramètres ⭐
+
+### Ce que ça fait
+Permet à l'utilisateur de consulter/modifier son profil, changer son mot de passe, uploader sa photo. L'administrateur peut configurer les paramètres globaux, gérer les rôles, sauvegarder/restaurer/supprimer les données, gérer les indisponibilités et configurer les modules.
+
+### Fichiers concernés
+
+| Côté | Fichier | Rôle |
+|------|---------|------|
+| Frontend Page | `src/pages/ProfilePage.tsx` | Page principale (2 onglets : Profil / Paramètres) |
+| Composant | `src/components/profile/ProfileCard.tsx` | Carte d'identité (avatar, nom, email, rôle, statut) |
+| Composant | `src/components/profile/ProfileAvatar.tsx` | Avatar animé avec anneaux pulsants verts |
+| Composant | `src/components/profile/ProfileInfoCard.tsx` | Formulaire d'édition des infos personnelles |
+| Composant | `src/components/profile/PasswordSection.tsx` | Changement de mot de passe avec force check |
+| Composant | `src/components/profile/ParametresSection.tsx` | Config admin (sauvegarde, rôles, modules, auto-backup) |
+| Composant | `src/components/profile/IndisponibiliteSection.tsx` | Gestion des congés/indisponibilités |
+| Composant | `src/components/profile/ModuleSettingsSection.tsx` | Configuration par module (pointage, tâches) |
+| Frontend API | `src/services/api/profileApi.ts` | Requêtes profil (GET, PUT, POST photo) |
+| Frontend API | `src/services/api/settingsApi.ts` | Requêtes paramètres (GET, PUT, backup, restore, delete) |
+| Frontend API | `src/services/api/moduleSettingsApi.ts` | Requêtes paramètres par module |
+| Frontend API | `src/services/api/indisponibleApi.ts` | Requêtes indisponibilités |
+| Backend Route | `server/routes/profile.js` | Routes API profil |
+| Backend Route | `server/routes/settings.js` | Routes API paramètres |
+| Backend Modèle | `server/models/User.js` | CRUD utilisateurs |
+| Base de données | `server/db/users.json` | Comptes utilisateurs |
+| Base de données | `server/db/settings.json` | Paramètres globaux |
+| Base de données | `server/db/moduleSettings.json` | Paramètres par module |
+| Base de données | `server/db/indisponible.json` | Congés et indisponibilités |
+
+### Pour modifier
+- **Changer la carte profil** → `ProfileCard.tsx` et `ProfileAvatar.tsx`
+- **Modifier le formulaire d'édition** → `ProfileInfoCard.tsx`
+- **Changer la logique de mot de passe** → `PasswordSection.tsx` (frontend) et `server/routes/profile.js` (backend)
+- **Modifier les paramètres admin** → `ParametresSection.tsx`
+- **Ajouter un module configurable** → `ModuleSettingsSection.tsx`
+- **Modifier les indisponibilités** → `IndisponibiliteSection.tsx`
+- **Changer la sauvegarde/restauration** → `ParametresSection.tsx` + `server/routes/settings.js`
+- **Modifier les rôles** → `ParametresSection.tsx` (section rôles) + `server/routes/settings.js`
+
+### Logique métier importante
+- **Rôles** : 3 niveaux — `simple utilisateur`, `administrateur`, `administrateur principale`
+- **Sauvegarde** : Chiffrement AES-256, scan dynamique de tous les `*.json` dans `server/db/`
+- **Suppression** : Admin principale uniquement, 1 seule tentative (mot de passe incorrect = déconnexion)
+- **Auto-backup** : Sauvegarde automatique avec compte à rebours (5 min) après modification de données
+- **Photo** : Upload multipart via Multer, stockée dans `server/uploads/profil/photo/`
+
+---
+
+## 📌 19. Page Contact
 
 ### Fichiers concernés
 

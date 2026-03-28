@@ -1,9 +1,26 @@
+/**
+ * ProfileInfoCard — Carte d'édition des informations personnelles
+ * 
+ * Affiche les champs : Prénom, Nom, Email (lecture seule), Téléphone, Adresse, Genre.
+ * En mode lecture, les valeurs sont affichées dans des cartes glassmorphism.
+ * En mode édition, des inputs remplacent les valeurs textuelles.
+ * 
+ * Chaque champ a une icône, un label uppercase, et un effet hover avec décalage vertical.
+ * Le genre utilise un <select> avec les options Homme/Femme/Autre.
+ * 
+ * Props :
+ * - profile : données du profil (lecture)
+ * - editing : booléen pour activer le mode édition
+ * - editForm : valeurs du formulaire d'édition
+ * - onEdit / onCancel / onSave : callbacks d'actions
+ */
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Shield, Edit3, Save, X, User, Mail, Phone, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
+/** Classe CSS des boutons premium avec glassmorphism */
 const premiumBtnClass =
   "group relative overflow-hidden rounded-2xl backdrop-blur-xl border transition-all duration-300 hover:scale-[1.04] active:scale-[0.98] px-5 py-3 text-sm font-semibold shadow-lg";
 
@@ -20,6 +37,7 @@ interface ProfileInfoCardProps {
 const ProfileInfoCard: React.FC<ProfileInfoCardProps> = ({
   profile, editing, editForm, setEditForm, onEdit, onCancel, onSave
 }) => {
+  /** Configuration des champs affichés dans la grille */
   const fields = [
     { icon: User, label: 'Prénom', key: 'firstName' as const },
     { icon: User, label: 'Nom', key: 'lastName' as const },
@@ -40,14 +58,14 @@ const ProfileInfoCard: React.FC<ProfileInfoCardProps> = ({
                  overflow-hidden p-8"
     >
 
-      {/* Glow premium */}
+      {/* Effets de glow décoratifs (coins opposés) */}
       <div className="absolute -top-20 -right-20 w-72 h-72 bg-violet-500/20 blur-[120px] rounded-full" />
       <div className="absolute -bottom-20 -left-20 w-72 h-72 bg-fuchsia-500/20 blur-[120px] rounded-full" />
 
-      {/* Ligne gradient haut */}
+      {/* Ligne gradient décorative en haut */}
       <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-violet-500 to-transparent opacity-70" />
 
-      {/* Header */}
+      {/* En-tête avec titre et boutons Modifier/Enregistrer/Annuler */}
       <div className="flex items-center justify-between mb-8 relative z-10">
         <h3 className="text-xl font-semibold text-foreground flex items-center gap-3 tracking-tight">
           <div className="p-2 rounded-xl bg-gradient-to-br from-violet-500/20 to-fuchsia-500/20 backdrop-blur-md">
@@ -94,7 +112,7 @@ const ProfileInfoCard: React.FC<ProfileInfoCardProps> = ({
         )}
       </div>
 
-      {/* Grid */}
+      {/* Grille des champs (2 colonnes) avec effet hover */}
       <div className="grid grid-cols-2 gap-6 relative z-10">
         {fields.map(({ icon: Icon, label, key, readonly }) => (
           <motion.div
@@ -107,7 +125,7 @@ const ProfileInfoCard: React.FC<ProfileInfoCardProps> = ({
                             p-5 transition-all duration-300
                             group-hover:border-violet-400/40">
 
-              {/* Header champ */}
+              {/* Icône + label du champ */}
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500/20 to-fuchsia-500/20
                                 flex items-center justify-center shadow-inner">
@@ -119,7 +137,7 @@ const ProfileInfoCard: React.FC<ProfileInfoCardProps> = ({
                 </span>
               </div>
 
-              {/* Input / Texte */}
+              {/* Input en mode édition, texte en mode lecture */}
               {editing && !readonly ? (
                 key === 'gender' ? (
                   <select

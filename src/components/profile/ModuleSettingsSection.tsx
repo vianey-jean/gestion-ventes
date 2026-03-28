@@ -1,3 +1,19 @@
+/**
+ * ModuleSettingsSection — Configuration par module
+ * 
+ * Permet de configurer les paramètres spécifiques à chaque module :
+ * - Pointage : prix/heure par défaut, prix journalier par défaut, arrondi des heures
+ * - Tâches : auto-complétion, affichage des tâches terminées
+ * 
+ * Chaque section est pliable (expandable) avec un header cliquable.
+ * Les modifications sont sauvegardées immédiatement via moduleSettingsApi
+ * et synchronisées avec les fichiers de paramètres associés
+ * (prixpointage.json pour le pointage, parametretache.json pour les tâches).
+ * 
+ * Composants internes :
+ * - Toggle : interrupteur on/off animé
+ * - SectionHeader : en-tête de section avec icône, titre et chevron
+ */
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
@@ -10,8 +26,10 @@ import parametresApi from '@/services/api/parametresApi';
 
 const ModuleSettingsSection: React.FC = () => {
   const { toast } = useToast();
+  // Paramètres des modules chargés depuis l'API
   const [settings, setSettings] = useState<ModuleSettings | null>(null);
   const [loading, setLoading] = useState(true);
+  // État d'expansion de chaque section
   const [expanded, setExpanded] = useState<Record<string, boolean>>({
     commandes: false,
     pointage: false,
@@ -19,6 +37,7 @@ const ModuleSettingsSection: React.FC = () => {
     notes: false,
   });
 
+  /** Charge les paramètres des modules au montage */
   useEffect(() => {
     fetchSettings();
   }, []);
@@ -29,12 +48,16 @@ const ModuleSettingsSection: React.FC = () => {
       const data = await moduleSettingsApi.getAll();
       setSettings(data);
     } catch {
-      // silently fail
+      // Échec silencieux — les paramètres par défaut sont utilisés
     } finally {
       setLoading(false);
     }
   };
 
+  /**
+   * Met à jour un paramètre d'un module et synchronise avec les fichiers associés.
+   * Par exemple, modifier defaultPrixHeure met aussi à jour prixpointage.json.
+   */
   const updateModule = async (module: string, key: string, value: any) => {
     if (!settings) return;
     const updated = { ...settings, [module]: { ...settings[module as keyof ModuleSettings], [key]: value } };
@@ -42,7 +65,7 @@ const ModuleSettingsSection: React.FC = () => {
     try {
       await moduleSettingsApi.updateModule(module, updated[module as keyof ModuleSettings]);
       
-      // Sync prix to prixpointage.json
+      // Synchronisation du prix de pointage avec prixpointage.json
       if (module === 'pointage' && (key === 'defaultPrixHeure' || key === 'defaultPrixJournalier')) {
         const prixData: any = {};
         if (key === 'defaultPrixHeure') prixData.prixHeure = value;
@@ -50,7 +73,7 @@ const ModuleSettingsSection: React.FC = () => {
         await parametresApi.updatePrixPointage(prixData);
       }
       
-      // Sync tache settings to parametretache.json
+      // Synchronisation des paramètres de tâches avec parametretache.json
       if (module === 'taches' && (key === 'autoCompleteOnDone' || key === 'showCompletedTasks')) {
         const tacheData: any = {};
         if (key === 'autoCompleteOnDone') tacheData.autoCompleteOnDone = value;
@@ -62,6 +85,7 @@ const ModuleSettingsSection: React.FC = () => {
     }
   };
 
+  /** Composant interrupteur on/off avec animation de glissement */
   const Toggle = ({ value, onChange, label }: { value: boolean; onChange: (v: boolean) => void; label: string }) => (
     <div className="flex items-center justify-between py-2">
       <span className="text-sm text-foreground">{label}</span>
@@ -74,6 +98,7 @@ const ModuleSettingsSection: React.FC = () => {
     </div>
   );
 
+  /** En-tête de section avec icône colorée, titre et chevron pour expand/collapse */
   const SectionHeader = ({ icon: Icon, title, sectionKey, color }: { icon: any; title: string; sectionKey: string; color: string }) => (
     <button
       onClick={() => setExpanded(p => ({ ...p, [sectionKey]: !p[sectionKey] }))}
@@ -89,6 +114,7 @@ const ModuleSettingsSection: React.FC = () => {
     </button>
   );
 
+  // Loader pendant le chargement des paramètres
   if (loading || !settings) {
     return (
       <div className="flex justify-center py-4">
@@ -100,12 +126,12 @@ const ModuleSettingsSection: React.FC = () => {
   return (
     <div className="space-y-2">
      
-
-      {/* Pointage */}
+      {/* Section Pointage : prix/heure, prix journalier, arrondi */}
       <div className="rounded-xl bg-gradient-to-br from-slate-50 to-white dark:from-white/5 dark:to-white/[0.02] border border-border/50 p-3">
         <SectionHeader icon={Clock} title="Pointage" sectionKey="pointage" color="from-emerald-500 to-teal-500" />
         {expanded.pointage && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3 pl-10">
+            {/* Prix par heure par défaut */}
             <div className="flex items-center justify-between py-1">
               <span className="text-sm text-foreground">Prix/heure par défaut (€)</span>
               <Input
@@ -116,6 +142,7 @@ const ModuleSettingsSection: React.FC = () => {
                 className="w-24 h-8 rounded-lg text-sm text-right"
               />
             </div>
+            {/* Prix journalier par défaut */}
             <div className="flex items-center justify-between py-1">
               <span className="text-sm text-foreground">Prix journalier par défaut (€)</span>
               <Input
@@ -126,12 +153,13 @@ const ModuleSettingsSection: React.FC = () => {
                 className="w-24 h-8 rounded-lg text-sm text-right"
               />
             </div>
+            {/* Toggle arrondi des heures */}
             <Toggle label="Arrondir les heures" value={settings.pointage.arrondiHeures} onChange={v => updateModule('pointage', 'arrondiHeures', v)} />
           </motion.div>
         )}
       </div>
 
-      {/* Tâches */}
+      {/* Section Tâches : auto-complétion, affichage terminées */}
       <div className="rounded-xl bg-gradient-to-br from-slate-50 to-white dark:from-white/5 dark:to-white/[0.02] border border-border/50 p-3">
         <SectionHeader icon={ListChecks} title="Tâches" sectionKey="taches" color="from-amber-500 to-orange-500" />
         {expanded.taches && (

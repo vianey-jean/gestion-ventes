@@ -1,4 +1,18 @@
-// Configuration de base pour l'API
+/**
+ * api.ts — Instance Axios centralisée pour toutes les requêtes HTTP
+ * 
+ * Configuration :
+ * - baseURL : VITE_API_BASE_URL ou https://server-gestion-ventes.onrender.com
+ * - timeout : 30 secondes
+ * - Content-Type : application/json
+ * - withCredentials : false (pas de cookies cross-origin)
+ * 
+ * Intercepteurs :
+ * - Requête : ajoute automatiquement le token JWT depuis localStorage
+ * - Réponse : redirige vers /login en cas de 401 (token expiré)
+ * 
+ * Retry : 2 tentatives avec backoff exponentiel (2s, 4s) pour erreurs réseau ou 503
+ */
 import axios, { AxiosInstance } from 'axios';
 import axiosRetry from 'axios-retry';
 

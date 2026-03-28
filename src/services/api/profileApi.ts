@@ -1,3 +1,12 @@
+/**
+ * profileApi — Service API pour le profil utilisateur
+ * 
+ * Endpoints :
+ * - GET /api/profile : récupérer le profil
+ * - PUT /api/profile : modifier les infos personnelles
+ * - POST /api/profile/photo : upload photo (multipart)
+ * - PUT /api/profile/password : changer le mot de passe
+ */
 import api from '../../service/api';
 
 export interface ProfileData {

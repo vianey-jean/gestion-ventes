@@ -1,3 +1,18 @@
+/**
+ * IndisponibiliteSection — Gestion des congés et indisponibilités
+ * 
+ * Permet d'ajouter, modifier et supprimer des jours d'indisponibilité.
+ * Chaque indisponibilité peut être :
+ * - Journée complète (journeeComplete: true)
+ * - Créneau horaire (heureDebut → heureFin)
+ * - Avec un motif optionnel (ex: Congé, Rendez-vous personnel)
+ * 
+ * Les indisponibilités sont triées par date décroissante.
+ * La suppression nécessite une confirmation via AlertDialog.
+ * 
+ * Utilise indisponibleApi pour communiquer avec le backend
+ * (CRUD sur server/db/indisponible.json).
+ */
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -18,13 +33,15 @@ import indisponibleApi, { Indisponibilite } from '@/services/api/indisponibleApi
 
 const IndisponibiliteSection: React.FC = () => {
   const { toast } = useToast();
+  // Liste des indisponibilités chargées depuis l'API
   const [indisponibilites, setIndisponibilites] = useState<Indisponibilite[]>([]);
   const [loading, setLoading] = useState(true);
+  // Dialogues d'ajout et de suppression
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-  // Edit state
+  // État pour la modification d'une indisponibilité existante
   const [editingItem, setEditingItem] = useState<Indisponibilite | null>(null);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [editForm, setEditForm] = useState({
@@ -35,6 +52,7 @@ const IndisponibiliteSection: React.FC = () => {
     journeeComplete: false,
   });
 
+  // Formulaire d'ajout d'une nouvelle indisponibilité
   const [form, setForm] = useState({
     date: new Date().toISOString().split('T')[0],
     heureDebut: '08:00',
@@ -43,6 +61,7 @@ const IndisponibiliteSection: React.FC = () => {
     journeeComplete: false,
   });
 
+  /** Charge la liste des indisponibilités au montage */
   useEffect(() => {
     fetchData();
   }, []);
@@ -53,12 +72,13 @@ const IndisponibiliteSection: React.FC = () => {
       const data = await indisponibleApi.getAll();
       setIndisponibilites(data);
     } catch {
-      // silently fail
+      // Échec silencieux
     } finally {
       setLoading(false);
     }
   };
 
+  /** Ajoute une nouvelle indisponibilité via l'API */
   const handleAdd = async () => {
     try {
       setSaving(true);
@@ -74,6 +94,7 @@ const IndisponibiliteSection: React.FC = () => {
     }
   };
 
+  /** Prépare le formulaire d'édition avec les données de l'item sélectionné */
   const handleEdit = (item: Indisponibilite) => {
     setEditingItem(item);
     setEditForm({
@@ -86,6 +107,7 @@ const IndisponibiliteSection: React.FC = () => {
     setShowEditDialog(true);
   };
 
+  /** Soumet la modification d'une indisponibilité existante */
   const handleUpdateSubmit = async () => {
     if (!editingItem) return;
     try {
@@ -102,6 +124,7 @@ const IndisponibiliteSection: React.FC = () => {
     }
   };
 
+  /** Supprime une indisponibilité après confirmation */
   const handleDelete = async (id: string) => {
     try {
       await indisponibleApi.delete(id);
@@ -113,16 +136,19 @@ const IndisponibiliteSection: React.FC = () => {
     }
   };
 
+  /** Formate une date ISO en texte lisible français (ex: "lundi 15 mars 2026") */
   const formatDate = (dateStr: string) => {
     const d = new Date(dateStr + 'T00:00:00');
     return d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
   };
 
-  // Sort by date descending
+  // Tri par date décroissante (les plus récents en premier)
   const sorted = [...indisponibilites].sort((a, b) => b.date.localeCompare(a.date));
 
+  /** Rendu des champs du formulaire (partagé entre ajout et modification) */
   const renderFormFields = (formData: typeof form, setFormData: (f: typeof form) => void) => (
     <div className="space-y-4 py-2">
+      {/* Sélecteur de date */}
       <div className="space-y-2">
         <Label className="text-sm font-semibold">Date *</Label>
         <Input
@@ -133,6 +159,7 @@ const IndisponibiliteSection: React.FC = () => {
         />
       </div>
 
+      {/* Toggle journée complète */}
       <div className="flex items-center gap-3">
         <button
           type="button"
@@ -144,6 +171,7 @@ const IndisponibiliteSection: React.FC = () => {
         <span className="text-sm text-foreground">Journée complète</span>
       </div>
 
+      {/* Créneaux horaires (masqués si journée complète) */}
       <AnimatePresence>
         {!formData.journeeComplete && (
           <motion.div
@@ -178,6 +206,7 @@ const IndisponibiliteSection: React.FC = () => {
         )}
       </AnimatePresence>
 
+      {/* Motif optionnel */}
       <div className="space-y-2">
         <Label className="text-sm font-semibold">Motif (optionnel)</Label>
         <Input
@@ -192,6 +221,7 @@ const IndisponibiliteSection: React.FC = () => {
 
   return (
     <div className="space-y-4">
+      {/* En-tête avec icône et bouton Ajouter */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center">
@@ -208,6 +238,7 @@ const IndisponibiliteSection: React.FC = () => {
         </Button>
       </div>
 
+      {/* Liste des indisponibilités ou message vide */}
       {loading ? (
         <div className="flex justify-center py-4">
           <div className="animate-spin w-6 h-6 border-2 border-red-500 border-t-transparent rounded-full" />
@@ -231,6 +262,7 @@ const IndisponibiliteSection: React.FC = () => {
                 </p>
               </div>
               <div className="flex items-center gap-1">
+                {/* Bouton Modifier */}
                 <Button
                   size="sm"
                   variant="ghost"
@@ -239,6 +271,7 @@ const IndisponibiliteSection: React.FC = () => {
                 >
                   <Edit className="w-4 h-4" />
                 </Button>
+                {/* Bouton Supprimer (ouvre la confirmation) */}
                 <Button
                   size="sm"
                   variant="ghost"
@@ -253,7 +286,7 @@ const IndisponibiliteSection: React.FC = () => {
         </div>
       )}
 
-      {/* Add dialog */}
+      {/* Dialogue d'ajout d'indisponibilité */}
       <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
         <DialogContent className="rounded-3xl max-w-md">
           <DialogHeader>
@@ -275,7 +308,7 @@ const IndisponibiliteSection: React.FC = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Edit dialog */}
+      {/* Dialogue de modification d'indisponibilité */}
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
         <DialogContent className="rounded-3xl max-w-md">
           <DialogHeader>
@@ -297,7 +330,7 @@ const IndisponibiliteSection: React.FC = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Delete confirm */}
+      {/* Dialogue de confirmation de suppression */}
       <AlertDialog open={!!deleteConfirmId} onOpenChange={v => { if (!v) setDeleteConfirmId(null); }}>
         <AlertDialogContent className="rounded-3xl max-w-sm">
           <AlertDialogHeader>

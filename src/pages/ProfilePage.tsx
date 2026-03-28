@@ -1,3 +1,20 @@
+/**
+ * ProfilePage — Page principale du profil utilisateur
+ * 
+ * Contient deux onglets :
+ * - "Profil" (visible par tous) : carte profil, infos personnelles, mot de passe
+ * - "Paramètres" (visible par les admins) : configuration globale, rôles, sauvegarde
+ * 
+ * Gère l'upload de photo avec aperçu et confirmation,
+ * la modification du profil avec dialogue de confirmation,
+ * et le changement de mot de passe sécurisé.
+ * 
+ * Composants enfants :
+ * - ProfileCard : avatar + identité
+ * - ProfileInfoCard : formulaire d'édition des informations
+ * - PasswordSection : changement de mot de passe
+ * - ParametresSection : paramètres admin (sauvegarde, rôles, modules)
+ */
 import React, { useState, useEffect, useRef } from 'react';
 import Layout from '@/components/Layout';
 import { useAuth } from '@/contexts/AuthContext';
@@ -15,6 +32,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 
+/** Classe CSS commune pour les boutons premium avec effet glassmorphism */
 const premiumBtnClass = "group relative overflow-hidden rounded-xl sm:rounded-2xl backdrop-blur-xl border transition-all duration-300 hover:scale-105 px-4 py-2 sm:px-5 sm:py-3 text-xs sm:text-sm font-semibold";
 
 const ProfilePage: React.FC = () => {
@@ -22,19 +40,22 @@ const ProfilePage: React.FC = () => {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Onglet actif (profil ou paramètres)
   const [activeTab, setActiveTab] = useState<'profil' | 'parametres'>('profil');
+  // Données du profil chargées depuis l'API
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
+  // Mode édition des informations personnelles
   const [editing, setEditing] = useState(false);
   const [editForm, setEditForm] = useState({ firstName: '', lastName: '', gender: '', address: '', phone: '' });
 
-  // Password
+  // État du formulaire de changement de mot de passe
   const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [pwForm, setPwForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
   const [showPw, setShowPw] = useState({ current: false, new: false, confirm: false });
   const [isNewPasswordValid, setIsNewPasswordValid] = useState(false);
 
-  // Confirmations
+  // Dialogues de confirmation (profil, mot de passe, photo)
   const [confirmProfile, setConfirmProfile] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState(false);
   const [confirmPhoto, setConfirmPhoto] = useState(false);
@@ -42,12 +63,13 @@ const ProfilePage: React.FC = () => {
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-  // Role-based visibility
+  // Détermination du rôle pour l'affichage conditionnel de l'onglet Paramètres
   const userRole = (profile as any)?.role || (user as any)?.role || '';
   const isAdminPrincipal = userRole === 'administrateur principale';
   const isAdmin = userRole === 'administrateur' || isAdminPrincipal;
   const canSeeSettings = isAdmin;
 
+  /** Charge le profil utilisateur depuis l'API au montage */
   useEffect(() => {
     fetchProfile();
   }, []);
@@ -65,6 +87,7 @@ const ProfilePage: React.FC = () => {
     }
   };
 
+  /** Gère la sélection d'une photo et affiche l'aperçu avec confirmation */
   const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -73,6 +96,7 @@ const ProfilePage: React.FC = () => {
     setConfirmPhoto(true);
   };
 
+  /** Envoie la photo sélectionnée au serveur après confirmation */
   const uploadPhoto = async () => {
     if (!pendingPhoto) return;
     try {
@@ -91,6 +115,7 @@ const ProfilePage: React.FC = () => {
     }
   };
 
+  /** Sauvegarde les modifications du profil après confirmation */
   const saveProfile = async () => {
     try {
       setSaving(true);
@@ -107,6 +132,7 @@ const ProfilePage: React.FC = () => {
     }
   };
 
+  /** Change le mot de passe après confirmation (vérifie l'ancien côté serveur) */
   const changePassword = async () => {
     try {
       setSaving(true);
@@ -124,8 +150,10 @@ const ProfilePage: React.FC = () => {
     }
   };
 
+  // URL complète de la photo de profil (construite via profileApi.getPhotoUrl)
   const photoUrl = profile?.profilePhoto ? profileApi.getPhotoUrl(profile.profilePhoto) : null;
 
+  // Affichage du loader pendant le chargement initial
   if (loading) {
     return (
       <Layout>
@@ -138,6 +166,7 @@ const ProfilePage: React.FC = () => {
 
   return (
     <Layout>
+      {/* Animation CSS pour les anneaux pulsants verts autour de l'avatar */}
       <style>{`
         @keyframes greenPulse {
           0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.7); }
@@ -148,7 +177,7 @@ const ProfilePage: React.FC = () => {
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-violet-50/30 to-fuchsia-50/20 dark:from-[#030014] dark:via-[#0a0020] dark:to-[#0e0030] py-8 px-4">
         <div className="max-w-5xl mx-auto space-y-6">
 
-          {/* HEADER */}
+          {/* En-tête de page avec badge et titre */}
           <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-4">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-violet-500/10 to-fuchsia-500/10 border border-violet-300/20 mb-4">
               <Crown className="w-4 h-4 text-violet-500" />
@@ -160,7 +189,7 @@ const ProfilePage: React.FC = () => {
             </h1>
           </motion.div>
 
-          {/* TAB TOGGLE */}
+          {/* Boutons de navigation entre onglets Profil / Paramètres */}
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
             className="flex justify-center gap-3"
           >
@@ -175,6 +204,7 @@ const ProfilePage: React.FC = () => {
               <User className="w-4 h-4 mr-2" /> Profil
             </Button>
 
+            {/* Onglet Paramètres visible uniquement pour les administrateurs */}
             {canSeeSettings && (
               <Button
                 onClick={() => setActiveTab('parametres')}
@@ -189,7 +219,7 @@ const ProfilePage: React.FC = () => {
             )}
           </motion.div>
 
-          {/* PROFIL TAB */}
+          {/* Contenu de l'onglet Profil : carte, infos, mot de passe */}
           {activeTab === 'profil' && (
             <>
               <ProfileCard
@@ -226,7 +256,7 @@ const ProfilePage: React.FC = () => {
             </>
           )}
 
-          {/* PARAMETRES TAB */}
+          {/* Contenu de l'onglet Paramètres (admin uniquement) */}
           {activeTab === 'parametres' && canSeeSettings && (
             <ParametresSection userRole={userRole} />
           )}
@@ -234,7 +264,7 @@ const ProfilePage: React.FC = () => {
         </div>
       </div>
 
-      {/* CONFIRM DIALOGS */}
+      {/* Dialogue de confirmation pour la modification du profil */}
       <AlertDialog open={confirmProfile} onOpenChange={setConfirmProfile}>
         <AlertDialogContent className="rounded-3xl backdrop-blur-2xl bg-white/95 dark:bg-[#0a0020]/95 border border-violet-200/30">
           <AlertDialogHeader>
@@ -250,6 +280,7 @@ const ProfilePage: React.FC = () => {
         </AlertDialogContent>
       </AlertDialog>
 
+      {/* Dialogue de confirmation pour le changement de mot de passe */}
       <AlertDialog open={confirmPassword} onOpenChange={setConfirmPassword}>
         <AlertDialogContent className="rounded-3xl backdrop-blur-2xl bg-white/95 dark:bg-[#0a0020]/95 border border-violet-200/30">
           <AlertDialogHeader>
@@ -265,6 +296,7 @@ const ProfilePage: React.FC = () => {
         </AlertDialogContent>
       </AlertDialog>
 
+      {/* Dialogue de confirmation pour l'upload de photo avec aperçu */}
       <AlertDialog open={confirmPhoto} onOpenChange={v => { setConfirmPhoto(v); if (!v) { setPendingPhoto(null); setPhotoPreview(null); } }}>
         <AlertDialogContent className="rounded-3xl backdrop-blur-2xl bg-white/95 dark:bg-[#0a0020]/95 border border-violet-200/30">
           <AlertDialogHeader>

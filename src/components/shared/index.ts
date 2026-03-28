@@ -1,4 +1,15 @@
-// Export de tous les composants partagés
+/**
+ * index.ts — Export centralisé des composants partagés (shared)
+ * 
+ * Composants réutilisables dans tout le projet :
+ * - UnifiedSearchBar : barre de recherche unifiée
+ * - PageHero : en-tête héroïque de page
+ * - Pagination : composant de pagination
+ * - LoadingOverlay : overlay de chargement
+ * - ConfirmDialog : dialogue de confirmation
+ * - AddressActionModal : modal d'actions pour les adresses (Google Maps)
+ * - StatBadge : badge de statistique
+ */
 
 export { default as UnifiedSearchBar } from './UnifiedSearchBar';
 export type { UnifiedSearchBarProps } from './UnifiedSearchBar';

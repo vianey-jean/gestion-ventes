@@ -1,4 +1,9 @@
-// Export centralisé de tous les services API
+/**
+ * index.ts — Export centralisé de tous les services API
+ * 
+ * Permet d'importer n'importe quel service API depuis un seul point d'entrée :
+ * import { clientApiService, saleApiService } from '@/services/api';
+ */
 export { default as api, getBaseURL } from './api';
 export { default as authApiService } from './authApi';
 export { default as clientApiService } from './clientApi';
