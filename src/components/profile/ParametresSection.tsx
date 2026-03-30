@@ -160,7 +160,11 @@ const ParametresSection: React.FC<ParametresSectionProps> = ({ userRole }) => {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = result.filename;
+        // Generate auto-backup filename: auto-backup-riziky-{nom}-{date}
+        const userName = localStorage.getItem('user_name') || 'inconnu';
+        const today = new Date().toISOString().split('T')[0];
+        const autoBackupFilename = `auto-backup-riziky-${userName.replace(/\s+/g, '-')}-${today}.json`;
+        a.download = autoBackupFilename;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
