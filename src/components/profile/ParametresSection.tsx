@@ -28,7 +28,7 @@ interface ParametresSectionProps {
 
 const ParametresSection: React.FC<ParametresSectionProps> = ({ userRole }) => {
   const { toast } = useToast();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const isAdminPrincipal = userRole === 'administrateur principale';
@@ -161,9 +161,18 @@ const ParametresSection: React.FC<ParametresSectionProps> = ({ userRole }) => {
         const a = document.createElement('a');
         a.href = url;
         // Generate auto-backup filename: auto-backup-riziky-{nom}-{date}
-        const userName = localStorage.getItem('user_name') || 'inconnu';
-        const today = new Date().toISOString().split('T')[0];
-        const autoBackupFilename = `auto-backup-riziky-${userName.replace(/\s+/g, '-')}-${today}.json`;
+        // Use server-provided filename first, fallback to localStorage user_name, then auth user
+        const serverFilename = result.filename;
+        let autoBackupFilename: string;
+        if (serverFilename && !serverFilename.includes('inconnu')) {
+          autoBackupFilename = serverFilename;
+        } else {
+          const storedName = localStorage.getItem('user_name');
+          const authName = user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : '';
+          const userName = storedName || authName || 'inconnu';
+          const today = new Date().toISOString().split('T')[0];
+          autoBackupFilename = `auto-backup-riziky-${userName.replace(/\s+/g, '-')}-${today}.json`;
+        }
         a.download = autoBackupFilename;
         document.body.appendChild(a);
         a.click();
