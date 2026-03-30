@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import {
   Settings, Trash2, Upload, Download, Shield, Eye, EyeOff, AlertTriangle,
-  ChevronDown, ChevronUp,
+ ChevronDown, ChevronUp,
   UserCog, ArrowUpCircle, ArrowDownCircle, CalendarOff, Radio,
   StopCircle, PlayCircle
 } from 'lucide-react';
@@ -131,100 +131,67 @@ const ParametresSection: React.FC<ParametresSectionProps> = ({ userRole }) => {
     setCountdownSeconds(0);
   }, []);
 
-const triggerAutoBackup = useCallback(async () => {
-  // 🚫 Bloque tous les cas de double exécution
-  if (
-    manualBackupDoneRef.current ||
-    autoBackupInProgressRef.current ||
-    autoBackupPaused
-  ) {
-    setAutoBackupPending(false);
-    return;
-  }
-
-  autoBackupInProgressRef.current = true;
-
-  try {
-    const currentActivationId = countdownActivationIdRef.current;
-
-    // 🔐 Mot de passe
-    const encodedPw = sessionStorage.getItem('_abk');
-    if (!encodedPw) {
-      console.warn('Auto-backup: no password available');
-      blockedActivationIdRef.current = currentActivationId;
-      clearAutoBackupCountdown();
+  const triggerAutoBackup = useCallback(async () => {
+    if (manualBackupDoneRef.current || autoBackupInProgressRef.current || autoBackupPaused) {
+      setAutoBackupPending(false);
       return;
     }
 
-    const password = atob(encodedPw);
+    autoBackupInProgressRef.current = true;
 
-    // 👤 Nom utilisateur (OBLIGATOIRE maintenant)
-    const storedUserName = localStorage.getItem('user_name');
+    try {
+      const currentActivationId = countdownActivationIdRef.current;
 
-    if (!storedUserName) {
-      console.warn('Auto-backup: user_name not ready → skip');
-      autoBackupInProgressRef.current = false;
-      return; // ⛔ Empêche la sauvegarde "inconnu"
-    }
+      // Get the stored password from sessionStorage
+      const encodedPw = sessionStorage.getItem('_abk');
+      if (!encodedPw) {
+        console.warn('Auto-backup: no password available');
+        blockedActivationIdRef.current = currentActivationId;
+        clearAutoBackupCountdown();
+        return;
+      }
 
-    const userName = storedUserName.replace(/\s+/g, '-');
+      const password = atob(encodedPw);
+      const result = await settingsApi.autoBackup(password);
 
-    // 📡 API
-    const result = await settingsApi.autoBackup(password);
+      if (result.success) {
+        // Download the backup file automatically
+        const blob = new Blob([JSON.stringify(result.backup)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        // Generate auto-backup filename: auto-backup-riziky-{nom}-{date}
+        const userName = localStorage.getItem('user_name') || 'inconnu';
+        const today = new Date().toISOString().split('T')[0];
+        const autoBackupFilename = `auto-backup-riziky-${userName.replace(/\s+/g, '-')}-${today}.json`;
+        a.download = autoBackupFilename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
 
-    if (result.success) {
-      // 🔁 Double sécurité : si déjà fait entre-temps
-      if (manualBackupDoneRef.current) return;
+        toast({
+          title: '🔄 Sauvegarde automatique effectuée',
+          description: 'Le fichier de sauvegarde a été téléchargé automatiquement (crypté avec votre mot de passe)',
+          className: 'bg-blue-600 text-white border-blue-600'
+        });
 
-      const blob = new Blob(
-        [JSON.stringify(result.backup)],
-        { type: 'application/json' }
-      );
-
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-
-      const today = new Date().toISOString().split('T')[0];
-      const autoBackupFilename = `auto-backup-riziky-${userName}-${today}.json`;
-
-      a.download = autoBackupFilename;
-
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-
-      URL.revokeObjectURL(url);
-
+        clearAutoBackupCountdown();
+        manualBackupDoneRef.current = true; // Prevent further auto-backups until new data
+      }
+    } catch (e) {
+      console.error('Auto-backup failed:', e);
+      blockedActivationIdRef.current = countdownActivationIdRef.current;
       toast({
-        title: '🔄 Sauvegarde automatique effectuée',
-        description:
-          'Le fichier de sauvegarde a été téléchargé automatiquement (crypté avec votre mot de passe)',
-        className: 'bg-blue-600 text-white border-blue-600'
+        title: 'Sauvegarde automatique échouée',
+        description: 'La sauvegarde automatique n\'a pas pu être effectuée',
+        variant: 'destructive'
       });
-
-      // ✅ Marque comme fait (clé du fix)
-      manualBackupDoneRef.current = true;
-
       clearAutoBackupCountdown();
+    } finally {
+      autoBackupInProgressRef.current = false;
     }
-  } catch (e) {
-    console.error('Auto-backup failed:', e);
-
-    blockedActivationIdRef.current = countdownActivationIdRef.current;
-
-    toast({
-      title: 'Sauvegarde automatique échouée',
-      description: "La sauvegarde automatique n'a pas pu être effectuée",
-      variant: 'destructive'
-    });
-
-    clearAutoBackupCountdown();
-  } finally {
-    autoBackupInProgressRef.current = false;
-  }
-}, [clearAutoBackupCountdown, toast, autoBackupPaused]);
-
+  }, [clearAutoBackupCountdown, toast, autoBackupPaused]);
 
   const startAutoBackupCountdown = useCallback((serverState: any) => {
     if (!serverState?.activationId || manualBackupDoneRef.current || autoBackupPaused) {
@@ -603,7 +570,7 @@ const triggerAutoBackup = useCallback(async () => {
               <h3 className="text-lg font-bold text-foreground">Paramètres</h3>
               <p className="text-xs text-muted-foreground">Configuration du site et gestion des données</p>
             </div>
-          </div>
+           </div>
 
           {/* Indisponibilités / Congés */}
           <div className="mt-6 pt-6 border-t border-border/50">
@@ -734,10 +701,11 @@ const triggerAutoBackup = useCallback(async () => {
                       <div>
                         <p className="text-sm font-semibold text-foreground">{u.firstName} {u.lastName}</p>
                         <p className="text-xs text-muted-foreground">{u.email}</p>
-                        <span className={`inline-block mt-1 text-xs px-2 py-0.5 rounded-full font-bold ${u.role === 'administrateur'
+                        <span className={`inline-block mt-1 text-xs px-2 py-0.5 rounded-full font-bold ${
+                          u.role === 'administrateur'
                             ? 'bg-violet-500/10 text-violet-600 border border-violet-500/20'
                             : 'bg-slate-500/10 text-slate-600 border border-slate-500/20'
-                          }`}>
+                        }`}>
                           {u.role === 'administrateur' ? 'Administrateur' : 'Simple utilisateur'}
                         </span>
                       </div>
@@ -794,10 +762,11 @@ const triggerAutoBackup = useCallback(async () => {
                       <div>
                         <p className="text-sm font-semibold text-foreground">{u.firstName} {u.lastName}</p>
                         <p className="text-xs text-muted-foreground">{u.email}</p>
-                        <span className={`inline-block mt-1 text-xs px-2 py-0.5 rounded-full font-bold ${u.specification === 'live'
+                        <span className={`inline-block mt-1 text-xs px-2 py-0.5 rounded-full font-bold ${
+                          u.specification === 'live'
                             ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20'
                             : 'bg-slate-500/10 text-slate-600 border border-slate-500/20'
-                          }`}>
+                        }`}>
                           {u.specification === 'live' ? '🟢 Live' : 'Aucune spécification'}
                         </span>
                       </div>
@@ -927,10 +896,11 @@ const triggerAutoBackup = useCallback(async () => {
             <Button
               onClick={handleRoleChange}
               disabled={changingRole}
-              className={`rounded-xl text-white ${roleChangeTarget === 'administrateur'
+              className={`rounded-xl text-white ${
+                roleChangeTarget === 'administrateur'
                   ? 'bg-gradient-to-r from-violet-500 to-fuchsia-500'
                   : 'bg-gradient-to-r from-orange-500 to-red-500'
-                }`}
+              }`}
             >
               {changingRole ? 'Modification...' : 'Confirmer'}
             </Button>
@@ -963,10 +933,11 @@ const triggerAutoBackup = useCallback(async () => {
             <Button
               onClick={handleSpecChange}
               disabled={changingSpec}
-              className={`rounded-xl text-white ${specChangeTarget === 'live'
+              className={`rounded-xl text-white ${
+                specChangeTarget === 'live'
                   ? 'bg-gradient-to-r from-emerald-500 to-teal-500'
                   : 'bg-gradient-to-r from-orange-500 to-red-500'
-                }`}
+              }`}
             >
               {changingSpec ? 'Modification...' : 'Confirmer'}
             </Button>
