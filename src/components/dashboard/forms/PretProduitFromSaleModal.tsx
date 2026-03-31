@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Product, PretProduit } from '@/types';
 import ProductSearchInput from '../ProductSearchInput';
@@ -18,6 +19,7 @@ interface PretProduitFromSaleModalProps {
 interface ClientPretProduit {
   nom: string;
   phone: string;
+  phones?: string[];
   pretsCount: number;
 }
 
@@ -33,6 +35,7 @@ const PretProduitFromSaleModal: React.FC<PretProduitFromSaleModalProps> = ({ isO
   // États du formulaire
   const [clientName, setClientName] = useState('');
   const [clientPhone, setClientPhone] = useState('');
+  const [clientPhones, setClientPhones] = useState<string[]>([]);
   const [datePret, setDatePret] = useState(new Date().toISOString().split('T')[0]);
   const [datePaiement, setDatePaiement] = useState('');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -105,8 +108,10 @@ const PretProduitFromSaleModal: React.FC<PretProduitFromSaleModalProps> = ({ isO
 
   // Sélectionner un client
   const handleClientSelect = (client: ClientPretProduit) => {
+    const phones = client.phones && client.phones.length > 0 ? client.phones : (client.phone ? [client.phone] : []);
     setClientName(client.nom);
-    setClientPhone(client.phone);
+    setClientPhones(phones);
+    setClientPhone(phones[0] || '');
     setClientSearch(client.nom);
     setShowClientResults(false);
   };
@@ -287,12 +292,27 @@ const PretProduitFromSaleModal: React.FC<PretProduitFromSaleModalProps> = ({ isO
 
             <div className="space-y-2">
               <Label htmlFor="clientPhone">Téléphone</Label>
-              <Input
-                id="clientPhone"
-                value={clientPhone}
-                onChange={(e) => setClientPhone(e.target.value)}
-                placeholder="0692123456"
-              />
+              {clientPhones.length > 1 ? (
+                <Select value={clientPhone} onValueChange={setClientPhone}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Choisir un numéro" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {clientPhones.map((phone, idx) => (
+                      <SelectItem key={idx} value={phone}>
+                        {phone} {idx === 0 ? '(principal)' : ''}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <Input
+                  id="clientPhone"
+                  value={clientPhone}
+                  onChange={(e) => setClientPhone(e.target.value)}
+                  placeholder="0692123456"
+                />
+              )}
             </div>
           </div>
 

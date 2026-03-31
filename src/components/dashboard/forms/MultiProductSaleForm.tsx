@@ -38,6 +38,7 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [clientName, setClientName] = useState('');
   const [clientPhone, setClientPhone] = useState('');
+  const [clientPhones, setClientPhones] = useState<string[]>([]);
   const [clientAddress, setClientAddress] = useState('');
   const [formProducts, setFormProducts] = useState<FormProduct[]>([createEmptyFormProduct()]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -178,10 +179,13 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
   // Gestion du client
   const handleClientSelect = (client: any) => {
     if (client) {
+      const phones = client.phones && client.phones.length > 0 ? client.phones : (client.phone ? [client.phone] : []);
       setClientName(client.nom);
-      setClientPhone(client.phone);
+      setClientPhones(phones);
+      setClientPhone(phones[0] || '');
       setClientAddress(client.adresse);
     } else {
+      setClientPhones([]);
       setClientPhone('');
       setClientAddress('');
     }
@@ -899,6 +903,7 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
             setClientName={setClientName}
             clientPhone={clientPhone}
             setClientPhone={setClientPhone}
+            clientPhones={clientPhones}
             clientAddress={clientAddress}
             setClientAddress={setClientAddress}
             onClientSelect={handleClientSelect}

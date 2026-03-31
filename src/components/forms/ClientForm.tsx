@@ -1,11 +1,11 @@
-// Formulaire d'ajout/modification de client
+// Formulaire d'ajout/modification de client avec support multi-téléphones
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ClientFormData } from '@/types/client';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, Plus, Trash2 } from 'lucide-react';
 
 interface ClientFormProps {
   isOpen: boolean;
@@ -26,6 +26,28 @@ const ClientForm: React.FC<ClientFormProps> = ({
   isEditing,
   isSubmitting,
 }) => {
+  // Ajouter un nouveau champ téléphone
+  const addPhone = () => {
+    setFormData(prev => ({ ...prev, phones: [...prev.phones, ''] }));
+  };
+
+  // Supprimer un numéro de téléphone
+  const removePhone = (index: number) => {
+    if (formData.phones.length <= 1) return; // Garder au moins 1
+    setFormData(prev => ({
+      ...prev,
+      phones: prev.phones.filter((_, i) => i !== index)
+    }));
+  };
+
+  // Modifier un numéro de téléphone
+  const updatePhone = (index: number, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      phones: prev.phones.map((p, i) => i === index ? value : p)
+    }));
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md bg-gradient-to-br from-white via-purple-50 to-indigo-50 dark:from-gray-900 dark:via-purple-900/30 dark:to-indigo-900/30 border-2 border-purple-200 dark:border-purple-700 shadow-2xl">
@@ -55,20 +77,57 @@ const ClientForm: React.FC<ClientFormProps> = ({
                 required
               />
             </div>
+            
+            {/* Multi-téléphones */}
             <div className="space-y-2">
-              <Label htmlFor="phone" className="text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200">
-                Téléphone
-              </Label>
-              <Input
-                id="phone"
-                type="tel"
-                value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                placeholder="Numéro de téléphone..."
-                className="border-2 border-purple-200 dark:border-purple-700 focus:border-purple-500 dark:focus:border-purple-500 rounded-xl py-3 text-base sm:text-lg"
-                required
-              />
+              <div className="flex items-center justify-between">
+                <Label className="text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200">
+                  Téléphone(s)
+                </Label>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={addPhone}
+                  className="h-8 w-8 p-0 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white shadow-md hover:shadow-lg transition-all"
+                >
+                  <Plus className="w-4 h-4" />
+                </Button>
+              </div>
+              <div className="space-y-2">
+                {formData.phones.map((phone, index) => (
+                  <div key={index} className="flex items-center gap-2">
+                    <div className="flex-1 relative">
+                      <Input
+                        type="tel"
+                        value={phone}
+                        onChange={(e) => updatePhone(index, e.target.value)}
+                        placeholder={index === 0 ? "Téléphone principal" : `Téléphone ${index + 1}`}
+                        className="border-2 border-purple-200 dark:border-purple-700 focus:border-purple-500 dark:focus:border-purple-500 rounded-xl py-3 text-base sm:text-lg pr-16"
+                        required={index === 0}
+                      />
+                      {index === 0 && (
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/30 px-2 py-0.5 rounded-full">
+                          Principal
+                        </span>
+                      )}
+                    </div>
+                    {formData.phones.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removePhone(index)}
+                        className="h-8 w-8 p-0 rounded-full hover:bg-red-100 dark:hover:bg-red-900/30 text-red-500 hover:text-red-600 transition-all"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
+
             <div className="space-y-2">
               <Label htmlFor="adresse" className="text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200">
                 Adresse

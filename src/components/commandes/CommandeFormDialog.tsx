@@ -24,6 +24,7 @@ interface Client {
   id: string;
   nom: string;
   phone: string;
+  phones?: string[];
   adresse: string;
 }
 
@@ -68,6 +69,7 @@ interface CommandeFormDialogProps {
   setClientNom: (value: string) => void;
   clientPhone: string;
   setClientPhone: (value: string) => void;
+  clientPhones?: string[];
   clientAddress: string;
   setClientAddress: (value: string) => void;
   clientSearch: string;
@@ -130,6 +132,7 @@ const CommandeFormDialog: React.FC<CommandeFormDialogProps> = ({
   setClientNom,
   clientPhone,
   setClientPhone,
+  clientPhones = [],
   clientAddress,
   setClientAddress,
   clientSearch,
@@ -254,14 +257,29 @@ const CommandeFormDialog: React.FC<CommandeFormDialogProps> = ({
                 <Label htmlFor="clientPhone" className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">
                   📞 Téléphone
                 </Label>
-                <Input
-                  id="clientPhone"
-                  value={clientPhone}
-                  onChange={(e) => setClientPhone(e.target.value)}
-                  placeholder="Numéro de téléphone"
-                  className="border-2 border-blue-300 dark:border-blue-700 focus:border-blue-500 dark:focus:border-blue-500 bg-white dark:bg-gray-900 shadow-sm"
-                  required
-                />
+                {clientPhones.length > 1 ? (
+                  <Select value={clientPhone} onValueChange={setClientPhone}>
+                    <SelectTrigger className="w-full border-2 border-blue-300 dark:border-blue-700 focus:border-blue-500 dark:focus:border-blue-500 bg-white dark:bg-gray-900 shadow-sm">
+                      <SelectValue placeholder="Choisir un numéro" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {clientPhones.map((phone, idx) => (
+                        <SelectItem key={idx} value={phone}>
+                          {phone} {idx === 0 ? '(principal)' : ''}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <Input
+                    id="clientPhone"
+                    value={clientPhone}
+                    onChange={(e) => setClientPhone(e.target.value)}
+                    placeholder="Numéro de téléphone"
+                    className="border-2 border-blue-300 dark:border-blue-700 focus:border-blue-500 dark:focus:border-blue-500 bg-white dark:bg-gray-900 shadow-sm"
+                    required
+                  />
+                )}
               </div>
 
               <div>

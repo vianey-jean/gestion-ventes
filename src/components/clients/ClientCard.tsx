@@ -56,19 +56,24 @@ const ClientCard: React.FC<ClientCardProps> = ({
       </CardHeader>
       
       <CardContent className="space-y-4 relative z-10">
-        {/* Téléphone - cliquable */}
-        <div 
-          className="flex items-center gap-3 p-3 bg-gradient-to-r from-emerald-50 to-green-50 dark:from-emerald-900/30 dark:to-green-900/30 rounded-xl border border-emerald-200 dark:border-emerald-800 cursor-pointer hover:from-emerald-100 hover:to-green-100 dark:hover:from-emerald-900/50 dark:hover:to-green-900/50 transition-all"
-          onClick={() => onPhoneClick(client.phone)}
-        >
-          <div className="w-10 h-10 bg-gradient-to-r from-emerald-500 to-green-500 rounded-full flex items-center justify-center shrink-0 shadow-lg">
-            <Phone className="w-5 h-5 text-white" />
+        {/* Téléphones - affichage empilé */}
+        {(client.phones && client.phones.length > 0 ? client.phones : [client.phone]).map((phone, idx) => (
+          <div 
+            key={idx}
+            className="flex items-center gap-3 p-3 bg-gradient-to-r from-emerald-50 to-green-50 dark:from-emerald-900/30 dark:to-green-900/30 rounded-xl border border-emerald-200 dark:border-emerald-800 cursor-pointer hover:from-emerald-100 hover:to-green-100 dark:hover:from-emerald-900/50 dark:hover:to-green-900/50 transition-all"
+            onClick={() => onPhoneClick(phone)}
+          >
+            <div className="w-10 h-10 bg-gradient-to-r from-emerald-500 to-green-500 rounded-full flex items-center justify-center shrink-0 shadow-lg">
+              <Phone className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">
+                {idx === 0 ? 'Téléphone principal' : `Téléphone ${idx + 1}`}
+              </p>
+              <p className="text-sm font-semibold text-gray-900 dark:text-white">{phone}</p>
+            </div>
           </div>
-          <div>
-            <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Téléphone</p>
-            <p className="text-sm font-semibold text-gray-900 dark:text-white">{client.phone}</p>
-          </div>
-        </div>
+        ))}
         
         {/* Adresse */}
         <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-xl border border-blue-200 dark:border-blue-800">

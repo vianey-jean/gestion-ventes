@@ -1,7 +1,8 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Product, Sale } from '@/types';
 import ProductSearchInput from '../ProductSearchInput';
 import SaleQuantityInput from './SaleQuantityInput';
@@ -49,16 +50,20 @@ const SaleFormFields: React.FC<SaleFormFieldsProps> = ({
   isAdvanceProduct,
   isProfitNegative
 }) => {
+  const [clientPhones, setClientPhones] = useState<string[]>([]);
+
   const handleClientSelect = (client: any) => {
     if (client) {
+      const phones = client.phones && client.phones.length > 0 ? client.phones : (client.phone ? [client.phone] : []);
+      setClientPhones(phones);
       setFormData(prev => ({
         ...prev,
         clientName: client.nom,
-        clientPhone: client.phone,
+        clientPhone: phones[0] || '', // Par défaut le principal
         clientAddress: client.adresse
       }));
     } else {
-      // Si pas de client sélectionné, garder seulement le nom saisi
+      setClientPhones([]);
       setFormData(prev => ({
         ...prev,
         clientPhone: '',
@@ -101,13 +106,28 @@ const SaleFormFields: React.FC<SaleFormFieldsProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="clientPhone">Numéro de téléphone</Label>
-              <Input
-                id="clientPhone"
-                name="clientPhone"
-                value={formData.clientPhone}
-                onChange={(e) => setFormData(prev => ({ ...prev, clientPhone: e.target.value }))}
-                placeholder="Ex: 0692123456"
-              />
+              {clientPhones.length > 1 ? (
+                <Select value={formData.clientPhone} onValueChange={(val) => setFormData(prev => ({ ...prev, clientPhone: val }))}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Choisir un numéro" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {clientPhones.map((phone, idx) => (
+                      <SelectItem key={idx} value={phone}>
+                        {phone} {idx === 0 ? '(principal)' : ''}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <Input
+                  id="clientPhone"
+                  name="clientPhone"
+                  value={formData.clientPhone}
+                  onChange={(e) => setFormData(prev => ({ ...prev, clientPhone: e.target.value }))}
+                  placeholder="Ex: 0692123456"
+                />
+              )}
             </div>
             
             <div className="space-y-2">

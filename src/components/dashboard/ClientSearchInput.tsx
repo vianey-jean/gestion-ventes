@@ -1,13 +1,13 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { useClientSync } from '@/hooks/useClientSync';
 
 interface Client {
   id: string;
   nom: string;
   phone: string;
+  phones: string[];
   adresse: string;
 }
 
@@ -48,7 +48,7 @@ const ClientSearchInput: React.FC<ClientSearchInputProps> = ({
     }
   }, [value, searchClients, isSelecting]);
 
-  // Gestion clic à l'extérieur et changement de focus
+  // Gestion clic à l'extérieur
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -62,7 +62,6 @@ const ClientSearchInput: React.FC<ClientSearchInputProps> = ({
     };
 
     const handleFocusChange = (event: FocusEvent) => {
-      // Si le focus va vers un autre élément qui n'est pas le dropdown
       if (
         event.target !== inputRef.current &&
         dropdownRef.current &&
@@ -87,7 +86,7 @@ const ClientSearchInput: React.FC<ClientSearchInputProps> = ({
     onChange(client.nom);
     onClientSelect(client);
     setSuggestions([]);
-    setIsOpen(false); // Fermer immédiatement le dropdown
+    setIsOpen(false);
   };
 
   // Changement dans l'input
@@ -99,9 +98,7 @@ const ClientSearchInput: React.FC<ClientSearchInputProps> = ({
     }
   };
 
-  // Gestionnaire pour fermer le dropdown quand on clique ailleurs dans le formulaire
   const handleInputBlur = () => {
-    // Délai pour permettre au clic sur une suggestion de s'exécuter
     setTimeout(() => {
       setIsOpen(false);
     }, 150);
@@ -109,10 +106,6 @@ const ClientSearchInput: React.FC<ClientSearchInputProps> = ({
 
   return (
 <div className="relative">
-  {/* Label avec espace en bas */}
-  
-
-  {/* Champ de saisie */}
   <Input
     ref={inputRef}
     id="clientName"
@@ -124,7 +117,7 @@ const ClientSearchInput: React.FC<ClientSearchInputProps> = ({
     autoComplete="off"
   />
 
-  {/* Liste des suggestions - affiche min 3 clients avec scroll */}
+  {/* Liste des suggestions */}
   {isOpen && suggestions.length > 0 && (
     <div
       ref={dropdownRef}
@@ -137,32 +130,38 @@ const ClientSearchInput: React.FC<ClientSearchInputProps> = ({
       }}
     >
       <div className="py-1">
-        {suggestions.map((client, index) => (
-          <button
-            key={client.id}
-            type="button"
-            className="w-full px-4 py-3 text-left hover:bg-accent border-b border-border last:border-b-0 focus:bg-accent focus:outline-none transition-colors"
-            onClick={() => handleClientSelect(client)}
-            onMouseDown={(e) => e.preventDefault()}
-          >
-            <div className="flex items-center gap-2">
-              <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary">
-                {index + 1}
-              </span>
-              <div className="flex-1 min-w-0">
-                <div className="font-medium text-foreground truncate">
-                  {client.nom}
-                </div>
-                <div className="text-sm text-muted-foreground">
-                  {client.phone}
-                </div>
-                <div className="text-xs text-muted-foreground truncate">
-                  {client.adresse}
+        {suggestions.map((client, index) => {
+          const phones = client.phones && client.phones.length > 0 ? client.phones : (client.phone ? [client.phone] : []);
+          return (
+            <button
+              key={client.id}
+              type="button"
+              className="w-full px-4 py-3 text-left hover:bg-accent border-b border-border last:border-b-0 focus:bg-accent focus:outline-none transition-colors"
+              onClick={() => handleClientSelect(client)}
+              onMouseDown={(e) => e.preventDefault()}
+            >
+              <div className="flex items-center gap-2">
+                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary">
+                  {index + 1}
+                </span>
+                <div className="flex-1 min-w-0">
+                  <div className="font-medium text-foreground truncate">
+                    {client.nom}
+                  </div>
+                  {/* Afficher tous les téléphones */}
+                  {phones.map((phone, pIdx) => (
+                    <div key={pIdx} className="text-sm text-muted-foreground">
+                      {phone} {pIdx === 0 && phones.length > 1 && <span className="text-xs text-emerald-600">(principal)</span>}
+                    </div>
+                  ))}
+                  <div className="text-xs text-muted-foreground truncate">
+                    {client.adresse}
+                  </div>
                 </div>
               </div>
-            </div>
-          </button>
-        ))}
+            </button>
+          );
+        })}
       </div>
       {suggestions.length > 3 && (
         <div className="sticky bottom-0 bg-gradient-to-t from-background to-transparent py-2 text-center">

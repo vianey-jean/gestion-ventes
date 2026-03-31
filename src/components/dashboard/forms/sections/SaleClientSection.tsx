@@ -2,6 +2,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Package } from 'lucide-react';
 import ClientSearchInput from '../../ClientSearchInput';
 
@@ -10,6 +11,7 @@ interface SaleClientSectionProps {
   setClientName: (v: string) => void;
   clientPhone: string;
   setClientPhone: (v: string) => void;
+  clientPhones?: string[];
   clientAddress: string;
   setClientAddress: (v: string) => void;
   onClientSelect: (client: any) => void;
@@ -21,6 +23,7 @@ const SaleClientSection: React.FC<SaleClientSectionProps> = ({
   setClientName,
   clientPhone,
   setClientPhone,
+  clientPhones = [],
   clientAddress,
   setClientAddress,
   onClientSelect,
@@ -32,6 +35,7 @@ const SaleClientSection: React.FC<SaleClientSectionProps> = ({
         <div className="absolute -top-16 -right-16 w-32 h-32 bg-blue-300/20 rounded-full blur-2xl" />
         <div className="absolute -bottom-8 -left-8 w-24 h-24 bg-indigo-300/20 rounded-full blur-2xl" />
       </div>
+
       <CardHeader className="relative pb-2">
         <CardTitle className="text-base font-bold bg-gradient-to-r from-blue-600 to-indigo-700 bg-clip-text text-transparent flex items-center gap-2">
           <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg">
@@ -40,7 +44,9 @@ const SaleClientSection: React.FC<SaleClientSectionProps> = ({
           Informations Client
         </CardTitle>
       </CardHeader>
+
       <CardContent className="relative space-y-4">
+        {/* Nom */}
         <div className="space-y-2">
           <Label>Nom du client</Label>
           <ClientSearchInput
@@ -50,9 +56,33 @@ const SaleClientSection: React.FC<SaleClientSectionProps> = ({
             disabled={isSubmitting}
           />
         </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Téléphone */}
           <div className="space-y-2">
             <Label>Téléphone</Label>
+
+            {/* Select si plusieurs numéros */}
+            {clientPhones.length > 1 && (
+              <Select
+                value={clientPhone}
+                onValueChange={(value) => setClientPhone(value)}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Choisir un numéro" />
+                </SelectTrigger>
+
+                <SelectContent>
+                  {clientPhones.map((phone, idx) => (
+                    <SelectItem key={idx} value={phone}>
+                      {phone} {idx === 0 ? '(principal)' : ''}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+
+            {/* Input toujours affiché */}
             <Input
               type="tel"
               value={clientPhone}
@@ -61,6 +91,8 @@ const SaleClientSection: React.FC<SaleClientSectionProps> = ({
               disabled={isSubmitting}
             />
           </div>
+
+          {/* Adresse */}
           <div className="space-y-2">
             <Label>Adresse</Label>
             <Input
