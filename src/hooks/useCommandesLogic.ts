@@ -28,6 +28,7 @@ interface Client {
   id: string;
   nom: string;
   phone: string;
+  phones?: string[];
   adresse: string;
 }
 
@@ -58,6 +59,7 @@ export const useCommandesLogic = () => {
   // =========================================================================
   const [clientNom, setClientNom] = useState('');
   const [clientPhone, setClientPhone] = useState('');
+  const [clientPhones, setClientPhones] = useState<string[]>([]);
   const [clientAddress, setClientAddress] = useState('');
   const [clientSearch, setClientSearch] = useState('');
   const [showClientSuggestions, setShowClientSuggestions] = useState(false);
@@ -274,8 +276,10 @@ export const useCommandesLogic = () => {
   // =========================================================================
 
   const handleClientSelect = useCallback((client: Client) => {
+    const phones = client.phones && client.phones.length > 0 ? client.phones : (client.phone ? [client.phone] : []);
     setClientNom(client.nom);
-    setClientPhone(client.phone);
+    setClientPhones(phones);
+    setClientPhone(phones[0] || '');
     setClientAddress(client.adresse);
     setClientSearch(client.nom);
     setShowClientSuggestions(false);
@@ -810,7 +814,7 @@ export const useCommandesLogic = () => {
     filteredCommandes, filteredClients, filteredProducts, commandesForExportDate,
     // États formulaire
     isDialogOpen, setIsDialogOpen, editingCommande,
-    clientNom, setClientNom, clientPhone, setClientPhone, clientAddress, setClientAddress,
+    clientNom, setClientNom, clientPhone, setClientPhone, clientPhones, clientAddress, setClientAddress,
     clientSearch, setClientSearch, showClientSuggestions, setShowClientSuggestions,
     type, setType, dateArrivagePrevue, setDateArrivagePrevue, dateEcheance, setDateEcheance, horaire, setHoraire,
     produitNom, setProduitNom, prixUnitaire, setPrixUnitaire, quantite, setQuantite, prixVente, setPrixVente,

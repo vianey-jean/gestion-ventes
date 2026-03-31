@@ -3,14 +3,15 @@
 export interface Client {
   id: string;
   nom: string;
-  phone: string;
+  phone: string; // Rétrocompatibilité: premier numéro
+  phones: string[]; // Tous les numéros de téléphone
   adresse: string;
   dateCreation: string;
 }
 
 export interface ClientFormData {
   nom: string;
-  phone: string;
+  phones: string[]; // Tableau de numéros
   adresse: string;
 }
 

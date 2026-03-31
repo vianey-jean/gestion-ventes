@@ -18,7 +18,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Edit, Trash2, Phone, MapPin, Users, Sparkles, Crown, Star, Diamond, MessageSquare, PhoneCall, Navigation } from 'lucide-react';
+import { Edit, Trash2, Phone, MapPin, Users, Sparkles, Crown, Star, MessageSquare, PhoneCall, Navigation, Plus } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import axios from 'axios';
 import Navbar from '@/components/Navbar';
@@ -40,6 +40,7 @@ interface Client {
   id: string;
   nom: string;
   phone: string;
+  phones: string[];
   adresse: string;
   dateCreation: string;
 }
@@ -60,7 +61,7 @@ const ClientsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formData, setFormData] = useState({ nom: '', phone: '', adresse: '' });
+  const [formData, setFormData] = useState({ nom: '', phones: [''], adresse: '' });
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
@@ -99,7 +100,8 @@ const ClientsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => 
   const filteredClients = searchQuery.length >= 3 
     ? clients.filter(client => 
         client.nom.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        client.phone.includes(searchQuery) ||
+        (client.phones || []).some(p => p.includes(searchQuery)) ||
+        client.phone?.includes(searchQuery) ||
         client.adresse.toLowerCase().includes(searchQuery.toLowerCase())
       )
     : clients;
@@ -117,14 +119,20 @@ const ClientsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => 
   // =========================================================================
   // CRUD Handlers
   // =========================================================================
-  const resetForm = () => { setFormData({ nom: '', phone: '', adresse: '' }); setEditingClient(null); };
+  const resetForm = () => { setFormData({ nom: '', phones: [''], adresse: '' }); setEditingClient(null); };
   const handleAddClient = () => { resetForm(); setIsAddDialogOpen(true); };
-  const handleEditClient = (client: Client) => { setFormData({ nom: client.nom, phone: client.phone, adresse: client.adresse }); setEditingClient(client); setIsAddDialogOpen(true); };
+  const handleEditClient = (client: Client) => { 
+    const phones = client.phones && client.phones.length > 0 ? client.phones : [client.phone || ''];
+    setFormData({ nom: client.nom, phones, adresse: client.adresse }); 
+    setEditingClient(client); 
+    setIsAddDialogOpen(true); 
+  };
   
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.nom.trim() || !formData.phone.trim() || !formData.adresse.trim()) {
-      toast({ title: "Erreur", description: "Tous les champs sont obligatoires", variant: "destructive", className: "notification-erreur" });
+    const validPhones = formData.phones.filter(p => p.trim());
+    if (!formData.nom.trim() || validPhones.length === 0 || !formData.adresse.trim()) {
+      toast({ title: "Erreur", description: "Le nom, au moins un téléphone et l'adresse sont obligatoires", variant: "destructive", className: "notification-erreur" });
       return;
     }
     if (editingClient) { setShowEditConfirm(true); } else { setShowAddConfirm(true); }
@@ -246,11 +254,21 @@ const ClientsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => 
               
               <CardContent className="relative z-10">
                 <div className="space-y-4">
-                  <div onClick={() => handlePhoneClick(client.phone)} className="flex items-center gap-4 p-4 bg-gradient-to-r from-green-50 via-emerald-50 to-teal-50 dark:from-green-900/30 dark:via-emerald-900/30 dark:to-teal-900/30 rounded-xl border border-green-200/50 dark:border-green-800/50 backdrop-blur-sm cursor-pointer hover:scale-[1.02] transition-transform duration-200">
-                    <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full shadow-lg">
-                      <Phone className="w-5 h-5 text-white" />
-                    </div>
-                    <span className="text-gray-700 dark:text-gray-200 font-semibold hover:text-green-600 dark:hover:text-green-400 transition-colors">{client.phone}</span>
+                  {/* Affichage multi-téléphones empilés */}
+                  <div className="space-y-2">
+                    {(client.phones && client.phones.length > 0 ? client.phones : [client.phone]).map((phone, phoneIndex) => (
+                      <div key={phoneIndex} onClick={() => handlePhoneClick(phone)} className="flex items-center gap-4 p-4 bg-gradient-to-r from-green-50 via-emerald-50 to-teal-50 dark:from-green-900/30 dark:via-emerald-900/30 dark:to-teal-900/30 rounded-xl border border-green-200/50 dark:border-green-800/50 backdrop-blur-sm cursor-pointer hover:scale-[1.02] transition-transform duration-200">
+                        <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full shadow-lg">
+                          <Phone className="w-5 h-5 text-white" />
+                        </div>
+                        <div className="flex-1">
+                          <span className="text-gray-700 dark:text-gray-200 font-semibold hover:text-green-600 dark:hover:text-green-400 transition-colors">{phone}</span>
+                          {phoneIndex === 0 && client.phones && client.phones.length > 1 && (
+                            <span className="ml-2 text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/30 px-2 py-0.5 rounded-full">Principal</span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
                   </div>
                   
                   <div onClick={() => handleAddressClick(client.adresse)} className="flex items-start gap-4 p-4 bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 dark:from-blue-900/30 dark:via-indigo-900/30 dark:to-purple-900/30 rounded-xl border border-blue-200/50 dark:border-blue-800/50 backdrop-blur-sm cursor-pointer hover:scale-[1.02] transition-transform duration-200">
@@ -339,8 +357,38 @@ const ClientsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => 
                 <Input id="nom" value={formData.nom} onChange={(e) => setFormData({ ...formData, nom: e.target.value })} placeholder="Nom et prénom" className="border-gray-200 dark:border-gray-700 focus:ring-blue-500 focus:border-blue-500" required />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="phone" className="text-sm font-semibold text-gray-700 dark:text-gray-300">Numéro de téléphone</Label>
-                <Input id="phone" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} placeholder="Ex: 0692123456" className="border-gray-200 dark:border-gray-700 focus:ring-blue-500 focus:border-blue-500" required />
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Téléphone(s)</Label>
+                  <Button type="button" variant="ghost" size="sm" onClick={() => setFormData(prev => ({ ...prev, phones: [...prev.phones, ''] }))} className="h-7 w-7 p-0 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white shadow-md">
+                    <Plus className="w-3.5 h-3.5" />
+                  </Button>
+                </div>
+                <div className="space-y-2">
+                  {formData.phones.map((phone, index) => (
+                    <div key={index} className="flex items-center gap-2">
+                      <div className="flex-1 relative">
+                        <Input
+                          type="tel"
+                          value={phone}
+                          onChange={(e) => setFormData(prev => ({ ...prev, phones: prev.phones.map((p, i) => i === index ? e.target.value : p) }))}
+                          placeholder={index === 0 ? "Téléphone principal" : `Téléphone ${index + 1}`}
+                          className="border-gray-200 dark:border-gray-700 focus:ring-blue-500 focus:border-blue-500 pr-16"
+                          required={index === 0}
+                        />
+                        {index === 0 && (
+                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/30 px-2 py-0.5 rounded-full">
+                            Principal
+                          </span>
+                        )}
+                      </div>
+                      {formData.phones.length > 1 && (
+                        <Button type="button" variant="ghost" size="sm" onClick={() => setFormData(prev => ({ ...prev, phones: prev.phones.filter((_, i) => i !== index) }))} className="h-7 w-7 p-0 rounded-full hover:bg-red-100 dark:hover:bg-red-900/30 text-red-500">
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="adresse" className="text-sm font-semibold text-gray-700 dark:text-gray-300">Adresse</Label>

@@ -48,7 +48,7 @@ export const useCommandes = () => {
       if (!existingClient) {
         await clientApiService.create({
           nom: data.clientNom,
-          phone: data.clientPhone,
+          phones: [data.clientPhone],
           adresse: data.clientAddress,
         });
       }
