@@ -6,7 +6,27 @@ import { Input } from '@/components/ui/input';
 import { playNotificationSound } from '@/hooks/use-chat-notification';
 import ChatNotificationBanner, { ChatNotifItem } from '@/components/livechat/ChatNotificationBanner';
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'https://server-gestion-ventes.onrender.com';
+const getLiveChatApiBase = () => {
+  const configuredBase = import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, '');
+  if (configuredBase) return configuredBase;
+
+  if (typeof window === 'undefined') {
+    return 'https://server-gestion-ventes.onrender.com';
+  }
+
+  const hostname = window.location.hostname;
+  const usesLocalProxy = hostname === 'localhost' || hostname === '127.0.0.1';
+  const usesPreviewProxy = hostname.includes('lovableproject.com') || hostname.includes('lovable.app');
+  const usesVercelRewrite = hostname.includes('vercel.app');
+
+  if (usesLocalProxy || usesPreviewProxy || usesVercelRewrite) {
+    return '';
+  }
+
+  return 'https://server-gestion-ventes.onrender.com';
+};
+
+const API_BASE = getLiveChatApiBase();
 
 const EMOJI_LIST = ['😀','😂','😍','🥰','😎','🤔','👍','👏','❤️','🔥','🎉','😢','😮','🙏','💪','✨','😊','🤗','😘','👌'];
 
