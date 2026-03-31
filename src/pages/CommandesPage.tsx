@@ -69,6 +69,7 @@ const CommandesPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =
           setClientNom={logic.setClientNom}
           clientPhone={logic.clientPhone}
           setClientPhone={logic.setClientPhone}
+          clientPhones={logic.clientPhones}
           clientAddress={logic.clientAddress}
           setClientAddress={logic.setClientAddress}
           clientSearch={logic.clientSearch}
