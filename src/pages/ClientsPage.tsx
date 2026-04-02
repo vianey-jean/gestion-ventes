@@ -61,6 +61,7 @@ const ClientsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => 
   const [formData, setFormData] = useState({ nom: '', phones: [''], adresse: '' });
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [removeExistingPhoto, setRemoveExistingPhoto] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
@@ -84,6 +85,7 @@ const ClientsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => 
     const file = e.target.files?.[0];
     if (!file) return;
     setPhotoFile(file);
+    setRemoveExistingPhoto(false);
     const reader = new FileReader();
     reader.onload = (ev) => setPhotoPreview(ev.target?.result as string);
     reader.readAsDataURL(file);
@@ -92,6 +94,7 @@ const ClientsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => 
   const removePhoto = () => {
     setPhotoFile(null);
     setPhotoPreview(null);
+    setRemoveExistingPhoto(Boolean(editingClient?.photo));
     if (photoInputRef.current) photoInputRef.current.value = '';
   };
 
@@ -143,7 +146,7 @@ const ClientsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => 
   // =========================================================================
   // CRUD Handlers
   // =========================================================================
-  const resetForm = () => { setFormData({ nom: '', phones: [''], adresse: '' }); setEditingClient(null); setPhotoFile(null); setPhotoPreview(null); };
+  const resetForm = () => { setFormData({ nom: '', phones: [''], adresse: '' }); setEditingClient(null); setPhotoFile(null); setPhotoPreview(null); setRemoveExistingPhoto(false); };
   const handleAddClient = () => { resetForm(); setIsAddDialogOpen(true); };
   const handleEditClient = (client: Client) => { 
     const phones = client.phones && client.phones.length > 0 ? client.phones : [client.phone || ''];
@@ -151,6 +154,7 @@ const ClientsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => 
     setEditingClient(client);
     setPhotoFile(null);
     setPhotoPreview(client.photo ? getClientPhotoUrl(client) : null);
+    setRemoveExistingPhoto(false);
     setIsAddDialogOpen(true); 
   };
   
@@ -170,6 +174,7 @@ const ClientsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => 
     fd.append('phones', JSON.stringify(formData.phones.filter(p => p.trim())));
     fd.append('adresse', formData.adresse);
     if (photoFile) fd.append('photo', photoFile);
+    if (editingClient && removeExistingPhoto && !photoFile) fd.append('removePhoto', 'true');
     return fd;
   };
 
