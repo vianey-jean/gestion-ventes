@@ -41,7 +41,9 @@ const SecurityCheckPage: React.FC<SecurityCheckPageProps> = ({ onVerified }) => 
   const [image, setImage] = useState("");
   const [targetX, setTargetX] = useState(0);
   const [targetY, setTargetY] = useState(0);
-  const [slider, setSlider] = useState(0);
+  const [starX, setStarX] = useState(20);
+  const [starY, setStarY] = useState(20);
+  const [isDragging, setIsDragging] = useState(false);
 
   const [verifiedPuzzle, setVerifiedPuzzle] = useState(false);
   const [checked, setChecked] = useState(false);
@@ -49,16 +51,21 @@ const SecurityCheckPage: React.FC<SecurityCheckPageProps> = ({ onVerified }) => 
   const startTime = useRef(Date.now());
   const moveCount = useRef(0);
   const lastMoveTime = useRef(Date.now());
+  const containerRef = useRef<HTMLDivElement>(null);
+  const dragStartOffset = useRef({ x: 0, y: 0 });
 
   // ✅ Générer un challenge
   const generateChallenge = () => {
     const img = images[Math.floor(Math.random() * images.length)];
     setImage(img + "?w=800&q=80");
 
-    setTargetX(Math.floor(Math.random() * 220) + 20);
-    setTargetY(Math.floor(Math.random() * 100) + 20);
+    setTargetX(Math.floor(Math.random() * 220) + 40);
+    setTargetY(Math.floor(Math.random() * 100) + 30);
 
-    setSlider(0);
+    // Place red star at random initial position (different from target)
+    setStarX(Math.floor(Math.random() * 40) + 5);
+    setStarY(Math.floor(Math.random() * 60) + 80);
+
     setVerifiedPuzzle(false);
     setChecked(false);
 
@@ -75,28 +82,101 @@ const SecurityCheckPage: React.FC<SecurityCheckPageProps> = ({ onVerified }) => 
     return () => clearTimeout(timer);
   }, []);
 
-  // 🎯 Slider + détection comportement
-  const handleSlider = (val: number) => {
-    const now = Date.now();
+  // Check if stars overlap
+  const checkOverlap = useCallback((x: number, y: number) => {
+    const dist = Math.sqrt(Math.pow(x - targetX, 2) + Math.pow(y - targetY, 2));
+    if (dist < 15) {
+      setVerifiedPuzzle(true);
+      // Snap to target
+      setStarX(targetX);
+      setStarY(targetY);
+    } else {
+      setVerifiedPuzzle(false);
+    }
+  }, [targetX, targetY]);
 
+  // Drag handlers
+  const getRelativePosition = (clientX: number, clientY: number) => {
+    if (!containerRef.current) return { x: 0, y: 0 };
+    const rect = containerRef.current.getBoundingClientRect();
+    return {
+      x: Math.max(0, Math.min(rect.width - 50, clientX - rect.left - dragStartOffset.current.x)),
+      y: Math.max(0, Math.min(rect.height - 50, clientY - rect.top - dragStartOffset.current.y)),
+    };
+  };
+
+  const handleDragStart = (clientX: number, clientY: number) => {
+    if (!containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    const relX = clientX - rect.left;
+    const relY = clientY - rect.top;
+    // Check if click is on the red star
+    if (Math.abs(relX - starX - 25) < 30 && Math.abs(relY - starY - 25) < 30) {
+      setIsDragging(true);
+      dragStartOffset.current = { x: relX - starX, y: relY - starY };
+    }
+  };
+
+  const handleDragMove = (clientX: number, clientY: number) => {
+    if (!isDragging) return;
+    const now = Date.now();
     moveCount.current++;
     const delta = now - lastMoveTime.current;
     lastMoveTime.current = now;
 
-    setSlider(val);
+    // Bot detection
+    if (delta < 3) return;
 
-    // ❌ mouvement trop rapide (bot)
-    if (delta < 5) {
-      setVerifiedPuzzle(false);
-      return;
-    }
-
-    if (Math.abs(val - targetX) < 8) {
-      setVerifiedPuzzle(true);
-    } else {
-      setVerifiedPuzzle(false);
-    }
+    const pos = getRelativePosition(clientX, clientY);
+    setStarX(pos.x);
+    setStarY(pos.y);
+    checkOverlap(pos.x, pos.y);
   };
+
+  const handleDragEnd = () => {
+    setIsDragging(false);
+  };
+
+  // Mouse events
+  const onMouseDown = (e: React.MouseEvent) => handleDragStart(e.clientX, e.clientY);
+  const onMouseMove = (e: React.MouseEvent) => handleDragMove(e.clientX, e.clientY);
+  const onMouseUp = () => handleDragEnd();
+
+  // Touch events
+  const onTouchStart = (e: React.TouchEvent) => {
+    const t = e.touches[0];
+    handleDragStart(t.clientX, t.clientY);
+  };
+  const onTouchMove = (e: React.TouchEvent) => {
+    e.preventDefault();
+    const t = e.touches[0];
+    handleDragMove(t.clientX, t.clientY);
+  };
+  const onTouchEnd = () => handleDragEnd();
+
+  // Global mouse/touch events for drag outside container
+  useEffect(() => {
+    if (!isDragging) return;
+    const handleGlobalMouseMove = (e: MouseEvent) => handleDragMove(e.clientX, e.clientY);
+    const handleGlobalMouseUp = () => handleDragEnd();
+    const handleGlobalTouchMove = (e: TouchEvent) => {
+      e.preventDefault();
+      handleDragMove(e.touches[0].clientX, e.touches[0].clientY);
+    };
+    const handleGlobalTouchEnd = () => handleDragEnd();
+
+    window.addEventListener('mousemove', handleGlobalMouseMove);
+    window.addEventListener('mouseup', handleGlobalMouseUp);
+    window.addEventListener('touchmove', handleGlobalTouchMove, { passive: false });
+    window.addEventListener('touchend', handleGlobalTouchEnd);
+
+    return () => {
+      window.removeEventListener('mousemove', handleGlobalMouseMove);
+      window.removeEventListener('mouseup', handleGlobalMouseUp);
+      window.removeEventListener('touchmove', handleGlobalTouchMove);
+      window.removeEventListener('touchend', handleGlobalTouchEnd);
+    };
+  }, [isDragging, handleDragMove]);
 
   // 🔐 Vérification sécurité
   const performSecurityCheck = useCallback(() => {
@@ -174,38 +254,42 @@ const SecurityCheckPage: React.FC<SecurityCheckPageProps> = ({ onVerified }) => 
               <motion.div key="challenge" className="space-y-5">
 
                 <p className="text-sm text-white/60 text-center">
-                  Alignez l'étoile rouge avec l'étoile blanche
+                  Glissez l'étoile <span className="text-red-400 font-bold">rouge</span> sur l'étoile <span className="text-gray-300 font-bold">blanche</span>
                 </p>
 
-                <div className="relative w-full h-48 rounded-xl overflow-hidden border border-white/10">
-                  <img src={image} className="w-full h-full object-cover" />
+                <div
+                  ref={containerRef}
+                  className="relative w-full h-48 rounded-xl overflow-hidden border border-white/10 select-none"
+                  style={{ touchAction: 'none', cursor: isDragging ? 'grabbing' : 'default' }}
+                  onMouseDown={onMouseDown}
+                  onMouseMove={onMouseMove}
+                  onMouseUp={onMouseUp}
+                  onTouchStart={onTouchStart}
+                  onTouchMove={onTouchMove}
+                  onTouchEnd={onTouchEnd}
+                >
+                  <img src={image} className="w-full h-full object-cover pointer-events-none" draggable={false} />
 
-                  {/* ⭐ étoile fixe */}
-                  <div style={{ left: targetX, top: targetY }} className="absolute">
+                  {/* ⭐ étoile fixe (blanche/grise) */}
+                  <div style={{ left: targetX, top: targetY }} className="absolute pointer-events-none">
                     <Star type="fixed" />
                   </div>
 
-                  {/* 🔴 étoile mobile */}
-                  <div style={{ left: slider, top: targetY }} className="absolute">
+                  {/* 🔴 étoile mobile (rouge) - draggable */}
+                  <div
+                    style={{ left: starX, top: starY, cursor: isDragging ? 'grabbing' : 'grab' }}
+                    className="absolute z-10"
+                  >
                     <Star type="moving" />
                   </div>
 
                   {verifiedPuzzle && (
                     <div
-                      className="absolute w-14 h-14 bg-green-400/30 blur-xl rounded-full"
-                      style={{ left: slider, top: targetY }}
+                      className="absolute w-14 h-14 bg-green-400/30 blur-xl rounded-full pointer-events-none"
+                      style={{ left: starX, top: starY }}
                     />
                   )}
                 </div>
-
-                <input
-                  type="range"
-                  min={0}
-                  max={260}
-                  value={slider}
-                  onChange={(e) => handleSlider(Number(e.target.value))}
-                  className="w-full"
-                />
 
                 {/* ✅ CHECKBOX */}
                 <label className="flex items-center gap-3 text-white cursor-pointer">

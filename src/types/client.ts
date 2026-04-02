@@ -7,12 +7,14 @@ export interface Client {
   phones: string[]; // Tous les numéros de téléphone
   adresse: string;
   dateCreation: string;
+  photo?: string; // Chemin vers la photo du client (optionnel)
 }
 
 export interface ClientFormData {
   nom: string;
   phones: string[]; // Tableau de numéros
   adresse: string;
+  photo?: File | null; // Fichier photo (optionnel)
 }
 
 export interface ClientSearchResult {

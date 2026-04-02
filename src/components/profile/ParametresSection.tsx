@@ -81,6 +81,11 @@ const ParametresSection: React.FC<ParametresSectionProps> = ({ userRole }) => {
   const [specChangeTarget, setSpecChangeTarget] = useState('');
   const [changingSpec, setChangingSpec] = useState(false);
 
+  // Account delete management state
+  const [showDeleteUserDialog, setShowDeleteUserDialog] = useState(false);
+  const [deleteTargetUser, setDeleteTargetUser] = useState<any>(null);
+  const [deletingUser, setDeletingUser] = useState(false);
+
   // Auto-backup state
   const autoBackupTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const countdownIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -438,6 +443,25 @@ const ParametresSection: React.FC<ParametresSectionProps> = ({ userRole }) => {
       toast({ title: 'Erreur', description: e?.response?.data?.message || 'Erreur lors du changement de spécification', variant: 'destructive' });
     } finally {
       setChangingSpec(false);
+    }
+  };
+
+  // ========== DELETE USER ACCOUNT ==========
+  const handleDeleteUser = async () => {
+    if (!deleteTargetUser) return;
+    try {
+      setDeletingUser(true);
+      const response = await api.delete(`/api/settings/user/${deleteTargetUser.id}`);
+      if (response.data.success) {
+        toast({ title: '✅ Compte supprimé', description: response.data.message, className: 'bg-green-600 text-white border-green-600' });
+        setShowDeleteUserDialog(false);
+        setDeleteTargetUser(null);
+        fetchUsers();
+      }
+    } catch (e: any) {
+      toast({ title: 'Erreur', description: e?.response?.data?.message || 'Erreur lors de la suppression du compte', variant: 'destructive' });
+    } finally {
+      setDeletingUser(false);
     }
   };
 
@@ -807,8 +831,87 @@ const ParametresSection: React.FC<ParametresSectionProps> = ({ userRole }) => {
               )}
             </motion.div>
           )}
+
+          {/* ACCOUNT MANAGEMENT - Only for administrateur principale */}
+          {isAdminPrincipal && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.4 }}
+              className="mt-8 pt-6 border-t border-border/50"
+            >
+              <div className="flex items-center gap-2 mb-4">
+                <Trash2 className="w-4 h-4 text-red-500" />
+                <span className="text-xs font-bold text-red-600 dark:text-red-400 uppercase tracking-wider">Gérance comptes</span>
+              </div>
+
+              {loadingUsers ? (
+                <div className="flex items-center justify-center py-6">
+                  <div className="animate-spin w-6 h-6 border-2 border-red-500 border-t-transparent rounded-full" />
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {allUsers.filter(u => u.role !== 'administrateur principale').map(u => (
+                    <div key={u.id} className="flex items-center justify-between rounded-xl bg-gradient-to-br from-slate-50 to-white dark:from-white/5 dark:to-white/[0.02] border border-border/50 p-3">
+                      <div>
+                        <p className="text-sm font-semibold text-foreground">{u.firstName} {u.lastName}</p>
+                        <p className="text-xs text-muted-foreground">{u.email}</p>
+                        <span className={`inline-block mt-1 text-xs px-2 py-0.5 rounded-full font-bold ${
+                          u.role === 'administrateur'
+                            ? 'bg-violet-500/10 text-violet-600 border border-violet-500/20'
+                            : 'bg-slate-500/10 text-slate-600 border border-slate-500/20'
+                        }`}>
+                          {u.role === 'administrateur' ? 'Administrateur' : 'Simple utilisateur'}
+                        </span>
+                      </div>
+                      <Button
+                        size="sm"
+                        onClick={() => { setDeleteTargetUser(u); setShowDeleteUserDialog(true); }}
+                        className="rounded-xl bg-gradient-to-r from-red-500/10 to-rose-500/10 border border-red-300/30 text-red-600 dark:text-red-400 text-xs hover:from-red-500/20 hover:to-rose-500/20"
+                      >
+                        <Trash2 className="w-3 h-3 mr-1" /> Supprimer
+                      </Button>
+                    </div>
+                  ))}
+                  {allUsers.filter(u => u.role !== 'administrateur principale').length === 0 && (
+                    <p className="text-sm text-muted-foreground text-center py-4">Aucun compte à gérer</p>
+                  )}
+                </div>
+              )}
+            </motion.div>
+          )}
         </div>
       </motion.div>
+
+      {/* ========== DELETE USER ACCOUNT DIALOG ========== */}
+      <AlertDialog open={showDeleteUserDialog} onOpenChange={v => { setShowDeleteUserDialog(v); if (!v) setDeleteTargetUser(null); }}>
+        <AlertDialogContent className="rounded-3xl backdrop-blur-2xl bg-white/95 dark:bg-[#0a0020]/95 border border-red-200/30 max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-red-600">
+              <Trash2 className="w-5 h-5" /> Supprimer le compte
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2">
+              {deleteTargetUser && (
+                <>
+                  <span className="block text-red-500 font-bold">⚠️ Cette action est IRRÉVERSIBLE !</span>
+                  <span className="block">Voulez-vous vraiment supprimer le compte de <strong>{deleteTargetUser.firstName} {deleteTargetUser.lastName}</strong> ({deleteTargetUser.email}) ?</span>
+                  <span className="block text-xs text-muted-foreground">Toutes les données associées à ce compte seront supprimées définitivement.</span>
+                </>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="rounded-xl">Annuler</AlertDialogCancel>
+            <Button
+              onClick={handleDeleteUser}
+              disabled={deletingUser}
+              className="rounded-xl bg-gradient-to-r from-red-600 to-rose-600 text-white hover:from-red-700 hover:to-rose-700"
+            >
+              {deletingUser ? 'Suppression...' : '🗑️ Supprimer définitivement'}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* ========== DELETE DIALOG ========== */}
       <AlertDialog open={showDeleteDialog} onOpenChange={v => { setShowDeleteDialog(v); if (!v) { setDeletePassword(''); setConfirmDeleteStep(false); } }}>

@@ -2,14 +2,9 @@
  * =============================================================================
  * ClientsPage - Page de gestion des clients
  * =============================================================================
- * 
- * Cette page permet de gérer les clients : ajout, modification, suppression.
- * Elle utilise des sous-composants décomposés pour le hero et la recherche.
- * 
- * @module ClientsPage
  */
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useClientSync } from '@/hooks/useClientSync';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,7 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Edit, Trash2, Phone, MapPin, Users, Sparkles, Crown, Star, MessageSquare, PhoneCall, Navigation, Plus } from 'lucide-react';
+import { Edit, Trash2, Phone, MapPin, Users, Sparkles, Crown, Star, MessageSquare, PhoneCall, Navigation, Plus, Camera, User } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import axios from 'axios';
 import Navbar from '@/components/Navbar';
@@ -27,6 +22,7 @@ import ScrollToTop from '@/components/ScrollToTop';
 import ConfirmDeleteDialog from '@/components/dashboard/forms/ConfirmDeleteDialog';
 import Layout from '@/components/Layout';
 import PremiumLoading from '@/components/ui/premium-loading';
+import ClientPhotoZoomModal from '@/components/clients/ClientPhotoZoomModal';
 import { motion } from "framer-motion";
 
 // Sous-composants décomposés
@@ -43,6 +39,7 @@ interface Client {
   phones: string[];
   adresse: string;
   dateCreation: string;
+  photo?: string;
 }
 
 // ============================================================================
@@ -62,6 +59,8 @@ const ClientsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => 
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({ nom: '', phones: [''], adresse: '' });
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
@@ -73,8 +72,33 @@ const ClientsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => 
   const [selectedPhone, setSelectedPhone] = useState<string>('');
   const [addressActionOpen, setAddressActionOpen] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState<string>('');
+  const [zoomPhoto, setZoomPhoto] = useState<{ url: string; name: string } | null>(null);
 
+  const photoInputRef = useRef<HTMLInputElement>(null);
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:10000';
+
+  // =========================================================================
+  // Photo handling
+  // =========================================================================
+  const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setPhotoFile(file);
+    const reader = new FileReader();
+    reader.onload = (ev) => setPhotoPreview(ev.target?.result as string);
+    reader.readAsDataURL(file);
+  };
+
+  const removePhoto = () => {
+    setPhotoFile(null);
+    setPhotoPreview(null);
+    if (photoInputRef.current) photoInputRef.current.value = '';
+  };
+
+  const getClientPhotoUrl = (client: Client) => {
+    if (!client.photo) return null;
+    return `${API_BASE_URL}${client.photo}`;
+  };
 
   // =========================================================================
   // Handlers téléphone et adresse
@@ -119,12 +143,14 @@ const ClientsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => 
   // =========================================================================
   // CRUD Handlers
   // =========================================================================
-  const resetForm = () => { setFormData({ nom: '', phones: [''], adresse: '' }); setEditingClient(null); };
+  const resetForm = () => { setFormData({ nom: '', phones: [''], adresse: '' }); setEditingClient(null); setPhotoFile(null); setPhotoPreview(null); };
   const handleAddClient = () => { resetForm(); setIsAddDialogOpen(true); };
   const handleEditClient = (client: Client) => { 
     const phones = client.phones && client.phones.length > 0 ? client.phones : [client.phone || ''];
     setFormData({ nom: client.nom, phones, adresse: client.adresse }); 
-    setEditingClient(client); 
+    setEditingClient(client);
+    setPhotoFile(null);
+    setPhotoPreview(client.photo ? getClientPhotoUrl(client) : null);
     setIsAddDialogOpen(true); 
   };
   
@@ -138,11 +164,26 @@ const ClientsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => 
     if (editingClient) { setShowEditConfirm(true); } else { setShowAddConfirm(true); }
   };
 
+  const buildFormData = () => {
+    const fd = new FormData();
+    fd.append('nom', formData.nom);
+    fd.append('phones', JSON.stringify(formData.phones.filter(p => p.trim())));
+    fd.append('adresse', formData.adresse);
+    if (photoFile) fd.append('photo', photoFile);
+    return fd;
+  };
+
   const confirmAdd = async () => {
     setIsSubmitting(true);
     try {
       const token = localStorage.getItem('token');
-      await axios.post(`${API_BASE_URL}/api/clients`, formData, { headers: { Authorization: `Bearer ${token}` } });
+      const fd = buildFormData();
+      await axios.post(`${API_BASE_URL}/api/clients`, fd, { 
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
+        } 
+      });
       toast({ title: "Succès", description: "Client ajouté avec succès", className: "notification-success" });
       setIsAddDialogOpen(false); setShowAddConfirm(false); resetForm(); refetch();
     } catch (error) {
@@ -155,7 +196,13 @@ const ClientsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => 
     setIsSubmitting(true);
     try {
       const token = localStorage.getItem('token');
-      await axios.put(`${API_BASE_URL}/api/clients/${editingClient.id}`, formData, { headers: { Authorization: `Bearer ${token}` } });
+      const fd = buildFormData();
+      await axios.put(`${API_BASE_URL}/api/clients/${editingClient.id}`, fd, { 
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
+        } 
+      });
       toast({ title: "Succès", description: "Client mis à jour avec succès", className: "notification-success" });
       setIsAddDialogOpen(false); setShowEditConfirm(false); resetForm(); refetch();
     } catch (error) {
@@ -213,14 +260,16 @@ const ClientsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => 
 
         {/* Grille des clients */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 md:gap-8">
-          {paginatedClients.map((client, index) => (
+          {paginatedClients.map((client, index) => {
+            const clientPhotoUrl = getClientPhotoUrl(client);
+            return (
             <Card 
               key={client.id} 
               className="group hover:shadow-2xl transition-all duration-700 transform hover:-translate-y-4 card-mirror-light dark:card-mirror mirror-shine backdrop-blur-sm shadow-xl hover:shadow-purple-500/25 relative"
               style={{ animationDelay: `${index * 150}ms` }}
             >
               {/* Badge ÉLITE au hover */}
-              <div className="absolute top-4 right-4 bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400 text-black text-xs font-bold px-3 py-1 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-x-4 group-hover:translate-x-0 animate-bounce">
+              <div className="absolute top-4 right-4 bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400 text-black text-xs font-bold px-3 py-1 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-x-4 group-hover:translate-x-0 animate-bounce z-30">
                 <Star className="w-3 h-3 inline mr-1" />ÉLITE
               </div>
               
@@ -230,18 +279,46 @@ const ClientsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => 
               
               <CardHeader className="pb-4 relative z-10">
                 <div className="flex justify-between items-start">
-                  <div className="flex-1">
-                    <CardTitle className="text-xl font-bold text-gray-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors duration-300">
-                      {client.nom}
-                    </CardTitle>
-                    <CardDescription className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-                      <span className="inline-flex items-center gap-1">
-                        <Crown className="w-3 h-3 text-yellow-500" />
-                        Membre depuis le {new Date(client.dateCreation).toLocaleDateString('fr-FR')}
-                      </span>
-                    </CardDescription>
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    {/* Photo du client */}
+                    <div 
+                      className="shrink-0 cursor-pointer group/photo"
+                      onClick={() => {
+                        if (clientPhotoUrl) setZoomPhoto({ url: clientPhotoUrl, name: client.nom });
+                      }}
+                    >
+                      {clientPhotoUrl ? (
+                        <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full overflow-hidden ring-2 ring-purple-400/50 ring-offset-2 ring-offset-white dark:ring-offset-gray-900 shadow-lg group-hover/photo:ring-purple-500 group-hover/photo:scale-110 transition-all duration-300">
+                          <img 
+                            src={clientPhotoUrl} 
+                            alt={client.nom}
+                            className="w-full h-full object-cover"
+                            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden'); }}
+                          />
+                          <div className="hidden w-full h-full bg-gradient-to-br from-purple-500 via-violet-500 to-indigo-500 flex items-center justify-center">
+                            <User className="w-6 h-6 text-white" />
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-purple-500 via-violet-500 to-indigo-500 flex items-center justify-center ring-2 ring-purple-400/30 ring-offset-2 ring-offset-white dark:ring-offset-gray-900 shadow-lg">
+                          <User className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="min-w-0 flex-1">
+                      <CardTitle className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors duration-300 truncate">
+                        {client.nom}
+                      </CardTitle>
+                      <CardDescription className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1">
+                        <span className="inline-flex items-center gap-1">
+                          <Crown className="w-3 h-3 text-yellow-500" />
+                          Depuis le {new Date(client.dateCreation).toLocaleDateString('fr-FR')}
+                        </span>
+                      </CardDescription>
+                    </div>
                   </div>
-                  <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-y-2 group-hover:translate-y-0">
+                  <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-y-2 group-hover:translate-y-0 shrink-0">
                     <Button variant="ghost" size="sm" onClick={() => handleEditClient(client)} className="h-10 w-10 p-0 hover:bg-blue-100 dark:hover:bg-blue-900/20 rounded-full hover:scale-110 transition-transform duration-200">
                       <Edit className="w-4 h-4 text-blue-600" />
                     </Button>
@@ -280,7 +357,8 @@ const ClientsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => 
                 </div>
               </CardContent>
             </Card>
-          ))}
+            );
+          })}
         </div>
 
         {/* Empty State pour recherche sans résultat */}
@@ -352,6 +430,38 @@ const ClientsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => 
           </DialogHeader>
           <form onSubmit={handleFormSubmit}>
             <div className="grid gap-6 py-6">
+              {/* Photo upload - centered above name */}
+              <div className="flex flex-col items-center gap-2">
+                <input
+                  ref={photoInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handlePhotoSelect}
+                  className="hidden"
+                />
+                <div
+                  onClick={() => photoInputRef.current?.click()}
+                  className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full cursor-pointer group/upload overflow-hidden ring-2 ring-dashed ring-purple-300 dark:ring-purple-700 hover:ring-purple-500 transition-all duration-300 shadow-lg hover:shadow-xl"
+                >
+                  {photoPreview ? (
+                    <img src={photoPreview} alt="Preview" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-purple-100 via-violet-100 to-indigo-100 dark:from-purple-900/40 dark:via-violet-900/40 dark:to-indigo-900/40 flex items-center justify-center">
+                      <Camera className="w-8 h-8 sm:w-10 sm:h-10 text-purple-400 dark:text-purple-500 group-hover/upload:text-purple-600 dark:group-hover/upload:text-purple-400 transition-colors" />
+                    </div>
+                  )}
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/upload:opacity-100 transition-opacity flex items-center justify-center rounded-full">
+                    <Camera className="w-6 h-6 text-white" />
+                  </div>
+                </div>
+                <span className="text-xs text-gray-500 dark:text-gray-400">Photo (optionnel)</span>
+                {photoPreview && (
+                  <button type="button" onClick={removePhoto} className="text-xs text-red-500 hover:text-red-600 underline">
+                    Retirer la photo
+                  </button>
+                )}
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="nom" className="text-sm font-semibold text-gray-700 dark:text-gray-300">Nom complet</Label>
                 <Input id="nom" value={formData.nom} onChange={(e) => setFormData({ ...formData, nom: e.target.value })} placeholder="Nom et prénom" className="border-gray-200 dark:border-gray-700 focus:ring-blue-500 focus:border-blue-500" required />
@@ -450,6 +560,16 @@ const ClientsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => 
           <DialogFooter><Button variant="outline" onClick={() => setAddressActionOpen(false)} className="w-full border-gray-300 hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-800">Annuler</Button></DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Photo zoom modal */}
+      {zoomPhoto && (
+        <ClientPhotoZoomModal
+          isOpen={!!zoomPhoto}
+          onClose={() => setZoomPhoto(null)}
+          photoUrl={zoomPhoto.url}
+          clientName={zoomPhoto.name}
+        />
+      )}
     </div>
     </>
   );

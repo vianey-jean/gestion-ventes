@@ -160,7 +160,11 @@ const LiveChatAdmin: React.FC = () => {
         setTotalUnread(data.reduce((sum: number, c: Conversation) => sum + c.unreadCount, 0));
       }
     } catch (e) {
-      console.error('Error loading conversations:', e);
+      if (e instanceof TypeError && e.message.includes('NetworkError')) {
+        console.debug('Network unavailable for conversations');
+      } else {
+        console.error('Error loading conversations:', e);
+      }
     }
   }, [user, token]);
 
@@ -192,7 +196,11 @@ const LiveChatAdmin: React.FC = () => {
         setAdminUsers(data.filter((a: AdminUser) => a.id !== user.id));
       }
     } catch (e) {
-      console.error('Error loading admin users:', e);
+      if (e instanceof TypeError && e.message.includes('NetworkError')) {
+        console.debug('Network unavailable for admin users');
+      } else {
+        console.error('Error loading admin users:', e);
+      }
     }
   }, [user, token]);
 
@@ -350,7 +358,10 @@ const LiveChatAdmin: React.FC = () => {
       } catch {}
     });
 
-    es.onerror = () => {};
+    es.onerror = () => {
+      // Silently handle SSE connection errors - will auto-reconnect via polling
+      console.debug('SSE connection interrupted, falling back to polling');
+    };
 
     const pollInterval = setInterval(() => {
       const cur = selectedConvRef.current;
