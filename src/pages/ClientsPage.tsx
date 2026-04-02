@@ -307,7 +307,7 @@ const ClientsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => 
                     </div>
 
                     <div className="min-w-0 flex-1">
-                      <CardTitle className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors duration-300 truncate">
+                      <CardTitle className="text-sm sm:text-base font-bold text-gray-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors duration-300 break-words">
                         {client.nom}
                       </CardTitle>
                       <CardDescription className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1">
@@ -318,7 +318,7 @@ const ClientsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => 
                       </CardDescription>
                     </div>
                   </div>
-                  <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-y-2 group-hover:translate-y-0 shrink-0">
+                  <div className="flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-y-2 group-hover:translate-y-0 shrink-0">
                     <Button variant="ghost" size="sm" onClick={() => handleEditClient(client)} className="h-10 w-10 p-0 hover:bg-blue-100 dark:hover:bg-blue-900/20 rounded-full hover:scale-110 transition-transform duration-200">
                       <Edit className="w-4 h-4 text-blue-600" />
                     </Button>
