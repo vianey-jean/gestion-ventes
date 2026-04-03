@@ -1,9 +1,16 @@
 
-import { api } from '@/service/api';
+import { api } from '@/services/api/api';
 import { SyncData, SyncEvent, ConnectionConfig } from './types';
 import { EventSourceManager } from './EventSourceManager';
 import { DataCacheManager } from './DataCacheManager';
 
+/**
+ * RealtimeService — SSE Push Only
+ * 
+ * NO periodic polling. Data is pushed from the backend via SSE
+ * the instant a file changes on disk. The frontend only syncs
+ * when it receives an SSE event.
+ */
 class RealtimeService {
   private eventSourceManager: EventSourceManager;
   private dataCacheManager: DataCacheManager;
@@ -11,14 +18,12 @@ class RealtimeService {
   private syncListeners: Set<(event: SyncEvent) => void> = new Set();
   private lastSyncTime: Date = new Date();
   private isConnected: boolean = false;
-  private syncInProgress: boolean = false;
 
-  // OPTIMIZED: Faster sync intervals for real-time performance
   private config: ConnectionConfig = {
     reconnectInterval: 2000,
     maxReconnectAttempts: 10,
     connectionTimeout: 5000,
-    fallbackSyncInterval: 10000 // Reduced from 30s to 10s for faster sync
+    fallbackSyncInterval: 0 // Not used — no polling
   };
 
   constructor() {
@@ -30,32 +35,8 @@ class RealtimeService {
     );
   }
 
-  private fallbackInterval: ReturnType<typeof setInterval> | null = null;
-
   private handleConnectionChange(connected: boolean) {
     this.isConnected = connected;
-    
-    // Démarrer le polling si non connecté
-    if (!connected && !this.fallbackInterval) {
-      this.startFallbackSync();
-    }
-  }
-
-  private startFallbackSync() {
-    // Éviter les intervalles multiples
-    if (this.fallbackInterval) {
-      return;
-    }
-    
-    // FAST: Sync initial immédiat
-    this.syncCurrentMonthData();
-    
-    // Polling périodique optimisé
-    this.fallbackInterval = setInterval(async () => {
-      if (!this.syncInProgress) {
-        await this.syncCurrentMonthData();
-      }
-    }, this.config.fallbackSyncInterval);
   }
 
   private handleSyncEvent(event: SyncEvent) {
@@ -68,7 +49,7 @@ class RealtimeService {
           }
         }
         break;
-      
+
       case 'force-sync':
         this.lastSyncTime = new Date();
         this.syncCurrentMonthData();
@@ -85,28 +66,22 @@ class RealtimeService {
       case 'products':
         syncData = { products: receivedData };
         break;
-      
       case 'sales':
         const currentMonthSales = this.filterCurrentMonthSales(receivedData);
         syncData = { sales: currentMonthSales };
         break;
-      
       case 'pretfamilles':
         syncData = { pretFamilles: receivedData };
         break;
-      
       case 'pretproduits':
         syncData = { pretProduits: receivedData };
         break;
-        
       case 'depensedumois':
         syncData = { depenses: receivedData };
         break;
-
       case 'clients':
         syncData = { clients: receivedData };
         break;
-
       case 'messages':
         syncData = { messages: receivedData };
         break;
@@ -121,41 +96,31 @@ class RealtimeService {
     const now = new Date();
     const currentMonth = now.getMonth();
     const currentYear = now.getFullYear();
-    
     return sales.filter(sale => {
       const saleDate = new Date(sale.date);
       return saleDate.getMonth() === currentMonth && saleDate.getFullYear() === currentYear;
     });
   }
 
-  // Public API methods
+  // Public API
   connect(token?: string) {
     this.eventSourceManager.connect(token);
   }
 
   disconnect() {
-    if (this.fallbackInterval) {
-      clearInterval(this.fallbackInterval);
-      this.fallbackInterval = null;
-    }
     this.eventSourceManager.disconnect();
   }
 
-  // OPTIMIZED: Parallel data fetching for ultra-fast loading
+  /**
+   * Full data fetch — only called on force-sync or initial load,
+   * NOT on a timer.
+   */
   async syncCurrentMonthData(): Promise<SyncData | null> {
-    if (this.syncInProgress) {
-      return null;
-    }
-
-    this.syncInProgress = true;
-    const startTime = performance.now();
-
     try {
       const currentDate = new Date();
       const currentMonth = currentDate.getMonth() + 1;
       const currentYear = currentDate.getFullYear();
-      
-      // PARALLEL: Fetch all data simultaneously for fastest loading
+
       const results = await Promise.allSettled([
         api.get('/api/products'),
         api.get(`/api/sales/by-month?month=${currentMonth}&year=${currentYear}`),
@@ -166,7 +131,7 @@ class RealtimeService {
         api.get('/api/messages')
       ]);
 
-      const getData = (result: PromiseSettledResult<any>) => 
+      const getData = (result: PromiseSettledResult<any>) =>
         result.status === 'fulfilled' ? result.value.data || [] : [];
 
       const syncData: SyncData = {
@@ -180,76 +145,50 @@ class RealtimeService {
       };
 
       // Update cache
-      this.dataCacheManager.updateCache('products', syncData.products);
-      this.dataCacheManager.updateCache('sales', syncData.sales);
-      this.dataCacheManager.updateCache('pretfamilles', syncData.pretFamilles);
-      this.dataCacheManager.updateCache('pretproduits', syncData.pretProduits);
-      this.dataCacheManager.updateCache('depensedumois', syncData.depenses);
-      this.dataCacheManager.updateCache('clients', syncData.clients);
-      this.dataCacheManager.updateCache('messages', syncData.messages);
+      Object.entries({
+        products: syncData.products,
+        sales: syncData.sales,
+        pretfamilles: syncData.pretFamilles,
+        pretproduits: syncData.pretProduits,
+        depensedumois: syncData.depenses,
+        clients: syncData.clients,
+        messages: syncData.messages
+      }).forEach(([key, val]) => this.dataCacheManager.updateCache(key, val));
 
       this.lastSyncTime = new Date();
       this.notifyListeners(syncData);
-      
-      const endTime = performance.now();
-      console.log(`⚡ Sync completed in ${Math.round(endTime - startTime)}ms`);
-      
       return syncData;
     } catch (error) {
-      console.error('❌ Sync error:', error);
+      console.error('Sync error:', error);
       return null;
-    } finally {
-      this.syncInProgress = false;
     }
   }
 
   addDataListener(callback: (data: Partial<SyncData>) => void) {
     this.listeners.add(callback);
-    return () => {
-      this.listeners.delete(callback);
-    };
+    return () => { this.listeners.delete(callback); };
   }
 
   addSyncListener(callback: (event: SyncEvent) => void) {
     this.syncListeners.add(callback);
-    return () => {
-      this.syncListeners.delete(callback);
-    };
+    return () => { this.syncListeners.delete(callback); };
   }
 
   private notifyListeners(data: Partial<SyncData>) {
-    this.listeners.forEach(callback => {
-      try {
-        callback(data);
-      } catch (error) {
-        console.error('Listener error:', error);
-      }
-    });
+    this.listeners.forEach(cb => { try { cb(data); } catch {} });
   }
 
   private notifySyncListeners(event: SyncEvent) {
-    this.syncListeners.forEach(callback => {
-      try {
-        callback(event);
-      } catch (error) {
-        console.error('Sync listener error:', error);
-      }
-    });
+    this.syncListeners.forEach(cb => { try { cb(event); } catch {} });
   }
 
-  getLastSyncTime(): Date {
-    return this.lastSyncTime;
-  }
-
-  getConnectionStatus(): boolean {
-    return this.eventSourceManager.getConnectionStatus();
-  }
+  getLastSyncTime(): Date { return this.lastSyncTime; }
+  getConnectionStatus(): boolean { return this.eventSourceManager.getConnectionStatus(); }
 
   async forceSync(): Promise<void> {
     try {
       await api.post('/api/sync/force-sync');
-    } catch (error) {
-      console.error('Force sync failed, using local sync');
+    } catch {
       await this.syncCurrentMonthData();
     }
   }

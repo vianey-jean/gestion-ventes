@@ -23,6 +23,7 @@ import profileApi, { ProfileData } from '@/services/api/profileApi';
 import { motion } from 'framer-motion';
 import { User, Camera, Lock, Shield, Sparkles, Crown, Settings } from 'lucide-react';
 import ParametresSection from '@/components/profile/ParametresSection';
+import SecuriteSection from '@/components/profile/SecuriteSection';
 import ProfileCard from '@/components/profile/ProfileCard';
 import ProfileInfoCard from '@/components/profile/ProfileInfoCard';
 import PasswordSection from '@/components/profile/PasswordSection';
@@ -41,7 +42,7 @@ const ProfilePage: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Onglet actif (profil ou paramètres)
-  const [activeTab, setActiveTab] = useState<'profil' | 'parametres'>('profil');
+  const [activeTab, setActiveTab] = useState<'profil' | 'parametres' | 'securite'>('profil');
   // Données du profil chargées depuis l'API
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -217,6 +218,20 @@ const ProfilePage: React.FC = () => {
                 <Settings className="w-4 h-4 mr-2" /> Paramètres
               </Button>
             )}
+
+            {/* Onglet Sécurité visible uniquement pour l'admin principal */}
+            {isAdminPrincipal && (
+              <Button
+                onClick={() => setActiveTab('securite')}
+                className={`${premiumBtnClass} ${
+                  activeTab === 'securite'
+                    ? 'bg-gradient-to-r from-red-500 to-rose-500 text-white border-red-400/30 shadow-lg shadow-red-500/25'
+                    : 'bg-white/50 dark:bg-white/5 border-violet-200/30 dark:border-violet-800/20 text-foreground hover:bg-red-50 dark:hover:bg-white/10'
+                }`}
+              >
+                <Shield className="w-4 h-4 mr-2" /> Sécurité
+              </Button>
+            )}
           </motion.div>
 
           {/* Contenu de l'onglet Profil : carte, infos, mot de passe */}
@@ -259,6 +274,11 @@ const ProfilePage: React.FC = () => {
           {/* Contenu de l'onglet Paramètres (admin uniquement) */}
           {activeTab === 'parametres' && canSeeSettings && (
             <ParametresSection userRole={userRole} />
+          )}
+
+          {/* Contenu de l'onglet Sécurité (admin principal uniquement) */}
+          {activeTab === 'securite' && isAdminPrincipal && (
+            <SecuriteSection userRole={userRole} />
           )}
 
         </div>
