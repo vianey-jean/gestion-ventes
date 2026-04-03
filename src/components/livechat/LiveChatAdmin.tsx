@@ -115,6 +115,7 @@ const LiveChatAdmin: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const eventSourceRef = useRef<EventSource | null>(null);
+  const refreshTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   
   const selectedConvRef = useRef<string | null>(null);
   const selectedAdminRef = useRef<string | null>(null);
@@ -235,6 +236,17 @@ const LiveChatAdmin: React.FC = () => {
     }
   }, [user, token, loadAdminConversations]);
 
+  const scheduleSidebarRefresh = useCallback(() => {
+    if (refreshTimeoutRef.current) return;
+
+    refreshTimeoutRef.current = setTimeout(() => {
+      refreshTimeoutRef.current = null;
+      loadConversations();
+      loadAdminUsers();
+      loadAdminConversations();
+    }, 250);
+  }, [loadConversations, loadAdminUsers, loadAdminConversations]);
+
 
   // ========== SSE & POLLING ==========
   useEffect(() => {
@@ -245,6 +257,10 @@ const LiveChatAdmin: React.FC = () => {
 
     const es = new EventSource(`${API_BASE}/api/messagerie/events?adminId=${user.id}`);
     eventSourceRef.current = es;
+
+    es.onopen = () => {
+      scheduleSidebarRefresh();
+    };
 
     es.addEventListener('new_message', (e) => {
       try {
@@ -263,7 +279,7 @@ const LiveChatAdmin: React.FC = () => {
         if (msg.from === 'visitor' && (!isOpenRef.current || selectedConvRef.current !== msg.visitorId)) {
           addNotification(msg.visitorNom || 'Visiteur', msg.contenu, msg.id);
         }
-        loadConversations();
+        scheduleSidebarRefresh();
       } catch {}
     });
 
@@ -274,8 +290,7 @@ const LiveChatAdmin: React.FC = () => {
           if (selectedConvRef.current === msg.visitorId) {
             setMessages(prev => prev.find(m => m.id === msg.id) ? prev : [...prev, msg]);
           }
-          // No notification here — already handled by 'new_message' event
-          loadConversations();
+          scheduleSidebarRefresh();
         }
       } catch {}
     });
@@ -327,7 +342,7 @@ const LiveChatAdmin: React.FC = () => {
         if (msg.senderId !== user.id && (!isOpenRef.current || selectedAdminRef.current !== msg.senderId)) {
           addNotification(msg.senderName, msg.contenu, msg.id);
         }
-        loadAdminConversations();
+        scheduleSidebarRefresh();
       } catch {}
     });
 
@@ -346,7 +361,7 @@ const LiveChatAdmin: React.FC = () => {
       try {
         const data = JSON.parse(e.data);
         setAdminMessages(prev => prev.filter(m => m.id !== data.id));
-        loadAdminConversations();
+        scheduleSidebarRefresh();
       } catch {}
     });
 
@@ -359,26 +374,19 @@ const LiveChatAdmin: React.FC = () => {
     });
 
     es.onerror = () => {
-      // Silently handle SSE connection errors - will auto-reconnect via polling
-      console.debug('SSE connection interrupted, falling back to polling');
+      console.debug('SSE messagerie reconnecting...');
     };
 
-    const pollInterval = setInterval(() => {
-      const cur = selectedConvRef.current;
-      if (cur) {
-        fetch(`${API_BASE}/api/messagerie/messages/${cur}/${user.id}`)
-          .then(res => res.ok ? res.json() : [])
-          .then(data => setMessages(data))
-          .catch(() => {});
+    return () => {
+      es.close();
+      eventSourceRef.current = null;
+      if (refreshTimeoutRef.current) {
+        clearTimeout(refreshTimeoutRef.current);
+        refreshTimeoutRef.current = null;
       }
-      loadConversations();
-      loadAdminUsers();
-      loadAdminConversations();
-    }, 3000);
-
-    return () => { es.close(); eventSourceRef.current = null; clearInterval(pollInterval); };
+    };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated, isAdmin, user?.id]);
+  }, [isAuthenticated, isAdmin, user?.id, scheduleSidebarRefresh]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });

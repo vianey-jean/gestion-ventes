@@ -11,7 +11,7 @@ const getBaseURL = () => {
 const createApiInstance = (): AxiosInstance => {
   const instance = axios.create({
     baseURL: getBaseURL(),
-    timeout: 15000, // Reduced from 30s to 15s for faster failure detection
+    timeout: 30000,
     headers: {
       'Content-Type': 'application/json',
     },
@@ -22,6 +22,7 @@ const createApiInstance = (): AxiosInstance => {
   axiosRetry(instance, {
     retries: 2,
     retryDelay: (retryCount) => Math.min(Math.pow(2, retryCount) * 500, 2000), // Faster retry delays
+    shouldResetTimeout: true,
     retryCondition: (error) => {
       return axiosRetry.isNetworkOrIdempotentRequestError(error) || 
              (error.response?.status === 503);

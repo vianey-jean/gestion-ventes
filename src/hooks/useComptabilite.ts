@@ -11,6 +11,7 @@ import useCurrencyFormatter from '@/hooks/use-currency-formatter';
 import nouvelleAchatApiService from '@/services/api/nouvelleAchatApi';
 import comptaApiService from '@/services/api/comptaApi';
 import fournisseurApiService, { Fournisseur } from '@/services/api/fournisseurApi';
+import { realtimeService } from '@/services/realtimeService';
 import { NouvelleAchat, NouvelleAchatFormData, DepenseFormData, ComptabiliteData } from '@/types/comptabilite';
 import { Product } from '@/types/product';
 import { toast } from '@/hooks/use-toast';
@@ -103,6 +104,7 @@ export function useComptabilite() {
 
   // Ref pour éviter les appels multiples
   const loadingRef = useRef(false);
+  const lastSavedSignatureRef = useRef('');
 
   // Fonction pour ouvrir/fermer les modales
   const toggleModal = useCallback((modalName: keyof ModalStates, value?: boolean) => {
@@ -141,6 +143,21 @@ export function useComptabilite() {
   useEffect(() => {
     loadAchats();
   }, [loadAchats]);
+
+  useEffect(() => {
+    const unsubscribe = realtimeService.addDataListener((data) => {
+      if (!data.achats) return;
+
+      const filteredAchats = data.achats.filter((achat: NouvelleAchat) => {
+        const date = new Date(achat.date);
+        return date.getMonth() + 1 === selectedMonth && date.getFullYear() === selectedYear;
+      });
+
+      setAchats(filteredAchats);
+    });
+
+    return () => unsubscribe();
+  }, [selectedMonth, selectedYear]);
 
   // Charger les fournisseurs
   const loadFournisseurs = useCallback(async () => {
@@ -233,10 +250,27 @@ export function useComptabilite() {
   }, [selectedMonth, selectedYear]);
 
   useEffect(() => {
-    if (comptabiliteData && (comptabiliteData.salesCount > 0 || achats.length > 0)) {
-      saveComptaData();
+    if (!comptabiliteData || (comptabiliteData.salesCount === 0 && achats.length === 0)) {
+      return;
     }
-  }, [comptabiliteData, achats.length, saveComptaData]);
+
+    const signature = [
+      selectedYear,
+      selectedMonth,
+      comptabiliteData.salesTotal,
+      comptabiliteData.salesProfit,
+      comptabiliteData.achatsTotal,
+      comptabiliteData.depensesTotal,
+      achats.length
+    ].join('|');
+
+    if (lastSavedSignatureRef.current === signature) {
+      return;
+    }
+
+    lastSavedSignatureRef.current = signature;
+    saveComptaData();
+  }, [achats.length, comptabiliteData, saveComptaData, selectedMonth, selectedYear]);
 
   // Données pour les graphiques mensuels
   const monthlyChartData = useMemo<BarChartData[]>(() => {

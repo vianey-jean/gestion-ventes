@@ -19,7 +19,7 @@ export const RealtimeWrapper: React.FC<RealtimeWrapperProps> = ({
   children, 
   showStatus = true 
 }) => {
-  const { refreshData, setProducts, setSales } = useApp();
+  const { refreshData, setProducts, setSales, fetchAllSales } = useApp();
   const [lastSync, setLastSync] = React.useState<Date>(new Date());
   const [isConnected, setIsConnected] = React.useState<boolean>(false);
 
@@ -28,11 +28,9 @@ export const RealtimeWrapper: React.FC<RealtimeWrapperProps> = ({
 
     const unsubscribeData = realtimeService.addDataListener((data) => {
       if (data.products) setProducts(data.products);
-      if (data.sales) setSales(data.sales);
-
-      // For other data types, trigger a global refresh
-      if (data.depenses || data.clients || data.messages || data.pretFamilles || data.pretProduits) {
-        refreshData?.();
+      if (data.sales) {
+        setSales(data.sales);
+        void fetchAllSales?.();
       }
 
       setLastSync(new Date());
@@ -55,7 +53,7 @@ export const RealtimeWrapper: React.FC<RealtimeWrapperProps> = ({
       unsubscribeSyncEvents();
       realtimeService.disconnect();
     };
-  }, [refreshData, setProducts, setSales]);
+  }, [fetchAllSales, refreshData, setProducts, setSales]);
 
   return (
     <div className="relative">

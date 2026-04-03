@@ -18,6 +18,7 @@ class RealtimeService {
   private syncListeners: Set<(event: SyncEvent) => void> = new Set();
   private lastSyncTime: Date = new Date();
   private isConnected: boolean = false;
+  private activeConsumers: number = 0;
 
   private config: ConnectionConfig = {
     reconnectInterval: 2000,
@@ -79,6 +80,9 @@ class RealtimeService {
       case 'depensedumois':
         syncData = { depenses: receivedData };
         break;
+      case 'nouvelle_achat':
+        syncData = { achats: receivedData };
+        break;
       case 'clients':
         syncData = { clients: receivedData };
         break;
@@ -104,10 +108,14 @@ class RealtimeService {
 
   // Public API
   connect(token?: string) {
+    this.activeConsumers += 1;
+    if (this.activeConsumers > 1) return;
     this.eventSourceManager.connect(token);
   }
 
   disconnect() {
+    this.activeConsumers = Math.max(0, this.activeConsumers - 1);
+    if (this.activeConsumers > 0) return;
     this.eventSourceManager.disconnect();
   }
 
@@ -123,10 +131,11 @@ class RealtimeService {
 
       const results = await Promise.allSettled([
         api.get('/api/products'),
-        api.get(`/api/sales/by-month?month=${currentMonth}&year=${currentYear}`),
+        api.get('/api/sales'),
         api.get('/api/pretfamilles'),
         api.get('/api/pretproduits'),
         api.get('/api/depenses/mouvements'),
+        api.get(`/api/nouvelle-achat/monthly/${currentYear}/${currentMonth}`),
         api.get('/api/clients'),
         api.get('/api/messages')
       ]);
@@ -136,12 +145,13 @@ class RealtimeService {
 
       const syncData: SyncData = {
         products: getData(results[0]),
-        sales: getData(results[1]),
+        sales: this.filterCurrentMonthSales(getData(results[1])),
         pretFamilles: getData(results[2]),
         pretProduits: getData(results[3]),
         depenses: getData(results[4]),
-        clients: getData(results[5]),
-        messages: getData(results[6])
+        achats: getData(results[5]),
+        clients: getData(results[6]),
+        messages: getData(results[7])
       };
 
       // Update cache
@@ -151,6 +161,7 @@ class RealtimeService {
         pretfamilles: syncData.pretFamilles,
         pretproduits: syncData.pretProduits,
         depensedumois: syncData.depenses,
+        nouvelle_achat: syncData.achats,
         clients: syncData.clients,
         messages: syncData.messages
       }).forEach(([key, val]) => this.dataCacheManager.updateCache(key, val));

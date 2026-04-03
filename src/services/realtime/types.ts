@@ -5,6 +5,7 @@ export interface SyncData {
   pretFamilles: any[];
   pretProduits: any[];
   depenses: any[];
+  achats: any[];
   clients: any[];
   messages: any[];
 }

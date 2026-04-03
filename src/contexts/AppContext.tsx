@@ -67,6 +67,13 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const currentYear = selectedYear;
   const isLoading = loading;
 
+  const filterSalesForCurrentDate = useCallback((salesToFilter: Sale[]) => {
+    return salesToFilter.filter(sale => {
+      const saleDate = new Date(sale.date);
+      return saleDate.getMonth() + 1 === currentDate.month && saleDate.getFullYear() === currentDate.year;
+    });
+  }, [currentDate.month, currentDate.year]);
+
   // Fonction pour vérifier et mettre à jour le mois en cours
   const checkAndUpdateCurrentMonth = useCallback(() => {
     const newDate = getCurrentMonthYear();
@@ -156,6 +163,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       const startTime = performance.now();
       const fetchedAllSales = await salesService.getAllSales();
       setAllSales(fetchedAllSales);
+      setSales(filterSalesForCurrentDate(fetchedAllSales));
       const endTime = performance.now();
       console.log(`⚡ All sales loaded in ${Math.round(endTime - startTime)}ms (${fetchedAllSales.length} items)`);
     } catch (err: any) {
@@ -167,7 +175,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         className: "notification-erreur",
       });
     }
-  }, [toast, isAuthenticated, authLoading]);
+  }, [filterSalesForCurrentDate, toast, isAuthenticated, authLoading]);
 
   // OPTIMIZED: Fast parallel data refresh
   const refreshData = useCallback(async () => {
@@ -181,10 +189,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     const startTime = performance.now();
     
     try {
-      // PARALLEL: Fetch all data simultaneously for ultra-fast loading
       await Promise.all([
         fetchProducts(),
-        fetchSales(),
         fetchAllSales()
       ]);
       
@@ -195,7 +201,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     } finally {
       setLoading(false);
     }
-  }, [fetchProducts, fetchSales, fetchAllSales, isAuthenticated, authLoading]);
+  }, [fetchProducts, fetchAllSales, isAuthenticated, authLoading]);
 
   // OPTIMIZED: Fast initial data loading on auth
   useEffect(() => {
@@ -204,10 +210,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         setLoading(true);
         const startTime = performance.now();
         
-        // PARALLEL: Load all data simultaneously
         await Promise.all([
           fetchProducts(),
-          fetchSales(),
           fetchAllSales()
         ]);
         
@@ -222,7 +226,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       setSales([]);
       setAllSales([]);
     }
-  }, [isAuthenticated, authLoading, currentDate, fetchProducts, fetchSales, fetchAllSales]);
+  }, [isAuthenticated, authLoading, currentDate, fetchProducts, fetchAllSales]);
 
   // Add searchProducts function that is being used
   const searchProducts = async (query: string): Promise<Product[]> => {
