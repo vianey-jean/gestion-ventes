@@ -61,7 +61,8 @@ const createApiInstance = (): AxiosInstance => {
       if (error.response?.status === 401) {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
-        window.location.href = '/login';
+        // Dispatch a custom event so AuthContext can handle navigation via React Router
+        window.dispatchEvent(new CustomEvent('auth:logout'));
       } else if (error.code !== 'ERR_NETWORK') {
         console.error('API Error:', error);
       }

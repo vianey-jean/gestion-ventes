@@ -11,6 +11,7 @@ export class EventSourceManager {
   private isConnected: boolean = false;
   private reconnectAttempts: number = 0;
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+  private intentionalDisconnect: boolean = false;
 
   constructor(
     private config: ConnectionConfig,
@@ -21,6 +22,7 @@ export class EventSourceManager {
   connect(_token?: string) {
     // Clean up any existing connection
     this.disconnect();
+    this.intentionalDisconnect = false;
 
     const baseURL = getBaseURL();
     const sseUrl = `${baseURL}/api/sync/events`;
@@ -28,7 +30,7 @@ export class EventSourceManager {
     try {
       this.eventSource = new EventSource(sseUrl, { withCredentials: false });
 
-      this.eventSource.addEventListener('connected', (e: MessageEvent) => {
+      this.eventSource.addEventListener('connected', () => {
         this.isConnected = true;
         this.reconnectAttempts = 0;
         this.onConnectionChange(true);
@@ -48,7 +50,7 @@ export class EventSourceManager {
         }
       });
 
-      this.eventSource.addEventListener('force-sync', (e: MessageEvent) => {
+      this.eventSource.addEventListener('force-sync', () => {
         this.onEvent({ type: 'force-sync', timestamp: Date.now() });
       });
 
@@ -70,15 +72,21 @@ export class EventSourceManager {
           this.eventSource = null;
         }
 
-        this.scheduleReconnect();
+        // Don't reconnect if disconnect was intentional (logout)
+        if (!this.intentionalDisconnect) {
+          this.scheduleReconnect();
+        }
       };
     } catch {
-      this.scheduleReconnect();
+      if (!this.intentionalDisconnect) {
+        this.scheduleReconnect();
+      }
     }
   }
 
   private scheduleReconnect() {
     if (this.reconnectTimer) return;
+    if (this.intentionalDisconnect) return;
     if (this.reconnectAttempts >= this.config.maxReconnectAttempts) {
       console.warn('SSE: max reconnect attempts reached, giving up');
       return;
@@ -89,11 +97,15 @@ export class EventSourceManager {
 
     this.reconnectTimer = setTimeout(() => {
       this.reconnectTimer = null;
-      this.connect();
+      if (!this.intentionalDisconnect) {
+        this.connect();
+      }
     }, delay);
   }
 
   disconnect() {
+    this.intentionalDisconnect = true;
+
     if (this.reconnectTimer) {
       clearTimeout(this.reconnectTimer);
       this.reconnectTimer = null;
@@ -105,6 +117,7 @@ export class EventSourceManager {
     }
 
     this.isConnected = false;
+    this.reconnectAttempts = 0;
     this.onConnectionChange(false);
   }
 

@@ -27,9 +27,11 @@ export const RealtimeWrapper: React.FC<RealtimeWrapperProps> = ({
     realtimeService.connect();
 
     const unsubscribeData = realtimeService.addDataListener((data) => {
+      // Instantly propagate every data type the backend pushes
       if (data.products) setProducts(data.products);
       if (data.sales) {
         setSales(data.sales);
+        // Also refresh allSales so charts/tendances update
         void fetchAllSales?.();
       }
 
@@ -40,6 +42,9 @@ export const RealtimeWrapper: React.FC<RealtimeWrapperProps> = ({
       switch (event.type) {
         case 'connected':
           setIsConnected(true);
+          break;
+        case 'disconnected':
+          setIsConnected(false);
           break;
         case 'force-sync':
           refreshData?.();

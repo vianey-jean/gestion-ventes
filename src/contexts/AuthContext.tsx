@@ -3,6 +3,7 @@ import React, { createContext, useContext, useEffect, useState, useCallback } fr
 import { LoginCredentials, PasswordResetData, PasswordResetRequest, RegistrationData, User } from '../types';
 import { authService } from '../service/api';
 import { useToast } from '@/hooks/use-toast';
+import { realtimeService } from '@/services/realtimeService';
 
 interface AuthContextType {
   user: User | null;
@@ -111,6 +112,37 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     initializeAuth();
   }, [verifySession, toast]);
 
+  const logout = useCallback(() => {
+    // Disconnect SSE before clearing auth state
+    try {
+      realtimeService.disconnect();
+    } catch {}
+
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    localStorage.removeItem('user_name');
+    sessionStorage.removeItem('_abk');
+    
+    setUser(null);
+    setToken(null);
+    setIsVerified(false);
+    authService.setCurrentUser(null);
+    toast({
+      title: "Déconnexion réussie",
+      description: "Vous avez été déconnecté avec succès",
+      className: "bg-red-800 text-white border-red-800",
+    });
+  }, [toast]);
+
+  // Listen for 401 auth:logout events from the API interceptor
+  useEffect(() => {
+    const handleForceLogout = () => {
+      logout();
+    };
+    window.addEventListener('auth:logout', handleForceLogout);
+    return () => window.removeEventListener('auth:logout', handleForceLogout);
+  }, [logout]);
+
   const login = async (credentials: LoginCredentials): Promise<boolean> => {
     try {
       setIsLoading(true);
@@ -167,21 +199,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const logout = () => {
-    setUser(null);
-    setToken(null);
-    setIsVerified(false);
-    authService.setCurrentUser(null);
-    toast({
-      title: "Déconnexion réussie",
-      description: "Vous avez été déconnecté avec succès",
-      className: "bg-red-800 text-white border-red-800",
-    });
-
-    // Redirect to login page after logout
-    window.location.href = '/login';
   };
 
   const register = async (data: RegistrationData): Promise<boolean> => {
