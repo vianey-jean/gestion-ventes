@@ -24,15 +24,22 @@ export const RealtimeWrapper: React.FC<RealtimeWrapperProps> = ({
     // Connexion au service temps réel
     realtimeService.connect();
     
-    // Écouter les changements de données
+    // Écouter les changements de données - synchroniser TOUTES les données
     const unsubscribeData = realtimeService.addDataListener((data) => {
-      // Mettre à jour les données selon le type
       if (data.products) {
         setProducts(data.products);
       }
       
       if (data.sales) {
         setSales(data.sales);
+      }
+      
+      // Pour les autres types de données (dépenses, clients, etc.),
+      // déclencher un refresh global pour que tous les composants soient à jour
+      if (data.depenses || data.clients || data.messages || data.pretFamilles || data.pretProduits) {
+        if (refreshData) {
+          refreshData();
+        }
       }
       
       setLastSync(new Date());

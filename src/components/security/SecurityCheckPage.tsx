@@ -6,7 +6,6 @@ interface SecurityCheckPageProps {
   onVerified: () => void;
 }
 
-// ✅ 10 images
 const images = [
   "https://images.unsplash.com/photo-1506744038136-46273834b3fb",
   "https://images.unsplash.com/photo-1491553895911-0055eca6402d",
@@ -19,7 +18,6 @@ const images = [
   "https://images.unsplash.com/photo-1469474968028-56623f02e42e",
 ];
 
-// ⭐ Étoile
 const Star = ({ type = "fixed" }: { type?: "fixed" | "moving" }) => {
   const isMoving = type === "moving";
 
@@ -45,6 +43,7 @@ const SecurityCheckPage: React.FC<SecurityCheckPageProps> = ({ onVerified }) => 
   const [starY, setStarY] = useState(20);
   const [isDragging, setIsDragging] = useState(false);
 
+  const [isOverTarget, setIsOverTarget] = useState(false); // 👈 NEW
   const [verifiedPuzzle, setVerifiedPuzzle] = useState(false);
   const [checked, setChecked] = useState(false);
 
@@ -54,7 +53,6 @@ const SecurityCheckPage: React.FC<SecurityCheckPageProps> = ({ onVerified }) => 
   const containerRef = useRef<HTMLDivElement>(null);
   const dragStartOffset = useRef({ x: 0, y: 0 });
 
-  // ✅ Générer un challenge
   const generateChallenge = () => {
     const img = images[Math.floor(Math.random() * images.length)];
     setImage(img + "?w=800&q=80");
@@ -62,12 +60,12 @@ const SecurityCheckPage: React.FC<SecurityCheckPageProps> = ({ onVerified }) => 
     setTargetX(Math.floor(Math.random() * 220) + 40);
     setTargetY(Math.floor(Math.random() * 100) + 30);
 
-    // Place red star at random initial position (different from target)
     setStarX(Math.floor(Math.random() * 40) + 5);
     setStarY(Math.floor(Math.random() * 60) + 80);
 
     setVerifiedPuzzle(false);
     setChecked(false);
+    setIsOverTarget(false);
 
     moveCount.current = 0;
     startTime.current = Date.now();
@@ -82,20 +80,20 @@ const SecurityCheckPage: React.FC<SecurityCheckPageProps> = ({ onVerified }) => 
     return () => clearTimeout(timer);
   }, []);
 
-  // Check if stars overlap
+  // ✅ détecte seulement (NE VALIDE PAS)
   const checkOverlap = useCallback((x: number, y: number) => {
     const dist = Math.sqrt(Math.pow(x - targetX, 2) + Math.pow(y - targetY, 2));
+
     if (dist < 15) {
-      setVerifiedPuzzle(true);
-      // Snap to target
+      setIsOverTarget(true);
       setStarX(targetX);
       setStarY(targetY);
     } else {
+      setIsOverTarget(false);
       setVerifiedPuzzle(false);
     }
   }, [targetX, targetY]);
 
-  // Drag handlers
   const getRelativePosition = (clientX: number, clientY: number) => {
     if (!containerRef.current) return { x: 0, y: 0 };
     const rect = containerRef.current.getBoundingClientRect();
@@ -110,7 +108,7 @@ const SecurityCheckPage: React.FC<SecurityCheckPageProps> = ({ onVerified }) => 
     const rect = containerRef.current.getBoundingClientRect();
     const relX = clientX - rect.left;
     const relY = clientY - rect.top;
-    // Check if click is on the red star
+
     if (Math.abs(relX - starX - 25) < 30 && Math.abs(relY - starY - 25) < 30) {
       setIsDragging(true);
       dragStartOffset.current = { x: relX - starX, y: relY - starY };
@@ -119,12 +117,12 @@ const SecurityCheckPage: React.FC<SecurityCheckPageProps> = ({ onVerified }) => 
 
   const handleDragMove = (clientX: number, clientY: number) => {
     if (!isDragging) return;
+
     const now = Date.now();
     moveCount.current++;
     const delta = now - lastMoveTime.current;
     lastMoveTime.current = now;
 
-    // Bot detection
     if (delta < 3) return;
 
     const pos = getRelativePosition(clientX, clientY);
@@ -133,16 +131,21 @@ const SecurityCheckPage: React.FC<SecurityCheckPageProps> = ({ onVerified }) => 
     checkOverlap(pos.x, pos.y);
   };
 
+  // ✅ ICI LA LOGIQUE DEMANDÉE
   const handleDragEnd = () => {
     setIsDragging(false);
+
+    if (isOverTarget) {
+      setTimeout(() => {
+        setVerifiedPuzzle(true);
+      }, 500); // ⏱️ délai 0.5s
+    }
   };
 
-  // Mouse events
   const onMouseDown = (e: React.MouseEvent) => handleDragStart(e.clientX, e.clientY);
   const onMouseMove = (e: React.MouseEvent) => handleDragMove(e.clientX, e.clientY);
   const onMouseUp = () => handleDragEnd();
 
-  // Touch events
   const onTouchStart = (e: React.TouchEvent) => {
     const t = e.touches[0];
     handleDragStart(t.clientX, t.clientY);
@@ -154,40 +157,28 @@ const SecurityCheckPage: React.FC<SecurityCheckPageProps> = ({ onVerified }) => 
   };
   const onTouchEnd = () => handleDragEnd();
 
-  // Global mouse/touch events for drag outside container
   useEffect(() => {
     if (!isDragging) return;
+
     const handleGlobalMouseMove = (e: MouseEvent) => handleDragMove(e.clientX, e.clientY);
     const handleGlobalMouseUp = () => handleDragEnd();
-    const handleGlobalTouchMove = (e: TouchEvent) => {
-      e.preventDefault();
-      handleDragMove(e.touches[0].clientX, e.touches[0].clientY);
-    };
-    const handleGlobalTouchEnd = () => handleDragEnd();
 
     window.addEventListener('mousemove', handleGlobalMouseMove);
     window.addEventListener('mouseup', handleGlobalMouseUp);
-    window.addEventListener('touchmove', handleGlobalTouchMove, { passive: false });
-    window.addEventListener('touchend', handleGlobalTouchEnd);
 
     return () => {
       window.removeEventListener('mousemove', handleGlobalMouseMove);
       window.removeEventListener('mouseup', handleGlobalMouseUp);
-      window.removeEventListener('touchmove', handleGlobalTouchMove);
-      window.removeEventListener('touchend', handleGlobalTouchEnd);
     };
   }, [isDragging, handleDragMove]);
 
-  // 🔐 Vérification sécurité
   const performSecurityCheck = useCallback(() => {
     const timeSpent = Date.now() - startTime.current;
 
     if (timeSpent < 1500) return false;
     if (!verifiedPuzzle) return false;
     if (!checked) return false;
-
     if (moveCount.current < 5) return false;
-
     if ((navigator as any).webdriver) return false;
 
     return true;
@@ -218,6 +209,7 @@ const SecurityCheckPage: React.FC<SecurityCheckPageProps> = ({ onVerified }) => 
       }
     }, 1200);
   };
+
 
   return (
     <div className="min-h-screen bg-black flex items-center justify-center p-4">
@@ -291,16 +283,18 @@ const SecurityCheckPage: React.FC<SecurityCheckPageProps> = ({ onVerified }) => 
                   )}
                 </div>
 
-                {/* ✅ CHECKBOX */}
-                <label className="flex items-center gap-3 text-white cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={checked}
-                    onChange={(e) => setChecked(e.target.checked)}
-                    className="w-5 h-5"
-                  />
-                  Je confirme que je suis un humain
-                </label>
+                {/* ✅ CHECKBOX - visible uniquement quand l'étoile rouge est sur l'étoile grise */}
+                {verifiedPuzzle && (
+                  <label className="flex items-center gap-3 text-white cursor-pointer animate-fadeIn">
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={(e) => setChecked(e.target.checked)}
+                      className="w-5 h-5"
+                    />
+                    Je confirme que je suis un humain
+                  </label>
+                )}
 
                 <button
                   onClick={handleVerify}
