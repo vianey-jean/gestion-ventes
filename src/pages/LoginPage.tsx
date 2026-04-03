@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -28,7 +28,9 @@ import {
   BarChart3,
   Users,
   Package,
-  TrendingUp
+  TrendingUp,
+  AlertTriangle,
+  Timer
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import axios from 'axios';
@@ -50,6 +52,39 @@ const LoginPage: React.FC = () => {
   const [isPasswordValid, setIsPasswordValid] = useState(false);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
+  // Login attempt tracking
+  const [maxAttempts, setMaxAttempts] = useState(5);
+  const [failedAttempts, setFailedAttempts] = useState(0);
+  const [isLocked, setIsLocked] = useState(false);
+  const [lockCountdown, setLockCountdown] = useState(0);
+  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Countdown timer
+  useEffect(() => {
+    if (isLocked && lockCountdown > 0) {
+      countdownRef.current = setInterval(() => {
+        setLockCountdown(prev => {
+          if (prev <= 1) {
+            setIsLocked(false);
+            setFailedAttempts(0);
+            if (countdownRef.current) clearInterval(countdownRef.current);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+      return () => {
+        if (countdownRef.current) clearInterval(countdownRef.current);
+      };
+    }
+  }, [isLocked, lockCountdown]);
+
+  const formatCountdown = (seconds: number) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  };
+
   const handleEmailCheck = async () => {
     if (!email) {
       setErrors({ ...errors, email: 'Veuillez entrer votre email' });
@@ -70,6 +105,14 @@ const LoginPage: React.FC = () => {
         setEmailExists(true);
         setShowPasswordField(true);
         setUserName(`${response.data.user.firstName} ${response.data.user.lastName}`);
+        setMaxAttempts(response.data.maxAttempts || 5);
+        setFailedAttempts(response.data.failedAttempts || 0);
+
+        if (response.data.locked) {
+          setIsLocked(true);
+          setLockCountdown(response.data.remainingSeconds || 0);
+          setFailedAttempts(response.data.maxAttempts || 5);
+        }
       } else {
         setEmailExists(false);
         setShowPasswordField(false);
@@ -102,12 +145,41 @@ const LoginPage: React.FC = () => {
       return;
     }
 
+    if (isLocked) return;
+
     setIsLoggingIn(true);
-    const success = await login({ email, password });
-    if (success) {
-      navigate('/dashboard');
+    try {
+      const response = await axios.post(`${AUTH_BASE_URL}/api/auth/login`, { email, password });
+
+      if (response.data && response.data.token) {
+        // Reset attempts on success
+        setFailedAttempts(0);
+        // Use the auth context login flow
+        const success = await login({ email, password });
+        if (success) {
+          navigate('/dashboard');
+        }
+      }
+    } catch (error: any) {
+      const status = error?.response?.status;
+      const data = error?.response?.data;
+
+      if (status === 423) {
+        // Account locked
+        setIsLocked(true);
+        setLockCountdown(data.remainingSeconds || 0);
+        setFailedAttempts(data.maxAttempts || maxAttempts);
+        setMaxAttempts(data.maxAttempts || maxAttempts);
+      } else if (status === 401 && data?.failedAttempts !== undefined) {
+        setFailedAttempts(data.failedAttempts);
+        setMaxAttempts(data.maxAttempts || maxAttempts);
+        setErrors({ password: `Mot de passe incorrect (${data.failedAttempts}/${data.maxAttempts})` });
+      } else {
+        setErrors({ password: data?.message || 'Identifiants invalides' });
+      }
+    } finally {
+      setIsLoggingIn(false);
     }
-    setIsLoggingIn(false);
   };
 
   const [showPasswordChecker, setShowPasswordChecker] = useState(true);
@@ -130,6 +202,8 @@ const LoginPage: React.FC = () => {
       </Layout>
     );
   }
+
+  const remainingAttempts = maxAttempts - failedAttempts;
 
   return (
     <Layout>
@@ -284,6 +358,9 @@ const LoginPage: React.FC = () => {
                           setEmail(e.target.value);
                           setShowPasswordField(false);
                           setEmailExists(false);
+                          setFailedAttempts(0);
+                          setIsLocked(false);
+                          setLockCountdown(0);
                           if (errors.email) setErrors({ ...errors, email: undefined });
                         }}
                         onBlur={handleEmailCheck}
@@ -309,19 +386,99 @@ const LoginPage: React.FC = () => {
 
                   {showPasswordField && (
                     <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} transition={{ duration: 0.3 }} className="space-y-3">
-                      <Label htmlFor="password" className="text-sm font-semibold text-purple-200/80">
-                        Mot de passe
-                      </Label>
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="password" className="text-sm font-semibold text-purple-200/80">
+                          Mot de passe
+                        </Label>
+                        {/* Attempt counter */}
+                        {failedAttempts > 0 && (
+                          <motion.div
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className={`flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full border backdrop-blur-sm ${
+                              isLocked
+                                ? 'bg-red-500/20 border-red-400/30 text-red-300'
+                                : remainingAttempts <= 2
+                                  ? 'bg-orange-500/20 border-orange-400/30 text-orange-300'
+                                  : 'bg-yellow-500/20 border-yellow-400/30 text-yellow-300'
+                            }`}
+                          >
+                            <Shield className="w-3 h-3" />
+                            {failedAttempts}/{maxAttempts}
+                          </motion.div>
+                        )}
+                      </div>
+
+                      {/* Lockout banner */}
+                      {isLocked && lockCountdown > 0 && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          className="relative rounded-xl overflow-hidden"
+                        >
+                          <div className="absolute inset-0 bg-gradient-to-r from-red-600/30 via-rose-600/30 to-red-600/30 backdrop-blur-xl" />
+                          <div className="relative p-4 border border-red-400/30 rounded-xl">
+                            <div className="flex items-center gap-3 mb-3">
+                              <div className="w-10 h-10 rounded-xl bg-red-500/20 border border-red-400/30 flex items-center justify-center">
+                                <Lock className="w-5 h-5 text-red-300" />
+                              </div>
+                              <div>
+                                <p className="text-sm font-bold text-red-200">Compte temporairement bloqué</p>
+                                <p className="text-xs text-red-300/70">Trop de tentatives échouées</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center justify-center gap-3">
+                              <Timer className="w-5 h-5 text-red-300" />
+                              <div className="text-3xl font-mono font-black text-transparent bg-clip-text bg-gradient-to-r from-red-300 via-rose-200 to-red-300 tracking-widest">
+                                {formatCountdown(lockCountdown)}
+                              </div>
+                            </div>
+                            {/* Progress bar */}
+                            <div className="mt-3 h-1 rounded-full bg-red-900/50 overflow-hidden">
+                              <motion.div
+                                className="h-full bg-gradient-to-r from-red-400 to-rose-400 rounded-full"
+                                initial={{ width: '100%' }}
+                                animate={{ width: '0%' }}
+                                transition={{ duration: lockCountdown, ease: 'linear' }}
+                              />
+                            </div>
+                          </div>
+                        </motion.div>
+                      )}
+
                       <PasswordInput
                         id="password"
                         placeholder="••••••••"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         error={errors.password}
-                        className="h-14 bg-white/[0.06] border-white/[0.1] text-white rounded-xl"
+                        disabled={isLocked}
+                        className={`h-14 bg-white/[0.06] border-white/[0.1] text-white rounded-xl ${isLocked ? 'opacity-50 cursor-not-allowed' : ''}`}
                       />
 
-                      <PasswordStrengthChecker password={password} onValidityChange={handlePasswordValidityChange} />
+                      {/* Attempt progress dots */}
+                      {showPasswordField && maxAttempts > 0 && failedAttempts > 0 && !isLocked && (
+                        <motion.div
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          className="flex items-center justify-center gap-1.5"
+                        >
+                          {Array.from({ length: maxAttempts }).map((_, i) => (
+                            <div
+                              key={i}
+                              className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                                i < failedAttempts
+                                  ? 'bg-red-400 shadow-[0_0_6px_rgba(248,113,113,0.5)]'
+                                  : 'bg-white/20'
+                              }`}
+                            />
+                          ))}
+                        </motion.div>
+                      )}
+
+                      {!isLocked && (
+                        <PasswordStrengthChecker password={password} onValidityChange={handlePasswordValidityChange} />
+                      )}
 
                       <div className="text-sm text-right">
                         <Link to="/reset-password" className="text-purple-400 hover:text-purple-300 font-medium hover:underline transition-colors">
@@ -336,7 +493,7 @@ const LoginPage: React.FC = () => {
                   <Button
                     type="submit"
                     className="flex-1 h-14 bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 hover:from-purple-500 hover:via-pink-500 hover:to-blue-500 text-white font-bold text-base rounded-xl shadow-[0_20px_40px_rgba(139,92,246,0.3)] hover:shadow-[0_25px_50px_rgba(139,92,246,0.4)] transform hover:scale-[1.02] transition-all duration-300 border border-white/10"
-                    disabled={isCheckingEmail || (showPasswordField && !isPasswordValid)}
+                    disabled={isCheckingEmail || (showPasswordField && !isPasswordValid) || isLocked}
                   >
                     {isCheckingEmail ? (
                       <>

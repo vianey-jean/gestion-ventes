@@ -11,7 +11,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
   Shield, Lock, Eye, EyeOff, UserCog, ArrowUpCircle, ArrowDownCircle,
-  Radio, Trash2, Key, CheckCircle, XCircle, AlertTriangle
+  Radio, Trash2, Key, CheckCircle, XCircle, AlertTriangle, Timer, Hash
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -65,10 +65,16 @@ const SecuriteSection: React.FC<SecuriteSectionProps> = ({ userRole }) => {
   const [showDeactivateKey, setShowDeactivateKey] = useState(false);
   const [deactivating, setDeactivating] = useState(false);
 
+  // Login security settings
+  const [nombreConnexion, setNombreConnexion] = useState(5);
+  const [tempsBlocage, setTempsBlocage] = useState(15);
+  const [savingSecuritySettings, setSavingSecuritySettings] = useState(false);
+
   useEffect(() => {
     if (isAdminPrincipal) {
       fetchUsers();
       fetchEncryptionStatus();
+      fetchSecuritySettings();
     }
   }, [isAdminPrincipal]);
 
@@ -90,6 +96,35 @@ const SecuriteSection: React.FC<SecuriteSectionProps> = ({ userRole }) => {
       setEncryptionStatus(response.data);
     } catch (e) {
       console.error('Error fetching encryption status:', e);
+    }
+  };
+
+  const fetchSecuritySettings = async () => {
+    try {
+      const response = await api.get('/api/profile');
+      if (response.data) {
+        setNombreConnexion(response.data.nombreConnexion || 5);
+        setTempsBlocage(response.data.tempsBlocage || 15);
+      }
+    } catch (e) {
+      console.error('Error fetching security settings:', e);
+    }
+  };
+
+  const handleSaveSecuritySettings = async () => {
+    try {
+      setSavingSecuritySettings(true);
+      const response = await api.put('/api/profile/security-settings', {
+        nombreConnexion,
+        tempsBlocage
+      });
+      if (response.data.success) {
+        toast({ title: '✅ Paramètres de sécurité sauvegardés', description: `Max ${nombreConnexion} tentatives, blocage ${tempsBlocage} min`, className: 'bg-green-600 text-white border-green-600' });
+      }
+    } catch (e: any) {
+      toast({ title: 'Erreur', description: e?.response?.data?.message || 'Erreur lors de la sauvegarde', variant: 'destructive' });
+    } finally {
+      setSavingSecuritySettings(false);
     }
   };
 
@@ -374,6 +409,73 @@ const SecuriteSection: React.FC<SecuriteSectionProps> = ({ userRole }) => {
                 )}
               </div>
             )}
+          </motion.div>
+
+          {/* ========== PARAMÈTRES DE CONNEXION ========== */}
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.28 }}
+            className="mt-8 pt-6 border-t border-border/50"
+          >
+            <div className="flex items-center gap-2 mb-4">
+              <Timer className="w-4 h-4 text-blue-500" />
+              <span className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">Paramètres de connexion</span>
+            </div>
+
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                    <Hash className="w-3 h-3" /> Tentatives max de connexion
+                  </label>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={20}
+                    value={nombreConnexion}
+                    onChange={e => setNombreConnexion(parseInt(e.target.value) || 5)}
+                    className="rounded-xl border-blue-200/30 dark:border-blue-800/20"
+                  />
+                  <p className="text-xs text-muted-foreground">Nombre de tentatives avant blocage (1-20)</p>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                    <Timer className="w-3 h-3" /> Temps de blocage (minutes)
+                  </label>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={1440}
+                    value={tempsBlocage}
+                    onChange={e => setTempsBlocage(parseInt(e.target.value) || 15)}
+                    className="rounded-xl border-blue-200/30 dark:border-blue-800/20"
+                  />
+                  <p className="text-xs text-muted-foreground">Durée du blocage après tentatives épuisées (1-1440 min)</p>
+                </div>
+              </div>
+
+              <div className="rounded-xl bg-blue-50 dark:bg-blue-900/10 border border-blue-200/50 p-3">
+                <p className="text-xs text-blue-700 dark:text-blue-400 flex items-start gap-2">
+                  <Shield className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                  <span>Après {nombreConnexion} tentatives échouées, le compte sera bloqué pendant {tempsBlocage} minute{tempsBlocage > 1 ? 's' : ''}.</span>
+                </p>
+              </div>
+
+              <Button
+                onClick={handleSaveSecuritySettings}
+                disabled={savingSecuritySettings}
+                className="w-full rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600"
+              >
+                {savingSecuritySettings ? (
+                  <span className="flex items-center gap-2">
+                    <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
+                    Sauvegarde...
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-2">
+                    <Shield className="w-4 h-4" /> Sauvegarder les paramètres
+                  </span>
+                )}
+              </Button>
+            </div>
           </motion.div>
 
           {/* ========== CRYPTAGE DE DONNÉES ========== */}
