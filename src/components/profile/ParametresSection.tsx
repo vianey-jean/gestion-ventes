@@ -49,6 +49,7 @@ const ParametresSection: React.FC<ParametresSectionProps> = ({ userRole }) => {
   const [showDeletePw, setShowDeletePw] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [confirmDeleteStep, setConfirmDeleteStep] = useState(false);
+  const [isDeletePasswordValid, setIsDeletePasswordValid] = useState(false);
 
   // Backup state
   const [showBackupDialog, setShowBackupDialog] = useState(false);
@@ -557,7 +558,7 @@ const ParametresSection: React.FC<ParametresSectionProps> = ({ userRole }) => {
                 {/* DELETE BUTTON - Only for administrateur principale */}
                 {isAdminPrincipal && (
                   <Button
-                    onClick={() => { setShowDeleteDialog(true); setDeletePassword(''); setConfirmDeleteStep(false); }}
+                    onClick={() => { setShowDeleteDialog(true); setDeletePassword(''); setConfirmDeleteStep(false); setIsDeletePasswordValid(false); }}
                     className={`${premiumBtnClass} bg-gradient-to-r from-red-500/10 to-rose-500/10 border-red-300/30 text-red-600 dark:text-red-400 hover:from-red-500/20 hover:to-rose-500/20`}
                   >
                     <Trash2 className="w-4 h-4 mr-2" />
@@ -572,7 +573,106 @@ const ParametresSection: React.FC<ParametresSectionProps> = ({ userRole }) => {
       </motion.div>
 
 
-      {/* ========== DELETE DIALOG ========== */}
+      {/* ========== DELETE ALL DIALOG ========== */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={v => { setShowDeleteDialog(v); if (!v) { setDeletePassword(''); setConfirmDeleteStep(false); } }}>
+        <AlertDialogContent className="rounded-3xl backdrop-blur-2xl bg-white/95 dark:bg-[#0a0020]/95 border border-red-200/30 max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-red-600">
+              <Trash2 className="w-5 h-5" /> Supprimer toutes les données
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2">
+              {!confirmDeleteStep ? (
+                <>
+                  <span className="block text-red-500 font-bold">⚠️ Cette action est IRRÉVERSIBLE !</span>
+                  <span className="block">Toutes les données seront supprimées sauf votre compte administrateur principal. Saisissez votre mot de passe pour continuer.</span>
+                </>
+              ) : (
+                <>
+                  <span className="block text-red-500 font-bold">⚠️ DERNIÈRE CONFIRMATION</span>
+                  <span className="block">Êtes-vous absolument certain de vouloir supprimer toutes les données ? Cette action ne peut pas être annulée. Vous serez déconnecté automatiquement après la suppression.</span>
+                </>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          {!confirmDeleteStep && (
+            <div className="space-y-4 py-4">
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">
+                Mot de passe
+              </label>
+              <div className="relative">
+                <Input
+                  type={showDeletePw ? 'text' : 'password'}
+                  value={deletePassword}
+                  onChange={e => setDeletePassword(e.target.value)}
+                  placeholder="Saisissez votre mot de passe"
+                  autoComplete="current-password"
+                  className="rounded-xl border-red-200/30 dark:border-red-800/20 pr-10"
+                />
+                <button type="button" onClick={() => setShowDeletePw(!showDeletePw)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                  {showDeletePw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+              <PasswordStrengthChecker password={deletePassword} onValidityChange={setIsDeletePasswordValid} />
+            </div>
+          )}
+
+          <AlertDialogFooter>
+            <AlertDialogCancel className="rounded-xl">Annuler</AlertDialogCancel>
+            {!confirmDeleteStep ? (
+              <Button
+                onClick={async () => {
+                  if (!deletePassword) return;
+                  try {
+                    const result = await settingsApi.verifyPassword(deletePassword);
+                    if (result.valid) {
+                      setConfirmDeleteStep(true);
+                    } else {
+                      toast({ title: 'Erreur', description: 'Mot de passe incorrect', variant: 'destructive' });
+                    }
+                  } catch (e: any) {
+                    toast({ title: 'Erreur', description: e?.response?.data?.message || 'Mot de passe incorrect', variant: 'destructive' });
+                  }
+                }}
+                disabled={!deletePassword || !isDeletePasswordValid}
+                className="rounded-xl bg-gradient-to-r from-red-500 to-rose-500 text-white hover:from-red-600 hover:to-rose-600"
+              >
+                Vérifier le mot de passe
+              </Button>
+            ) : (
+              <Button
+                onClick={async () => {
+                  try {
+                    setDeleting(true);
+                    const result = await settingsApi.deleteAllData(deletePassword);
+                    if (result.success) {
+                      toast({ title: '✅ Données supprimées', description: result.message, className: 'bg-green-600 text-white border-green-600' });
+                      setShowDeleteDialog(false);
+                      setDeletePassword('');
+                      setConfirmDeleteStep(false);
+                      // Auto-logout after deletion
+                      setTimeout(() => {
+                        logout();
+                      }, 1500);
+                    }
+                  } catch (e: any) {
+                    toast({ title: 'Erreur', description: e?.response?.data?.message || 'Erreur lors de la suppression', variant: 'destructive' });
+                  } finally {
+                    setDeleting(false);
+                  }
+                }}
+                disabled={deleting}
+                className="rounded-xl bg-gradient-to-r from-red-600 to-rose-600 text-white hover:from-red-700 hover:to-rose-700"
+              >
+                {deleting ? 'Suppression...' : '🗑️ Supprimer définitivement'}
+              </Button>
+            )}
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* ========== BACKUP DIALOG ========== */}
       <AlertDialog open={showBackupDialog} onOpenChange={v => { setShowBackupDialog(v); if (!v) { setBackupCode(''); setIsBackupCodeValid(false); } }}>
         <AlertDialogContent className="rounded-3xl backdrop-blur-2xl bg-white/95 dark:bg-[#0a0020]/95 border border-emerald-200/30 max-w-md">
           <AlertDialogHeader>

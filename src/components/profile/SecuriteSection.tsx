@@ -21,6 +21,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import api from '@/service/api';
+import PasswordStrengthChecker from '@/components/PasswordStrengthChecker';
 
 interface SecuriteSectionProps {
   userRole?: string;
@@ -57,6 +58,7 @@ const SecuriteSection: React.FC<SecuriteSectionProps> = ({ userRole }) => {
   const [encryptionStatus, setEncryptionStatus] = useState<{ enabled: boolean; hasKey: boolean; activatedAt: string | null }>({ enabled: false, hasKey: false, activatedAt: null });
   const [encryptionKey, setEncryptionKey] = useState('');
   const [showEncryptionKey, setShowEncryptionKey] = useState(false);
+  const [isEncryptionKeyValid, setIsEncryptionKeyValid] = useState(false);
   const [activatingEncryption, setActivatingEncryption] = useState(false);
   const [showDeactivateDialog, setShowDeactivateDialog] = useState(false);
   const [deactivateKey, setDeactivateKey] = useState('');
@@ -154,8 +156,8 @@ const SecuriteSection: React.FC<SecuriteSectionProps> = ({ userRole }) => {
 
   // ========== ENCRYPTION ==========
   const handleActivateEncryption = async () => {
-    if (encryptionKey.length < 10) {
-      toast({ title: 'Erreur', description: 'La clé doit contenir au moins 10 caractères', variant: 'destructive' });
+    if (!isEncryptionKeyValid) {
+      toast({ title: 'Erreur', description: 'La clé de cryptage ne respecte pas les critères de sécurité', variant: 'destructive' });
       return;
     }
     try {
@@ -435,16 +437,7 @@ const SecuriteSection: React.FC<SecuriteSectionProps> = ({ userRole }) => {
                     {showEncryptionKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
-                {encryptionKey.length > 0 && encryptionKey.length < 10 && (
-                  <p className="text-xs text-red-500 flex items-center gap-1">
-                    <AlertTriangle className="w-3 h-3" /> Encore {10 - encryptionKey.length} caractère(s) requis
-                  </p>
-                )}
-                {encryptionKey.length >= 10 && (
-                  <p className="text-xs text-emerald-500 flex items-center gap-1">
-                    <CheckCircle className="w-3 h-3" /> Clé valide
-                  </p>
-                )}
+                <PasswordStrengthChecker password={encryptionKey} onValidityChange={setIsEncryptionKeyValid} />
                 <div className="rounded-xl bg-amber-50 dark:bg-amber-900/10 border border-amber-200/50 p-3">
                   <p className="text-xs text-amber-700 dark:text-amber-400 flex items-start gap-2">
                     <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" />
@@ -453,7 +446,7 @@ const SecuriteSection: React.FC<SecuriteSectionProps> = ({ userRole }) => {
                 </div>
                 <Button
                   onClick={handleActivateEncryption}
-                  disabled={encryptionKey.length < 10 || activatingEncryption}
+                  disabled={!isEncryptionKeyValid || activatingEncryption}
                   className="w-full rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:from-amber-600 hover:to-orange-600"
                 >
                   {activatingEncryption ? (
