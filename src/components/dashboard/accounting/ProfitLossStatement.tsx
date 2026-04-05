@@ -67,8 +67,7 @@ const ProfitLossStatement: React.FC = () => {
         endDate = new Date(now.getFullYear(), now.getMonth(), 0);
         break;
       case 'current-quarter':
-        const quarterStart = Math.floor(now.getMonth() / 3) * 3;
-        startDate = new Date(now.getFullYear(), quarterStart, 1);
+        startDate = new Date(now.getFullYear(), now.getMonth() - 2, 1);
         break;
       case 'current-year':
         startDate = new Date(now.getFullYear(), 0, 1);
@@ -123,8 +122,7 @@ const ProfitLossStatement: React.FC = () => {
         endDate = new Date(now.getFullYear(), now.getMonth(), 0);
         break;
       case 'current-quarter':
-        const quarterStart = Math.floor(now.getMonth() / 3) * 3;
-        startDate = new Date(now.getFullYear(), quarterStart, 1);
+        startDate = new Date(now.getFullYear(), now.getMonth() - 2, 1);
         break;
       case 'current-year':
         startDate = new Date(now.getFullYear(), 0, 1);

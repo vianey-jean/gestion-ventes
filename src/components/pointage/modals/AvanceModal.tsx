@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Banknote, Building2, Search, User, X, AlertTriangle } from 'lucide-react';
+import { Banknote, Building2, Search, User, X, AlertTriangle, Calendar, CalendarRange } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Travailleur } from '@/services/api/travailleurApi';
 import { Entreprise } from '@/services/api/entrepriseApi';
@@ -25,6 +25,7 @@ const AvanceModal: React.FC<AvanceModalProps> = ({
   open, onOpenChange, travailleurs, entreprises, premiumBtnClass, mirrorShine
 }) => {
   const { toast } = useToast();
+  const [mode, setMode] = useState<'month' | 'year'>('month');
   const [travSearch, setTravSearch] = useState('');
   const [travId, setTravId] = useState('');
   const [travNom, setTravNom] = useState('');
@@ -46,7 +47,7 @@ const AvanceModal: React.FC<AvanceModalProps> = ({
     if (!open) {
       setTravSearch(''); setTravId(''); setTravNom('');
       setEntrepriseId(''); setTotalPointage(0); setTotalAvancesDejaRecues(0);
-      setMontantAvance(''); setConfirmSave(false);
+      setMontantAvance(''); setConfirmSave(false); setMode('month');
     }
   }, [open]);
 
@@ -65,24 +66,35 @@ const AvanceModal: React.FC<AvanceModalProps> = ({
       })
     : [];
 
-  // Load salary details when travailleur + entreprise are selected
   useEffect(() => {
     if (!travId) { setTotalPointage(0); setTotalAvancesDejaRecues(0); return; }
     const loadSalary = async () => {
       setLoadingSalary(true);
       try {
-        const [ptRes, avRes] = await Promise.all([
-          pointageApi.getByMonth(currentYear, currentMonth),
-          avanceApi.getByTravailleur(travId, currentMonth, currentYear)
-        ]);
-        let pts = ptRes.data.filter((p: any) => p.travailleurId === travId);
-        if (entrepriseId) {
-          pts = pts.filter((p: any) => p.entrepriseId === entrepriseId);
+        if (mode === 'month') {
+          const [ptRes, avRes] = await Promise.all([
+            pointageApi.getByMonth(currentYear, currentMonth),
+            avanceApi.getByTravailleur(travId, currentMonth, currentYear)
+          ]);
+          let pts = ptRes.data.filter((p: any) => p.travailleurId === travId);
+          if (entrepriseId) pts = pts.filter((p: any) => p.entrepriseId === entrepriseId);
+          const total = pts.reduce((s: number, p: any) => s + p.montantTotal, 0);
+          const totalAv = avRes.data.reduce((s: number, a: any) => s + a.montant, 0);
+          setTotalPointage(total);
+          setTotalAvancesDejaRecues(totalAv);
+        } else {
+          const [ptRes, avAllRes] = await Promise.all([
+            pointageApi.getByYear(currentYear),
+            avanceApi.getAll()
+          ]);
+          let pts = ptRes.data.filter((p: any) => p.travailleurId === travId);
+          if (entrepriseId) pts = pts.filter((p: any) => p.entrepriseId === entrepriseId);
+          const total = pts.reduce((s: number, p: any) => s + p.montantTotal, 0);
+          const yearAvances = avAllRes.data.filter((a: any) => a.travailleurId === travId && a.annee === currentYear);
+          const totalAv = yearAvances.reduce((s: number, a: any) => s + a.montant, 0);
+          setTotalPointage(total);
+          setTotalAvancesDejaRecues(totalAv);
         }
-        const total = pts.reduce((s: number, p: any) => s + p.montantTotal, 0);
-        const totalAv = avRes.data.reduce((s: number, a: any) => s + a.montant, 0);
-        setTotalPointage(total);
-        setTotalAvancesDejaRecues(totalAv);
       } catch {
         setTotalPointage(0);
         setTotalAvancesDejaRecues(0);
@@ -91,7 +103,7 @@ const AvanceModal: React.FC<AvanceModalProps> = ({
       }
     };
     loadSalary();
-  }, [travId, entrepriseId, currentMonth, currentYear]);
+  }, [travId, entrepriseId, currentMonth, currentYear, mode]);
 
   const disponible = Math.max(0, totalPointage - totalAvancesDejaRecues);
   const montantNum = parseFloat(montantAvance) || 0;
@@ -124,6 +136,8 @@ const AvanceModal: React.FC<AvanceModalProps> = ({
     }
   };
 
+  const periodLabel = mode === 'month' ? `Mois en cours (${currentMonth}/${currentYear})` : `Année ${currentYear}`;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="bg-gradient-to-br from-slate-900 via-amber-900/20 to-orange-900/20 backdrop-blur-2xl border border-white/10 shadow-2xl rounded-3xl max-w-lg max-h-[90vh] overflow-y-auto">
@@ -135,6 +149,20 @@ const AvanceModal: React.FC<AvanceModalProps> = ({
             💰 Prise d'Avance
           </DialogTitle>
         </DialogHeader>
+
+        {/* Mode tabs */}
+        <div className="flex gap-2 mb-2">
+          <button onClick={() => setMode('month')}
+            className={cn("flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition-all",
+              mode === 'month' ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg" : "bg-white/5 text-white/60 hover:bg-white/10 border border-white/10")}>
+            <Calendar className="h-4 w-4" /> Mois en cours
+          </button>
+          <button onClick={() => setMode('year')}
+            className={cn("flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition-all",
+              mode === 'year' ? "bg-gradient-to-r from-purple-500 to-indigo-500 text-white shadow-lg" : "bg-white/5 text-white/60 hover:bg-white/10 border border-white/10")}>
+            <CalendarRange className="h-4 w-4" /> Année en cours
+          </button>
+        </div>
 
         <div className="space-y-4">
           {/* Travailleur search */}
@@ -204,12 +232,13 @@ const AvanceModal: React.FC<AvanceModalProps> = ({
           {/* Salary details */}
           {travId && (
             <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-3">
+              <p className="text-xs font-bold text-white/50 uppercase tracking-wider">{periodLabel}</p>
               {loadingSalary ? (
                 <p className="text-white/50 text-sm text-center animate-pulse">Chargement...</p>
               ) : (
                 <>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-white/70">Total pointage du mois</span>
+                    <span className="text-sm text-white/70">Total pointage {mode === 'month' ? 'du mois' : "de l'année"}</span>
                     <span className="text-lg font-black text-emerald-400">{totalPointage.toFixed(2)}€</span>
                   </div>
                   <div className="flex justify-between items-center">
