@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  CalendarOff, Plus, Trash2, Clock, AlertTriangle, Edit, Repeat, CalendarDays
+  CalendarOff, Plus, Trash2, Clock, AlertTriangle, Edit, Repeat, CalendarDays, Eye
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -56,7 +56,9 @@ const IndisponibiliteSection: React.FC = () => {
   const { toast } = useToast();
   const [indisponibilites, setIndisponibilites] = useState<Indisponibilite[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [deleteConfirmGroup, setDeleteConfirmGroup] = useState<GroupedIndispo | null>(null);
+  const [historyDeleteConfirm, setHistoryDeleteConfirm] = useState<GroupedIndispo | null>(null);
   const [saving, setSaving] = useState(false);
 
   // Add form
@@ -125,6 +127,16 @@ const IndisponibiliteSection: React.FC = () => {
 
     return groups.sort((a, b) => b.firstEntry.date.localeCompare(a.firstEntry.date));
   }, [indisponibilites]);
+
+  // Only show groups that have at least one future or current date
+  const activeGroups = useMemo(() => {
+    const today = new Date();
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    return grouped.filter(group => {
+      // Keep if any entry date is >= today
+      return group.entries.some(e => e.date >= todayStr);
+    });
+  }, [grouped]);
 
   const handleAdd = async () => {
     try {
@@ -234,24 +246,33 @@ const IndisponibiliteSection: React.FC = () => {
           </div>
           <span className="text-sm font-bold text-foreground">Jours indisponibles / Congés</span>
         </div>
-        <Button
-          size="sm"
-          onClick={() => setShowAddDialog(true)}
-          className="rounded-xl bg-gradient-to-r from-red-500/10 to-orange-500/10 border border-red-300/30 text-red-600 dark:text-red-400 hover:from-red-500/20 hover:to-orange-500/20 text-xs"
-        >
-          <Plus className="w-3 h-3 mr-1" /> Ajouter
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            size="sm"
+            onClick={() => setShowHistoryModal(true)}
+            className="rounded-xl bg-gradient-to-r from-blue-500/10 to-indigo-500/10 border border-blue-300/30 text-blue-600 dark:text-blue-400 hover:from-blue-500/20 hover:to-indigo-500/20 text-xs"
+          >
+            <Eye className="w-3 h-3 mr-1" /> Afficher
+          </Button>
+          <Button
+            size="sm"
+            onClick={() => setShowAddDialog(true)}
+            className="rounded-xl bg-gradient-to-r from-red-500/10 to-orange-500/10 border border-red-300/30 text-red-600 dark:text-red-400 hover:from-red-500/20 hover:to-orange-500/20 text-xs"
+          >
+            <Plus className="w-3 h-3 mr-1" /> Ajouter
+          </Button>
+        </div>
       </div>
 
       {loading ? (
         <div className="flex justify-center py-4">
           <div className="animate-spin w-6 h-6 border-2 border-red-500 border-t-transparent rounded-full" />
         </div>
-      ) : grouped.length === 0 ? (
-        <p className="text-sm text-muted-foreground text-center py-4">Aucun jour indisponible configuré</p>
+      ) : activeGroups.length === 0 ? (
+        <p className="text-sm text-muted-foreground text-center py-4">Aucun jour indisponible à venir</p>
       ) : (
         <div className="space-y-2 max-h-60 overflow-y-auto">
-          {grouped.map(group => (
+          {activeGroups.map(group => (
             <motion.div
               key={group.groupId}
               initial={{ opacity: 0, y: 5 }}
@@ -599,6 +620,120 @@ const IndisponibiliteSection: React.FC = () => {
               className="rounded-xl bg-gradient-to-r from-red-500 to-rose-500 text-white"
             >
               Supprimer {deleteConfirmGroup && deleteConfirmGroup.entries.length > 1 ? `(${deleteConfirmGroup.entries.length})` : ''}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      {/* ===== History Modal ===== */}
+      <Dialog open={showHistoryModal} onOpenChange={setShowHistoryModal}>
+        <DialogContent className="rounded-3xl max-w-lg max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-blue-600">
+              <Eye className="w-5 h-5" /> Historique des indisponibilités
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-3 py-2">
+            {grouped.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-4">Aucune indisponibilité enregistrée</p>
+            ) : (
+              grouped.map(group => {
+                const today = new Date();
+                const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+                const isPast = group.entries.every(e => e.date < todayStr);
+
+                return (
+                  <div
+                    key={group.groupId}
+                    className={`rounded-xl border p-3 ${
+                      isPast
+                        ? 'bg-muted/30 border-border opacity-60'
+                        : 'bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-900/10 dark:to-orange-900/10 border-red-200/30 dark:border-red-800/20'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <p className="text-sm font-semibold text-foreground capitalize">
+                        {group.recurrence === 'weekly'
+                          ? `Chaque ${group.jourSemaine}`
+                          : formatDate(group.firstEntry.date)
+                        }
+                      </p>
+                      <div className="flex items-center gap-1.5">
+                        {group.entries.length > 1 && (
+                          <span className="inline-flex items-center gap-1 text-xs bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 rounded-full px-2 py-0.5">
+                            <Repeat className="w-3 h-3" />
+                            {group.entries.length}x
+                          </span>
+                        )}
+                        {isPast && (
+                          <span className="text-xs bg-muted text-muted-foreground rounded-full px-2 py-0.5">Passé</span>
+                        )}
+                        <Button
+                          size="sm" variant="ghost"
+                          onClick={() => {
+                            setShowHistoryModal(false);
+                            setTimeout(() => handleEditOpen(group), 200);
+                          }}
+                          className="text-blue-500 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 h-7 w-7 p-0"
+                        >
+                          <Edit className="w-3.5 h-3.5" />
+                        </Button>
+                        <Button
+                          size="sm" variant="ghost"
+                          onClick={() => setHistoryDeleteConfirm(group)}
+                          className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 h-7 w-7 p-0"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {group.journeeComplete ? '🔒 Journée complète' : `⏰ ${group.heureDebut} - ${group.heureFin}`}
+                      {group.motif && ` • ${group.motif}`}
+                    </p>
+                    {group.entries.length > 1 && (
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        Du {formatDate(group.entries[0].date)} au {formatDate(group.entries[group.entries.length - 1].date)}
+                      </p>
+                    )}
+                  </div>
+                );
+              })
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowHistoryModal(false)} className="rounded-xl">Fermer</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ===== History Delete Confirm ===== */}
+      <AlertDialog open={!!historyDeleteConfirm} onOpenChange={v => { if (!v) setHistoryDeleteConfirm(null); }}>
+        <AlertDialogContent className="rounded-3xl max-w-sm">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-red-600">
+              <AlertTriangle className="w-5 h-5" /> Supprimer ?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {historyDeleteConfirm && historyDeleteConfirm.entries.length > 1
+                ? `Voulez-vous supprimer les ${historyDeleteConfirm.entries.length} indisponibilités de ce groupe (chaque ${historyDeleteConfirm.jourSemaine}) ?`
+                : 'Voulez-vous vraiment supprimer cette indisponibilité ?'
+              }
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="rounded-xl">Annuler</AlertDialogCancel>
+            <Button
+              onClick={async () => {
+                if (historyDeleteConfirm) {
+                  await handleDeleteGroup(historyDeleteConfirm);
+                  setHistoryDeleteConfirm(null);
+                }
+              }}
+              className="rounded-xl bg-gradient-to-r from-red-500 to-rose-500 text-white"
+            >
+              Supprimer {historyDeleteConfirm && historyDeleteConfirm.entries.length > 1 ? `(${historyDeleteConfirm.entries.length})` : ''}
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
