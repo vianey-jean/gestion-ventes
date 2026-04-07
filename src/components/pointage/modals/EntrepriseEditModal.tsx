@@ -84,7 +84,7 @@ const EntrepriseEditModal: React.FC<EntrepriseEditModalProps> = ({
             <div className="space-y-2">
               <Label className="text-sm font-bold text-white/80 flex items-center gap-2">
                 <Euro className="h-4 w-4 text-emerald-400" />
-                {form.typePaiement === 'journalier' ? 'Prix par jour (€)' : 'Prix par heure (€)'}
+                {form.typePaiement === 'journalier' ? 'Prix par jour /défaut ou échanger  (€)' : 'Prix par heure /défaut ou échanger  (€)'}
               </Label>
               <Input type="number" step="0.01" value={form.prix} onChange={e => setForm({ ...form, prix: e.target.value })} placeholder="Ex: 25"
                 className="bg-white/10 border border-white/20 focus:border-emerald-400 rounded-xl text-white placeholder:text-white/40" />
