@@ -6,11 +6,22 @@ export interface Benefice {
   id: string;
   productId: string;
   productDescription: string;
-  purchasePrice: number;
-  sellingPrice: number;
-  profit: number;
-  margin: number;
-  date: string;
+  prixAchat: number;
+  taxeDouane: number;
+  tva: number;
+  autresFrais: number;
+  coutTotal: number;
+  margeDesire: number;
+  prixVenteRecommande: number;
+  beneficeNet: number;
+  tauxMarge: number;
+  purchasePrice?: number;
+  sellingPrice?: number;
+  profit?: number;
+  margin?: number;
+  date?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export const beneficeApiService = {
