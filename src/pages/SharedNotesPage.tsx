@@ -3,6 +3,7 @@ import { useParams, Navigate } from 'react-router-dom';
 import { StickyNote, Lock, Eye } from 'lucide-react';
 import { getBaseURL } from '@/services/api/api';
 import { getDrawingUrl } from '@/services/api/noteApi';
+import SEOHead from '@/components/SEOHead';
 
 interface SharedNote {
   title: string;
@@ -79,6 +80,7 @@ const SharedNotesPage: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-amber-50/30 to-gray-100 dark:from-gray-900 dark:via-gray-900 dark:to-gray-950 select-none"
       onContextMenu={(e) => e.preventDefault()}
     >
+      <SEOHead title="Notes partagées" description="Consultation des notes partagées" noindex />
       {/* Header */}
       <div className="sticky top-0 z-50 backdrop-blur-xl bg-white/70 dark:bg-gray-900/70 border-b border-gray-200/50 dark:border-gray-700/50">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">

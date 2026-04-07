@@ -11,6 +11,7 @@
 
 import React, { useState, Suspense, lazy } from 'react';
 import Layout from '@/components/Layout';
+import SEOHead from '@/components/SEOHead';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -201,8 +202,19 @@ const DashboardPage = () => {
     }
   };
 
+  const seoTitles: Record<string, string> = {
+    ventes: 'Ventes',
+    commandes: 'Commandes',
+    rdv: 'Rendez-vous',
+    comptabilite: 'Comptabilité & Finances',
+    clients: 'Clients',
+    produits: 'Produits',
+    pointage: 'Pointage',
+  };
+
   return (
     <Layout requireAuth>
+      <SEOHead title={seoTitles[activeSection] || 'Dashboard'} description={`Gestion des ${seoTitles[activeSection]?.toLowerCase() || 'ventes'} - Tableau de bord`} />
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20 dark:from-[#030014] dark:via-[#0a0025] dark:to-[#0e0035]">
 
         {/* Mobile top bar */}

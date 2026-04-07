@@ -11,6 +11,7 @@ import Layout from '@/components/Layout';
 import PremiumLoading from '@/components/ui/premium-loading';
 import { KeyRound, Mail, ArrowLeft, Shield, CheckCircle, Crown, Fingerprint, Star, BarChart3, Users, Package, TrendingUp } from 'lucide-react';
 import { motion } from 'framer-motion';
+import SEOHead from '@/components/SEOHead';
 
 const ResetPasswordPage: React.FC = () => {
   const navigate = useNavigate();
@@ -77,6 +78,7 @@ const ResetPasswordPage: React.FC = () => {
   
   return (
     <Layout>
+      <SEOHead title="Réinitialiser le mot de passe" description="Réinitialisation du mot de passe" />
       <div className="min-h-screen relative flex items-center justify-center p-4 overflow-hidden">
         {/* Ultra-luxe animated background */}
         <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950" />

@@ -26,6 +26,7 @@ import { fr } from 'date-fns/locale';
 import { Input } from '@/components/ui/input';
 import PremiumLoading from '@/components/ui/premium-loading';
 import { motion } from 'framer-motion';
+import SEOHead from '@/components/SEOHead';
 
 const MessagesPage: React.FC = () => {
   const { messages, unreadCount, isLoading, markAsRead, markAsUnread, deleteMessage } = useMessages();
@@ -92,6 +93,7 @@ const MessagesPage: React.FC = () => {
 
   return (
     <Layout>
+      <SEOHead title="Messages" description="Gestion des messages reçus" />
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-950/50 to-indigo-950">
         {/* Grid pattern */}
         <div className="fixed inset-0 bg-[linear-gradient(rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:48px_48px] pointer-events-none" />

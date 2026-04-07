@@ -178,12 +178,14 @@ Optimisez votre activité grâce à une technologie performante, élégante et p
               <span>Confidentialité</span>
               <span className="w-1 h-1 bg-white/20 rounded-full" />
               <span>Mentions légales</span>
+              <span className="w-1 h-1 bg-white/20 rounded-full" />
+              <span>Données Cryptés</span>
             </div>
           </div>
 
           <div className="mt-6 flex flex-wrap justify-center gap-3">
             {[
-              'Version 5.0.0 - Système opérationnel',
+              'Version 5.4.0 - Système opérationnel',
               'Créé par Jean Rabemanalina',
             ].map((text, i) => (
               <div

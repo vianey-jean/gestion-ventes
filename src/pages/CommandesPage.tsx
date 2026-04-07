@@ -28,6 +28,7 @@ import {
   RdvConfirmationModal
 } from '@/components/commandes';
 import TacheConflictModal from '@/components/commandes/TacheConflictModal';
+import SEOHead from '@/components/SEOHead';
 
 const CommandesPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => {
   const logic = useCommandesLogic();
@@ -43,6 +44,7 @@ const CommandesPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =
 
   const content = (
     <>
+      <SEOHead title="Commandes" description="Gestion des commandes et réservations" />
       {/* Hero Header */}
       <CommandesHero />
 

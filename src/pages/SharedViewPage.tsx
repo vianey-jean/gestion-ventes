@@ -3,6 +3,7 @@ import { useParams, Navigate } from 'react-router-dom';
 import { Lock, Eye, StickyNote, Clock, ListTodo, KeyRound, ShieldAlert, CheckCircle } from 'lucide-react';
 import shareLinksApi from '@/services/api/shareLinksApi';
 import { getDrawingUrl } from '@/services/api/noteApi';
+import SEOHead from '@/components/SEOHead';
 
 const SharedViewPage: React.FC = () => {
   const { token } = useParams<{ token: string }>();
@@ -103,6 +104,7 @@ const SharedViewPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-100 to-gray-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-950 select-none"
       onContextMenu={e => e.preventDefault()}>
+      <SEOHead title="Données partagées" description="Consultation des données partagées" noindex />
       {/* Header */}
       <div className="sticky top-0 z-50 backdrop-blur-xl bg-white/70 dark:bg-gray-900/70 border-b border-gray-200/50 dark:border-gray-700/50">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">

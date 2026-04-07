@@ -20,6 +20,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Calendar, List } from 'lucide-react';
 import { parseISO, isSameMonth } from 'date-fns';
 import PremiumLoading from '@/components/ui/premium-loading';
+import SEOHead from '@/components/SEOHead';
 
 // Composants extraits
 import { RdvHero, RdvPageStatsCards, RdvSearchBar, RdvListView } from '@/pages/rdv';
@@ -218,6 +219,7 @@ const RdvPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => {
 
   const content = (
     <>
+      <SEOHead title="Rendez-vous" description="Gestion des rendez-vous clients" />
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-purple-50/30 dark:from-slate-900 dark:via-purple-950/30 dark:to-indigo-950/50">
         {/* Hero */}
         <RdvHero onNewRdv={() => handleOpenForm()} />

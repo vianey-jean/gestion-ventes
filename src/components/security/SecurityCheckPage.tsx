@@ -246,7 +246,7 @@ const SecurityCheckPage: React.FC<SecurityCheckPageProps> = ({ onVerified }) => 
               <motion.div key="challenge" className="space-y-5">
 
                 <p className="text-sm text-white/60 text-center">
-                  Glissez l'étoile <span className="text-red-400 font-bold">rouge</span> sur l'étoile <span className="text-gray-300 font-bold">blanche</span>
+                  Glissez l'étoile <span className="text-red-400 font-bold">Rouge</span> sur l'étoile <span className="text-gray-300 font-bold">Blanche</span>
                 </p>
 
                 <div

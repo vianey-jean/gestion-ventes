@@ -32,6 +32,7 @@ import {
 } from '@/components/ui/table';
 import PhotoUploadSection from '@/components/dashboard/PhotoUploadSection';
 import EditProductForm from '@/components/dashboard/EditProductForm';
+import SEOHead from '@/components/SEOHead';
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://server-gestion-ventes.onrender.com';
 
@@ -277,6 +278,7 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
 
   const content = (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-violet-50/30 to-fuchsia-50/20 dark:from-[#030014] dark:via-[#0a0025] dark:to-[#0e0030]">
+      <SEOHead title="Produits" description="Gestion des produits - Inventaire et catalogue" />
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-violet-50/30 to-fuchsia-50/20 dark:from-[#030014] dark:via-[#0a0025] dark:to-[#0e0030]">
         {/* Hero */}
         <div className="relative overflow-hidden">

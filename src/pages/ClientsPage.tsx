@@ -24,6 +24,7 @@ import Layout from '@/components/Layout';
 import PremiumLoading from '@/components/ui/premium-loading';
 import ClientPhotoZoomModal from '@/components/clients/ClientPhotoZoomModal';
 import { motion } from "framer-motion";
+import SEOHead from '@/components/SEOHead';
 
 // Sous-composants décomposés
 import { ClientHero, ClientSearchSection } from './clients';
@@ -247,6 +248,7 @@ const ClientsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => 
   // =========================================================================
   const mainContent = (
     <>
+    <SEOHead title="Clients" description="Gestion des clients - Liste et suivi des clients" />
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-purple-50/30 to-indigo-50/50 dark:from-[#030014] dark:via-[#0a0020]/80 dark:to-[#0e0030]">
       {!embedded && <Navbar />}
       {!embedded && <ScrollToTop />}

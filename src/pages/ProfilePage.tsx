@@ -28,6 +28,7 @@ import ProfileCard from '@/components/profile/ProfileCard';
 import ProfileInfoCard from '@/components/profile/ProfileInfoCard';
 import PasswordSection from '@/components/profile/PasswordSection';
 import { Button } from '@/components/ui/button';
+import SEOHead from '@/components/SEOHead';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -167,6 +168,7 @@ const ProfilePage: React.FC = () => {
 
   return (
     <Layout>
+      <SEOHead title="Profil" description="Gestion du profil utilisateur" />
       {/* Animation CSS pour les anneaux pulsants verts autour de l'avatar */}
       <style>{`
         @keyframes greenPulse {

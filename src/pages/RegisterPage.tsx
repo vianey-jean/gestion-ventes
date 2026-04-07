@@ -14,6 +14,7 @@ import Layout from '@/components/Layout';
 import PremiumLoading from '@/components/ui/premium-loading';
 import { UserPlus, Mail, User, Phone, MapPin, Shield, Sparkles, Crown, Fingerprint, KeyRound, Star, BarChart3, Users, Package, TrendingUp } from 'lucide-react';
 import { motion } from 'framer-motion';
+import SEOHead from '@/components/SEOHead';
 
 const RegisterPage: React.FC = () => {
   const navigate = useNavigate();
@@ -257,6 +258,7 @@ const RegisterPage: React.FC = () => {
 
   return (
     <Layout>
+      <SEOHead title="Inscription" description="Créer un compte sur Gestion Vente" />
       <div className="min-h-screen relative flex items-center justify-center p-4 py-12 overflow-hidden">
        {/* Ultra-luxe animated background */}
         <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-purple-950 to-indigo-950" />
