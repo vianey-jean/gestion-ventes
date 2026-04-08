@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MessageCircle, X, Send, Loader2, ChevronLeft, Users, Smile, Heart, Pencil, Trash2, Check, XCircle, UserCheck, AlertTriangle } from 'lucide-react';
+import { MessageCircle, X, Send, Loader2, ChevronLeft, Users, Smile, Heart, Pencil, Trash2, Check, XCircle, UserCheck, AlertTriangle, Plus, UsersRound, Edit3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/contexts/AuthContext';
@@ -81,7 +81,33 @@ interface AdminConversation {
   unreadCount: number;
 }
 
-type TabType = 'visitors' | 'admins';
+interface GroupMember {
+  id: string;
+  name: string;
+  role: string;
+}
+
+interface GroupChat {
+  id: string;
+  name: string;
+  createdBy: string;
+  members: GroupMember[];
+  createdAt: string;
+  lastMessage?: GroupMessage | null;
+  unreadCount?: number;
+}
+
+interface GroupMessage {
+  id: string;
+  groupId: string;
+  senderId: string;
+  senderName: string;
+  contenu: string;
+  date: string;
+  readBy: string[];
+}
+
+type TabType = 'visitors' | 'admins' | 'groups';
 
 const LiveChatAdmin: React.FC = () => {
   const { user, isAuthenticated } = useAuth();
@@ -112,6 +138,19 @@ const LiveChatAdmin: React.FC = () => {
   const [contextMenuId, setContextMenuId] = useState<string | null>(null);
   const [adminDeleteConfirm, setAdminDeleteConfirm] = useState<{ msgId: string; type: 'own' | 'other' } | null>(null);
   const [notifications, setNotifications] = useState<ChatNotifItem[]>([]);
+  
+  // Group chat state
+  const [groups, setGroups] = useState<GroupChat[]>([]);
+  const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
+  const [groupMessages, setGroupMessages] = useState<GroupMessage[]>([]);
+  const [groupUnread, setGroupUnread] = useState(0);
+  const [showCreateGroup, setShowCreateGroup] = useState(false);
+  const [newGroupName, setNewGroupName] = useState('');
+  const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
+  const [groupTyping, setGroupTyping] = useState<Record<string, { senderId: string; senderName: string }>>({});
+  const [renamingGroup, setRenamingGroup] = useState<string | null>(null);
+  const [renameText, setRenameText] = useState('');
+  
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const eventSourceRef = useRef<EventSource | null>(null);
@@ -119,13 +158,16 @@ const LiveChatAdmin: React.FC = () => {
   
   const selectedConvRef = useRef<string | null>(null);
   const selectedAdminRef = useRef<string | null>(null);
+  const selectedGroupRef = useRef<string | null>(null);
   const messagesRef = useRef<ChatMessage[]>([]);
   const adminTypingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const groupTypingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isOpenRef = useRef(false);
 
   useEffect(() => { isOpenRef.current = isOpen; }, [isOpen]);
   useEffect(() => { selectedConvRef.current = selectedConv; }, [selectedConv]);
   useEffect(() => { selectedAdminRef.current = selectedAdmin; }, [selectedAdmin]);
+  useEffect(() => { selectedGroupRef.current = selectedGroup; }, [selectedGroup]);
   useEffect(() => { messagesRef.current = messages; }, [messages]);
 
   const addNotification = useCallback((sender: string, message: string, id?: string) => {
@@ -236,6 +278,79 @@ const LiveChatAdmin: React.FC = () => {
     }
   }, [user, token, loadAdminConversations]);
 
+  // ========== GROUP CHAT FUNCTIONS ==========
+  const loadGroups = useCallback(async () => {
+    if (!user) return;
+    try {
+      const res = await fetch(`${API_BASE}/api/messagerie/groups`, { headers: authHeaders });
+      if (res.ok) {
+        const data = await res.json();
+        setGroups(data);
+        setGroupUnread(data.reduce((sum: number, g: GroupChat) => sum + (g.unreadCount || 0), 0));
+      }
+    } catch (e) {
+      console.error('Error loading groups:', e);
+    }
+  }, [user, token]);
+
+  const loadGroupMessages = useCallback(async (groupId: string) => {
+    if (!user) return;
+    try {
+      const res = await fetch(`${API_BASE}/api/messagerie/group-messages/${groupId}`, { headers: authHeaders });
+      if (res.ok) {
+        const data = await res.json();
+        setGroupMessages(data);
+        fetch(`${API_BASE}/api/messagerie/group-mark-read/${groupId}`, {
+          method: 'PUT', headers: authHeaders
+        }).then(() => loadGroups()).catch(() => {});
+      }
+    } catch (e) {
+      console.error('Error loading group messages:', e);
+    }
+  }, [user, token]);
+
+  const createGroup = async () => {
+    if (!newGroupName.trim() || selectedMembers.length < 2) return;
+    try {
+      const res = await fetch(`${API_BASE}/api/messagerie/group/create`, {
+        method: 'POST', headers: authHeaders,
+        body: JSON.stringify({ name: newGroupName.trim(), memberIds: selectedMembers })
+      });
+      if (res.ok) {
+        const group = await res.json();
+        setGroups(prev => [group, ...prev]);
+        setShowCreateGroup(false);
+        setNewGroupName('');
+        setSelectedMembers([]);
+      }
+    } catch (e) {
+      console.error('Error creating group:', e);
+    }
+  };
+
+  const renameGroup = async (groupId: string) => {
+    if (!renameText.trim()) return;
+    try {
+      await fetch(`${API_BASE}/api/messagerie/group/rename/${groupId}`, {
+        method: 'PUT', headers: authHeaders,
+        body: JSON.stringify({ name: renameText.trim() })
+      });
+      setRenamingGroup(null);
+      setRenameText('');
+      loadGroups();
+    } catch (e) {
+      console.error('Error renaming group:', e);
+    }
+  };
+
+  const sendGroupTypingIndicator = (isTyping: boolean) => {
+    if (!selectedGroup || !user) return;
+    fetch(`${API_BASE}/api/messagerie/group-typing`, {
+      method: 'POST', headers: authHeaders,
+      body: JSON.stringify({ groupId: selectedGroup, isTyping })
+    }).catch(() => {});
+  };
+
   const scheduleSidebarRefresh = useCallback(() => {
     if (refreshTimeoutRef.current) return;
 
@@ -244,8 +359,9 @@ const LiveChatAdmin: React.FC = () => {
       loadConversations();
       loadAdminUsers();
       loadAdminConversations();
+      loadGroups();
     }, 250);
-  }, [loadConversations, loadAdminUsers, loadAdminConversations]);
+  }, [loadConversations, loadAdminUsers, loadAdminConversations, loadGroups]);
 
 
   // ========== SSE & POLLING ==========
@@ -254,6 +370,7 @@ const LiveChatAdmin: React.FC = () => {
     loadConversations();
     loadAdminUsers();
     loadAdminConversations();
+    loadGroups();
 
     const es = new EventSource(`${API_BASE}/api/messagerie/events?adminId=${user.id}`);
     eventSourceRef.current = es;
@@ -373,6 +490,45 @@ const LiveChatAdmin: React.FC = () => {
       } catch {}
     });
 
+    // Group chat events
+    es.addEventListener('group_message', (e) => {
+      try {
+        const msg: GroupMessage = JSON.parse(e.data);
+        if (selectedGroupRef.current === msg.groupId) {
+          setGroupMessages(prev => prev.find(m => m.id === msg.id) ? prev : [...prev, msg]);
+          if (msg.senderId !== user.id) {
+            fetch(`${API_BASE}/api/messagerie/group-mark-read/${msg.groupId}`, {
+              method: 'PUT', headers: authHeaders
+            }).catch(() => {});
+          }
+        }
+        if (msg.senderId !== user.id && (!isOpenRef.current || selectedGroupRef.current !== msg.groupId)) {
+          addNotification(msg.senderName, msg.contenu, msg.id);
+        }
+        scheduleSidebarRefresh();
+      } catch {}
+    });
+
+    es.addEventListener('group_created', () => {
+      loadGroups();
+    });
+
+    es.addEventListener('group_updated', () => {
+      loadGroups();
+    });
+
+    es.addEventListener('group_typing', (e) => {
+      try {
+        const data = JSON.parse(e.data);
+        if (data.senderId !== user.id) {
+          setGroupTyping(prev => ({ ...prev, [data.groupId]: data.isTyping ? { senderId: data.senderId, senderName: data.senderName } : undefined as any }));
+          if (!data.isTyping) {
+            setGroupTyping(prev => { const n = { ...prev }; delete n[data.groupId]; return n; });
+          }
+        }
+      } catch {}
+    });
+
     es.onerror = () => {
       console.debug('SSE messagerie reconnecting...');
     };
@@ -390,19 +546,28 @@ const LiveChatAdmin: React.FC = () => {
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, adminMessages, visitorTyping, adminTyping]);
+  }, [messages, adminMessages, groupMessages, visitorTyping, adminTyping, groupTyping]);
 
   // ========== VISITOR CHAT HANDLERS ==========
   const openConversation = (visitorId: string) => {
     setSelectedConv(visitorId);
     setSelectedAdmin(null);
+    setSelectedGroup(null);
     loadMessages(visitorId);
   };
 
   const openAdminChat = (adminId: string) => {
     setSelectedAdmin(adminId);
     setSelectedConv(null);
+    setSelectedGroup(null);
     loadAdminMessages(adminId);
+  };
+
+  const openGroupChat = (groupId: string) => {
+    setSelectedGroup(groupId);
+    setSelectedConv(null);
+    setSelectedAdmin(null);
+    loadGroupMessages(groupId);
   };
 
   const handleSend = async () => {
@@ -445,6 +610,24 @@ const LiveChatAdmin: React.FC = () => {
           loadConversations();
         }
       } catch (e) { console.error('Error sending:', e); }
+      finally { setIsSending(false); }
+    } else if (selectedGroup) {
+      // Group message
+      setIsSending(true);
+      try {
+        const res = await fetch(`${API_BASE}/api/messagerie/group-send`, {
+          method: 'POST', headers: authHeaders,
+          body: JSON.stringify({ groupId: selectedGroup, contenu: input.trim() })
+        });
+        if (res.ok) {
+          const msg = await res.json();
+          setGroupMessages(prev => prev.find(m => m.id === msg.id) ? prev : [...prev, msg]);
+          setInput('');
+          setShowEmojis(false);
+          sendGroupTypingIndicator(false);
+          loadGroups();
+        }
+      } catch (e) { console.error('Error sending group message:', e); }
       finally { setIsSending(false); }
     }
   };
@@ -537,6 +720,11 @@ const LiveChatAdmin: React.FC = () => {
       if (adminTypingTimeoutRef.current) clearTimeout(adminTypingTimeoutRef.current);
       adminTypingTimeoutRef.current = setTimeout(() => sendAdminTypingIndicator(false), 2000);
     }
+    if (activeTab === 'groups' && selectedGroup) {
+      sendGroupTypingIndicator(true);
+      if (groupTypingTimeoutRef.current) clearTimeout(groupTypingTimeoutRef.current);
+      groupTypingTimeoutRef.current = setTimeout(() => sendGroupTypingIndicator(false), 2000);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -545,8 +733,8 @@ const LiveChatAdmin: React.FC = () => {
 
   if (!isAuthenticated || !isAdmin) return null;
 
-  const allUnread = totalUnread + adminUnread;
-  const isInChat = selectedConv || selectedAdmin;
+  const allUnread = totalUnread + adminUnread + groupUnread;
+  const isInChat = selectedConv || selectedAdmin || selectedGroup;
 
   if (!isOpen) {
     return (
@@ -554,11 +742,11 @@ const LiveChatAdmin: React.FC = () => {
         <ChatNotificationBanner
           notifications={notifications}
           onDismiss={dismissNotification}
-          onClick={() => { setIsOpen(true); setNotifications([]); loadConversations(); loadAdminUsers(); loadAdminConversations(); }}
+          onClick={() => { setIsOpen(true); setNotifications([]); loadConversations(); loadAdminUsers(); loadAdminConversations(); loadGroups(); }}
         />
         <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="fixed bottom-6 right-6 z-[9999]">
           <button
-            onClick={() => { setIsOpen(true); setNotifications([]); loadConversations(); loadAdminUsers(); loadAdminConversations(); }}
+            onClick={() => { setIsOpen(true); setNotifications([]); loadConversations(); loadAdminUsers(); loadAdminConversations(); loadGroups(); }}
             className="relative p-4 bg-gradient-to-br from-violet-600 to-fuchsia-600 rounded-full shadow-[0_8px_30px_rgba(139,92,246,0.5)] hover:scale-110 transition-transform"
           >
             <MessageCircle className="h-6 w-6 text-white" />
@@ -576,18 +764,23 @@ const LiveChatAdmin: React.FC = () => {
   const activeConversationId = selectedConv || null;
   const selectedConversation = conversations.find(c => c.visitorId === activeConversationId);
   const selectedAdminUser = adminUsers.find(a => a.id === selectedAdmin);
+  const selectedGroupData = groups.find(g => g.id === selectedGroup);
 
   const headerTitle = selectedConversation
     ? selectedConversation.visitorNom
     : selectedAdminUser
       ? `${selectedAdminUser.firstName} ${selectedAdminUser.lastName}`
-      : 'Messagerie Live';
+      : selectedGroupData
+        ? selectedGroupData.name
+        : 'Messagerie Live';
   
   const headerSubtitle = selectedConv
     ? (visitorTyping[selectedConv] ? 'En train d\'écrire...' : 'En ligne')
     : selectedAdmin
       ? (selectedAdmin && adminTyping[selectedAdmin] ? 'En train d\'écrire...' : selectedAdminUser?.online ? '🟢 En ligne' : '🔴 Hors ligne')
-      : `${conversations.length} visiteur${conversations.length > 1 ? 's' : ''} · ${adminUsers.length} admin${adminUsers.length > 1 ? 's' : ''}`;
+      : selectedGroup
+        ? (groupTyping[selectedGroup] ? `${groupTyping[selectedGroup].senderName} écrit...` : `${selectedGroupData?.members.length || 0} membres`)
+        : `${conversations.length} visiteur${conversations.length > 1 ? 's' : ''} · ${adminUsers.length} admin${adminUsers.length > 1 ? 's' : ''}`;
 
   return (
     <motion.div
@@ -600,7 +793,7 @@ const LiveChatAdmin: React.FC = () => {
       <div className="bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 px-5 py-4 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3">
           {isInChat && (
-            <button onClick={() => { setSelectedConv(null); setSelectedAdmin(null); setMessages([]); setAdminMessages([]); }} className="p-1.5 hover:bg-white/10 rounded-lg transition-colors">
+            <button onClick={() => { setSelectedConv(null); setSelectedAdmin(null); setSelectedGroup(null); setMessages([]); setAdminMessages([]); setGroupMessages([]); }} className="p-1.5 hover:bg-white/10 rounded-lg transition-colors">
               <ChevronLeft className="h-5 w-5 text-white" />
             </button>
           )}
@@ -653,6 +846,23 @@ const LiveChatAdmin: React.FC = () => {
               )}
             </div>
             {activeTab === 'admins' && <div className="absolute bottom-0 left-2 right-2 h-0.5 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full" />}
+          </button>
+          <button
+            onClick={() => setActiveTab('groups')}
+            className={`flex-1 py-2.5 text-xs font-semibold transition-colors relative ${
+              activeTab === 'groups' ? 'text-white' : 'text-purple-300/50 hover:text-purple-200/70'
+            }`}
+          >
+            <div className="flex items-center justify-center gap-1.5">
+              <UsersRound className="h-3.5 w-3.5" />
+              Groupes
+              {groupUnread > 0 && (
+                <span className="min-w-[16px] h-4 bg-red-500 rounded-full text-white text-[10px] flex items-center justify-center px-1 animate-pulse">
+                  {groupUnread}
+                </span>
+              )}
+            </div>
+            {activeTab === 'groups' && <div className="absolute bottom-0 left-2 right-2 h-0.5 bg-gradient-to-r from-amber-500 to-orange-500 rounded-full" />}
           </button>
         </div>
       )}
@@ -714,7 +924,7 @@ const LiveChatAdmin: React.FC = () => {
                 </button>
               ))
             )
-          ) : (
+          ) : activeTab === 'admins' ? (
             /* Admin users list */
             adminUsers.length === 0 ? (
               <div className="text-center text-purple-300/40 text-sm mt-16">
@@ -781,6 +991,139 @@ const LiveChatAdmin: React.FC = () => {
                 );
               })
             )
+          ) : (
+            /* Groups list */
+            <>
+              {user?.role === 'administrateur principale' && (
+                <button
+                  onClick={() => setShowCreateGroup(true)}
+                  className="w-full px-5 py-3 flex items-center gap-3 hover:bg-white/[0.04] transition-colors border-b border-white/[0.06] text-left"
+                >
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-500/30 to-orange-500/30 border border-dashed border-amber-500/30 flex items-center justify-center">
+                    <Plus className="h-5 w-5 text-amber-400" />
+                  </div>
+                  <span className="text-amber-400 font-semibold text-sm">Créer un groupe</span>
+                </button>
+              )}
+              {groups.length === 0 ? (
+                <div className="text-center text-purple-300/40 text-sm mt-12">
+                  <UsersRound className="h-12 w-12 mx-auto mb-3 opacity-30" />
+                  Aucun groupe
+                </div>
+              ) : (
+                groups.map((group) => (
+                  <button
+                    key={group.id}
+                    onClick={() => { setActiveTab('groups'); openGroupChat(group.id); }}
+                    className="w-full px-5 py-4 flex items-center gap-3 hover:bg-white/[0.04] transition-colors border-b border-white/[0.04] text-left"
+                  >
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-500/30 to-orange-500/30 border border-white/[0.08] flex items-center justify-center text-white font-bold text-sm shrink-0">
+                      <UsersRound className="h-5 w-5 text-amber-400" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <span className="text-white font-semibold text-sm truncate">{group.name}</span>
+                        {group.lastMessage && (
+                          <span className="text-purple-300/30 text-[10px] shrink-0 ml-2">
+                            {new Date(group.lastMessage.date).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center justify-between mt-0.5">
+                        <span className="text-purple-300/40 text-xs truncate">
+                          {group.lastMessage
+                            ? `${group.lastMessage.senderId === user?.id ? 'Vous' : group.lastMessage.senderName.split(' ')[0]} : ${group.lastMessage.contenu}`
+                            : `${group.members.length} membres`}
+                        </span>
+                        {(group.unreadCount || 0) > 0 && (
+                          <span className="min-w-[18px] h-[18px] bg-red-500 rounded-full text-white text-[10px] flex items-center justify-center px-1 shrink-0 ml-2 animate-pulse">
+                            {group.unreadCount}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </button>
+                ))
+              )}
+
+              {/* Create Group Modal */}
+              <AnimatePresence>
+                {showCreateGroup && (
+                  <motion.div
+                    initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                    className="absolute inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
+                    onClick={() => setShowCreateGroup(false)}
+                  >
+                    <motion.div
+                      initial={{ scale: 0.9 }} animate={{ scale: 1 }} exit={{ scale: 0.9 }}
+                      className="bg-slate-800 border border-white/[0.1] rounded-2xl p-5 max-w-[340px] w-full shadow-2xl max-h-[400px] flex flex-col"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <h3 className="text-white font-bold text-sm mb-3 flex items-center gap-2">
+                        <UsersRound className="h-4 w-4 text-amber-400" />
+                        Créer un groupe
+                      </h3>
+                      <Input
+                        value={newGroupName}
+                        onChange={(e) => setNewGroupName(e.target.value)}
+                        placeholder="Nom du groupe..."
+                        className="mb-3 h-10 bg-white/[0.05] border-white/[0.08] text-white placeholder:text-purple-300/30 rounded-xl text-sm"
+                      />
+                      <p className="text-purple-200/60 text-[11px] mb-2">Sélectionner au moins 2 membres :</p>
+                      <div className="flex-1 overflow-y-auto space-y-1 mb-3">
+                        {adminUsers.map(admin => (
+                          <label key={admin.id} className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white/[0.04] cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={selectedMembers.includes(admin.id)}
+                              onChange={(e) => {
+                                if (e.target.checked) setSelectedMembers(prev => [...prev, admin.id]);
+                                else setSelectedMembers(prev => prev.filter(id => id !== admin.id));
+                              }}
+                              className="rounded border-white/20"
+                            />
+                            <span className="text-white text-xs">{admin.firstName} {admin.lastName}</span>
+                            <span className={`text-[9px] ml-auto px-1.5 py-0.5 rounded-full ${
+                              admin.role === 'administrateur principale' 
+                                ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                                : 'bg-slate-500/10 text-slate-400 border border-slate-500/20'
+                            }`}>
+                              {admin.role === 'administrateur principale' ? 'Principal' : 'Admin'}
+                            </span>
+                          </label>
+                        ))}
+                        {/* Also show visitor conversations as potential members */}
+                        {conversations.map(conv => (
+                          <label key={conv.visitorId} className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white/[0.04] cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={selectedMembers.includes(conv.visitorId)}
+                              onChange={(e) => {
+                                if (e.target.checked) setSelectedMembers(prev => [...prev, conv.visitorId]);
+                                else setSelectedMembers(prev => prev.filter(id => id !== conv.visitorId));
+                              }}
+                              className="rounded border-white/20"
+                            />
+                            <span className="text-white text-xs">{conv.visitorNom}</span>
+                            <span className="text-[9px] ml-auto px-1.5 py-0.5 rounded-full bg-violet-500/10 text-violet-400 border border-violet-500/20">Visiteur</span>
+                          </label>
+                        ))}
+                      </div>
+                      <div className="flex gap-2">
+                        <button onClick={() => { setShowCreateGroup(false); setNewGroupName(''); setSelectedMembers([]); }}
+                          className="flex-1 py-2 px-3 rounded-xl bg-white/[0.06] text-purple-200 text-xs font-semibold hover:bg-white/[0.1] transition-colors border border-white/[0.08]">
+                          Annuler
+                        </button>
+                        <button onClick={createGroup} disabled={!newGroupName.trim() || selectedMembers.length < 2}
+                          className="flex-1 py-2 px-3 rounded-xl bg-amber-500 text-white text-xs font-semibold hover:bg-amber-600 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+                          Créer ({selectedMembers.length + 1} membres)
+                        </button>
+                      </div>
+                    </motion.div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </>
           )}
         </div>
       ) : selectedAdmin ? (
@@ -928,6 +1271,131 @@ const LiveChatAdmin: React.FC = () => {
               </motion.div>
             )}
           </AnimatePresence>
+        </>
+      ) : selectedGroup ? (
+        /* Group chat messages */
+        <>
+          <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-gradient-to-b from-slate-900 via-slate-900/95 to-slate-950">
+            {/* Group name with rename option */}
+            {user?.role === 'administrateur principale' && (
+              <div className="flex items-center justify-center gap-2 mb-2">
+                {renamingGroup === selectedGroup ? (
+                  <div className="flex items-center gap-1">
+                    <Input
+                      value={renameText}
+                      onChange={(e) => setRenameText(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') renameGroup(selectedGroup); if (e.key === 'Escape') setRenamingGroup(null); }}
+                      className="h-7 text-xs bg-white/[0.08] border-purple-400/30 text-white rounded-lg w-40"
+                      autoFocus
+                    />
+                    <button onClick={() => renameGroup(selectedGroup)} className="p-1 text-emerald-400 hover:bg-white/10 rounded"><Check className="h-3.5 w-3.5" /></button>
+                    <button onClick={() => setRenamingGroup(null)} className="p-1 text-red-400 hover:bg-white/10 rounded"><XCircle className="h-3.5 w-3.5" /></button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => { setRenamingGroup(selectedGroup); setRenameText(selectedGroupData?.name || ''); }}
+                    className="flex items-center gap-1 text-[10px] text-purple-300/40 hover:text-purple-200/60 transition-colors"
+                  >
+                    <Edit3 className="h-3 w-3" /> Renommer
+                  </button>
+                )}
+              </div>
+            )}
+            {/* Members list */}
+            <div className="flex flex-wrap gap-1 justify-center mb-3">
+              {selectedGroupData?.members.map(m => (
+                <span key={m.id} className="text-[9px] px-2 py-0.5 rounded-full bg-white/[0.06] text-purple-200/60 border border-white/[0.06]">
+                  {m.id === user?.id ? 'Vous' : m.name.split(' ')[0]}
+                </span>
+              ))}
+            </div>
+
+            {groupMessages.length === 0 && (
+              <div className="text-center text-purple-300/40 text-sm mt-8">
+                <UsersRound className="h-12 w-12 mx-auto mb-3 opacity-30" />
+                Commencer la discussion de groupe
+              </div>
+            )}
+            {groupMessages.map((msg) => {
+              const isOwn = msg.senderId === user?.id;
+              return (
+                <motion.div
+                  key={msg.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}
+                >
+                  <div className="max-w-[80%]">
+                    {!isOwn && (
+                      <div className="text-[10px] text-amber-400 font-semibold mb-1 ml-1">
+                        {msg.senderName.split(' ')[0]}
+                      </div>
+                    )}
+                    <div className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
+                      isOwn
+                        ? 'bg-gradient-to-br from-violet-600 to-fuchsia-600 text-white rounded-br-md'
+                        : 'bg-white/[0.08] text-purple-100 border border-white/[0.06] rounded-bl-md'
+                    }`}>
+                      {msg.contenu}
+                      <div className={`text-[10px] mt-1 ${isOwn ? 'text-purple-200/50' : 'text-purple-300/30'}`}>
+                        {new Date(msg.date).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
+
+            <AnimatePresence>
+              {selectedGroup && groupTyping[selectedGroup] && (
+                <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="flex justify-start">
+                  <div>
+                    <div className="text-[10px] text-amber-400 mb-1 ml-1">{groupTyping[selectedGroup].senderName.split(' ')[0]}</div>
+                    <div className="bg-white/[0.08] border border-white/[0.06] rounded-2xl rounded-bl-md px-4 py-3 flex gap-1.5">
+                      <span className="w-2.5 h-2.5 bg-amber-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                      <span className="w-2.5 h-2.5 bg-amber-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                      <span className="w-2.5 h-2.5 bg-amber-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* Emoji picker */}
+          <AnimatePresence>
+            {showEmojis && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }}
+                className="bg-slate-800/95 backdrop-blur border-t border-white/[0.06] px-3 py-2 shrink-0"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="flex flex-wrap gap-1">
+                  {EMOJI_LIST.map((emoji) => (
+                    <button key={emoji} onClick={() => { setInput(prev => prev + emoji); setShowEmojis(false); }}
+                      className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10 text-lg transition-colors">{emoji}</button>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Input */}
+          <div className="p-3 bg-slate-900/90 backdrop-blur border-t border-white/[0.06] shrink-0">
+            <div className="flex items-center gap-2">
+              <button onClick={(e) => { e.stopPropagation(); setShowEmojis(!showEmojis); }}
+                className="h-11 w-11 shrink-0 flex items-center justify-center rounded-xl bg-white/[0.05] hover:bg-white/[0.1] border border-white/[0.08] transition-colors">
+                <Smile className="h-5 w-5 text-purple-300/60" />
+              </button>
+              <Input value={input} onChange={handleInputChange} onKeyDown={handleKeyDown} placeholder="Message au groupe..."
+                className="flex-1 h-11 bg-white/[0.05] border-white/[0.08] text-white placeholder:text-purple-300/30 rounded-xl focus:bg-white/[0.08] focus:border-purple-400/30" />
+              <Button onClick={handleSend} disabled={!input.trim() || isSending}
+                className="h-11 w-11 p-0 bg-gradient-to-br from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 rounded-xl shadow-lg border border-white/10">
+                {isSending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+              </Button>
+            </div>
+          </div>
         </>
       ) : (
         /* Visitor chat messages */
