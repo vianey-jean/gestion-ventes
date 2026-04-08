@@ -76,22 +76,44 @@ const AvanceModal: React.FC<AvanceModalProps> = ({
             pointageApi.getByMonth(currentYear, currentMonth),
             avanceApi.getByTravailleur(travId, currentMonth, currentYear)
           ]);
+
           let pts = ptRes.data.filter((p: any) => p.travailleurId === travId);
           if (entrepriseId) pts = pts.filter((p: any) => p.entrepriseId === entrepriseId);
+
           const total = pts.reduce((s: number, p: any) => s + p.montantTotal, 0);
-          const totalAv = avRes.data.reduce((s: number, a: any) => s + a.montant, 0);
+
+          // ✅ CORRECTION ICI
+          let avances = avRes.data;
+          if (entrepriseId && entrepriseId !== "all") {
+            avances = avances.filter((a: any) => a.entrepriseId === entrepriseId);
+          }
+          const totalAv = avances.reduce((s: number, a: any) => s + a.montant, 0);
+
           setTotalPointage(total);
           setTotalAvancesDejaRecues(totalAv);
+
         } else {
           const [ptRes, avAllRes] = await Promise.all([
             pointageApi.getByYear(currentYear),
             avanceApi.getAll()
           ]);
+
           let pts = ptRes.data.filter((p: any) => p.travailleurId === travId);
           if (entrepriseId) pts = pts.filter((p: any) => p.entrepriseId === entrepriseId);
+
           const total = pts.reduce((s: number, p: any) => s + p.montantTotal, 0);
-          const yearAvances = avAllRes.data.filter((a: any) => a.travailleurId === travId && a.annee === currentYear);
+
+          // ✅ CORRECTION ICI
+          let yearAvances = avAllRes.data.filter(
+            (a: any) => a.travailleurId === travId && a.annee === currentYear
+          );
+
+          if (entrepriseId && entrepriseId !== "all") {
+            yearAvances = yearAvances.filter((a: any) => a.entrepriseId === entrepriseId);
+          }
+
           const totalAv = yearAvances.reduce((s: number, a: any) => s + a.montant, 0);
+
           setTotalPointage(total);
           setTotalAvancesDejaRecues(totalAv);
         }
