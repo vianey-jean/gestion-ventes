@@ -18,6 +18,7 @@ import settingsApi, { AppSettings } from '@/services/api/settingsApi';
 import api from '@/service/api';
 import IndisponibiliteSection from './IndisponibiliteSection';
 import ModuleSettingsSection from './ModuleSettingsSection';
+import BulkDeleteModal from './BulkDeleteModal';
 
 const premiumBtnClass = "group relative overflow-hidden rounded-xl sm:rounded-2xl backdrop-blur-xl border transition-all duration-300 hover:scale-105 px-4 py-2 sm:px-5 sm:py-3 text-xs sm:text-sm font-semibold";
 
@@ -67,6 +68,8 @@ const ParametresSection: React.FC<ParametresSectionProps> = ({ userRole }) => {
   const [restoreFile, setRestoreFile] = useState<any>(null);
   const [restoreFileName, setRestoreFileName] = useState('');
 
+  // Bulk delete modal state
+  const [showBulkDelete, setShowBulkDelete] = useState(false);
 
   // Auto-backup state
   const autoBackupTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -480,6 +483,20 @@ const ParametresSection: React.FC<ParametresSectionProps> = ({ userRole }) => {
             <ModuleSettingsSection />
           </div>
 
+          {/* BULK DELETE BUTTON - admin principale only */}
+          {isAdminPrincipal && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }} className="mt-6">
+              <Button
+                onClick={() => setShowBulkDelete(true)}
+                className="w-full group relative overflow-hidden rounded-2xl backdrop-blur-xl border border-red-300/30 bg-gradient-to-r from-red-500/10 via-rose-500/10 to-pink-500/10 text-red-600 dark:text-red-400 hover:from-red-500/20 hover:to-rose-500/20 hover:scale-[1.02] transition-all duration-300 px-5 py-3 text-sm font-bold shadow-lg shadow-red-500/5 hover:shadow-red-500/15"
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Supprimer des données
+                <span className="ml-2 text-[10px] px-2 py-0.5 rounded-full bg-red-500/15 text-red-500 font-mono">sélectif</span>
+              </Button>
+            </motion.div>
+          )}
+
           {/* ADMIN BUTTONS: Backup/Restore for both admin roles, Delete only for admin principale */}
           {isAdmin && (
             <motion.div
@@ -774,6 +791,9 @@ const ParametresSection: React.FC<ParametresSectionProps> = ({ userRole }) => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* BULK DELETE MODAL */}
+      <BulkDeleteModal open={showBulkDelete} onOpenChange={setShowBulkDelete} />
     </>
   );
 };
