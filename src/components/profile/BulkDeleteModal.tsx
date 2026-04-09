@@ -203,7 +203,7 @@ const BulkDeleteModal: React.FC<BulkDeleteModalProps> = ({ open, onOpenChange })
       return (
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium truncate">{item.description}</p>
-          <p className="text-xs text-muted-foreground">Stock: {item.quantity} • Achat: {item.purchasePrice?.toLocaleString()} Ar</p>
+          <p className="text-xs text-muted-foreground">Stock: {item.quantity} • Achat: {item.purchasePrice?.toLocaleString()} €</p>
         </div>
       );
     } else {
@@ -267,8 +267,15 @@ const BulkDeleteModal: React.FC<BulkDeleteModalProps> = ({ open, onOpenChange })
             {/* STEP 2: Filter (sales only) */}
             {step === 'choose-filter' && (
               <motion.div key="filter" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-3">
-                <button onClick={() => { setStep('choose-type'); setType(null); }} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors mb-2">
-                  <ChevronLeft className="w-3 h-3" /> Retour
+                <button
+                  onClick={() => {
+                    setStep('choose-type');
+                    setType(null);
+                  }}
+                  className="flex items-center gap-1 text-sm font-semibold text-green-600 hover:text-green-700 transition-colors mb-2"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  Retour
                 </button>
 
                 {!filterMode && (
@@ -324,13 +331,24 @@ const BulkDeleteModal: React.FC<BulkDeleteModalProps> = ({ open, onOpenChange })
             {/* STEP 3: Select items */}
             {step === 'select-items' && (
               <motion.div key="items" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col min-h-0 flex-1">
-                <button onClick={() => {
-                  if (type === 'sales') { setStep('choose-filter'); setFilterMode(null); setSelectedYear(null); setSelectedMonth(null); }
-                  else { setStep('choose-type'); setType(null); }
-                  setSelectedIds(new Set());
-                  setSearchTerm('');
-                }} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors mb-2">
-                  <ChevronLeft className="w-3 h-3" /> Retour
+                <button
+                  onClick={() => {
+                    if (type === 'sales') {
+                      setStep('choose-filter');
+                      setFilterMode(null);
+                      setSelectedYear(null);
+                      setSelectedMonth(null);
+                    } else {
+                      setStep('choose-type');
+                      setType(null);
+                    }
+                    setSelectedIds(new Set());
+                    setSearchTerm('');
+                  }}
+                  className="flex items-center gap-1 text-sm font-semibold text-green-600 hover:text-green-700 transition-colors mb-2"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  Retour
                 </button>
 
                 {/* Search bar */}
@@ -376,11 +394,10 @@ const BulkDeleteModal: React.FC<BulkDeleteModalProps> = ({ open, onOpenChange })
                       <button
                         key={item.id}
                         onClick={() => toggleSelect(item.id)}
-                        className={`w-full flex items-center gap-3 p-2.5 rounded-xl border transition-all duration-150 hover:scale-[1.01] ${
-                          selectedIds.has(item.id)
+                        className={`w-full flex items-center gap-3 p-2.5 rounded-xl border transition-all duration-150 hover:scale-[1.01] ${selectedIds.has(item.id)
                             ? 'border-red-300/50 bg-red-50/50 dark:bg-red-900/15 shadow-sm'
                             : 'border-border/20 bg-white/30 dark:bg-white/3 hover:bg-white/60 dark:hover:bg-white/8'
-                        }`}
+                          }`}
                       >
                         {selectedIds.has(item.id) ? (
                           <CheckSquare className="w-4 h-4 text-red-500 flex-shrink-0" />

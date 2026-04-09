@@ -491,8 +491,8 @@ const ParametresSection: React.FC<ParametresSectionProps> = ({ userRole }) => {
                 className="w-full group relative overflow-hidden rounded-2xl backdrop-blur-xl border border-red-300/30 bg-gradient-to-r from-red-500/10 via-rose-500/10 to-pink-500/10 text-red-600 dark:text-red-400 hover:from-red-500/20 hover:to-rose-500/20 hover:scale-[1.02] transition-all duration-300 px-5 py-3 text-sm font-bold shadow-lg shadow-red-500/5 hover:shadow-red-500/15"
               >
                 <Trash2 className="w-4 h-4 mr-2" />
-                Supprimer des données
-                <span className="ml-2 text-[10px] px-2 py-0.5 rounded-full bg-red-500/15 text-red-500 font-mono">sélectif</span>
+                Suppression des données
+                <span className="ml-2 text-[10px] px-2 py-0.5 rounded-full bg-red-500/15 text-red-500 font-mono">Sélectif</span>
               </Button>
             </motion.div>
           )}
