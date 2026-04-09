@@ -9,6 +9,7 @@ export interface Avance {
   montant: number;
   totalPointage: number;
   resteApresAvance: number;
+  pointageIds: string[];
   date: string;
   mois: number;
   annee: number;

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -33,7 +33,7 @@ const ParPersonneModal: React.FC<ParPersonneModalProps> = ({
   const [ppTravailleurNom, setPpTravailleurNom] = useState('');
   const [ppShowDropdown, setPpShowDropdown] = useState(false);
   const [ppResults, setPpResults] = useState<PointageEntry[]>([]);
-  const [ppAvances, setPpAvances] = useState<Avance[]>([]);
+  const [ppAllAvances, setPpAllAvances] = useState<Avance[]>([]);
   const [ppLoading, setPpLoading] = useState(false);
   const [ppSearched, setPpSearched] = useState(false);
   const ppDropdownRef = useRef<HTMLDivElement>(null);
@@ -44,7 +44,7 @@ const ParPersonneModal: React.FC<ParPersonneModalProps> = ({
       setPpTravailleurId('');
       setPpTravailleurNom('');
       setPpResults([]);
-      setPpAvances([]);
+      setPpAllAvances([]);
       setPpSearched(false);
     }
   }, [open]);
@@ -59,43 +59,112 @@ const ParPersonneModal: React.FC<ParPersonneModalProps> = ({
 
   const ppFilteredTravailleurs = ppTravSearch.length >= 3
     ? travailleurs.filter(t => {
-        const q = ppTravSearch.toLowerCase();
-        return `${t.prenom} ${t.nom}`.toLowerCase().includes(q) || `${t.nom} ${t.prenom}`.toLowerCase().includes(q);
-      })
+      const q = ppTravSearch.toLowerCase();
+      return `${t.prenom} ${t.nom}`.toLowerCase().includes(q) || `${t.nom} ${t.prenom}`.toLowerCase().includes(q);
+    })
     : [];
 
-  const handleSearch = async () => {
-    if (!ppTravailleurId) {
-      toast({ title: 'Erreur', description: 'Veuillez choisir une personne', variant: 'destructive' });
-      return;
-    }
+  // Core search function
+  const doSearch = useCallback(async (travId: string, month: number, year: number) => {
+    if (!travId) return;
     setPpLoading(true);
     try {
       const [ptRes, avRes] = await Promise.all([
-        pointageApi.getByMonth(ppYear, ppMonth),
-        avanceApi.getByTravailleur(ppTravailleurId, ppMonth, ppYear)
+        pointageApi.getByMonth(year, month),
+        avanceApi.getAll()
       ]);
-      const filtered = ptRes.data.filter((p: any) => p.travailleurId === ppTravailleurId);
+      const filtered = ptRes.data.filter((p: any) => p.travailleurId === travId);
+      const workerAvances = (avRes.data || []).filter((a: Avance) => a.travailleurId === travId);
       setPpResults(filtered);
-      setPpAvances(avRes.data);
+      setPpAllAvances(workerAvances);
       setPpSearched(true);
     } catch (err) {
       toast({ title: 'Erreur', variant: 'destructive' });
     } finally {
       setPpLoading(false);
     }
+  }, [toast]);
+
+  const handleSearch = () => {
+    if (!ppTravailleurId) {
+      toast({ title: 'Erreur', description: 'Veuillez choisir une personne', variant: 'destructive' });
+      return;
+    }
+    doSearch(ppTravailleurId, ppMonth, ppYear);
   };
 
-  const ppGroupedByEntreprise = ppResults.reduce((acc, p) => {
-    const key = p.entrepriseNom || p.entrepriseId;
-    if (!acc[key]) acc[key] = [];
-    acc[key].push(p);
-    return acc;
-  }, {} as Record<string, PointageEntry[]>);
+  // Auto-search when month/year changes AFTER first search
+  useEffect(() => {
+    if (ppSearched && ppTravailleurId) {
+      doSearch(ppTravailleurId, ppMonth, ppYear);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ppMonth, ppYear]);
+
+
+  // Filter avances by selected month/year from avance.json (mois & annee fields)
+  const ppAvancesForMonth = useMemo(() => {
+    return ppAllAvances.filter(a => a.mois === ppMonth && a.annee === ppYear);
+  }, [ppAllAvances, ppMonth, ppYear]);
+
+  // Group pointages by entreprise
+  const ppGroupedByEntreprise = useMemo(() => {
+    return ppResults.reduce((acc, p) => {
+      const key = p.entrepriseNom || p.entrepriseId;
+      if (!acc[key]) acc[key] = [];
+      acc[key].push(p);
+      return acc;
+    }, {} as Record<string, PointageEntry[]>);
+  }, [ppResults]);
+
+  // All pointage IDs that have been taken as avance
+  const takenPointageIds = useMemo(() => {
+    const ids = new Set<string>();
+    ppAllAvances.forEach(a => {
+      if (a.pointageIds && Array.isArray(a.pointageIds)) {
+        a.pointageIds.forEach(id => ids.add(id));
+      }
+    });
+    return ids;
+  }, [ppAllAvances]);
+
+  // Compute per-entreprise stats based on taken/not-taken pointages
+  const entrepriseStats = useMemo(() => {
+    const stats: Record<string, {
+      totalPointage: number;
+      pointagesTaken: number;
+      pointagesTotal: number;
+      totalAvance: number;
+      reste: number;
+    }> = {};
+
+    Object.entries(ppGroupedByEntreprise).forEach(([entName, pts]) => {
+      const totalPointage = pts.reduce((s, p) => s + p.montantTotal, 0);
+      const takenPts = pts.filter(p => takenPointageIds.has(p.id));
+      const notTakenPts = pts.filter(p => !takenPointageIds.has(p.id));
+      const totalAvance = takenPts.reduce((s, p) => s + p.montantTotal, 0);
+      const reste = notTakenPts.reduce((s, p) => s + p.montantTotal, 0);
+
+      stats[entName] = {
+        totalPointage,
+        pointagesTaken: takenPts.length,
+        pointagesTotal: pts.length,
+        totalAvance,
+        reste,
+      };
+    });
+
+    return stats;
+  }, [ppGroupedByEntreprise, takenPointageIds]);
 
   const ppGlobalTotal = ppResults.reduce((s, p) => s + p.montantTotal, 0);
-  const ppTotalAvances = ppAvances.reduce((s, a) => s + a.montant, 0);
-  const ppResteDisponible = Math.max(0, ppGlobalTotal - ppTotalAvances);
+  //const ppTotalAvances = Object.values(entrepriseStats).reduce((s, st) => s + st.totalAvance, 0);
+  const ppTotalAvances = useMemo(() => {
+    return ppAvancesForMonth.reduce((sum, a) => sum + a.montant, 0);
+  }, [ppAvancesForMonth]);
+
+  // Reste disponible
+  const ppResteDisponible = Object.values(entrepriseStats).reduce((s, st) => s + st.reste, 0);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -167,7 +236,7 @@ const ParPersonneModal: React.FC<ParPersonneModalProps> = ({
                 <div className="mt-2 flex items-center gap-2 px-3 py-2 rounded-lg bg-purple-500/10 border border-purple-500/20">
                   <User className="h-4 w-4 text-purple-400" />
                   <span className="text-sm font-bold text-purple-300">{ppTravailleurNom}</span>
-                  <button onClick={() => { setPpTravailleurId(''); setPpTravailleurNom(''); setPpTravSearch(''); }}
+                  <button onClick={() => { setPpTravailleurId(''); setPpTravailleurNom(''); setPpTravSearch(''); setPpSearched(false); }}
                     className="ml-auto text-white/50 hover:text-white"><X className="h-3 w-3" /></button>
                 </div>
               )}
@@ -196,19 +265,18 @@ const ParPersonneModal: React.FC<ParPersonneModalProps> = ({
                   </div>
 
                   {Object.entries(ppGroupedByEntreprise).map(([entName, pts]) => {
+                    const stats = entrepriseStats[entName];
+                    if (!stats) return null;
                     const totalHeures = pts.reduce((s, p) => s + (p.heures || 0), 0);
                     const totalJours = pts.filter(p => p.typePaiement === 'journalier').length;
-                    const totalEntreprise = pts.reduce((s, p) => s + p.montantTotal, 0);
-                    const entAvances = ppAvances.filter(a => a.entrepriseNom === entName);
-                    const entAvTotal = entAvances.reduce((s, a) => s + a.montant, 0);
-                    const entReste = Math.max(0, totalEntreprise - entAvTotal);
+
                     return (
                       <div key={entName} className="p-4 rounded-2xl bg-white/10 border border-white/10 backdrop-blur-xl">
                         <div className="flex items-center justify-between mb-3">
                           <h4 className="font-black text-white text-sm flex items-center gap-2">
                             <Building2 className="h-4 w-4 text-cyan-400" /> {entName}
                           </h4>
-                          <span className="text-lg font-black text-emerald-400">{totalEntreprise.toFixed(2)}€</span>
+                          <span className="text-lg font-black text-emerald-400">{stats.totalPointage.toFixed(2)}€</span>
                         </div>
                         <div className="grid grid-cols-2 gap-2 text-xs">
                           {totalJours > 0 && (
@@ -221,31 +289,40 @@ const ParPersonneModal: React.FC<ParPersonneModalProps> = ({
                               <p className="text-blue-400 font-bold">⏰ {totalHeures}h</p>
                             </div>
                           )}
+                          <div className="px-3 py-2 rounded-lg bg-purple-500/10 border border-purple-500/20">
+                            <p className="text-purple-400 font-bold">📋 {stats.pointagesTaken}/{stats.pointagesTotal} pris en avance</p>
+                          </div>
                         </div>
                         <div className="mt-3 space-y-1">
-                          {pts.map(p => (
-                            <div key={p.id} className="flex justify-between text-xs text-white/70 px-2 py-1 rounded bg-white/5">
-                              <span>{new Date(p.date + 'T00:00:00').toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}</span>
-                              <span>{p.typePaiement === 'journalier' ? `${p.prixJournalier}€/jour` : `${p.heures}h × ${p.prixHeure}€`}</span>
-                              <span className="font-bold text-emerald-400">{p.montantTotal.toFixed(2)}€</span>
-                            </div>
-                          ))}
+                          {pts.map(p => {
+                            const isTaken = takenPointageIds.has(p.id);
+                            return (
+                              <div key={p.id} className={cn(
+                                "flex justify-between text-xs px-2 py-1 rounded",
+                                isTaken ? "bg-amber-500/10 text-amber-300/80" : "bg-white/5 text-white/70"
+                              )}>
+                                <span>{new Date(p.date + 'T00:00:00').toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}</span>
+                                <span>{p.typePaiement === 'journalier' ? `${p.prixJournalier}€/jour` : `${p.heures}h × ${p.prixHeure}€`}</span>
+                                <span className={cn("font-bold", isTaken ? "text-amber-400" : "text-emerald-400")}>
+                                  {isTaken && '✓ '}{p.montantTotal.toFixed(2)}€
+                                </span>
+                              </div>
+                            );
+                          })}
                         </div>
                         {/* Avances pour cette entreprise */}
-                        {entAvTotal > 0 && (
+                        {stats.totalAvance > 0 && (
                           <div className="mt-3 space-y-1">
                             <div className="flex items-center gap-1 text-xs text-amber-300 font-bold px-2">
-                              <Banknote className="h-3 w-3" /> Avances reçues
+                              <Banknote className="h-3 w-3" /> Avances reçues ({stats.pointagesTaken} pointage(s))
                             </div>
-                            {entAvances.map(a => (
-                              <div key={a.id} className="flex justify-between text-xs text-white/60 px-2 py-1 rounded bg-amber-500/5">
-                                <span>{new Date(a.date || a.createdAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}</span>
-                                <span className="font-bold text-amber-400">-{a.montant.toFixed(2)}€</span>
-                              </div>
-                            ))}
+                            <div className="flex justify-between text-xs text-white/60 px-2 py-1 rounded bg-amber-500/5">
+                              <span>Total pris en avance</span>
+                              <span className="font-bold text-amber-400">-{stats.totalAvance.toFixed(2)}€</span>
+                            </div>
                             <div className="flex justify-between items-center px-2 py-1.5 rounded-lg bg-cyan-500/10 border border-cyan-500/20 text-xs mt-1">
                               <span className="text-cyan-300 font-bold">Reste</span>
-                              <span className="text-cyan-400 font-black">{entReste.toFixed(2)}€</span>
+                              <span className="text-cyan-400 font-black">{stats.reste.toFixed(2)}€</span>
                             </div>
                           </div>
                         )}
@@ -260,24 +337,26 @@ const ParPersonneModal: React.FC<ParPersonneModalProps> = ({
                   </div>
 
                   {/* Avances section */}
-                  {ppAvances.length > 0 && (
+                  {ppAvancesForMonth.length > 0 && (
                     <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30">
                       <div className="flex items-center gap-2 mb-3">
                         <Banknote className="h-5 w-5 text-amber-400" />
-                        <span className="text-sm font-black text-amber-300">Avances reçues</span>
+                        <span className="text-sm font-black text-amber-300">Total Avances du mois</span>
                       </div>
                       <div className="space-y-1">
-                        {ppAvances.map(a => (
+                        {ppAvancesForMonth.map(a => (
                           <div key={a.id} className="flex justify-between text-xs text-white/70 px-2 py-1.5 rounded bg-white/5">
-                            <span>{new Date(a.date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}</span>
+                            <span>{new Date(a.date || a.createdAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}</span>
                             <span className="text-white/50">{a.entrepriseNom || 'Toutes'}</span>
                             <span className="font-bold text-amber-400">-{a.montant.toFixed(2)}€</span>
                           </div>
                         ))}
                       </div>
                       <div className="mt-2 flex justify-between items-center px-2 pt-2 border-t border-white/10">
-                        <span className="text-xs font-bold text-amber-300">Total avances</span>
-                        <span className="text-lg font-black text-amber-400">-{ppTotalAvances.toFixed(2)}€</span>
+                        <span className="text-xs font-bold text-amber-300">Total avances </span>
+                        <span className="text-lg font-black text-amber-400">
+                          -{ppTotalAvances.toFixed(2)}€
+                        </span>
                       </div>
                     </div>
                   )}
