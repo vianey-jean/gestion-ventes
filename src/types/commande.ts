@@ -26,6 +26,8 @@ export interface Commande {
   createdAt?: string;
   updatedAt?: string;
   saleId?: string;
+  /** ISO timestamp du début du chrono de retard (persisté en DB) */
+  overdueTimerStart?: string;
 }
 
 export interface CommandeFormData {

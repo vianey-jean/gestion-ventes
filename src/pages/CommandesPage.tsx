@@ -28,6 +28,7 @@ import {
   RdvConfirmationModal
 } from '@/components/commandes';
 import TacheConflictModal from '@/components/commandes/TacheConflictModal';
+import OverdueReservationModal from '@/components/commandes/OverdueReservationModal';
 import SEOHead from '@/components/SEOHead';
 
 const CommandesPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => {
@@ -180,6 +181,15 @@ const CommandesPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =
         conflictingTache={logic.conflictingTache}
         onReschedule={logic.handleRescheduleTacheAndCreate}
         onSkip={logic.handleSkipTacheConflict}
+      />
+
+      {/* Modale réservation en retard (auto-validation 30min) */}
+      <OverdueReservationModal
+        isOpen={logic.showOverdueModal}
+        reservation={logic.overdueReservation}
+        onValidate={logic.handleOverdueValidate}
+        onCancel={logic.handleOverdueCancel}
+        onPostpone={logic.handleOverduePostpone}
       />
     </>
   );

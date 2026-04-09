@@ -24,3 +24,6 @@ export { ValidationDialog, CancellationDialog, DeleteDialog } from './Confirmati
 // Composants RDV
 export { default as RdvCreationModal } from './RdvCreationModal';
 export { default as RdvConfirmationModal } from './RdvConfirmationModal';
+
+// Composant réservation en retard
+export { default as OverdueReservationModal } from './OverdueReservationModal';

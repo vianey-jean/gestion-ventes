@@ -128,6 +128,13 @@ export const useCommandesLogic = () => {
   const [pendingTacheData, setPendingTacheData] = useState<any>(null);
 
   // =========================================================================
+  // États modale réservation en retard (auto-validation)
+  // =========================================================================
+  const [overdueReservation, setOverdueReservation] = useState<Commande | null>(null);
+  const [showOverdueModal, setShowOverdueModal] = useState(false);
+  const [overdueProcessedIds, setOverdueProcessedIds] = useState<Set<string>>(new Set());
+
+  // =========================================================================
   // Fonctions de chargement des données
   // =========================================================================
 
@@ -172,6 +179,157 @@ export const useCommandesLogic = () => {
     loadData();
     const interval = setInterval(checkNotifications, 60000);
     return () => clearInterval(interval);
+  }, []);
+
+  // =========================================================================
+  // Détection des réservations en retard (date+horaire dépassé de 30 min)
+  // Le champ overdueTimerStart est persisté en DB pour survivre aux déconnexions
+  // =========================================================================
+  useEffect(() => {
+    if (isLoading || commandes.length === 0) return;
+
+    const checkOverdue = async () => {
+      const now = new Date();
+
+      // Chercher une réservation en retard non encore traitée
+      const overdue = commandes.find(c => {
+        if (c.type !== 'reservation') return false;
+        if (c.statut === 'valide' || c.statut === 'annule') return false;
+        if (overdueProcessedIds.has(c.id)) return false;
+
+        const reservationDate = c.dateEcheance || c.dateCommande;
+        if (!reservationDate) return false;
+
+        // Construire le datetime de la réservation
+        let reservationTime: Date;
+        if (c.horaire) {
+          const [heure] = c.horaire.split('-').map(h => h?.trim());
+          const [h, m] = (heure || '00:00').split(':').map(Number);
+          reservationTime = new Date(reservationDate + 'T' + `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:00`);
+        } else {
+          reservationTime = new Date(reservationDate + 'T00:00:00');
+        }
+
+        // Vérifier si dépassé de 30 minutes
+        const diffMs = now.getTime() - reservationTime.getTime();
+        const diffMinutes = diffMs / (1000 * 60);
+        return diffMinutes >= 30;
+      });
+
+      if (overdue && !showOverdueModal) {
+        // Persister overdueTimerStart en DB si pas encore fait
+        if (!overdue.overdueTimerStart) {
+          try {
+            const timerStart = new Date().toISOString();
+            await api.put(`/api/commandes/${overdue.id}`, { overdueTimerStart: timerStart });
+            overdue.overdueTimerStart = timerStart;
+          } catch (err) {
+            console.error('Erreur sauvegarde overdueTimerStart:', err);
+          }
+        }
+        setOverdueReservation(overdue);
+        setShowOverdueModal(true);
+      }
+    };
+
+    // Vérifier immédiatement puis toutes les 60 secondes
+    checkOverdue();
+    const overdueInterval = setInterval(checkOverdue, 60000);
+    return () => clearInterval(overdueInterval);
+  }, [commandes, isLoading, overdueProcessedIds, showOverdueModal]);
+
+  // =========================================================================
+  // Handlers pour la modale réservation en retard
+  // =========================================================================
+
+  /** Valider une réservation en retard (manuelle ou auto) */
+  const handleOverdueValidate = useCallback(async (id: string) => {
+    setShowOverdueModal(false);
+    setOverdueProcessedIds(prev => new Set(prev).add(id));
+    setValidatingId(id);
+    // Appeler directement confirmValidation via setValidatingId
+    // puis la validation sera faite par le bouton existant ou auto
+    // On va directement appeler la logique de validation
+    const commandeToValidate = commandes.find(c => c.id === id);
+    if (!commandeToValidate) return;
+    try {
+      for (const p of commandeToValidate.produits) {
+        const existingProduct = products.find(prod => prod.description.toLowerCase() === p.nom.toLowerCase());
+        if (existingProduct && existingProduct.quantity < p.quantite) {
+          toast({ title: 'Stock insuffisant', description: `Stock disponible pour ${p.nom}: ${existingProduct.quantity} unités`, className: "bg-app-red text-white", variant: 'destructive' });
+          setValidatingId(null);
+          return;
+        }
+      }
+      const today = new Date().toISOString().split('T')[0];
+      const saleProducts = [];
+      for (const p of commandeToValidate.produits) {
+        let product = products.find(prod => prod.description.toLowerCase() === p.nom.toLowerCase());
+        if (!product) { const newProductResponse = await api.post('/api/products', { description: p.nom, purchasePrice: p.prixUnitaire, quantity: p.quantite }); product = newProductResponse.data; }
+        saleProducts.push({ productId: product.id, description: p.nom, quantitySold: p.quantite, purchasePrice: p.prixUnitaire * p.quantite, sellingPrice: p.prixVente * p.quantite, profit: (p.prixVente - p.prixUnitaire) * p.quantite, deliveryFee: 0, deliveryLocation: "Saint-Denis" });
+      }
+      const totalPurchasePrice = commandeToValidate.produits.reduce((sum, p) => sum + (p.prixUnitaire * p.quantite), 0);
+      const totalSellingPrice = commandeToValidate.produits.reduce((sum, p) => sum + (p.prixVente * p.quantite), 0);
+      const saleData = { date: today, products: saleProducts, totalPurchasePrice, totalSellingPrice, totalProfit: totalSellingPrice - totalPurchasePrice, clientName: commandeToValidate.clientNom, clientAddress: commandeToValidate.clientAddress, clientPhone: commandeToValidate.clientPhone, reste: 0, nextPaymentDate: null };
+
+      // Valider le RDV associé
+      try { await api.put(`/api/rdv/by-commande/${id}`, { statut: 'confirme' }); } catch (rdvError) { console.log('RDV non trouvé:', rdvError); }
+
+      // Marquer la tâche associée comme terminée
+      try {
+        const tachesResponse = await tacheApi.getAll();
+        const taches = tachesResponse.data || tachesResponse;
+        const associatedTache = (taches as any[]).find((t: any) => t.commandeId === id);
+        if (associatedTache && !associatedTache.completed) {
+          const now = new Date();
+          const currentHeureFin = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+          await tacheApi.update(associatedTache.id, { completed: true, heureFin: currentHeureFin });
+        }
+      } catch (tacheErr) { console.log('Tâche associée non trouvée:', tacheErr); }
+
+      const saleResponse = await api.post('/api/sales', saleData);
+      const createdSale = saleResponse.data;
+      await api.put(`/api/commandes/${id}`, { statut: 'valide', saleId: createdSale.id });
+
+      // Dé-réserver les produits
+      for (const p of commandeToValidate.produits) {
+        const existingProduct = products.find(prod => prod.description.toLowerCase() === p.nom.toLowerCase());
+        if (existingProduct) {
+          const newQuantity = Math.max(0, existingProduct.quantity - p.quantite);
+          try { await api.put(`/api/products/${existingProduct.id}`, { reserver: 'non', quantity: newQuantity }); } catch (err) { console.error('Erreur dé-réservation:', err); }
+        }
+      }
+
+      toast({ title: '✅ Réservation validée', description: `Réservation de ${commandeToValidate.clientNom} validée et enregistrée comme vente`, className: "bg-app-green text-white" });
+      await Promise.all([fetchCommandes(), fetchProducts()]);
+    } catch (error) {
+      console.error('Error auto-validating:', error);
+      toast({ title: 'Erreur', description: 'Impossible de valider automatiquement', className: "bg-app-red text-white", variant: 'destructive' });
+    }
+    setValidatingId(null);
+  }, [commandes, products]);
+
+  /** Annuler une réservation en retard */
+  const handleOverdueCancel = useCallback(async (id: string) => {
+    setShowOverdueModal(false);
+    setOverdueProcessedIds(prev => new Set(prev).add(id));
+    try {
+      await api.put(`/api/commandes/${id}`, { statut: 'annule' });
+      try { await api.put(`/api/rdv/by-commande/${id}`, { statut: 'annule' }); } catch (e) { console.log('RDV non trouvé:', e); }
+      toast({ title: '❌ Réservation annulée', description: 'La réservation a été annulée', className: "bg-app-red text-white" });
+      fetchCommandes();
+    } catch (error) {
+      console.error('Error cancelling overdue:', error);
+      toast({ title: 'Erreur', description: 'Impossible d\'annuler', className: "bg-app-red text-white", variant: 'destructive' });
+    }
+  }, []);
+
+  /** Reporter une réservation en retard → ouvre la modale Reporter */
+  const handleOverduePostpone = useCallback((id: string) => {
+    setShowOverdueModal(false);
+    setOverdueProcessedIds(prev => new Set(prev).add(id));
+    setReporterCommandeId(id);
+    setReporterModalOpen(true);
   }, []);
 
   // =========================================================================
@@ -828,6 +986,9 @@ export const useCommandesLogic = () => {
     reporterModalOpen, setReporterModalOpen, reporterDate, setReporterDate, reporterHoraire, setReporterHoraire,
     showRdvConfirmDialog, showRdvFormModal, pendingReservationForRdv, isRdvLoading,
     showTacheConflictModal, conflictingTache,
+    // États modale réservation en retard
+    showOverdueModal, overdueReservation,
+    handleOverdueValidate, handleOverdueCancel, handleOverduePostpone,
     // Handlers
     handleClientSelect, handleProductSelect,
     handleAddProduit, handleEditProduit, handleRemoveProduit,
