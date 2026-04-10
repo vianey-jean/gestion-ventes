@@ -62,6 +62,16 @@ export class EventSourceManager {
         // Handled elsewhere if needed
       });
 
+      // Listen for share comment notifications and dispatch to window
+      this.eventSource.addEventListener('share-comment-received', (e: MessageEvent) => {
+        try {
+          const payload = JSON.parse(e.data);
+          window.dispatchEvent(new CustomEvent('share-comment-received', { detail: payload }));
+        } catch {
+          // Ignore
+        }
+      });
+
       this.eventSource.onerror = () => {
         this.isConnected = false;
         this.onConnectionChange(false);

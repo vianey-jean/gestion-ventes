@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
 import { Lock, Eye, StickyNote, Clock, ListTodo, KeyRound, ShieldAlert, CheckCircle, MessageCircle } from 'lucide-react';
 import shareLinksApi from '@/services/api/shareLinksApi';
@@ -14,6 +14,29 @@ const SharedViewPage: React.FC = () => {
   const [dataType, setDataType] = useState<string>('');
   const [data, setData] = useState<any>(null);
   const [commentMode, setCommentMode] = useState(false);
+
+  // Build the sorted items array to pass to comment form
+  const sortedItems = useMemo(() => {
+    if (!data) return [];
+    if (dataType === 'pointage' && data.pointages) {
+      return [...data.pointages].sort((a: any, b: any) => b.date.localeCompare(a.date));
+    }
+    if (dataType === 'taches' && data.taches) {
+      return [...data.taches].sort((a: any, b: any) => {
+        if (a.date !== b.date) return b.date.localeCompare(a.date);
+        return a.heureDebut.localeCompare(b.heureDebut);
+      });
+    }
+    if (dataType === 'notes' && data.notes && data.columns) {
+      const sorted: any[] = [];
+      [...data.columns].sort((a: any, b: any) => a.order - b.order).forEach((col: any) => {
+        const colNotes = data.notes.filter((n: any) => n.columnId === col.id).sort((a: any, b: any) => a.order - b.order);
+        sorted.push(...colNotes);
+      });
+      return sorted;
+    }
+    return [];
+  }, [data, dataType]);
 
   if (!token) return <Navigate to="/" replace />;
 
@@ -100,14 +123,7 @@ const SharedViewPage: React.FC = () => {
   const config = typeConfig[dataType as keyof typeof typeConfig] || typeConfig.notes;
   const Icon = config.icon;
 
-  // Flatten items for counting
-  let itemCount = 0;
-  if (dataType === 'pointage') itemCount = data.pointages?.length || 0;
-  else if (dataType === 'taches') itemCount = data.taches?.length || 0;
-  else if (dataType === 'notes') itemCount = data.notes?.length || 0;
-
-  // Global item index tracker for comment markers
-  let globalIndex = 0;
+  const itemCount = sortedItems.length;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-100 to-gray-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-950 select-none"
@@ -187,7 +203,7 @@ const SharedViewPage: React.FC = () => {
         {dataType === 'pointage' && data.pointages && (
           <div className="space-y-3">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {data.pointages.sort((a: any, b: any) => b.date.localeCompare(a.date)).map((p: any, i: number) => (
+              {sortedItems.map((p: any, i: number) => (
                 <div key={i} className="shared-item-wrapper relative p-4 rounded-2xl border border-gray-200/60 dark:border-gray-700/40 bg-white/80 dark:bg-white/5 backdrop-blur-xl shadow-lg">
                   {commentMode && (
                     <button
@@ -228,10 +244,7 @@ const SharedViewPage: React.FC = () => {
         {dataType === 'taches' && data.taches && (
           <div className="space-y-3">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {data.taches.sort((a: any, b: any) => {
-                if (a.date !== b.date) return b.date.localeCompare(a.date);
-                return a.heureDebut.localeCompare(b.heureDebut);
-              }).map((t: any, i: number) => (
+              {sortedItems.map((t: any, i: number) => (
                 <div key={i} className={`shared-item-wrapper relative p-4 rounded-2xl border backdrop-blur-xl shadow-lg ${
                   t.importance === 'pertinent'
                     ? 'border-red-300/40 dark:border-red-700/40 bg-red-50/80 dark:bg-red-900/10'
@@ -276,11 +289,12 @@ const SharedViewPage: React.FC = () => {
         )}
       </div>
 
-      {/* Comment Form */}
+      {/* Comment Form - pass items */}
       <SharedCommentForm
         token={token}
         dataType={dataType}
         itemCount={itemCount}
+        items={sortedItems}
         onCommentModeChange={setCommentMode}
       />
     </div>

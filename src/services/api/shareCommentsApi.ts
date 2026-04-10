@@ -1,6 +1,13 @@
 import api from './api';
 import { getBaseURL } from './api';
 
+export interface CommentItemData {
+  index: number;
+  text: string;
+  itemData?: any;
+  itemLabel?: string;
+}
+
 export interface ShareComment {
   id: string;
   token: string;
@@ -10,12 +17,14 @@ export interface ShareComment {
   prenom: string;
   telephone: string;
   email: string;
-  comments: { index: number; text: string }[];
+  comments: CommentItemData[];
   generalComment: string;
   status: 'validated' | 'sent';
   createdAt: string;
   sentAt?: string;
   read: boolean;
+  allItems?: any[];
+  snapshotFile?: string;
 }
 
 export interface UnreadCounts {
@@ -32,8 +41,9 @@ const shareCommentsApi = {
     prenom: string;
     telephone: string;
     email: string;
-    comments: { index: number; text: string }[];
+    comments: CommentItemData[];
     generalComment: string;
+    allItems?: any[];
   }) => {
     const base = getBaseURL();
     const res = await fetch(`${base}/api/share-comments/submit/${token}`, {
@@ -81,6 +91,12 @@ const shareCommentsApi = {
 
   detail: (id: string) =>
     api.get<ShareComment>(`/api/share-comments/detail/${id}`),
+
+  // Get snapshot file URL
+  snapshotUrl: (filename: string) => {
+    const base = getBaseURL();
+    return `${base}/api/share-comments/snapshot/${filename}`;
+  },
 };
 
 export default shareCommentsApi;

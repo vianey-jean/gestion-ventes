@@ -6,12 +6,13 @@ interface SharedCommentFormProps {
   token: string;
   dataType: string;
   itemCount: number;
+  items?: any[]; // The actual shared data items
   onCommentModeChange?: (active: boolean) => void;
 }
 
-const SharedCommentForm: React.FC<SharedCommentFormProps> = ({ token, dataType, itemCount, onCommentModeChange }) => {
+const SharedCommentForm: React.FC<SharedCommentFormProps> = ({ token, dataType, itemCount, items = [], onCommentModeChange }) => {
   const [mode, setMode] = useState<'idle' | 'commenting' | 'validated' | 'sent' | 'already'>('idle');
-  const [inlineComments, setInlineComments] = useState<{ index: number; text: string }[]>([]);
+  const [inlineComments, setInlineComments] = useState<{ index: number; text: string; itemData?: any }[]>([]);
   const [generalComment, setGeneralComment] = useState('');
   const [nom, setNom] = useState('');
   const [prenom, setPrenom] = useState('');
@@ -31,6 +32,22 @@ const SharedCommentForm: React.FC<SharedCommentFormProps> = ({ token, dataType, 
       }
     }).catch(() => {});
   }, [token]);
+
+  // Get a human-readable label for the item at given index
+  const getItemLabel = (index: number): string => {
+    if (!items || !items[index]) return `Élément #${index + 1}`;
+    const item = items[index];
+    if (dataType === 'pointage') {
+      return `${item.date} - ${item.entrepriseNom || ''} - ${item.travailleurNom || ''} - ${item.typePaiement === 'journalier' ? 'Journalier' : `${item.heures}h`} - ${item.montantTotal?.toFixed(2) || 0}€`;
+    }
+    if (dataType === 'taches') {
+      return `${item.date} - ${item.description || ''} - ${item.heureDebut || ''}-${item.heureFin || ''} - ${item.travailleurNom || ''} - ${item.importance === 'pertinent' ? 'Pertinent' : 'Optionnel'}`;
+    }
+    if (dataType === 'notes') {
+      return `${item.title || 'Sans titre'} - ${(item.content || '').substring(0, 50)}${(item.content || '').length > 50 ? '...' : ''}`;
+    }
+    return `Élément #${index + 1}`;
+  };
 
   // Expose inline comment handler globally for item markers
   const handleAddInlineComment = useCallback((index: number) => {
@@ -59,9 +76,10 @@ const SharedCommentForm: React.FC<SharedCommentFormProps> = ({ token, dataType, 
       setActiveText('');
       return;
     }
+    const itemData = items?.[activeIndex] || null;
     setInlineComments(prev => {
       const filtered = prev.filter(c => c.index !== activeIndex);
-      return [...filtered, { index: activeIndex, text: activeText.trim() }].sort((a, b) => a.index - b.index);
+      return [...filtered, { index: activeIndex, text: activeText.trim(), itemData }].sort((a, b) => a.index - b.index);
     });
     setActiveIndex(null);
     setActiveText('');
@@ -87,8 +105,14 @@ const SharedCommentForm: React.FC<SharedCommentFormProps> = ({ token, dataType, 
         prenom: prenom.trim(),
         telephone: telephone.trim(),
         email: email.trim(),
-        comments: inlineComments,
+        comments: inlineComments.map(c => ({
+          index: c.index,
+          text: c.text,
+          itemData: c.itemData || null,
+          itemLabel: getItemLabel(c.index),
+        })),
         generalComment: generalComment.trim(),
+        allItems: items || [],
       });
       setCommentId(result.id);
       setMode('validated');
@@ -138,10 +162,16 @@ const SharedCommentForm: React.FC<SharedCommentFormProps> = ({ token, dataType, 
       {mode === 'commenting' && activeIndex !== null && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/30 backdrop-blur-sm" onClick={() => { setActiveIndex(null); setActiveText(''); }}>
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-5 max-w-md w-full mx-4 border border-gray-200 dark:border-gray-700" onClick={e => e.stopPropagation()}>
-            <h4 className="font-bold text-sm text-gray-800 dark:text-white mb-2 flex items-center gap-2">
+            <h4 className="font-bold text-sm text-gray-800 dark:text-white mb-1 flex items-center gap-2">
               <MessageCircle className="h-4 w-4 text-blue-500" />
               Commentaire pour l'élément #{activeIndex + 1}
             </h4>
+            {/* Show the element data */}
+            <div className="mb-3 p-2 rounded-lg bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600">
+              <p className="text-[11px] text-gray-600 dark:text-gray-300 font-medium">
+                📌 {getItemLabel(activeIndex)}
+              </p>
+            </div>
             <textarea
               value={activeText}
               onChange={e => setActiveText(e.target.value)}
@@ -181,9 +211,13 @@ const SharedCommentForm: React.FC<SharedCommentFormProps> = ({ token, dataType, 
                 <p className="text-xs font-bold text-gray-600 dark:text-gray-300">Commentaires ajoutés ({inlineComments.length}):</p>
                 {inlineComments.map(c => (
                   <div key={c.index} className="flex items-start gap-2 p-2 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
-                    <span className="text-xs font-bold text-blue-600 dark:text-blue-400 mt-0.5">#{c.index + 1}</span>
-                    <p className="text-xs text-gray-700 dark:text-gray-300 flex-1">{c.text}</p>
-                    <button onClick={() => handleRemoveInlineComment(c.index)} className="p-0.5 hover:text-red-500">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[10px] font-bold text-blue-600 dark:text-blue-400 mb-0.5">
+                        📌 {getItemLabel(c.index)}
+                      </p>
+                      <p className="text-xs text-gray-700 dark:text-gray-300">{c.text}</p>
+                    </div>
+                    <button onClick={() => handleRemoveInlineComment(c.index)} className="p-0.5 hover:text-red-500 shrink-0">
                       <X className="h-3 w-3" />
                     </button>
                   </div>
