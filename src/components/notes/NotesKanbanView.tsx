@@ -256,7 +256,7 @@ const NotesKanbanView: React.FC = () => {
                 onClick={() => setShowCommentsViewer(true)}
                 className="relative overflow-hidden bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-700 border border-blue-300/40 text-white shadow-[0_20px_70px_rgba(59,130,246,0.5)] rounded-2xl px-5 py-2.5 font-bold text-sm transition-all hover:scale-105 active:scale-95"
               >
-                <MessageCircle className="h-4 w-4 mr-2" /> Commentaires
+                <MessageCircle className="h-4 w-4 mr-2" />
                 {commentCount > 0 && (
                   <span className="absolute -top-2 -right-2 min-w-[20px] h-5 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center px-1 shadow-lg animate-pulse">
                     {commentCount}
