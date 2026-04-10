@@ -23,6 +23,7 @@ import AvanceModal from '@/components/pointage/modals/AvanceModal';
 import TacheView from '@/components/tache/TacheView';
 import NotesKanbanView from '@/components/notes/NotesKanbanView';
 import ShareLinkModal from '@/components/shared/ShareLinkModal';
+import SelectiveShareModal from '@/components/shared/SelectiveShareModal';
 import SEOHead from '@/components/SEOHead';
 const premiumBtnClass = "group relative overflow-hidden rounded-xl sm:rounded-2xl backdrop-blur-xl border transition-all duration-300 hover:scale-105 px-4 py-2 sm:px-5 sm:py-3 text-xs sm:text-sm font-semibold";
 const mirrorShine = "absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500";
@@ -47,6 +48,7 @@ const PointagePage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
   const [showAvanceModal, setShowAvanceModal] = useState(false);
   const [showMonthDetailModal, setShowMonthDetailModal] = useState(false);
   const [showSharePointageModal, setShowSharePointageModal] = useState(false);
+  const [showSelectiveSharePointage, setShowSelectiveSharePointage] = useState(false);
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
   const [editingPointage, setEditingPointage] = useState<PointageEntry | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
@@ -225,6 +227,7 @@ const PointagePage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
               onShowYearlyTotal={handleShowYearlyTotal}
               onShowMonthDetail={() => setShowMonthDetailModal(true)}
               onSharePointage={() => setShowSharePointageModal(true)}
+              onSelectiveSharePointage={() => setShowSelectiveSharePointage(true)}
               year={year}
             />
 
@@ -303,6 +306,11 @@ const PointagePage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
               onClose={() => setShowSharePointageModal(false)}
               type="pointage"
               typeLabel="Pointage"
+            />
+            <SelectiveShareModal
+              open={showSelectiveSharePointage}
+              onClose={() => setShowSelectiveSharePointage(false)}
+              type="pointage"
             />
           </>
         ) : activeTab === 'tache' ? (

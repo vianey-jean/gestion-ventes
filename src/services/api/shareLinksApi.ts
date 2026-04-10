@@ -10,8 +10,8 @@ export interface ShareLink {
 }
 
 const shareLinksApi = {
-  generate: (type: 'notes' | 'pointage' | 'taches') =>
-    api.post<{ token: string; accessCode: string; type: string; createdAt: string }>('/api/share-links/generate', { type }),
+  generate: (type: 'notes' | 'pointage' | 'taches', filters?: any) =>
+    api.post<{ token: string; accessCode: string; type: string; createdAt: string }>('/api/share-links/generate', { type, filters }),
 
   list: (type?: string) =>
     api.get<ShareLink[]>(`/api/share-links/list${type ? `?type=${type}` : ''}`),

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
-import { Clock, Building2, Plus, Timer, Sparkles, UserPlus, Users, BarChart3, Banknote, Share2 } from 'lucide-react';
+import { Clock, Building2, Plus, Timer, Sparkles, UserPlus, Users, BarChart3, Banknote, Share2, Filter } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
@@ -20,13 +20,14 @@ interface PointageHeroProps {
   onPriseAvance: () => void;
   onShowMonthDetail: () => void;
   onSharePointage?: () => void;
+  onSelectiveSharePointage?: () => void;
   year: number;
 }
 
 const PointageHero: React.FC<PointageHeroProps> = ({
   entreprisesCount, travailleursCount, pointagesCount, monthTotal,
   premiumBtnClass, mirrorShine,
-  onAddEntreprise, onAddTravailleur, onNewPointage, onShowParPersonne, onShowYearlyTotal, onPriseAvance, onShowMonthDetail, onSharePointage, year
+  onAddEntreprise, onAddTravailleur, onNewPointage, onShowParPersonne, onShowYearlyTotal, onPriseAvance, onShowMonthDetail, onSharePointage, onSelectiveSharePointage, year
 }) => {
   return (
     <div className="relative overflow-hidden py-8 sm:py-12">
@@ -114,6 +115,13 @@ const PointageHero: React.FC<PointageHeroProps> = ({
                   className={cn(premiumBtnClass, "bg-gradient-to-br from-teal-500 via-teal-600 to-cyan-700 border-teal-300/40 text-white shadow-[0_20px_70px_rgba(20,184,166,0.5)] hover:shadow-[0_35px_100px_rgba(20,184,166,0.7)]")}>
                   <span className={mirrorShine} />
                   <span className="relative flex items-center"><Share2 className="h-4 w-4 sm:h-5 sm:w-5 mr-2" /> Partager pointage</span>
+                </Button>
+              )}
+              {onSelectiveSharePointage && (
+                <Button onClick={onSelectiveSharePointage}
+                  className={cn(premiumBtnClass, "bg-gradient-to-br from-violet-500 via-purple-600 to-indigo-700 border-violet-300/40 text-white shadow-[0_20px_70px_rgba(139,92,246,0.5)] hover:shadow-[0_35px_100px_rgba(139,92,246,0.7)]")}>
+                  <span className={mirrorShine} />
+                  <span className="relative flex items-center"><Filter className="h-4 w-4 sm:h-5 sm:w-5 mr-2" /> Partage sélectif</span>
                 </Button>
               )}
             </div>

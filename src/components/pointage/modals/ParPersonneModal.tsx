@@ -59,9 +59,9 @@ const ParPersonneModal: React.FC<ParPersonneModalProps> = ({
 
   const ppFilteredTravailleurs = ppTravSearch.length >= 3
     ? travailleurs.filter(t => {
-      const q = ppTravSearch.toLowerCase();
-      return `${t.prenom} ${t.nom}`.toLowerCase().includes(q) || `${t.nom} ${t.prenom}`.toLowerCase().includes(q);
-    })
+        const q = ppTravSearch.toLowerCase();
+        return `${t.prenom} ${t.nom}`.toLowerCase().includes(q) || `${t.nom} ${t.prenom}`.toLowerCase().includes(q);
+      })
     : [];
 
   // Core search function
@@ -158,12 +158,7 @@ const ParPersonneModal: React.FC<ParPersonneModalProps> = ({
   }, [ppGroupedByEntreprise, takenPointageIds]);
 
   const ppGlobalTotal = ppResults.reduce((s, p) => s + p.montantTotal, 0);
-  //const ppTotalAvances = Object.values(entrepriseStats).reduce((s, st) => s + st.totalAvance, 0);
-  const ppTotalAvances = useMemo(() => {
-    return ppAvancesForMonth.reduce((sum, a) => sum + a.montant, 0);
-  }, [ppAvancesForMonth]);
-
-  // Reste disponible
+  const ppTotalAvances = Object.values(entrepriseStats).reduce((s, st) => s + st.totalAvance, 0);
   const ppResteDisponible = Object.values(entrepriseStats).reduce((s, st) => s + st.reste, 0);
 
   return (
@@ -353,10 +348,8 @@ const ParPersonneModal: React.FC<ParPersonneModalProps> = ({
                         ))}
                       </div>
                       <div className="mt-2 flex justify-between items-center px-2 pt-2 border-t border-white/10">
-                        <span className="text-xs font-bold text-amber-300">Total avances </span>
-                        <span className="text-lg font-black text-amber-400">
-                          -{ppTotalAvances.toFixed(2)}€
-                        </span>
+                        <span className="text-xs font-bold text-amber-300">Total avances</span>
+                        <span className="text-lg font-black text-amber-400">-{ppTotalAvances.toFixed(2)}€</span>
                       </div>
                     </div>
                   )}
