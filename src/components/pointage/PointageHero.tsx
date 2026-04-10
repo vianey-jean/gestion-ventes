@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
-import { Clock, Building2, Plus, Timer, Sparkles, UserPlus, Users, BarChart3, Banknote, Share2, Filter } from 'lucide-react';
+import { Clock, Building2, Plus, Timer, Sparkles, UserPlus, Users, BarChart3, Banknote, Share2, Filter, MessageCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
@@ -21,13 +21,15 @@ interface PointageHeroProps {
   onShowMonthDetail: () => void;
   onSharePointage?: () => void;
   onSelectiveSharePointage?: () => void;
+  onViewComments?: () => void;
+  commentCount?: number;
   year: number;
 }
 
 const PointageHero: React.FC<PointageHeroProps> = ({
   entreprisesCount, travailleursCount, pointagesCount, monthTotal,
   premiumBtnClass, mirrorShine,
-  onAddEntreprise, onAddTravailleur, onNewPointage, onShowParPersonne, onShowYearlyTotal, onPriseAvance, onShowMonthDetail, onSharePointage, onSelectiveSharePointage, year
+  onAddEntreprise, onAddTravailleur, onNewPointage, onShowParPersonne, onShowYearlyTotal, onPriseAvance, onShowMonthDetail, onSharePointage, onSelectiveSharePointage, onViewComments, commentCount = 0, year
 }) => {
   return (
     <div className="relative overflow-hidden py-8 sm:py-12">
@@ -122,6 +124,18 @@ const PointageHero: React.FC<PointageHeroProps> = ({
                   className={cn(premiumBtnClass, "bg-gradient-to-br from-violet-500 via-purple-600 to-indigo-700 border-violet-300/40 text-white shadow-[0_20px_70px_rgba(139,92,246,0.5)] hover:shadow-[0_35px_100px_rgba(139,92,246,0.7)]")}>
                   <span className={mirrorShine} />
                   <span className="relative flex items-center"><Filter className="h-4 w-4 sm:h-5 sm:w-5 mr-2" /> Partage sélectif</span>
+                </Button>
+              )}
+              {onViewComments && (
+                <Button onClick={onViewComments}
+                  className={cn(premiumBtnClass, "bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-700 border-blue-300/40 text-white shadow-[0_20px_70px_rgba(59,130,246,0.5)] hover:shadow-[0_35px_100px_rgba(59,130,246,0.7)] relative")}>
+                  <span className={mirrorShine} />
+                  <span className="relative flex items-center"><MessageCircle className="h-4 w-4 sm:h-5 sm:w-5 mr-2" /> Commentaires</span>
+                  {commentCount > 0 && (
+                    <span className="absolute -top-2 -right-2 min-w-[20px] h-5 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center px-1 shadow-lg animate-pulse">
+                      {commentCount}
+                    </span>
+                  )}
                 </Button>
               )}
             </div>

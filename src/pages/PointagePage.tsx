@@ -24,6 +24,8 @@ import TacheView from '@/components/tache/TacheView';
 import NotesKanbanView from '@/components/notes/NotesKanbanView';
 import ShareLinkModal from '@/components/shared/ShareLinkModal';
 import SelectiveShareModal from '@/components/shared/SelectiveShareModal';
+import ShareCommentsViewer from '@/components/shared/ShareCommentsViewer';
+import shareCommentsApi from '@/services/api/shareCommentsApi';
 import SEOHead from '@/components/SEOHead';
 const premiumBtnClass = "group relative overflow-hidden rounded-xl sm:rounded-2xl backdrop-blur-xl border transition-all duration-300 hover:scale-105 px-4 py-2 sm:px-5 sm:py-3 text-xs sm:text-sm font-semibold";
 const mirrorShine = "absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500";
@@ -49,6 +51,8 @@ const PointagePage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
   const [showMonthDetailModal, setShowMonthDetailModal] = useState(false);
   const [showSharePointageModal, setShowSharePointageModal] = useState(false);
   const [showSelectiveSharePointage, setShowSelectiveSharePointage] = useState(false);
+  const [showCommentsViewer, setShowCommentsViewer] = useState(false);
+  const [commentCount, setCommentCount] = useState(0);
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
   const [editingPointage, setEditingPointage] = useState<PointageEntry | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
@@ -85,6 +89,10 @@ const PointagePage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
   }, [year, month]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
+
+  useEffect(() => {
+    shareCommentsApi.unread().then(res => setCommentCount(res.data.pointage)).catch(() => {});
+  }, []);
 
   const getMonthTotal = () => pointages.reduce((sum, p) => sum + p.montantTotal, 0);
 
@@ -226,8 +234,10 @@ const PointagePage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
               onShowParPersonne={() => setShowParPersonneModal(true)}
               onShowYearlyTotal={handleShowYearlyTotal}
               onShowMonthDetail={() => setShowMonthDetailModal(true)}
-              onSharePointage={() => setShowSharePointageModal(true)}
+               onSharePointage={() => setShowSharePointageModal(true)}
               onSelectiveSharePointage={() => setShowSelectiveSharePointage(true)}
+              onViewComments={() => setShowCommentsViewer(true)}
+              commentCount={commentCount}
               year={year}
             />
 
@@ -311,6 +321,13 @@ const PointagePage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
               open={showSelectiveSharePointage}
               onClose={() => setShowSelectiveSharePointage(false)}
               type="pointage"
+            />
+            <ShareCommentsViewer
+              open={showCommentsViewer}
+              onClose={() => setShowCommentsViewer(false)}
+              type="pointage"
+              typeLabel="Pointage"
+              onCountChange={(delta) => setCommentCount(prev => Math.max(0, prev + delta))}
             />
           </>
         ) : activeTab === 'tache' ? (

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { motion } from 'framer-motion';
-import { ListTodo, Plus, CalendarDays, Eye, Sparkles, UserPlus, Clock, CheckCircle, Share2, Filter } from 'lucide-react';
+import { ListTodo, Plus, CalendarDays, Eye, Sparkles, UserPlus, Clock, CheckCircle, Share2, Filter, MessageCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Tache } from '@/services/api/tacheApi';
 
@@ -19,6 +19,8 @@ interface TacheHeroProps {
   onAddTravailleur?: () => void;
   onShareTaches?: () => void;
   onSelectiveShareTaches?: () => void;
+  onViewComments?: () => void;
+  commentCount?: number;
   allTaches?: Tache[];
   onNavigateToDate?: (dateStr: string) => void;
 }
@@ -26,7 +28,7 @@ interface TacheHeroProps {
 const TacheHero: React.FC<TacheHeroProps> = ({
   totalTaches, todayCount, pertinentCount, optionnelCount,
   premiumBtnClass, mirrorShine,
-  onAddTache, onShowToday, onShowWeek, onAddTravailleur, onShareTaches, onSelectiveShareTaches,
+  onAddTache, onShowToday, onShowWeek, onAddTravailleur, onShareTaches, onSelectiveShareTaches, onViewComments, commentCount = 0,
   allTaches = [], onNavigateToDate
 }) => {
   const [showTotalModal, setShowTotalModal] = useState(false);
@@ -165,6 +167,18 @@ const TacheHero: React.FC<TacheHeroProps> = ({
                     className={cn(premiumBtnClass, "bg-gradient-to-br from-violet-500 via-purple-600 to-indigo-700 border-violet-300/40 text-white shadow-[0_20px_70px_rgba(139,92,246,0.5)] hover:shadow-[0_35px_100px_rgba(139,92,246,0.7)]")}>
                     <span className={mirrorShine} />
                     <span className="relative flex items-center"><Filter className="h-4 w-4 sm:h-5 sm:w-5 mr-2" /> Partage sélectif</span>
+                  </Button>
+                )}
+                {onViewComments && (
+                  <Button onClick={onViewComments}
+                    className={cn(premiumBtnClass, "bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-700 border-blue-300/40 text-white shadow-[0_20px_70px_rgba(59,130,246,0.5)] relative")}>
+                    <span className={mirrorShine} />
+                    <span className="relative flex items-center"><MessageCircle className="h-4 w-4 sm:h-5 sm:w-5 mr-2" /> Commentaires</span>
+                    {commentCount > 0 && (
+                      <span className="absolute -top-2 -right-2 min-w-[20px] h-5 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center px-1 shadow-lg animate-pulse">
+                        {commentCount}
+                      </span>
+                    )}
                   </Button>
                 )}
               </div>

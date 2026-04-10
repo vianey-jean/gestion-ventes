@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
-import { StickyNote, Lock, Eye } from 'lucide-react';
+import { StickyNote, Lock, Eye, MessageCircle } from 'lucide-react';
 import { getBaseURL } from '@/services/api/api';
 import { getDrawingUrl } from '@/services/api/noteApi';
 import SEOHead from '@/components/SEOHead';
+import SharedCommentForm from '@/components/shared/SharedCommentForm';
 
 interface SharedNote {
   title: string;
@@ -32,6 +33,7 @@ const SharedNotesPage: React.FC = () => {
   const [columns, setColumns] = useState<SharedColumn[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [commentMode, setCommentMode] = useState(false);
 
   useEffect(() => {
     if (!token) return;
@@ -75,6 +77,7 @@ const SharedNotesPage: React.FC = () => {
   }
 
   const sortedColumns = [...columns].sort((a, b) => a.order - b.order);
+  let noteIdx = 0;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-amber-50/30 to-gray-100 dark:from-gray-900 dark:via-gray-900 dark:to-gray-950 select-none"
@@ -102,7 +105,7 @@ const SharedNotesPage: React.FC = () => {
       </div>
 
       {/* Kanban read-only */}
-      <div className="max-w-full mx-auto px-4 py-6">
+      <div className="max-w-full mx-auto px-4 py-6 pb-32">
         <div className="overflow-x-auto pb-4">
           <div className="flex gap-4 min-w-max">
             {sortedColumns.map((col) => {
@@ -121,24 +124,36 @@ const SharedNotesPage: React.FC = () => {
                   </div>
                   {/* Notes */}
                   <div className="p-3 space-y-2 max-h-[65vh] overflow-y-auto">
-                    {colNotes.map((note, i) => (
-                      <div key={i} className="p-3 rounded-xl border border-gray-200/50 dark:border-gray-700/30 bg-white/80 dark:bg-gray-800/50 shadow-sm"
-                        style={{ borderLeftColor: note.color, borderLeftWidth: '3px' }}
-                      >
-                        {note.title && (
-                          <h4 className="font-semibold text-sm text-gray-800 dark:text-white mb-1">{note.title}</h4>
-                        )}
-                        {note.content && (
-                          <p className="text-xs text-gray-600 dark:text-gray-300 whitespace-pre-wrap leading-relaxed">{note.content}</p>
-                        )}
-                        {note.drawing && (
-                          <img src={getDrawingUrl(note.drawing) || ''} alt="Dessin" className="mt-2 rounded-lg max-h-32 w-full object-contain pointer-events-none" draggable={false} />
-                        )}
-                        {note.voiceText && (
-                          <p className="mt-1 text-[10px] text-gray-400 italic">🎤 {note.voiceText}</p>
-                        )}
-                      </div>
-                    ))}
+                    {colNotes.map((note, i) => {
+                      const idx = noteIdx++;
+                      return (
+                        <div key={i} className="shared-item-wrapper relative p-3 rounded-xl border border-gray-200/50 dark:border-gray-700/30 bg-white/80 dark:bg-gray-800/50 shadow-sm"
+                          style={{ borderLeftColor: note.color, borderLeftWidth: '3px' }}
+                        >
+                          {commentMode && (
+                            <button
+                              onClick={() => (window as any).__addInlineComment?.(idx)}
+                              className="absolute top-1 right-1 z-40 w-7 h-7 rounded-full flex items-center justify-center bg-blue-500/15 text-blue-500 border border-dashed border-blue-300 hover:scale-110 transition-transform"
+                              title={`Commenter #${idx + 1}`}
+                            >
+                              <MessageCircle className="h-3.5 w-3.5" />
+                            </button>
+                          )}
+                          {note.title && (
+                            <h4 className="font-semibold text-sm text-gray-800 dark:text-white mb-1">{note.title}</h4>
+                          )}
+                          {note.content && (
+                            <p className="text-xs text-gray-600 dark:text-gray-300 whitespace-pre-wrap leading-relaxed">{note.content}</p>
+                          )}
+                          {note.drawing && (
+                            <img src={getDrawingUrl(note.drawing) || ''} alt="Dessin" className="mt-2 rounded-lg max-h-32 w-full object-contain pointer-events-none" draggable={false} />
+                          )}
+                          {note.voiceText && (
+                            <p className="mt-1 text-[10px] text-gray-400 italic">🎤 {note.voiceText}</p>
+                          )}
+                        </div>
+                      );
+                    })}
                     {colNotes.length === 0 && (
                       <p className="text-center text-xs text-gray-400 py-6">Aucune note</p>
                     )}
@@ -149,6 +164,14 @@ const SharedNotesPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Comment Form */}
+      <SharedCommentForm
+        token={token}
+        dataType="notes"
+        itemCount={notes.length}
+        onCommentModeChange={setCommentMode}
+      />
     </div>
   );
 };

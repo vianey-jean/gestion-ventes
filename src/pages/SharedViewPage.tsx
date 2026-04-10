@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
-import { Lock, Eye, StickyNote, Clock, ListTodo, KeyRound, ShieldAlert, CheckCircle } from 'lucide-react';
+import { Lock, Eye, StickyNote, Clock, ListTodo, KeyRound, ShieldAlert, CheckCircle, MessageCircle } from 'lucide-react';
 import shareLinksApi from '@/services/api/shareLinksApi';
 import { getDrawingUrl } from '@/services/api/noteApi';
 import SEOHead from '@/components/SEOHead';
+import SharedCommentForm from '@/components/shared/SharedCommentForm';
 
 const SharedViewPage: React.FC = () => {
   const { token } = useParams<{ token: string }>();
@@ -12,6 +13,7 @@ const SharedViewPage: React.FC = () => {
   const [errorMsg, setErrorMsg] = useState('');
   const [dataType, setDataType] = useState<string>('');
   const [data, setData] = useState<any>(null);
+  const [commentMode, setCommentMode] = useState(false);
 
   if (!token) return <Navigate to="/" replace />;
 
@@ -21,7 +23,6 @@ const SharedViewPage: React.FC = () => {
     try {
       const result = await shareLinksApi.verify(token, accessCode.trim().toUpperCase());
       setDataType(result.type);
-      // Now fetch the data
       const viewData = await shareLinksApi.viewData(token);
       setData(viewData);
       setStep('view');
@@ -31,7 +32,6 @@ const SharedViewPage: React.FC = () => {
     }
   };
 
-  // Code entry screen
   if (step === 'code') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-950 flex items-center justify-center p-4"
@@ -90,7 +90,6 @@ const SharedViewPage: React.FC = () => {
     );
   }
 
-  // View data
   if (!data) return null;
 
   const typeConfig = {
@@ -100,6 +99,15 @@ const SharedViewPage: React.FC = () => {
   };
   const config = typeConfig[dataType as keyof typeof typeConfig] || typeConfig.notes;
   const Icon = config.icon;
+
+  // Flatten items for counting
+  let itemCount = 0;
+  if (dataType === 'pointage') itemCount = data.pointages?.length || 0;
+  else if (dataType === 'taches') itemCount = data.taches?.length || 0;
+  else if (dataType === 'notes') itemCount = data.notes?.length || 0;
+
+  // Global item index tracker for comment markers
+  let globalIndex = 0;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-100 to-gray-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-950 select-none"
@@ -125,47 +133,71 @@ const SharedViewPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-6">
+      <div className="max-w-7xl mx-auto px-4 py-6 pb-32">
         {/* NOTES VIEW */}
-        {dataType === 'notes' && data.columns && (
-          <div className="overflow-x-auto pb-4">
-            <div className="flex gap-4 min-w-max">
-              {[...data.columns].sort((a: any, b: any) => a.order - b.order).map((col: any) => {
-                const colNotes = data.notes.filter((n: any) => n.columnId === col.id).sort((a: any, b: any) => a.order - b.order);
-                return (
-                  <div key={col.id} className="flex-shrink-0 w-[300px] rounded-2xl border border-gray-200/60 dark:border-gray-700/40 bg-white/50 dark:bg-white/5 backdrop-blur-xl shadow-lg">
-                    <div className="p-4 border-b border-gray-200/40 dark:border-gray-700/30">
-                      <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded-full shadow" style={{ backgroundColor: col.color }} />
-                        <h3 className="font-bold text-sm text-gray-800 dark:text-white">{col.title}</h3>
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-300">{colNotes.length}</span>
+        {dataType === 'notes' && data.columns && (() => {
+          let noteIdx = 0;
+          return (
+            <div className="overflow-x-auto pb-4">
+              <div className="flex gap-4 min-w-max">
+                {[...data.columns].sort((a: any, b: any) => a.order - b.order).map((col: any) => {
+                  const colNotes = data.notes.filter((n: any) => n.columnId === col.id).sort((a: any, b: any) => a.order - b.order);
+                  return (
+                    <div key={col.id} className="flex-shrink-0 w-[300px] rounded-2xl border border-gray-200/60 dark:border-gray-700/40 bg-white/50 dark:bg-white/5 backdrop-blur-xl shadow-lg">
+                      <div className="p-4 border-b border-gray-200/40 dark:border-gray-700/30">
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 rounded-full shadow" style={{ backgroundColor: col.color }} />
+                          <h3 className="font-bold text-sm text-gray-800 dark:text-white">{col.title}</h3>
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-300">{colNotes.length}</span>
+                        </div>
+                      </div>
+                      <div className="p-3 space-y-2 max-h-[65vh] overflow-y-auto">
+                        {colNotes.map((note: any, i: number) => {
+                          const idx = noteIdx++;
+                          return (
+                            <div key={i} className="shared-item-wrapper relative p-3 rounded-xl border border-gray-200/50 dark:border-gray-700/30 bg-white/80 dark:bg-gray-800/50 shadow-sm"
+                              style={{ borderLeftColor: note.color, borderLeftWidth: '3px' }}>
+                              {commentMode && (
+                                <button
+                                  onClick={() => (window as any).__addInlineComment?.(idx)}
+                                  className="absolute top-1 right-1 z-40 w-7 h-7 rounded-full flex items-center justify-center bg-blue-500/15 text-blue-500 border border-dashed border-blue-300 hover:scale-110 transition-transform"
+                                  title={`Commenter #${idx + 1}`}
+                                >
+                                  <MessageCircle className="h-3.5 w-3.5" />
+                                </button>
+                              )}
+                              {note.title && <h4 className="font-semibold text-sm text-gray-800 dark:text-white mb-1">{note.title}</h4>}
+                              {note.content && <p className="text-xs text-gray-600 dark:text-gray-300 whitespace-pre-wrap leading-relaxed">{note.content}</p>}
+                              {note.drawing && <img src={getDrawingUrl(note.drawing) || ''} alt="Dessin" className="mt-2 rounded-lg max-h-32 w-full object-contain pointer-events-none" draggable={false} />}
+                              {note.voiceText && <p className="mt-1 text-[10px] text-gray-400 italic">🎤 {note.voiceText}</p>}
+                            </div>
+                          );
+                        })}
+                        {colNotes.length === 0 && <p className="text-center text-xs text-gray-400 py-6">Aucune note</p>}
                       </div>
                     </div>
-                    <div className="p-3 space-y-2 max-h-[65vh] overflow-y-auto">
-                      {colNotes.map((note: any, i: number) => (
-                        <div key={i} className="p-3 rounded-xl border border-gray-200/50 dark:border-gray-700/30 bg-white/80 dark:bg-gray-800/50 shadow-sm"
-                          style={{ borderLeftColor: note.color, borderLeftWidth: '3px' }}>
-                          {note.title && <h4 className="font-semibold text-sm text-gray-800 dark:text-white mb-1">{note.title}</h4>}
-                          {note.content && <p className="text-xs text-gray-600 dark:text-gray-300 whitespace-pre-wrap leading-relaxed">{note.content}</p>}
-                          {note.drawing && <img src={getDrawingUrl(note.drawing) || ''} alt="Dessin" className="mt-2 rounded-lg max-h-32 w-full object-contain pointer-events-none" draggable={false} />}
-                          {note.voiceText && <p className="mt-1 text-[10px] text-gray-400 italic">🎤 {note.voiceText}</p>}
-                        </div>
-                      ))}
-                      {colNotes.length === 0 && <p className="text-center text-xs text-gray-400 py-6">Aucune note</p>}
-                    </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* POINTAGE VIEW */}
         {dataType === 'pointage' && data.pointages && (
           <div className="space-y-3">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {data.pointages.sort((a: any, b: any) => b.date.localeCompare(a.date)).map((p: any, i: number) => (
-                <div key={i} className="p-4 rounded-2xl border border-gray-200/60 dark:border-gray-700/40 bg-white/80 dark:bg-white/5 backdrop-blur-xl shadow-lg">
+                <div key={i} className="shared-item-wrapper relative p-4 rounded-2xl border border-gray-200/60 dark:border-gray-700/40 bg-white/80 dark:bg-white/5 backdrop-blur-xl shadow-lg">
+                  {commentMode && (
+                    <button
+                      onClick={() => (window as any).__addInlineComment?.(i)}
+                      className="absolute top-2 right-2 z-40 w-7 h-7 rounded-full flex items-center justify-center bg-blue-500/15 text-blue-500 border border-dashed border-blue-300 hover:scale-110 transition-transform"
+                      title={`Commenter #${i + 1}`}
+                    >
+                      <MessageCircle className="h-3.5 w-3.5" />
+                    </button>
+                  )}
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-xs font-bold text-cyan-600 dark:text-cyan-400">📅 {p.date}</span>
                     <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-300">
@@ -200,11 +232,20 @@ const SharedViewPage: React.FC = () => {
                 if (a.date !== b.date) return b.date.localeCompare(a.date);
                 return a.heureDebut.localeCompare(b.heureDebut);
               }).map((t: any, i: number) => (
-                <div key={i} className={`p-4 rounded-2xl border backdrop-blur-xl shadow-lg ${
+                <div key={i} className={`shared-item-wrapper relative p-4 rounded-2xl border backdrop-blur-xl shadow-lg ${
                   t.importance === 'pertinent'
                     ? 'border-red-300/40 dark:border-red-700/40 bg-red-50/80 dark:bg-red-900/10'
                     : 'border-emerald-300/40 dark:border-emerald-700/40 bg-emerald-50/80 dark:bg-emerald-900/10'
                 }`}>
+                  {commentMode && (
+                    <button
+                      onClick={() => (window as any).__addInlineComment?.(i)}
+                      className="absolute top-2 right-2 z-40 w-7 h-7 rounded-full flex items-center justify-center bg-blue-500/15 text-blue-500 border border-dashed border-blue-300 hover:scale-110 transition-transform"
+                      title={`Commenter #${i + 1}`}
+                    >
+                      <MessageCircle className="h-3.5 w-3.5" />
+                    </button>
+                  )}
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-xs font-bold text-violet-600 dark:text-violet-400">📅 {t.date}</span>
                     <div className="flex items-center gap-1">
@@ -234,6 +275,14 @@ const SharedViewPage: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Comment Form */}
+      <SharedCommentForm
+        token={token}
+        dataType={dataType}
+        itemCount={itemCount}
+        onCommentModeChange={setCommentMode}
+      />
     </div>
   );
 };

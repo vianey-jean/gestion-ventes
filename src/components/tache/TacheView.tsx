@@ -15,7 +15,7 @@ import TacheValidationModal from './TacheValidationModal';
 import TravailleurModal from '@/components/pointage/modals/TravailleurModal';
 import ShareLinkModal from '@/components/shared/ShareLinkModal';
 import SelectiveShareModal from '@/components/shared/SelectiveShareModal';
-
+import ShareCommentsViewer from '@/components/shared/ShareCommentsViewer';
 const premiumBtnClass = "group relative overflow-hidden rounded-xl sm:rounded-2xl backdrop-blur-xl border transition-all duration-300 hover:scale-105 px-4 py-2 sm:px-5 sm:py-3 text-xs sm:text-sm font-semibold";
 const mirrorShine = "absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500";
 
@@ -49,6 +49,8 @@ const TacheView: React.FC = () => {
   const [showTravailleurModal, setShowTravailleurModal] = useState(false);
   const [showShareTachesModal, setShowShareTachesModal] = useState(false);
   const [showSelectiveShareTaches, setShowSelectiveShareTaches] = useState(false);
+  const [showCommentsViewer, setShowCommentsViewer] = useState(false);
+  const [commentCount, setCommentCount] = useState(0);
   const [travailleurForm, setTravailleurForm] = useState({ nom: '', prenom: '', adresse: '', phone: '', genre: 'homme' as 'homme' | 'femme', role: 'autre' as 'administrateur' | 'autre' });
 
   // Follow-up form (pre-filled)
@@ -57,6 +59,12 @@ const TacheView: React.FC = () => {
   // Paramètre taches settings
   const [parametreTache, setParametreTache] = useState<ParametreTache>({ autoCompleteOnDone: true, tachesTerminees: true });
   const autoCompletedRef = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    import('@/services/api/shareCommentsApi').then(mod => {
+      mod.default.unread().then(res => setCommentCount(res.data.taches)).catch(() => {});
+    });
+  }, []);
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -378,6 +386,8 @@ const TacheView: React.FC = () => {
         onAddTravailleur={() => setShowTravailleurModal(true)}
         onShareTaches={() => setShowShareTachesModal(true)}
         onSelectiveShareTaches={() => setShowSelectiveShareTaches(true)}
+        onViewComments={() => setShowCommentsViewer(true)}
+        commentCount={commentCount}
         allTaches={taches}
         onNavigateToDate={handleNavigateToDate}
       />
@@ -502,6 +512,13 @@ const TacheView: React.FC = () => {
         open={showSelectiveShareTaches}
         onClose={() => setShowSelectiveShareTaches(false)}
         type="taches"
+      />
+      <ShareCommentsViewer
+        open={showCommentsViewer}
+        onClose={() => setShowCommentsViewer(false)}
+        type="taches"
+        typeLabel="Tâches"
+        onCountChange={(delta) => setCommentCount(prev => Math.max(0, prev + delta))}
       />
     </>
   );
