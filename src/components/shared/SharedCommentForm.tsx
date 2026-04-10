@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { MessageSquarePlus, Send, Check, X, User, Phone, Mail, MessageCircle, AlertCircle } from 'lucide-react';
+import { MessageSquarePlus, Send, Check, X, User, Phone, Mail, MessageCircle, AlertCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import shareCommentsApi from '@/services/api/shareCommentsApi';
 
 interface SharedCommentFormProps {
@@ -12,6 +12,7 @@ interface SharedCommentFormProps {
 
 const SharedCommentForm: React.FC<SharedCommentFormProps> = ({ token, dataType, itemCount, items = [], onCommentModeChange }) => {
   const [mode, setMode] = useState<'idle' | 'commenting' | 'validated' | 'sent' | 'already'>('idle');
+  const [minimized, setMinimized] = useState(false);
   const [inlineComments, setInlineComments] = useState<{ index: number; text: string; itemData?: any }[]>([]);
   const [generalComment, setGeneralComment] = useState('');
   const [nom, setNom] = useState('');
@@ -189,98 +190,128 @@ const SharedCommentForm: React.FC<SharedCommentFormProps> = ({ token, dataType, 
 
       {/* Bottom panel when commenting */}
       {mode === 'commenting' && (
-        <div className="w-full bg-white dark:bg-gray-800 border-t-2 border-blue-500 shadow-2xl">
-          <div className="max-w-3xl mx-auto p-4 space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="font-bold text-gray-800 dark:text-white flex items-center gap-2">
-                <MessageSquarePlus className="h-5 w-5 text-blue-500" />
-                Mode commentaire
-              </h3>
-              <button onClick={() => setMode('idle')} className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+        <div className={`fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-gray-800 border-t-2 border-blue-500 shadow-2xl transition-all duration-300 ease-in-out ${minimized ? 'max-h-[52px]' : 'max-h-[70vh]'} overflow-hidden`}>
+          {/* Header bar - always visible */}
+          <div className="max-w-3xl mx-auto px-4 py-2.5 flex items-center justify-between">
+            <h3 className="font-bold text-gray-800 dark:text-white flex items-center gap-2 text-sm">
+              <MessageSquarePlus className="h-5 w-5 text-blue-500" />
+              Mode commentaire
+              {minimized && inlineComments.length > 0 && (
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-bold">
+                  {inlineComments.length} commentaire{inlineComments.length > 1 ? 's' : ''}
+                </span>
+              )}
+            </h3>
+            <div className="flex items-center gap-1.5">
+              {/* Minimize / Maximize toggle */}
+              {minimized ? (
+                <button
+                  onClick={() => setMinimized(false)}
+                  title="Vers le haut"
+                  className="group p-1.5 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors"
+                >
+                  <ChevronUp className="h-5 w-5 text-emerald-500 group-hover:text-emerald-600 transition-colors" />
+                </button>
+              ) : (
+                <button
+                  onClick={() => setMinimized(true)}
+                  title="Vers le bas"
+                  className="group p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                >
+                  <ChevronDown className="h-5 w-5 text-red-500 group-hover:text-red-600 transition-colors" />
+                </button>
+              )}
+              {/* Close button */}
+              <button onClick={() => { setMode('idle'); setMinimized(false); }} className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
                 <X className="h-4 w-4 text-gray-500" />
               </button>
             </div>
-
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              Cliquez sur les boutons <span className="text-blue-500 font-bold">💬</span> à côté de chaque élément pour ajouter un commentaire, ou écrivez un commentaire général ci-dessous.
-            </p>
-
-            {/* Inline comments summary */}
-            {inlineComments.length > 0 && (
-              <div className="space-y-2">
-                <p className="text-xs font-bold text-gray-600 dark:text-gray-300">Commentaires ajoutés ({inlineComments.length}):</p>
-                {inlineComments.map(c => (
-                  <div key={c.index} className="flex items-start gap-2 p-2 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[10px] font-bold text-blue-600 dark:text-blue-400 mb-0.5">
-                        📌 {getItemLabel(c.index)}
-                      </p>
-                      <p className="text-xs text-gray-700 dark:text-gray-300">{c.text}</p>
-                    </div>
-                    <button onClick={() => handleRemoveInlineComment(c.index)} className="p-0.5 hover:text-red-500 shrink-0">
-                      <X className="h-3 w-3" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* General comment */}
-            <div>
-              <label className="text-xs font-bold text-gray-600 dark:text-gray-300 mb-1 block">Commentaire général</label>
-              <textarea
-                value={generalComment}
-                onChange={e => setGeneralComment(e.target.value)}
-                placeholder="Écrivez vos remarques générales ici..."
-                className="w-full rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 px-3 py-2 text-sm text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[100px] resize-none"
-              />
-            </div>
-
-            {/* Contact form */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="text-xs font-bold text-gray-600 dark:text-gray-300 mb-1 flex items-center gap-1">
-                  <User className="h-3 w-3" /> Prénom *
-                </label>
-                <input value={prenom} onChange={e => setPrenom(e.target.value)} placeholder="Prénom"
-                  className="w-full rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 px-3 py-2 text-sm text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" />
-              </div>
-              <div>
-                <label className="text-xs font-bold text-gray-600 dark:text-gray-300 mb-1 flex items-center gap-1">
-                  <User className="h-3 w-3" /> Nom *
-                </label>
-                <input value={nom} onChange={e => setNom(e.target.value)} placeholder="Nom"
-                  className="w-full rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 px-3 py-2 text-sm text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" />
-              </div>
-              <div>
-                <label className="text-xs font-bold text-gray-600 dark:text-gray-300 mb-1 flex items-center gap-1">
-                  <Phone className="h-3 w-3" /> Téléphone
-                </label>
-                <input value={telephone} onChange={e => setTelephone(e.target.value)} placeholder="Numéro de téléphone"
-                  className="w-full rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 px-3 py-2 text-sm text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" />
-              </div>
-              <div>
-                <label className="text-xs font-bold text-gray-600 dark:text-gray-300 mb-1 flex items-center gap-1">
-                  <Mail className="h-3 w-3" /> Email
-                </label>
-                <input value={email} onChange={e => setEmail(e.target.value)} placeholder="Adresse email" type="email"
-                  className="w-full rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 px-3 py-2 text-sm text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" />
-              </div>
-            </div>
-
-            {error && (
-              <div className="flex items-center gap-2 text-red-500 text-xs">
-                <AlertCircle className="h-3.5 w-3.5" />
-                {error}
-              </div>
-            )}
-
-            <button onClick={handleValidate}
-              className="w-full py-3 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-bold text-sm hover:shadow-lg transition-all hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-2">
-              <Check className="h-4 w-4" />
-              Valider les commentaires
-            </button>
           </div>
+
+          {/* Collapsible content */}
+          {!minimized && (
+            <div className="max-w-3xl mx-auto px-4 pb-4 space-y-4 overflow-y-auto" style={{ maxHeight: 'calc(70vh - 52px)' }}>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Cliquez sur les boutons <span className="text-blue-500 font-bold">💬</span> à côté de chaque élément pour ajouter un commentaire, ou écrivez un commentaire général ci-dessous.
+              </p>
+
+              {/* Inline comments summary */}
+              {inlineComments.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-xs font-bold text-gray-600 dark:text-gray-300">Commentaires ajoutés ({inlineComments.length}):</p>
+                  {inlineComments.map(c => (
+                    <div key={c.index} className="flex items-start gap-2 p-2 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[10px] font-bold text-blue-600 dark:text-blue-400 mb-0.5">
+                          📌 {getItemLabel(c.index)}
+                        </p>
+                        <p className="text-xs text-gray-700 dark:text-gray-300">{c.text}</p>
+                      </div>
+                      <button onClick={() => handleRemoveInlineComment(c.index)} className="p-0.5 hover:text-red-500 shrink-0">
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* General comment */}
+              <div>
+                <label className="text-xs font-bold text-gray-600 dark:text-gray-300 mb-1 block">Commentaire général</label>
+                <textarea
+                  value={generalComment}
+                  onChange={e => setGeneralComment(e.target.value)}
+                  placeholder="Écrivez vos remarques générales ici..."
+                  className="w-full rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 px-3 py-2 text-sm text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[80px] resize-none"
+                />
+              </div>
+
+              {/* Contact form */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-bold text-gray-600 dark:text-gray-300 mb-1 flex items-center gap-1">
+                    <User className="h-3 w-3" /> Prénom *
+                  </label>
+                  <input value={prenom} onChange={e => setPrenom(e.target.value)} placeholder="Prénom"
+                    className="w-full rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 px-3 py-2 text-sm text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-gray-600 dark:text-gray-300 mb-1 flex items-center gap-1">
+                    <User className="h-3 w-3" /> Nom *
+                  </label>
+                  <input value={nom} onChange={e => setNom(e.target.value)} placeholder="Nom"
+                    className="w-full rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 px-3 py-2 text-sm text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-gray-600 dark:text-gray-300 mb-1 flex items-center gap-1">
+                    <Phone className="h-3 w-3" /> Téléphone
+                  </label>
+                  <input value={telephone} onChange={e => setTelephone(e.target.value)} placeholder="Numéro de téléphone"
+                    className="w-full rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 px-3 py-2 text-sm text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-gray-600 dark:text-gray-300 mb-1 flex items-center gap-1">
+                    <Mail className="h-3 w-3" /> Email
+                  </label>
+                  <input value={email} onChange={e => setEmail(e.target.value)} placeholder="Adresse email" type="email"
+                    className="w-full rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 px-3 py-2 text-sm text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                </div>
+              </div>
+
+              {error && (
+                <div className="flex items-center gap-2 text-red-500 text-xs">
+                  <AlertCircle className="h-3.5 w-3.5" />
+                  {error}
+                </div>
+              )}
+
+              <button onClick={handleValidate}
+                className="w-full py-3 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-bold text-sm hover:shadow-lg transition-all hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-2">
+                <Check className="h-4 w-4" />
+                Valider les commentaires
+              </button>
+            </div>
+          )}
         </div>
       )}
 
