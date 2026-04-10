@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { X, User, Phone, Mail, MessageCircle, Eye, Clock, Download, FileText, ExternalLink } from 'lucide-react';
 import shareCommentsApi, { ShareComment } from '@/services/api/shareCommentsApi';
 
@@ -15,6 +15,9 @@ const ShareCommentsViewer: React.FC<ShareCommentsViewerProps> = ({ open, onClose
   const [loading, setLoading] = useState(false);
   const [selectedComment, setSelectedComment] = useState<ShareComment | null>(null);
   const [showSnapshot, setShowSnapshot] = useState(false);
+  const [snapshotHtml, setSnapshotHtml] = useState<string | null>(null);
+  const [snapshotLoading, setSnapshotLoading] = useState(false);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
 
   useEffect(() => {
     if (open) fetchComments();
@@ -60,9 +63,26 @@ const ShareCommentsViewer: React.FC<ShareCommentsViewerProps> = ({ open, onClose
     }
   };
 
-  const handleViewSnapshot = () => {
+const handleViewSnapshot = async () => {
+  if (selectedComment?.snapshotFile) {
+    setSnapshotLoading(true);
     setShowSnapshot(true);
-  };
+    try {
+      const url = shareCommentsApi.snapshotUrl(selectedComment.snapshotFile);
+      const token = localStorage.getItem('token');
+      const res = await fetch(url, {
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+      });
+      if (!res.ok) throw new Error('Erreur de chargement');
+      const html = await res.text();
+      setSnapshotHtml(html);
+    } catch {
+      setSnapshotHtml('<html><body><p style="color:red;padding:20px;">Erreur lors du chargement du document.</p></body></html>');
+    } finally {
+      setSnapshotLoading(false);
+    }
+  }
+};
 
   const handleDownloadPDF = (comment: ShareComment) => {
     const content = [
@@ -123,16 +143,24 @@ const ShareCommentsViewer: React.FC<ShareCommentsViewerProps> = ({ open, onClose
                     <FileText className="h-4 w-4 text-blue-500" />
                     Document du lien partagé
                   </h4>
-                  <button onClick={() => setShowSnapshot(false)} className="text-xs text-gray-500 hover:text-gray-700">
+                  <button onClick={() => { setShowSnapshot(false); setSnapshotHtml(null); }} className="text-xs text-gray-500 hover:text-gray-700">
                     Fermer le document
                   </button>
                 </div>
-                <iframe
-                  src={shareCommentsApi.snapshotUrl(selectedComment.snapshotFile)}
-                  className="w-full rounded-xl border border-gray-200 dark:border-gray-600"
-                  style={{ height: '60vh' }}
-                  title="Snapshot du lien partagé"
-                />
+                {snapshotLoading ? (
+                  <div className="flex justify-center py-12">
+                    <div className="w-6 h-6 border-2 border-blue-500/30 border-t-blue-500 rounded-full animate-spin" />
+                  </div>
+                ) : snapshotHtml ? (
+                  <iframe
+                    ref={iframeRef}
+                    srcDoc={snapshotHtml}
+                    sandbox="allow-same-origin"
+                    className="w-full rounded-xl border border-gray-200 dark:border-gray-600"
+                    style={{ height: '60vh' }}
+                    title="Snapshot du lien partagé"
+                  />
+                ) : null}
               </div>
             ) : (
               <div className="space-y-4">
