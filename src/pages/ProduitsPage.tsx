@@ -13,7 +13,7 @@ import { cn } from '@/lib/utils';
 import {
   Package, Plus, Search, Filter, Eye, Edit, Trash2, CheckCircle2, XCircle,
   AlertTriangle, Camera, Star, Euro, Hash, Sparkles, ChevronLeft, ChevronRight,
-  X, PackagePlus, Pencil, ImageOff, ShoppingBag
+  X, PackagePlus, Pencil, ImageOff, ShoppingBag, MessageSquare, ChevronDown, ChevronUp
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import SharedPagination from '@/components/shared/Pagination';
@@ -33,7 +33,11 @@ import {
 import PhotoUploadSection from '@/components/dashboard/PhotoUploadSection';
 import EditProductForm from '@/components/dashboard/EditProductForm';
 import SEOHead from '@/components/SEOHead';
-
+import ProductCommentScroller from '@/components/products/ProductCommentScroller';
+import { productCommentsApi, ProductComment, ProductRatingInfo } from '@/services/api/productCommentsApi';
+import { clientApiService } from '@/services/api/clientApi';
+import { Client } from '@/types/client';
+import { User } from 'lucide-react';
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://server-gestion-ventes.onrender.com';
 
 type FilterType = 'tous' | 'perruque' | 'tissage' | 'extension' | 'autres';
@@ -77,6 +81,32 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 10;
+
+  // Comments & Ratings
+  const [allRatings, setAllRatings] = useState<Record<string, ProductRatingInfo>>({});
+  const [viewComments, setViewComments] = useState<ProductComment[]>([]);
+  const [showCommentsList, setShowCommentsList] = useState(false);
+  const [newComment, setNewComment] = useState('');
+  const [newRating, setNewRating] = useState(5);
+  const [isSubmittingComment, setIsSubmittingComment] = useState(false);
+  const [commentClientName, setCommentClientName] = useState('');
+  const [clientSearchQuery, setClientSearchQuery] = useState('');
+  const [clientSearchResults, setClientSearchResults] = useState<Client[]>([]);
+  const [showClientDropdown, setShowClientDropdown] = useState(false);
+
+  // Fetch all ratings
+  const fetchRatings = useCallback(async () => {
+    try {
+      const data = await productCommentsApi.getAllRatings();
+      setAllRatings(data);
+    } catch (e) {
+      console.error('Error fetching ratings:', e);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchRatings();
+  }, [fetchRatings]);
 
   // Filter products
   const filteredProducts = useMemo(() => {
@@ -249,11 +279,18 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
     if (!selectedProduct) return;
     setIsSubmitting(true);
     try {
+      // Delete all comments for this product first
+      try {
+        await productCommentsApi.deleteByProductId(selectedProduct.id);
+      } catch (e) {
+        console.error('Error deleting product comments:', e);
+      }
       await productService.deleteProduct(selectedProduct.id);
-      toast({ title: 'Succès', description: `"${selectedProduct.description}" supprimé`, className: 'notification-success' });
+      toast({ title: 'Succès', description: `"${selectedProduct.description}" supprimé avec tous ses commentaires`, className: 'notification-success' });
       setIsDeleteConfirmOpen(false);
       setSelectedProduct(null);
       if (fetchProducts) await fetchProducts();
+      await fetchRatings();
     } catch {
       toast({ title: 'Erreur', description: 'Erreur lors de la suppression', variant: 'destructive', className: 'notification-erreur' });
     } finally {
@@ -265,6 +302,7 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
   const openView = (product: Product) => {
     setSelectedProduct(product);
     setCurrentPhotoIndex(0);
+    setShowCommentsList(false);
     setIsViewOpen(true);
   };
 
@@ -447,13 +485,14 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
                     <TableHead className="font-black text-violet-700 dark:text-violet-300">Description</TableHead>
                     <TableHead className="font-black text-violet-700 dark:text-violet-300">Prix</TableHead>
                     <TableHead className="font-black text-violet-700 dark:text-violet-300">Qté</TableHead>
+                    <TableHead className="font-black text-violet-700 dark:text-violet-300">Notation</TableHead>
                     <TableHead className="font-black text-violet-700 dark:text-violet-300 text-center">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {paginatedProducts.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center py-12">
+                      <TableCell colSpan={7} className="text-center py-12">
                         <div className="flex flex-col items-center gap-3">
                           <div className="w-16 h-16 rounded-2xl bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center">
                             <Package className="h-8 w-8 text-violet-400" />
@@ -490,7 +529,14 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
                             {product.code || '—'}
                           </Badge>
                         </TableCell>
-                        <TableCell className="font-bold text-foreground max-w-[200px] truncate">{product.description}</TableCell>
+                        <TableCell className="font-bold text-foreground max-w-[200px]">
+                          <div className="flex flex-col">
+                            {allRatings[product.id]?.comments?.length > 0 && (
+                              <ProductCommentScroller comments={allRatings[product.id].comments} />
+                            )}
+                            <span className="truncate">{product.description}</span>
+                          </div>
+                        </TableCell>
                         <TableCell>
                           <span className="font-bold text-amber-600 dark:text-amber-400">{product.purchasePrice}€</span>
                         </TableCell>
@@ -503,6 +549,27 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
                           )}>
                             {product.quantity}
                           </Badge>
+                        </TableCell>
+                        {/* Notation */}
+                        <TableCell>
+                          {(() => {
+                            const info = allRatings[product.id];
+                            if (!info || info.count === 0) return <span className="text-muted-foreground text-xs">—</span>;
+                            const avg = info.average;
+                            const fullStars = Math.floor(avg);
+                            const hasHalf = avg - fullStars >= 0.3;
+                            const starColor = avg <= 2 ? 'text-red-500' : avg <= 3 ? 'text-yellow-500' : 'text-emerald-500';
+                            return (
+                              <div className="flex flex-col items-center gap-0.5">
+                                <div className={`flex items-center ${starColor}`}>
+                                  {Array.from({ length: 5 }).map((_, i) => (
+                                    <Star key={i} className={cn("h-3 w-3", i < fullStars ? "fill-current" : (i === fullStars && hasHalf) ? "fill-current opacity-50" : "opacity-20")} />
+                                  ))}
+                                </div>
+                                <span className="text-[10px] text-muted-foreground font-medium">{avg} ({info.count})</span>
+                              </div>
+                            );
+                          })()}
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center justify-center gap-1.5">
@@ -714,6 +781,118 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
                     maxPhotos={6}
                   />
                 </div>
+
+                {/* Ajouter Commentaire */}
+                <div className="p-4 bg-white/5 border border-white/10 rounded-2xl space-y-3">
+                  <Label className="text-sm font-bold text-white/80 flex items-center gap-2">
+                    <MessageSquare className="h-4 w-4 text-purple-400" /> Ajouter un commentaire
+                  </Label>
+
+                  {/* Client search */}
+                  <div className="relative">
+                    <Label className="text-xs font-bold text-white/60 flex items-center gap-1 mb-1">
+                      <User className="h-3 w-3" /> Nom du client
+                    </Label>
+                    <Input
+                      value={clientSearchQuery}
+                      onChange={async (e) => {
+                        const val = e.target.value;
+                        setClientSearchQuery(val);
+                        setCommentClientName(val);
+                        if (val.length >= 3) {
+                          try {
+                            const clients = await clientApiService.getAll();
+                            const filtered = clients.filter(c => c.nom.toLowerCase().includes(val.toLowerCase()));
+                            setClientSearchResults(filtered);
+                            setShowClientDropdown(true);
+                          } catch { setClientSearchResults([]); }
+                        } else {
+                          setClientSearchResults([]);
+                          setShowClientDropdown(false);
+                        }
+                      }}
+                      onBlur={() => setTimeout(() => setShowClientDropdown(false), 200)}
+                      placeholder="Rechercher un client (3 car. min.)..."
+                      className="bg-white/10 border border-white/20 focus:border-cyan-400 rounded-xl text-white placeholder:text-white/40"
+                    />
+                    {showClientDropdown && clientSearchResults.length > 0 && (
+                      <div className="absolute z-50 top-full mt-1 w-full rounded-xl border border-white/20 bg-slate-900/95 backdrop-blur-2xl shadow-2xl max-h-40 overflow-y-auto">
+                        {clientSearchResults.map(client => (
+                          <button
+                            key={client.id}
+                            type="button"
+                            onMouseDown={(e) => {
+                              e.preventDefault();
+                              setCommentClientName(client.nom);
+                              setClientSearchQuery(client.nom);
+                              setShowClientDropdown(false);
+                            }}
+                            className="w-full text-left px-3 py-2 hover:bg-white/10 text-white text-sm flex items-center gap-2 transition-colors"
+                          >
+                            <User className="h-3.5 w-3.5 text-cyan-400 flex-shrink-0" />
+                            <span className="truncate">{client.nom}</span>
+                            {client.phone && <span className="text-white/30 text-xs ml-auto">{client.phone}</span>}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <Input
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                    placeholder="Votre commentaire sur ce produit..."
+                    className="bg-white/10 border border-white/20 focus:border-purple-400 rounded-xl text-white placeholder:text-white/40"
+                  />
+                  <div className="space-y-1">
+                    <Label className="text-xs font-bold text-white/60">Notation</Label>
+                    <div className="flex items-center gap-1">
+                      {[1, 2, 3, 4, 5].map(s => (
+                        <button key={s} type="button" onClick={() => setNewRating(s)}
+                          className="transition-transform hover:scale-125"
+                        >
+                          <Star className={cn(
+                            "h-6 w-6 transition-colors",
+                            s <= newRating
+                              ? newRating <= 2 ? "text-red-500 fill-red-500" : newRating <= 3 ? "text-yellow-500 fill-yellow-500" : "text-emerald-500 fill-emerald-500"
+                              : "text-white/20"
+                          )} />
+                        </button>
+                      ))}
+                      <span className="text-white/60 text-sm ml-2">{newRating}/5</span>
+                    </div>
+                  </div>
+                  <Button
+                    onClick={async () => {
+                      if (!newComment.trim() || !selectedProduct) return;
+                      setIsSubmittingComment(true);
+                      try {
+                        await productCommentsApi.create({
+                          productId: selectedProduct.id,
+                          comment: newComment.trim(),
+                          rating: newRating,
+                          clientName: commentClientName.trim(),
+                        });
+                        setNewComment('');
+                        setNewRating(5);
+                        setCommentClientName('');
+                        setClientSearchQuery('');
+                        await fetchRatings();
+                        toast({ title: 'Succès', description: 'Commentaire ajouté', className: 'notification-success' });
+                      } catch {
+                        toast({ title: 'Erreur', description: "Erreur lors de l'ajout du commentaire", variant: 'destructive', className: 'notification-erreur' });
+                      } finally {
+                        setIsSubmittingComment(false);
+                      }
+                    }}
+                    disabled={isSubmittingComment || !newComment.trim()}
+                    className="w-full h-10 rounded-xl font-bold bg-gradient-to-r from-purple-500 to-fuchsia-600 text-white border-0"
+                  >
+                    <MessageSquare className="h-4 w-4 mr-2" />
+                    {isSubmittingComment ? 'Envoi...' : 'Ajouter commentaire'}
+                  </Button>
+                </div>
+
                 <div className="flex gap-3 pt-2">
                   <Button onClick={handleEditSubmit} disabled={isSubmitting}
                     className="flex-1 h-12 rounded-xl font-bold bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg shadow-blue-500/25 transition-all duration-300 border-0"
@@ -884,6 +1063,82 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
                   <p className="text-white/50 text-xs font-medium">Fournisseur</p>
                   <p className="text-cyan-400 font-bold text-lg">{selectedProduct.fournisseur || '—'}</p>
                 </div>
+
+                {/* Commentaires & Notation */}
+                {(() => {
+                  const info = allRatings[selectedProduct.id];
+                  const avg = info?.average || 0;
+                  const count = info?.count || 0;
+                  const comments = info?.comments || [];
+                  const fullStars = Math.floor(avg);
+                  const hasHalf = avg - fullStars >= 0.3;
+                  const starColor = avg <= 2 ? 'text-red-500' : avg <= 3 ? 'text-yellow-500' : 'text-emerald-500';
+                  return (
+                    <div className="space-y-3">
+                      <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
+                        <p className="text-white/50 text-xs font-medium">Notation moyenne</p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <div className={`flex items-center ${starColor}`}>
+                            {Array.from({ length: 5 }).map((_, i) => (
+                              <Star key={i} className={cn("h-5 w-5", i < fullStars ? "fill-current" : (i === fullStars && hasHalf) ? "fill-current opacity-50" : "opacity-20")} />
+                            ))}
+                          </div>
+                          <span className="text-white font-bold text-lg">{avg > 0 ? avg : '—'}</span>
+                          <span className="text-white/40 text-sm">({count} commentaire{count !== 1 ? 's' : ''})</span>
+                        </div>
+                      </div>
+
+                      {comments.length > 0 && (
+                        <div className="rounded-2xl bg-white/5 border border-white/10 overflow-hidden">
+                          <button
+                            onClick={() => setShowCommentsList(!showCommentsList)}
+                            className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors"
+                          >
+                            <span className="text-white/80 font-bold text-sm flex items-center gap-2">
+                              <MessageSquare className="h-4 w-4" /> Commentaires ({comments.length})
+                            </span>
+                            {showCommentsList ? <ChevronUp className="h-4 w-4 text-white/50" /> : <ChevronDown className="h-4 w-4 text-white/50" />}
+                          </button>
+                          <AnimatePresence>
+                            {showCommentsList && (
+                              <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: 'auto', opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                className="overflow-hidden"
+                              >
+                                <div className="px-4 pb-4 space-y-2 max-h-48 overflow-y-auto">
+                                  {comments.map(c => {
+                                    const cColor = c.rating <= 2 ? 'border-red-500/30 bg-red-500/5' : c.rating === 3 ? 'border-yellow-500/30 bg-yellow-500/5' : 'border-emerald-500/30 bg-emerald-500/5';
+                                    const cStarColor = c.rating <= 2 ? 'text-red-500' : c.rating === 3 ? 'text-yellow-500' : 'text-emerald-500';
+                                    return (
+                                      <div key={c.id} className={`p-3 rounded-xl border ${cColor}`}>
+                                        <div className="flex items-center justify-between mb-1">
+                                          <div className={`flex items-center gap-1 ${cStarColor}`}>
+                                            {Array.from({ length: 5 }).map((_, i) => (
+                                              <Star key={i} className={cn("h-3 w-3", i < c.rating ? "fill-current" : "opacity-20")} />
+                                            ))}
+                                          </div>
+                                          {c.clientName && (
+                                            <span className="text-cyan-400 text-xs font-bold flex items-center gap-1">
+                                              <User className="h-3 w-3" /> {c.clientName}
+                                            </span>
+                                          )}
+                                        </div>
+                                        <p className="text-white/80 text-sm">{c.comment}</p>
+                                        <p className="text-white/30 text-[10px] mt-1">{new Date(c.createdAt).toLocaleDateString('fr-FR')}</p>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
 
                 {/* Action buttons */}
                 <div className="flex gap-3 pt-2">
