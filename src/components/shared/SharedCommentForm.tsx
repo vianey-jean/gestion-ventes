@@ -195,13 +195,14 @@ const SharedCommentForm: React.FC<SharedCommentFormProps> = ({ token, dataType, 
           <div className="max-w-3xl mx-auto px-4 py-2.5 flex items-center justify-between">
             <h3 className="font-bold text-gray-800 dark:text-white flex items-center gap-2 text-sm">
               <MessageSquarePlus className="h-5 w-5 text-blue-500" />
-              Mode commentaire
+              Mode commentaire / Droit faire seule une fois
               {minimized && inlineComments.length > 0 && (
                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-bold">
                   {inlineComments.length} commentaire{inlineComments.length > 1 ? 's' : ''}
                 </span>
               )}
             </h3>
+            
             <div className="flex items-center gap-1.5">
               {/* Minimize / Maximize toggle */}
               {minimized ? (
