@@ -5,6 +5,7 @@ import { Plus, StickyNote, Columns3, Sparkles, Share2, MessageCircle } from 'luc
 import { Button } from '@/components/ui/button';
 import ShareLinkModal from '@/components/shared/ShareLinkModal';
 import ShareCommentsViewer from '@/components/shared/ShareCommentsViewer';
+import { useRealtimeCommentNotifications } from '@/hooks/useRealtimeCommentNotifications';
 import KanbanColumn from './KanbanColumn';
 import NoteFormModal from './NoteFormModal';
 import ColumnFormModal from './ColumnFormModal';
@@ -41,6 +42,12 @@ const NotesKanbanView: React.FC = () => {
       mod.default.unread().then(res => setCommentCount(res.data.notes)).catch(() => { });
     });
   }, []);
+
+  // Real-time SSE comment notifications
+  useRealtimeCommentNotifications({
+    type: 'notes',
+    onCountChange: (delta) => setCommentCount(prev => prev + delta),
+  });
 
   const fetchData = useCallback(async () => {
     try {

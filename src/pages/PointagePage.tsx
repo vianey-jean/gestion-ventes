@@ -26,6 +26,7 @@ import ShareLinkModal from '@/components/shared/ShareLinkModal';
 import SelectiveShareModal from '@/components/shared/SelectiveShareModal';
 import ShareCommentsViewer from '@/components/shared/ShareCommentsViewer';
 import shareCommentsApi from '@/services/api/shareCommentsApi';
+import { useRealtimeCommentNotifications } from '@/hooks/useRealtimeCommentNotifications';
 import SEOHead from '@/components/SEOHead';
 const premiumBtnClass = "group relative overflow-hidden rounded-xl sm:rounded-2xl backdrop-blur-xl border transition-all duration-300 hover:scale-105 px-4 py-2 sm:px-5 sm:py-3 text-xs sm:text-sm font-semibold";
 const mirrorShine = "absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500";
@@ -93,6 +94,12 @@ const PointagePage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
   useEffect(() => {
     shareCommentsApi.unread().then(res => setCommentCount(res.data.pointage)).catch(() => {});
   }, []);
+
+  // Real-time SSE comment notifications
+  useRealtimeCommentNotifications({
+    type: 'pointage',
+    onCountChange: (delta) => setCommentCount(prev => prev + delta),
+  });
 
   const getMonthTotal = () => pointages.reduce((sum, p) => sum + p.montantTotal, 0);
 

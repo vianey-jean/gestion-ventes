@@ -605,12 +605,12 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
                             {product.code || '—'}
                           </Badge>
                         </TableCell>
-                        <TableCell className="font-bold text-foreground max-w-[200px]">
-                          <div className="flex flex-col">
+                        <TableCell className="font-bold text-foreground min-w-[220px] max-w-[350px]">
+                          <div className="flex flex-col gap-1">
                             {allRatings[product.id]?.comments?.length > 0 && (
                               <ProductCommentScroller comments={allRatings[product.id].comments} />
                             )}
-                            <span className="truncate">{product.description}</span>
+                            <span className="break-words whitespace-pre-wrap">{product.description}</span>
                           </div>
                         </TableCell>
                         <TableCell>

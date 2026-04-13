@@ -16,6 +16,7 @@ import TravailleurModal from '@/components/pointage/modals/TravailleurModal';
 import ShareLinkModal from '@/components/shared/ShareLinkModal';
 import SelectiveShareModal from '@/components/shared/SelectiveShareModal';
 import ShareCommentsViewer from '@/components/shared/ShareCommentsViewer';
+import { useRealtimeCommentNotifications } from '@/hooks/useRealtimeCommentNotifications';
 const premiumBtnClass = "group relative overflow-hidden rounded-xl sm:rounded-2xl backdrop-blur-xl border transition-all duration-300 hover:scale-105 px-4 py-2 sm:px-5 sm:py-3 text-xs sm:text-sm font-semibold";
 const mirrorShine = "absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500";
 
@@ -65,6 +66,12 @@ const TacheView: React.FC = () => {
       mod.default.unread().then(res => setCommentCount(res.data.taches)).catch(() => {});
     });
   }, []);
+
+  // Real-time SSE comment notifications
+  useRealtimeCommentNotifications({
+    type: 'taches',
+    onCountChange: (delta) => setCommentCount(prev => prev + delta),
+  });
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
