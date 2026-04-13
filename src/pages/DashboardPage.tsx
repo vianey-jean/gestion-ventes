@@ -367,70 +367,142 @@ const DashboardPage = () => {
                       const isActive = activeSection === item.id;
 
                       return (
-                        <motion.button
-                          key={item.id}
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                          onClick={() => handleSectionChange(item.id)}
-                          className={cn(
-                            'w-full flex items-center gap-3 rounded-2xl transition-all duration-300 group relative overflow-hidden',
-                            sidebarCollapsed ? 'p-3 justify-center' : 'px-4 py-3',
-                            isActive
-                              ? `bg-gradient-to-r ${item.gradient} text-white shadow-xl ${item.shadow}`
-                              : `bg-transparent ${item.hoverBg}`
-                          )}
-                        >
-                          {/* Mirror shine on active */}
-                          {isActive && (
-                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 animate-pulse pointer-events-none" />
-                          )}
+                        // <motion.button
+                        //   key={item.id}
+                        //   whileHover={{ scale: 1.02 }}
+                        //   whileTap={{ scale: 0.98 }}
+                        //   onClick={() => handleSectionChange(item.id)}
+                        //   className={cn(
+                        //     'w-full flex items-center gap-3 rounded-2xl transition-all duration-300 group relative overflow-hidden',
+                        //     sidebarCollapsed ? 'p-3 justify-center' : 'px-4 py-3',
+                        //     isActive
+                        //       ? `bg-gradient-to-r ${item.gradient} text-white shadow-xl ${item.shadow}`
+                        //       : `bg-transparent ${item.hoverBg}`
+                        //   )}
+                        // >
+                        //   {/* Mirror shine on active */}
+                        //   {isActive && (
+                        //     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 animate-pulse pointer-events-none" />
+                        //   )}
 
-                          <div className={cn(
-                            'flex-shrink-0 rounded-xl flex items-center justify-center transition-all duration-300',
-                            sidebarCollapsed ? 'w-10 h-10' : 'w-9 h-9',
-                            isActive
-                              ? 'bg-white/20 shadow-inner'
-                              : `${item.iconBg} shadow-lg ${item.shadow}`
-                          )}>
-                            <Icon className={cn(
-                              'transition-all duration-300',
-                              sidebarCollapsed ? 'h-5 w-5' : 'h-4 w-4',
-                              'text-white'
-                            )} />
-                          </div>
+                        //   <div className={cn(
+                        //     'flex-shrink-0 rounded-xl flex items-center justify-center transition-all duration-300',
+                        //     sidebarCollapsed ? 'w-10 h-10' : 'w-9 h-9',
+                        //     isActive
+                        //       ? 'bg-white/20 shadow-inner'
+                        //       : `${item.iconBg} shadow-lg ${item.shadow}`
+                        //   )}>
+                        //     <Icon className={cn(
+                        //       'transition-all duration-300',
+                        //       sidebarCollapsed ? 'h-5 w-5' : 'h-4 w-4',
+                        //       'text-white'
+                        //     )} />
+                        //   </div>
 
-                          {!sidebarCollapsed && (
-                            <motion.div
-                              initial={{ opacity: 0, x: -10 }}
-                              animate={{ opacity: 1, x: 0 }}
-                              className="flex-1 text-left min-w-0"
+                        //   {!sidebarCollapsed && (
+                        //     <motion.div
+                        //       initial={{ opacity: 0, x: -10 }}
+                        //       animate={{ opacity: 1, x: 0 }}
+                        //       className="flex-1 text-left min-w-0"
+                        //     >
+                        //       <span className={cn(
+                        //         'font-bold text-sm block truncate',
+                        //         isActive ? 'text-white' : 'text-foreground'
+                        //       )}>
+                        //         {item.label}
+                        //       </span>
+                        //     </motion.div>
+                        //   )}
+
+                        //   {/* Badge for pointage */}
+                        //   {item.id === 'pointage' && tacheCount > 0 && (
+                        //     <Badge className={cn(
+                        //       'bg-red-500 text-white border-0 animate-pulse text-[10px] px-1.5 py-0',
+                        //       sidebarCollapsed && 'absolute -top-1 -right-1'
+                        //     )}>
+                        //       {tacheCount}
+                        //     </Badge>
+                        //   )}
+
+                        //   {/* Active indicator */}
+                        //   {isActive && !sidebarCollapsed && (
+                        //     <div className="flex-shrink-0">
+                        //       <Diamond className="h-3 w-3 text-white/70" />
+                        //     </div>
+                        //   )}
+                        // </motion.button>
+                        <div key={item.id} className="relative">
+                          <motion.button
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => handleSectionChange(item.id)}
+                            className={cn(
+                              'w-full flex items-center gap-3 rounded-2xl transition-all duration-300 group relative overflow-hidden',
+                              sidebarCollapsed ? 'p-3 justify-center' : 'px-4 py-3',
+                              isActive
+                                ? `bg-gradient-to-r ${item.gradient} text-white shadow-xl ${item.shadow}`
+                                : `bg-transparent ${item.hoverBg}`
+                            )}
+                          >
+                            {/* ✨ Mirror shine */}
+                            {isActive && (
+                              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 animate-pulse pointer-events-none" />
+                            )}
+
+                            {/* 🔵 Icon */}
+                            <div
+                              className={cn(
+                                'flex-shrink-0 rounded-xl flex items-center justify-center transition-all duration-300',
+                                sidebarCollapsed ? 'w-10 h-10' : 'w-9 h-9',
+                                isActive
+                                  ? 'bg-white/20 shadow-inner'
+                                  : `${item.iconBg} shadow-lg ${item.shadow}`
+                              )}
                             >
-                              <span className={cn(
-                                'font-bold text-sm block truncate',
-                                isActive ? 'text-white' : 'text-foreground'
-                              )}>
-                                {item.label}
-                              </span>
-                            </motion.div>
-                          )}
-
-                          {/* Badge for pointage */}
-                          {item.id === 'pointage' && tacheCount > 0 && (
-                            <Badge className={cn(
-                              'bg-red-500 text-white border-0 animate-pulse text-[10px] px-1.5 py-0',
-                              sidebarCollapsed && 'absolute -top-1 -right-1'
-                            )}>
-                              {tacheCount}
-                            </Badge>
-                          )}
-
-                          {/* Active indicator */}
-                          {isActive && !sidebarCollapsed && (
-                            <div className="flex-shrink-0">
-                              <Diamond className="h-3 w-3 text-white/70" />
+                              <Icon
+                                className={cn(
+                                  'transition-all duration-300',
+                                  sidebarCollapsed ? 'h-5 w-5' : 'h-4 w-4',
+                                  'text-white'
+                                )}
+                              />
                             </div>
+
+                            {/* 📝 Label */}
+                            {!sidebarCollapsed && (
+                              <motion.div
+                                initial={{ opacity: 0, x: -10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                className="flex-1 text-left min-w-0"
+                              >
+                                <span
+                                  className={cn(
+                                    'font-bold text-sm block truncate',
+                                    isActive ? 'text-white' : 'text-foreground'
+                                  )}
+                                >
+                                  {item.label}
+                                </span>
+                              </motion.div>
+                            )}
+
+                            {/* 💎 Active indicator */}
+                            {isActive && !sidebarCollapsed && (
+                              <div className="flex-shrink-0">
+                                <Diamond className="h-3 w-3 text-white/70" />
+                              </div>
+                            )}
+                          </motion.button>
+
+                          {/* 🔴 Badge EXTERNE */}
+                          {item.id === 'pointage' && tacheCount > 0 && (
+                            <span className="absolute top-0 right-0 translate-x-1/2 -translate-y-1/2 z-30">
+                              <Badge className="bg-red-500 text-white border-0 animate-pulse text-[10px] px-1.5 py-0 shadow-lg ring-2 ring-white">
+                                {tacheCount}
+                              </Badge>
+                            </span>
                           )}
-                        </motion.button>
+                        </div>
                       );
                     })}
                   </nav>

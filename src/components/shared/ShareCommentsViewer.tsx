@@ -132,7 +132,7 @@ const handleViewSnapshot = async () => {
 
         {selectedComment ? (
           <div className="flex-1 overflow-y-auto">
-            <button onClick={() => { setSelectedComment(null); setShowSnapshot(false); }} className="text-xs text-blue-500 hover:underline mb-3 flex items-center gap-1">
+            <button onClick={() => { setSelectedComment(null); setShowSnapshot(false); }} className="text-xs text-green-600 font-bold hover:underline mb-3 flex items-center gap-1">
               ← Retour à la liste
             </button>
 
