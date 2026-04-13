@@ -78,9 +78,9 @@ const PointagePage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
         pointageApi.getByMonth(year, month + 1),
         travailleurApi.getAll()
       ]);
-      setEntreprises(entRes.data);
-      setPointages(ptRes.data);
-      setTravailleurs(travRes.data);
+      setEntreprises(Array.isArray(entRes.data) ? entRes.data : []);
+      setPointages(Array.isArray(ptRes.data) ? ptRes.data : []);
+      setTravailleurs(Array.isArray(travRes.data) ? travRes.data : []);
     } catch (err) {
       console.error('Error fetching data:', err);
     } finally {
@@ -136,7 +136,7 @@ const PointagePage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
       toast({ title: 'Erreur', description: 'Date et entreprise requis', variant: 'destructive' });
       return;
     }
-    const ent = entreprises.find(e => e.id === ptForm.entrepriseId);
+    const ent = (Array.isArray(entreprises) ? entreprises : []).find(e => e.id === ptForm.entrepriseId);
     if (!ent) return;
 
     let montantTotal = 0, heures = 0, prixJournalier = 0, prixHeure = 0;
@@ -205,7 +205,7 @@ const PointagePage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
     setShowYearlyModal(true);
     try {
       const res = await pointageApi.getByYear(year);
-      setYearlyPointages(res.data);
+      setYearlyPointages(Array.isArray(res.data) ? res.data : []);
     } catch {
       toast({ title: 'Erreur', variant: 'destructive' });
     } finally {

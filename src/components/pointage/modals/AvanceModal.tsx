@@ -125,9 +125,9 @@ const AvanceModal: React.FC<AvanceModalProps> = ({
 
   const filteredTravailleurs = travSearch.length >= 3
     ? travailleurs.filter(t => {
-      const q = travSearch.toLowerCase();
-      return `${t.prenom} ${t.nom}`.toLowerCase().includes(q) || `${t.nom} ${t.prenom}`.toLowerCase().includes(q);
-    })
+        const q = travSearch.toLowerCase();
+        return `${t.prenom} ${t.nom}`.toLowerCase().includes(q) || `${t.nom} ${t.prenom}`.toLowerCase().includes(q);
+      })
     : [];
 
   const hasEntrepriseFilter = entrepriseId && entrepriseId !== 'all';
@@ -195,7 +195,7 @@ const AvanceModal: React.FC<AvanceModalProps> = ({
       const d = parseDate(p.date);
       const monday = getMonday(d);
       const sunday = getSunday(d);
-      const key = `${monday.getFullYear()}-${(monday.getMonth() + 1).toString().padStart(2, '0')}-${monday.getDate().toString().padStart(2, '0')}`;
+      const key = `${monday.getFullYear()}-${(monday.getMonth()+1).toString().padStart(2,'0')}-${monday.getDate().toString().padStart(2,'0')}`;
       if (!map.has(key)) {
         map.set(key, {
           key,
@@ -573,13 +573,7 @@ const AvanceModal: React.FC<AvanceModalProps> = ({
             <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 space-y-3">
               <p className="text-sm font-bold text-amber-300">⚠️ Confirmer l'enregistrement de cette avance de {montantNum.toFixed(2)}€ pour {travNom} ?</p>
               <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setConfirmSave(false)}
-                  className="flex-1 rounded-xl border-red-500 text-white font-bold bg-red-600 hover:bg-red-400"
-                >
-                  Annuler
-                </Button>
+                <Button variant="outline" onClick={() => setConfirmSave(false)} className="flex-1 rounded-xl border-white/20 text-white hover:bg-white/10">Annuler</Button>
                 <Button onClick={handleSave} disabled={loading}
                   className="flex-1 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white font-bold">
                   {loading ? '⏳...' : '✅ Confirmer'}

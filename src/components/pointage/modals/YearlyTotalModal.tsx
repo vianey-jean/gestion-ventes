@@ -15,6 +15,7 @@ interface YearlyTotalModalProps {
 const YearlyTotalModal: React.FC<YearlyTotalModalProps> = ({
   open, onOpenChange, year, yearlyPointages, loading
 }) => {
+  const safeYearlyPointages = Array.isArray(yearlyPointages) ? yearlyPointages : [];
   const [avances, setAvances] = useState<Avance[]>([]);
   const [loadingAv, setLoadingAv] = useState(false);
 
@@ -24,28 +25,29 @@ const YearlyTotalModal: React.FC<YearlyTotalModalProps> = ({
       setLoadingAv(true);
       try {
         const res = await avanceApi.getAll();
-        setAvances(res.data.filter((a: Avance) => a.annee === year));
+        const safeAvances = Array.isArray(res.data) ? res.data : [];
+        setAvances(safeAvances.filter((a: Avance) => a.annee === year));
       } catch { setAvances([]); }
       finally { setLoadingAv(false); }
     };
     load();
   }, [open, year]);
 
-  const yearlyByEntreprise = yearlyPointages.reduce((acc, p) => {
+  const yearlyByEntreprise = safeYearlyPointages.reduce((acc, p) => {
     const key = p.entrepriseNom || p.entrepriseId;
     if (!acc[key]) acc[key] = [];
     acc[key].push(p);
     return acc;
   }, {} as Record<string, PointageEntry[]>);
 
-  const yearlyByPerson = yearlyPointages.reduce((acc, p) => {
+  const yearlyByPerson = safeYearlyPointages.reduce((acc, p) => {
     const name = (p as any).travailleurNom || 'Sans nom';
     if (!acc[name]) acc[name] = [];
     acc[name].push(p);
     return acc;
   }, {} as Record<string, PointageEntry[]>);
 
-  const yearlyGlobalTotal = yearlyPointages.reduce((s, p) => s + p.montantTotal, 0);
+  const yearlyGlobalTotal = safeYearlyPointages.reduce((s, p) => s + p.montantTotal, 0);
   const totalAvances = avances.reduce((s, a) => s + a.montant, 0);
   const reste = Math.max(0, yearlyGlobalTotal - totalAvances);
 
@@ -63,7 +65,7 @@ const YearlyTotalModal: React.FC<YearlyTotalModalProps> = ({
 
         {loading || loadingAv ? (
           <div className="text-center py-8"><p className="text-white/60 font-bold">⏳ Chargement...</p></div>
-        ) : yearlyPointages.length === 0 ? (
+        ) : safeYearlyPointages.length === 0 ? (
           <div className="text-center py-8"><p className="text-white/50 font-bold">Aucun pointage en {year}</p></div>
         ) : (
           <div className="space-y-4">
@@ -71,7 +73,7 @@ const YearlyTotalModal: React.FC<YearlyTotalModalProps> = ({
             <div className="p-4 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 text-center">
               <p className="text-xs text-white/60 mb-1">TOTAL ANNUEL {year}</p>
               <p className="text-3xl font-black text-emerald-400">{yearlyGlobalTotal.toFixed(2)}€</p>
-              <p className="text-xs text-white/50 mt-1">{yearlyPointages.length} pointage(s)</p>
+              <p className="text-xs text-white/50 mt-1">{safeYearlyPointages.length} pointage(s)</p>
             </div>
 
             {/* Par Entreprise avec avances */}

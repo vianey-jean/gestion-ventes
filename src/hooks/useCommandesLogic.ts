@@ -141,7 +141,7 @@ export const useCommandesLogic = () => {
   const fetchCommandes = async () => {
     try {
       const response = await api.get('/api/commandes');
-      setCommandes(response.data);
+      setCommandes(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       console.error('Error fetching commandes:', error);
       toast({ title: 'Erreur', description: 'Impossible de charger les commandes', className: "bg-app-red text-white", variant: 'destructive' });

@@ -235,8 +235,9 @@ const LiveChatAdmin: React.FC = () => {
       const res = await fetch(`${API_BASE}/api/messagerie/admin-users`, { headers: authHeaders });
       if (res.ok) {
         const data = await res.json();
+        const safeAdmins = Array.isArray(data) ? data : [];
         // Filter out self
-        setAdminUsers(data.filter((a: AdminUser) => a.id !== user.id));
+        setAdminUsers(safeAdmins.filter((a: AdminUser) => a.id !== user.id));
       }
     } catch (e) {
       if (e instanceof TypeError && e.message.includes('NetworkError')) {
@@ -253,8 +254,9 @@ const LiveChatAdmin: React.FC = () => {
       const res = await fetch(`${API_BASE}/api/messagerie/admin-conversations`, { headers: authHeaders });
       if (res.ok) {
         const data = await res.json();
-        setAdminConversations(data);
-        setAdminUnread(data.reduce((sum: number, c: AdminConversation) => sum + c.unreadCount, 0));
+        const safeConversations = Array.isArray(data) ? data : [];
+        setAdminConversations(safeConversations);
+        setAdminUnread(safeConversations.reduce((sum: number, c: AdminConversation) => sum + c.unreadCount, 0));
       }
     } catch (e) {
       console.error('Error loading admin conversations:', e);
@@ -267,7 +269,7 @@ const LiveChatAdmin: React.FC = () => {
       const res = await fetch(`${API_BASE}/api/messagerie/admin-messages/${otherAdminId}`, { headers: authHeaders });
       if (res.ok) {
         const data = await res.json();
-        setAdminMessages(data);
+        setAdminMessages(Array.isArray(data) ? data : []);
         // Mark as read
         fetch(`${API_BASE}/api/messagerie/admin-mark-read/${otherAdminId}`, {
           method: 'PUT', headers: authHeaders
@@ -285,8 +287,9 @@ const LiveChatAdmin: React.FC = () => {
       const res = await fetch(`${API_BASE}/api/messagerie/groups`, { headers: authHeaders });
       if (res.ok) {
         const data = await res.json();
-        setGroups(data);
-        setGroupUnread(data.reduce((sum: number, g: GroupChat) => sum + (g.unreadCount || 0), 0));
+        const safeGroups = Array.isArray(data) ? data : [];
+        setGroups(safeGroups);
+        setGroupUnread(safeGroups.reduce((sum: number, g: GroupChat) => sum + (g.unreadCount || 0), 0));
       }
     } catch (e) {
       console.error('Error loading groups:', e);

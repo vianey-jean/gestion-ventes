@@ -31,8 +31,18 @@ export const productCommentsApi = {
     return response.data;
   },
 
+  async update(id: string, data: { comment: string; rating: number; clientName?: string }): Promise<ProductComment> {
+    const response = await api.put(`/api/product-comments/${id}`, data);
+    return response.data;
+  },
+
   async delete(id: string): Promise<void> {
     await api.delete(`/api/product-comments/${id}`);
+  },
+
+  async deleteMany(ids: string[]): Promise<{ message: string; count: number }> {
+    const response = await api.delete('/api/product-comments/bulk', { data: { ids } });
+    return response.data;
   },
 
   async deleteByProductId(productId: string): Promise<void> {

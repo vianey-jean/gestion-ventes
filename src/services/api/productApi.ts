@@ -7,8 +7,10 @@ export const productApiService = {
   async getAll(): Promise<Product[]> {
     console.log('📦 Fetching products from API...');
     const response: AxiosResponse<Product[]> = await api.get('/api/products');
-    console.log(`✅ Retrieved ${response.data.length} products from API`);
-    return response.data;
+    // Guard: ensure we always return an array even if server returns unexpected data
+    const products = Array.isArray(response.data) ? response.data : [];
+    console.log(`✅ Retrieved ${products.length} products from API`);
+    return products;
   },
 
   async getById(id: string): Promise<Product> {

@@ -130,20 +130,23 @@ class DataOptimizationService {
    * Optimise les calculs de ventes avec mémoisation (fonction pure)
    */
   public optimizeSalesCalculations(sales: readonly Sale[]): OptimizedSalesCalculations {
+    // Guard: ensure sales is a valid array
+    const safeSales = Array.isArray(sales) ? sales : [];
+    
     // Créer une clé de cache basée sur les IDs des ventes
-    const cacheKey = `sales-calc-${sales.length}-${this.createSalesCacheKey(sales)}`;
+    const cacheKey = `sales-calc-${safeSales.length}-${this.createSalesCacheKey(safeSales)}`;
     const cached = this.getCache<OptimizedSalesCalculations>(cacheKey);
     
     if (cached) return cached;
 
     // Calculs purs sans effets de bord
     const calculations: OptimizedSalesCalculations = Object.freeze({
-      totalProfit: sales.reduce((sum, sale) => sum + sale.profit, 0),
-      totalRevenue: sales.reduce((sum, sale) => sum + (sale.sellingPrice ), 0),
-      totalQuantity: sales.reduce((sum, sale) => sum + sale.quantitySold, 0),
-      averageProfit: sales.length > 0 ? sales.reduce((sum, sale) => sum + sale.profit, 0) / sales.length : 0,
-      topProducts: this.getTopProducts(sales),
-      salesByDate: this.groupSalesByDate(sales)
+      totalProfit: safeSales.reduce((sum, sale) => sum + sale.profit, 0),
+      totalRevenue: safeSales.reduce((sum, sale) => sum + (sale.sellingPrice ), 0),
+      totalQuantity: safeSales.reduce((sum, sale) => sum + sale.quantitySold, 0),
+      averageProfit: safeSales.length > 0 ? safeSales.reduce((sum, sale) => sum + sale.profit, 0) / safeSales.length : 0,
+      topProducts: this.getTopProducts(safeSales),
+      salesByDate: this.groupSalesByDate(safeSales)
     });
 
     this.setCache(cacheKey, calculations);
@@ -238,18 +241,21 @@ class DataOptimizationService {
    * Optimise les données de produits (fonction pure)
    */
   public optimizeProductData(products: readonly Product[]): OptimizedProductData {
-    const cacheKey = `products-opt-${products.length}-${this.createProductsCacheKey(products)}`;
+    // Guard: ensure products is a valid array
+    const safeProducts = Array.isArray(products) ? products : [];
+    
+    const cacheKey = `products-opt-${safeProducts.length}-${this.createProductsCacheKey(safeProducts)}`;
     const cached = this.getCache<OptimizedProductData>(cacheKey);
     
     if (cached) return cached;
 
     const optimized: OptimizedProductData = Object.freeze({
-      totalValue: products.reduce((sum, p) => sum + (p.purchasePrice * p.quantity), 0),
-      availableProducts: Object.freeze([...products.filter(p => p.quantity > 0)]),
-      lowStockProducts: Object.freeze([...products.filter(p => p.quantity > 0 && p.quantity <= 5)]),
-      outOfStockProducts: Object.freeze([...products.filter(p => p.quantity === 0)]),
-      totalItems: products.reduce((sum, p) => sum + p.quantity, 0),
-      categories: this.categorizeProducts(products)
+      totalValue: safeProducts.reduce((sum, p) => sum + (p.purchasePrice * p.quantity), 0),
+      availableProducts: Object.freeze([...safeProducts.filter(p => p.quantity > 0)]),
+      lowStockProducts: Object.freeze([...safeProducts.filter(p => p.quantity > 0 && p.quantity <= 5)]),
+      outOfStockProducts: Object.freeze([...safeProducts.filter(p => p.quantity === 0)]),
+      totalItems: safeProducts.reduce((sum, p) => sum + p.quantity, 0),
+      categories: this.categorizeProducts(safeProducts)
     });
 
     this.setCache(cacheKey, optimized);

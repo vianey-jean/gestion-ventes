@@ -25,7 +25,9 @@ interface PointageFormModalProps {
 const PointageFormModal: React.FC<PointageFormModalProps> = ({
   open, onOpenChange, form, setForm, entreprises, travailleurs, onSubmit, premiumBtnClass, mirrorShine
 }) => {
-  const selectedEntreprise = entreprises.find(e => e.id === form.entrepriseId);
+  const safeEntreprises = Array.isArray(entreprises) ? entreprises : [];
+  const safeTravailleurs = Array.isArray(travailleurs) ? travailleurs : [];
+  const selectedEntreprise = safeEntreprises.find(e => e.id === form.entrepriseId);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -40,7 +42,7 @@ const PointageFormModal: React.FC<PointageFormModalProps> = ({
         </DialogHeader>
         <div className="space-y-4">
           <TravailleurSearchInput
-            travailleurs={travailleurs}
+            travailleurs={safeTravailleurs}
             selectedId={form.travailleurId}
             selectedNom={form.travailleurNom}
             onSelect={(id, nom) => setForm({ ...form, travailleurId: id, travailleurNom: nom })}
@@ -64,7 +66,7 @@ const PointageFormModal: React.FC<PointageFormModalProps> = ({
                 <SelectValue placeholder="Choisir une entreprise" />
               </SelectTrigger>
               <SelectContent>
-                {entreprises.map(e => (
+                {safeEntreprises.map(e => (
                   <SelectItem key={e.id} value={e.id}>
                     {e.nom} ({e.typePaiement === 'journalier' ? `${e.prix}€/jour` : `${e.prix}€/h`})
                   </SelectItem>

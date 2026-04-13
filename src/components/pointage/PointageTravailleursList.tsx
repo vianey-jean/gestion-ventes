@@ -8,7 +8,8 @@ interface PointageTravailleurs_ListProps {
   travailleurs: Travailleur[];
 }
 
-const PointageTravailleursList: React.FC<PointageTravailleurs_ListProps> = ({ travailleurs }) => {
+const PointageTravailleursList: React.FC<PointageTravailleurs_ListProps> = ({ travailleurs: rawTravailleurs }) => {
+  const travailleurs = Array.isArray(rawTravailleurs) ? rawTravailleurs : [];
   const [show, setShow] = useState(true);
 
   if (travailleurs.length === 0) return null;

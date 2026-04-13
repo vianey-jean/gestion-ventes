@@ -51,7 +51,7 @@ const ProductCommentScroller: React.FC<ProductCommentScrollerProps> = ({ comment
           className={`absolute inset-0 flex items-center justify-center px-1`}
         >
           <span className={`text-[10px] font-semibold truncate max-w-full px-1.5 py-0.5 rounded border ${getRatingBg(current.rating)} ${getRatingColor(current.rating)}`}>
-            {'★'.repeat(current.rating)}{'☆'.repeat(5 - current.rating)} / {current.clientName ? `${current.clientName}: ` : ''} / {current.comment}
+            {'★'.repeat(current.rating)}{'☆'.repeat(5 - current.rating)} {current.clientName ? `${current.clientName}: ` : ''}{current.comment}
           </span>
         </motion.div>
       </AnimatePresence>

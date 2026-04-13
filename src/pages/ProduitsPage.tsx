@@ -16,10 +16,12 @@ import {
   X, PackagePlus, Pencil, ImageOff, ShoppingBag, MessageSquare, ChevronDown, ChevronUp
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import SharedPagination from '@/components/shared/Pagination';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog';
@@ -93,15 +95,29 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
   const [clientSearchQuery, setClientSearchQuery] = useState('');
   const [clientSearchResults, setClientSearchResults] = useState<Client[]>([]);
   const [showClientDropdown, setShowClientDropdown] = useState(false);
+  const [selectedCommentIds, setSelectedCommentIds] = useState<string[]>([]);
+  const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
+  const [editingCommentText, setEditingCommentText] = useState('');
+  const [editingCommentRating, setEditingCommentRating] = useState(5);
+  const [editingCommentClientName, setEditingCommentClientName] = useState('');
+  const [isUpdatingComment, setIsUpdatingComment] = useState(false);
+  const [isDeletingComments, setIsDeletingComments] = useState(false);
 
   // Fetch all ratings
   const fetchRatings = useCallback(async () => {
     try {
       const data = await productCommentsApi.getAllRatings();
-      setAllRatings(data);
+      setAllRatings(data && typeof data === 'object' && !Array.isArray(data) ? data : {});
     } catch (e) {
       console.error('Error fetching ratings:', e);
     }
+  }, []);
+
+  const resetCommentEditor = useCallback(() => {
+    setEditingCommentId(null);
+    setEditingCommentText('');
+    setEditingCommentRating(5);
+    setEditingCommentClientName('');
   }, []);
 
   useEffect(() => {
@@ -303,7 +319,67 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
     setSelectedProduct(product);
     setCurrentPhotoIndex(0);
     setShowCommentsList(false);
+    setSelectedCommentIds([]);
+    resetCommentEditor();
     setIsViewOpen(true);
+  };
+
+  const startEditingComment = (comment: ProductComment) => {
+    setEditingCommentId(comment.id);
+    setEditingCommentText(comment.comment);
+    setEditingCommentRating(comment.rating);
+    setEditingCommentClientName(comment.clientName || '');
+  };
+
+  const toggleCommentSelection = (commentId: string, checked: boolean) => {
+    setSelectedCommentIds(prev => checked ? [...prev, commentId] : prev.filter(id => id !== commentId));
+  };
+
+  const handleSaveCommentEdit = async () => {
+    if (!editingCommentId || !editingCommentText.trim()) return;
+
+    setIsUpdatingComment(true);
+    try {
+      await productCommentsApi.update(editingCommentId, {
+        comment: editingCommentText.trim(),
+        rating: editingCommentRating,
+        clientName: editingCommentClientName.trim(),
+      });
+      await fetchRatings();
+      resetCommentEditor();
+      toast({ title: 'Succès', description: 'Commentaire modifié', className: 'notification-success' });
+    } catch {
+      toast({ title: 'Erreur', description: 'Impossible de modifier ce commentaire', variant: 'destructive', className: 'notification-erreur' });
+    } finally {
+      setIsUpdatingComment(false);
+    }
+  };
+
+  const handleDeleteComments = async (ids: string[]) => {
+    if (ids.length === 0) return;
+    const confirmed = window.confirm(ids.length === 1 ? 'Supprimer ce commentaire ?' : `Supprimer ${ids.length} commentaires ?`);
+    if (!confirmed) return;
+
+    setIsDeletingComments(true);
+    try {
+      if (ids.length === 1) {
+        await productCommentsApi.delete(ids[0]);
+      } else {
+        await productCommentsApi.deleteMany(ids);
+      }
+
+      await fetchRatings();
+      setSelectedCommentIds(prev => prev.filter(id => !ids.includes(id)));
+      if (editingCommentId && ids.includes(editingCommentId)) {
+        resetCommentEditor();
+      }
+
+      toast({ title: 'Succès', description: ids.length === 1 ? 'Commentaire supprimé' : `${ids.length} commentaires supprimés`, className: 'notification-success' });
+    } catch {
+      toast({ title: 'Erreur', description: 'Impossible de supprimer le(s) commentaire(s)', variant: 'destructive', className: 'notification-erreur' });
+    } finally {
+      setIsDeletingComments(false);
+    }
   };
 
   const filters: { key: FilterType; label: string; icon: React.ReactNode }[] = [
@@ -966,7 +1042,13 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
 
         {/* ========== VIEW MODAL (Photo Slideshow) ========== */}
         {selectedProduct && (
-          <Dialog open={isViewOpen} onOpenChange={setIsViewOpen}>
+          <Dialog open={isViewOpen} onOpenChange={(open) => {
+            setIsViewOpen(open);
+            if (!open) {
+              setSelectedCommentIds([]);
+              resetCommentEditor();
+            }
+          }}>
             <DialogContent className="sm:max-w-2xl bg-gradient-to-br from-slate-900 via-violet-900/30 to-purple-900/20 backdrop-blur-2xl border border-white/10 shadow-2xl rounded-3xl max-h-[90vh] overflow-y-auto">
               <DialogHeader className="text-center space-y-4 pb-2">
                 <div className="mx-auto flex items-center gap-3 px-4 py-3 bg-gradient-to-br from-violet-500 to-purple-600 rounded-2xl shadow-xl shadow-violet-500/30">
@@ -1107,26 +1189,127 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
                                 exit={{ height: 0, opacity: 0 }}
                                 className="overflow-hidden"
                               >
-                                <div className="px-4 pb-4 space-y-2 max-h-48 overflow-y-auto">
+                                <div className="px-4 pb-4 space-y-2 max-h-64 overflow-y-auto">
+                                  {selectedCommentIds.length > 0 && (
+                                    <div className="flex items-center justify-between gap-3 rounded-xl border border-red-500/20 bg-red-500/10 p-3">
+                                      <span className="text-xs font-bold text-red-200">
+                                        {selectedCommentIds.length} commentaire{selectedCommentIds.length > 1 ? 's' : ''} sélectionné{selectedCommentIds.length > 1 ? 's' : ''}
+                                      </span>
+                                      <div className="flex items-center gap-2">
+                                        <Button
+                                          type="button"
+                                          variant="outline"
+                                          onClick={() => setSelectedCommentIds([])}
+                                          className="h-8 border-white/20 bg-white/5 text-white/80 hover:bg-white/10"
+                                        >
+                                          Annuler
+                                        </Button>
+                                        <Button
+                                          type="button"
+                                          onClick={() => handleDeleteComments(selectedCommentIds)}
+                                          disabled={isDeletingComments}
+                                          className="h-8 bg-gradient-to-r from-red-500 to-rose-600 text-white border-0"
+                                        >
+                                          <Trash2 className="mr-2 h-3.5 w-3.5" />
+                                          Supprimer
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  )}
                                   {comments.map(c => {
                                     const cColor = c.rating <= 2 ? 'border-red-500/30 bg-red-500/5' : c.rating === 3 ? 'border-yellow-500/30 bg-yellow-500/5' : 'border-emerald-500/30 bg-emerald-500/5';
                                     const cStarColor = c.rating <= 2 ? 'text-red-500' : c.rating === 3 ? 'text-yellow-500' : 'text-emerald-500';
+                                    const isEditing = editingCommentId === c.id;
                                     return (
                                       <div key={c.id} className={`p-3 rounded-xl border ${cColor}`}>
-                                        <div className="flex items-center justify-between mb-1">
-                                          <div className={`flex items-center gap-1 ${cStarColor}`}>
-                                            {Array.from({ length: 5 }).map((_, i) => (
-                                              <Star key={i} className={cn("h-3 w-3", i < c.rating ? "fill-current" : "opacity-20")} />
-                                            ))}
+                                        <div className="flex items-start gap-3">
+                                          <Checkbox
+                                            checked={selectedCommentIds.includes(c.id)}
+                                            onCheckedChange={(checked) => toggleCommentSelection(c.id, checked === true)}
+                                            className="mt-1 border-white/30 data-[state=checked]:bg-red-500 data-[state=checked]:text-white"
+                                          />
+                                          <div className="flex-1 space-y-2">
+                                            <div className="flex items-start justify-between gap-3 mb-1">
+                                              <div>
+                                                <div className={`flex items-center gap-1 ${isEditing ? (editingCommentRating <= 2 ? 'text-red-500' : editingCommentRating === 3 ? 'text-yellow-500' : 'text-emerald-500') : cStarColor}`}>
+                                                  {Array.from({ length: 5 }).map((_, i) => (
+                                                    <button
+                                                      key={i}
+                                                      type="button"
+                                                      onClick={() => isEditing && setEditingCommentRating(i + 1)}
+                                                      className={isEditing ? 'cursor-pointer transition-transform hover:scale-110' : 'cursor-default'}
+                                                    >
+                                                      <Star className={cn('h-3 w-3', i < (isEditing ? editingCommentRating : c.rating) ? 'fill-current' : 'opacity-20')} />
+                                                    </button>
+                                                  ))}
+                                                </div>
+                                                {(isEditing ? editingCommentClientName : c.clientName) && (
+                                                  <span className="text-cyan-400 text-xs font-bold flex items-center gap-1 mt-1">
+                                                    <User className="h-3 w-3" /> {isEditing ? editingCommentClientName : c.clientName}
+                                                  </span>
+                                                )}
+                                              </div>
+                                              <div className="flex items-center gap-1">
+                                                <button
+                                                  type="button"
+                                                  onClick={() => startEditingComment(c)}
+                                                  className="rounded-lg border border-blue-500/20 bg-blue-500/10 p-1.5 text-blue-300 transition-colors hover:bg-blue-500/20"
+                                                  title="Modifier le commentaire"
+                                                >
+                                                  <Pencil className="h-3.5 w-3.5" />
+                                                </button>
+                                                <button
+                                                  type="button"
+                                                  onClick={() => handleDeleteComments([c.id])}
+                                                  className="rounded-lg border border-red-500/20 bg-red-500/10 p-1.5 text-red-300 transition-colors hover:bg-red-500/20"
+                                                  title="Supprimer le commentaire"
+                                                >
+                                                  <Trash2 className="h-3.5 w-3.5" />
+                                                </button>
+                                              </div>
+                                            </div>
+
+                                            {isEditing ? (
+                                              <div className="space-y-2">
+                                                <Input
+                                                  value={editingCommentClientName}
+                                                  onChange={(e) => setEditingCommentClientName(e.target.value)}
+                                                  placeholder="Nom du client"
+                                                  className="bg-white/10 border border-white/20 focus:border-cyan-400 rounded-xl text-white placeholder:text-white/40"
+                                                />
+                                                <Textarea
+                                                  value={editingCommentText}
+                                                  onChange={(e) => setEditingCommentText(e.target.value)}
+                                                  placeholder="Modifier le commentaire..."
+                                                  className="min-h-[96px] bg-white/10 border border-white/20 focus:border-purple-400 rounded-xl text-white placeholder:text-white/40"
+                                                />
+                                                <div className="flex gap-2">
+                                                  <Button
+                                                    type="button"
+                                                    onClick={handleSaveCommentEdit}
+                                                    disabled={isUpdatingComment || !editingCommentText.trim()}
+                                                    className="h-9 bg-gradient-to-r from-emerald-500 to-teal-600 text-white border-0"
+                                                  >
+                                                    {isUpdatingComment ? 'Validation...' : 'Valider'}
+                                                  </Button>
+                                                  <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    onClick={resetCommentEditor}
+                                                    className="h-9 border-white/20 bg-white/5 text-white/80 hover:bg-white/10"
+                                                  >
+                                                    Annuler
+                                                  </Button>
+                                                </div>
+                                              </div>
+                                            ) : (
+                                              <>
+                                                <p className="text-white/80 text-sm">{c.comment}</p>
+                                                <p className="text-white/30 text-[10px] mt-1">{new Date(c.createdAt).toLocaleDateString('fr-FR')}</p>
+                                              </>
+                                            )}
                                           </div>
-                                          {c.clientName && (
-                                            <span className="text-cyan-400 text-xs font-bold flex items-center gap-1">
-                                              <User className="h-3 w-3" /> {c.clientName}
-                                            </span>
-                                          )}
                                         </div>
-                                        <p className="text-white/80 text-sm">{c.comment}</p>
-                                        <p className="text-white/30 text-[10px] mt-1">{new Date(c.createdAt).toLocaleDateString('fr-FR')}</p>
                                       </div>
                                     );
                                   })}

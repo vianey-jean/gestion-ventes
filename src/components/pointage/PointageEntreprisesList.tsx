@@ -16,7 +16,8 @@ interface PointageEntreprisesListProps {
   onRefresh?: () => void;
 }
 
-const PointageEntreprisesList: React.FC<PointageEntreprisesListProps> = ({ entreprises, onRefresh }) => {
+const PointageEntreprisesList: React.FC<PointageEntreprisesListProps> = ({ entreprises: rawEntreprises, onRefresh }) => {
+  const entreprises = Array.isArray(rawEntreprises) ? rawEntreprises : [];
   const [show, setShow] = useState(true);
   const { toast } = useToast();
 
