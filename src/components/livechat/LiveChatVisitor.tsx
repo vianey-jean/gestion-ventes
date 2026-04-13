@@ -198,8 +198,18 @@ const LiveChatVisitor: React.FC<LiveChatVisitorProps> = ({ visitorNom, adminId, 
     loadMessages();
     loadGroups();
 
-    const es = new EventSource(`${API_BASE}/api/messagerie/events?visitorId=${visitorId.current}`);
+    let es: EventSource;
+    try {
+      es = new EventSource(`${API_BASE}/api/messagerie/events?visitorId=${visitorId.current}`);
+    } catch {
+      console.warn('SSE messagerie visitor: failed to connect');
+      return;
+    }
     eventSourceRef.current = es;
+
+    es.onerror = () => {
+      console.warn('SSE messagerie visitor: connection error');
+    };
 
     // Messages privés
     es.addEventListener('new_message', (e) => {

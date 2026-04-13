@@ -375,11 +375,22 @@ const LiveChatAdmin: React.FC = () => {
     loadAdminConversations();
     loadGroups();
 
-    const es = new EventSource(`${API_BASE}/api/messagerie/events?adminId=${user.id}`);
+    let es: EventSource;
+    try {
+      es = new EventSource(`${API_BASE}/api/messagerie/events?adminId=${user.id}`);
+    } catch {
+      console.warn('SSE messagerie: failed to connect');
+      return;
+    }
     eventSourceRef.current = es;
 
     es.onopen = () => {
       scheduleSidebarRefresh();
+    };
+
+    es.onerror = () => {
+      // Silently handle SSE errors (CORS, network)
+      console.warn('SSE messagerie: connection error');
     };
 
     es.addEventListener('new_message', (e) => {

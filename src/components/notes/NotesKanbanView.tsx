@@ -53,8 +53,8 @@ const NotesKanbanView: React.FC = () => {
     try {
       setLoading(true);
       const [notesRes, colsRes] = await Promise.all([noteApi.getAll(), noteApi.getColumns()]);
-      setNotes(notesRes.data);
-      setColumns(colsRes.data);
+      setNotes(Array.isArray(notesRes.data) ? notesRes.data : []);
+      setColumns(Array.isArray(colsRes.data) ? colsRes.data : []);
     } catch (err) {
       console.error('Error fetching notes:', err);
     } finally {
