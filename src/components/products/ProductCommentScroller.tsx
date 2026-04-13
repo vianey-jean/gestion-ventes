@@ -30,20 +30,27 @@ const getRatingGradient = (rating: number) => {
 const ProductCommentScroller: React.FC<ProductCommentScrollerProps> = ({ comments }) => {
   const [index, setIndex] = useState(0);
 
-  if (!comments || comments.length === 0) return null;
+  // Reset index when comments array changes
+  useEffect(() => {
+    setIndex(prev => (comments && comments.length > 0 ? Math.min(prev, comments.length - 1) : 0));
+  }, [comments]);
 
   // Auto-scroll every 5 seconds
   useEffect(() => {
-    if (comments.length <= 1) return;
+    if (!comments || comments.length <= 1) return;
 
     const interval = setInterval(() => {
       setIndex((prev) => (prev + 1) % comments.length);
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [comments.length]);
+  }, [comments?.length]);
 
-  const comment = comments[index];
+  if (!comments || comments.length === 0) return null;
+
+  const safeIndex = Math.min(index, comments.length - 1);
+  const comment = comments[safeIndex];
+  if (!comment) return null;
 
   return (
     <div className="w-full space-y-1.5 mb-1 overflow-hidden">
@@ -95,7 +102,7 @@ const ProductCommentScroller: React.FC<ProductCommentScrollerProps> = ({ comment
             <div
               key={i}
               className={`h-1.5 w-1.5 rounded-full transition-all ${
-                i === index ? 'bg-primary w-3' : 'bg-gray-300 dark:bg-gray-600'
+                i === safeIndex ? 'bg-primary w-3' : 'bg-gray-300 dark:bg-gray-600'
               }`}
             />
           ))}
