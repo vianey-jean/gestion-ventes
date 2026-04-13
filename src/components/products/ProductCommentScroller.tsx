@@ -71,7 +71,7 @@ const ProductCommentScroller: React.FC<ProductCommentScrollerProps> = ({ comment
       </AnimatePresence>
 
       {/* Show more / less */}
-      {comments.length > 2 && (
+      {comments.length > 1 && (
         <button
           onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}
           className="flex items-center gap-1 text-[10px] font-bold text-primary hover:text-primary/80 transition-colors mx-auto"
