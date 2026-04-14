@@ -1,3 +1,4 @@
+/** Tendances.tsx - Page d'analyse des tendances de ventes avec graphiques */
 
 import React from 'react';
 import Layout from '../components/Layout';

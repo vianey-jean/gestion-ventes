@@ -1,3 +1,4 @@
+/** Ventes.tsx - Redirection vers la page ventes dans le dashboard */
 
 import React from 'react';
 import { Navigate } from 'react-router-dom';

@@ -1,3 +1,4 @@
+/** Comptabilite.tsx - Redirection vers la page comptabilité dans le dashboard */
 
 import React from 'react';
 import { Navigate } from 'react-router-dom';

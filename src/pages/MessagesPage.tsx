@@ -1,3 +1,4 @@
+/** MessagesPage.tsx - Page de messagerie interne avec notifications et compteur de non-lus */
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';

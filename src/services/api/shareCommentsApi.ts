@@ -1,3 +1,23 @@
+/**
+ * shareCommentsApi.ts
+ * 
+ * Service API pour la gestion des commentaires sur les liens partagés.
+ * 
+ * Routes publiques (sans auth) :
+ * - submit : Soumettre des commentaires pour un lien partagé
+ * - send : Finaliser et envoyer les commentaires (déclenche la génération du snapshot HTML)
+ * - check : Vérifier si un lien a déjà été commenté
+ * 
+ * Routes authentifiées (admin) :
+ * - list : Lister les commentaires par type (notes/pointage/taches)
+ * - unread : Compteur de commentaires non lus par type
+ * - markRead : Marquer un commentaire comme lu
+ * - detail : Détail d'un commentaire spécifique
+ * - delete : Supprimer un commentaire (doit être lu)
+ * - syncHtml : Régénérer les fichiers HTML manquants depuis le JSON
+ * - exportJson / importJson : Sauvegarde et restauration des commentaires
+ * - snapshotUrl : URL du fichier snapshot HTML
+ */
 import api from './api';
 import { getBaseURL } from './api';
 
@@ -103,6 +123,10 @@ const shareCommentsApi = {
   // Import comments from JSON
   importJson: (comments: ShareComment[]) =>
     api.post('/api/share-comments/import-json', { comments }),
+
+  // Authenticated: Delete a comment (must be read first)
+  delete: (id: string) =>
+    api.delete(`/api/share-comments/delete/${id}`),
 
   // Get snapshot file URL
   snapshotUrl: (filename: string) => {

@@ -1,3 +1,9 @@
+/**
+ * AuthContext.tsx - Contexte d'authentification
+ * 
+ * Gère l'état de connexion, le token JWT, le profil utilisateur,
+ * et les fonctions login/logout/register/resetPassword.
+ */
 
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { LoginCredentials, PasswordResetData, PasswordResetRequest, RegistrationData, User } from '../types';

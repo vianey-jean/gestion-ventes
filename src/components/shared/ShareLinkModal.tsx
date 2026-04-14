@@ -1,3 +1,15 @@
+/**
+ * ShareLinkModal.tsx
+ * 
+ * Modal de gestion des liens de partage pour les données (notes, pointage, tâches).
+ * Permet de générer, copier et supprimer des liens de partage sécurisés avec code d'accès.
+ * 
+ * Fonctionnalités :
+ * - Génération d'un nouveau lien de partage avec code d'accès aléatoire
+ * - Copie du lien dans le presse-papiers
+ * - Suppression/révocation d'un lien existant
+ * - Affichage de la liste des liens actifs et révoqués
+ */
 import React, { useState, useEffect } from 'react';
 import { Share2, Copy, Check, LinkIcon, X, Trash2, Plus, KeyRound } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';

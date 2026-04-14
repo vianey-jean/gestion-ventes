@@ -1,3 +1,17 @@
+/**
+ * SharedViewPage.tsx
+ * 
+ * Page publique pour visualiser un lien partagé (pointage, tâches ou notes).
+ * Accessible sans authentification via un token unique et un code d'accès.
+ * 
+ * Flux :
+ * 1. L'utilisateur entre le code d'accès associé au lien
+ * 2. Le serveur valide le token + code et retourne les données partagées
+ * 3. Les données sont affichées en lecture seule
+ * 4. Un formulaire de commentaires (SharedCommentForm) permet au visiteur de réagir
+ * 
+ * Types supportés : pointage, tâches, notes
+ */
 import React, { useState, useMemo } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
 import { Lock, Eye, StickyNote, Clock, ListTodo, KeyRound, ShieldAlert, CheckCircle, MessageCircle } from 'lucide-react';

@@ -1,3 +1,11 @@
+/**
+ * LoginPage.tsx - Page de connexion utilisateur
+ * 
+ * Formulaire d'authentification avec :
+ * - Blocage temporaire après N tentatives échouées (configurable par utilisateur)
+ * - Compte à rebours visuel pendant le blocage
+ * - Lien vers inscription et réinitialisation de mot de passe
+ */
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';

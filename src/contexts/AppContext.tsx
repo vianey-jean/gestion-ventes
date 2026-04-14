@@ -1,4 +1,9 @@
-// We need to add typings to handle boolean returns from the API
+/**
+ * AppContext.tsx - Contexte global de l'application
+ * 
+ * Fournit les données partagées (produits, ventes) et les fonctions CRUD
+ * à tous les composants via React Context. Gère le chargement initial des données.
+ */
 import { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Product, Sale } from '@/types';

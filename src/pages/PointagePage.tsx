@@ -1,3 +1,9 @@
+/**
+ * PointagePage.tsx - Page de gestion du pointage des travailleurs
+ * 
+ * Affiche les entreprises, travailleurs et entrées de pointage.
+ * Inclut le partage de données via liens sécurisés et la réception de commentaires.
+ */
 import React, { useState, useEffect, useCallback } from 'react';
 import Layout from '@/components/Layout';
 import { useToast } from '@/hooks/use-toast';

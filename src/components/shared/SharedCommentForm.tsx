@@ -1,3 +1,16 @@
+/**
+ * SharedCommentForm.tsx
+ * 
+ * Formulaire de commentaires pour les visiteurs d'un lien partagé (public, sans authentification).
+ * Permet de commenter des éléments spécifiques (pointage, tâches, notes) et d'ajouter un commentaire général.
+ * 
+ * Fonctionnalités :
+ * - Mode commentaire avec sélection d'éléments individuels
+ * - Capture des données complètes de chaque élément commenté (label, données contextuelles)
+ * - Formulaire d'identification (nom, prénom, téléphone, email)
+ * - Validation puis envoi des commentaires au serveur
+ * - Génération automatique d'un snapshot HTML côté serveur à l'envoi
+ */
 import React, { useState, useEffect, useCallback } from 'react';
 import { MessageSquarePlus, Send, Check, X, User, Phone, Mail, MessageCircle, AlertCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import shareCommentsApi from '@/services/api/shareCommentsApi';

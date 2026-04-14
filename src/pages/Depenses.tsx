@@ -1,3 +1,4 @@
+/** Depenses.tsx - Redirection vers la page dépenses dans le dashboard */
 
 import React from 'react';
 import { Navigate } from 'react-router-dom';

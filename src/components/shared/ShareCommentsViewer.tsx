@@ -1,5 +1,20 @@
+/**
+ * ShareCommentsViewer.tsx
+ * 
+ * Composant modal pour visualiser les commentaires reçus sur les liens partagés.
+ * Supporte les types : notes, pointage, tâches.
+ * 
+ * Fonctionnalités :
+ * - Liste des commentaires reçus avec indicateur lu/non lu
+ * - Vue détaillée d'un commentaire avec informations de contact
+ * - Affichage des commentaires spécifiques avec le label de l'élément commenté
+ * - Visualisation du document snapshot HTML dans un iframe
+ * - Téléchargement des commentaires en fichier texte
+ * - Suppression d'un commentaire (uniquement si déjà lu)
+ * - Synchronisation en temps réel via SSE (Server-Sent Events)
+ */
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { X, User, Phone, Mail, MessageCircle, Eye, Clock, Download, FileText, ExternalLink } from 'lucide-react';
+import { X, User, Phone, Mail, MessageCircle, Eye, Clock, Download, FileText, ExternalLink, Trash2 } from 'lucide-react';
 import shareCommentsApi, { ShareComment } from '@/services/api/shareCommentsApi';
 
 interface ShareCommentsViewerProps {
@@ -17,6 +32,7 @@ const ShareCommentsViewer: React.FC<ShareCommentsViewerProps> = ({ open, onClose
   const [showSnapshot, setShowSnapshot] = useState(false);
   const [snapshotHtml, setSnapshotHtml] = useState<string | null>(null);
   const [snapshotLoading, setSnapshotLoading] = useState(false);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   useEffect(() => {
@@ -26,14 +42,14 @@ const ShareCommentsViewer: React.FC<ShareCommentsViewerProps> = ({ open, onClose
   // Listen for SSE real-time comment notifications
   useEffect(() => {
     if (!open) return;
-    
+
     const handleSSE = (event: Event) => {
       const customEvent = event as CustomEvent;
       if (customEvent.detail?.type === type) {
         fetchComments();
       }
     };
-    
+
     window.addEventListener('share-comment-received', handleSSE);
     return () => window.removeEventListener('share-comment-received', handleSSE);
   }, [open, type]);
@@ -59,30 +75,49 @@ const ShareCommentsViewer: React.FC<ShareCommentsViewerProps> = ({ open, onClose
         await shareCommentsApi.markRead(comment.id);
         setComments(prev => prev.map(c => c.id === comment.id ? { ...c, read: true } : c));
         onCountChange?.(-1);
-      } catch {}
+      } catch { }
     }
   };
 
-const handleViewSnapshot = async () => {
-  if (selectedComment?.snapshotFile) {
-    setSnapshotLoading(true);
-    setShowSnapshot(true);
-    try {
-      const url = shareCommentsApi.snapshotUrl(selectedComment.snapshotFile);
-      const token = localStorage.getItem('token');
-      const res = await fetch(url, {
-        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
-      });
-      if (!res.ok) throw new Error('Erreur de chargement');
-      const html = await res.text();
-      setSnapshotHtml(html);
-    } catch {
-      setSnapshotHtml('<html><body><p style="color:red;padding:20px;">Erreur lors du chargement du document.</p></body></html>');
-    } finally {
-      setSnapshotLoading(false);
+  const handleViewSnapshot = async () => {
+    if (selectedComment?.snapshotFile) {
+      setSnapshotLoading(true);
+      setShowSnapshot(true);
+      try {
+        const url = shareCommentsApi.snapshotUrl(selectedComment.snapshotFile);
+        const token = localStorage.getItem('token');
+        const res = await fetch(url, {
+          headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+        });
+        if (!res.ok) throw new Error('Erreur de chargement');
+        const html = await res.text();
+        setSnapshotHtml(html);
+      } catch {
+        setSnapshotHtml('<html><body><p style="color:red;padding:20px;">Erreur lors du chargement du document.</p></body></html>');
+      } finally {
+        setSnapshotLoading(false);
+      }
     }
-  }
-};
+  };
+
+  /** Supprime un commentaire (uniquement s'il est déjà lu) */
+  const handleDelete = async (commentId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (deleteConfirmId === commentId) {
+      try {
+        await shareCommentsApi.delete(commentId);
+        setComments(prev => prev.filter(c => c.id !== commentId));
+        setDeleteConfirmId(null);
+        if (selectedComment?.id === commentId) {
+          setSelectedComment(null);
+          setShowSnapshot(false);
+        }
+      } catch { }
+    } else {
+      setDeleteConfirmId(commentId);
+      setTimeout(() => setDeleteConfirmId(null), 3000);
+    }
+  };
 
   const handleDownloadPDF = (comment: ShareComment) => {
     const content = [
@@ -250,11 +285,10 @@ const handleViewSnapshot = async () => {
               <p className="text-center text-gray-400 text-sm py-8">Aucun commentaire reçu</p>
             ) : (
               comments.map(comment => (
-                <div key={comment.id} className={`p-3 rounded-xl border cursor-pointer hover:shadow-md transition-all ${
-                  comment.read
+                <div key={comment.id} className={`p-3 rounded-xl border cursor-pointer hover:shadow-md transition-all ${comment.read
                     ? 'bg-gray-50 dark:bg-gray-700/30 border-gray-200 dark:border-gray-600'
                     : 'bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-700'
-                }`} onClick={() => handleView(comment)}>
+                  }`} onClick={() => handleView(comment)}>
                   <div className="flex items-center justify-between mb-1.5">
                     <div className="flex items-center gap-2">
                       <User className="h-3.5 w-3.5 text-gray-500" />
@@ -271,6 +305,19 @@ const handleViewSnapshot = async () => {
                         {new Date(comment.sentAt || comment.createdAt).toLocaleDateString('fr-FR')}
                       </span>
                       <Eye className="h-3.5 w-3.5 text-blue-500" />
+                      {/* Delete button - only enabled if comment is read */}
+                      {comment.read && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setDeleteConfirmId(comment.id);
+                          }}
+                          className="p-1 rounded text-gray-400 hover:text-red-500 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all"
+                          title="Supprimer ce commentaire"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      )}
                     </div>
                   </div>
                   <div className="text-xs text-gray-500 dark:text-gray-400">
@@ -283,6 +330,57 @@ const handleViewSnapshot = async () => {
           </div>
         )}
       </div>
+      {deleteConfirmId && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fadeIn"
+          onClick={() => setDeleteConfirmId(null)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 w-[90%] max-w-sm border border-gray-200 dark:border-gray-700 text-center transform animate-scaleIn"
+          >
+            <div className="mb-4">
+              <div className="w-12 h-12 mx-auto rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center mb-3">
+                <Trash2 className="h-6 w-6 text-red-500" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-800 dark:text-white">
+                Supprimer ce commentaire ?
+              </h3>
+              <p className="text-sm text-gray-500 dark:text-gray-300 mt-1">
+                Cette action est irréversible.
+              </p>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setDeleteConfirmId(null)}
+                className="flex-1 py-2.5 rounded-xl bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-white hover:bg-gray-300 transition"
+              >
+                Annuler
+              </button>
+
+              <button
+                onClick={async () => {
+                  try {
+                    await shareCommentsApi.delete(deleteConfirmId);
+                    setComments(prev => prev.filter(c => c.id !== deleteConfirmId));
+
+                    if (selectedComment?.id === deleteConfirmId) {
+                      setSelectedComment(null);
+                      setShowSnapshot(false);
+                    }
+                  } catch { }
+
+                  setDeleteConfirmId(null);
+                }}
+                className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-red-500 to-red-600 text-white font-bold hover:shadow-lg transition"
+              >
+                Oui, supprimer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
