@@ -92,6 +92,18 @@ const shareCommentsApi = {
   detail: (id: string) =>
     api.get<ShareComment>(`/api/share-comments/detail/${id}`),
 
+  // Sync: regenerate missing HTML from JSON backup
+  syncHtml: () =>
+    api.post('/api/share-comments/sync-html'),
+
+  // Export all comments as JSON
+  exportJson: () =>
+    api.get<{ comments: ShareComment[]; total: number }>('/api/share-comments/export-json'),
+
+  // Import comments from JSON
+  importJson: (comments: ShareComment[]) =>
+    api.post('/api/share-comments/import-json', { comments }),
+
   // Get snapshot file URL
   snapshotUrl: (filename: string) => {
     const base = getBaseURL();
