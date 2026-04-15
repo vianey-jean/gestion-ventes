@@ -17,7 +17,8 @@ import { cn } from '@/lib/utils';
 import {
   Package, Plus, Search, Filter, Eye, Edit, Trash2, CheckCircle2, XCircle,
   AlertTriangle, Camera, Star, Euro, Hash, Sparkles, ChevronLeft, ChevronRight,
-  X, PackagePlus, Pencil, ImageOff, ShoppingBag, MessageSquare, ChevronDown, ChevronUp
+  X, PackagePlus, Pencil, ImageOff, ShoppingBag, MessageSquare, ChevronDown, ChevronUp,
+  ArrowUp, ArrowDown
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -88,6 +89,22 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 10;
 
+  // Tri (sorting)
+  type SortField = 'description' | 'purchasePrice' | 'quantity' | 'notation';
+  type SortDir = 'asc' | 'desc';
+  const [sortField, setSortField] = useState<SortField | null>(null);
+  const [sortDir, setSortDir] = useState<SortDir>('asc');
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDir(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDir('asc');
+    }
+    setCurrentPage(1);
+  };
+
   // Comments & Ratings
   const [allRatings, setAllRatings] = useState<Record<string, ProductRatingInfo>>({});
   const [viewComments, setViewComments] = useState<ProductComment[]>([]);
@@ -152,8 +169,33 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
       );
     }
 
+    // Tri
+    if (sortField) {
+      filtered.sort((a, b) => {
+        let cmp = 0;
+        switch (sortField) {
+          case 'description':
+            cmp = a.description.localeCompare(b.description, 'fr');
+            break;
+          case 'purchasePrice':
+            cmp = (a.purchasePrice || 0) - (b.purchasePrice || 0);
+            break;
+          case 'quantity':
+            cmp = (a.quantity || 0) - (b.quantity || 0);
+            break;
+          case 'notation': {
+            const avgA = allRatings[a.id]?.average || 0;
+            const avgB = allRatings[b.id]?.average || 0;
+            cmp = avgA - avgB;
+            break;
+          }
+        }
+        return sortDir === 'asc' ? cmp : -cmp;
+      });
+    }
+
     return filtered;
-  }, [products, activeFilter, searchQuery]);
+  }, [products, activeFilter, searchQuery, sortField, sortDir, allRatings]);
 
   // Reset page when filter/search changes
   useEffect(() => {
@@ -562,10 +604,42 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
                   <TableRow className="bg-gradient-to-r from-violet-500/10 via-purple-500/5 to-fuchsia-500/10 border-b border-violet-200/20 dark:border-violet-800/20">
                     <TableHead className="font-black text-violet-700 dark:text-violet-300">Photo</TableHead>
                     <TableHead className="font-black text-violet-700 dark:text-violet-300">Code</TableHead>
-                    <TableHead className="font-black text-violet-700 dark:text-violet-300">Description</TableHead>
-                    <TableHead className="font-black text-violet-700 dark:text-violet-300">Prix</TableHead>
-                    <TableHead className="font-black text-violet-700 dark:text-violet-300">Qté</TableHead>
-                    <TableHead className="font-black text-violet-700 dark:text-violet-300">Notation</TableHead>
+                    <TableHead className="font-black text-violet-700 dark:text-violet-300">
+                      <button onClick={() => handleSort('description')} className="flex items-center gap-1 hover:opacity-70 transition-opacity">
+                        Description
+                        <span className="flex flex-col">
+                          <ArrowUp className={cn("h-3 w-3", sortField === 'description' && sortDir === 'asc' ? 'text-violet-500' : 'text-violet-300/40')} />
+                          <ArrowDown className={cn("h-3 w-3 -mt-1", sortField === 'description' && sortDir === 'desc' ? 'text-violet-500' : 'text-violet-300/40')} />
+                        </span>
+                      </button>
+                    </TableHead>
+                    <TableHead className="font-black text-violet-700 dark:text-violet-300">
+                      <button onClick={() => handleSort('purchasePrice')} className="flex items-center gap-1 hover:opacity-70 transition-opacity">
+                        Prix
+                        <span className="flex flex-col">
+                          <ArrowUp className={cn("h-3 w-3", sortField === 'purchasePrice' && sortDir === 'asc' ? 'text-violet-500' : 'text-violet-300/40')} />
+                          <ArrowDown className={cn("h-3 w-3 -mt-1", sortField === 'purchasePrice' && sortDir === 'desc' ? 'text-violet-500' : 'text-violet-300/40')} />
+                        </span>
+                      </button>
+                    </TableHead>
+                    <TableHead className="font-black text-violet-700 dark:text-violet-300">
+                      <button onClick={() => handleSort('quantity')} className="flex items-center gap-1 hover:opacity-70 transition-opacity">
+                        Qté
+                        <span className="flex flex-col">
+                          <ArrowUp className={cn("h-3 w-3", sortField === 'quantity' && sortDir === 'asc' ? 'text-violet-500' : 'text-violet-300/40')} />
+                          <ArrowDown className={cn("h-3 w-3 -mt-1", sortField === 'quantity' && sortDir === 'desc' ? 'text-violet-500' : 'text-violet-300/40')} />
+                        </span>
+                      </button>
+                    </TableHead>
+                    <TableHead className="font-black text-violet-700 dark:text-violet-300">
+                      <button onClick={() => handleSort('notation')} className="flex items-center gap-1 hover:opacity-70 transition-opacity">
+                        Notation
+                        <span className="flex flex-col">
+                          <ArrowUp className={cn("h-3 w-3", sortField === 'notation' && sortDir === 'asc' ? 'text-violet-500' : 'text-violet-300/40')} />
+                          <ArrowDown className={cn("h-3 w-3 -mt-1", sortField === 'notation' && sortDir === 'desc' ? 'text-violet-500' : 'text-violet-300/40')} />
+                        </span>
+                      </button>
+                    </TableHead>
                     <TableHead className="font-black text-violet-700 dark:text-violet-300 text-center">Actions</TableHead>
                   </TableRow>
                 </TableHeader>

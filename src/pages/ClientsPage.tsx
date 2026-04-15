@@ -13,7 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Edit, Trash2, Phone, MapPin, Users, Sparkles, Crown, Star, MessageSquare, PhoneCall, Navigation, Plus, Camera, User } from 'lucide-react';
+import { Edit, Trash2, Phone, MapPin, Users, Sparkles, Crown, Star, MessageSquare, PhoneCall, Navigation, Plus, Camera, User, ArrowUp, ArrowDown } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import axios from 'axios';
 import Navbar from '@/components/Navbar';
@@ -66,6 +66,7 @@ const ClientsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => 
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
+  const [clientSortDir, setClientSortDir] = useState<'asc' | 'desc'>('asc');
   const [showAddConfirm, setShowAddConfirm] = useState(false);
   const [showEditConfirm, setShowEditConfirm] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -125,14 +126,24 @@ const ClientsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => 
   // =========================================================================
   // Filtrage et pagination
   // =========================================================================
-  const filteredClients = searchQuery.length >= 3 
-    ? clients.filter(client => 
-        client.nom.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (client.phones || []).some(p => p.includes(searchQuery)) ||
-        client.phone?.includes(searchQuery) ||
-        client.adresse.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-    : clients;
+  const filteredClients = useMemo(() => {
+    let result = searchQuery.length >= 3 
+      ? clients.filter(client => 
+          client.nom.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (client.phones || []).some(p => p.includes(searchQuery)) ||
+          client.phone?.includes(searchQuery) ||
+          client.adresse.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+      : [...clients];
+
+    // Tri par nom A-Z ou Z-A
+    result.sort((a, b) => {
+      const cmp = a.nom.localeCompare(b.nom, 'fr');
+      return clientSortDir === 'asc' ? cmp : -cmp;
+    });
+
+    return result;
+  }, [clients, searchQuery, clientSortDir]);
 
   const totalPages = Math.max(1, Math.ceil(filteredClients.length / itemsPerPage));
 
@@ -265,7 +276,20 @@ const ClientsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => 
           filteredCount={filteredClients.length}
         />
 
-        {/* Grille des clients */}
+        {/* Tri par nom + Grille des clients */}
+        <div className="flex items-center justify-between mb-4">
+          <button
+            onClick={() => setClientSortDir(prev => prev === 'asc' ? 'desc' : 'asc')}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/80 dark:bg-white/5 border border-violet-200/30 dark:border-violet-800/30 hover:bg-violet-50 dark:hover:bg-violet-900/20 transition-all text-sm font-semibold text-violet-700 dark:text-violet-300"
+          >
+            Nom
+            <span className="flex flex-col">
+              <ArrowUp className={`h-3 w-3 ${clientSortDir === 'asc' ? 'text-violet-500' : 'text-violet-300/40'}`} />
+              <ArrowDown className={`h-3 w-3 -mt-1 ${clientSortDir === 'desc' ? 'text-violet-500' : 'text-violet-300/40'}`} />
+            </span>
+            <span className="text-xs text-muted-foreground">({clientSortDir === 'asc' ? 'A → Z' : 'Z → A'})</span>
+          </button>
+        </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 md:gap-8">
           {paginatedClients.map((client, index) => {
             const clientPhotoUrl = getClientPhotoUrl(client);
