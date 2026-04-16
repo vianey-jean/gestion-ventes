@@ -198,137 +198,124 @@ const LiveChatVisitor: React.FC<LiveChatVisitorProps> = ({ visitorNom, adminId, 
     loadMessages();
     loadGroups();
 
-    let es: EventSource;
-    try {
-      es = new EventSource(`${API_BASE}/api/messagerie/events?visitorId=${visitorId.current}`);
-    } catch {
-      console.warn('SSE messagerie visitor: failed to connect');
-      return;
-    }
-    eventSourceRef.current = es;
+    let es: EventSource | null = null;
+    let sseTimeout: ReturnType<typeof setTimeout> | null = null;
+    let pollInterval: ReturnType<typeof setInterval> | null = null;
 
-    es.onerror = () => {
-      console.warn('SSE messagerie visitor: connection error');
+    const connectSSE = () => {
+      try {
+        es = new EventSource(`${API_BASE}/api/messagerie/events?visitorId=${visitorId.current}`);
+      } catch {
+        console.warn('SSE messagerie visitor: failed to connect');
+        return;
+      }
+      eventSourceRef.current = es;
+
+      es.onerror = () => {};
+
+      // Messages privés
+      es.addEventListener('new_message', (e) => {
+        try {
+          const msg: ChatMessage = JSON.parse(e.data);
+          setMessages(prev => prev.find(m => m.id === msg.id) ? prev : [...prev, msg]);
+        } catch {}
+      });
+
+      es.addEventListener('new_conversation_message', (e) => {
+        try {
+          const msg: ChatMessage = JSON.parse(e.data);
+          setMessages(prev => prev.find(m => m.id === msg.id) ? prev : [...prev, msg]);
+        } catch {}
+      });
+
+      es.addEventListener('message_edited', (e) => {
+        try {
+          const msg: ChatMessage = JSON.parse(e.data);
+          setMessages(prev => prev.map(m => m.id === msg.id ? msg : m));
+        } catch {}
+      });
+
+      es.addEventListener('message_deleted', (e) => {
+        try {
+          const msg: ChatMessage = JSON.parse(e.data);
+          setMessages(prev => prev.map(m => m.id === msg.id ? msg : m));
+        } catch {}
+      });
+
+      es.addEventListener('message_liked', (e) => {
+        try {
+          const msg: ChatMessage = JSON.parse(e.data);
+          setMessages(prev => prev.map(m => m.id === msg.id ? msg : m));
+        } catch {}
+      });
+
+      es.addEventListener('typing', (e) => {
+        try {
+          const data = JSON.parse(e.data);
+          if (data.from === 'admin') {
+            setAdminTyping(data.isTyping);
+          }
+        } catch {}
+      });
+
+      // Messages de groupe
+      es.addEventListener('group_message', (e) => {
+        try {
+          const msg: GroupMessage = JSON.parse(e.data);
+          if (selectedGroupRef.current === msg.groupId) {
+            setGroupMessages(prev => prev.find(m => m.id === msg.id) ? prev : [...prev, msg]);
+          }
+        } catch {}
+      });
+
+      es.addEventListener('group_message_edited', (e) => {
+        try {
+          const msg: GroupMessage = JSON.parse(e.data);
+          setGroupMessages(prev => prev.map(m => m.id === msg.id ? msg : m));
+        } catch {}
+      });
+
+      es.addEventListener('group_message_deleted', (e) => {
+        try {
+          const msg: GroupMessage = JSON.parse(e.data);
+          setGroupMessages(prev => prev.map(m => m.id === msg.id ? msg : m));
+        } catch {}
+      });
+
+      es.addEventListener('group_typing', (e) => {
+        try {
+          const data = JSON.parse(e.data);
+          if (data.senderId !== visitorId.current) {
+            setGroupTyping(prev => ({
+              ...prev,
+              [data.groupId]: data.isTyping ? { senderId: data.senderId, senderName: data.senderName } : undefined as any
+            }));
+            if (!data.isTyping) {
+              setGroupTyping(prev => { const n = { ...prev }; delete n[data.groupId]; return n; });
+            }
+          }
+        } catch {}
+      });
+
+      es.addEventListener('admin_status', () => {});
+
+      pollInterval = setInterval(() => { loadMessages(); loadGroups(); }, 2000);
     };
 
-    // Messages privés
-    es.addEventListener('new_message', (e) => {
-      try {
-        const msg: ChatMessage = JSON.parse(e.data);
-        if (msg.visitorId === visitorId.current && msg.adminId === adminId) {
-          setMessages(prev => {
-            if (prev.find(m => m.id === msg.id)) return prev;
-            return [...prev, msg];
-          });
-          if (msg.from === 'admin') {
-            if (isMinimizedRef.current || viewModeRef.current !== 'chat') {
-              playNotificationSound();
-              setNotifications(prev => [...prev, {
-                id: msg.id,
-                sender: 'Admin',
-                message: msg.contenu,
-                timestamp: Date.now()
-              }]);
-              setTimeout(() => {
-                setNotifications(prev => prev.filter(n => n.id !== msg.id));
-              }, 5000);
-            }
-            fetch(`${API_BASE}/api/messagerie/mark-read/${visitorId.current}/${adminId}`, {
-              method: 'PUT', headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ reader: 'visitor' })
-            }).catch(() => {});
-          }
-        }
-      } catch {}
-    });
+    // Connect after page is fully loaded
+    if (document.readyState === 'complete') {
+      sseTimeout = setTimeout(connectSSE, 500);
+    } else {
+      const onLoad = () => { sseTimeout = setTimeout(connectSSE, 500); };
+      window.addEventListener('load', onLoad, { once: true });
+    }
 
-    es.addEventListener('message_edited', (e) => {
-      try {
-        const msg: ChatMessage = JSON.parse(e.data);
-        setMessages(prev => prev.map(m => m.id === msg.id ? msg : m));
-      } catch {}
-    });
-
-    es.addEventListener('message_deleted', (e) => {
-      try {
-        const msg: ChatMessage = JSON.parse(e.data);
-        setMessages(prev => prev.map(m => m.id === msg.id ? msg : m));
-      } catch {}
-    });
-
-    es.addEventListener('message_liked', (e) => {
-      try {
-        const msg: ChatMessage = JSON.parse(e.data);
-        setMessages(prev => prev.map(m => m.id === msg.id ? msg : m));
-      } catch {}
-    });
-
-    es.addEventListener('typing', (e) => {
-      try {
-        const data = JSON.parse(e.data);
-        if (data.from === 'admin' && data.visitorId === visitorId.current) {
-          setAdminTyping(data.isTyping);
-        }
-      } catch {}
-    });
-
-    // ── Événements de groupe ──
-    es.addEventListener('group_message', (e) => {
-      try {
-        const msg: GroupMessage = JSON.parse(e.data);
-        if (selectedGroupRef.current === msg.groupId) {
-          setGroupMessages(prev => prev.find(m => m.id === msg.id) ? prev : [...prev, msg]);
-          if (msg.senderId !== visitorId.current) {
-            fetch(`${API_BASE}/api/messagerie/visitor-group-mark-read/${msg.groupId}/${visitorId.current}`, {
-              method: 'PUT', headers: { 'Content-Type': 'application/json' }
-            }).catch(() => {});
-          }
-        }
-        // Notification si pas sur ce groupe
-        if (msg.senderId !== visitorId.current && (isMinimizedRef.current || viewModeRef.current !== 'group-chat' || selectedGroupRef.current !== msg.groupId)) {
-          playNotificationSound();
-          setNotifications(prev => [...prev, {
-            id: msg.id,
-            sender: `📌 ${msg.senderName}`,
-            message: msg.contenu,
-            timestamp: Date.now()
-          }]);
-          setTimeout(() => {
-            setNotifications(prev => prev.filter(n => n.id !== msg.id));
-          }, 5000);
-        }
-        loadGroups();
-      } catch {}
-    });
-
-    es.addEventListener('group_created', () => {
-      loadGroups();
-    });
-
-    es.addEventListener('group_updated', () => {
-      loadGroups();
-    });
-
-    es.addEventListener('group_typing', (e) => {
-      try {
-        const data = JSON.parse(e.data);
-        if (data.senderId !== visitorId.current) {
-          setGroupTyping(prev => ({
-            ...prev,
-            [data.groupId]: data.isTyping ? { senderId: data.senderId, senderName: data.senderName } : undefined as any
-          }));
-          if (!data.isTyping) {
-            setGroupTyping(prev => { const n = { ...prev }; delete n[data.groupId]; return n; });
-          }
-        }
-      } catch {}
-    });
-
-    es.addEventListener('admin_status', () => {});
-    es.onerror = () => {};
-
-    const pollInterval = setInterval(() => { loadMessages(); loadGroups(); }, 2000);
-    return () => { es.close(); eventSourceRef.current = null; clearInterval(pollInterval); };
+    return () => {
+      if (sseTimeout) clearTimeout(sseTimeout);
+      if (es) es.close();
+      eventSourceRef.current = null;
+      if (pollInterval) clearInterval(pollInterval);
+    };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [adminId]);
 

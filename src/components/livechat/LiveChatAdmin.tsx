@@ -367,7 +367,7 @@ const LiveChatAdmin: React.FC = () => {
   }, [loadConversations, loadAdminUsers, loadAdminConversations, loadGroups]);
 
 
-  // ========== SSE & POLLING ==========
+   // ========== SSE & POLLING ==========
   useEffect(() => {
     if (!isAuthenticated || !isAdmin || !user) return;
     loadConversations();
@@ -375,22 +375,21 @@ const LiveChatAdmin: React.FC = () => {
     loadAdminConversations();
     loadGroups();
 
-    let es: EventSource;
-    try {
-      es = new EventSource(`${API_BASE}/api/messagerie/events?adminId=${user.id}`);
-    } catch {
-      console.warn('SSE messagerie: failed to connect');
-      return;
-    }
-    eventSourceRef.current = es;
+    let es: EventSource | null = null;
+    let sseTimeout: ReturnType<typeof setTimeout> | null = null;
+
+    // Delay SSE connection until page is fully loaded
+    const connectSSE = () => {
+      try {
+        es = new EventSource(`${API_BASE}/api/messagerie/events?adminId=${user.id}`);
+      } catch {
+        console.warn('SSE messagerie: failed to connect');
+        return;
+      }
+      eventSourceRef.current = es;
 
     es.onopen = () => {
       scheduleSidebarRefresh();
-    };
-
-    es.onerror = () => {
-      // Silently handle SSE errors (CORS, network)
-      console.warn('SSE messagerie: connection error');
     };
 
     es.addEventListener('new_message', (e) => {
@@ -406,7 +405,6 @@ const LiveChatAdmin: React.FC = () => {
             }).catch(() => {});
           }
         }
-        // Notification if chat closed or not viewing this conversation
         if (msg.from === 'visitor' && (!isOpenRef.current || selectedConvRef.current !== msg.visitorId)) {
           addNotification(msg.visitorNom || 'Visiteur', msg.contenu, msg.id);
         }
@@ -456,7 +454,6 @@ const LiveChatAdmin: React.FC = () => {
       } catch {}
     });
 
-    // Admin-to-admin messages via SSE
     es.addEventListener('admin_message', (e) => {
       try {
         const msg: AdminMessage = JSON.parse(e.data);
@@ -469,15 +466,27 @@ const LiveChatAdmin: React.FC = () => {
             }).catch(() => {});
           }
         }
-        // Notification if message from another admin and chat closed or not viewing
         if (msg.senderId !== user.id && (!isOpenRef.current || selectedAdminRef.current !== msg.senderId)) {
-          addNotification(msg.senderName, msg.contenu, msg.id);
+          addNotification(msg.senderName || 'Admin', msg.contenu, msg.id);
         }
         scheduleSidebarRefresh();
       } catch {}
     });
 
-    // Admin-to-admin typing indicator via SSE
+    es.addEventListener('admin_message_edited', (e) => {
+      try {
+        const msg: AdminMessage = JSON.parse(e.data);
+        setAdminMessages(prev => prev.map(m => m.id === msg.id ? msg : m));
+      } catch {}
+    });
+
+    es.addEventListener('admin_message_deleted', (e) => {
+      try {
+        const msg: AdminMessage = JSON.parse(e.data);
+        setAdminMessages(prev => prev.map(m => m.id === msg.id ? msg : m));
+      } catch {}
+    });
+
     es.addEventListener('admin_typing', (e) => {
       try {
         const data = JSON.parse(e.data);
@@ -487,48 +496,31 @@ const LiveChatAdmin: React.FC = () => {
       } catch {}
     });
 
-    // Admin-to-admin message deleted (own message deleted for both)
-    es.addEventListener('admin_message_deleted', (e) => {
-      try {
-        const data = JSON.parse(e.data);
-        setAdminMessages(prev => prev.filter(m => m.id !== data.id));
-        scheduleSidebarRefresh();
-      } catch {}
-    });
-
-    // Admin-to-admin message hidden (other's message hidden for self)
-    es.addEventListener('admin_message_hidden', (e) => {
-      try {
-        const data = JSON.parse(e.data);
-        setAdminMessages(prev => prev.filter(m => m.id !== data.id));
-      } catch {}
-    });
-
-    // Group chat events
     es.addEventListener('group_message', (e) => {
       try {
         const msg: GroupMessage = JSON.parse(e.data);
         if (selectedGroupRef.current === msg.groupId) {
           setGroupMessages(prev => prev.find(m => m.id === msg.id) ? prev : [...prev, msg]);
-          if (msg.senderId !== user.id) {
-            fetch(`${API_BASE}/api/messagerie/group-mark-read/${msg.groupId}`, {
-              method: 'PUT', headers: authHeaders
-            }).catch(() => {});
-          }
         }
         if (msg.senderId !== user.id && (!isOpenRef.current || selectedGroupRef.current !== msg.groupId)) {
-          addNotification(msg.senderName, msg.contenu, msg.id);
+          addNotification(msg.senderName || 'Groupe', msg.contenu, msg.id);
         }
         scheduleSidebarRefresh();
       } catch {}
     });
 
-    es.addEventListener('group_created', () => {
-      loadGroups();
+    es.addEventListener('group_message_edited', (e) => {
+      try {
+        const msg: GroupMessage = JSON.parse(e.data);
+        setGroupMessages(prev => prev.map(m => m.id === msg.id ? msg : m));
+      } catch {}
     });
 
-    es.addEventListener('group_updated', () => {
-      loadGroups();
+    es.addEventListener('group_message_deleted', (e) => {
+      try {
+        const msg: GroupMessage = JSON.parse(e.data);
+        setGroupMessages(prev => prev.map(m => m.id === msg.id ? msg : m));
+      } catch {}
     });
 
     es.addEventListener('group_typing', (e) => {
@@ -546,9 +538,19 @@ const LiveChatAdmin: React.FC = () => {
     es.onerror = () => {
       console.debug('SSE messagerie reconnecting...');
     };
+    }; // end connectSSE
+
+    // Connect after page is fully loaded to avoid interruption warnings
+    if (document.readyState === 'complete') {
+      sseTimeout = setTimeout(connectSSE, 500);
+    } else {
+      const onLoad = () => { sseTimeout = setTimeout(connectSSE, 500); };
+      window.addEventListener('load', onLoad, { once: true });
+    }
 
     return () => {
-      es.close();
+      if (sseTimeout) clearTimeout(sseTimeout);
+      if (es) es.close();
       eventSourceRef.current = null;
       if (refreshTimeoutRef.current) {
         clearTimeout(refreshTimeoutRef.current);

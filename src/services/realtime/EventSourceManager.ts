@@ -24,6 +24,24 @@ export class EventSourceManager {
     this.disconnect();
     this.intentionalDisconnect = false;
 
+    // Delay SSE connection until page is fully loaded to avoid
+    // "connection interrupted during page load" browser warnings
+    const doConnect = () => {
+      if (this.intentionalDisconnect) return;
+      this._doConnect();
+    };
+
+    if (document.readyState === 'complete') {
+      // Small delay even if already loaded to avoid race conditions
+      setTimeout(doConnect, 500);
+    } else {
+      window.addEventListener('load', () => setTimeout(doConnect, 500), { once: true });
+    }
+  }
+
+  private _doConnect() {
+    if (this.intentionalDisconnect) return;
+
     const baseURL = getBaseURL();
     const sseUrl = `${baseURL}/api/sync/events`;
 
