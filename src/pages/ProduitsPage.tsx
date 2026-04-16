@@ -661,9 +661,9 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
                         className="hover:bg-gradient-to-r hover:from-violet-50 hover:to-fuchsia-50 dark:hover:from-violet-900/10 dark:hover:to-fuchsia-900/10 transition-all duration-200 border-b border-violet-100/20 dark:border-violet-800/10"
                       >
                         {/* Photo with eye icon */}
-                        <TableCell>
-                          <div className="relative group cursor-pointer" onClick={() => openView(product)}>
-                            <div className="h-12 rounded-xl overflow-hidden border-2 border-violet-200/30 dark:border-violet-800/30 shadow-md">
+                        <TableCell className="py-1">
+                          <div className="relative group cursor-pointer h-full" onClick={() => openView(product)}>
+                            <div className={cn("rounded-xl overflow-hidden border-2 border-violet-200/30 dark:border-violet-800/30 shadow-md", allRatings[product.id]?.comments?.length > 0 ? "h-20 min-h-[3rem]" : "h-12")} >
                               {product.mainPhoto || (product.photos && product.photos.length > 0) ? (
                                 <img src={getPhotoUrl(product.mainPhoto || product.photos![0])} alt="" className="w-full h-full object-cover" />
                               ) : (
