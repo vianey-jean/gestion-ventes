@@ -23,6 +23,7 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import moduleSettingsApi, { ModuleSettings } from '@/services/api/moduleSettingsApi';
 import parametresApi from '@/services/api/parametresApi';
+import PointageAutoSection from './PointageAutoSection';
 
 const ModuleSettingsSection: React.FC = () => {
   const { toast } = useToast();
@@ -170,7 +171,9 @@ const ModuleSettingsSection: React.FC = () => {
         )}
       </div>
 
-     
+      {/* Section Pointage automatique — règles récurrentes ultra luxe */}
+      <PointageAutoSection />
+
     </div>
   );
 };

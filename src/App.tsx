@@ -23,6 +23,7 @@ import CookieConsent from '@/components/CookieConsent';
 
 // Fallback pendant chargement des pages
 import PremiumLoading from '@/components/ui/premium-loading';
+import PointageAutoWatcher from '@/components/pointage/PointageAutoWatcher';
 
 // ==================
 // Lazy loading pages
@@ -179,6 +180,8 @@ function App() {
               </Router>
               <Toaster />
               <CookieConsent />
+              {/* Watcher global pour les pointages automatiques (modal top-right) */}
+              <PointageAutoWatcher />
             </AppProvider>
           </AuthProvider>
         </AccessibilityProvider>

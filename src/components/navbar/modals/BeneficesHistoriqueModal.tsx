@@ -37,7 +37,19 @@ const BeneficesHistoriqueModal: React.FC<BeneficesHistoriqueModalProps> = ({
     }).format(value);
   };
 
-  const totalAnnuel = beneficesHistorique.reduce((sum, b) => sum + b.totalBenefice, 0);
+  // Dédoublonnage : un seul enregistrement par couple (mois, année).
+  // Si plusieurs entrées existent pour le même mois, on garde la dernière (écrase).
+  const beneficesUniques = React.useMemo(() => {
+    const map = new Map<string, BeneficeMensuel>();
+    for (const b of beneficesHistorique) {
+      map.set(`${b.annee}-${b.mois}`, b);
+    }
+    return Array.from(map.values()).sort((a, b) =>
+      a.annee !== b.annee ? a.annee - b.annee : a.mois - b.mois
+    );
+  }, [beneficesHistorique]);
+
+  const totalAnnuel = beneficesUniques.reduce((sum, b) => sum + b.totalBenefice, 0);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -72,8 +84,8 @@ const BeneficesHistoriqueModal: React.FC<BeneficesHistoriqueModalProps> = ({
 
           {/* Monthly List */}
           <div className="max-h-[300px] overflow-y-auto space-y-2 pr-1">
-            {beneficesHistorique.length > 0 ? (
-              beneficesHistorique.map((item, index) => (
+            {beneficesUniques.length > 0 ? (
+              beneficesUniques.map((item, index) => (
                 <div
                   key={`${item.mois}-${item.annee}`}
                   className={cn(
