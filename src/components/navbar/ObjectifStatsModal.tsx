@@ -127,8 +127,17 @@ const totalAnnuel = historiqueUnique.reduce(
     ? Math.round(totalAnnuel / data.historique.length)
     : 0;
   
-  // Calculate total benefices for the year
-  const totalBeneficesAnnuel = data?.beneficesHistorique?.reduce((sum, b) => sum + b.totalBenefice, 0) || 0;
+  // Calculate total benefices for the year — dedupe par mois+année (garde la dernière occurrence)
+  const beneficesUniques = data?.beneficesHistorique
+    ? Object.values(
+        data.beneficesHistorique.reduce((acc, b) => {
+          const key = `${b.mois}-${b.annee}`;
+          acc[key] = b;
+          return acc;
+        }, {} as Record<string, { mois: number; annee: number; totalBenefice: number }>)
+      )
+    : [];
+  const totalBeneficesAnnuel = beneficesUniques.reduce((sum, b) => sum + (Number(b.totalBenefice) || 0), 0);
 
   // Calcul des statistiques de performance
   const bestMonth = data?.historique?.reduce((best, item) => 
