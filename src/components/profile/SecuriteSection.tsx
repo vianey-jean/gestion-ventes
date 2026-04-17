@@ -109,25 +109,31 @@ const SecuriteSection: React.FC<SecuriteSectionProps> = ({ userRole }) => {
 
   const fetchSecuritySettings = async () => {
     try {
-      const response = await api.get('/api/profile');
+      // Source de vérité : tentativeblocage.json côté serveur
+      const response = await api.get('/api/profile/security-settings');
       if (response.data) {
-        setNombreConnexion(response.data.nombreConnexion || 5);
-        setTempsBlocage(response.data.tempsBlocage || 15);
+        setNombreConnexion(Number(response.data.nombreConnexion) || 5);
+        setTempsBlocage(Number(response.data.tempsBlocage) || 15);
       }
     } catch (e) {
       console.error('Error fetching security settings:', e);
+      setNombreConnexion(5);
+      setTempsBlocage(15);
     }
   };
 
   const fetchTimeoutSettings = async () => {
     try {
+      // Source de vérité : timeoutinactive.json côté serveur
       const response = await api.get('/api/profile/timeout-settings');
       if (response.data) {
-        setInactiveMinutes(response.data.active || 10);
-        setTimeoutHours(response.data.timeout || 7);
+        setInactiveMinutes(Number(response.data.active) || 10);
+        setTimeoutHours(Number(response.data.timeout) || 7);
       }
     } catch (e) {
       console.error('Error fetching timeout settings:', e);
+      setInactiveMinutes(10);
+      setTimeoutHours(7);
     }
   };
 
