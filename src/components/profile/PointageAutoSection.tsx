@@ -15,7 +15,8 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus, Edit2, Trash2, X, Save, Crown, Sparkles, Diamond,
-  CalendarDays, Building2, User, Power, Zap, ChevronDown, ChevronUp
+  CalendarDays, Building2, User, Power, Zap, ChevronDown, ChevronUp,
+  ShieldAlert, AlertTriangle, XCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,6 +24,11 @@ import { Label } from '@/components/ui/label';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue
 } from '@/components/ui/select';
+import {
+  AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction
+} from '@/components/ui/alert-dialog';
+import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import pointageAutoApi, { PointageAutoEntry } from '@/services/api/pointageAutoApi';
 import travailleurApi, { Travailleur } from '@/services/api/travailleurApi';
@@ -68,7 +74,8 @@ const PointageAutoSection: React.FC = () => {
   const [form, setForm] = useState<FormState>(emptyForm);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState(false);
-
+  const [deleteTarget, setDeleteTarget] = useState<PointageAutoEntry | null>(null);
+  const [deleting, setDeleting] = useState(false);
   useEffect(() => { fetchAll(); }, []);
 
   const fetchAll = async () => {
@@ -153,14 +160,22 @@ const PointageAutoSection: React.FC = () => {
     }
   };
 
-  const remove = async (id: string) => {
-    if (!confirm('Supprimer ce pointage automatique ?')) return;
+  const remove = (item: PointageAutoEntry) => {
+    setDeleteTarget(item);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
     try {
-      await pointageAutoApi.delete(id);
-      toast({ title: 'Supprimé' });
+      setDeleting(true);
+      await pointageAutoApi.delete(deleteTarget.id);
+      toast({ title: 'Supprimé avec succès' });
+      setDeleteTarget(null);
       fetchAll();
     } catch {
-      toast({ title: 'Erreur', variant: 'destructive' });
+      toast({ title: 'Erreur lors de la suppression', variant: 'destructive' });
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -266,7 +281,7 @@ const PointageAutoSection: React.FC = () => {
                       <button onClick={() => openEdit(item)} className="p-1 rounded text-blue-600 hover:bg-blue-500/10">
                         <Edit2 className="w-3.5 h-3.5" />
                       </button>
-                      <button onClick={() => remove(item.id)} className="p-1 rounded text-red-600 hover:bg-red-500/10">
+                      <button onClick={() => remove(item)} className="p-1 rounded text-red-600 hover:bg-red-500/10">
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     </div>
@@ -499,6 +514,141 @@ const PointageAutoSection: React.FC = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Dialog de confirmation ultra luxe */}
+      <AlertDialog open={!!deleteTarget} onOpenChange={(o) => !o && !deleting && setDeleteTarget(null)}>
+        <AlertDialogContent className="bg-gradient-to-br from-slate-950 via-rose-950/40 to-red-950/30 backdrop-blur-3xl border border-rose-300/20 rounded-3xl overflow-hidden shadow-[0_30px_120px_rgba(244,63,94,0.45)] max-w-md p-0">
+          {/* Décor lumineux */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div className="absolute -top-32 -right-32 w-72 h-72 bg-gradient-to-br from-rose-500/30 via-red-500/20 to-transparent rounded-full blur-3xl animate-pulse" />
+            <div className="absolute -bottom-32 -left-32 w-72 h-72 bg-gradient-to-tr from-red-600/30 via-rose-500/20 to-transparent rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-radial from-rose-500/10 to-transparent rounded-full blur-2xl" />
+          </div>
+
+          {/* Bordure dégradée */}
+          <div className="absolute inset-0 rounded-3xl pointer-events-none">
+            <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-rose-400/20 via-transparent to-red-400/20 p-[1px]">
+              <div className="w-full h-full rounded-3xl bg-transparent" />
+            </div>
+          </div>
+
+          <div className="relative p-7">
+            <AlertDialogHeader className="space-y-5">
+              {/* Icône premium */}
+              <div className="mx-auto relative">
+                <motion.div
+                  initial={{ scale: 0, rotate: -180 }}
+                  animate={{ scale: 1, rotate: 0 }}
+                  transition={{ type: 'spring', stiffness: 200, damping: 15 }}
+                  className="relative w-24 h-24 bg-gradient-to-br from-rose-400 via-red-500 to-rose-700 rounded-3xl flex items-center justify-center shadow-[0_20px_60px_rgba(244,63,94,0.6)] rotate-3"
+                >
+                  <ShieldAlert className="h-12 w-12 text-white drop-shadow-2xl" strokeWidth={2.2} />
+                  {/* Reflet */}
+                  <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-white/40 via-white/10 to-transparent opacity-60" />
+                  {/* Diamond accent */}
+                  <Diamond className="absolute -top-2 -right-2 h-5 w-5 text-rose-200 fill-rose-300 drop-shadow-lg" />
+                  <Sparkles className="absolute -bottom-1 -left-1 h-4 w-4 text-yellow-200 fill-yellow-300 drop-shadow-lg" />
+                </motion.div>
+                {/* Halo */}
+                <div className="absolute inset-0 bg-gradient-to-br from-rose-400 via-red-500 to-rose-700 rounded-3xl blur-2xl opacity-50 -z-10 scale-125 animate-pulse" />
+              </div>
+
+              <AlertDialogTitle className="text-center text-2xl font-black tracking-tight">
+                <span className="bg-gradient-to-r from-rose-200 via-red-100 to-rose-200 bg-clip-text text-transparent drop-shadow-[0_2px_10px_rgba(244,63,94,0.5)]">
+                  Suppression définitive
+                </span>
+              </AlertDialogTitle>
+
+              <AlertDialogDescription asChild>
+                <div className="space-y-4 text-center">
+                  <p className="text-sm text-rose-100/80 font-medium leading-relaxed">
+                    Vous êtes sur le point de supprimer cette règle de pointage automatique.
+                  </p>
+
+                  {deleteTarget && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.15 }}
+                      className="relative mx-auto rounded-2xl bg-gradient-to-br from-white/10 via-rose-500/10 to-red-500/10 backdrop-blur-xl border border-rose-300/20 p-4 shadow-inner"
+                    >
+                      <div className="flex items-center gap-3 justify-center">
+                        <div className="p-2 bg-gradient-to-br from-rose-400/30 to-red-500/30 rounded-xl border border-rose-300/30">
+                          <User className="h-4 w-4 text-rose-100" />
+                        </div>
+                        <div className="text-left">
+                          <p className="text-sm font-bold text-white truncate max-w-[180px]">
+                            {deleteTarget.travailleurNom || 'Personne'}
+                          </p>
+                          <p className="text-xs text-rose-200/70 truncate max-w-[180px]">
+                            {deleteTarget.entrepriseNom || 'Entreprise'}
+                          </p>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  <div className="flex items-center justify-center gap-2 pt-1">
+                    <AlertTriangle className="h-3.5 w-3.5 text-amber-300 animate-pulse" />
+                    <span className="text-xs font-bold uppercase tracking-widest bg-gradient-to-r from-amber-200 to-rose-200 bg-clip-text text-transparent">
+                      Action irréversible
+                    </span>
+                    <AlertTriangle className="h-3.5 w-3.5 text-amber-300 animate-pulse" />
+                  </div>
+                </div>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+
+            <AlertDialogFooter className="relative flex gap-3 pt-6 sm:flex-row">
+              <AlertDialogCancel
+                disabled={deleting}
+                className={cn(
+                  "flex-1 h-12 rounded-2xl font-bold text-sm m-0",
+                  "bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl",
+                  "border border-white/20 hover:border-white/30",
+                  "text-white/90 hover:text-white hover:bg-white/15",
+                  "shadow-lg transition-all duration-300",
+                  "flex items-center justify-center gap-2"
+                )}
+              >
+                <XCircle className="h-4 w-4" />
+                Annuler
+              </AlertDialogCancel>
+
+              <AlertDialogAction
+                onClick={(e) => { e.preventDefault(); confirmDelete(); }}
+                disabled={deleting}
+                className={cn(
+                  "flex-1 h-12 rounded-2xl font-black text-sm relative overflow-hidden",
+                  "bg-gradient-to-br from-rose-500 via-red-600 to-rose-700",
+                  "hover:from-rose-600 hover:via-red-700 hover:to-rose-800",
+                  "text-white border border-rose-300/40",
+                  "shadow-[0_20px_60px_rgba(244,63,94,0.6)] hover:shadow-[0_25px_70px_rgba(244,63,94,0.7)]",
+                  "transition-all duration-300 transform hover:-translate-y-0.5",
+                  "flex items-center justify-center gap-2",
+                  "disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none"
+                )}
+              >
+                {/* Mirror shine */}
+                <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full hover:translate-x-full transition-transform duration-1000" />
+                <span className="relative flex items-center gap-2">
+                  {deleting ? (
+                    <>
+                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                      Suppression...
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="h-4 w-4" />
+                      Supprimer
+                    </>
+                  )}
+                </span>
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
