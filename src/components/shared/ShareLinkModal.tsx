@@ -14,6 +14,7 @@ import React, { useState, useEffect } from 'react';
 import { Share2, Copy, Check, LinkIcon, X, Trash2, Plus, KeyRound } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import shareLinksApi, { ShareLink } from '@/services/api/shareLinksApi';
+import PremiumLoading from '@/components/ui/premium-loading';
 
 interface ShareLinkModalProps {
   open: boolean;
@@ -108,7 +109,7 @@ const ShareLinkModal: React.FC<ShareLinkModalProps> = ({ open, onClose, type, ty
         <div className="flex-1 overflow-y-auto space-y-3">
           {loading ? (
             <div className="flex justify-center py-8">
-              <div className="w-6 h-6 border-2 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin" />
+              <PremiumLoading text="Chargement..." size="md" overlay={false} variant="default" />
             </div>
           ) : links.length === 0 ? (
             <p className="text-center text-gray-400 text-sm py-8">Aucun lien créé</p>

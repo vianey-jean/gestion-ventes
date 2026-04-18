@@ -21,6 +21,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import api from '@/service/api';
 import PasswordStrengthChecker from '@/components/PasswordStrengthChecker';
+import PremiumLoading from '@/components/ui/premium-loading';
 
 interface SecuriteSectionProps {
   userRole?: string;
@@ -323,7 +324,7 @@ const SecuriteSection: React.FC<SecuriteSectionProps> = ({ userRole }) => {
 
             {loadingUsers ? (
               <div className="flex items-center justify-center py-8">
-                <div className="animate-spin w-6 h-6 border-2 border-violet-500 border-t-transparent rounded-full" />
+                <PremiumLoading text="Chargement des utilisateurs..." size="md" overlay={false} variant="default" />
               </div>
             ) : (
               <div className="space-y-2 max-h-[280px] overflow-y-auto pr-1 custom-scrollbar">
@@ -418,7 +419,7 @@ const SecuriteSection: React.FC<SecuriteSectionProps> = ({ userRole }) => {
 
             {loadingUsers ? (
               <div className="flex items-center justify-center py-8">
-                <div className="animate-spin w-6 h-6 border-2 border-red-500 border-t-transparent rounded-full" />
+                <PremiumLoading text="Chargement des comptes..." size="md" overlay={false} variant="default" />
               </div>
             ) : (
               <div className="space-y-2 max-h-[350px] overflow-y-auto pr-1 custom-scrollbar">

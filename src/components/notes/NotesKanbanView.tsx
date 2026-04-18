@@ -10,6 +10,7 @@ import KanbanColumn from './KanbanColumn';
 import NoteFormModal from './NoteFormModal';
 import ColumnFormModal from './ColumnFormModal';
 import ConfirmModal from './ConfirmModal';
+import PremiumLoading from '@/components/ui/premium-loading';
 
 const SEPARATOR_COLORS = [
   'from-cyan-400 to-blue-500',
@@ -214,7 +215,7 @@ const NotesKanbanView: React.FC = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <div className="w-10 h-10 border-4 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin" />
+        <PremiumLoading text="Chargement des notes..." size="lg" overlay={false} variant="default" />
       </div>
     );
   }

@@ -17,6 +17,7 @@
  */
 import React, { useState, useEffect, useRef } from 'react';
 import Layout from '@/components/Layout';
+import PremiumLoading from '@/components/ui/premium-loading';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import profileApi, { ProfileData } from '@/services/api/profileApi';
@@ -159,9 +160,7 @@ const ProfilePage: React.FC = () => {
   if (loading) {
     return (
       <Layout>
-        <div className="min-h-screen flex items-center justify-center">
-          <div className="animate-spin w-12 h-12 border-4 border-violet-500 border-t-transparent rounded-full" />
-        </div>
+        <PremiumLoading text="Chargement du profil..." size="xl" overlay={true} variant="default" />
       </Layout>
     );
   }

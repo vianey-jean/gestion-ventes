@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import indisponibleApi, { Indisponibilite } from '@/services/api/indisponibleApi';
+import PremiumLoading from '@/components/ui/premium-loading';
 
 const JOURS_SEMAINE = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
 
@@ -266,7 +267,7 @@ const IndisponibiliteSection: React.FC = () => {
 
       {loading ? (
         <div className="flex justify-center py-4">
-          <div className="animate-spin w-6 h-6 border-2 border-red-500 border-t-transparent rounded-full" />
+          <PremiumLoading text="Chargement..." size="md" overlay={false} variant="default" />
         </div>
       ) : activeGroups.length === 0 ? (
         <p className="text-sm text-muted-foreground text-center py-4">Aucun jour indisponible à venir</p>

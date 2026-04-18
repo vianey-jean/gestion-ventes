@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import api from '@/service/api';
+import PremiumLoading from '@/components/ui/premium-loading';
 
 type DeleteType = 'sales' | 'products' | 'clients';
 type Step = 'choose-type' | 'choose-filter' | 'select-items' | 'confirm';
@@ -322,7 +323,7 @@ const BulkDeleteModal: React.FC<BulkDeleteModalProps> = ({ open, onOpenChange })
 
                 {loading && (
                   <div className="flex items-center justify-center py-8">
-                    <Loader2 className="w-6 h-6 animate-spin text-violet-500" />
+                    <PremiumLoading text="Chargement..." size="md" overlay={false} variant="default" />
                   </div>
                 )}
               </motion.div>
@@ -383,7 +384,7 @@ const BulkDeleteModal: React.FC<BulkDeleteModalProps> = ({ open, onOpenChange })
                 <div className="flex-1 overflow-y-auto space-y-1 min-h-0 max-h-[300px] pr-1">
                   {loading ? (
                     <div className="flex items-center justify-center py-8">
-                      <Loader2 className="w-6 h-6 animate-spin text-violet-500" />
+                      <PremiumLoading text="Chargement..." size="md" overlay={false} variant="default" />
                     </div>
                   ) : filteredItems.length === 0 ? (
                     <div className="text-center py-8 text-muted-foreground text-sm">

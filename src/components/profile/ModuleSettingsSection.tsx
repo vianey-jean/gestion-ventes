@@ -24,6 +24,7 @@ import { useToast } from '@/hooks/use-toast';
 import moduleSettingsApi, { ModuleSettings } from '@/services/api/moduleSettingsApi';
 import parametresApi from '@/services/api/parametresApi';
 import PointageAutoSection from './PointageAutoSection';
+import PremiumLoading from '@/components/ui/premium-loading';
 
 const ModuleSettingsSection: React.FC = () => {
   const { toast } = useToast();
@@ -119,7 +120,7 @@ const ModuleSettingsSection: React.FC = () => {
   if (loading || !settings) {
     return (
       <div className="flex justify-center py-4">
-        <div className="animate-spin w-6 h-6 border-2 border-violet-500 border-t-transparent rounded-full" />
+        <PremiumLoading text="Chargement des modules..." size="md" overlay={false} variant="default" />
       </div>
     );
   }

@@ -19,6 +19,7 @@ import api from '@/service/api';
 import IndisponibiliteSection from './IndisponibiliteSection';
 import ModuleSettingsSection from './ModuleSettingsSection';
 import BulkDeleteModal from './BulkDeleteModal';
+import PremiumLoading from '@/components/ui/premium-loading';
 
 const premiumBtnClass = "group relative overflow-hidden rounded-xl sm:rounded-2xl backdrop-blur-xl border transition-all duration-300 hover:scale-105 px-4 py-2 sm:px-5 sm:py-3 text-xs sm:text-sm font-semibold";
 
@@ -441,7 +442,7 @@ const ParametresSection: React.FC<ParametresSectionProps> = ({ userRole }) => {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="animate-spin w-8 h-8 border-3 border-violet-500 border-t-transparent rounded-full" />
+        <PremiumLoading text="Chargement des paramètres..." size="lg" overlay={false} variant="default" />
       </div>
     );
   }

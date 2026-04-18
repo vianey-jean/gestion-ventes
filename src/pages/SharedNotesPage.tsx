@@ -5,6 +5,7 @@ import { getBaseURL } from '@/services/api/api';
 import { getDrawingUrl } from '@/services/api/noteApi';
 import SEOHead from '@/components/SEOHead';
 import SharedCommentForm from '@/components/shared/SharedCommentForm';
+import PremiumLoading from '@/components/ui/premium-loading';
 
 interface SharedNote {
   title: string;
@@ -59,7 +60,7 @@ const SharedNotesPage: React.FC = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-950 flex items-center justify-center">
-        <div className="w-10 h-10 border-4 border-amber-500/30 border-t-amber-500 rounded-full animate-spin" />
+        <PremiumLoading text="Chargement des notes partagées..." size="xl" overlay={false} variant="default" />
       </div>
     );
   }

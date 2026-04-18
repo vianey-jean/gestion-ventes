@@ -33,6 +33,7 @@ import { useToast } from '@/hooks/use-toast';
 import pointageAutoApi, { PointageAutoEntry } from '@/services/api/pointageAutoApi';
 import travailleurApi, { Travailleur } from '@/services/api/travailleurApi';
 import entrepriseApi, { Entreprise } from '@/services/api/entrepriseApi';
+import PremiumLoading from '@/components/ui/premium-loading';
 
 const JOURS = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'];
 
@@ -232,7 +233,7 @@ const PointageAutoSection: React.FC = () => {
       {expanded && (
         loading ? (
           <div className="flex justify-center py-3">
-            <div className="animate-spin w-5 h-5 border-2 border-emerald-500 border-t-transparent rounded-full" />
+            <PremiumLoading text="Chargement..." size="md" overlay={false} variant="default" />
           </div>
         ) : items.length === 0 ? (
           <div className="text-center py-4 text-xs text-muted-foreground">
