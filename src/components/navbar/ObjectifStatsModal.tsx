@@ -72,11 +72,32 @@ const ObjectifStatsModal: React.FC = () => {
     }
   };
 
+  // Fetch initial au montage pour que la carte "Total bénéfices annuels" soit toujours à jour
+  // (même quand le grand modal n'est pas ouvert), et refetch quand il s'ouvre.
+  useEffect(() => {
+    fetchHistorique();
+  }, []);
+
   useEffect(() => {
     if (isOpen) {
       fetchHistorique();
     }
   }, [isOpen]);
+
+  // Re-récupère les bénéfices dès qu'une vente est créée/modifiée/supprimée,
+  // ou qu'un bénéfice est supprimé. Le backend recalcule depuis sales.json
+  // et renvoie beneficesHistorique dédoublonné par mois pour l'année en cours.
+  useEffect(() => {
+    const refresh = () => fetchHistorique();
+    window.addEventListener('sales-updated', refresh);
+    window.addEventListener('benefice-deleted', refresh);
+    window.addEventListener('focus', refresh);
+    return () => {
+      window.removeEventListener('sales-updated', refresh);
+      window.removeEventListener('benefice-deleted', refresh);
+      window.removeEventListener('focus', refresh);
+    };
+  }, []);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('fr-FR', {

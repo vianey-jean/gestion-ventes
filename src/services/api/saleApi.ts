@@ -21,16 +21,20 @@ export const saleApiService = {
 
   async create(data: Omit<Sale, 'id'>): Promise<Sale> {
     const response: AxiosResponse<Sale> = await api.post('/api/sales', data);
+    // Notifie les composants (ex: ObjectifStatsModal) qu'il faut recalculer les bénéfices annuels
+    try { window.dispatchEvent(new CustomEvent('sales-updated', { detail: { type: 'create' } })); } catch {}
     return response.data;
   },
 
   async update(id: string, data: Partial<Sale>): Promise<Sale> {
     const response: AxiosResponse<Sale> = await api.put(`/api/sales/${id}`, data);
+    try { window.dispatchEvent(new CustomEvent('sales-updated', { detail: { type: 'update', id } })); } catch {}
     return response.data;
   },
 
   async delete(id: string): Promise<boolean> {
     await api.delete(`/api/sales/${id}`);
+    try { window.dispatchEvent(new CustomEvent('sales-updated', { detail: { type: 'delete', id } })); } catch {}
     return true;
   },
 
