@@ -717,8 +717,10 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
 
       const totals = getTotals();
       const avancePriceValue = Number(avancePrice) || 0;
-      const finalSellingPrice = avancePriceValue > 0 ? avancePriceValue : totals.totalSellingPrice;
-      const resteValue = avancePriceValue > 0 ? Number(reste) : 0;
+      // Mode avance actif dès que la section est affichée et qu'une valeur (même 0) a été saisie
+      const isAdvanceMode = showAdvanceSection && avancePrice.trim() !== '' && !isNaN(Number(avancePrice));
+      const finalSellingPrice = isAdvanceMode ? avancePriceValue : totals.totalSellingPrice;
+      const resteValue = isAdvanceMode ? Number(reste) : 0;
       
       const saleData = {
         date,
@@ -731,7 +733,7 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
         clientAddress: clientAddress || null,
         clientPhone: clientPhone || null,
         reste: resteValue,
-        nextPaymentDate: avancePriceValue > 0 ? nextPaymentDate : null,
+        nextPaymentDate: isAdvanceMode ? nextPaymentDate : null,
       };
 
       let success;
@@ -739,7 +741,7 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
       if (editSale) {
         success = await updateSale({ ...saleData, id: editSale.id });
         
-        if (success && avancePriceValue > 0 && nextPaymentDate) {
+        if (success && isAdvanceMode && nextPaymentDate) {
           try {
             const token = localStorage.getItem('token');
             const pretProduitsResponse = await axios.get(`${API_BASE_URL}/api/pretproduits`, {
@@ -772,7 +774,7 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
       } else {
         success = await addSale(saleData);
         
-        if (success && avancePriceValue > 0 && nextPaymentDate) {
+        if (success && isAdvanceMode && nextPaymentDate) {
           try {
             const token = localStorage.getItem('token');
             const productsDescription = validProducts.map(p => p.description).join(', ');
@@ -802,7 +804,7 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
         }
       }
       
-      if (success && !(avancePriceValue > 0 && nextPaymentDate)) {
+      if (success && !(isAdvanceMode && nextPaymentDate)) {
         toast({
           title: "Succès",
           description: editSale 

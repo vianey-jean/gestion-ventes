@@ -114,7 +114,7 @@ const SaleTotalsSection: React.FC<SaleTotalsSectionProps> = ({
                 <Input id="nextPaymentDate" type="date" value={nextPaymentDate} onChange={(e) => setNextPaymentDate(e.target.value)} disabled={isSubmitting} />
               </div>
             </div>
-            {avancePrice && Number(avancePrice) > 0 && (
+            {avancePrice !== '' && !isNaN(Number(avancePrice)) && (
               <div className="text-sm text-blue-700 dark:text-blue-300 bg-blue-100 dark:bg-blue-900/30 p-3 rounded">
                 <p className="font-semibold">Information:</p>
                 <p>Cette vente sera enregistrée avec un prix de vente de {Number(avancePrice).toFixed(2)} € (avance) et un reste de {reste} € sera enregistré.</p>
