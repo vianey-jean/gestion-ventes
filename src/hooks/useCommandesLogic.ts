@@ -272,20 +272,8 @@ export const useCommandesLogic = () => {
       const totalSellingPrice = commandeToValidate.produits.reduce((sum, p) => sum + (p.prixVente * p.quantite), 0);
       const saleData = { date: today, products: saleProducts, totalPurchasePrice, totalSellingPrice, totalProfit: totalSellingPrice - totalPurchasePrice, clientName: commandeToValidate.clientNom, clientAddress: commandeToValidate.clientAddress, clientPhone: commandeToValidate.clientPhone, reste: 0, nextPaymentDate: null };
 
-      // Valider le RDV associé
-      try { await api.put(`/api/rdv/by-commande/${id}`, { statut: 'confirme' }); } catch (rdvError) { console.log('RDV non trouvé:', rdvError); }
-
-      // Marquer la tâche associée comme terminée
-      try {
-        const tachesResponse = await tacheApi.getAll();
-        const taches = tachesResponse.data || tachesResponse;
-        const associatedTache = (taches as any[]).find((t: any) => t.commandeId === id);
-        if (associatedTache && !associatedTache.completed) {
-          const now = new Date();
-          const currentHeureFin = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-          await tacheApi.update(associatedTache.id, { completed: true, heureFin: currentHeureFin });
-        }
-      } catch (tacheErr) { console.log('Tâche associée non trouvée:', tacheErr); }
+      await reservationRdvSyncService.syncRdvStatus(id, 'valide');
+      await syncTacheForCommande(id, 'valide');
 
       const saleResponse = await api.post('/api/sales', saleData);
       const createdSale = saleResponse.data;
@@ -315,7 +303,8 @@ export const useCommandesLogic = () => {
     setOverdueProcessedIds(prev => new Set(prev).add(id));
     try {
       await api.put(`/api/commandes/${id}`, { statut: 'annule' });
-      try { await api.put(`/api/rdv/by-commande/${id}`, { statut: 'annule' }); } catch (e) { console.log('RDV non trouvé:', e); }
+      await reservationRdvSyncService.syncRdvStatus(id, 'annule');
+      await syncTacheForCommande(id, 'annule');
       toast({ title: '❌ Réservation annulée', description: 'La réservation a été annulée', className: "bg-app-red text-white" });
       fetchCommandes();
     } catch (error) {
@@ -331,6 +320,18 @@ export const useCommandesLogic = () => {
     setReporterCommandeId(id);
     setReporterModalOpen(true);
   }, []);
+
+  const extractStartTime = (horaire?: string) => {
+    const [heure] = String(horaire || '').split('-').map(part => part?.trim());
+    return heure || '';
+  };
+
+  const getOneHourLater = (heureDebut?: string) => {
+    const safeHeureDebut = extractStartTime(heureDebut) || '09:00';
+    const [hours, minutes] = safeHeureDebut.split(':').map(Number);
+    const endHours = (hours + 1) % 24;
+    return `${endHours.toString().padStart(2, '0')}:${(minutes || 0).toString().padStart(2, '0')}`;
+  };
 
   // =========================================================================
   // Mémos de filtrage
@@ -652,7 +653,8 @@ export const useCommandesLogic = () => {
 
   const handleDelete = async (id: string) => {
     try {
-      try { await rdvFromReservationService.deleteRdvFromCommande(id); } catch (err) { console.error('Erreur suppression RDV lié:', err); }
+      try { await api.delete(`/api/rdv/by-commande/${id}`); } catch (err) { console.error('Erreur suppression RDV lié:', err); }
+      try { await api.delete(`/api/taches/by-commande/${id}`); } catch (err) { console.error('Erreur suppression tâches liées:', err); }
       await api.delete(`/api/commandes/${id}`);
       toast({ title: 'Succès', description: 'Commande supprimée', className: "bg-app-green text-white" });
       fetchCommandes(); setDeleteId(null);
@@ -686,9 +688,42 @@ export const useCommandesLogic = () => {
     }
     try {
       await api.put(`/api/commandes/${id}`, { statut: newStatus });
-      if (commande.type === 'reservation') await reservationRdvSyncService.syncRdvStatus(id, newStatus as CommandeStatut);
+      if (commande.type === 'reservation') {
+        await reservationRdvSyncService.syncRdvStatus(id, newStatus as CommandeStatut);
+        // Synchroniser la tâche associée
+        await syncTacheForCommande(id, newStatus as CommandeStatut);
+      }
       toast({ title: 'Succès', description: 'Statut mis à jour', className: "bg-app-green text-white" }); fetchCommandes();
     } catch (error) { console.error('Error updating status:', error); toast({ title: 'Erreur', description: 'Impossible de mettre à jour le statut', className: "bg-app-red text-white", variant: 'destructive' }); }
+  };
+
+  // Helper: synchroniser une tâche associée à une commande selon le nouveau statut
+  const syncTacheForCommande = async (commandeId: string, statut: CommandeStatut, newDate?: string, newHoraire?: string) => {
+    try {
+      if (statut === 'valide') {
+        const now = new Date();
+        const currentHeureFin = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+        await api.put(`/api/taches/by-commande/${commandeId}`, {
+          completed: true,
+          heureFin: currentHeureFin,
+          descriptionPrefixToRemove: '[ANNULÉ] '
+        });
+      } else if (statut === 'annule') {
+        await api.put(`/api/taches/by-commande/${commandeId}`, {
+          completed: true,
+          descriptionPrefix: '[ANNULÉ] '
+        });
+      } else if (statut === 'reporter' && newDate) {
+        const heureDebut = extractStartTime(newHoraire) || '09:00';
+        await api.put(`/api/taches/by-commande/${commandeId}`, {
+          date: newDate,
+          heureDebut,
+          heureFin: getOneHourLater(heureDebut),
+          completed: false,
+          descriptionPrefixToRemove: '[ANNULÉ] '
+        });
+      }
+    } catch (tacheErr) { console.log('Tâche associée non synchronisée:', tacheErr); }
   };
 
   // =========================================================================
@@ -709,7 +744,8 @@ export const useCommandesLogic = () => {
             try { await api.put(`/api/products/${existingProduct.id}`, { reserver: 'non' }); } catch (err) { console.error('Erreur dé-réservation produit:', err); }
           }
         }
-        try { await api.put(`/api/rdv/by-commande/${cancellingId}`, { statut: 'annule' }); } catch (rdvError) { console.log('RDV non trouvé:', rdvError); }
+        await reservationRdvSyncService.syncRdvStatus(cancellingId, 'annule');
+        await syncTacheForCommande(cancellingId, 'annule');
       }
       toast({ title: 'Succès', description: 'Commande annulée', className: "bg-app-green text-white" });
       await Promise.all([fetchCommandes(), fetchProducts()]); setCancellingId(null);
@@ -741,19 +777,9 @@ export const useCommandesLogic = () => {
       const totalPurchasePrice = commandeToValidate.produits.reduce((sum, p) => sum + (p.prixUnitaire * p.quantite), 0);
       const totalSellingPrice = commandeToValidate.produits.reduce((sum, p) => sum + (p.prixVente * p.quantite), 0);
       const saleData = { date: today, products: saleProducts, totalPurchasePrice, totalSellingPrice, totalProfit: totalSellingPrice - totalPurchasePrice, clientName: commandeToValidate.clientNom, clientAddress: commandeToValidate.clientAddress, clientPhone: commandeToValidate.clientPhone, reste: 0, nextPaymentDate: null };
-      if (commandeToValidate.type === 'reservation') { try { await api.put(`/api/rdv/by-commande/${validatingId}`, { statut: 'confirme' }); } catch (rdvError) { console.log('RDV non trouvé:', rdvError); } }
-      // Mark associated tache as completed with current time as heureFin
       if (commandeToValidate.type === 'reservation') {
-        try {
-          const tachesResponse = await tacheApi.getAll();
-          const taches = tachesResponse.data || tachesResponse;
-          const associatedTache = (taches as any[]).find((t: any) => t.commandeId === validatingId);
-          if (associatedTache && !associatedTache.completed) {
-            const now = new Date();
-            const currentHeureFin = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-            await tacheApi.update(associatedTache.id, { completed: true, heureFin: currentHeureFin });
-          }
-        } catch (tacheErr) { console.log('Tâche associée non trouvée:', tacheErr); }
+        await reservationRdvSyncService.syncRdvStatus(validatingId, 'valide');
+        await syncTacheForCommande(validatingId, 'valide');
       }
       const saleResponse = await api.post('/api/sales', saleData);
       const createdSale = saleResponse.data;
@@ -788,12 +814,10 @@ export const useCommandesLogic = () => {
       await api.put(`/api/commandes/${reporterCommandeId}`, updateData);
       if (commande.type === 'reservation') {
         try {
-          const heureDebut = reporterHoraire || '09:00';
-          const [h, m] = heureDebut.split(':').map(Number);
-          const endH = (h + 1) % 24;
-          const heureFin = `${endH.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
-          await api.put(`/api/rdv/by-commande/${reporterCommandeId}`, { date: reporterDate, heureDebut, heureFin, statut: 'reporte' });
+          await reservationRdvSyncService.syncRdvReport(reporterCommandeId, reporterDate, extractStartTime(reporterHoraire) || '09:00');
         } catch (rdvError) { console.log('RDV non trouvé:', rdvError); }
+        // Synchroniser la tâche associée (reporter date + horaire)
+        await syncTacheForCommande(reporterCommandeId, 'reporter', reporterDate, extractStartTime(reporterHoraire) || '09:00');
       }
       toast({ title: 'Succès', description: `Reporté au ${new Date(reporterDate).toLocaleDateString('fr-FR')}${reporterHoraire ? ' à ' + reporterHoraire : ''}`, className: "bg-app-green text-white" });
       fetchCommandes(); setReporterModalOpen(false); setReporterCommandeId(null); setReporterDate(''); setReporterHoraire('');
