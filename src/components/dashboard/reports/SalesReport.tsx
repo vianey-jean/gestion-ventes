@@ -46,8 +46,9 @@ const SalesReport: React.FC = () => {
           }
 
           const prodData = productMap.get(product.productId);
-          prodData.revenue += product.sellingPrice * product.quantitySold;
-          prodData.quantity += product.quantitySold;
+          // sellingPrice est déjà stocké comme TOTAL (prix unitaire × quantité)
+          prodData.revenue += Number(product.sellingPrice || 0);
+          prodData.quantity += Number(product.quantitySold || 0);
           prodData.sales += 1;
         });
       }

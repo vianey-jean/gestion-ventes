@@ -22,21 +22,26 @@ export interface MonthlyStats {
 }
 
 // Calcul des valeurs d'une vente (supporte les deux formats)
+// IMPORTANT : dans la base de données, sellingPrice/purchasePrice sont déjà
+// stockés comme des TOTAUX (prixUnitaire × quantité). Il ne faut donc PAS
+// les re-multiplier par quantitySold sous peine de gonfler artificiellement
+// les chiffres d'affaires (cause des écarts entre SalesReport / YearlyComparison
+// et les vraies valeurs).
 export const getSaleValues = (sale: Sale) => {
   // Format multi-produits
   if (sale.products && Array.isArray(sale.products) && sale.products.length > 0) {
-    const revenue = sale.totalSellingPrice || sale.products.reduce((sum, p) => sum + (p.sellingPrice * p.quantitySold), 0);
-    const cost = sale.totalPurchasePrice || sale.products.reduce((sum, p) => sum + (p.purchasePrice * p.quantitySold), 0);
-    const profit = sale.totalProfit || sale.products.reduce((sum, p) => sum + p.profit, 0);
-    const quantity = sale.products.reduce((sum, p) => sum + p.quantitySold, 0);
+    const revenue = sale.totalSellingPrice ?? sale.products.reduce((sum, p) => sum + Number(p.sellingPrice || 0), 0);
+    const cost = sale.totalPurchasePrice ?? sale.products.reduce((sum, p) => sum + Number(p.purchasePrice || 0), 0);
+    const profit = sale.totalProfit ?? sale.products.reduce((sum, p) => sum + Number(p.profit || 0), 0);
+    const quantity = sale.products.reduce((sum, p) => sum + Number(p.quantitySold || 0), 0);
     return { revenue, cost, profit, quantity };
   }
-  // Format single-produit
+  // Format single-produit (sellingPrice est déjà le total)
   else if (sale.sellingPrice !== undefined) {
-    const revenue = sale.sellingPrice || 0;
-    const cost = sale.purchasePrice || 0;
-    const profit = sale.profit || 0;
-    const quantity = sale.quantitySold || 0;
+    const revenue = Number(sale.sellingPrice || 0);
+    const cost = Number(sale.purchasePrice || 0);
+    const profit = Number(sale.profit || 0);
+    const quantity = Number(sale.quantitySold || 0);
     return { revenue, cost, profit, quantity };
   }
   return { revenue: 0, cost: 0, profit: 0, quantity: 0 };

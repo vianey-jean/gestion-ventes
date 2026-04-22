@@ -29,22 +29,29 @@ const ProfitLossStatement: React.FC = () => {
   const [activeModal, setActiveModal] = useState<ModalType>(null);
 
   // Fonction utilitaire pour calculer les valeurs d'une vente
+  // IMPORTANT: pour le format multi-produits, prix * quantité (cohérent avec useYearlyData)
+  // Pour le format single-produit, sellingPrice/purchasePrice sont déjà des totaux stockés en DB
   const getSaleValues = (sale: Sale) => {
     // Nouveau format multi-produits
     if (sale.products && Array.isArray(sale.products) && sale.products.length > 0) {
-      // Pour les ventes multi-produits, utiliser les totaux pré-calculés ou calculer
-      const revenue = sale.totalSellingPrice || sale.products.reduce((sum, p) => sum + (p.sellingPrice || 0), 0);
-      const cost = sale.totalPurchasePrice || sale.products.reduce((sum, p) => sum + ((p.purchasePrice || 0)), 0);
-      const profit = sale.totalProfit || sale.products.reduce((sum, p) => sum + (p.profit || 0), 0);
+      const revenue = sale.totalSellingPrice ?? sale.products.reduce(
+        (sum, p) => sum + ((p.sellingPrice || 0) * (p.quantitySold || 0)), 0
+      );
+      const cost = sale.totalPurchasePrice ?? sale.products.reduce(
+        (sum, p) => sum + ((p.purchasePrice || 0) * (p.quantitySold || 0)), 0
+      );
+      const profit = sale.totalProfit ?? sale.products.reduce(
+        (sum, p) => sum + (p.profit || 0), 0
+      );
       const totalProductsSold = sale.products.reduce((sum, p) => sum + (p.quantitySold || 0), 0);
 
       return { revenue, cost, profit, totalProductsSold };
     }
-    // Ancien format single-produit
-    else if (sale.sellingPrice !== undefined && sale.quantitySold !== undefined && sale.purchasePrice !== undefined) {
-      const revenue = (sale.sellingPrice || 0);
-      const cost = (sale.purchasePrice || 0);
-      const profit = sale.profit || (revenue - cost);
+    // Ancien format single-produit (sellingPrice/purchasePrice stockés comme totaux)
+    else if (sale.sellingPrice !== undefined) {
+      const revenue = sale.sellingPrice || 0;
+      const cost = sale.purchasePrice || 0;
+      const profit = sale.profit ?? (revenue - cost);
       const totalProductsSold = sale.quantitySold || 0;
 
       return { revenue, cost, profit, totalProductsSold };
