@@ -20,6 +20,7 @@ import ProtectedRoute from './components/auth/ProtectedRoute';
 import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 import { Toaster } from '@/components/ui/toaster';
 import CookieConsent from '@/components/CookieConsent';
+import MaintenanceGate from '@/components/maintenance/MaintenanceGate';
 
 // Fallback pendant chargement des pages
 import PremiumLoading from '@/components/ui/premium-loading';
@@ -83,6 +84,7 @@ function App() {
           <AuthProvider>
             <AppProvider>
               <Router>
+                <MaintenanceGate>
                 {/* Suspense : gestion du chargement asynchrone */}
                 <Suspense
                   fallback={
@@ -177,6 +179,7 @@ function App() {
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </Suspense>
+                </MaintenanceGate>
               </Router>
               <Toaster />
               <CookieConsent />

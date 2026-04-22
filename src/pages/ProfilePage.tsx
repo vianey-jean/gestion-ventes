@@ -25,6 +25,7 @@ import { motion } from 'framer-motion';
 import { User, Camera, Lock, Shield, Sparkles, Crown, Settings } from 'lucide-react';
 import ParametresSection from '@/components/profile/ParametresSection';
 import SecuriteSection from '@/components/profile/SecuriteSection';
+import MaintenanceSection from '@/components/profile/MaintenanceSection';
 import ProfileCard from '@/components/profile/ProfileCard';
 import ProfileInfoCard from '@/components/profile/ProfileInfoCard';
 import PasswordSection from '@/components/profile/PasswordSection';
@@ -279,7 +280,10 @@ const ProfilePage: React.FC = () => {
 
           {/* Contenu de l'onglet Sécurité (admin principal uniquement) */}
           {activeTab === 'securite' && isAdminPrincipal && (
-            <SecuriteSection userRole={userRole} />
+            <>
+              <SecuriteSection userRole={userRole} />
+              <MaintenanceSection userRole={userRole} />
+            </>
           )}
 
         </div>
