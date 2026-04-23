@@ -40,6 +40,7 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
   const [clientPhone, setClientPhone] = useState('');
   const [clientPhones, setClientPhones] = useState<string[]>([]);
   const [clientAddress, setClientAddress] = useState('');
+  const [clientPhoto, setClientPhoto] = useState<string | null>(null);
   const [formProducts, setFormProducts] = useState<FormProduct[]>([createEmptyFormProduct()]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -166,6 +167,7 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
         setClientName('');
         setClientPhone('');
         setClientAddress('');
+        setClientPhoto(null);
         setFormProducts([createEmptyFormProduct()]);
         setShowAdvanceSection(false);
         setAvancePrice('');
@@ -184,10 +186,12 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
       setClientPhones(phones);
       setClientPhone(phones[0] || '');
       setClientAddress(client.adresse);
+      setClientPhoto(client.photo || null);
     } else {
       setClientPhones([]);
       setClientPhone('');
       setClientAddress('');
+      setClientPhoto(null);
     }
   };
 
@@ -910,6 +914,7 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
             setClientAddress={setClientAddress}
             onClientSelect={handleClientSelect}
             isSubmitting={isSubmitting}
+            clientPhoto={clientPhoto}
           />
 
           {/* Products */}

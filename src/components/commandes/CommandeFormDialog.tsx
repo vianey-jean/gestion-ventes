@@ -26,6 +26,7 @@ interface Client {
   phone: string;
   phones?: string[];
   adresse: string;
+  photo?: string;
 }
 
 interface Product {
@@ -33,7 +34,11 @@ interface Product {
   description: string;
   purchasePrice: number;
   quantity: number;
+  mainPhoto?: string;
+  photos?: string[];
 }
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:10000';
 
 type ProductCategory = 'all' | 'perruque' | 'tissage' | 'extension' | 'autres';
 
@@ -175,6 +180,28 @@ const CommandeFormDialog: React.FC<CommandeFormDialogProps> = ({
 }) => {
   const [productCategoryFilter, setProductCategoryFilter] = React.useState<ProductCategory>('all');
   const categoryFilteredProducts = React.useMemo(() => filterProductsByCategory(filteredProducts, productCategoryFilter), [filteredProducts, productCategoryFilter]);
+  const [selectedClientPhoto, setSelectedClientPhoto] = React.useState<string | null>(null);
+
+  // Réinitialiser la photo client quand le dialogue se ferme ou que le nom change manuellement
+  React.useEffect(() => {
+    if (!isOpen) setSelectedClientPhoto(null);
+  }, [isOpen]);
+
+  const onClientPick = (client: Client) => {
+    setSelectedClientPhoto(client.photo || null);
+    handleClientSelect(client);
+  };
+
+  const clientPhotoUrl = selectedClientPhoto
+    ? (selectedClientPhoto.startsWith('http') ? selectedClientPhoto : `${API_BASE_URL}${selectedClientPhoto}`)
+    : null;
+
+  const productMainPhoto = selectedProduct
+    ? (selectedProduct.mainPhoto || (selectedProduct.photos && selectedProduct.photos[0]))
+    : null;
+  const productPhotoUrl = productMainPhoto
+    ? (productMainPhoto.startsWith('http') ? productMainPhoto : `${API_BASE_URL}${productMainPhoto}`)
+    : null;
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => {
@@ -218,6 +245,21 @@ const CommandeFormDialog: React.FC<CommandeFormDialogProps> = ({
               </span>
             </h3>
             
+            {/* Photo du client (si disponible) */}
+            {clientPhotoUrl && (
+              <div className="flex justify-center">
+                <div className="relative group">
+                  <div className="absolute -inset-1 bg-gradient-to-br from-blue-400 via-indigo-500 to-purple-500 rounded-full blur-md opacity-70" />
+                  <img
+                    src={clientPhotoUrl}
+                    alt={clientNom || 'Client'}
+                    className="relative w-24 h-24 rounded-full object-cover border-4 border-white dark:border-gray-800 shadow-2xl"
+                    onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                  />
+                </div>
+              </div>
+            )}
+
             <div className="relative">
               <Label htmlFor="clientNom" className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">
                 👤 Nom du Client
@@ -229,6 +271,7 @@ const CommandeFormDialog: React.FC<CommandeFormDialogProps> = ({
                   setClientSearch(e.target.value);
                   setClientNom(e.target.value);
                   setShowClientSuggestions(e.target.value.length >= 3);
+                  if (e.target.value.length < 3) setSelectedClientPhoto(null);
                 }}
                 placeholder="Saisir au moins 3 caractères..."
                 className="border-2 border-blue-300 dark:border-blue-700 focus:border-blue-500 dark:focus:border-blue-500 bg-white dark:bg-gray-900 shadow-sm"
@@ -240,7 +283,7 @@ const CommandeFormDialog: React.FC<CommandeFormDialogProps> = ({
                     <div
                       key={client.id}
                       className="p-3 hover:bg-gradient-to-r hover:from-purple-100 hover:to-blue-100 dark:hover:from-purple-900/30 dark:hover:to-blue-900/30 cursor-pointer transition-all duration-200 border-b border-gray-100 dark:border-gray-700 last:border-0"
-                      onClick={() => handleClientSelect(client)}
+                      onClick={() => onClientPick(client)}
                     >
                       <div className="font-semibold text-gray-900 dark:text-white">{client.nom}</div>
                       <div className="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-1 mt-1">
@@ -329,6 +372,21 @@ const CommandeFormDialog: React.FC<CommandeFormDialogProps> = ({
                 </button>
               ))}
             </div>
+
+            {/* Photo principale du produit (si disponible) */}
+            {productPhotoUrl && (
+              <div className="flex justify-center">
+                <div className="relative group">
+                  <div className="absolute -inset-1 bg-gradient-to-br from-purple-400 via-pink-500 to-rose-500 rounded-2xl blur-md opacity-70" />
+                  <img
+                    src={productPhotoUrl}
+                    alt={selectedProduct?.description || 'Produit'}
+                    className="relative w-24 h-24 rounded-2xl object-cover border-4 border-white dark:border-gray-800 shadow-2xl"
+                    onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                  />
+                </div>
+              </div>
+            )}
 
             <div className="relative">
               <Label htmlFor="produitNom" className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">

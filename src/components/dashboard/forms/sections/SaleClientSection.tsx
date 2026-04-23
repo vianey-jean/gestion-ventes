@@ -16,7 +16,10 @@ interface SaleClientSectionProps {
   setClientAddress: (v: string) => void;
   onClientSelect: (client: any) => void;
   isSubmitting: boolean;
+  clientPhoto?: string | null;
 }
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:10000';
 
 const SaleClientSection: React.FC<SaleClientSectionProps> = ({
   clientName,
@@ -28,7 +31,9 @@ const SaleClientSection: React.FC<SaleClientSectionProps> = ({
   setClientAddress,
   onClientSelect,
   isSubmitting,
+  clientPhoto,
 }) => {
+  const photoUrl = clientPhoto ? (clientPhoto.startsWith('http') ? clientPhoto : `${API_BASE_URL}${clientPhoto}`) : null;
   return (
     <Card className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-indigo-50/50 to-purple-50/30 dark:from-blue-900/30 dark:via-indigo-900/20 dark:to-purple-900/10 border-0 shadow-xl shadow-blue-500/10 rounded-2xl">
       <div className="absolute inset-0 pointer-events-none">
@@ -46,6 +51,21 @@ const SaleClientSection: React.FC<SaleClientSectionProps> = ({
       </CardHeader>
 
       <CardContent className="relative space-y-4">
+        {/* Photo du client (si disponible) */}
+        {photoUrl && (
+          <div className="flex justify-center">
+            <div className="relative group">
+              <div className="absolute -inset-1 bg-gradient-to-br from-blue-400 via-indigo-500 to-purple-500 rounded-full blur-md opacity-70 group-hover:opacity-100 transition-opacity" />
+              <img
+                src={photoUrl}
+                alt={clientName || 'Client'}
+                className="relative w-20 h-20 rounded-full object-cover border-4 border-white dark:border-gray-800 shadow-xl"
+                onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+              />
+            </div>
+          </div>
+        )}
+
         {/* Nom */}
         <div className="space-y-2">
           <Label>Nom du client</Label>
