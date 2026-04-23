@@ -45,6 +45,8 @@ import { productCommentsApi, ProductComment, ProductRatingInfo } from '@/service
 import { clientApiService } from '@/services/api/clientApi';
 import { Client } from '@/types/client';
 import { User } from 'lucide-react';
+import ProductCharacteristicCard from '@/components/products/ProductCharacteristicCard';
+import CaracteristiqueModal from '@/components/products/CaracteristiqueModal';
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://server-gestion-ventes.onrender.com';
 
 type FilterType = 'tous' | 'perruque' | 'tissage' | 'extension' | 'autres';
@@ -66,6 +68,8 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [isAddConfirmOpen, setIsAddConfirmOpen] = useState(false);
   const [isEditConfirmOpen, setIsEditConfirmOpen] = useState(false);
+  const [isCaracteristiqueOpen, setIsCaracteristiqueOpen] = useState(false);
+  const [caracteristiqueProduct, setCaracteristiqueProduct] = useState<Product | null>(null);
 
   // Selected product
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -641,12 +645,13 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
                       </button>
                     </TableHead>
                     <TableHead className="font-black text-violet-700 dark:text-violet-300 text-center">Actions</TableHead>
+                    <TableHead className="font-black text-violet-700 dark:text-violet-300 text-center">Caractéristique</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {paginatedProducts.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center py-12">
+                      <TableCell colSpan={8} className="text-center py-12">
                         <div className="flex flex-col items-center gap-3">
                           <div className="w-16 h-16 rounded-2xl bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center">
                             <Package className="h-8 w-8 text-violet-400" />
@@ -750,6 +755,22 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
                               title="Supprimer"
                             >
                               <Trash2 className="h-4 w-4" />
+                            </motion.button>
+                          </div>
+                        </TableCell>
+                        {/* Caractéristique */}
+                        <TableCell className="py-2">
+                          <div className="flex items-center justify-center gap-2">
+                            <ProductCharacteristicCard product={product} variant="compact" />
+                            <motion.button
+                              whileHover={{ scale: 1.15 }}
+                              whileTap={{ scale: 0.9 }}
+                              onClick={() => { setCaracteristiqueProduct(product); setIsCaracteristiqueOpen(true); }}
+                              className="p-2 rounded-xl bg-fuchsia-500/10 hover:bg-fuchsia-500/20 text-fuchsia-600 dark:text-fuchsia-400 transition-all duration-200 backdrop-blur-xl border border-fuchsia-200/30 dark:border-fuchsia-800/30"
+                              title="Voir caractéristique"
+                              type="button"
+                            >
+                              <Eye className="h-4 w-4" />
                             </motion.button>
                           </div>
                         </TableCell>
@@ -1424,6 +1445,13 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
       <EditProductForm
         isOpen={isEditProductOpen}
         onClose={() => setIsEditProductOpen(false)}
+      />
+
+      {/* ========== CARACTÉRISTIQUE MODAL (avec impression PDF) ========== */}
+      <CaracteristiqueModal
+        open={isCaracteristiqueOpen}
+        onOpenChange={setIsCaracteristiqueOpen}
+        product={caracteristiqueProduct}
       />
     </div>
   );
