@@ -25,7 +25,7 @@
  * - ComptabiliteModule.tsx
  */
 
-import React from 'react';
+import React, { useRef, useMemo } from 'react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import {
@@ -49,7 +49,7 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/components/ui/select';
-import { Receipt, Fuel, DollarSign, Plus, CalendarIcon } from 'lucide-react';
+import { Receipt, Fuel, DollarSign, Plus, CalendarIcon, Upload, X, FileText, Image as ImageIcon } from 'lucide-react';
 import { DepenseFormData } from '@/types/comptabilite';
 
 // ============================================
@@ -66,6 +66,10 @@ export interface DepenseFormDialogProps {
   onFormChange: (field: keyof DepenseFormData, value: string | number) => void;
   /** Callback lors de la soumission du formulaire */
   onSubmit: () => void;
+  /** Fichier reçu en attente (image ou PDF) — facultatif */
+  receiptFile?: File | null;
+  /** Callback lors du changement du reçu (fichier ou null pour retirer) */
+  onReceiptChange?: (file: File | null) => void;
 }
 
 // ============================================
@@ -76,11 +80,28 @@ const DepenseFormDialog: React.FC<DepenseFormDialogProps> = ({
   onClose,
   depenseForm,
   onFormChange,
-  onSubmit
+  onSubmit,
+  receiptFile,
+  onReceiptChange
 }) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const previewUrl = useMemo(() => {
+    if (!receiptFile) return null;
+    return URL.createObjectURL(receiptFile);
+  }, [receiptFile]);
+
+  const isPdf = receiptFile?.type === 'application/pdf';
+
+  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0] || null;
+    if (f) onReceiptChange?.(f);
+    if (e.target) e.target.value = '';
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-lg bg-gradient-to-br from-white via-orange-50/30 to-red-50/50 dark:from-gray-900 dark:via-orange-900/20 dark:to-red-900/20 backdrop-blur-xl border-0 shadow-2xl rounded-3xl">
+      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto bg-gradient-to-br from-white via-orange-50/30 to-red-50/50 dark:from-gray-900 dark:via-orange-900/20 dark:to-red-900/20 backdrop-blur-xl border-0 shadow-2xl rounded-3xl">
         {/* En-tête de la modale */}
         <DialogHeader>
           <DialogTitle className="text-2xl font-black bg-gradient-to-r from-orange-600 via-red-600 to-pink-600 bg-clip-text text-transparent flex items-center gap-3">
@@ -96,6 +117,77 @@ const DepenseFormDialog: React.FC<DepenseFormDialogProps> = ({
 
         {/* Corps du formulaire */}
         <div className="space-y-5 py-4">
+          {/* ===========================================================
+              REÇU DE DÉPENSE (image ou PDF) — facultatif
+              Affiché juste au-dessus de la date.
+          =========================================================== */}
+          <div className="space-y-2">
+            <Label className="text-sm font-semibold text-gray-700 dark:text-gray-200 flex items-center gap-2">
+              <Receipt className="h-4 w-4 text-orange-500" />
+              Reçu (image ou PDF) <span className="text-xs font-normal text-gray-400">— facultatif</span>
+            </Label>
+
+            {!receiptFile ? (
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="w-full py-6 rounded-2xl border-2 border-dashed border-orange-300 dark:border-orange-700 hover:border-orange-500 bg-orange-50/50 dark:bg-orange-900/20 hover:bg-orange-100/60 flex flex-col items-center justify-center gap-2 transition-all"
+              >
+                <Upload className="h-6 w-6 text-orange-500" />
+                <span className="text-sm font-medium text-orange-700 dark:text-orange-300">
+                  Cliquez pour ajouter un reçu
+                </span>
+                <span className="text-xs text-gray-500">JPG, PNG, WebP ou PDF (max 15 MB)</span>
+              </button>
+            ) : (
+              <div className="relative rounded-2xl border border-orange-200 dark:border-orange-700 bg-white dark:bg-gray-800 p-3 flex items-center gap-3 shadow-sm">
+                {isPdf ? (
+                  <div className="h-16 w-16 shrink-0 rounded-xl bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+                    <FileText className="h-8 w-8 text-red-500" />
+                  </div>
+                ) : previewUrl ? (
+                  <img
+                    src={previewUrl}
+                    alt="Aperçu reçu"
+                    className="h-16 w-16 shrink-0 rounded-xl object-cover border border-gray-200 dark:border-gray-700"
+                  />
+                ) : (
+                  <div className="h-16 w-16 shrink-0 rounded-xl bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+                    <ImageIcon className="h-8 w-8 text-gray-400" />
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-sm text-gray-800 dark:text-gray-100 truncate">
+                    {receiptFile.name}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {(receiptFile.size / 1024).toFixed(1)} KB
+                    {' • '}
+                    {isPdf ? 'PDF' : 'Image'}
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => onReceiptChange?.(null)}
+                  className="shrink-0 text-red-500 hover:text-red-700 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-xl"
+                  title="Retirer le reçu"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/jpg,image/png,image/gif,image/webp,application/pdf"
+              onChange={handleFile}
+              className="hidden"
+            />
+          </div>
+
           {/* Date de dépense */}
             <div className="space-y-2">
           <Label className="text-sm font-semibold text-gray-700 dark:text-gray-200 flex items-center gap-2">

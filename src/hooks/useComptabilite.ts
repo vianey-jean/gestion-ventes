@@ -9,6 +9,7 @@ import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useApp } from '@/contexts/AppContext';
 import useCurrencyFormatter from '@/hooks/use-currency-formatter';
 import nouvelleAchatApiService from '@/services/api/nouvelleAchatApi';
+import productApiService from '@/services/api/productApi';
 import comptaApiService from '@/services/api/comptaApi';
 import fournisseurApiService, { Fournisseur } from '@/services/api/fournisseurApi';
 import { realtimeService } from '@/services/realtimeService';
@@ -101,6 +102,37 @@ export function useComptabilite() {
     categorie: 'divers',
     date: ''
   });
+
+  // ===== Photos en attente pour le formulaire d'achat =====
+  // Ces états ne sont PAS dans achatForm car ils contiennent des objets File.
+  const [pendingPhotoFiles, setPendingPhotoFiles] = useState<File[]>([]);
+  const [pendingPhotoKept, setPendingPhotoKept] = useState<string[]>([]);
+  const [pendingPhotoMainIndex, setPendingPhotoMainIndex] = useState<number>(0);
+  const [pendingPhotosTouched, setPendingPhotosTouched] = useState<boolean>(false);
+
+  // ===== Reçu de dépense en attente =====
+  const [pendingReceiptFile, setPendingReceiptFile] = useState<File | null>(null);
+
+  const handlePhotosChange = useCallback(
+    (files: File[], kept: string[], mainIndex: number) => {
+      setPendingPhotoFiles(files);
+      setPendingPhotoKept(kept);
+      setPendingPhotoMainIndex(mainIndex);
+      setPendingPhotosTouched(true);
+    },
+    []
+  );
+
+  const resetPendingPhotos = useCallback(() => {
+    setPendingPhotoFiles([]);
+    setPendingPhotoKept([]);
+    setPendingPhotoMainIndex(0);
+    setPendingPhotosTouched(false);
+  }, []);
+
+  const handleReceiptChange = useCallback((file: File | null) => {
+    setPendingReceiptFile(file);
+  }, []);
 
   // Ref pour éviter les appels multiples
   const loadingRef = useRef(false);
@@ -346,11 +378,12 @@ export function useComptabilite() {
         return;
       }
 
-      const finalPurchasePrice = achatForm.purchasePrice > 0 
-        ? achatForm.purchasePrice 
+      const finalPurchasePrice = achatForm.purchasePrice > 0
+        ? achatForm.purchasePrice
         : (selectedProduct?.purchasePrice || 0);
 
-      await nouvelleAchatApiService.create({
+      // 1) Création de l'achat (création ou mise à jour du produit côté serveur)
+      const createdAchat = await nouvelleAchatApiService.create({
         productId: selectedProduct?.id,
         productDescription: achatForm.productDescription,
         purchasePrice: finalPurchasePrice,
@@ -359,6 +392,32 @@ export function useComptabilite() {
         caracteristiques: achatForm.caracteristiques,
         date: achatForm.date
       });
+
+      // 2) Gestion des photos — uniquement si l'utilisateur a touché la zone photos.
+      //    Cas A : produit existant -> remplacer les photos (supprime les anciennes
+      //            non gardées + ajoute les nouvelles).
+      //    Cas B : nouveau produit créé -> on récupère son id depuis createdAchat.productId
+      //            puis on appelle replacePhotos pour ajouter les nouvelles.
+      if (pendingPhotosTouched) {
+        try {
+          const targetProductId = selectedProduct?.id || createdAchat?.productId;
+          if (targetProductId) {
+            await productApiService.replacePhotos(
+              targetProductId,
+              pendingPhotoFiles,
+              pendingPhotoKept,
+              pendingPhotoMainIndex
+            );
+          }
+        } catch (photoErr) {
+          console.error('⚠️ Erreur lors de la mise à jour des photos:', photoErr);
+          toast({
+            title: 'Photos',
+            description: 'L\'achat est enregistré mais les photos n\'ont pas pu être mises à jour.',
+            variant: 'destructive'
+          });
+        }
+      }
 
       if (selectedProduct) {
         const nameChanged = achatForm.productDescription !== selectedProduct.description;
@@ -393,8 +452,9 @@ export function useComptabilite() {
       setShowProductList(false);
       setFournisseurSearch('');
       setShowFournisseurList(false);
+      resetPendingPhotos();
       toggleModal('showAchatForm', false);
-      
+
       loadAchats();
       fetchProducts();
       loadFournisseurs();
@@ -407,7 +467,20 @@ export function useComptabilite() {
         variant: 'destructive'
       });
     }
-  }, [achatForm, selectedProduct, loadAchats, fetchProducts, formatEuro, toggleModal]);
+  }, [
+    achatForm,
+    selectedProduct,
+    loadAchats,
+    fetchProducts,
+    formatEuro,
+    toggleModal,
+    pendingPhotoFiles,
+    pendingPhotoKept,
+    pendingPhotoMainIndex,
+    pendingPhotosTouched,
+    resetPendingPhotos,
+    loadFournisseurs
+  ]);
 
   // Handler soumission dépense
   const handleSubmitDepense = useCallback(async () => {
@@ -421,17 +494,34 @@ export function useComptabilite() {
         return;
       }
 
+      // 1) Upload du reçu (facultatif) — image ou PDF
+      let receiptUrl: string | null = null;
+      if (pendingReceiptFile) {
+        try {
+          receiptUrl = await nouvelleAchatApiService.uploadReceipt(pendingReceiptFile);
+        } catch (upErr) {
+          console.error('⚠️ Upload reçu échoué:', upErr);
+          toast({
+            title: 'Reçu',
+            description: 'Le reçu n\'a pas pu être envoyé. La dépense sera enregistrée sans reçu.',
+            variant: 'destructive'
+          });
+        }
+      }
+
+      // 2) Création de la dépense en BDD avec l'URL du reçu (si présent)
       await nouvelleAchatApiService.addDepense({
         ...depenseForm,
-        date: depenseForm.date
+        date: depenseForm.date,
+        receiptUrl
       });
-      
+
       toast({
         title: 'Succès',
         description: 'Dépense enregistrée avec succès',
         className: 'bg-green-600 text-white border-green-700'
       });
-      
+
       setDepenseForm({
         description: '',
         montant: 0,
@@ -439,7 +529,8 @@ export function useComptabilite() {
         categorie: 'divers',
         date: ''
       });
-      
+      setPendingReceiptFile(null);
+
       toggleModal('showDepenseForm', false);
       loadAchats();
     } catch (error) {
@@ -450,7 +541,7 @@ export function useComptabilite() {
         variant: 'destructive'
       });
     }
-  }, [depenseForm, loadAchats, toggleModal]);
+  }, [depenseForm, loadAchats, toggleModal, pendingReceiptFile]);
 
   // Handler mise à jour achat/dépense
   const handleUpdateAchat = useCallback(async (id: string, data: Partial<NouvelleAchat>) => {
@@ -579,6 +670,9 @@ export function useComptabilite() {
     handleSubmitDepense,
     handleUpdateAchat,
     handleDeleteAchat,
+    handlePhotosChange,
+    handleReceiptChange,
+    pendingReceiptFile,
     loadAchats,
     
     // Utilitaires

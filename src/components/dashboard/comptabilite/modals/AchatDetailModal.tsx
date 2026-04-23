@@ -35,9 +35,13 @@ import {
   Trash2,
   X,
   Sparkles,
-  AlertTriangle
+  AlertTriangle,
+  FileText,
+  Eye,
+  Download
 } from 'lucide-react';
 import { NouvelleAchat } from '@/types/comptabilite';
+import { getBaseURL } from '@/services/api/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   AlertDialog,
@@ -296,6 +300,54 @@ const AchatDetailModal: React.FC<AchatDetailModalProps> = ({
                     <p className="font-medium text-sm">{achat.caracteristiques}</p>
                   </div>
                 )}
+
+                {/* Reçu (image ou PDF) - clic = ouvrir dans nouvel onglet ; bouton télécharger séparé */}
+                {achat.receiptUrl && (() => {
+                  const fullUrl = `${getBaseURL()}${achat.receiptUrl}`;
+                  const isPdf = /\.pdf($|\?)/i.test(achat.receiptUrl);
+                  return (
+                    <div className="p-3 rounded-xl bg-white/50 dark:bg-white/5 space-y-2">
+                      <p className="text-xs text-muted-foreground">Reçu de la dépense</p>
+                      <div className="flex items-center gap-3">
+                        <a
+                          href={fullUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-3 flex-1 min-w-0 group"
+                          title="Ouvrir le reçu dans un nouvel onglet"
+                        >
+                          {isPdf ? (
+                            <div className="h-14 w-14 shrink-0 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center group-hover:scale-105 transition">
+                              <FileText className="h-7 w-7 text-red-500" />
+                            </div>
+                          ) : (
+                            <img
+                              src={fullUrl}
+                              alt="Reçu"
+                              className="h-14 w-14 shrink-0 rounded-lg object-cover border border-white/20 group-hover:scale-105 transition"
+                            />
+                          )}
+                          <div className="flex items-center gap-1.5 text-sm font-semibold text-primary group-hover:underline">
+                            <Eye className="h-4 w-4" /> Cliquez pour visualiser
+                          </div>
+                        </a>
+                        <a
+                          href={fullUrl}
+                          download
+                          onClick={(e) => {
+                            if (!window.confirm('Voulez-vous télécharger ce reçu ?')) {
+                              e.preventDefault();
+                            }
+                          }}
+                          className="shrink-0 inline-flex items-center justify-center h-10 w-10 rounded-lg bg-emerald-500/15 text-emerald-600 hover:bg-emerald-500/25 transition"
+                          title="Télécharger le reçu"
+                        >
+                          <Download className="h-4 w-4" />
+                        </a>
+                      </div>
+                    </div>
+                  );
+                })()}
               </motion.div>
 
               {/* Actions */}

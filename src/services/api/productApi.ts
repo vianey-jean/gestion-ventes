@@ -46,6 +46,47 @@ export const productApiService = {
     console.log('✅ Codes generated:', response.data);
     return response.data;
   },
+
+  // Créer un produit avec photos en une seule requête (multipart/form-data)
+  async createWithPhotos(
+    data: ProductFormData,
+    files: File[],
+    mainIndex = 0
+  ): Promise<Product> {
+    const fd = new FormData();
+    fd.append('description', data.description);
+    fd.append('purchasePrice', String(data.purchasePrice));
+    fd.append('quantity', String(data.quantity));
+    if (data.fournisseur) fd.append('fournisseur', data.fournisseur);
+    if (data.sellingPrice !== undefined) fd.append('sellingPrice', String(data.sellingPrice));
+    fd.append('mainPhotoIndex', String(mainIndex));
+    files.forEach(f => fd.append('photos', f));
+
+    const response: AxiosResponse<Product> = await api.post('/api/products/with-photos', fd, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+    console.log('✅ Product created with photos:', response.data);
+    return response.data;
+  },
+
+  // Remplace toutes les photos d'un produit (supprime celles non gardées + ajoute les nouvelles)
+  async replacePhotos(
+    productId: string,
+    newFiles: File[],
+    keptExistingUrls: string[],
+    mainIndex = 0
+  ): Promise<Product> {
+    const fd = new FormData();
+    fd.append('photosJson', JSON.stringify(keptExistingUrls));
+    fd.append('mainPhotoIndex', String(mainIndex));
+    newFiles.forEach(f => fd.append('photos', f));
+
+    const response: AxiosResponse<Product> = await api.put(`/api/products/${productId}/photos`, fd, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+    console.log('✅ Product photos replaced:', response.data);
+    return response.data;
+  },
 };
 
 export default productApiService;

@@ -69,6 +69,8 @@ import { NouvelleAchatFormData } from '@/types/comptabilite';
 import { Product } from '@/types/product';
 import { Fournisseur } from '@/services/api/fournisseurApi';
 import ProductSearchInput from './ProductSearchInput';
+import PhotoUploadSection from '../PhotoUploadSection';
+import { getBaseURL } from '@/services/api/api';
 
 // ============================================
 // INTERFACE DES PROPS
@@ -104,6 +106,8 @@ export interface AchatFormDialogProps {
   showFournisseurList: boolean;
   /** Callback de sélection d'un fournisseur */
   onSelectFournisseur: (nom: string) => void;
+  /** Callback déclenché lorsque les photos du produit changent (facultatif) */
+  onPhotosChange?: (newFiles: File[], keptExistingUrls: string[], mainIndex: number) => void;
 }
 
 // ============================================
@@ -124,9 +128,15 @@ const AchatFormDialog: React.FC<AchatFormDialogProps> = ({
   formatEuro,
   filteredFournisseurs,
   showFournisseurList,
-  onSelectFournisseur
+  onSelectFournisseur,
+  onPhotosChange
 }) => {
   const fournisseurRef = useRef<HTMLDivElement>(null);
+  const baseUrl = getBaseURL();
+
+  // Clé pour réinitialiser PhotoUploadSection quand on change de produit
+  // (existant -> nouveau, ou produit existant A -> produit existant B)
+  const photoSectionKey = selectedProduct ? `existing-${selectedProduct.id}` : 'new-product';
   // Calcul du coût total
   const totalCost = (achatForm.purchasePrice > 0 
     ? achatForm.purchasePrice 
@@ -149,6 +159,26 @@ const AchatFormDialog: React.FC<AchatFormDialogProps> = ({
         </DialogHeader>
 
         <div className="space-y-5 py-4">
+          {/* ===========================================================
+              GESTION DES PHOTOS PRODUIT
+              - Si un produit existant est sélectionné : on affiche les
+                photos déjà en BDD (modifiables) au-dessus du formulaire.
+              - Sinon (nouveau produit) : on affiche un emplacement vide
+                pour ajouter de nouvelles photos. (facultatif)
+          =========================================================== */}
+          <div className="rounded-2xl border border-purple-500/20 bg-gradient-to-br from-purple-500/5 via-transparent to-indigo-500/5 p-4">
+            <PhotoUploadSection
+              key={photoSectionKey}
+              existingPhotos={selectedProduct?.photos || []}
+              existingMainPhoto={selectedProduct?.mainPhoto}
+              baseUrl={baseUrl}
+              onPhotosChange={(files, kept, mainIdx) => {
+                onPhotosChange?.(files, kept, mainIdx);
+              }}
+              maxPhotos={6}
+            />
+          </div>
+
           {/* Composant de recherche de produit */}
           <ProductSearchInput
             searchTerm={searchTerm}

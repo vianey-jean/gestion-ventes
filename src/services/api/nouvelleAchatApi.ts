@@ -79,6 +79,19 @@ export const nouvelleAchatApiService = {
     console.log('✅ Achat deleted successfully');
     return true;
   },
+
+  // Uploader un reçu (image/PDF) pour une dépense — renvoie l'URL relative
+  async uploadReceipt(file: File): Promise<string> {
+    const fd = new FormData();
+    fd.append('receipt', file);
+    const response = await api.post<{ receiptUrl: string }>(
+      '/api/nouvelle-achat/depense/upload-receipt',
+      fd,
+      { headers: { 'Content-Type': 'multipart/form-data' } }
+    );
+    console.log('✅ Receipt uploaded:', response.data.receiptUrl);
+    return response.data.receiptUrl;
+  },
 };
 
 export default nouvelleAchatApiService;

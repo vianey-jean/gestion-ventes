@@ -13,6 +13,8 @@ export interface NouvelleAchat {
   type: 'achat_produit' | 'taxes' | 'carburant' | 'autre_depense';
   description?: string;
   categorie?: string;
+  /** URL relative (ex: /uploads/depense/recu-xxx.pdf) du reçu de dépense — facultatif */
+  receiptUrl?: string | null;
 }
 
 export interface NouvelleAchatFormData {
@@ -31,6 +33,8 @@ export interface DepenseFormData {
   type: 'taxes' | 'carburant' | 'autre_depense';
   categorie?: string;
   date?: string;
+  /** URL du reçu déjà uploadé (utilisée côté backend lors de l'enregistrement) */
+  receiptUrl?: string | null;
 }
 
 export interface MonthlyStats {

@@ -89,7 +89,10 @@ const ComptabiliteModule: React.FC<ComptabiliteModuleProps> = ({ className }) =>
     handleSubmitDepense,
     handleUpdateAchat,
     handleDeleteAchat,
-    
+    handlePhotosChange,
+    handleReceiptChange,
+    pendingReceiptFile,
+
     // Utilitaires
     formatEuro,
   } = useComptabilite();
@@ -157,6 +160,7 @@ const ComptabiliteModule: React.FC<ComptabiliteModuleProps> = ({ className }) =>
         filteredFournisseurs={filteredFournisseurs}
         showFournisseurList={showFournisseurList}
         onSelectFournisseur={handleSelectFournisseur}
+        onPhotosChange={handlePhotosChange}
       />
 
       {/* Modal Formulaire Dépense */}
@@ -166,6 +170,8 @@ const ComptabiliteModule: React.FC<ComptabiliteModuleProps> = ({ className }) =>
         depenseForm={depenseForm}
         onFormChange={handleDepenseFormChange}
         onSubmit={handleSubmitDepense}
+        receiptFile={pendingReceiptFile}
+        onReceiptChange={handleReceiptChange}
       />
 
       {/* ========== MODALES DE DÉTAILS ========== */}
