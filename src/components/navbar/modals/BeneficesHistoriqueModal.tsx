@@ -38,18 +38,25 @@ const BeneficesHistoriqueModal: React.FC<BeneficesHistoriqueModalProps> = ({
   };
 
   // Dédoublonnage : un seul enregistrement par couple (mois, année).
-  // Si plusieurs entrées existent pour le même mois, on garde la dernière (écrase).
+  // Puis on remplit les 12 mois de l'année courante (avec 0 si pas de bénéfice)
+  // pour afficher la liste complète et la vraie valeur par mois.
   const beneficesUniques = React.useMemo(() => {
     const map = new Map<string, BeneficeMensuel>();
     for (const b of beneficesHistorique) {
       map.set(`${b.annee}-${b.mois}`, b);
     }
-    return Array.from(map.values()).sort((a, b) =>
-      a.annee !== b.annee ? a.annee - b.annee : a.mois - b.mois
-    );
-  }, [beneficesHistorique]);
+    // Remplir les 12 mois de l'année affichée
+    const result: BeneficeMensuel[] = [];
+    for (let m = 1; m <= 12; m++) {
+      const key = `${annee}-${m}`;
+      result.push(
+        map.get(key) || { mois: m, annee, totalBenefice: 0 } as BeneficeMensuel
+      );
+    }
+    return result;
+  }, [beneficesHistorique, annee]);
 
-  const totalAnnuel = beneficesUniques.reduce((sum, b) => sum + b.totalBenefice, 0);
+  const totalAnnuel = beneficesUniques.reduce((sum, b) => sum + (Number(b.totalBenefice) || 0), 0);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>

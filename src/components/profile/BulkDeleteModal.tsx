@@ -6,7 +6,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Trash2, ShoppingCart, Package, Users, Search, CheckSquare, Square,
-  ChevronLeft, AlertTriangle, Calendar, X, Loader2, CheckCheck
+  ChevronLeft, AlertTriangle, Calendar, X, Loader2, CheckCheck, StickyNote
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,7 +18,7 @@ import { useToast } from '@/hooks/use-toast';
 import api from '@/service/api';
 import PremiumLoading from '@/components/ui/premium-loading';
 
-type DeleteType = 'sales' | 'products' | 'clients';
+type DeleteType = 'sales' | 'products' | 'clients' | 'notes';
 type Step = 'choose-type' | 'choose-filter' | 'select-items' | 'confirm';
 
 interface BulkItem {
@@ -188,7 +188,7 @@ const BulkDeleteModal: React.FC<BulkDeleteModalProps> = ({ open, onOpenChange })
     }
   };
 
-  const typeLabel = type === 'sales' ? 'vente(s)' : type === 'products' ? 'produit(s)' : 'client(s)';
+  const typeLabel = type === 'sales' ? 'vente(s)' : type === 'products' ? 'produit(s)' : type === 'notes' ? 'note(s)' : 'client(s)';
 
   const renderItemLabel = (item: BulkItem) => {
     if (type === 'sales') {
@@ -205,6 +205,14 @@ const BulkDeleteModal: React.FC<BulkDeleteModalProps> = ({ open, onOpenChange })
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium truncate">{item.description}</p>
           <p className="text-xs text-muted-foreground">Stock: {item.quantity} • Achat: {item.purchasePrice?.toLocaleString()} €</p>
+        </div>
+      );
+    } else if (type === 'notes') {
+      const date = item.date ? new Date(item.date).toLocaleDateString('fr-FR') : '';
+      return (
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium truncate">{item.nom || 'Sans titre'}</p>
+          <p className="text-xs text-muted-foreground truncate">{date}{item.description ? ` • ${item.description}` : ''}</p>
         </div>
       );
     } else {
@@ -246,6 +254,7 @@ const BulkDeleteModal: React.FC<BulkDeleteModalProps> = ({ open, onOpenChange })
                   { key: 'sales' as DeleteType, icon: ShoppingCart, label: 'Ventes', desc: 'Supprimer des ventes par période ou individuellement', gradient: 'from-orange-500 to-amber-500' },
                   { key: 'products' as DeleteType, icon: Package, label: 'Produits', desc: 'Supprimer des produits sélectionnés ou tous', gradient: 'from-blue-500 to-indigo-500' },
                   { key: 'clients' as DeleteType, icon: Users, label: 'Clients', desc: 'Supprimer des clients sélectionnés ou tous', gradient: 'from-emerald-500 to-teal-500' },
+                  { key: 'notes' as DeleteType, icon: StickyNote, label: 'Notes', desc: 'Supprimer des notes sélectionnées ou toutes', gradient: 'from-violet-500 to-fuchsia-500' },
                 ]).map(({ key, icon: Icon, label, desc, gradient }) => (
                   <button
                     key={key}

@@ -108,11 +108,23 @@ const ObjectifStatsModal: React.FC = () => {
     }).format(value);
   };
 
+  // Map benefices by month for current year for fast lookup
+  const beneficeByMonth = React.useMemo(() => {
+    const map: Record<number, number> = {};
+    (data?.beneficesHistorique || []).forEach((b) => {
+      // Keep the last (already deduped server-side, but be safe)
+      map[b.mois] = Number(b.totalBenefice) || 0;
+    });
+    return map;
+  }, [data?.beneficesHistorique]);
+
   const chartData = data?.historique?.map((item) => ({
    name: MOIS_NOMS[item.mois - 1],
+   mois: item.mois,
   ventes: item.totalVentesMois,
   objectif: item.objectif,
   pourcentage: item.pourcentage,
+  benefice: beneficeByMonth[item.mois] || 0,
   })) || [];
 
   // Fill missing months with 0
@@ -120,9 +132,11 @@ const ObjectifStatsModal: React.FC = () => {
     const existing = chartData.find((d) => d.name === nom);
     return existing || {
       name: nom,
+      mois: index + 1,
       ventes: 0,
       objectif: data?.currentData?.objectif || 0,
       pourcentage: 0,
+      benefice: beneficeByMonth[index + 1] || 0,
     };
   });
 
@@ -340,12 +354,21 @@ const totalAnnuel = historiqueUnique.reduce(
                         <YAxis stroke="#94a3b8" fontSize={12} tickFormatter={(v) => `${v/1000}k`} />
                         <Tooltip
                           contentStyle={{
-                            backgroundColor: 'rgba(255,255,255,0.95)',
+                            backgroundColor: 'rgba(255,255,255,0.98)',
                             border: 'none',
                             borderRadius: '12px',
-                            boxShadow: '0 10px 40px rgba(0,0,0,0.1)',
+                            boxShadow: '0 10px 40px rgba(0,0,0,0.15)',
+                            padding: '10px 14px',
                           }}
-                          formatter={(value: number) => [formatCurrency(value), 'Ventes']}
+                          labelStyle={{ fontWeight: 'bold', color: '#0f172a', marginBottom: 4 }}
+                          formatter={(value: number, name: string) => {
+                            const labels: Record<string, string> = {
+                              ventes: 'Ventes',
+                              objectif: 'Objectif',
+                              benefice: 'Bénéfice',
+                            };
+                            return [formatCurrency(value), labels[name] || name];
+                          }}
                         />
                         <Area
                           type="monotone"
@@ -353,6 +376,16 @@ const totalAnnuel = historiqueUnique.reduce(
                           stroke="#10b981"
                           strokeWidth={3}
                           fill="url(#colorVentes)"
+                          activeDot={{ r: 6, fill: '#10b981' }}
+                        />
+                        <Line
+                          type="monotone"
+                          dataKey="benefice"
+                          stroke="#f59e0b"
+                          strokeWidth={2}
+                          strokeDasharray="4 4"
+                          dot={{ fill: '#f59e0b', r: 3 }}
+                          activeDot={{ r: 5, fill: '#f59e0b' }}
                         />
                       </AreaChart>
                     </ResponsiveContainer>
@@ -388,12 +421,24 @@ const totalAnnuel = historiqueUnique.reduce(
                         <YAxis stroke="#94a3b8" fontSize={12} tickFormatter={(v) => `${v}%`} />
                         <Tooltip
                           contentStyle={{
-                            backgroundColor: 'rgba(255,255,255,0.95)',
+                            backgroundColor: 'rgba(255,255,255,0.98)',
                             border: 'none',
                             borderRadius: '12px',
-                            boxShadow: '0 10px 40px rgba(0,0,0,0.1)',
+                            boxShadow: '0 10px 40px rgba(0,0,0,0.15)',
+                            padding: '10px 14px',
                           }}
-                          formatter={(value: number) => [`${value}%`, 'Performance']}
+                          labelStyle={{ fontWeight: 'bold', color: '#0f172a', marginBottom: 4 }}
+                          formatter={(value: number, name: string, props: any) => {
+                            if (name === 'pourcentage') {
+                              const ventes = props?.payload?.ventes || 0;
+                              const benef = props?.payload?.benefice || 0;
+                              return [
+                                `${value}% • Ventes: ${formatCurrency(ventes)} • Bénéfice: ${formatCurrency(benef)}`,
+                                'Performance',
+                              ];
+                            }
+                            return [`${value}%`, name];
+                          }}
                         />
                         <Line
                           type="monotone"
