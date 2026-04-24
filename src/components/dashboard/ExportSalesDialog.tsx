@@ -59,6 +59,20 @@ const ExportSalesDialog: React.FC<ExportSalesDialogProps> = ({ isOpen, onClose }
   };
 
   /**
+   * Détecte si une vente est un remboursement
+   */
+  const isRefundSale = (sale: Sale) => {
+    return (sale as any).isRefund === true || (sale.totalSellingPrice ?? sale.sellingPrice ?? 0) < 0;
+  };
+
+  /**
+   * Normalise la quantité pour l'affichage : négative si remboursement
+   */
+  const normalizeQty = (qty: number, sale: Sale) => {
+    return isRefundSale(sale) ? -Math.abs(qty || 0) : (qty || 0);
+  };
+
+  /**
    * Gère l'exportation des ventes en PDF
    */
   const handleExport = async () => {
@@ -147,34 +161,43 @@ const ExportSalesDialog: React.FC<ExportSalesDialogProps> = ({ isOpen, onClose }
     
     sales.forEach(sale => {
       const saleDate = new Date(sale.date).toLocaleDateString('fr-FR');
-      
-      if (sale.products && Array.isArray(sale.products)) {
+      const refund = isRefundSale(sale);
+      const refundPrefix = refund ? '[REMB] ' : '';
+
+      if (sale.products && Array.isArray(sale.products) && sale.products.length > 0) {
         // Vente multi-produits - chaque produit sur une ligne séparée
+        // IMPORTANT: product.purchasePrice et product.sellingPrice sont des TOTAUX
+        // (purchasePriceUnit * quantity), tels que stockés par MultiProductSaleForm
         sale.products.forEach((product, idx) => {
-          const quantity = isAdvanceProduct(product.description) ? 0 : product.quantitySold;
+          const baseQty = isAdvanceProduct(product.description) ? 0 : (product.quantitySold || 0);
+          const quantity = normalizeQty(baseQty, sale);
           const deliveryFee = product.deliveryFee || 0;
-          
+          const purchasePrice = product.purchasePrice || 0;
+          const sellingPrice = product.sellingPrice || 0;
+          const profit = product.profit || 0;
+
           tableBody.push([
             idx === 0 ? saleDate : '', // Date seulement sur la première ligne
-            product.description || 'Inconnu',
-            `${product.purchasePrice.toFixed(2)} €`,
+            `${idx === 0 ? refundPrefix : ''}${product.description || 'Inconnu'}`,
+            `${purchasePrice.toFixed(2)} €`,
             quantity.toString(),
-            `${product.sellingPrice.toFixed(2)} €`,
+            `${sellingPrice.toFixed(2)} €`,
             `${deliveryFee.toFixed(2)} €`,
-            `${product.profit.toFixed(2)} €`,
+            `${profit.toFixed(2)} €`,
           ]);
         });
       } else {
         // Vente simple (ancien format)
         const achatPrice = typeof sale.purchasePrice === 'number' ? sale.purchasePrice : 0;
-        const quantity = isAdvanceProduct(sale.description || '') ? 0 : (typeof sale.quantitySold === 'number' ? sale.quantitySold : 0);
+        const baseQty = isAdvanceProduct(sale.description || '') ? 0 : (typeof sale.quantitySold === 'number' ? sale.quantitySold : 0);
+        const quantity = normalizeQty(baseQty, sale);
         const ventePrice = typeof sale.sellingPrice === 'number' ? sale.sellingPrice : 0;
         const deliveryFee = typeof sale.deliveryFee === 'number' ? sale.deliveryFee : 0;
         const profit = typeof sale.profit === 'number' ? sale.profit : 0;
 
         tableBody.push([
           saleDate,
-          sale.description || 'Inconnu',
+          `${refundPrefix}${sale.description || 'Inconnu'}`,
           `${achatPrice.toFixed(2)} €`,
           quantity.toString(),
           `${ventePrice.toFixed(2)} €`,
@@ -184,60 +207,60 @@ const ExportSalesDialog: React.FC<ExportSalesDialogProps> = ({ isOpen, onClose }
       }
     });
 
-    // Calcul des totaux - Compatible avec ventes multi-produits ET simples
+    // Calcul des totaux - ALIGNÉ avec SalesTable et MultiProductSaleForm.
+    // Règle: privilégier les champs total* déjà stockés (source de vérité du formulaire),
+    // sinon recalculer depuis products[] (somme des sellingPrice + deliveryFee, comme dans getTotals()).
+
+    const sumProductsField = (sale: Sale, field: 'purchasePrice' | 'sellingPrice' | 'profit' | 'deliveryFee') => {
+      if (!sale.products || !Array.isArray(sale.products)) return 0;
+      return sale.products.reduce((s, p) => s + (Number(p[field] as number) || 0), 0);
+    };
+
     const totalQuantite = sales.reduce((sum, sale) => {
+      const refund = isRefundSale(sale);
+      const sign = refund ? -1 : 1;
       if (sale.products && Array.isArray(sale.products)) {
-        // Vente multi-produits
-        return sum + sale.products.reduce((productSum, product) => {
-          return productSum + (isAdvanceProduct(product.description) ? 0 : product.quantitySold);
+        const qty = sale.products.reduce((productSum, product) => {
+          return productSum + (isAdvanceProduct(product.description) ? 0 : Math.abs(product.quantitySold || 0));
         }, 0);
-      } else {
-        // Vente simple
-        return sum + (isAdvanceProduct(sale.description || '') ? 0 : (typeof sale.quantitySold === 'number' ? sale.quantitySold : 0));
+        return sum + sign * qty;
       }
+      const baseQty = isAdvanceProduct(sale.description || '') ? 0 : Math.abs(typeof sale.quantitySold === 'number' ? sale.quantitySold : 0);
+      return sum + sign * baseQty;
     }, 0);
-    
+
+    // Prix de vente total (inclut frais de livraison, comme dans le formulaire et la table)
     const totalVente = sales.reduce((sum, sale) => {
+      if (typeof sale.totalSellingPrice === 'number') return sum + sale.totalSellingPrice;
       if (sale.products && Array.isArray(sale.products)) {
-        // Vente multi-produits
-        return sum + sale.products.reduce((productSum, product) => productSum + product.sellingPrice, 0);
-      } else {
-        // Vente simple
-        return sum + (typeof sale.sellingPrice === 'number' ? sale.sellingPrice : 0);
+        // Reproduit la logique getTotals() du formulaire: sellingPrice + deliveryFee par produit
+        return sum + sumProductsField(sale, 'sellingPrice') + sumProductsField(sale, 'deliveryFee');
       }
+      return sum + (typeof sale.sellingPrice === 'number' ? sale.sellingPrice : 0);
     }, 0);
-    
+
     const totalAchat = sales.reduce((sum, sale) => {
+      if (typeof sale.totalPurchasePrice === 'number') return sum + sale.totalPurchasePrice;
       if (sale.products && Array.isArray(sale.products)) {
-        // Vente multi-produits
-        return sum + sale.products.reduce((productSum, product) => productSum + product.purchasePrice, 0);
-      } else {
-        // Vente simple
-        const prixAchat = typeof sale.purchasePrice === 'number' ? sale.purchasePrice : 0;
-        return sum + prixAchat;
+        return sum + sumProductsField(sale, 'purchasePrice');
       }
+      return sum + (typeof sale.purchasePrice === 'number' ? sale.purchasePrice : 0);
     }, 0);
-    
+
     const totalDeliveryFee = sales.reduce((sum, sale) => {
+      if (typeof sale.totalDeliveryFee === 'number') return sum + sale.totalDeliveryFee;
       if (sale.products && Array.isArray(sale.products)) {
-        // Vente multi-produits
-        return sum + sale.products.reduce((productSum, product) => {
-          return productSum + (product.deliveryFee || 0);
-        }, 0);
-      } else {
-        // Vente simple
-        return sum + (typeof sale.deliveryFee === 'number' ? sale.deliveryFee : 0);
+        return sum + sumProductsField(sale, 'deliveryFee');
       }
+      return sum + (typeof sale.deliveryFee === 'number' ? sale.deliveryFee : 0);
     }, 0);
-    
+
     const totalProfit = sales.reduce((sum, sale) => {
+      if (typeof sale.totalProfit === 'number') return sum + sale.totalProfit;
       if (sale.products && Array.isArray(sale.products)) {
-        // Vente multi-produits
-        return sum + sale.products.reduce((productSum, product) => productSum + product.profit, 0);
-      } else {
-        // Vente simple
-        return sum + (typeof sale.profit === 'number' ? sale.profit : 0);
+        return sum + sumProductsField(sale, 'profit');
       }
+      return sum + (typeof sale.profit === 'number' ? sale.profit : 0);
     }, 0);
 
     // Ligne de totaux premium
