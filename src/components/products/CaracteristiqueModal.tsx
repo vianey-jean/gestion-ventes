@@ -16,6 +16,7 @@ import JsBarcode from 'jsbarcode';
 import ProductCharacteristicCard, { extractSize, ProductCharLike } from './ProductCharacteristicCard';
 import { useToast } from '@/hooks/use-toast';
 import { getBarcodeValue } from '@/lib/barcodeCodec';
+import { Euro } from 'lucide-react';
 
 interface Props {
   open: boolean;
@@ -27,6 +28,9 @@ const CaracteristiqueModal: React.FC<Props> = ({ open, onOpenChange, product }) 
   const [widthMm, setWidthMm] = useState<string>('100');
   const [heightMm, setHeightMm] = useState<string>('80');
   const [askFormat, setAskFormat] = useState(false);
+  const [askPrice, setAskPrice] = useState(false);
+  const [priceInput, setPriceInput] = useState<string>('');
+  const [priceEuro, setPriceEuro] = useState<number | null>(null);
   const { toast } = useToast();
 
   if (!product) return null;
@@ -63,9 +67,10 @@ const CaracteristiqueModal: React.FC<Props> = ({ open, onOpenChange, product }) 
       // description: 22%, gap, taille: 36%, gap, codebarre: 26%, gap, code: 10%
       const gap = contentH * 0.02;
       const descH = contentH * 0.22;
-      const sizeH = contentH * 0.34;
+      const sizeH = contentH * 0.30;
       const barcodeH = contentH * 0.24;
-      const codeH = contentH * 0.10;
+      const codeH = contentH * 0.09;
+      const thanksH = contentH * 0.07;
 
       const desc = product.description || '';
       const carac = product.caracteristique;
@@ -153,10 +158,29 @@ const CaracteristiqueModal: React.FC<Props> = ({ open, onOpenChange, product }) 
           lineColor: '#1e1b4b',
         });
         const imgData = canvas.toDataURL('image/png');
-        // Largeur = 90% du contenu, hauteur = zone disponible
-        const bcW = contentW * 0.9;
+        // Si un prix est défini, le code-barre prend ~70% de la largeur,
+        // le prix s'affiche à droite. Sinon, code-barre = 90%.
+        const hasPrice = typeof priceEuro === 'number' && !isNaN(priceEuro);
+        const bcW = hasPrice ? contentW * 0.65 : contentW * 0.9;
         const bcH = barcodeH;
-        pdf.addImage(imgData, 'PNG', (pageW - bcW) / 2, cursorY, bcW, bcH);
+        const bcX = hasPrice ? margin : (pageW - bcW) / 2;
+        pdf.addImage(imgData, 'PNG', bcX, cursorY, bcW, bcH);
+
+        if (hasPrice) {
+          const priceText = `${priceEuro!.toLocaleString('fr-FR', {
+            minimumFractionDigits: 2, maximumFractionDigits: 2,
+          })} €`;
+          const priceZoneX = bcX + bcW;
+          const priceZoneW = pageW - margin - priceZoneX;
+          const { fontSize: pricePt } = fitFontSize(
+            priceText, priceZoneW, bcH, 'helvetica', 'bold', 200, 6,
+          );
+          pdf.setFont('helvetica', 'bold');
+          pdf.setFontSize(pricePt);
+          pdf.setTextColor(5, 122, 85); // emerald-700
+          const priceY = cursorY + bcH / 2 + pricePt * PT_TO_MM * 0.35;
+          pdf.text(priceText, priceZoneX + priceZoneW / 2, priceY, { align: 'center' });
+        }
         cursorY += bcH + gap;
       } catch (e) {
         console.warn('Barcode generation failed', e);
@@ -173,6 +197,22 @@ const CaracteristiqueModal: React.FC<Props> = ({ open, onOpenChange, product }) 
       pdf.setTextColor(91, 33, 182);
       const codeY = cursorY + codeH / 2 + codePt * PT_TO_MM * 0.35;
       pdf.text(codeText, pageW / 2, codeY, { align: 'center' });
+      cursorY += codeH + gap;
+
+      // === Message de remerciement (petit, en bas) ===
+      const thanksText = 'Merci pour votre achat chez RIZIKY BEAUTÉ — votre satisfaction est notre plus belle récompense.';
+      const { fontSize: thanksPt, lines: thanksLines } = fitFontSize(
+        thanksText, contentW, thanksH, 'helvetica', 'normal', 10, 3,
+      );
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(thanksPt);
+      pdf.setTextColor(120, 113, 130);
+      const thanksLineH = thanksPt * PT_TO_MM * 1.15;
+      const thanksTotalH = thanksLines.length * thanksLineH;
+      const thanksStartY = cursorY + (thanksH - thanksTotalH) / 2 + thanksPt * PT_TO_MM * 0.85;
+      thanksLines.forEach((ln, i) => {
+        pdf.text(ln, pageW / 2, thanksStartY + i * thanksLineH, { align: 'center' });
+      });
 
       const fileName = `caracteristique_${product.code || product.id}_${w}x${h}mm.pdf`;
       pdf.save(fileName);
@@ -206,8 +246,67 @@ const CaracteristiqueModal: React.FC<Props> = ({ open, onOpenChange, product }) 
         </DialogHeader>
 
         <div className="py-4">
-          <ProductCharacteristicCard product={product} variant="full" />
+          <ProductCharacteristicCard product={product} variant="full" priceEuro={priceEuro} />
         </div>
+
+        {askPrice ? (
+          <div className="space-y-3 p-4 rounded-2xl bg-emerald-50/60 dark:bg-emerald-950/30 border border-emerald-200/50 dark:border-emerald-800/40">
+            <p className="text-sm font-bold text-emerald-700 dark:text-emerald-300 text-center">
+              Saisir le prix vendu (€) — utilisé uniquement pour l'impression
+            </p>
+            <div className="flex items-center gap-2">
+              <div className="flex-1 space-y-1.5">
+                <Label htmlFor="sell-price" className="text-xs font-bold">Prix (€)</Label>
+                <Input
+                  id="sell-price"
+                  type="number"
+                  step="0.01"
+                  min={0}
+                  value={priceInput}
+                  onChange={(e) => setPriceInput(e.target.value)}
+                  placeholder="0.00"
+                  className="rounded-xl"
+                  autoFocus
+                />
+              </div>
+            </div>
+            <div className="flex gap-2 justify-end">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => { setAskPrice(false); }}
+                className="rounded-xl"
+              >
+                Annuler
+              </Button>
+              {priceEuro !== null && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => { setPriceEuro(null); setPriceInput(''); setAskPrice(false); }}
+                  className="rounded-xl"
+                >
+                  Retirer
+                </Button>
+              )}
+              <Button
+                type="button"
+                onClick={() => {
+                  const v = parseFloat(priceInput.replace(',', '.'));
+                  if (isNaN(v) || v < 0) {
+                    toast({ title: 'Prix invalide', description: 'Entrez un montant positif.', variant: 'destructive' });
+                    return;
+                  }
+                  setPriceEuro(v);
+                  setAskPrice(false);
+                }}
+                className="rounded-xl bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white border-0"
+              >
+                Valider
+              </Button>
+            </div>
+          </div>
+        ) : null}
 
         {askFormat ? (
           <div className="space-y-4 p-4 rounded-2xl bg-violet-50/60 dark:bg-violet-950/30 border border-violet-200/50 dark:border-violet-800/40">
@@ -263,6 +362,13 @@ const CaracteristiqueModal: React.FC<Props> = ({ open, onOpenChange, product }) 
         <DialogFooter className="flex-col sm:flex-row gap-2">
           {!askFormat ? (
             <>
+              <Button
+                variant="outline"
+                onClick={() => { setPriceInput(priceEuro !== null ? String(priceEuro) : ''); setAskPrice(true); }}
+                className="w-full sm:w-auto rounded-xl border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-800 dark:text-emerald-300 dark:hover:bg-emerald-950/40"
+              >
+                <Euro className="h-4 w-4 mr-2" /> Prix vendu{priceEuro !== null ? ` (${priceEuro.toFixed(2)} €)` : ''}
+              </Button>
               <Button
                 variant="outline"
                 onClick={() => onOpenChange(false)}

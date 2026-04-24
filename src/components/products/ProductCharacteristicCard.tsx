@@ -37,9 +37,11 @@ interface Props {
   /** "compact" pour la cellule de table, "full" pour la modale/impression */
   variant?: 'compact' | 'full';
   className?: string;
+  /** Prix optionnel (en €) à afficher à droite du code-barre (impression uniquement) */
+  priceEuro?: number | null;
 }
 
-const ProductCharacteristicCard: React.FC<Props> = ({ product, variant = 'compact', className }) => {
+const ProductCharacteristicCard: React.FC<Props> = ({ product, variant = 'compact', className, priceEuro }) => {
   const barcodeRef = useRef<SVGSVGElement | null>(null);
   // Priorité : caractéristique persistée -> sinon extraction depuis la description
   const carac = product.caracteristique;
@@ -98,10 +100,22 @@ const ProductCharacteristicCard: React.FC<Props> = ({ product, variant = 'compac
       )}
 
       {/* Code-barres */}
-      <svg
-        ref={barcodeRef}
-        className={cn(variant === 'full' ? 'w-56 h-20' : 'w-full h-8')}
-      />
+      <div className={cn('flex items-center justify-center gap-3 w-full', variant === 'full' ? 'gap-4' : 'gap-2')}>
+        <svg
+          ref={barcodeRef}
+          className={cn(variant === 'full' ? 'w-56 h-20' : 'w-full h-8')}
+        />
+        {typeof priceEuro === 'number' && !isNaN(priceEuro) && (
+          <div
+            className={cn(
+              'font-black bg-gradient-to-br from-emerald-600 to-green-600 bg-clip-text text-transparent leading-none whitespace-nowrap',
+              variant === 'full' ? 'text-3xl' : 'text-sm'
+            )}
+          >
+            {priceEuro.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €
+          </div>
+        )}
+      </div>
 
       {/* Code produit */}
       <p
@@ -112,6 +126,13 @@ const ProductCharacteristicCard: React.FC<Props> = ({ product, variant = 'compac
       >
         {displayCode}
       </p>
+
+      {/* Message de remerciement */}
+      {variant === 'full' && (
+        <p className="text-center italic text-[11px] text-slate-500 dark:text-slate-400 leading-snug mt-1 px-2">
+          Merci pour votre achat chez RIZIKY BEAUTÉ — votre satisfaction est notre plus belle récompense.
+        </p>
+      )}
     </div>
   );
 };
