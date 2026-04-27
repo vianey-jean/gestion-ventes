@@ -58,6 +58,36 @@ const ruleAppliesToday = (rule: PointageAutoEntry): boolean => {
   return false;
 };
 
+/** Vérifie si la règle s'applique à une date donnée (selon ses jours configurés) */
+const ruleAppliesToDate = (rule: PointageAutoEntry, date: Date): boolean => {
+  if (!rule.active) return false;
+  if (rule.jours === 'toute') return true;
+  if (Array.isArray(rule.jours)) {
+    return rule.jours.includes(JOURS[date.getDay()]);
+  }
+  return false;
+};
+
+const fmtDate = (d: Date): string =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
+/**
+ * Retourne toutes les dates du mois en cours, du 1er jusqu'à AUJOURD'HUI INCLUS,
+ * pour lesquelles la règle aurait dû déclencher un pointage.
+ */
+const getExpectedDatesThisMonth = (rule: PointageAutoEntry): string[] => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth();
+  const today = now.getDate();
+  const dates: string[] = [];
+  for (let day = 1; day <= today; day++) {
+    const d = new Date(year, month, day);
+    if (ruleAppliesToDate(rule, d)) dates.push(fmtDate(d));
+  }
+  return dates;
+};
+
 const PointageAutoWatcher: React.FC = () => {
   const { isAuthenticated, user } = useAuth();
   const { toast } = useToast();
@@ -85,23 +115,44 @@ const PointageAutoWatcher: React.FC = () => {
     if (!isAuthenticated) return;
     try {
       const res = await pointageAutoApi.getAll();
-      const rules = (res.data || []).filter(ruleAppliesToday);
-      const date = todayStr();
+      const allRules = (res.data || []).filter(r => r.active);
+
+      // Récupère TOUS les pointages du mois en cours (1 seul fetch optimisé)
+      const now = new Date();
+      const monthRes = await pointageApi.getByMonth(now.getFullYear(), now.getMonth() + 1);
+      const monthList = monthRes.data || [];
+      const hasPointage = (date: string, rule: PointageAutoEntry): boolean =>
+        monthList.some(p =>
+          p.date === date &&
+          p.travailleurId === rule.travailleurId &&
+          p.entrepriseId === rule.entrepriseId
+        );
+
+      const today = todayStr();
       const newItems: QueueItem[] = [];
 
-      for (const rule of rules) {
-        const k = keyOf(date, rule.id);
-        if (processedRef.current.has(k)) continue;
-        // Skip si pointage manuel déjà fait
-        if (await pointageExists(rule, date)) {
-          processedRef.current.add(k);
-          continue;
-        }
-        // Skip si déjà dans la queue ou modal actif
-        if (queue.some(q => q.rule.id === rule.id && q.date === date)) continue;
-        if (activeModal && activeModal.rule.id === rule.id && activeModal.date === date) continue;
+      for (const rule of allRules) {
+        // 1) Vérifie tous les jours attendus du mois (rétroactif) — jours manqués
+        const expectedDates = getExpectedDatesThisMonth(rule);
+        for (const date of expectedDates) {
+          const k = keyOf(date, rule.id);
+          if (processedRef.current.has(k)) continue;
+          if (hasPointage(date, rule)) {
+            processedRef.current.add(k);
+            continue;
+          }
+          if (queue.some(q => q.rule.id === rule.id && q.date === date)) continue;
+          if (activeModal && activeModal.rule.id === rule.id && activeModal.date === date) continue;
 
-        newItems.push({ rule, date, showAt: Date.now() + PREAVIS_MS });
+          // Pour les jours PASSÉS manqués → showAt immédiat (préavis 0)
+          // Pour AUJOURD'HUI → préavis normal de 10 min
+          const isToday = date === today;
+          newItems.push({
+            rule,
+            date,
+            showAt: isToday ? Date.now() + PREAVIS_MS : Date.now(),
+          });
+        }
       }
       if (newItems.length > 0) {
         setQueue(prev => [...prev, ...newItems]);
