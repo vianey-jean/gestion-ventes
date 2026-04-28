@@ -72,18 +72,36 @@ const fmtDate = (d: Date): string =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
 /**
- * Retourne toutes les dates du mois en cours, du 1er jusqu'à AUJOURD'HUI INCLUS,
- * pour lesquelles la règle aurait dû déclencher un pointage.
+ * Retourne toutes les dates pour lesquelles la règle aurait dû déclencher un pointage.
+ * - Borne basse : reactivationStartDate si fournie, sinon le 1er du mois courant.
+ * - Borne haute : AUJOURD'HUI inclus.
+ * Permet le rattrapage rétroactif même au-delà du mois courant si une date
+ * de réactivation passée (ex: -5 jours) a été saisie.
  */
 const getExpectedDatesThisMonth = (rule: PointageAutoEntry): string[] => {
   const now = new Date();
-  const year = now.getFullYear();
-  const month = now.getMonth();
-  const today = now.getDate();
+  now.setHours(0, 0, 0, 0);
+
+  // Calcule la date de départ
+  let start: Date;
+  if (rule.reactivationStartDate) {
+    const [y, m, d] = rule.reactivationStartDate.split('-').map(Number);
+    start = new Date(y, (m || 1) - 1, d || 1);
+  } else {
+    start = new Date(now.getFullYear(), now.getMonth(), 1);
+  }
+  start.setHours(0, 0, 0, 0);
+
+  // Garde-fou : ne jamais remonter plus de 60 jours en arrière
+  const maxBack = new Date(now);
+  maxBack.setDate(maxBack.getDate() - 60);
+  if (start < maxBack) start = maxBack;
+
   const dates: string[] = [];
-  for (let day = 1; day <= today; day++) {
-    const d = new Date(year, month, day);
-    if (ruleAppliesToDate(rule, d)) dates.push(fmtDate(d));
+  const cursor = new Date(start);
+  while (cursor <= now) {
+    if (ruleAppliesToDate(rule, cursor)) dates.push(fmtDate(cursor));
+    cursor.setDate(cursor.getDate() + 1);
   }
   return dates;
 };

@@ -22,6 +22,10 @@ export interface PointageAutoEntry {
   prixJournalier: number;
   montantTotal: number;
   active: boolean;
+  /** Désactivation permanente — ne peut plus être réactivé */
+  permanentlyDisabled?: boolean;
+  /** Date de début à partir de laquelle les pointages rétroactifs doivent être générés (YYYY-MM-DD) */
+  reactivationStartDate?: string | null;
   createdAt?: string;
 }
 

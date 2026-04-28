@@ -16,7 +16,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus, Edit2, Trash2, X, Save, Crown, Sparkles, Diamond,
   CalendarDays, Building2, User, Power, Zap, ChevronDown, ChevronUp,
-  ShieldAlert, AlertTriangle, XCircle
+  ShieldAlert, AlertTriangle, XCircle, Clock, Check
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -77,6 +77,11 @@ const PointageAutoSection: React.FC = () => {
   const [expanded, setExpanded] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<PointageAutoEntry | null>(null);
   const [deleting, setDeleting] = useState(false);
+  // Modal désactivation (permanent/temporaire)
+  const [deactivateTarget, setDeactivateTarget] = useState<PointageAutoEntry | null>(null);
+  // Modal réactivation avec date de début
+  const [reactivateTarget, setReactivateTarget] = useState<PointageAutoEntry | null>(null);
+  const [reactivateDate, setReactivateDate] = useState<string>('');
   useEffect(() => { fetchAll(); }, []);
 
   const fetchAll = async () => {
@@ -180,9 +185,62 @@ const PointageAutoSection: React.FC = () => {
     }
   };
 
-  const toggleActive = async (item: PointageAutoEntry) => {
+  const toggleActive = (item: PointageAutoEntry) => {
+    // Désactivation permanente → blocage total
+    if (item.permanentlyDisabled) {
+      toast({
+        title: 'Désactivation permanente',
+        description: 'Cette règle a été désactivée de façon permanente et ne peut plus être réactivée.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    if (item.active) {
+      // Désactiver → demander permanent ou temporaire
+      setDeactivateTarget(item);
+    } else {
+      // Réactiver → demander la date de début
+      const today = new Date().toISOString().slice(0, 10);
+      setReactivateDate(today);
+      setReactivateTarget(item);
+    }
+  };
+
+  /** Désactive la règle (permanent ou temporaire) */
+  const confirmDeactivate = async (permanent: boolean) => {
+    if (!deactivateTarget) return;
     try {
-      await pointageAutoApi.update(item.id, { active: !item.active });
+      await pointageAutoApi.update(deactivateTarget.id, {
+        active: false,
+        permanentlyDisabled: permanent,
+      });
+      toast({
+        title: permanent ? 'Désactivation permanente' : 'Désactivation temporaire',
+        description: permanent
+          ? 'Cette règle ne pourra plus être réactivée.'
+          : 'Vous pourrez la réactiver quand vous voulez.',
+      });
+      setDeactivateTarget(null);
+      fetchAll();
+    } catch {
+      toast({ title: 'Erreur', variant: 'destructive' });
+    }
+  };
+
+  /** Réactive avec date de début (permet pointages rétroactifs) */
+  const confirmReactivate = async () => {
+    if (!reactivateTarget || !reactivateDate) return;
+    try {
+      await pointageAutoApi.update(reactivateTarget.id, {
+        active: true,
+        permanentlyDisabled: false,
+        reactivationStartDate: reactivateDate,
+      });
+      toast({
+        title: 'Pointage automatique réactivé',
+        description: `Les pointages seront générés depuis le ${reactivateDate}`,
+      });
+      setReactivateTarget(null);
       fetchAll();
     } catch {
       toast({ title: 'Erreur', variant: 'destructive' });
@@ -257,6 +315,8 @@ const PointageAutoSection: React.FC = () => {
                         <span className="text-xs font-bold text-foreground truncate">{item.travailleurNom}</span>
                         {item.active ? (
                           <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-semibold">ACTIF</span>
+                        ) : item.permanentlyDisabled ? (
+                          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-red-500/20 text-red-700 dark:text-red-300 font-semibold">DÉSACTIVÉ DÉFINITIVEMENT</span>
                         ) : (
                           <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">Inactif</span>
                         )}
@@ -269,13 +329,19 @@ const PointageAutoSection: React.FC = () => {
                             ? `${item.heures}h × ${item.prixHeure}€ = ${item.montantTotal}€`
                             : `${item.prixJournalier}€/jour`}
                         </div>
+                        {item.active && item.reactivationStartDate && (
+                          <div className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
+                            <Zap className="w-3 h-3" />Depuis : {item.reactivationStartDate}
+                          </div>
+                        )}
                       </div>
                     </div>
                     <div className="flex flex-col gap-1">
                       <button
                         onClick={() => toggleActive(item)}
-                        className={`p-1 rounded ${item.active ? 'text-emerald-600 hover:bg-emerald-500/10' : 'text-muted-foreground hover:bg-muted'}`}
-                        title={item.active ? 'Désactiver' : 'Activer'}
+                        disabled={item.permanentlyDisabled}
+                        className={`p-1 rounded ${item.permanentlyDisabled ? 'text-muted-foreground/40 cursor-not-allowed' : item.active ? 'text-emerald-600 hover:bg-emerald-500/10' : 'text-muted-foreground hover:bg-muted'}`}
+                        title={item.permanentlyDisabled ? 'Désactivé définitivement' : item.active ? 'Désactiver' : 'Activer'}
                       >
                         <Power className="w-3.5 h-3.5" />
                       </button>
@@ -650,6 +716,154 @@ const PointageAutoSection: React.FC = () => {
           </div>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Modal de désactivation : permanent ou temporaire */}
+      <AnimatePresence>
+        {deactivateTarget && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+            onClick={() => setDeactivateTarget(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              transition={{ type: 'spring', damping: 22 }}
+              onClick={e => e.stopPropagation()}
+              className="relative w-full max-w-md rounded-3xl bg-gradient-to-br from-amber-900/95 via-orange-900/95 to-red-900/95 border-2 border-amber-500/40 shadow-2xl shadow-amber-500/30 backdrop-blur-2xl overflow-hidden"
+            >
+              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-amber-400/20 to-transparent rounded-bl-full pointer-events-none" />
+              <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-red-400/20 to-transparent rounded-tr-full pointer-events-none" />
+              <div className="relative p-5 border-b border-amber-500/30">
+                <button onClick={() => setDeactivateTarget(null)} className="absolute top-3 right-3 p-1.5 rounded-lg text-amber-200 hover:bg-white/10">
+                  <X className="w-4 h-4" />
+                </button>
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 shadow-lg shadow-amber-500/40">
+                    <Power className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-black bg-gradient-to-r from-amber-300 via-orange-300 to-red-300 bg-clip-text text-transparent flex items-center gap-2">
+                      Désactivation du pointage
+                      <AlertTriangle className="w-4 h-4 text-amber-300 animate-pulse" />
+                    </h3>
+                    <p className="text-xs text-amber-200/80 flex items-center gap-1">
+                      <Sparkles className="w-3 h-3" /> Choisissez le type
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="relative p-5 space-y-3">
+                <p className="text-xs text-amber-100/90 leading-relaxed">
+                  Voulez-vous désactiver <span className="font-bold">{deactivateTarget.travailleurNom}</span> de façon temporaire ou permanente ?
+                </p>
+                <button
+                  onClick={() => confirmDeactivate(false)}
+                  className="w-full p-4 rounded-2xl bg-gradient-to-br from-amber-500/20 to-orange-500/20 border border-amber-400/40 hover:from-amber-500/30 hover:to-orange-500/30 text-left transition group"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-xl bg-amber-500/30">
+                      <Clock className="w-4 h-4 text-amber-200" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-sm font-bold text-amber-100">Désactivation temporaire</div>
+                      <div className="text-[11px] text-amber-200/70">Réactivable à tout moment</div>
+                    </div>
+                  </div>
+                </button>
+                <button
+                  onClick={() => confirmDeactivate(true)}
+                  className="w-full p-4 rounded-2xl bg-gradient-to-br from-red-500/20 to-rose-500/20 border border-red-400/40 hover:from-red-500/30 hover:to-rose-500/30 text-left transition group"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-xl bg-red-500/30">
+                      <ShieldAlert className="w-4 h-4 text-red-200" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-sm font-bold text-red-100">Désactivation permanente</div>
+                      <div className="text-[11px] text-red-200/70">Ne pourra plus être réactivée</div>
+                    </div>
+                  </div>
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Modal de réactivation : date de début */}
+      <AnimatePresence>
+        {reactivateTarget && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+            onClick={() => setReactivateTarget(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              transition={{ type: 'spring', damping: 22 }}
+              onClick={e => e.stopPropagation()}
+              className="relative w-full max-w-md rounded-3xl bg-gradient-to-br from-emerald-900/95 via-teal-900/95 to-green-900/95 border-2 border-emerald-500/40 shadow-2xl shadow-emerald-500/30 backdrop-blur-2xl overflow-hidden"
+            >
+              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-emerald-400/20 to-transparent rounded-bl-full pointer-events-none" />
+              <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-teal-400/20 to-transparent rounded-tr-full pointer-events-none" />
+              <div className="relative p-5 border-b border-emerald-500/30">
+                <button onClick={() => setReactivateTarget(null)} className="absolute top-3 right-3 p-1.5 rounded-lg text-emerald-200 hover:bg-white/10">
+                  <X className="w-4 h-4" />
+                </button>
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 shadow-lg shadow-emerald-500/40">
+                    <Zap className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-black bg-gradient-to-r from-emerald-300 via-teal-300 to-green-300 bg-clip-text text-transparent flex items-center gap-2">
+                      Réactivation du pointage
+                      <Crown className="w-4 h-4 text-yellow-400 animate-pulse" />
+                    </h3>
+                    <p className="text-xs text-emerald-200/80 flex items-center gap-1">
+                      <Sparkles className="w-3 h-3" /> Date de début
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="relative p-5 space-y-4">
+                <p className="text-xs text-emerald-100/90 leading-relaxed">
+                  À partir de quelle date les pointages automatiques doivent-ils reprendre pour <span className="font-bold">{reactivateTarget.travailleurNom}</span> ? Tous les jours manqués depuis cette date seront rattrapés.
+                </p>
+                <div className="space-y-1.5">
+                  <Label className="text-emerald-200 text-xs font-semibold flex items-center gap-1.5">
+                    <CalendarDays className="w-3.5 h-3.5" /> Date de début
+                  </Label>
+                  <Input
+                    type="date"
+                    value={reactivateDate}
+                    max={new Date().toISOString().slice(0, 10)}
+                    onChange={e => setReactivateDate(e.target.value)}
+                    className="bg-white/10 border-emerald-400/30 text-emerald-100 rounded-xl h-10"
+                  />
+                </div>
+              </div>
+              <div className="relative p-4 border-t border-emerald-500/30 flex gap-2">
+                <Button variant="outline" onClick={() => setReactivateTarget(null)}
+                  className="flex-1 bg-white/5 border-emerald-400/30 text-emerald-100 hover:bg-white/10 rounded-xl">
+                  Annuler
+                </Button>
+                <Button onClick={confirmReactivate} disabled={!reactivateDate}
+                  className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white shadow-lg shadow-emerald-500/40 rounded-xl">
+                  <Check className="w-4 h-4 mr-1.5" /> Valider
+                </Button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
