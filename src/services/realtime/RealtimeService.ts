@@ -89,6 +89,21 @@ class RealtimeService {
       case 'messages':
         syncData = { messages: receivedData };
         break;
+      case 'pointage':
+        syncData = { pointages: receivedData };
+        break;
+      case 'notes':
+        syncData = { notes: receivedData };
+        break;
+      case 'tache':
+        syncData = { taches: receivedData };
+        break;
+      case 'travailleur':
+        syncData = { travailleurs: receivedData };
+        break;
+      case 'entreprise':
+        syncData = { entreprises: receivedData };
+        break;
     }
 
     if (Object.keys(syncData).length > 0) {

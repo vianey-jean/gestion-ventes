@@ -8,6 +8,11 @@ export interface SyncData {
   achats: any[];
   clients: any[];
   messages: any[];
+  pointages?: any[];
+  notes?: any[];
+  taches?: any[];
+  travailleurs?: any[];
+  entreprises?: any[];
 }
 
 export interface SyncEvent {

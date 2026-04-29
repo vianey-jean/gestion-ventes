@@ -97,6 +97,37 @@ const PointagePage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
+  // Real-time SSE: receive pointage/notes/tache/travailleur/entreprise updates
+  // pushed by the server the instant a JSON file changes on disk.
+  useEffect(() => {
+    let mounted = true;
+    let unsubscribe: (() => void) | null = null;
+    (async () => {
+      const { realtimeService } = await import('@/services/realtimeService');
+      realtimeService.connect();
+      unsubscribe = realtimeService.addDataListener((data) => {
+        if (!mounted) return;
+        if (Array.isArray(data.pointages)) {
+          // Filter to current month/year, matching fetchData scope
+          const filtered = data.pointages.filter((p: PointageEntry) => {
+            const d = new Date(p.date);
+            return d.getMonth() === month && d.getFullYear() === year;
+          });
+          setPointages(filtered);
+        }
+        if (Array.isArray(data.entreprises)) setEntreprises(data.entreprises as Entreprise[]);
+        if (Array.isArray(data.travailleurs)) setTravailleurs(data.travailleurs as Travailleur[]);
+      });
+    })();
+    return () => {
+      mounted = false;
+      if (unsubscribe) unsubscribe();
+      import('@/services/realtimeService').then(({ realtimeService }) => {
+        realtimeService.disconnect();
+      });
+    };
+  }, [year, month]);
+
   useEffect(() => {
     shareCommentsApi.unread().then(res => setCommentCount(res.data.pointage)).catch(() => {});
   }, []);
