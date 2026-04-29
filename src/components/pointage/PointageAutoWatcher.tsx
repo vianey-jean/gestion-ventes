@@ -27,6 +27,7 @@ import pointageAutoApi, { PointageAutoEntry } from '@/services/api/pointageAutoA
 import pointageApi from '@/services/api/pointageApi';
 import pointageDeletedApi from '@/services/api/pointageDeletedApi';
 import pointageAutoSessionsApi, { PointageAutoSession } from '@/services/api/pointageAutoSessionsApi';
+import pointageAutoDeclancheApi from '@/services/api/pointageAutoDeclancheApi';
 import { useToast } from '@/hooks/use-toast';
 
 const JOURS = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
@@ -207,18 +208,42 @@ const PointageAutoWatcher: React.FC = () => {
         return;
       }
 
-      // Crée (ou récupère) la session partagée côté serveur
+      // 1) PERSISTENCE DU CHRONO : enregistre/récupère le déclenchement
+      //    dans pointageautodeclanche.json (idempotent : startedAt jamais réinit).
+      //    → tout admin qui se connecte plus tard reprend ce même chrono.
+      let startedAt: string | undefined;
+      let expiresAt: string | undefined;
       try {
-        const sessRes = await pointageAutoSessionsApi.create({
+        const decRes = await pointageAutoDeclancheApi.create({
           ruleId: next.rule.id,
           date: next.date,
           travailleurId: next.rule.travailleurId,
           entrepriseId: next.rule.entrepriseId,
           durationMs: MODAL_COUNTDOWN_MS,
         });
+        startedAt = decRes.data?.startedAt;
+        expiresAt = decRes.data?.expiresAt;
+      } catch { /* fallback : la session calcule son propre expiresAt */ }
+
+      // 2) Crée (ou récupère) la session partagée côté serveur (modal multi-admin)
+      try {
+        const remainMs = expiresAt
+          ? Math.max(1000, new Date(expiresAt).getTime() - Date.now())
+          : MODAL_COUNTDOWN_MS;
+        const sessRes = await pointageAutoSessionsApi.create({
+          ruleId: next.rule.id,
+          date: next.date,
+          travailleurId: next.rule.travailleurId,
+          entrepriseId: next.rule.entrepriseId,
+          durationMs: remainMs,
+        });
         setQueue(q => q.filter(x => !(x.rule.id === next.rule.id && x.date === next.date)));
         const session = sessRes.data;
-        setActiveSession({ session, rule: next.rule });
+        // Override expiresAt avec celui de pointageautodeclanche (source de vérité)
+        const merged: PointageAutoSession = expiresAt
+          ? { ...session, expiresAt, startedAt: startedAt || session.startedAt }
+          : session;
+        setActiveSession({ session: merged, rule: next.rule });
       } catch { /* silencieux, retry au prochain tick */ }
     }, 5_000);
     return () => window.clearInterval(id);
@@ -305,6 +330,12 @@ const PointageAutoWatcher: React.FC = () => {
     try {
       // Marquer la session validée côté serveur EN PREMIER (idempotent)
       try { await pointageAutoSessionsApi.update(session.id, { status: 'validated', closedBy: closerId }); } catch { /* silencieux */ }
+      // Clôture aussi le déclenchement persistant (pointageautodeclanche.json)
+      try {
+        const decRes = await pointageAutoDeclancheApi.getAll({ ruleId: session.ruleId, date: session.date, status: 'pending' });
+        const dec = decRes.data?.[0];
+        if (dec) await pointageAutoDeclancheApi.update(dec.id, { status: 'validated', closedBy: closerId });
+      } catch { /* silencieux */ }
 
       if (await pointageExists(rule, session.date)) {
         if (!isAuto) toast({ title: 'Pointage déjà existant', description: 'Un pointage manuel a été détecté' });
@@ -340,6 +371,12 @@ const PointageAutoWatcher: React.FC = () => {
     try {
       // Cancel serveur → ajoute empreinte pointageDeleted (bloque futurs autos)
       await pointageAutoSessionsApi.update(session.id, { status: 'cancelled', closedBy: closerId });
+      // Clôture aussi le déclenchement persistant
+      try {
+        const decRes = await pointageAutoDeclancheApi.getAll({ ruleId: session.ruleId, date: session.date, status: 'pending' });
+        const dec = decRes.data?.[0];
+        if (dec) await pointageAutoDeclancheApi.update(dec.id, { status: 'cancelled', closedBy: closerId });
+      } catch { /* silencieux */ }
       toast({ title: 'Pointage annulé', description: 'Pensez à le saisir manuellement si besoin' });
     } catch {
       toast({ title: 'Erreur', description: 'Annulation impossible', variant: 'destructive' });
