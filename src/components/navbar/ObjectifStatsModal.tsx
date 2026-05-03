@@ -1,5 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { Eye, TrendingUp, Target, Sparkles, BarChart3, Calendar, Coins, ArrowUpRight, Users, Percent, DollarSign, ShoppingCart, Award, Crown, Diamond, Gem, Star, Zap } from 'lucide-react';
+import { Eye, TrendingUp, Target, Sparkles, BarChart3, Calendar, Coins, ArrowUpRight, Users, Percent, DollarSign, ShoppingCart, Award, Crown, Diamond, Gem, Star, Zap, RotateCcw } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { toast } from 'sonner';
 import {
   Dialog,
   DialogContent,
@@ -59,6 +70,24 @@ const ObjectifStatsModal: React.FC = () => {
   const [showVentesModal, setShowVentesModal] = useState(false);
   const [showObjectifChangesModal, setShowObjectifChangesModal] = useState(false);
   const [detailModal, setDetailModal] = useState<DetailModalType>(null);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [resetting, setResetting] = useState(false);
+
+  const handleResetObjectif = async () => {
+    try {
+      setResetting(true);
+      await objectifApi.resetObjectif();
+      await fetchHistorique();
+      toast.success("Objectif réinitialisé à 2 000 €");
+      window.dispatchEvent(new CustomEvent('sales-updated'));
+    } catch (e) {
+      console.error(e);
+      toast.error("Erreur lors de la réinitialisation");
+    } finally {
+      setResetting(false);
+      setShowResetConfirm(false);
+    }
+  };
 
   const fetchHistorique = async () => {
     setLoading(true);
@@ -244,15 +273,25 @@ const totalAnnuel = historiqueUnique.reduce(
                   onClick={() => setDetailModal('ventesMois')}
                   clickable
                 />
-                <StatCard
-                  icon={<Target className="h-5 w-5" />}
-                  label="Objectif du Mois encours"
-                  value={formatCurrency(data.currentData.objectif)}
-                  gradient="from-violet-500 to-purple-500"
-                  shadowColor="violet"
-                  onClick={() => setShowObjectifChangesModal(true)}
-                  clickable
-                />
+                <div className="relative">
+                  <StatCard
+                    icon={<Target className="h-5 w-5" />}
+                    label="Objectif du Mois encours"
+                    value={formatCurrency(data.currentData.objectif)}
+                    gradient="from-violet-500 to-purple-500"
+                    shadowColor="violet"
+                    onClick={() => setShowObjectifChangesModal(true)}
+                    clickable
+                  />
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); setShowResetConfirm(true); }}
+                    title="Réinitialiser l'objectif à 2 000 €"
+                    className="absolute top-2 right-2 z-10 p-1.5 rounded-lg bg-white/90 dark:bg-slate-800/90 border border-violet-300/50 dark:border-violet-700/50 text-violet-600 dark:text-violet-400 hover:bg-violet-500 hover:text-white shadow-md transition-all"
+                  >
+                    <RotateCcw className="h-3.5 w-3.5" />
+                  </button>
+                </div>
                 <StatCard
                   icon={<Sparkles className="h-5 w-5" />}
                   label="Performance"
@@ -760,6 +799,31 @@ const totalAnnuel = historiqueUnique.reduce(
           />
         </>
       )}
+
+      <AlertDialog open={showResetConfirm} onOpenChange={setShowResetConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <RotateCcw className="h-5 w-5 text-violet-500" />
+              Réinitialiser l'objectif ?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              L'objectif du mois en cours sera remis à <strong>2 000 €</strong>.
+              Les modifications d'objectif du mois en cours seront supprimées. Cette action est immédiate.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={resetting}>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => { e.preventDefault(); handleResetObjectif(); }}
+              disabled={resetting}
+              className="bg-gradient-to-r from-violet-500 to-purple-500 hover:from-violet-600 hover:to-purple-600 text-white"
+            >
+              {resetting ? 'Réinitialisation...' : 'Réinitialiser'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 };

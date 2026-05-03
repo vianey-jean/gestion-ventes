@@ -62,6 +62,11 @@ export const objectifApi = {
   saveMonthlyData: async (): Promise<ObjectifHistorique> => {
     const response = await api.post('/api/objectif/save-monthly');
     return response.data;
+  },
+
+  resetObjectif: async (): Promise<ObjectifData> => {
+    const response = await api.post('/api/objectif/reset');
+    return response.data;
   }
 };
 
