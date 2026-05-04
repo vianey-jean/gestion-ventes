@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import {
   Settings, Trash2, Upload, Download, Shield, Eye, EyeOff, AlertTriangle,
   ChevronDown, ChevronUp, CalendarOff,
-  StopCircle, PlayCircle
+  StopCircle, PlayCircle, DatabaseZap
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -83,6 +83,7 @@ const ParametresSection: React.FC<ParametresSectionProps> = ({ userRole }) => {
   const [autoBackupPending, setAutoBackupPending] = useState(false);
   const [countdownSeconds, setCountdownSeconds] = useState(0);
   const [autoBackupPaused, setAutoBackupPaused] = useState(false);
+  const [autoInjecter, setAutoInjecter] = useState(true);
 
   // Load auto-sauvegarde status from server on mount
   useEffect(() => {
@@ -98,6 +99,9 @@ const ParametresSection: React.FC<ParametresSectionProps> = ({ userRole }) => {
     };
     if (isAdmin) {
       loadAutoSauvegardeStatus();
+      api.get('/api/settings/auto-injecter').then(r => {
+        if (typeof r.data?.autoInjecter === 'boolean') setAutoInjecter(r.data.autoInjecter);
+      }).catch(() => {});
     }
   }, [isAdmin]);
 
@@ -549,6 +553,29 @@ const ParametresSection: React.FC<ParametresSectionProps> = ({ userRole }) => {
                 {autoBackupPaused && (
                   <span className="text-[10px] px-2 py-0.5 rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 font-mono">
                     Auto-sauvegarde arrêté
+                  </span>
+                )}
+                <button
+                  onClick={async () => {
+                    const next = !autoInjecter;
+                    setAutoInjecter(next);
+                    try {
+                      await api.put('/api/settings/auto-injecter', { autoInjecter: next });
+                      toast({
+                        title: next ? '✅ Auto-injection activée' : '⏹ Auto-injection désactivée',
+                        description: next ? 'La détection automatique d\'injection est active' : 'La détection automatique est désactivée',
+                        className: next ? 'bg-green-600 text-white border-green-600' : 'bg-red-600 text-white border-red-600'
+                      });
+                    } catch { /* silent */ }
+                  }}
+                  title={autoInjecter ? 'Désactiver demande injection automatique' : 'Activer demande injection automatique'}
+                  className={`ml-1 p-0.5 rounded-full transition-colors ${autoInjecter ? 'hover:bg-violet-100 dark:hover:bg-violet-900/30' : 'hover:bg-gray-200 dark:hover:bg-gray-800'}`}
+                >
+                  <DatabaseZap className={`w-4 h-4 ${autoInjecter ? 'text-violet-500' : 'text-gray-400'}`} />
+                </button>
+                {!autoInjecter && (
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-gray-200 dark:bg-gray-800 text-gray-600 dark:text-gray-400 font-mono">
+                    Auto-injection arrêtée
                   </span>
                 )}
               </div>

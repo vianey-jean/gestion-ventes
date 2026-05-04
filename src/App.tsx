@@ -25,6 +25,7 @@ import MaintenanceGate from '@/components/maintenance/MaintenanceGate';
 // Fallback pendant chargement des pages
 import PremiumLoading from '@/components/ui/premium-loading';
 import PointageAutoWatcher from '@/components/pointage/PointageAutoWatcher';
+import AutoInjectWatcher from '@/components/AutoInjectWatcher';
 
 // ==================
 // Lazy loading pages
@@ -185,6 +186,7 @@ function App() {
               <CookieConsent />
               {/* Watcher global pour les pointages automatiques (modal top-right) */}
               <PointageAutoWatcher />
+              <AutoInjectWatcher />
             </AppProvider>
           </AuthProvider>
         </AccessibilityProvider>
