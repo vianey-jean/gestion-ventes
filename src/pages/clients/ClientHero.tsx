@@ -6,15 +6,17 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Plus, Users, Crown, Star, Diamond, Sparkles } from 'lucide-react';
+import { Plus, Users, Crown, Star, Diamond, Sparkles, Merge } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 interface ClientHeroProps {
   clientCount: number;
   onAddClient: () => void;
+  /** Optionnel : ouvre la modale de fusion de clients */
+  onMergeClient?: () => void;
 }
 
-const ClientHero: React.FC<ClientHeroProps> = ({ clientCount, onAddClient }) => {
+const ClientHero: React.FC<ClientHeroProps> = ({ clientCount, onAddClient, onMergeClient }) => {
   return (
     <div className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-purple-950 to-indigo-950">
       {/* Animated glass orbs */}
@@ -99,6 +101,16 @@ const ClientHero: React.FC<ClientHeroProps> = ({ clientCount, onAddClient }) => 
               </span>
               <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 ml-2 sm:ml-3 group-hover:scale-125 transition-transform duration-300 shrink-0" />
             </Button>
+
+            {onMergeClient && (
+              <Button
+                onClick={onMergeClient}
+                className="group bg-gradient-to-r from-orange-500 via-amber-500 to-red-500 hover:from-orange-400 hover:via-amber-400 hover:to-red-400 text-white font-bold px-6 sm:px-8 md:px-10 py-4 sm:py-5 md:py-6 rounded-2xl shadow-[0_20px_40px_rgba(249,115,22,0.3)] hover:shadow-[0_30px_60px_rgba(249,115,22,0.4)] transform hover:-translate-y-2 transition-all duration-500 border border-white/20 w-full sm:w-auto"
+              >
+                <Merge className="w-5 h-5 sm:w-6 sm:h-6 mr-2 sm:mr-3 group-hover:rotate-12 transition-transform duration-300 shrink-0" />
+                <span className="text-sm sm:text-base md:text-lg whitespace-nowrap">Fusionner Client</span>
+              </Button>
+            )}
           </div>
         </div>
       </div>

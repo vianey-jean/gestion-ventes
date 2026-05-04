@@ -23,6 +23,7 @@ import ConfirmDeleteDialog from '@/components/dashboard/forms/ConfirmDeleteDialo
 import Layout from '@/components/Layout';
 import PremiumLoading from '@/components/ui/premium-loading';
 import ClientPhotoZoomModal from '@/components/clients/ClientPhotoZoomModal';
+import ClientMergeModal from '@/components/clients/ClientMergeModal';
 import { motion } from "framer-motion";
 import SEOHead from '@/components/SEOHead';
 
@@ -76,6 +77,7 @@ const ClientsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => 
   const [addressActionOpen, setAddressActionOpen] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState<string>('');
   const [zoomPhoto, setZoomPhoto] = useState<{ url: string; name: string } | null>(null);
+  const [isMergeOpen, setIsMergeOpen] = useState(false);
 
   const photoInputRef = useRef<HTMLInputElement>(null);
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:10000';
@@ -265,7 +267,7 @@ const ClientsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => 
       {!embedded && <ScrollToTop />}
 
       {/* Section héroïque décomposée */}
-      <ClientHero clientCount={clients.length} onAddClient={handleAddClient} />
+      <ClientHero clientCount={clients.length} onAddClient={handleAddClient} onMergeClient={() => setIsMergeOpen(true)} />
 
       {/* Contenu principal */}
       <div className="container mx-auto px-3 sm:px-4 md:px-6 py-8 sm:py-12 md:py-20 max-w-7xl">
@@ -601,6 +603,14 @@ const ClientsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => 
           clientName={zoomPhoto.name}
         />
       )}
+
+      {/* Modale de fusion de clients */}
+      <ClientMergeModal
+        open={isMergeOpen}
+        onClose={() => setIsMergeOpen(false)}
+        clients={clients}
+        onMerged={() => refetch()}
+      />
     </div>
     </>
   );

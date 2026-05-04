@@ -18,7 +18,7 @@ import {
   Package, Plus, Search, Filter, Eye, Edit, Trash2, CheckCircle2, XCircle,
   AlertTriangle, Camera, Star, Euro, Hash, Sparkles, ChevronLeft, ChevronRight,
   X, PackagePlus, Pencil, ImageOff, ShoppingBag, MessageSquare, ChevronDown, ChevronUp,
-  ArrowUp, ArrowDown
+  ArrowUp, ArrowDown, Merge
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -47,6 +47,7 @@ import { Client } from '@/types/client';
 import { User } from 'lucide-react';
 import ProductCharacteristicCard from '@/components/products/ProductCharacteristicCard';
 import CaracteristiqueModal from '@/components/products/CaracteristiqueModal';
+import ProductMergeModal from '@/components/products/ProductMergeModal';
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://server-gestion-ventes.onrender.com';
 
 type FilterType = 'tous' | 'perruque' | 'tissage' | 'extension' | 'autres';
@@ -70,6 +71,7 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
   const [isEditConfirmOpen, setIsEditConfirmOpen] = useState(false);
   const [isCaracteristiqueOpen, setIsCaracteristiqueOpen] = useState(false);
   const [caracteristiqueProduct, setCaracteristiqueProduct] = useState<Product | null>(null);
+  const [isMergeOpen, setIsMergeOpen] = useState(false);
 
   // Selected product
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -534,6 +536,17 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
                 >
                   <Pencil className="h-5 w-5 mr-2" />
                   Modifier Produit
+                </Button>
+              </motion.div>
+
+              {/* Merge button */}
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Button
+                  onClick={() => setIsMergeOpen(true)}
+                  className="h-14 px-6 rounded-2xl font-bold bg-gradient-to-r from-orange-500 via-amber-500 to-red-500 hover:from-orange-600 hover:via-amber-600 hover:to-red-600 text-white shadow-xl shadow-orange-500/25 hover:shadow-2xl hover:shadow-orange-500/40 transition-all duration-300 border-0 w-full sm:w-auto"
+                >
+                  <Merge className="h-5 w-5 mr-2" />
+                  Fusionner Produit
                 </Button>
               </motion.div>
             </div>
@@ -1452,6 +1465,17 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
         open={isCaracteristiqueOpen}
         onOpenChange={setIsCaracteristiqueOpen}
         product={caracteristiqueProduct}
+      />
+
+      {/* ========== MODALE FUSION DE PRODUITS ========== */}
+      <ProductMergeModal
+        open={isMergeOpen}
+        onClose={() => setIsMergeOpen(false)}
+        products={products}
+        onMerged={async () => {
+          if (fetchProducts) await fetchProducts();
+          await fetchRatings();
+        }}
       />
     </div>
   );
