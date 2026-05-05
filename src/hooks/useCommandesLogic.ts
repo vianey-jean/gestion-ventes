@@ -19,6 +19,8 @@ import api from '@/service/api';
 import { rdvFromReservationService } from '@/services/rdvFromReservationService';
 import { reservationRdvSyncService } from '@/services/reservationRdvSyncService';
 import tacheApi from '@/services/api/tacheApi';
+import type { Sale } from '@/types/sale';
+import { computeClientCaracteristique } from '@/utils/clientCharacteristic';
 
 // ============================================================================
 // Types locaux
@@ -50,6 +52,7 @@ export const useCommandesLogic = () => {
   const [commandes, setCommandes] = useState<Commande[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
+  const [sales, setSales] = useState<Sale[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingCommande, setEditingCommande] = useState<Commande | null>(null);
@@ -166,6 +169,15 @@ export const useCommandesLogic = () => {
     }
   };
 
+  const fetchSales = async () => {
+    try {
+      const response = await api.get('/api/sales');
+      setSales(Array.isArray(response.data) ? response.data : []);
+    } catch (error) {
+      console.error('Error fetching sales:', error);
+    }
+  };
+
   // =========================================================================
   // Effets
   // =========================================================================
@@ -173,7 +185,7 @@ export const useCommandesLogic = () => {
   useEffect(() => {
     const loadData = async () => {
       setIsLoading(true);
-      await Promise.all([fetchCommandes(), fetchClients(), fetchProducts()]);
+      await Promise.all([fetchCommandes(), fetchClients(), fetchProducts(), fetchSales()]);
       setIsLoading(false);
     };
     loadData();
@@ -371,6 +383,11 @@ export const useCommandesLogic = () => {
     if (clientSearch.length < 3) return [];
     return clients.filter(client => client.nom.toLowerCase().includes(clientSearch.toLowerCase()));
   }, [clientSearch, clients]);
+
+  const currentClientCaracteristique = useMemo(
+    () => computeClientCaracteristique(clientNom, clients, sales, commandes),
+    [clientNom, clients, sales, commandes]
+  );
 
   const filteredProducts = useMemo(() => {
     if (productSearch.length < 3) return [];
@@ -573,7 +590,10 @@ export const useCommandesLogic = () => {
         return;
       }
     }
-    const commandeData: Partial<Commande> = { clientNom, clientPhone, clientAddress, type, produits: produitsListe, dateCommande: new Date().toISOString(), statut: type === 'commande' ? 'en_route' : 'en_attente' };
+    // Calcul de la caractéristique du client (avant éventuelle création)
+    const caracBefore = computeClientCaracteristique(clientNom, clients, sales, commandes);
+    const caracLabel = caracBefore?.label || 'Nouveau client';
+    const commandeData: Partial<Commande> = { clientNom, clientPhone, clientAddress, type, produits: produitsListe, dateCommande: new Date().toISOString(), statut: type === 'commande' ? 'en_route' : 'en_attente', clientCaracteristique: caracLabel };
     if (type === 'commande') commandeData.dateArrivagePrevue = dateArrivagePrevue;
     else commandeData.dateEcheance = dateEcheance;
     if (horaire) commandeData.horaire = horaire;
@@ -992,7 +1012,8 @@ export const useCommandesLogic = () => {
 
   return {
     // Données
-    commandes, clients, products, isLoading,
+    commandes, clients, products, sales, isLoading,
+    currentClientCaracteristique,
     filteredCommandes, filteredClients, filteredProducts, commandesForExportDate,
     // États formulaire
     isDialogOpen, setIsDialogOpen, editingCommande,

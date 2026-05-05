@@ -10,6 +10,19 @@ import { ModernTable, ModernTableHeader, ModernTableRow, ModernTableHead, Modern
 import { Gift, Edit, Trash2, ArrowUp, ArrowDown } from 'lucide-react';
 import { Commande, CommandeStatut } from '@/types/commande';
 import CommandesStatsButtons from './CommandesStatsButtons';
+import { getCaracteristiqueByLabel } from '@/utils/clientCharacteristic';
+
+const ClientCaracMarquee: React.FC<{ label?: string }> = ({ label }) => {
+  const carac = getCaracteristiqueByLabel(label);
+  if (!carac) return null;
+  return (
+    <div className="overflow-hidden w-full mt-1">
+      <div className={`whitespace-nowrap inline-block animate-marquee text-xs ${carac.marqueeClass}`}>
+        ✦ {carac.label} ✦ {carac.label} ✦
+      </div>
+    </div>
+  );
+};
 
 interface CommandesTableProps {
   filteredCommandes: Commande[];
@@ -191,6 +204,7 @@ const CommandeTableRow: React.FC<CommandeRowProps> = ({
      <ModernTableRow className="bg-gradient-to-r from-purple-50/30 via-pink-50/20 to-indigo-50/30 dark:from-gray-900/20 dark:via-purple-900/10 dark:to-indigo-900/10 hover:shadow-lg hover:bg-gradient-to-r hover:from-purple-100/40 hover:via-pink-100/30 hover:to-indigo-100/30 transition-all duration-500 rounded-xl backdrop-blur-sm">
   <ModernTableCell className="align-top w-52">
     <div className="font-semibold text-purple-800 dark:text-purple-200 whitespace-normal break-words">{commande.clientNom}</div>
+    <ClientCaracMarquee label={commande.clientCaracteristique} />
     <div className="text-xs text-muted-foreground whitespace-normal break-words">{commande.clientAddress}</div>
   </ModernTableCell>
   <ModernTableCell className="align-top">
@@ -335,6 +349,7 @@ const CommandeMobileCard: React.FC<CommandeRowProps> = ({
   <div className="flex justify-between items-start mb-3">
     <div className="flex-1 min-w-0">
       <h3 className="font-extrabold text-lg text-purple-800 dark:text-purple-200 truncate">{commande.clientNom}</h3>
+      <ClientCaracMarquee label={commande.clientCaracteristique} />
       <p className="text-xs text-muted-foreground truncate">{commande.clientAddress}</p>
       <p className="text-xs text-muted-foreground">{commande.clientPhone}</p>
     </div>

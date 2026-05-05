@@ -28,6 +28,8 @@ export interface Commande {
   saleId?: string;
   /** ISO timestamp du début du chrono de retard (persisté en DB) */
   overdueTimerStart?: string;
+  /** Caractéristique du client au moment de la création (persistée en DB) */
+  clientCaracteristique?: string;
 }
 
 export interface CommandeFormData {

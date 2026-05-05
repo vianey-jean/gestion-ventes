@@ -112,6 +112,7 @@ const CommandesPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =
           setHoraire={logic.setHoraire}
           handleSubmit={logic.handleSubmit}
           resetForm={logic.resetForm}
+          currentClientCaracteristique={logic.currentClientCaracteristique}
         />
 
         {/* Table des commandes */}

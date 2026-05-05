@@ -19,6 +19,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Plus, Trash2, Edit, ShoppingCart, Crown, Star, Sparkles, Gift, Award, Zap, Filter } from 'lucide-react';
 import SaleQuantityInput from '@/components/dashboard/forms/SaleQuantityInput';
 import { Commande, CommandeProduit } from '@/types/commande';
+import type { ClientCaracteristique } from '@/utils/clientCharacteristic';
 
 interface Client {
   id: string;
@@ -124,6 +125,9 @@ interface CommandeFormDialogProps {
   // Actions
   handleSubmit: (e: React.FormEvent) => void;
   resetForm: () => void;
+
+  // Caractéristique client (calculée en live)
+  currentClientCaracteristique?: ClientCaracteristique | null;
 }
 
 /**
@@ -177,6 +181,7 @@ const CommandeFormDialog: React.FC<CommandeFormDialogProps> = ({
   handleSubmit,
   resetForm,
   availableQuantityForSelected,
+  currentClientCaracteristique,
 }) => {
   const [productCategoryFilter, setProductCategoryFilter] = React.useState<ProductCategory>('all');
   const categoryFilteredProducts = React.useMemo(() => filterProductsByCategory(filteredProducts, productCategoryFilter), [filteredProducts, productCategoryFilter]);
@@ -261,9 +266,18 @@ const CommandeFormDialog: React.FC<CommandeFormDialogProps> = ({
             )}
 
             <div className="relative">
-              <Label htmlFor="clientNom" className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">
-                👤 Nom du Client
-              </Label>
+              <div className="flex items-center justify-between mb-2">
+                <Label htmlFor="clientNom" className="text-sm font-semibold text-gray-700 dark:text-gray-300 block">
+                  👤 Nom du Client
+                </Label>
+                {clientNom && clientNom.length >= 2 && currentClientCaracteristique && (
+                  <span
+                    className={`text-xs px-3 py-1 rounded-full font-bold tracking-wide ${currentClientCaracteristique.badgeClass}`}
+                  >
+                    {currentClientCaracteristique.label}
+                  </span>
+                )}
+              </div>
               <Input
                 id="clientNom"
                 value={clientSearch}
