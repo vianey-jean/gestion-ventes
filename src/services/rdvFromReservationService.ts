@@ -10,11 +10,16 @@ export const rdvFromReservationService = {
    * Convertit une commande/réservation en données RDV
    */
   convertCommandeToRdv(commande: Commande): RDVFormData {
-    // Calculer l'heure de fin (1 heure après le début par défaut)
+    // Heure de fin: si horaireFin défini, on l'utilise tel quel, sinon +1h
     const heureDebut = commande.horaire || '09:00';
-    const [hours, minutes] = heureDebut.split(':').map(Number);
-    const endHours = (hours + 1) % 24;
-    const heureFin = `${endHours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+    let heureFin: string;
+    if (commande.horaireFin) {
+      heureFin = commande.horaireFin;
+    } else {
+      const [hours, minutes] = heureDebut.split(':').map(Number);
+      const endHours = (hours + 1) % 24;
+      heureFin = `${endHours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+    }
 
     // Convertir les produits
     const produits: RDVProduit[] = commande.produits.map((p: CommandeProduit) => ({

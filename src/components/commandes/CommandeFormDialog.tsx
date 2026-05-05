@@ -121,6 +121,8 @@ interface CommandeFormDialogProps {
   setDateEcheance: (value: string) => void;
   horaire: string;
   setHoraire: (value: string) => void;
+  horaireFin?: string;
+  setHoraireFin?: (value: string) => void;
   
   // Actions
   handleSubmit: (e: React.FormEvent) => void;
@@ -178,11 +180,15 @@ const CommandeFormDialog: React.FC<CommandeFormDialogProps> = ({
   setDateEcheance,
   horaire,
   setHoraire,
+  horaireFin = '',
+  setHoraireFin,
   handleSubmit,
   resetForm,
   availableQuantityForSelected,
   currentClientCaracteristique,
 }) => {
+  const [showHeureFin, setShowHeureFin] = React.useState(false);
+  React.useEffect(() => { if (horaireFin) setShowHeureFin(true); }, [horaireFin, isOpen]);
   const [productCategoryFilter, setProductCategoryFilter] = React.useState<ProductCategory>('all');
   const categoryFilteredProducts = React.useMemo(() => filterProductsByCategory(filteredProducts, productCategoryFilter), [filteredProducts, productCategoryFilter]);
   const [selectedClientPhoto, setSelectedClientPhoto] = React.useState<string | null>(null);
@@ -607,16 +613,58 @@ const CommandeFormDialog: React.FC<CommandeFormDialogProps> = ({
             </div>
 
             <div>
-              <Label htmlFor="horaire" className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">
-                ⏰ Horaire (optionnel)
-              </Label>
-              <Input
-                id="horaire"
-                type="time"
-                value={horaire}
-                onChange={(e) => setHoraire(e.target.value)}
-                className="border-2 border-green-300 dark:border-green-700 focus:border-green-500 dark:focus:border-green-500 bg-white dark:bg-gray-900 shadow-sm"
-              />
+              <div className="flex items-center justify-between mb-2">
+                <Label htmlFor="horaire" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  ⏰ Horaire (optionnel)
+                </Label>
+                {!showHeureFin && (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setShowHeureFin(true)}
+                    className="h-7 px-2 border-green-400 text-green-700 dark:text-green-300 hover:bg-green-50 dark:hover:bg-green-900/30"
+                    title="Définir une heure de fin personnalisée"
+                  >
+                    <Plus className="w-4 h-4 mr-1" /> Heure fin
+                  </Button>
+                )}
+              </div>
+              <div className={showHeureFin ? "grid grid-cols-2 gap-3" : ""}>
+                <Input
+                  id="horaire"
+                  type="time"
+                  value={horaire}
+                  onChange={(e) => setHoraire(e.target.value)}
+                  className="border-2 border-green-300 dark:border-green-700 focus:border-green-500 dark:focus:border-green-500 bg-white dark:bg-gray-900 shadow-sm"
+                  placeholder="Heure de début"
+                />
+                {showHeureFin && (
+                  <div className="relative">
+                    <Input
+                      id="horaireFin"
+                      type="time"
+                      value={horaireFin}
+                      onChange={(e) => setHoraireFin?.(e.target.value)}
+                      className="border-2 border-emerald-400 dark:border-emerald-600 focus:border-emerald-500 bg-white dark:bg-gray-900 shadow-sm pr-9"
+                      placeholder="Heure de fin"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => { setHoraireFin?.(''); setShowHeureFin(false); }}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500"
+                      title="Retirer (auto +1h)"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
+              </div>
+              {!showHeureFin && horaire && (
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  Heure de fin auto: +1h après {horaire}
+                </p>
+              )}
             </div>
           </div>
 

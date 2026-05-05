@@ -21,6 +21,8 @@ export interface Commande {
   dateArrivagePrevue?: string;
   dateEcheance?: string;
   horaire?: string;
+  /** Heure de fin optionnelle (si non fournie => horaire + 1h calculé côté logique RDV/Tâche) */
+  horaireFin?: string;
   statut: CommandeStatut;
   notificationEnvoyee?: boolean;
   createdAt?: string;
@@ -41,4 +43,5 @@ export interface CommandeFormData {
   dateArrivagePrevue?: string;
   dateEcheance?: string;
   horaire?: string;
+  horaireFin?: string;
 }

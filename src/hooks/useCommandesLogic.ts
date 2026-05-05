@@ -74,6 +74,7 @@ export const useCommandesLogic = () => {
   const [dateArrivagePrevue, setDateArrivagePrevue] = useState('');
   const [dateEcheance, setDateEcheance] = useState('');
   const [horaire, setHoraire] = useState('');
+  const [horaireFin, setHoraireFin] = useState('');
   
   // =========================================================================
   // États du formulaire produits
@@ -503,7 +504,7 @@ export const useCommandesLogic = () => {
   const resetForm = useCallback(() => {
     setClientNom(''); setClientPhone(''); setClientAddress('');
     setProduitNom(''); setPrixUnitaire(''); setQuantite('1'); setPrixVente('');
-    setDateArrivagePrevue(''); setDateEcheance(''); setHoraire('');
+    setDateArrivagePrevue(''); setDateEcheance(''); setHoraire(''); setHoraireFin('');
     setType('commande'); setClientSearch(''); setProductSearch('');
     setProduitsListe([]); setEditingCommande(null); setSelectedProduct(null); setEditingProductIndex(null);
     setAvailableQuantityForSelected(null);
@@ -597,6 +598,7 @@ export const useCommandesLogic = () => {
     if (type === 'commande') commandeData.dateArrivagePrevue = dateArrivagePrevue;
     else commandeData.dateEcheance = dateEcheance;
     if (horaire) commandeData.horaire = horaire;
+    if (horaireFin) commandeData.horaireFin = horaireFin;
 
     try {
       const existingClient = clients.find(c => c.nom.toLowerCase() === clientNom.toLowerCase());
@@ -664,7 +666,7 @@ export const useCommandesLogic = () => {
     setEditingCommande(commande); setClientNom(commande.clientNom); setClientPhone(commande.clientPhone);
     setClientAddress(commande.clientAddress); setType(commande.type); setProduitsListe(commande.produits);
     setDateArrivagePrevue(commande.dateArrivagePrevue || ''); setDateEcheance(commande.dateEcheance || '');
-    setHoraire(commande.horaire || ''); setClientSearch(commande.clientNom); setIsDialogOpen(true);
+    setHoraire(commande.horaire || ''); setHoraireFin(commande.horaireFin || ''); setClientSearch(commande.clientNom); setIsDialogOpen(true);
   }, []);
 
   // =========================================================================
@@ -853,9 +855,14 @@ export const useCommandesLogic = () => {
     setIsRdvLoading(true);
     try {
       const heureDebut = pendingReservationForRdv.horaire || '09:00';
-      const [hours, minutes] = heureDebut.split(':').map(Number);
-      const endHours = (hours + 1) % 24;
-      const heureFin = `${endHours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+      let heureFin: string;
+      if (pendingReservationForRdv.horaireFin) {
+        heureFin = pendingReservationForRdv.horaireFin;
+      } else {
+        const [hours, minutes] = heureDebut.split(':').map(Number);
+        const endHours = (hours + 1) % 24;
+        heureFin = `${endHours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+      }
       const rdvData = {
         titre: titre || `Réservation pour ${pendingReservationForRdv.clientNom}`,
         description: description || '', clientNom: pendingReservationForRdv.clientNom,
@@ -1019,7 +1026,7 @@ export const useCommandesLogic = () => {
     isDialogOpen, setIsDialogOpen, editingCommande,
     clientNom, setClientNom, clientPhone, setClientPhone, clientPhones, clientAddress, setClientAddress,
     clientSearch, setClientSearch, showClientSuggestions, setShowClientSuggestions,
-    type, setType, dateArrivagePrevue, setDateArrivagePrevue, dateEcheance, setDateEcheance, horaire, setHoraire,
+    type, setType, dateArrivagePrevue, setDateArrivagePrevue, dateEcheance, setDateEcheance, horaire, setHoraire, horaireFin, setHoraireFin,
     produitNom, setProduitNom, prixUnitaire, setPrixUnitaire, quantite, setQuantite, prixVente, setPrixVente,
     productSearch, setProductSearch, showProductSuggestions, setShowProductSuggestions,
     selectedProduct, produitsListe, editingProductIndex, availableQuantityForSelected,
