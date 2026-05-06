@@ -102,6 +102,8 @@ const AvanceModal: React.FC<AvanceModalProps> = ({
   const [selectedWeeks, setSelectedWeeks] = useState<Set<string>>(new Set());
   const [selectedMonths, setSelectedMonths] = useState<Set<string>>(new Set());
   const [selectedPointageIds, setSelectedPointageIds] = useState<Set<string>>(new Set());
+  // Pointages exclus (non pris en avance) à l'intérieur d'une sélection semaine/mois
+  const [excludedIds, setExcludedIds] = useState<Set<string>>(new Set());
 
   const now = new Date();
   const currentYear = now.getFullYear();
@@ -112,6 +114,7 @@ const AvanceModal: React.FC<AvanceModalProps> = ({
       setEntrepriseId(''); setMontantAvance(''); setConfirmSave(false);
       setMode('week'); setAllPointages([]); setAllAvances([]);
       setSelectedWeeks(new Set()); setSelectedMonths(new Set()); setSelectedPointageIds(new Set());
+      setExcludedIds(new Set());
     }
   }, [open]);
 
@@ -164,6 +167,7 @@ const AvanceModal: React.FC<AvanceModalProps> = ({
     setSelectedWeeks(new Set());
     setSelectedMonths(new Set());
     setSelectedPointageIds(new Set());
+    setExcludedIds(new Set());
     setMontantAvance('');
     setConfirmSave(false);
   }, [mode, entrepriseId, travId]);
@@ -265,9 +269,33 @@ const AvanceModal: React.FC<AvanceModalProps> = ({
       .reduce((s, p) => s + (p.montantTotal || 0), 0);
   }, [availablePointages, effectiveSelectedIds]);
 
+  // Pointages contenus dans la sélection (week/month) → candidats à exclure
+  const selectionPointages = useMemo(() => {
+    return availablePointages.filter(p => effectiveSelectedIds.has(p.id))
+      .sort((a, b) => parseDate(a.date).getTime() - parseDate(b.date).getTime());
+  }, [availablePointages, effectiveSelectedIds]);
+
   const montantNum = parseFloat(montantAvance) || 0;
   const depassement = montantNum > selectedTotal;
-  const resteApres = selectedTotal - montantNum;
+
+  // Total exclu (parmi la sélection effective)
+  const excludedTotal = useMemo(() => {
+    return selectionPointages
+      .filter(p => excludedIds.has(p.id))
+      .reduce((s, p) => s + (p.montantTotal || 0), 0);
+  }, [selectionPointages, excludedIds]);
+
+  // Reste à exclure pour atteindre le montant exact
+  const targetExclusion = Math.max(0, selectedTotal - montantNum);
+  const needsExclusion = (mode === 'week' || mode === 'month') && montantNum > 0 && !depassement && montantNum < selectedTotal;
+  const exclusionValid = !needsExclusion || Math.abs(excludedTotal - targetExclusion) < 0.005;
+  const finalSelectedIds = useMemo(() => {
+    const next = new Set(effectiveSelectedIds);
+    excludedIds.forEach(id => next.delete(id));
+    return next;
+  }, [effectiveSelectedIds, excludedIds]);
+  const finalTotal = selectedTotal - excludedTotal;
+  const resteApres = finalTotal - montantNum;
 
   const toggleWeek = useCallback((key: string) => {
     setSelectedWeeks(prev => {
@@ -275,6 +303,7 @@ const AvanceModal: React.FC<AvanceModalProps> = ({
       if (next.has(key)) next.delete(key); else next.add(key);
       return next;
     });
+    setExcludedIds(new Set());
   }, []);
 
   const toggleMonth = useCallback((key: string) => {
@@ -283,10 +312,19 @@ const AvanceModal: React.FC<AvanceModalProps> = ({
       if (next.has(key)) next.delete(key); else next.add(key);
       return next;
     });
+    setExcludedIds(new Set());
   }, []);
 
   const togglePointage = useCallback((id: string) => {
     setSelectedPointageIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const toggleExcluded = useCallback((id: string) => {
+    setExcludedIds(prev => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id); else next.add(id);
       return next;
@@ -303,6 +341,7 @@ const AvanceModal: React.FC<AvanceModalProps> = ({
 
   const handleSave = async () => {
     if (!travId || montantNum <= 0 || depassement || effectiveSelectedIds.size === 0) return;
+    if (!exclusionValid) return;
     setLoading(true);
     try {
       const entNom = entreprises.find(e => e.id === entrepriseId)?.nom || '';
@@ -312,9 +351,9 @@ const AvanceModal: React.FC<AvanceModalProps> = ({
         entrepriseId: hasEntrepriseFilter ? entrepriseId : '',
         entrepriseNom: entNom,
         montant: montantNum,
-        totalPointage: selectedTotal,
+        totalPointage: finalTotal,
         resteApresAvance: resteApres,
-        pointageIds: Array.from(effectiveSelectedIds),
+        pointageIds: Array.from(finalSelectedIds),
         mois: now.getMonth() + 1,
         annee: currentYear,
       });
@@ -550,7 +589,7 @@ const AvanceModal: React.FC<AvanceModalProps> = ({
               </Label>
               <Input type="number" min="0" max={selectedTotal}
                 value={montantAvance}
-                onChange={e => setMontantAvance(e.target.value)}
+                onChange={e => { setMontantAvance(e.target.value); setExcludedIds(new Set()); }}
                 placeholder="0.00"
                 className={cn("bg-white/10 border rounded-xl text-white text-lg font-bold", depassement ? "border-red-500" : "border-white/20")}
               />
@@ -563,6 +602,59 @@ const AvanceModal: React.FC<AvanceModalProps> = ({
                 <div className="flex justify-between items-center px-3 py-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
                   <span className="text-xs text-emerald-300">Reste après avance</span>
                   <span className="text-sm font-black text-emerald-400">{resteApres.toFixed(2)}€</span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Exclusion picker (week/month) when amount < total */}
+          {needsExclusion && (
+            <div className="space-y-2 p-3 rounded-2xl bg-orange-500/10 border border-orange-500/30">
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-bold text-orange-300 uppercase tracking-wider">
+                  Sélectionnez les jours à NE PAS prendre en avance
+                </p>
+              </div>
+              <p className="text-[11px] text-white/60">
+                Reste à exclure : <span className="font-black text-orange-300">{(targetExclusion - excludedTotal).toFixed(2)}€</span>
+                {' '}/ Cible : <span className="font-bold text-white/80">{targetExclusion.toFixed(2)}€</span>
+              </p>
+              <div className="max-h-48 overflow-y-auto space-y-1 pr-1">
+                {selectionPointages.map(p => {
+                  const selected = excludedIds.has(p.id);
+                  const d = parseDate(p.date);
+                  const entName = p.entrepriseNom || entreprises.find(e => e.id === p.entrepriseId)?.nom || '';
+                  const remaining = targetExclusion - excludedTotal;
+                  const wouldOverflow = !selected && (p.montantTotal || 0) > remaining + 0.005;
+                  return (
+                    <button key={p.id} type="button"
+                      onClick={() => { if (!wouldOverflow) toggleExcluded(p.id); }}
+                      disabled={wouldOverflow}
+                      className={cn("w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left transition-all",
+                        selected ? "bg-orange-500/30 border border-orange-500/50" : "bg-white/5 border border-white/10 hover:bg-white/10",
+                        wouldOverflow && "opacity-40 cursor-not-allowed")}>
+                      <div className={cn("w-4 h-4 rounded flex items-center justify-center flex-shrink-0",
+                        selected ? "bg-orange-500" : "bg-white/10 border border-white/20")}>
+                        {selected && <Check className="h-2.5 w-2.5 text-white" />}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[11px] font-bold text-white/80">{fmtDay(d)}</p>
+                        {entName && <p className="text-[10px] text-white/40 truncate">{entName}</p>}
+                      </div>
+                      <span className="text-xs font-black text-orange-400">{(p.montantTotal || 0).toFixed(2)}€</span>
+                    </button>
+                  );
+                })}
+              </div>
+              {!exclusionValid && (
+                <div className="flex items-center gap-2 text-orange-300 text-xs font-bold">
+                  <AlertTriangle className="h-3.5 w-3.5" />
+                  La somme exclue ({excludedTotal.toFixed(2)}€) doit être exactement égale à {targetExclusion.toFixed(2)}€
+                </div>
+              )}
+              {exclusionValid && excludedIds.size > 0 && (
+                <div className="text-emerald-300 text-xs font-bold flex items-center gap-2">
+                  <Check className="h-3.5 w-3.5" /> Exclusion valide. {finalSelectedIds.size} pointage(s) seront pris en avance.
                 </div>
               )}
             </div>
@@ -583,7 +675,7 @@ const AvanceModal: React.FC<AvanceModalProps> = ({
           ) : (
             <Button
               onClick={() => setConfirmSave(true)}
-              disabled={!travId || montantNum <= 0 || depassement || loading || effectiveSelectedIds.size === 0}
+              disabled={!travId || montantNum <= 0 || depassement || loading || effectiveSelectedIds.size === 0 || !exclusionValid}
               className={cn(premiumBtnClass, "w-full bg-gradient-to-br from-amber-500 via-orange-500 to-orange-600 border-amber-300/40 text-white shadow-[0_20px_70px_rgba(245,158,11,0.5)] disabled:opacity-50")}>
               <span className={mirrorShine} />
               <span className="relative flex items-center justify-center w-full">
