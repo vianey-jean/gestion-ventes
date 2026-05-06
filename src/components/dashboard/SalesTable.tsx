@@ -324,14 +324,53 @@ const SalesTable: React.FC<SalesTableProps> = ({ sales: initialSales, onRowClick
               </TableCell>
             </TableRow>
           ) : (
-            sortedSales.map((sale, index) => {
-              const isRefund = (sale as any).isRefund || (sale.totalSellingPrice ?? sale.sellingPrice ?? 0) < 0;
-              return (
-                <ModernTableRow
-                  key={sale.id}
-                  onClick={() => onRowClick(sale)}
-                  className={`${isRefund ? 'bg-red-50/80 dark:bg-red-900/20 border-l-4 border-l-red-500' : ''} hover:bg-gradient-to-r hover:from-purple-50/50 hover:to-blue-50/50 dark:hover:from-purple-900/20 dark:hover:to-blue-900/20 transition-all duration-300 hover:shadow-lg border-b border-gray-100/50 dark:border-gray-700/50 cursor-pointer`}
-                >
+            (() => {
+              // Grouper les ventes par jour (clé = YYYY-MM-DD)
+              const groups: { key: string; date: string; sales: Sale[] }[] = [];
+              const map = new Map<string, { date: string; sales: Sale[] }>();
+              sortedSales.forEach((s) => {
+                const d = new Date(s.date);
+                const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                if (!map.has(key)) map.set(key, { date: s.date, sales: [] });
+                map.get(key)!.sales.push(s);
+              });
+              map.forEach((v, k) => groups.push({ key: k, ...v }));
+
+              const computeDayTotals = (daySales: Sale[]) => {
+                const sell = daySales.reduce((a, s) => a + (s.totalSellingPrice ?? s.sellingPrice ?? 0), 0);
+                const purch = daySales.reduce((a, s) => a + (s.totalPurchasePrice ?? s.purchasePrice ?? 0), 0);
+                const deliv = daySales.reduce((a, s) => {
+                  if (s.products) return a + s.products.reduce((p, pr) => p + (pr.deliveryFee || 0), 0);
+                  return a + (s.deliveryFee || 0);
+                }, 0);
+                const profit = daySales.reduce((a, s) => a + (s.totalProfit ?? s.profit ?? 0), 0);
+                const qty = daySales.reduce((a, s) => {
+                  if (s.products) {
+                    return a + s.products.reduce((p, pr) => p + normalizeQuantityForDisplay(isAdvanceProduct(pr.description) ? 0 : pr.quantitySold, s), 0);
+                  }
+                  return a + normalizeQuantityForDisplay(isAdvanceProduct(s.description || '') ? 0 : (s.quantitySold || 0), s);
+                }, 0);
+                return { sell, purch, deliv, profit, qty };
+              };
+
+              let globalIndex = 0;
+              return groups.map((group) => {
+                const totals = computeDayTotals(group.sales);
+                return (
+                  <React.Fragment key={`group-${group.key}`}>
+                    {group.sales.map((sale, idxInGroup) => {
+                      const index = globalIndex++;
+                      const isRefund = (sale as any).isRefund || (sale.totalSellingPrice ?? sale.sellingPrice ?? 0) < 0;
+                      const isFirst = idxInGroup === 0;
+                      // Bordure rouge gras encadrant le groupe d'une journée
+                      const groupBorderTop = isFirst ? 'border-t-4 border-t-red-600' : '';
+                      const sideBorder = 'first:border-l-4 first:border-l-red-600 last:border-r-4 last:border-r-red-600';
+                      return (
+                        <ModernTableRow
+                          key={sale.id}
+                          onClick={() => onRowClick(sale)}
+                          className={`${isRefund ? 'bg-red-50/80 dark:bg-red-900/20' : ''} ${groupBorderTop} hover:bg-gradient-to-r hover:from-purple-50/50 hover:to-blue-50/50 dark:hover:from-purple-900/20 dark:hover:to-blue-900/20 transition-all duration-300 hover:shadow-lg cursor-pointer [&>td:first-child]:border-l-4 [&>td:first-child]:border-l-red-600 [&>td:last-child]:border-r-4 [&>td:last-child]:border-r-red-600`}
+                        >
                   <ModernTableCell className="font-medium">
                     <div className="flex items-center space-x-3">
                       <div className="bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900/30 dark:to-purple-900/30 rounded-full w-8 h-8 flex items-center justify-center">
@@ -438,8 +477,34 @@ const SalesTable: React.FC<SalesTableProps> = ({ sales: initialSales, onRowClick
                     </div>
                   </ModernTableCell>
                 </ModernTableRow>
-              );
-            })
+                      );
+                    })}
+                    {/* Ligne total du jour - bordures rouges gras bas + côtés */}
+                    <TableRow className="bg-red-50/60 dark:bg-red-900/10 border-b-4 border-b-red-600 [&>td:first-child]:border-l-4 [&>td:first-child]:border-l-red-600 [&>td:last-child]:border-r-4 [&>td:last-child]:border-r-red-600">
+                      <TableCell className="font-bold text-red-600 bg-transparent whitespace-nowrap">
+                        Total vente: {formatDate(group.date)}
+                      </TableCell>
+                      <TableCell className="bg-transparent" />
+                      <TableCell className="text-right font-bold text-red-600 bg-transparent">
+                        Total: {formatCurrency(totals.sell)}
+                      </TableCell>
+                      <TableCell className="text-right font-bold text-red-600 bg-transparent">
+                        Total: {totals.qty}
+                      </TableCell>
+                      <TableCell className="text-right font-bold text-red-600 bg-transparent">
+                        Total: {formatCurrency(totals.purch)}
+                      </TableCell>
+                      <TableCell className="text-right font-bold text-red-600 bg-transparent">
+                        Total: {formatCurrency(totals.deliv)}
+                      </TableCell>
+                      <TableCell className="text-right font-bold text-red-600 bg-transparent">
+                        Total: {formatCurrency(totals.profit)}
+                      </TableCell>
+                    </TableRow>
+                  </React.Fragment>
+                );
+              });
+            })()
           )}
         </TableBody>
         {sortedSales.length > 0 && (
