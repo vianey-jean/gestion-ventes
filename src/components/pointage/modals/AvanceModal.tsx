@@ -665,7 +665,13 @@ const AvanceModal: React.FC<AvanceModalProps> = ({
             <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 space-y-3">
               <p className="text-sm font-bold text-amber-300">⚠️ Confirmer l'enregistrement de cette avance de {montantNum.toFixed(2)}€ pour {travNom} ?</p>
               <div className="flex gap-2">
-                <Button variant="outline" onClick={() => setConfirmSave(false)} className="flex-1 rounded-xl border-white/20 text-white hover:bg-white/10">Annuler</Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setConfirmSave(false)}
+                  className="flex-1 rounded-xl border-white/20 text-red-600 hover:bg-white/10"
+                >
+                  Annuler
+                </Button>
                 <Button onClick={handleSave} disabled={loading}
                   className="flex-1 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white font-bold">
                   {loading ? '⏳...' : '✅ Confirmer'}

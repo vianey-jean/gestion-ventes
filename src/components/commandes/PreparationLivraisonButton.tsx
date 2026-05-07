@@ -272,8 +272,16 @@ const PreparationLivraisonButton: React.FC<Props> = ({ filteredCommandes }) => {
               </div>
 
               <div className="flex justify-between items-center text-xs text-muted-foreground">
-                <span>Statut: <strong className={detail.termine ? 'text-green-600' : 'text-amber-600'}>{detail.termine ? 'Fini' : 'En cours'}</strong></span>
-                <span>{detail.horaire || ''}{detail.horaireFin ? ' - ' + detail.horaireFin : ''}</span>
+                <span className="text-white">
+                  Statut:{' '}
+                  <strong className={detail.termine ? 'text-green-600' : 'text-amber-600'}>
+                    {detail.termine ? 'Fini' : 'En cours'}
+                  </strong>
+                </span>
+                <span className="text-white">
+                  {detail.horaire || ''}
+                  {detail.horaireFin ? ' - ' + detail.horaireFin : ''}
+                </span>
               </div>
 
               <div className="flex justify-end">
