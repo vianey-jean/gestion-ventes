@@ -33,8 +33,8 @@ const isToday = (dateStr?: string | null) => {
   if (isNaN(d.getTime())) return false;
   const t = new Date();
   return d.getFullYear() === t.getFullYear() &&
-         d.getMonth() === t.getMonth() &&
-         d.getDate() === t.getDate();
+    d.getMonth() === t.getMonth() &&
+    d.getDate() === t.getDate();
 };
 
 const getRelevantDate = (c: Commande) =>
@@ -164,11 +164,10 @@ const PreparationLivraisonButton: React.FC<Props> = ({ filteredCommandes }) => {
                 return (
                   <div
                     key={entry.id}
-                    className={`p-4 rounded-xl border shadow-sm transition-all duration-200 ${
-                      fini
-                        ? 'bg-green-50/70 dark:bg-green-900/20 border-green-300 dark:border-green-700'
-                        : 'bg-white/70 dark:bg-gray-800/50 border-rose-100 dark:border-rose-800/30'
-                    }`}
+                    className={`p-4 rounded-xl border shadow-sm transition-all duration-200 ${fini
+                      ? 'bg-green-50/70 dark:bg-green-900/20 border-green-300 dark:border-green-700'
+                      : 'bg-white/70 dark:bg-gray-800/50 border-rose-100 dark:border-rose-800/30'
+                      }`}
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex items-start gap-3 flex-1 min-w-0">
@@ -255,8 +254,16 @@ const PreparationLivraisonButton: React.FC<Props> = ({ filteredCommandes }) => {
               </div>
 
               <div className="flex justify-between items-center text-xs text-muted-foreground">
-                <span>Statut: <strong className={detail.termine ? 'text-green-600' : 'text-amber-600'}>{detail.termine ? 'Fini' : 'En cours'}</strong></span>
-                <span>{detail.horaire || ''}{detail.horaireFin ? ' - ' + detail.horaireFin : ''}</span>
+                <span className="text-white">
+                  Statut:{' '}
+                  <strong className={detail.termine ? 'text-green-600' : 'text-amber-600'}>
+                    {detail.termine ? 'Fini' : 'En cours'}
+                  </strong>
+                </span>
+                <span className="text-white">
+                  {detail.horaire || ''}
+                  {detail.horaireFin ? ' - ' + detail.horaireFin : ''}
+                </span>
               </div>
 
               <div className="flex justify-end">
