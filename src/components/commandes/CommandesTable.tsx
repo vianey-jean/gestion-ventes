@@ -10,6 +10,7 @@ import { ModernTable, ModernTableHeader, ModernTableRow, ModernTableHead, Modern
 import { Gift, Edit, Trash2, ArrowUp, ArrowDown } from 'lucide-react';
 import { Commande, CommandeStatut } from '@/types/commande';
 import CommandesStatsButtons from './CommandesStatsButtons';
+import PreparationLivraisonButton from './PreparationLivraisonButton';
 import { getCaracteristiqueByLabel } from '@/utils/clientCharacteristic';
 
 const ClientCaracMarquee: React.FC<{ label?: string }> = ({ label }) => {
@@ -56,11 +57,14 @@ const CommandesTable: React.FC<CommandesTableProps> = ({
           </span>
           <span className="truncate">Liste des Commandes</span>
         </CardTitle>
-        <CommandesStatsButtons
-          filteredCommandes={filteredCommandes}
-          totalActiveCommandes={totalActiveCommandes}
-          commandeSearch={commandeSearch}
-        />
+        <div className="flex flex-wrap items-center gap-2">
+          <CommandesStatsButtons
+            filteredCommandes={filteredCommandes}
+            totalActiveCommandes={totalActiveCommandes}
+            commandeSearch={commandeSearch}
+          />
+          <PreparationLivraisonButton filteredCommandes={filteredCommandes} />
+        </div>
       </CardHeader>
       <CardContent className="p-0">
         {/* Vue mobile - Cards */}
