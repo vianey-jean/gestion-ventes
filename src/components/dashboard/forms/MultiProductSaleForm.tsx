@@ -879,31 +879,76 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
   const hasValidProducts = formProducts.filter(p => p.selectedProduct && p.sellingPriceUnit).length > 0;
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto bg-gray-400">
-        <DialogHeader>
-          <DialogTitle>
-            {editSale ? 'Modifier la vente multi-produits' : 'Ajouter une vente multi-produits'}
-          </DialogTitle>
-          <DialogDescription>
-            <p className="text-white">
-              {editSale
-                ? 'Modifiez les détails de cette vente avec plusieurs produits.'
-                : 'Enregistrez une vente avec un ou plusieurs produits.'}
-            </p>
-          </DialogDescription>
-        </DialogHeader>
+  
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Date */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="date">Date de vente</Label>
-              <Input id="date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+
+  <Dialog open={isOpen} onOpenChange={onClose}>
+    <DialogContent className="sm:max-w-5xl max-h-[92vh] overflow-y-auto border border-white/20 bg-[#F4F7FB]/95 backdrop-blur-2xl shadow-[0_20px_80px_rgba(15,23,42,0.18)] rounded-[2rem] text-slate-900">
+
+      {/* Glow effects */}
+      <div className="absolute inset-0 overflow-hidden rounded-[2rem] pointer-events-none">
+        <div className="absolute -top-24 -right-24 h-64 w-64 rounded-full bg-fuchsia-400/20 blur-3xl" />
+        <div className="absolute bottom-0 -left-20 h-72 w-72 rounded-full bg-cyan-400/20 blur-3xl" />
+      </div>
+
+      <DialogHeader className="relative z-10 border-b border-slate-200 pb-6">
+        <DialogTitle className="text-3xl font-black tracking-tight bg-gradient-to-r from-slate-900 via-slate-700 to-slate-500 bg-clip-text text-transparent">
+          {editSale
+            ? 'Modifier la vente multi-produits'
+            : 'Ajouter une vente multi-produits'}
+        </DialogTitle>
+
+        <DialogDescription>
+          <p className="text-sm text-slate-500 leading-relaxed">
+            {editSale
+              ? 'Modifiez les détails de cette vente avec plusieurs produits.'
+              : 'Enregistrez une vente avec un ou plusieurs produits.'}
+          </p>
+        </DialogDescription>
+      </DialogHeader>
+
+      <form onSubmit={handleSubmit} className="relative z-10 space-y-8 pt-2">
+
+        {/* Date */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-3 rounded-2xl border border-white/40 bg-white/80 p-5 shadow-[0_8px_30px_rgba(15,23,42,0.06)] backdrop-blur-xl">
+
+            <Label
+              htmlFor="date"
+              className="text-sm uppercase tracking-[0.2em] text-slate-500 font-semibold"
+            >
+              Date de vente
+            </Label>
+
+            <Input
+              id="date"
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              className="h-14 rounded-2xl border border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus:border-fuchsia-500 focus:ring-2 focus:ring-fuchsia-500/20 transition-all duration-300"
+            />
+          </div>
+        </div>
+
+        {/* Client Section */}
+        <div className="rounded-[1.8rem] border border-white/40 bg-white/75 p-6 shadow-[0_10px_40px_rgba(15,23,42,0.06)] backdrop-blur-2xl">
+
+          <div className="mb-6 flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-bold text-slate-900">
+                Informations Client
+              </h2>
+
+              <p className="text-sm text-slate-500">
+                Gestion complète du client premium
+              </p>
+            </div>
+
+            <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-fuchsia-500 to-violet-600 flex items-center justify-center shadow-lg shadow-fuchsia-500/20">
+              <span className="text-lg font-black text-white">C</span>
             </div>
           </div>
 
-          {/* Client Section */}
           <SaleClientSection
             clientName={clientName}
             setClientName={setClientName}
@@ -916,41 +961,98 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
             isSubmitting={isSubmitting}
             clientPhoto={clientPhoto}
           />
+        </div>
 
-          {/* Products */}
-          <div className="space-y-4">
+        {/* Products */}
+        <div className="space-y-6">
+
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-black text-slate-900">
+                Produits de la vente
+              </h2>
+
+              <p className="text-sm text-slate-500">
+                Ajoutez et configurez les produits vendus
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-2">
+              <span className="text-sm font-semibold text-emerald-700">
+                {formProducts.length} produit(s)
+              </span>
+            </div>
+          </div>
+
+          <div className="space-y-5">
             {formProducts.map((product, index) => (
-              <SaleProductCard
+              <div
                 key={index}
-                product={product}
-                index={index}
-                canDelete={formProducts.length > 1}
-                isSubmitting={isSubmitting}
-                onProductSelect={handleProductSelect}
-                onSellingPriceChange={handleSellingPriceChange}
-                onQuantityChange={handleQuantityChange}
-                onDeleteProduct={handleDeleteProduct}
-                onAvanceChange={handleAvanceProductChange}
-                onDeliveryChange={handleDeliveryChange}
-                onShowSlideshow={handleShowSlideshow}
-              />
+                className="group relative overflow-hidden rounded-[1.8rem] border border-white/50 bg-gradient-to-br from-white to-slate-50 p-[1px] transition-all duration-500 hover:border-fuchsia-300 hover:shadow-[0_12px_40px_rgba(217,70,239,0.12)]"
+              >
+
+                <div className="absolute inset-0 bg-gradient-to-r from-fuchsia-500/0 via-fuchsia-500/5 to-cyan-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+                <div className="relative rounded-[1.7rem] bg-white/90 p-5 backdrop-blur-xl">
+
+                  <SaleProductCard
+                    product={product}
+                    index={index}
+                    canDelete={formProducts.length > 1}
+                    isSubmitting={isSubmitting}
+                    onProductSelect={handleProductSelect}
+                    onSellingPriceChange={handleSellingPriceChange}
+                    onQuantityChange={handleQuantityChange}
+                    onDeleteProduct={handleDeleteProduct}
+                    onAvanceChange={handleAvanceProductChange}
+                    onDeliveryChange={handleDeliveryChange}
+                    onShowSlideshow={handleShowSlideshow}
+                  />
+                </div>
+              </div>
             ))}
           </div>
+        </div>
 
-          {/* Add product button */}
-          <div className="text-center py-4">
-            <Button
-              type="button"
-              onClick={addNewProduct}
-              className="rounded-xl font-bold bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 hover:from-green-600 hover:via-emerald-600 hover:to-teal-600 text-white border-0 shadow-lg shadow-green-500/25 hover:shadow-xl hover:shadow-green-500/40 transition-all duration-300 transform hover:-translate-y-0.5 px-6"
-            >
-              <Plus className="h-5 w-5 mr-2" />
-              Ajouter un autre produit
-            </Button>
-          </div>
+        {/* Add product button */}
+        <div className="flex justify-center py-4">
+          <Button
+            type="button"
+            onClick={addNewProduct}
+            className="group relative overflow-hidden rounded-2xl border border-emerald-300 bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 px-8 py-6 text-base font-bold text-white shadow-[0_10px_35px_rgba(16,185,129,0.25)] transition-all duration-500 hover:scale-[1.02] hover:shadow-[0_15px_45px_rgba(16,185,129,0.35)]"
+          >
 
-          {/* Totals & Advance */}
-          {formProducts.some(p => p.selectedProduct) && (
+            <div className="absolute inset-0 bg-white/10 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+
+            <Plus className="mr-3 h-5 w-5 transition-transform duration-300 group-hover:rotate-90" />
+
+            Ajouter un autre produit
+          </Button>
+        </div>
+
+        {/* Totals & Advance */}
+        {formProducts.some(p => p.selectedProduct) && (
+          <div className="rounded-[2rem] border border-white/50 bg-gradient-to-br from-white to-slate-100 p-6 shadow-[0_15px_60px_rgba(15,23,42,0.08)] backdrop-blur-2xl">
+
+            <div className="mb-6 flex items-center justify-between">
+
+              <div>
+                <h2 className="text-2xl font-black text-slate-900">
+                  Résumé financier
+                </h2>
+
+                <p className="text-sm text-slate-500">
+                  Vue globale des montants et bénéfices
+                </p>
+              </div>
+
+              <div className="rounded-2xl bg-gradient-to-br from-yellow-400 to-orange-500 px-4 py-2 shadow-lg shadow-yellow-500/20">
+                <span className="text-sm font-bold text-black">
+                  Premium
+                </span>
+              </div>
+            </div>
+
             <SaleTotalsSection
               totals={totals}
               showAdvanceSection={showAdvanceSection}
@@ -962,9 +1064,12 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
               setNextPaymentDate={setNextPaymentDate}
               isSubmitting={isSubmitting}
             />
-          )}
+          </div>
+        )}
 
-          {/* Footer Actions */}
+        {/* Footer Actions */}
+        <div className="rounded-[1.8rem] border border-white/40 bg-white/75 p-5 shadow-[0_10px_40px_rgba(15,23,42,0.06)] backdrop-blur-2xl">
+
           <SaleFormActions
             editSale={editSale}
             isSubmitting={isSubmitting}
@@ -973,80 +1078,133 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
             onRefund={onRefund}
             onClose={onClose}
           />
-        </form>
-      </DialogContent>
+        </div>
+      </form>
+    </DialogContent>
 
-      {/* Modals */}
-      <AdvancePaymentModal
-        isOpen={advancePaymentModalOpen}
-        onClose={() => { setAdvancePaymentModalOpen(false); setCurrentAdvanceProductIndex(null); }}
-        onConfirm={handleAdvancePaymentConfirm}
-      />
+    {/* Modals */}
+    <AdvancePaymentModal
+      isOpen={advancePaymentModalOpen}
+      onClose={() => {
+        setAdvancePaymentModalOpen(false);
+        setCurrentAdvanceProductIndex(null);
+      }}
+      onConfirm={handleAdvancePaymentConfirm}
+    />
 
-      <PretProduitFromSaleModal
-        isOpen={pretProduitModalOpen}
-        onClose={() => { setPretProduitModalOpen(false); setCurrentPretProductIndex(null); }}
-        onPretCreated={handlePretProduitCreated}
-      />
+    <PretProduitFromSaleModal
+      isOpen={pretProduitModalOpen}
+      onClose={() => {
+        setPretProduitModalOpen(false);
+        setCurrentPretProductIndex(null);
+      }}
+      onPretCreated={handlePretProduitCreated}
+    />
 
-      <ConfirmDeleteDialog
-        isOpen={deleteDialogOpen}
-        onClose={() => { setDeleteDialogOpen(false); setDeleteTarget(null); }}
-        onConfirm={executeDelete}
-        title={deleteTarget?.type === 'sale' ? 'Supprimer toute la vente' : 'Supprimer ce produit'}
-        description={deleteTarget?.type === 'sale'
+    <ConfirmDeleteDialog
+      isOpen={deleteDialogOpen}
+      onClose={() => {
+        setDeleteDialogOpen(false);
+        setDeleteTarget(null);
+      }}
+      onConfirm={executeDelete}
+      title={
+        deleteTarget?.type === 'sale'
+          ? 'Supprimer toute la vente'
+          : 'Supprimer ce produit'
+      }
+      description={
+        deleteTarget?.type === 'sale'
           ? 'Êtes-vous sûr de vouloir supprimer définitivement cette vente complète ? Cette action est irréversible.'
-          : 'Êtes-vous sûr de vouloir supprimer ce produit de la vente ? Cette action est irréversible.'}
-        isSubmitting={isSubmitting}
-      />
+          : 'Êtes-vous sûr de vouloir supprimer ce produit de la vente ? Cette action est irréversible.'
+      }
+      isSubmitting={isSubmitting}
+    />
 
-      <ReservedProductModal
-        isOpen={reservedModalOpen}
-        onOpenChange={setReservedModalOpen}
-        pendingProduct={pendingReservedProduct}
-        onConfirm={handleReservedConfirm}
-        onCancel={handleReservedCancel}
-      />
+    <ReservedProductModal
+      isOpen={reservedModalOpen}
+      onOpenChange={setReservedModalOpen}
+      pendingProduct={pendingReservedProduct}
+      onConfirm={handleReservedConfirm}
+      onCancel={handleReservedCancel}
+    />
 
-      {/* Modale de conflit de réservation */}
-      <AlertDialog open={reservationConflictModalOpen} onOpenChange={setReservationConflictModalOpen}>
-        <AlertDialogContent className="bg-card/95 backdrop-blur-xl border-0 shadow-2xl max-w-md">
-          <AlertDialogHeader>
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 rounded-full bg-destructive/10">
-                <Package className="h-5 w-5 text-destructive" />
-              </div>
-              <AlertDialogTitle className="text-xl font-bold text-foreground">
+    {/* Modale de conflit de réservation */}
+    <AlertDialog
+      open={reservationConflictModalOpen}
+      onOpenChange={setReservationConflictModalOpen}
+    >
+      <AlertDialogContent className="border border-white/40 bg-white/95 backdrop-blur-2xl rounded-[2rem] shadow-[0_20px_80px_rgba(15,23,42,0.12)] max-w-md text-slate-900">
+
+        <AlertDialogHeader>
+
+          <div className="mb-4 flex items-center gap-4">
+
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-red-500 to-orange-500 shadow-lg shadow-red-500/20">
+              <Package className="h-6 w-6 text-white" />
+            </div>
+
+            <div>
+              <AlertDialogTitle className="text-2xl font-black text-slate-900">
                 Stock réservé
               </AlertDialogTitle>
-            </div>
-            <AlertDialogDescription className="text-base text-muted-foreground">
-              Le produit <span className="font-semibold text-foreground">"{pendingConflictProduct?.product.description}"</span> est entièrement réservé par <span className="font-semibold text-foreground">{conflictingReservation?.clientNom}</span>.
-              <br /><br />
-              Voulez-vous supprimer cette réservation pour libérer le stock ?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter className="gap-3 sm:gap-2">
-            <AlertDialogCancel onClick={() => { setReservationConflictModalOpen(false); setConflictingReservation(null); setPendingConflictProduct(null); }} className="bg-secondary hover:bg-secondary/80">
-              Non, annuler
-            </AlertDialogCancel>
-            <AlertDialogAction onClick={handleConflictReservationDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90 min-w-[100px]">
-              Oui, supprimer la réservation
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
 
-      <ProductPhotoSlideshow
-        photos={slideshowProduct?.photos || []}
-        mainPhoto={slideshowProduct?.mainPhoto}
-        productName={slideshowProduct?.name || ''}
-        isOpen={!!slideshowProduct}
-        onClose={() => setSlideshowProduct(null)}
-        baseUrl={API_BASE_URL}
-      />
-    </Dialog>
-  );
+              <p className="text-sm text-slate-500">
+                Action nécessitant confirmation
+              </p>
+            </div>
+          </div>
+
+          <AlertDialogDescription className="text-base leading-relaxed text-slate-600">
+
+            Le produit{" "}
+            <span className="font-bold text-slate-900">
+              "{pendingConflictProduct?.product.description}"
+            </span>{" "}
+            est entièrement réservé par{" "}
+            <span className="font-bold text-fuchsia-600">
+              {conflictingReservation?.clientNom}
+            </span>.
+            <br />
+            <br />
+            Voulez-vous supprimer cette réservation pour libérer le stock ?
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+
+        <AlertDialogFooter className="gap-4 pt-4">
+
+          <AlertDialogCancel
+            onClick={() => {
+              setReservationConflictModalOpen(false);
+              setConflictingReservation(null);
+              setPendingConflictProduct(null);
+            }}
+            className="h-12 rounded-2xl border border-slate-200 bg-slate-100 text-slate-700 hover:bg-slate-200 transition-all duration-300"
+          >
+            Non, annuler
+          </AlertDialogCancel>
+
+          <AlertDialogAction
+            onClick={handleConflictReservationDelete}
+            className="h-12 rounded-2xl bg-gradient-to-r from-red-500 to-orange-500 font-bold text-white shadow-lg shadow-red-500/20 hover:opacity-90 transition-all duration-300"
+          >
+            Oui, supprimer
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+
+    <ProductPhotoSlideshow
+      photos={slideshowProduct?.photos || []}
+      mainPhoto={slideshowProduct?.mainPhoto}
+      productName={slideshowProduct?.name || ''}
+      isOpen={!!slideshowProduct}
+      onClose={() => setSlideshowProduct(null)}
+      baseUrl={API_BASE_URL}
+    />
+  </Dialog>
+);
+ 
 };
 
 export default MultiProductSaleForm;
