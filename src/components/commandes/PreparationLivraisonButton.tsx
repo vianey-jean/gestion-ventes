@@ -33,8 +33,8 @@ const isToday = (dateStr?: string | null) => {
   if (isNaN(d.getTime())) return false;
   const t = new Date();
   return d.getFullYear() === t.getFullYear() &&
-    d.getMonth() === t.getMonth() &&
-    d.getDate() === t.getDate();
+         d.getMonth() === t.getMonth() &&
+         d.getDate() === t.getDate();
 };
 
 const getRelevantDate = (c: Commande) =>
@@ -115,16 +115,33 @@ const PreparationLivraisonButton: React.FC<Props> = ({ filteredCommandes }) => {
     }
   };
 
+  // Y a-t-il une livraison du jour encore "en cours" ?
+  const hasPending = useMemo(() => {
+    const todayIds = new Set(todayPersistable.map(c => c.id));
+    return entries.some(e => todayIds.has(e.id) && VISIBLE_STATUTS.includes(e.statut) && !e.termine);
+  }, [entries, todayPersistable]);
+
+  // Fallback: si aucune entrée encore synchronisée mais qu'il existe une commande visible aujourd'hui,
+  // on considère qu'il y a du "pending" pour clignoter immédiatement.
+  const pendingActive = hasPending || (entries.length === 0 && hasVisibleToday);
+
   if (!hasVisibleToday) return null;
 
   return (
     <>
       <Button
         onClick={handleOpen}
-        className="group relative overflow-hidden bg-gradient-to-r from-rose-500 via-red-500 to-orange-500 hover:from-rose-600 hover:via-red-600 hover:to-orange-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] rounded-xl px-3 sm:px-4 py-2 h-auto"
+        className={`group relative overflow-hidden bg-gradient-to-r from-rose-500 via-red-500 to-orange-500 hover:from-rose-600 hover:via-red-600 hover:to-orange-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] rounded-xl px-3 sm:px-4 py-2 h-auto ${pendingActive ? 'livraison-luxury-pulse' : ''}`}
       >
+        {pendingActive && (
+          <>
+            <span className="pointer-events-none absolute inset-0 rounded-xl ring-2 ring-rose-300/70 animate-ping" />
+            <span className="pointer-events-none absolute -inset-[2px] rounded-xl bg-gradient-to-r from-rose-400/0 via-white/40 to-orange-400/0 livraison-luxury-shimmer" />
+            <span className="pointer-events-none absolute -top-1 -right-1 h-3 w-3 rounded-full bg-amber-300 shadow-[0_0_10px_2px_rgba(252,211,77,0.9)] animate-pulse" />
+          </>
+        )}
         <div className="relative flex items-center gap-2">
-          <div className="flex items-center justify-center h-7 w-7 rounded-lg bg-white/20 backdrop-blur-sm">
+          <div className={`flex items-center justify-center h-7 w-7 rounded-lg bg-white/20 backdrop-blur-sm ${pendingActive ? 'animate-bounce' : ''}`}>
             <Truck className="h-4 w-4" />
           </div>
           <div className="flex flex-col items-start">
@@ -164,10 +181,11 @@ const PreparationLivraisonButton: React.FC<Props> = ({ filteredCommandes }) => {
                 return (
                   <div
                     key={entry.id}
-                    className={`p-4 rounded-xl border shadow-sm transition-all duration-200 ${fini
-                      ? 'bg-green-50/70 dark:bg-green-900/20 border-green-300 dark:border-green-700'
-                      : 'bg-white/70 dark:bg-gray-800/50 border-rose-100 dark:border-rose-800/30'
-                      }`}
+                    className={`p-4 rounded-xl border shadow-sm transition-all duration-200 ${
+                      fini
+                        ? 'bg-green-50/70 dark:bg-green-900/20 border-green-300 dark:border-green-700'
+                        : 'bg-white/70 dark:bg-gray-800/50 border-rose-100 dark:border-rose-800/30'
+                    }`}
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex items-start gap-3 flex-1 min-w-0">
@@ -254,16 +272,8 @@ const PreparationLivraisonButton: React.FC<Props> = ({ filteredCommandes }) => {
               </div>
 
               <div className="flex justify-between items-center text-xs text-muted-foreground">
-                <span className="text-white">
-                  Statut:{' '}
-                  <strong className={detail.termine ? 'text-green-600' : 'text-amber-600'}>
-                    {detail.termine ? 'Fini' : 'En cours'}
-                  </strong>
-                </span>
-                <span className="text-white">
-                  {detail.horaire || ''}
-                  {detail.horaireFin ? ' - ' + detail.horaireFin : ''}
-                </span>
+                <span>Statut: <strong className={detail.termine ? 'text-green-600' : 'text-amber-600'}>{detail.termine ? 'Fini' : 'En cours'}</strong></span>
+                <span>{detail.horaire || ''}{detail.horaireFin ? ' - ' + detail.horaireFin : ''}</span>
               </div>
 
               <div className="flex justify-end">

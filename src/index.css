@@ -494,3 +494,26 @@
   .animate-fadeInDelay { animation: fadeInDelay 1.8s ease forwards; }
   .animate-buttonFloat { animation: buttonFloat 4s ease-in-out infinite; }
 }
+
+/* Luxury pulse for Livraison button */
+@keyframes livraison-luxury-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 hsla(0, 84%, 60%, 0.55), 0 8px 24px -6px hsla(20, 90%, 55%, 0.5), 0 0 18px hsla(350, 90%, 60%, 0.35);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 0 12px hsla(0, 84%, 60%, 0), 0 12px 34px -6px hsla(20, 90%, 55%, 0.75), 0 0 30px hsla(350, 90%, 60%, 0.6);
+    transform: scale(1.035);
+  }
+}
+.livraison-luxury-pulse {
+  animation: livraison-luxury-glow 1.6s ease-in-out infinite;
+}
+@keyframes livraison-luxury-shimmer-kf {
+  0% { transform: translateX(-120%); opacity: 0; }
+  40% { opacity: 1; }
+  100% { transform: translateX(120%); opacity: 0; }
+}
+.livraison-luxury-shimmer {
+  animation: livraison-luxury-shimmer-kf 2.2s ease-in-out infinite;
+}
