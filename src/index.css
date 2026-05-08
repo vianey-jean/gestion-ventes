@@ -517,3 +517,26 @@
 .livraison-luxury-shimmer {
   animation: livraison-luxury-shimmer-kf 2.2s ease-in-out infinite;
 }
+
+/* Luxury pulse for Confirmation RDV button */
+@keyframes confirmation-luxury-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 hsla(290, 85%, 60%, 0.55), 0 8px 24px -6px hsla(45, 95%, 55%, 0.5), 0 0 18px hsla(270, 90%, 60%, 0.4);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 0 14px hsla(290, 85%, 60%, 0), 0 14px 38px -6px hsla(45, 95%, 55%, 0.75), 0 0 34px hsla(270, 90%, 60%, 0.65);
+    transform: scale(1.04);
+  }
+}
+.confirmation-luxury-pulse {
+  animation: confirmation-luxury-glow 1.7s ease-in-out infinite;
+}
+@keyframes confirmation-luxury-shimmer-kf {
+  0% { transform: translateX(-120%); opacity: 0; }
+  40% { opacity: 1; }
+  100% { transform: translateX(120%); opacity: 0; }
+}
+.confirmation-luxury-shimmer {
+  animation: confirmation-luxury-shimmer-kf 2.4s ease-in-out infinite;
+}

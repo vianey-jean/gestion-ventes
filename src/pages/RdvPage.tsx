@@ -21,6 +21,7 @@ import { Calendar, List } from 'lucide-react';
 import { parseISO, isSameMonth } from 'date-fns';
 import PremiumLoading from '@/components/ui/premium-loading';
 import SEOHead from '@/components/SEOHead';
+import ConfirmationRdvButton from '@/components/rdv/ConfirmationRdvButton';
 
 // Composants extraits
 import { RdvHero, RdvPageStatsCards, RdvSearchBar, RdvListView } from '@/pages/rdv';
@@ -244,16 +245,19 @@ const RdvPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => {
 
           {/* Tabs: Calendar / List */}
           <Tabs value={activeTab} onValueChange={(val) => { setActiveTab(val); setCurrentPage(1); }} className="space-y-6">
-            <TabsList className="grid w-full max-w-md grid-cols-2">
-              <TabsTrigger value="calendar" className="flex items-center gap-2">
-                <Calendar className="h-4 w-4" />
-                Calendrier
-              </TabsTrigger>
-              <TabsTrigger value="list" className="flex items-center gap-2">
-                <List className="h-4 w-4" />
-                Liste ({currentMonthRdvs.length})
-              </TabsTrigger>
-            </TabsList>
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <TabsList className="grid w-full max-w-md grid-cols-2">
+                <TabsTrigger value="calendar" className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
+                  Calendrier
+                </TabsTrigger>
+                <TabsTrigger value="list" className="flex items-center gap-2">
+                  <List className="h-4 w-4" />
+                  Liste ({currentMonthRdvs.length})
+                </TabsTrigger>
+              </TabsList>
+              <ConfirmationRdvButton rdvs={rdvs} />
+            </div>
 
             <TabsContent value="calendar">
               <RdvCalendar
