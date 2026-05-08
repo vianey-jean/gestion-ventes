@@ -49,7 +49,7 @@ export const useCommandes = () => {
         await clientApiService.create({
           nom: data.clientNom,
           phones: [data.clientPhone],
-          adresse: data.clientAddress,
+          addresses: [data.clientAddress],
         });
       }
 

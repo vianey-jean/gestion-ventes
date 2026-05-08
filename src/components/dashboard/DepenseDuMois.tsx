@@ -38,13 +38,8 @@ const DepenseDuMois = () => {
   const [isFixeDialogOpen, setIsFixeDialogOpen] = useState(false);
   const [isRsaDialogOpen, setIsRsaDialogOpen] = useState(false);
   const [rsaMontant, setRsaMontant] = useState('607.75');
-  const [depensesFixe, setDepensesFixe] = useState({
-    free: '',
-    internetZeop: '',
-    assuranceVoiture: '',
-    autreDepense: '',
-    assuranceVie: '',
-  });
+  const [depensesFixe, setDepensesFixe] = useState<Array<{ label: string; montant: string }>>([]);
+  const [fixeTotal, setFixeTotal] = useState<number>(0);
 
   const { currentMonth, currentYear } = useApp();
   const isMobile = useIsMobile();
@@ -88,14 +83,17 @@ const DepenseDuMois = () => {
 
   const fetchDepensesFixe = async () => {
     try {
-      const depensesFixeData = await depenseService.getDepensesFixe();
-      setDepensesFixe({
-        free: (depensesFixeData.free || 0).toString(),
-        internetZeop: (depensesFixeData.internetZeop || 0).toString(),
-        assuranceVoiture: (depensesFixeData.assuranceVoiture || 0).toString(),
-        autreDepense: (depensesFixeData.autreDepense || 0).toString(),
-        assuranceVie: (depensesFixeData.assuranceVie || 0).toString(),
+      const data: any = await depenseService.getDepensesFixe();
+      const items: Array<{ label: string; montant: string }> = [];
+      let total = 0;
+      Object.entries(data || {}).forEach(([k, v]) => {
+        if (k === 'total') return;
+        const num = parseFloat(v as any) || 0;
+        items.push({ label: k, montant: String(v ?? '') });
+        total += num;
       });
+      setDepensesFixe(items);
+      setFixeTotal(parseFloat((data?.total ?? total).toString()) || total);
     } catch (error) {
       console.error("Erreur lors de la récupération des dépenses fixes:", error);
     }
@@ -236,20 +234,24 @@ const DepenseDuMois = () => {
 
   const handleUpdateDepensesFixe = async () => {
     try {
-      const depensesFixeNumbers = {
-        free: parseFloat(depensesFixe.free) || 0,
-        internetZeop: parseFloat(depensesFixe.internetZeop) || 0,
-        assuranceVoiture: parseFloat(depensesFixe.assuranceVoiture) || 0,
-        autreDepense: parseFloat(depensesFixe.autreDepense) || 0,
-        assuranceVie: parseFloat(depensesFixe.assuranceVie) || 0,
-      };
-      await depenseService.updateDepensesFixe(depensesFixeNumbers);
+      const payload: Record<string, number> = {};
+      let total = 0;
+      depensesFixe.forEach(({ label, montant }) => {
+        const cleanLabel = (label || '').trim();
+        if (!cleanLabel) return;
+        const num = parseFloat(montant) || 0;
+        payload[cleanLabel] = num;
+        total += num;
+      });
+      const updated: any = await depenseService.updateDepensesFixe(payload);
+      setFixeTotal(parseFloat((updated?.total ?? total).toString()) || total);
       toast({
         title: "Succès",
         description: "Dépenses fixes mises à jour avec succès",
         className: "bg-app-green text-white",
       });
       setIsFixeDialogOpen(false);
+      fetchDepensesFixe();
     } catch (error) {
       console.error("Erreur lors de la mise à jour des dépenses fixes:", error);
       toast({
@@ -260,6 +262,19 @@ const DepenseDuMois = () => {
       });
     }
   };
+
+  const addDepenseFixeItem = () => {
+    setDepensesFixe(prev => [...prev, { label: '', montant: '' }]);
+  };
+
+  const removeDepenseFixeItem = (index: number) => {
+    setDepensesFixe(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const updateDepenseFixeItem = (index: number, field: 'label' | 'montant', value: string) => {
+    setDepensesFixe(prev => prev.map((it, i) => i === index ? { ...it, [field]: value } : it));
+  };
+
 
   useEffect(() => {
     let cancelled = false;
@@ -564,6 +579,18 @@ const DepenseDuMois = () => {
               <span className="font-bold text-lg tracking-wide">
                 {estPositif ? 'Bonne situation' : 'Découvert'}
               </span>
+            </span>
+          </div>
+
+          {/* Charge fixe (toujours visible) */}
+          <div className="flex items-center gap-2 px-4 py-2 rounded-full
+                          bg-gradient-to-r from-purple-100 via-fuchsia-100 to-pink-100
+                          dark:from-purple-900/40 dark:via-fuchsia-900/30 dark:to-pink-900/30
+                          border border-purple-300/40 backdrop-blur-xl
+                          shadow-[0_10px_30px_rgba(168,85,247,0.25)]">
+            <CreditCard className="h-4 w-4 text-purple-600 dark:text-purple-300" />
+            <span className="text-xs sm:text-sm font-bold text-purple-700 dark:text-purple-300">
+              Charge fixe : {formatAmount(fixeTotal)}
             </span>
           </div>
         </div>
@@ -935,30 +962,66 @@ const DepenseDuMois = () => {
   <DialogContent className="sm:max-w-md bg-gradient-to-br from-white/95 to-gray-50/95 dark:from-gray-900/95 dark:to-gray-800/95
                              backdrop-blur-2xl border border-white/30 shadow-[0_40px_120px_rgba(0,0,0,0.25)] rounded-2xl sm:rounded-3xl">
     <DialogHeader>
-      <DialogTitle className="flex items-center gap-3 text-xl font-extrabold text-gray-800 dark:text-gray-200">
-        <div className="rounded-full p-3 bg-gradient-to-br from-purple-500 via-pink-500 to-fuchsia-500 shadow-lg">
-          <CreditCard className="h-5 w-5 text-white" />
+      <DialogTitle className="flex items-center justify-between gap-3 text-xl font-extrabold text-gray-800 dark:text-gray-200">
+        <div className="flex items-center gap-3">
+          <div className="rounded-full p-3 bg-gradient-to-br from-purple-500 via-pink-500 to-fuchsia-500 shadow-lg">
+            <CreditCard className="h-5 w-5 text-white" />
+          </div>
+          <span>Dépenses fixes mensuelles</span>
         </div>
-        Dépenses fixes mensuelles
+        <Button
+          type="button"
+          size="sm"
+          onClick={addDepenseFixeItem}
+          className="rounded-full p-2 h-9 w-9 bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-lg"
+          title="Ajouter une dépense fixe"
+        >
+          <Plus className="h-4 w-4" />
+        </Button>
       </DialogTitle>
     </DialogHeader>
 
-    <div className="space-y-6 py-6">
-      {Object.entries(depensesFixe).map(([key, val]) => (
-        <div key={key} className="space-y-2">
-          <Label htmlFor={key} className="text-sm font-semibold text-gray-700 dark:text-gray-300">{key}</Label>
-          <div className="relative">
-            <ArrowDown className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-red-500" />
+    <div className="space-y-4 py-6 max-h-[55vh] overflow-y-auto pr-1">
+      {depensesFixe.length === 0 && (
+        <p className="text-sm text-center text-gray-500 dark:text-gray-400 py-6">
+          Aucune dépense fixe. Cliquez sur <Plus className="inline h-3.5 w-3.5" /> pour en ajouter.
+        </p>
+      )}
+      {depensesFixe.map((item, index) => (
+        <div key={index} className="flex items-end gap-2 p-3 rounded-2xl bg-white/40 dark:bg-gray-800/40 border border-gray-200/40 backdrop-blur-xl">
+          <div className="flex-1 space-y-1">
+            <Label className="text-xs font-semibold text-gray-600 dark:text-gray-400">Libellé</Label>
             <Input
-              id={key}
-              type="number"
-              min="0"
-              step="0.01"
-              value={val}
-              onChange={(e) => setDepensesFixe({...depensesFixe, [key]: e.target.value})}
-              className="pl-10 px-4 py-3 bg-white/50 backdrop-blur-xl border border-gray-200/40 rounded-2xl shadow-inner"
+              type="text"
+              placeholder="Ex: Free, Internet…"
+              value={item.label}
+              onChange={(e) => updateDepenseFixeItem(index, 'label', e.target.value)}
+              className="px-3 py-2 bg-white/60 border border-gray-200/40 rounded-xl"
             />
           </div>
+          <div className="w-32 space-y-1">
+            <Label className="text-xs font-semibold text-gray-600 dark:text-gray-400">Montant (€)</Label>
+            <div className="relative">
+              <ArrowDown className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-red-500" />
+              <Input
+                type="number"
+                min="0"
+                step="0.01"
+                value={item.montant}
+                onChange={(e) => updateDepenseFixeItem(index, 'montant', e.target.value)}
+                className="pl-7 px-2 py-2 bg-white/60 border border-gray-200/40 rounded-xl"
+              />
+            </div>
+          </div>
+          <Button
+            type="button"
+            size="sm"
+            onClick={() => removeDepenseFixeItem(index)}
+            className="rounded-full p-2 h-9 w-9 bg-gradient-to-br from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white shadow-md"
+            title="Supprimer cette dépense"
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
         </div>
       ))}
     </div>

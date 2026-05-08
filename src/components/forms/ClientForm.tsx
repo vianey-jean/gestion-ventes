@@ -134,8 +134,8 @@ const ClientForm: React.FC<ClientFormProps> = ({
               </Label>
               <Input
                 id="adresse"
-                value={formData.adresse}
-                onChange={(e) => setFormData({ ...formData, adresse: e.target.value })}
+                value={formData.addresses?.[0] || ''}
+                onChange={(e) => setFormData({ ...formData, addresses: [e.target.value, ...(formData.addresses || []).slice(1)] })}
                 placeholder="Adresse complète..."
                 className="border-2 border-purple-200 dark:border-purple-700 focus:border-purple-500 dark:focus:border-purple-500 rounded-xl py-3 text-base sm:text-lg"
                 required

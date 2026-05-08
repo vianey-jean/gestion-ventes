@@ -3,18 +3,19 @@
 export interface Client {
   id: string;
   nom: string;
-  phone: string; // Rétrocompatibilité: premier numéro
+  phone: string; // Rétrocompatibilité: premier numéro (principal)
   phones: string[]; // Tous les numéros de téléphone
-  adresse: string;
+  adresse: string; // Rétrocompatibilité: première adresse (principale)
+  addresses: string[]; // Toutes les adresses
   dateCreation: string;
-  photo?: string; // Chemin vers la photo du client (optionnel)
+  photo?: string;
 }
 
 export interface ClientFormData {
   nom: string;
-  phones: string[]; // Tableau de numéros
-  adresse: string;
-  photo?: File | null; // Fichier photo (optionnel)
+  phones: string[];
+  addresses: string[];
+  photo?: File | null;
 }
 
 export interface ClientSearchResult {

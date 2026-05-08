@@ -75,16 +75,20 @@ const ClientCard: React.FC<ClientCardProps> = ({
           </div>
         ))}
         
-        {/* Adresse */}
-        <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-xl border border-blue-200 dark:border-blue-800">
-          <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full flex items-center justify-center shrink-0 shadow-lg">
-            <MapPin className="w-5 h-5 text-white" />
+        {/* Adresses - affichage empilé (principale en premier) */}
+        {(client.addresses && client.addresses.length > 0 ? client.addresses : [client.adresse]).map((addr, idx) => (
+          <div key={idx} className="flex items-center gap-3 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-xl border border-blue-200 dark:border-blue-800">
+            <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full flex items-center justify-center shrink-0 shadow-lg">
+              <MapPin className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">
+                {idx === 0 ? 'Adresse principale' : `Adresse ${idx + 1}`}
+              </p>
+              <p className="text-sm font-semibold text-gray-900 dark:text-white">{addr}</p>
+            </div>
           </div>
-          <div>
-            <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Adresse</p>
-            <p className="text-sm font-semibold text-gray-900 dark:text-white">{client.adresse}</p>
-          </div>
-        </div>
+        ))}
         
         {/* Actions */}
         <div className="flex gap-2 pt-2">

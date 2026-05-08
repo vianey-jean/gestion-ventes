@@ -26,6 +26,7 @@ import MaintenanceGate from '@/components/maintenance/MaintenanceGate';
 import PremiumLoading from '@/components/ui/premium-loading';
 import PointageAutoWatcher from '@/components/pointage/PointageAutoWatcher';
 import AutoInjectWatcher from '@/components/AutoInjectWatcher';
+import GlobalRdvTodayNotifier from '@/components/rdv/GlobalRdvTodayNotifier';
 
 // ==================
 // Lazy loading pages
@@ -187,6 +188,7 @@ function App() {
               {/* Watcher global pour les pointages automatiques (modal top-right) */}
               <PointageAutoWatcher />
               <AutoInjectWatcher />
+              <GlobalRdvTodayNotifier />
             </AppProvider>
           </AuthProvider>
         </AccessibilityProvider>

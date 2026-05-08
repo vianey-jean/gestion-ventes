@@ -40,6 +40,7 @@ interface Client {
   phone: string;
   phones: string[];
   adresse: string;
+  addresses?: string[];
   dateCreation: string;
   photo?: string;
 }
@@ -60,7 +61,7 @@ const ClientsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formData, setFormData] = useState({ nom: '', phones: [''], adresse: '' });
+  const [formData, setFormData] = useState<{ nom: string; phones: string[]; addresses: string[] }>({ nom: '', phones: [''], addresses: [''] });
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [removeExistingPhoto, setRemoveExistingPhoto] = useState(false);
@@ -160,23 +161,25 @@ const ClientsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => 
   // =========================================================================
   // CRUD Handlers
   // =========================================================================
-  const resetForm = () => { setFormData({ nom: '', phones: [''], adresse: '' }); setEditingClient(null); setPhotoFile(null); setPhotoPreview(null); setRemoveExistingPhoto(false); };
+  const resetForm = () => { setFormData({ nom: '', phones: [''], addresses: [''] }); setEditingClient(null); setPhotoFile(null); setPhotoPreview(null); setRemoveExistingPhoto(false); };
   const handleAddClient = () => { resetForm(); setIsAddDialogOpen(true); };
-  const handleEditClient = (client: Client) => { 
+  const handleEditClient = (client: Client) => {
     const phones = client.phones && client.phones.length > 0 ? client.phones : [client.phone || ''];
-    setFormData({ nom: client.nom, phones, adresse: client.adresse }); 
+    const addresses = client.addresses && client.addresses.length > 0 ? client.addresses : [client.adresse || ''];
+    setFormData({ nom: client.nom, phones, addresses });
     setEditingClient(client);
     setPhotoFile(null);
     setPhotoPreview(client.photo ? getClientPhotoUrl(client) : null);
     setRemoveExistingPhoto(false);
-    setIsAddDialogOpen(true); 
+    setIsAddDialogOpen(true);
   };
   
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const validPhones = formData.phones.filter(p => p.trim());
-    if (!formData.nom.trim() || validPhones.length === 0 || !formData.adresse.trim()) {
-      toast({ title: "Erreur", description: "Le nom, au moins un téléphone et l'adresse sont obligatoires", variant: "destructive", className: "notification-erreur" });
+    const validAddresses = formData.addresses.filter(a => a.trim());
+    if (!formData.nom.trim() || validPhones.length === 0 || validAddresses.length === 0) {
+      toast({ title: "Erreur", description: "Le nom, au moins un téléphone et une adresse sont obligatoires", variant: "destructive", className: "notification-erreur" });
       return;
     }
     if (editingClient) { setShowEditConfirm(true); } else { setShowAddConfirm(true); }
@@ -184,9 +187,12 @@ const ClientsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => 
 
   const buildFormData = () => {
     const fd = new FormData();
+    const validPhones = formData.phones.filter(p => p.trim());
+    const validAddresses = formData.addresses.filter(a => a.trim());
     fd.append('nom', formData.nom);
-    fd.append('phones', JSON.stringify(formData.phones.filter(p => p.trim())));
-    fd.append('adresse', formData.adresse);
+    fd.append('phones', JSON.stringify(validPhones));
+    fd.append('addresses', JSON.stringify(validAddresses));
+    fd.append('adresse', validAddresses[0] || '');
     if (photoFile) fd.append('photo', photoFile);
     if (editingClient && removeExistingPhoto && !photoFile) fd.append('removePhoto', 'true');
     return fd;
@@ -515,13 +521,27 @@ const ClientsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => 
                           value={phone}
                           onChange={(e) => setFormData(prev => ({ ...prev, phones: prev.phones.map((p, i) => i === index ? e.target.value : p) }))}
                           placeholder={index === 0 ? "Téléphone principal" : `Téléphone ${index + 1}`}
-                          className="border-gray-200 dark:border-gray-700 focus:ring-blue-500 focus:border-blue-500 pr-16"
+                          className="border-gray-200 dark:border-gray-700 focus:ring-blue-500 focus:border-blue-500 pr-24"
                           required={index === 0}
                         />
-                        {index === 0 && (
+                        {index === 0 ? (
                           <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/30 px-2 py-0.5 rounded-full">
                             Principal
                           </span>
+                        ) : (
+                          <button
+                            type="button"
+                            title="Définir comme principal"
+                            onClick={() => setFormData(prev => {
+                              const arr = [...prev.phones];
+                              const [item] = arr.splice(index, 1);
+                              arr.unshift(item);
+                              return { ...prev, phones: arr };
+                            })}
+                            className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/20 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 px-2 py-0.5 rounded-full border border-emerald-300/40"
+                          >
+                            ★ Principal
+                          </button>
                         )}
                       </div>
                       {formData.phones.length > 1 && (
@@ -534,8 +554,52 @@ const ClientsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => 
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="adresse" className="text-sm font-semibold text-gray-700 dark:text-gray-300">Adresse</Label>
-                <Input id="adresse" value={formData.adresse} onChange={(e) => setFormData({ ...formData, adresse: e.target.value })} placeholder="Adresse complète" className="border-gray-200 dark:border-gray-700 focus:ring-blue-500 focus:border-blue-500" required />
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Adresse(s)</Label>
+                  <Button type="button" variant="ghost" size="sm" onClick={() => setFormData(prev => ({ ...prev, addresses: [...prev.addresses, ''] }))} className="h-7 w-7 p-0 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white shadow-md">
+                    <Plus className="w-3.5 h-3.5" />
+                  </Button>
+                </div>
+                <div className="space-y-2">
+                  {formData.addresses.map((addr, index) => (
+                    <div key={index} className="flex items-center gap-2">
+                      <div className="flex-1 relative">
+                        <Input
+                          type="text"
+                          value={addr}
+                          onChange={(e) => setFormData(prev => ({ ...prev, addresses: prev.addresses.map((a, i) => i === index ? e.target.value : a) }))}
+                          placeholder={index === 0 ? "Adresse principale" : `Adresse ${index + 1}`}
+                          className="border-gray-200 dark:border-gray-700 focus:ring-blue-500 focus:border-blue-500 pr-24"
+                          required={index === 0}
+                        />
+                        {index === 0 ? (
+                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/30 px-2 py-0.5 rounded-full">
+                            Principal
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            title="Définir comme principale"
+                            onClick={() => setFormData(prev => {
+                              const arr = [...prev.addresses];
+                              const [item] = arr.splice(index, 1);
+                              arr.unshift(item);
+                              return { ...prev, addresses: arr };
+                            })}
+                            className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 px-2 py-0.5 rounded-full border border-blue-300/40"
+                          >
+                            ★ Principal
+                          </button>
+                        )}
+                      </div>
+                      {formData.addresses.length > 1 && (
+                        <Button type="button" variant="ghost" size="sm" onClick={() => setFormData(prev => ({ ...prev, addresses: prev.addresses.filter((_, i) => i !== index) }))} className="h-7 w-7 p-0 rounded-full hover:bg-red-100 dark:hover:bg-red-900/30 text-red-500">
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
             <DialogFooter className="gap-3">
