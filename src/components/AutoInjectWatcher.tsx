@@ -12,6 +12,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import api from '@/service/api';
 import settingsApi from '@/services/api/settingsApi';
+import PasswordStrengthChecker from '@/components/PasswordStrengthChecker';
 
 const CHRONO_MS = 5 * 60 * 1000;
 
@@ -25,6 +26,7 @@ const AutoInjectWatcher: React.FC = () => {
   const [code, setCode] = useState('');
   const [showCode, setShowCode] = useState(false);
   const [restoring, setRestoring] = useState(false);
+  const [isCodeValid, setIsCodeValid] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -164,11 +166,12 @@ const AutoInjectWatcher: React.FC = () => {
                   {showCode ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
-              <div className="flex gap-2 justify-end">
-                <Button variant="outline" size="sm" onClick={() => { setShowRestore(false); setCode(''); setRestoreFile(null); }}
+              <PasswordStrengthChecker password={code} onValidityChange={setIsCodeValid} />
+              <div className="flex gap-2 justify-end mt-2">
+                <Button variant="outline" size="sm" onClick={() => { setShowRestore(false); setCode(''); setRestoreFile(null); setIsCodeValid(false); }}
                   className="rounded-xl">Annuler</Button>
-                <Button size="sm" onClick={handleRestore} disabled={!code || restoring}
-                  className="rounded-xl bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white">
+                <Button size="sm" onClick={handleRestore} disabled={!code || !isCodeValid || restoring}
+                  className="rounded-xl bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white disabled:opacity-50">
                   {restoring ? 'Restauration...' : '📥 Restaurer'}
                 </Button>
               </div>
