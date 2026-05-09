@@ -20,6 +20,8 @@ import { Plus, Trash2, Edit, ShoppingCart, Crown, Star, Sparkles, Gift, Award, Z
 import SaleQuantityInput from '@/components/dashboard/forms/SaleQuantityInput';
 import { Commande, CommandeProduit } from '@/types/commande';
 import type { ClientCaracteristique } from '@/utils/clientCharacteristic';
+import indisponibleApi from '@/services/api/indisponibleApi';
+import { AlertTriangle } from 'lucide-react';
 
 interface Client {
   id: string;
@@ -192,6 +194,32 @@ const CommandeFormDialog: React.FC<CommandeFormDialogProps> = ({
   const [productCategoryFilter, setProductCategoryFilter] = React.useState<ProductCategory>('all');
   const categoryFilteredProducts = React.useMemo(() => filterProductsByCategory(filteredProducts, productCategoryFilter), [filteredProducts, productCategoryFilter]);
   const [selectedClientPhoto, setSelectedClientPhoto] = React.useState<string | null>(null);
+
+  // ===== Vérification de disponibilité (indisponibilité) =====
+  const [availability, setAvailability] = React.useState<{ disponible: boolean; message?: string; suggestions?: Array<{ heureDebut: string; heureFin: string; label: string }> }>({ disponible: true });
+  const checkDate = type === 'commande' ? dateArrivagePrevue : dateEcheance;
+  const computedHeureFin = React.useMemo(() => {
+    if (horaireFin) return horaireFin;
+    if (!horaire) return '';
+    const [h, m] = horaire.split(':').map(Number);
+    if (isNaN(h)) return '';
+    const end = new Date(); end.setHours(h + 1, m || 0, 0, 0);
+    return `${String(end.getHours()).padStart(2,'0')}:${String(end.getMinutes()).padStart(2,'0')}`;
+  }, [horaire, horaireFin]);
+
+  React.useEffect(() => {
+    if (!isOpen || !checkDate) { setAvailability({ disponible: true }); return; }
+    let cancelled = false;
+    const t = setTimeout(async () => {
+      try {
+        const res = await indisponibleApi.checkDisponibilite(checkDate, horaire || undefined, computedHeureFin || undefined);
+        if (!cancelled) setAvailability(res as any);
+      } catch {
+        if (!cancelled) setAvailability({ disponible: true });
+      }
+    }, 250);
+    return () => { cancelled = true; clearTimeout(t); };
+  }, [isOpen, checkDate, horaire, computedHeureFin]);
 
   // Réinitialiser la photo client quand le dialogue se ferme ou que le nom change manuellement
   React.useEffect(() => {
@@ -668,6 +696,33 @@ const CommandeFormDialog: React.FC<CommandeFormDialogProps> = ({
             </div>
           </div>
 
+          {/* Alerte indisponibilité */}
+          {!availability.disponible && (
+            <div className="p-4 rounded-xl border-2 border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/30 shadow">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
+                <div className="flex-1">
+                  <p className="font-bold text-red-700 dark:text-red-300 text-sm">🚫 Créneau indisponible</p>
+                  <p className="text-xs text-red-600 dark:text-red-400 mt-1">{availability.message}</p>
+                  {availability.suggestions && availability.suggestions.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {availability.suggestions.map((s, i) => (
+                        <button
+                          key={i}
+                          type="button"
+                          onClick={() => { setHoraire(s.heureDebut); setHoraireFin?.(s.heureFin); setShowHeureFin(true); }}
+                          className="px-3 py-1 rounded-full bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 text-xs font-semibold border border-green-300 dark:border-green-700 hover:bg-green-200 dark:hover:bg-green-800/50 transition"
+                        >
+                          ✅ {s.label} ({s.heureDebut} - {s.heureFin})
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Boutons d'action */}
           <div className="flex justify-end gap-3 pt-4">
             <Button
@@ -683,7 +738,8 @@ const CommandeFormDialog: React.FC<CommandeFormDialogProps> = ({
             </Button>
             <Button
               type="submit"
-              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-lg"
+              disabled={!availability.disponible}
+              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {editingCommande ? 'Modifier' : 'Créer'} la {type === 'commande' ? 'commande' : 'réservation'}
             </Button>
