@@ -1,17 +1,28 @@
 /**
- * LoginPage.tsx - Page de connexion utilisateur
- * 
- * Formulaire d'authentification avec :
- * - Blocage temporaire après N tentatives échouées (configurable par utilisateur)
- * - Compte à rebours visuel pendant le blocage
- * - Lien vers inscription et réinitialisation de mot de passe
+ * LoginPage.tsx - Ultra Premium Luxury Auth Experience
+ *
+ * ✨ Improvements:
+ * - Ultra modern glassmorphism
+ * - Aurora animated background
+ * - Neon gradients & luxury shadows
+ * - Advanced lock system UI
+ * - Smooth Framer Motion transitions
+ * - Floating particles
+ * - Premium CTA buttons
+ * - Interactive focus states
+ * - Dynamic progress indicators
+ * - Premium typography
+ * - Responsive luxury layout
  */
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+
 import {
   Card,
   CardContent,
@@ -20,10 +31,12 @@ import {
   CardHeader,
   CardTitle
 } from '@/components/ui/card';
+
 import PasswordInput from '@/components/PasswordInput';
 import PasswordStrengthChecker from '@/components/PasswordStrengthChecker';
 import Layout from '@/components/Layout';
 import PremiumLoading from '@/components/ui/premium-loading';
+
 import {
   Lock,
   Mail,
@@ -38,132 +51,240 @@ import {
   Package,
   TrendingUp,
   AlertTriangle,
-  Timer
+  Timer,
+  CheckCircle2,
+  Star,
+  Gem,
+  Zap,
+  Rocket,
+  Activity,
+  Globe,
+  Layers3,
+  ShieldCheck
 } from 'lucide-react';
+
 import { motion } from 'framer-motion';
+
 import axios from 'axios';
 import SEOHead from '@/components/SEOHead';
 
-const AUTH_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://server-gestion-ventes.onrender.com';
+const AUTH_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL ||
+  'https://server-gestion-ventes.onrender.com';
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
-  const { login, checkEmail } = useAuth();
+
+  const { login } = useAuth();
+
+  // =========================
+  // STATES
+  // =========================
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+
+  const [errors, setErrors] = useState<{
+    email?: string;
+    password?: string;
+  }>({});
+
   const [showPasswordField, setShowPasswordField] = useState(false);
+
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
   const [emailExists, setEmailExists] = useState(false);
+
   const [userName, setUserName] = useState('');
+
   const [isPasswordValid, setIsPasswordValid] = useState(false);
+
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
-  // Login attempt tracking
+  // =========================
+  // SECURITY STATES
+  // =========================
+
   const [maxAttempts, setMaxAttempts] = useState(5);
   const [failedAttempts, setFailedAttempts] = useState(0);
+
   const [isLocked, setIsLocked] = useState(false);
   const [lockCountdown, setLockCountdown] = useState(0);
+
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Countdown timer
+  // =========================
+  // COUNTDOWN
+  // =========================
+
   useEffect(() => {
     if (isLocked && lockCountdown > 0) {
       countdownRef.current = setInterval(() => {
-        setLockCountdown(prev => {
+        setLockCountdown((prev) => {
           if (prev <= 1) {
             setIsLocked(false);
             setFailedAttempts(0);
-            if (countdownRef.current) clearInterval(countdownRef.current);
+
+            if (countdownRef.current) {
+              clearInterval(countdownRef.current);
+            }
+
             return 0;
           }
+
           return prev - 1;
         });
       }, 1000);
+
       return () => {
-        if (countdownRef.current) clearInterval(countdownRef.current);
+        if (countdownRef.current) {
+          clearInterval(countdownRef.current);
+        }
       };
     }
   }, [isLocked, lockCountdown]);
 
+  // =========================
+  // FORMAT TIME
+  // =========================
+
   const formatCountdown = (seconds: number) => {
     const m = Math.floor(seconds / 60);
     const s = seconds % 60;
-    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+
+    return `${m.toString().padStart(2, '0')}:${s
+      .toString()
+      .padStart(2, '0')}`;
   };
+
+  // =========================
+  // EMAIL CHECK
+  // =========================
 
   const handleEmailCheck = async () => {
     if (!email) {
-      setErrors({ ...errors, email: 'Veuillez entrer votre email' });
+      setErrors({
+        ...errors,
+        email: 'Veuillez entrer votre email'
+      });
+
       return;
     }
 
     if (!/\S+@\S+\.\S+/.test(email)) {
-      setErrors({ ...errors, email: 'Veuillez entrer un email valide' });
+      setErrors({
+        ...errors,
+        email: 'Veuillez entrer un email valide'
+      });
+
       return;
     }
 
     setIsCheckingEmail(true);
+
     try {
-      const response = await axios.post(`${AUTH_BASE_URL}/api/auth/check-email`, { email });
+      const response = await axios.post(
+        `${AUTH_BASE_URL}/api/auth/check-email`,
+        { email }
+      );
+
       setIsCheckingEmail(false);
 
       if (response.data.exists) {
         setEmailExists(true);
         setShowPasswordField(true);
-        setUserName(`${response.data.user.firstName} ${response.data.user.lastName}`);
+
+        setUserName(
+          `${response.data.user.firstName} ${response.data.user.lastName}`
+        );
+
         setMaxAttempts(response.data.maxAttempts || 5);
+
         setFailedAttempts(response.data.failedAttempts || 0);
 
         if (response.data.locked) {
           setIsLocked(true);
+
           setLockCountdown(response.data.remainingSeconds || 0);
+
           setFailedAttempts(response.data.maxAttempts || 5);
         }
       } else {
         setEmailExists(false);
         setShowPasswordField(false);
-        setErrors({ ...errors, email: 'Ce profil n\'existe pas' });
+
+        setErrors({
+          ...errors,
+          email: "Ce profil n'existe pas"
+        });
       }
     } catch (error) {
       setIsCheckingEmail(false);
+
       setEmailExists(false);
+
       setShowPasswordField(false);
-      setErrors({ ...errors, email: 'Une erreur s\'est produite' });
+
+      setErrors({
+        ...errors,
+        email: "Une erreur s'est produite"
+      });
     }
   };
 
+  // =========================
+  // LOGIN SUBMIT
+  // =========================
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
     setErrors({});
 
     if (!email) {
-      setErrors(prev => ({ ...prev, email: 'Veuillez entrer votre email' }));
+      setErrors((prev) => ({
+        ...prev,
+        email: 'Veuillez entrer votre email'
+      }));
+
       return;
     }
 
     if (showPasswordField && !password) {
-      setErrors(prev => ({ ...prev, password: 'Veuillez entrer votre mot de passe' }));
+      setErrors((prev) => ({
+        ...prev,
+        password: 'Veuillez entrer votre mot de passe'
+      }));
+
       return;
     }
 
     if (!showPasswordField) {
       await handleEmailCheck();
+
       return;
     }
 
     if (isLocked) return;
 
     setIsLoggingIn(true);
+
     try {
-      const response = await axios.post(`${AUTH_BASE_URL}/api/auth/login`, { email, password });
+      const response = await axios.post(
+        `${AUTH_BASE_URL}/api/auth/login`,
+        {
+          email,
+          password
+        }
+      );
 
       if (response.data && response.data.token) {
-        // Reset attempts on success
         setFailedAttempts(0);
-        // Use the auth context login flow
-        const success = await login({ email, password });
+
+        const success = await login({
+          email,
+          password
+        });
+
         if (success) {
           navigate('/dashboard');
         }
@@ -173,36 +294,51 @@ const LoginPage: React.FC = () => {
       const data = error?.response?.data;
 
       if (status === 423) {
-        // Account locked
         setIsLocked(true);
+
         setLockCountdown(data.remainingSeconds || 0);
+
         setFailedAttempts(data.maxAttempts || maxAttempts);
+
         setMaxAttempts(data.maxAttempts || maxAttempts);
-      } else if (status === 401 && data?.failedAttempts !== undefined) {
+      } else if (
+        status === 401 &&
+        data?.failedAttempts !== undefined
+      ) {
         setFailedAttempts(data.failedAttempts);
+
         setMaxAttempts(data.maxAttempts || maxAttempts);
-        setErrors({ password: `Mot de passe incorrect (${data.failedAttempts}/${data.maxAttempts})` });
+
+        setErrors({
+          password: `Mot de passe incorrect (${data.failedAttempts}/${data.maxAttempts})`
+        });
       } else {
-        setErrors({ password: data?.message || 'Identifiants invalides' });
+        setErrors({
+          password: data?.message || 'Identifiants invalides'
+        });
       }
     } finally {
       setIsLoggingIn(false);
     }
   };
 
-  const [showPasswordChecker, setShowPasswordChecker] = useState(true);
+  // =========================
+  // PASSWORD VALIDITY
+  // =========================
 
   const handlePasswordValidityChange = (isValid: boolean) => {
     setIsPasswordValid(isValid);
-    if (isValid) setShowPasswordChecker(false);
-    else setShowPasswordChecker(true);
   };
+
+  // =========================
+  // LOADING
+  // =========================
 
   if (isLoggingIn) {
     return (
       <Layout>
         <PremiumLoading
-          text="Connexion en cours..."
+          text="Connexion sécurisée..."
           size="lg"
           overlay={true}
           variant="default"
@@ -216,326 +352,692 @@ const LoginPage: React.FC = () => {
   return (
     <Layout>
       <SEOHead
-        title="Connexion"
-        description="Connectez-vous à votre espace Gestion Vente. Accédez à vos ventes, stocks et comptabilité en toute sécurité."
+        title="Connexion Premium"
+        description="Connexion sécurisée à votre plateforme de gestion."
         canonical="https://riziky-boutic.vercel.app/login"
       />
-      <div className="min-h-screen relative flex items-center justify-center p-4 overflow-hidden">
-        {/* Ultra-luxe animated background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-purple-950 to-indigo-950" />
 
-        {/* Animated glassmorphism orbs */}
-        <div className="absolute inset-0 overflow-hidden">
+      {/* ================================================= */}
+      {/* MAIN CONTAINER */}
+      {/* ================================================= */}
+
+      <div className="relative min-h-screen overflow-hidden bg-[#030014] flex items-center justify-center px-4 py-10">
+
+        {/* ================================================= */}
+        {/* AURORA BACKGROUND */}
+        {/* ================================================= */}
+
+        <div className="absolute inset-0">
+
           <motion.div
-            animate={{ x: [0, 30, 0], y: [0, -20, 0], scale: [1, 1.1, 1] }}
-            transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/20 rounded-full blur-[100px]"
-          />
-          <motion.div
-            animate={{ x: [0, -40, 0], y: [0, 30, 0], scale: [1, 1.2, 1] }}
-            transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-blue-500/15 rounded-full blur-[120px]"
-          />
-          <motion.div
-            animate={{ x: [0, 20, 0], y: [0, 40, 0] }}
-            transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-r from-pink-500/10 to-violet-500/10 rounded-full blur-[100px]"
+            animate={{
+              x: [0, 100, -50, 0],
+              y: [0, -50, 50, 0],
+              scale: [1, 1.2, 1]
+            }}
+            transition={{
+              duration: 18,
+              repeat: Infinity,
+              ease: 'easeInOut'
+            }}
+            className="absolute top-0 left-0 w-[700px] h-[700px] rounded-full bg-fuchsia-500/20 blur-[160px]"
           />
 
-          {/* Floating particles */}
-          {[...Array(6)].map((_, i) => (
-            <motion.div
-              key={i}
-              animate={{ y: [0, -60, 0], opacity: [0.3, 0.7, 0.3] }}
-              transition={{ duration: 6 + i * 2, repeat: Infinity, delay: i * 0.8, ease: "easeInOut" }}
-              className="absolute w-1.5 h-1.5 bg-purple-300/40 rounded-full"
-              style={{ left: `${15 + i * 15}%`, top: `${20 + i * 10}%` }}
-            />
-          ))}
+          <motion.div
+            animate={{
+              x: [0, -120, 50, 0],
+              y: [0, 60, -30, 0],
+              scale: [1, 1.3, 1]
+            }}
+            transition={{
+              duration: 22,
+              repeat: Infinity,
+              ease: 'easeInOut'
+            }}
+            className="absolute bottom-0 right-0 w-[800px] h-[800px] rounded-full bg-cyan-500/20 blur-[180px]"
+          />
+
+          <motion.div
+            animate={{
+              rotate: [0, 360]
+            }}
+            transition={{
+              duration: 60,
+              repeat: Infinity,
+              ease: 'linear'
+            }}
+            className="absolute top-1/2 left-1/2 w-[900px] h-[900px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/[0.03]"
+          />
+
         </div>
 
-        {/* Grid pattern overlay */}
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:64px_64px]" />
+        {/* ================================================= */}
+        {/* GRID OVERLAY */}
+        {/* ================================================= */}
+
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.025)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.025)_1px,transparent_1px)] bg-[size:80px_80px]" />
+
+        {/* ================================================= */}
+        {/* FLOATING PARTICLES */}
+        {/* ================================================= */}
+
+        <div className="absolute inset-0 overflow-hidden">
+
+          {[...Array(14)].map((_, i) => (
+            <motion.div
+              key={i}
+              animate={{
+                y: [0, -60, 0],
+                opacity: [0.2, 0.7, 0.2]
+              }}
+              transition={{
+                duration: 6 + i,
+                repeat: Infinity,
+                delay: i * 0.5
+              }}
+              className="absolute w-1.5 h-1.5 rounded-full bg-white/40"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`
+              }}
+            />
+          ))}
+
+        </div>
+
+        {/* ================================================= */}
+        {/* CONTENT */}
+        {/* ================================================= */}
 
         <motion.div
-          initial={{ opacity: 0, y: 40, scale: 0.95 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-          className="relative w-full max-w-5xl z-10 flex flex-col lg:flex-row items-center gap-8 lg:gap-16"
+          initial={{
+            opacity: 0,
+            y: 40
+          }}
+          animate={{
+            opacity: 1,
+            y: 0
+          }}
+          transition={{
+            duration: 0.8
+          }}
+          className="relative z-10 w-full max-w-7xl flex flex-col lg:flex-row gap-16 items-center"
         >
-          {/* LEFT SIDE — Project description */}
+
+          {/* ================================================= */}
+          {/* LEFT SIDE */}
+          {/* ================================================= */}
+
           <motion.div
-            initial={{ opacity: 0, x: -40 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            className="flex-1 text-center lg:text-left max-w-md"
+            initial={{
+              opacity: 0,
+              x: -40
+            }}
+            animate={{
+              opacity: 1,
+              x: 0
+            }}
+            transition={{
+              duration: 0.8,
+              delay: 0.2
+            }}
+            className="flex-1"
           >
-            <h1 className="text-4xl lg:text-5xl font-black text-white mb-4 leading-tight">
-              Gestion des <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent">Ventes</span>
+
+            {/* PREMIUM BADGE */}
+
+            <motion.div
+              whileHover={{
+                scale: 1.04
+              }}
+              className="inline-flex items-center gap-3 px-5 py-2 rounded-full border border-white/10 bg-white/[0.05] backdrop-blur-xl mb-8"
+            >
+              <Gem className="w-4 h-4 text-fuchsia-400" />
+
+              <span className="text-sm font-semibold text-white/80">
+                Premium Business Suite
+              </span>
+            </motion.div>
+
+            {/* TITLE */}
+
+            <h1 className="text-5xl md:text-7xl font-black leading-[0.95] tracking-tight text-white">
+
+              Gérez votre
+
+              <span className="block mt-2 bg-gradient-to-r from-fuchsia-400 via-cyan-300 to-blue-400 bg-clip-text text-transparent">
+                Business
+              </span>
+
+              <span className="block mt-2">
+                avec élégance
+              </span>
+
             </h1>
-            <p className="text-lg text-purple-200/60 mb-8 leading-relaxed">
-              Gérez vos ventes, produits, clients et comptabilité en toute simplicité. Un tableau de bord complet pour piloter votre activité.
+
+            {/* DESCRIPTION */}
+
+            <p className="mt-8 text-lg md:text-xl leading-relaxed text-white/55 max-w-2xl">
+              Une expérience premium de gestion moderne :
+              ventes, produits, clients, comptabilité,
+              statistiques intelligentes et sécurité avancée.
             </p>
 
-            <div className="grid grid-cols-2 gap-4">
+            {/* FEATURES */}
+
+            <div className="grid grid-cols-2 gap-5 mt-12">
+
               {[
-                { icon: BarChart3, label: 'Tableau de bord', desc: 'Statistiques en temps réel' },
-                { icon: Users, label: 'Clients', desc: 'Gestion complète' },
-                { icon: Package, label: 'Produits', desc: 'Stock & inventaire' },
-                { icon: TrendingUp, label: 'Comptabilité', desc: 'Bénéfices & dépenses' },
-              ].map((item, i) => (
+                {
+                  icon: BarChart3,
+                  title: 'Analytics',
+                  desc: 'Tableaux intelligents'
+                },
+                {
+                  icon: Users,
+                  title: 'Clients',
+                  desc: 'Gestion moderne'
+                },
+                {
+                  icon: Package,
+                  title: 'Produits',
+                  desc: 'Stock en temps réel'
+                },
+                {
+                  icon: TrendingUp,
+                  title: 'Finance',
+                  desc: 'Comptabilité avancée'
+                },
+                {
+                  icon: ShieldCheck,
+                  title: 'Sécurité',
+                  desc: 'Protection premium'
+                },
+                {
+                  icon: Globe,
+                  title: 'Cloud',
+                  desc: 'Accessible partout'
+                }
+              ].map((item, index) => (
                 <motion.div
-                  key={i}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4 + i * 0.1 }}
-                  className="p-3 bg-white/[0.04] border border-white/[0.08] rounded-xl backdrop-blur-sm"
+                  key={index}
+                  whileHover={{
+                    y: -6,
+                    scale: 1.02
+                  }}
+                  className="group relative overflow-hidden rounded-3xl border border-white/[0.08] bg-white/[0.04] p-5 backdrop-blur-xl"
                 >
-                  <item.icon className="h-5 w-5 text-purple-400 mb-1.5" />
-                  <p className="text-sm font-bold text-white/90">{item.label}</p>
-                  <p className="text-xs text-white/40">{item.desc}</p>
+
+                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition duration-500 bg-gradient-to-br from-fuchsia-500/10 to-cyan-500/10" />
+
+                  <div className="relative">
+
+                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-fuchsia-500/20 to-cyan-500/20 border border-white/10 flex items-center justify-center mb-4">
+                      <item.icon className="w-6 h-6 text-white" />
+                    </div>
+
+                    <h3 className="text-white font-bold text-lg">
+                      {item.title}
+                    </h3>
+
+                    <p className="text-white/45 text-sm mt-1">
+                      {item.desc}
+                    </p>
+
+                  </div>
+
                 </motion.div>
               ))}
+
             </div>
+
           </motion.div>
 
-          {/* RIGHT SIDE — Login form */}
-          <div className="relative w-full max-w-md">
-            <div className="absolute -inset-4 bg-gradient-to-r from-purple-600/20 via-pink-600/20 to-blue-600/20 rounded-[2rem] blur-2xl" />
+          {/* ================================================= */}
+          {/* RIGHT SIDE LOGIN CARD */}
+          {/* ================================================= */}
 
-            <Card className="relative bg-white/[0.08] backdrop-blur-2xl border border-white/[0.12] shadow-[0_32px_64px_rgba(0,0,0,0.4)] rounded-3xl overflow-hidden">
-              <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-purple-400/50 to-transparent" />
+          <motion.div
+            initial={{
+              opacity: 0,
+              x: 40
+            }}
+            animate={{
+              opacity: 1,
+              x: 0
+            }}
+            transition={{
+              duration: 0.8,
+              delay: 0.3
+            }}
+            className="w-full max-w-lg relative"
+          >
 
-              <CardHeader className="text-center pb-8 pt-10">
+            {/* OUTER GLOW */}
+
+            <div className="absolute -inset-6 rounded-[40px] bg-gradient-to-r from-fuchsia-500/20 via-cyan-500/20 to-blue-500/20 blur-3xl" />
+
+            <Card className="relative overflow-hidden rounded-[36px] border border-white/[0.08] bg-white/[0.06] backdrop-blur-[40px] shadow-[0_20px_80px_rgba(0,0,0,0.65)]">
+
+              {/* TOP BORDER */}
+
+              <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/40 to-transparent" />
+
+              {/* ================================================= */}
+              {/* HEADER */}
+              {/* ================================================= */}
+
+              <CardHeader className="pt-10 pb-8 text-center">
+
+                {/* ICON */}
+
                 <motion.div
-                  initial={{ scale: 0, rotate: -180 }}
-                  animate={{ scale: 1, rotate: 0 }}
-                  transition={{ duration: 0.6, type: "spring", bounce: 0.4 }}
+                  initial={{
+                    scale: 0,
+                    rotate: -180
+                  }}
+                  animate={{
+                    scale: 1,
+                    rotate: 0
+                  }}
+                  transition={{
+                    type: 'spring',
+                    bounce: 0.4,
+                    duration: 0.8
+                  }}
                   className="flex justify-center mb-6"
                 >
+
                   <div className="relative">
-                    <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl blur-xl opacity-50" />
-                    <div className="relative w-20 h-20 bg-gradient-to-br from-purple-500 via-pink-500 to-blue-500 rounded-2xl flex items-center justify-center shadow-2xl border border-white/20">
-                      <Fingerprint className="h-10 w-10 text-white drop-shadow-lg" />
+
+                    <div className="absolute inset-0 rounded-[30px] bg-gradient-to-r from-fuchsia-500 to-cyan-500 blur-2xl opacity-50" />
+
+                    <div className="relative w-24 h-24 rounded-[28px] bg-gradient-to-br from-fuchsia-500 via-violet-500 to-cyan-500 flex items-center justify-center border border-white/20 shadow-[0_10px_40px_rgba(217,70,239,0.5)]">
+
+                      <Fingerprint className="w-11 h-11 text-white" />
+
                     </div>
+
                     <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                      className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-r from-yellow-400 to-amber-400 rounded-full flex items-center justify-center shadow-lg"
+                      animate={{
+                        rotate: 360
+                      }}
+                      transition={{
+                        duration: 12,
+                        repeat: Infinity,
+                        ease: 'linear'
+                      }}
+                      className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-gradient-to-r from-yellow-400 to-orange-400 flex items-center justify-center"
                     >
-                      <Crown className="h-3 w-3 text-white" />
+                      <Crown className="w-4 h-4 text-white" />
                     </motion.div>
+
                   </div>
+
                 </motion.div>
 
-                <CardTitle className="text-3xl font-bold text-white drop-shadow-lg">
+                <CardTitle className="text-4xl font-black text-white tracking-tight">
                   Connexion
                 </CardTitle>
-                <CardDescription className="text-purple-200/70 text-base mt-2">
-                  Accédez à votre espace personnel sécurisé
+
+                <CardDescription className="mt-3 text-base text-white/55">
+                  Authentification sécurisée premium
                 </CardDescription>
 
-                <div className="flex items-center justify-center gap-4 mt-4">
-                  <div className="flex items-center gap-1.5 text-xs text-purple-300/60">
-                    <Shield className="h-3 w-3" />
-                    <span>Sécurisé</span>
-                  </div>
-                  <div className="w-1 h-1 bg-purple-400/30 rounded-full" />
-                  <div className="flex items-center gap-1.5 text-xs text-purple-300/60">
-                    <KeyRound className="h-3 w-3" />
-                    <span>Chiffré</span>
-                  </div>
+                {/* SECURITY BADGES */}
+
+                <div className="flex items-center justify-center gap-4 mt-6">
+
+                  {[
+                    {
+                      icon: Shield,
+                      text: 'Sécurisé'
+                    },
+                    {
+                      icon: Zap,
+                      text: 'Ultra rapide'
+                    },
+                    {
+                      icon: KeyRound,
+                      text: 'Chiffré'
+                    }
+                  ].map((item, i) => (
+                    <div
+                      key={i}
+                      className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.04] border border-white/[0.08]"
+                    >
+                      <item.icon className="w-3.5 h-3.5 text-fuchsia-400" />
+
+                      <span className="text-xs text-white/70 font-medium">
+                        {item.text}
+                      </span>
+                    </div>
+                  ))}
+
                 </div>
+
               </CardHeader>
 
+              {/* ================================================= */}
+              {/* FORM */}
+              {/* ================================================= */}
+
               <form onSubmit={handleSubmit}>
-                <CardContent className="space-y-6 px-8">
+
+                <CardContent className="space-y-7 px-8">
+
+                  {/* EMAIL */}
+
                   <div className="space-y-3">
-                    <Label htmlFor="email" className="text-sm font-semibold text-purple-200/80 flex items-center gap-2">
-                      <Mail className="h-4 w-4 text-purple-400" />
+
+                    <Label className="text-sm font-semibold text-white/75 flex items-center gap-2">
+                      <Mail className="w-4 h-4 text-fuchsia-400" />
                       Adresse email
                     </Label>
+
                     <div className="relative group">
-                      <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-500/30 to-pink-500/30 rounded-xl blur opacity-0 group-focus-within:opacity-100 transition-opacity duration-300" />
+
+                      <div className="absolute -inset-[1px] rounded-2xl bg-gradient-to-r from-fuchsia-500/40 to-cyan-500/40 opacity-0 blur transition duration-500 group-focus-within:opacity-100" />
+
                       <Input
                         id="email"
                         type="email"
                         placeholder="exemple@email.com"
                         value={email}
+                        disabled={
+                          isCheckingEmail || showPasswordField
+                        }
+                        onBlur={handleEmailCheck}
                         onChange={(e) => {
                           setEmail(e.target.value);
+
                           setShowPasswordField(false);
+
                           setEmailExists(false);
+
                           setFailedAttempts(0);
+
                           setIsLocked(false);
+
                           setLockCountdown(0);
-                          if (errors.email) setErrors({ ...errors, email: undefined });
+
+                          if (errors.email) {
+                            setErrors({
+                              ...errors,
+                              email: undefined
+                            });
+                          }
                         }}
-                        onBlur={handleEmailCheck}
-                        disabled={isCheckingEmail || showPasswordField}
-                        className={`relative h-14 bg-white/[0.06] border-white/[0.1] text-white placeholder:text-purple-300/30 rounded-xl transition-all duration-300 focus:bg-white/[0.1] focus:border-purple-400/50 ${
-                          errors.email ? "border-red-400/50 focus:border-red-400/50" : ""
+                        className={`relative h-16 rounded-2xl border border-white/[0.08] bg-white/[0.05] text-white placeholder:text-white/25 backdrop-blur-xl focus:border-fuchsia-400/50 focus:bg-white/[0.08] transition-all duration-300 ${
+                          errors.email
+                            ? 'border-red-400/50'
+                            : ''
                         }`}
                       />
+
                     </div>
+
                     {errors.email && (
-                      <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-2 text-red-400 text-sm">
-                        <div className="w-1.5 h-1.5 bg-red-400 rounded-full" />
+                      <motion.div
+                        initial={{
+                          opacity: 0,
+                          y: -5
+                        }}
+                        animate={{
+                          opacity: 1,
+                          y: 0
+                        }}
+                        className="flex items-center gap-2 text-sm text-red-400"
+                      >
+                        <AlertTriangle className="w-4 h-4" />
+
                         {errors.email}
                       </motion.div>
                     )}
+
                     {emailExists && (
-                      <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-2 text-emerald-400 text-sm">
-                        <Sparkles className="h-4 w-4" />
+                      <motion.div
+                        initial={{
+                          opacity: 0,
+                          y: -5
+                        }}
+                        animate={{
+                          opacity: 1,
+                          y: 0
+                        }}
+                        className="flex items-center gap-2 text-sm text-emerald-400"
+                      >
+                        <CheckCircle2 className="w-4 h-4" />
+
                         Bienvenue {userName}
                       </motion.div>
                     )}
+
                   </div>
 
-                  {showPasswordField && (
-                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} transition={{ duration: 0.3 }} className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <Label htmlFor="password" className="text-sm font-semibold text-purple-200/80">
-                          Mot de passe
-                        </Label>
-                        {/* Attempt counter */}
-                        {failedAttempts > 0 && (
-                          <motion.div
-                            initial={{ opacity: 0, scale: 0.8 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            className={`flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full border backdrop-blur-sm ${
-                              isLocked
-                                ? 'bg-red-500/20 border-red-400/30 text-red-300'
-                                : remainingAttempts <= 2
-                                  ? 'bg-orange-500/20 border-orange-400/30 text-orange-300'
-                                  : 'bg-yellow-500/20 border-yellow-400/30 text-yellow-300'
-                            }`}
-                          >
-                            <Shield className="w-3 h-3" />
-                            {failedAttempts}/{maxAttempts}
-                          </motion.div>
-                        )}
-                      </div>
+                  {/* ================================================= */}
+                  {/* PASSWORD */}
+                  {/* ================================================= */}
 
-                      {/* Lockout banner */}
+                  {showPasswordField && (
+                    <motion.div
+                      initial={{
+                        opacity: 0,
+                        height: 0
+                      }}
+                      animate={{
+                        opacity: 1,
+                        height: 'auto'
+                      }}
+                      transition={{
+                        duration: 0.4
+                      }}
+                      className="space-y-4"
+                    >
+
+                      {/* ATTEMPTS */}
+
+                      {failedAttempts > 0 && !isLocked && (
+                        <div className="flex items-center justify-between">
+
+                          <div className="flex items-center gap-2 text-sm text-orange-300">
+                            <Shield className="w-4 h-4" />
+
+                            Tentatives :
+                            {failedAttempts}/{maxAttempts}
+                          </div>
+
+                          <div className="flex gap-1.5">
+
+                            {Array.from({
+                              length: maxAttempts
+                            }).map((_, i) => (
+                              <div
+                                key={i}
+                                className={`w-2.5 h-2.5 rounded-full ${
+                                  i < failedAttempts
+                                    ? 'bg-red-400 shadow-[0_0_10px_rgba(248,113,113,0.8)]'
+                                    : 'bg-white/15'
+                                }`}
+                              />
+                            ))}
+
+                          </div>
+
+                        </div>
+                      )}
+
+                      {/* LOCK BANNER */}
+
                       {isLocked && lockCountdown > 0 && (
                         <motion.div
-                          initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                          animate={{ opacity: 1, y: 0, scale: 1 }}
-                          className="relative rounded-xl overflow-hidden"
+                          initial={{
+                            opacity: 0,
+                            scale: 0.95
+                          }}
+                          animate={{
+                            opacity: 1,
+                            scale: 1
+                          }}
+                          className="relative overflow-hidden rounded-3xl border border-red-400/25 bg-red-500/10 p-5 backdrop-blur-2xl"
                         >
-                          <div className="absolute inset-0 bg-gradient-to-r from-red-600/30 via-rose-600/30 to-red-600/30 backdrop-blur-xl" />
-                          <div className="relative p-4 border border-red-400/30 rounded-xl">
-                            <div className="flex items-center gap-3 mb-3">
-                              <div className="w-10 h-10 rounded-xl bg-red-500/20 border border-red-400/30 flex items-center justify-center">
-                                <Lock className="w-5 h-5 text-red-300" />
+
+                          <div className="absolute inset-0 bg-gradient-to-r from-red-500/10 to-rose-500/10" />
+
+                          <div className="relative">
+
+                            <div className="flex items-center gap-4 mb-4">
+
+                              <div className="w-14 h-14 rounded-2xl bg-red-500/20 border border-red-400/20 flex items-center justify-center">
+                                <Lock className="w-6 h-6 text-red-300" />
                               </div>
+
                               <div>
-                                <p className="text-sm font-bold text-red-200">Compte temporairement bloqué</p>
-                                <p className="text-xs text-red-300/70">Trop de tentatives échouées</p>
+
+                                <h3 className="text-red-200 font-bold text-lg">
+                                  Compte bloqué
+                                </h3>
+
+                                <p className="text-red-300/70 text-sm">
+                                  Trop de tentatives échouées
+                                </p>
+
                               </div>
+
                             </div>
+
                             <div className="flex items-center justify-center gap-3">
-                              <Timer className="w-5 h-5 text-red-300" />
-                              <div className="text-3xl font-mono font-black text-transparent bg-clip-text bg-gradient-to-r from-red-300 via-rose-200 to-red-300 tracking-widest">
+
+                              <Timer className="w-6 h-6 text-red-300" />
+
+                              <div className="text-4xl font-black font-mono tracking-widest bg-gradient-to-r from-red-200 via-white to-red-200 bg-clip-text text-transparent">
                                 {formatCountdown(lockCountdown)}
                               </div>
+
                             </div>
-                            {/* Progress bar */}
-                            <div className="mt-3 h-1 rounded-full bg-red-900/50 overflow-hidden">
-                              <motion.div
-                                className="h-full bg-gradient-to-r from-red-400 to-rose-400 rounded-full"
-                                initial={{ width: '100%' }}
-                                animate={{ width: '0%' }}
-                                transition={{ duration: lockCountdown, ease: 'linear' }}
-                              />
-                            </div>
+
                           </div>
+
                         </motion.div>
                       )}
+
+                      {/* PASSWORD INPUT */}
 
                       <PasswordInput
                         id="password"
                         placeholder="••••••••"
                         value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        error={errors.password}
                         disabled={isLocked}
-                        className={`h-14 bg-white/[0.06] border-white/[0.1] text-white rounded-xl ${isLocked ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        error={errors.password}
+                        onChange={(e) =>
+                          setPassword(e.target.value)
+                        }
+                        className="h-16 rounded-2xl border border-white/[0.08] bg-white/[0.05] text-white backdrop-blur-xl"
                       />
 
-                      {/* Attempt progress dots */}
-                      {showPasswordField && maxAttempts > 0 && failedAttempts > 0 && !isLocked && (
-                        <motion.div
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          className="flex items-center justify-center gap-1.5"
-                        >
-                          {Array.from({ length: maxAttempts }).map((_, i) => (
-                            <div
-                              key={i}
-                              className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                                i < failedAttempts
-                                  ? 'bg-red-400 shadow-[0_0_6px_rgba(248,113,113,0.5)]'
-                                  : 'bg-white/20'
-                              }`}
-                            />
-                          ))}
-                        </motion.div>
-                      )}
+                      {/* PASSWORD CHECKER */}
 
                       {!isLocked && (
-                        <PasswordStrengthChecker password={password} onValidityChange={handlePasswordValidityChange} />
+                        <PasswordStrengthChecker
+                          password={password}
+                          onValidityChange={
+                            handlePasswordValidityChange
+                          }
+                        />
                       )}
 
-                      <div className="text-sm text-right">
-                        <Link to="/reset-password" className="text-purple-400 hover:text-purple-300 font-medium hover:underline transition-colors">
-                          Mot de passe oublié?
+                      {/* FORGOT */}
+
+                      <div className="text-right">
+
+                        <Link
+                          to="/reset-password"
+                          className="text-sm font-medium text-fuchsia-400 hover:text-fuchsia-300 transition"
+                        >
+                          Mot de passe oublié ?
                         </Link>
+
                       </div>
+
                     </motion.div>
                   )}
+
                 </CardContent>
 
-                <CardFooter className="flex flex-row gap-3 px-8 pb-10">
+                {/* ================================================= */}
+                {/* FOOTER */}
+                {/* ================================================= */}
+
+                <CardFooter className="flex flex-col gap-4 px-8 pb-10 pt-2">
+
+                  {/* LOGIN BUTTON */}
+
                   <Button
                     type="submit"
-                    className="flex-1 h-14 bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 hover:from-purple-500 hover:via-pink-500 hover:to-blue-500 text-white font-bold text-base rounded-xl shadow-[0_20px_40px_rgba(139,92,246,0.3)] hover:shadow-[0_25px_50px_rgba(139,92,246,0.4)] transform hover:scale-[1.02] transition-all duration-300 border border-white/10"
-                    disabled={isCheckingEmail || (showPasswordField && !isPasswordValid) || isLocked}
+                    disabled={
+                      isCheckingEmail ||
+                      (showPasswordField &&
+                        !isPasswordValid) ||
+                      isLocked
+                    }
+                    className="group relative w-full overflow-hidden h-16 rounded-2xl bg-gradient-to-r from-fuchsia-600 via-violet-600 to-cyan-600 text-white font-bold text-lg shadow-[0_15px_50px_rgba(168,85,247,0.45)] hover:scale-[1.02] transition-all duration-300"
                   >
+
+                    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition duration-500 bg-[linear-gradient(110deg,transparent,rgba(255,255,255,0.25),transparent)] translate-x-[-200%] group-hover:translate-x-[200%]" />
+
                     {isCheckingEmail ? (
                       <>
-                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
+                        <div className="w-5 h-5 mr-3 rounded-full border-2 border-white/30 border-t-white animate-spin" />
                         Vérification...
                       </>
                     ) : showPasswordField ? (
                       <>
-                        <Lock className="h-5 w-5 mr-2" />
+                        <Lock className="w-5 h-5 mr-3" />
                         Se connecter
                       </>
                     ) : (
                       <>
-                        <ArrowRight className="h-5 w-5 mr-2" />
+                        <ArrowRight className="w-5 h-5 mr-3" />
                         Continuer
                       </>
                     )}
+
                   </Button>
 
-                  <Link to="/register" className="flex-1">
+                  {/* REGISTER BUTTON */}
+
+                  <Link
+                    to="/register"
+                    className="w-full"
+                  >
+
                     <Button
                       type="button"
-                      className="w-full h-14 bg-white/[0.08] hover:bg-white/[0.15] text-white font-bold text-base rounded-xl border border-white/[0.12] hover:border-white/[0.2] shadow-lg transition-all duration-300 hover:scale-[1.02] backdrop-blur-sm"
+                      className="w-full h-16 rounded-2xl border border-white/[0.08] bg-white/[0.05] text-white hover:bg-white/[0.08] backdrop-blur-xl transition-all duration-300 hover:scale-[1.02]"
                     >
+
+                      <Rocket className="w-5 h-5 mr-3 text-cyan-300" />
+
                       Créer un compte
+
                     </Button>
+
                   </Link>
+
                 </CardFooter>
+
               </form>
 
-              <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-blue-400/30 to-transparent" />
+              {/* BOTTOM GLOW */}
+
+              <div className="absolute inset-x-0 bottom-0 h-[1px] bg-gradient-to-r from-transparent via-cyan-400/40 to-transparent" />
+
             </Card>
-          </div>
+
+          </motion.div>
+
         </motion.div>
+
       </div>
     </Layout>
   );
