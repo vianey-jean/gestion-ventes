@@ -1,10 +1,35 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Shield, CheckCircle, Loader2, AlertTriangle, Lock, Sparkles, Fingerprint } from 'lucide-react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import {
+  Shield,
+  CheckCircle,
+  Loader2,
+  AlertTriangle,
+  Lock,
+  Sparkles,
+  Fingerprint,
+  Eye,
+  Cpu,
+  ScanFace,
+  Radar,
+  Orbit,
+  ShieldCheck,
+  Activity,
+  MousePointer2,
+} from 'lucide-react';
+
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface SecurityCheckPageProps {
   onVerified: () => void;
 }
+
+type Phase =
+  | 'boot'
+  | 'checking'
+  | 'challenge'
+  | 'verifying'
+  | 'passed'
+  | 'failed';
 
 const images = [
   "https://images.unsplash.com/photo-1506744038136-46273834b3fb",
@@ -18,22 +43,65 @@ const images = [
   "https://images.unsplash.com/photo-1469474968028-56623f02e42e",
 ];
 
-const Star = ({ type = "fixed", glow = false }: { type?: "fixed" | "moving"; glow?: boolean }) => {
+const MAX_TRAIL = 14;
+
+const Star = ({
+  type = "fixed",
+  glow = false,
+}: {
+  type?: "fixed" | "moving";
+  glow?: boolean;
+}) => {
   const isMoving = type === "moving";
 
   return (
     <div className="relative">
       {glow && (
-        <div className={`absolute inset-0 blur-md ${isMoving ? 'bg-rose-500/60' : 'bg-white/40'} rounded-full`} />
+        <>
+          <div
+            className={`absolute inset-0 rounded-full blur-2xl ${
+              isMoving ? 'bg-rose-500/50' : 'bg-white/40'
+            }`}
+          />
+          <div
+            className={`absolute inset-0 rounded-full blur-md ${
+              isMoving ? 'bg-red-500/40' : 'bg-slate-200/30'
+            }`}
+          />
+        </>
       )}
-      <svg width="48" height="48" viewBox="0 0 24 24" className="relative drop-shadow-2xl">
+
+      <motion.svg
+        animate={
+          isMoving
+            ? {
+                rotate: [0, 4, -4, 0],
+                scale: [1, 1.04, 1],
+              }
+            : {}
+        }
+        transition={{
+          duration: 3,
+          repeat: Infinity,
+        }}
+        width="54"
+        height="54"
+        viewBox="0 0 24 24"
+        className="relative drop-shadow-[0_0_30px_rgba(255,255,255,0.35)]"
+      >
         <defs>
-          <linearGradient id={isMoving ? "redGrad" : "whiteGrad"} x1="0%" y1="0%" x2="100%" y2="100%">
+          <linearGradient
+            id={isMoving ? 'redGrad' : 'whiteGrad'}
+            x1="0%"
+            y1="0%"
+            x2="100%"
+            y2="100%"
+          >
             {isMoving ? (
               <>
-                <stop offset="0%" stopColor="#ff6b8a" />
-                <stop offset="50%" stopColor="#ef4444" />
-                <stop offset="100%" stopColor="#b91c1c" />
+                <stop offset="0%" stopColor="#ff8fab" />
+                <stop offset="40%" stopColor="#ef4444" />
+                <stop offset="100%" stopColor="#7f1d1d" />
               </>
             ) : (
               <>
@@ -43,122 +111,268 @@ const Star = ({ type = "fixed", glow = false }: { type?: "fixed" | "moving"; glo
             )}
           </linearGradient>
         </defs>
+
         <path
           d="M12 2 L15 9 L22 9 L17 14 L19 22 L12 18 L5 22 L7 14 L2 9 L9 9 Z"
-          fill={`url(#${isMoving ? "redGrad" : "whiteGrad"})`}
-          stroke={isMoving ? "#fecaca" : "#f1f5f9"}
+          fill={`url(#${isMoving ? 'redGrad' : 'whiteGrad'})`}
+          stroke={isMoving ? '#ffe4e6' : '#f8fafc'}
           strokeWidth="1"
         />
-      </svg>
+      </motion.svg>
     </div>
   );
 };
 
-const SecurityCheckPage: React.FC<SecurityCheckPageProps> = ({ onVerified }) => {
-  const [phase, setPhase] = useState<'checking' | 'challenge' | 'verifying' | 'passed' | 'failed'>('checking');
+const Metric = ({
+  icon,
+  label,
+  value,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+}) => {
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-3">
+      <div className="flex items-center gap-2 text-white/50 text-[10px] uppercase tracking-[0.2em]">
+        {icon}
+        {label}
+      </div>
+
+      <p className="mt-2 text-white text-sm font-semibold">{value}</p>
+    </div>
+  );
+};
+
+const SecurityCheckPage: React.FC<SecurityCheckPageProps> = ({
+  onVerified,
+}) => {
+  const [phase, setPhase] = useState<Phase>('boot');
 
   const [image, setImage] = useState("");
   const [targetX, setTargetX] = useState(0);
   const [targetY, setTargetY] = useState(0);
+
   const [starX, setStarX] = useState(20);
   const [starY, setStarY] = useState(20);
-  const [isDragging, setIsDragging] = useState(false);
 
+  const [isDragging, setIsDragging] = useState(false);
   const [isOverTarget, setIsOverTarget] = useState(false);
   const [verifiedPuzzle, setVerifiedPuzzle] = useState(false);
+
   const [checked, setChecked] = useState(false);
-  const [honeypot, setHoneypot] = useState(""); // anti-bot honeypot
+
+  const [securityScore, setSecurityScore] = useState(0);
+  const [networkQuality, setNetworkQuality] = useState("SECURE");
+  const [motionTrail, setMotionTrail] = useState<
+    { x: number; y: number }[]
+  >([]);
+
+  const [honeypot, setHoneypot] = useState("");
+  const [timingVariance, setTimingVariance] = useState(0);
 
   const startTime = useRef(Date.now());
   const moveCount = useRef(0);
+
   const lastMoveTime = useRef(Date.now());
-  const containerRef = useRef<HTMLDivElement>(null);
-  const dragStartOffset = useRef({ x: 0, y: 0 });
+  const movementIntervals = useRef<number[]>([]);
+
   const entropyRef = useRef(0);
+  const pathLengthRef = useRef(0);
+
   const lastPosRef = useRef({ x: 0, y: 0 });
 
-  const generateChallenge = () => {
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const dragStartOffset = useRef({ x: 0, y: 0 });
+
+  const velocitySamples = useRef<number[]>([]);
+
+  const challengeId = useMemo(
+    () => Math.random().toString(36).slice(2, 12).toUpperCase(),
+    []
+  );
+
+  const generateChallenge = useCallback(() => {
     const img = images[Math.floor(Math.random() * images.length)];
-    setImage(img + "?w=800&q=80");
+
+    setImage(img + "?w=1200&q=90");
 
     setTargetX(Math.floor(Math.random() * 220) + 40);
-    setTargetY(Math.floor(Math.random() * 100) + 30);
+    setTargetY(Math.floor(Math.random() * 90) + 40);
 
     setStarX(Math.floor(Math.random() * 40) + 5);
-    setStarY(Math.floor(Math.random() * 60) + 80);
+    setStarY(Math.floor(Math.random() * 60) + 110);
 
     setVerifiedPuzzle(false);
     setChecked(false);
     setIsOverTarget(false);
 
+    setMotionTrail([]);
+
     moveCount.current = 0;
     entropyRef.current = 0;
+    pathLengthRef.current = 0;
+    velocitySamples.current = [];
+    movementIntervals.current = [];
+
     startTime.current = Date.now();
-  };
+
+    setSecurityScore(0);
+  }, []);
 
   useEffect(() => {
     generateChallenge();
-  }, []);
 
-  useEffect(() => {
-    const timer = setTimeout(() => setPhase('challenge'), 1500);
-    return () => clearTimeout(timer);
-  }, []);
+    const boot = setTimeout(() => {
+      setPhase('checking');
+    }, 800);
 
-  const checkOverlap = useCallback((x: number, y: number) => {
-    const dist = Math.sqrt(Math.pow(x - targetX, 2) + Math.pow(y - targetY, 2));
+    const challenge = setTimeout(() => {
+      setPhase('challenge');
+    }, 2400);
 
-    if (dist < 15) {
-      setIsOverTarget(true);
-      setStarX(targetX);
-      setStarY(targetY);
-    } else {
-      setIsOverTarget(false);
-      setVerifiedPuzzle(false);
+    return () => {
+      clearTimeout(boot);
+      clearTimeout(challenge);
+    };
+  }, [generateChallenge]);
+
+  const getRelativePosition = (
+    clientX: number,
+    clientY: number
+  ) => {
+    if (!containerRef.current) {
+      return { x: 0, y: 0 };
     }
-  }, [targetX, targetY]);
 
-  const getRelativePosition = (clientX: number, clientY: number) => {
-    if (!containerRef.current) return { x: 0, y: 0 };
     const rect = containerRef.current.getBoundingClientRect();
+
     return {
-      x: Math.max(0, Math.min(rect.width - 50, clientX - rect.left - dragStartOffset.current.x)),
-      y: Math.max(0, Math.min(rect.height - 50, clientY - rect.top - dragStartOffset.current.y)),
+      x: Math.max(
+        0,
+        Math.min(
+          rect.width - 55,
+          clientX - rect.left - dragStartOffset.current.x
+        )
+      ),
+
+      y: Math.max(
+        0,
+        Math.min(
+          rect.height - 55,
+          clientY - rect.top - dragStartOffset.current.y
+        )
+      ),
     };
   };
 
-  const handleDragStart = (clientX: number, clientY: number) => {
+  const checkOverlap = useCallback(
+    (x: number, y: number) => {
+      const dist = Math.sqrt(
+        Math.pow(x - targetX, 2) +
+          Math.pow(y - targetY, 2)
+      );
+
+      if (dist < 18) {
+        setIsOverTarget(true);
+        setStarX(targetX);
+        setStarY(targetY);
+      } else {
+        setIsOverTarget(false);
+      }
+    },
+    [targetX, targetY]
+  );
+
+  const handleDragStart = (
+    clientX: number,
+    clientY: number
+  ) => {
     if (!containerRef.current) return;
-    const rect = containerRef.current.getBoundingClientRect();
+
+    const rect =
+      containerRef.current.getBoundingClientRect();
+
     const relX = clientX - rect.left;
     const relY = clientY - rect.top;
 
-    if (Math.abs(relX - starX - 25) < 30 && Math.abs(relY - starY - 25) < 30) {
+    if (
+      Math.abs(relX - starX - 25) < 35 &&
+      Math.abs(relY - starY - 25) < 35
+    ) {
       setIsDragging(true);
-      dragStartOffset.current = { x: relX - starX, y: relY - starY };
+
+      dragStartOffset.current = {
+        x: relX - starX,
+        y: relY - starY,
+      };
     }
   };
 
-  const handleDragMove = (clientX: number, clientY: number) => {
+  const handleDragMove = (
+    clientX: number,
+    clientY: number
+  ) => {
     if (!isDragging) return;
 
     const now = Date.now();
+
     moveCount.current++;
+
     const delta = now - lastMoveTime.current;
+
     lastMoveTime.current = now;
 
-    if (delta < 3) return;
+    movementIntervals.current.push(delta);
+
+    if (movementIntervals.current.length > 20) {
+      movementIntervals.current.shift();
+    }
 
     const pos = getRelativePosition(clientX, clientY);
-    // entropy: accumulate non-linear motion
+
     const dx = pos.x - lastPosRef.current.x;
     const dy = pos.y - lastPosRef.current.y;
-    entropyRef.current += Math.abs(dx) + Math.abs(dy);
+
+    const velocity = Math.sqrt(dx * dx + dy * dy);
+
+    velocitySamples.current.push(velocity);
+
+    pathLengthRef.current += velocity;
+
+    entropyRef.current +=
+      Math.abs(dx) +
+      Math.abs(dy) +
+      Math.random() * 0.4;
+
     lastPosRef.current = pos;
 
     setStarX(pos.x);
     setStarY(pos.y);
+
+    setMotionTrail((prev) => {
+      const next = [...prev, { x: pos.x, y: pos.y }];
+
+      return next.slice(-MAX_TRAIL);
+    });
+
     checkOverlap(pos.x, pos.y);
+
+    const avg =
+      movementIntervals.current.reduce(
+        (a, b) => a + b,
+        0
+      ) / movementIntervals.current.length;
+
+    const variance =
+      movementIntervals.current.reduce(
+        (acc, val) =>
+          acc + Math.pow(val - avg, 2),
+        0
+      ) / movementIntervals.current.length;
+
+    setTimingVariance(Math.floor(variance));
   };
 
   const handleDragEnd = () => {
@@ -167,59 +381,163 @@ const SecurityCheckPage: React.FC<SecurityCheckPageProps> = ({ onVerified }) => 
     if (isOverTarget) {
       setTimeout(() => {
         setVerifiedPuzzle(true);
-      }, 500);
+      }, 600);
     }
   };
 
-  const onMouseDown = (e: React.MouseEvent) => handleDragStart(e.clientX, e.clientY);
-  const onMouseMove = (e: React.MouseEvent) => handleDragMove(e.clientX, e.clientY);
+  const onMouseDown = (e: React.MouseEvent) =>
+    handleDragStart(e.clientX, e.clientY);
+
+  const onMouseMove = (e: React.MouseEvent) =>
+    handleDragMove(e.clientX, e.clientY);
+
   const onMouseUp = () => handleDragEnd();
 
   const onTouchStart = (e: React.TouchEvent) => {
     const t = e.touches[0];
+
     handleDragStart(t.clientX, t.clientY);
   };
+
   const onTouchMove = (e: React.TouchEvent) => {
     e.preventDefault();
+
     const t = e.touches[0];
+
     handleDragMove(t.clientX, t.clientY);
   };
+
   const onTouchEnd = () => handleDragEnd();
 
   useEffect(() => {
     if (!isDragging) return;
 
-    const handleGlobalMouseMove = (e: MouseEvent) => handleDragMove(e.clientX, e.clientY);
-    const handleGlobalMouseUp = () => handleDragEnd();
+    const handleGlobalMouseMove = (
+      e: MouseEvent
+    ) => {
+      handleDragMove(e.clientX, e.clientY);
+    };
 
-    window.addEventListener('mousemove', handleGlobalMouseMove);
-    window.addEventListener('mouseup', handleGlobalMouseUp);
+    const handleGlobalMouseUp = () => {
+      handleDragEnd();
+    };
+
+    window.addEventListener(
+      'mousemove',
+      handleGlobalMouseMove
+    );
+
+    window.addEventListener(
+      'mouseup',
+      handleGlobalMouseUp
+    );
 
     return () => {
-      window.removeEventListener('mousemove', handleGlobalMouseMove);
-      window.removeEventListener('mouseup', handleGlobalMouseUp);
+      window.removeEventListener(
+        'mousemove',
+        handleGlobalMouseMove
+      );
+
+      window.removeEventListener(
+        'mouseup',
+        handleGlobalMouseUp
+      );
     };
-  }, [isDragging, handleDragMove]);
+  }, [isDragging]);
 
-  const performSecurityCheck = useCallback(() => {
-    const timeSpent = Date.now() - startTime.current;
+  const advancedFingerprintCheck = () => {
+    const nav = navigator as any;
 
-    if (timeSpent < 1500) return false;
-    if (!verifiedPuzzle) return false;
-    if (!checked) return false;
-    if (moveCount.current < 5) return false;
-    if ((navigator as any).webdriver) return false;
-    // Extra security checks
-    if (honeypot.length > 0) return false; // bot filled hidden field
-    if (entropyRef.current < 50) return false; // straight-line motion = bot
-    if (!navigator.userAgent || /HeadlessChrome|PhantomJS|Selenium/i.test(navigator.userAgent)) return false;
-    if ((navigator as any).languages && (navigator as any).languages.length === 0) return false;
+    if (nav.webdriver) return false;
+
+    if (
+      /HeadlessChrome|PhantomJS|Selenium|Crawler/i.test(
+        navigator.userAgent
+      )
+    ) {
+      return false;
+    }
+
+    if (!navigator.language) return false;
+
+    if (nav.languages?.length === 0) {
+      return false;
+    }
+
+    if (!window.outerWidth || !window.outerHeight) {
+      return false;
+    }
+
+    if (!window.crypto) {
+      return false;
+    }
 
     return true;
-  }, [verifiedPuzzle, checked, honeypot]);
+  };
+
+  const performSecurityCheck = useCallback(() => {
+    const timeSpent =
+      Date.now() - startTime.current;
+
+    const avgVelocity =
+      velocitySamples.current.reduce(
+        (a, b) => a + b,
+        0
+      ) / (velocitySamples.current.length || 1);
+
+    let score = 0;
+
+    if (timeSpent > 2500) score += 20;
+
+    if (verifiedPuzzle) score += 20;
+
+    if (checked) score += 15;
+
+    if (moveCount.current > 8) score += 10;
+
+    if (entropyRef.current > 120) score += 15;
+
+    if (pathLengthRef.current > 80) score += 10;
+
+    if (timingVariance > 5) score += 5;
+
+    if (avgVelocity > 1.2) score += 5;
+
+    if (advancedFingerprintCheck()) score += 20;
+
+    setSecurityScore(score);
+
+    if (honeypot.length > 0) {
+      return false;
+    }
+
+    if (score < 70) {
+      return false;
+    }
+
+    return true;
+  }, [
+    verifiedPuzzle,
+    checked,
+    honeypot,
+    timingVariance,
+  ]);
 
   const handleVerify = () => {
     setPhase('verifying');
+
+    const statuses = [
+      "SECURE",
+      "QUANTUM",
+      "TRUSTED",
+      "VALIDATED",
+    ];
+
+    setNetworkQuality(
+      statuses[
+        Math.floor(Math.random() * statuses.length)
+      ]
+    );
 
     setTimeout(() => {
       const isHuman = performSecurityCheck();
@@ -227,140 +545,323 @@ const SecurityCheckPage: React.FC<SecurityCheckPageProps> = ({ onVerified }) => 
       if (isHuman) {
         setPhase('passed');
 
-        sessionStorage.setItem('security_verified', JSON.stringify({
-          verified: true,
-          timestamp: Date.now(),
-        }));
+        sessionStorage.setItem(
+          'security_verified_v3',
+          JSON.stringify({
+            verified: true,
+            timestamp: Date.now(),
+            challengeId,
+            score: securityScore,
+          })
+        );
 
-        setTimeout(() => onVerified(), 1200);
+        setTimeout(() => {
+          onVerified();
+        }, 1400);
       } else {
         setPhase('failed');
 
         setTimeout(() => {
           generateChallenge();
           setPhase('challenge');
-        }, 2500);
+        }, 2600);
       }
-    }, 1200);
+    }, 2200);
   };
 
   return (
-    <div className="min-h-screen relative flex items-center justify-center p-4 overflow-hidden bg-[#05060a]">
-      {/* Animated mesh background */}
-      <div className="absolute inset-0">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,_rgba(139,92,246,0.18),transparent_50%),radial-gradient(ellipse_at_bottom_right,_rgba(236,72,153,0.15),transparent_50%),radial-gradient(ellipse_at_center,_rgba(59,130,246,0.12),transparent_60%)]" />
-        <div className="absolute inset-0 opacity-[0.04]" style={{
-          backgroundImage: 'linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)',
-          backgroundSize: '48px 48px',
-        }} />
+    <div className="min-h-screen relative overflow-hidden bg-[#030307] flex items-center justify-center p-5">
+      {/* Luxury animated background */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(139,92,246,0.22),transparent_30%),radial-gradient(circle_at_bottom_right,rgba(236,72,153,0.18),transparent_30%),radial-gradient(circle_at_center,rgba(59,130,246,0.14),transparent_45%)]" />
+
+        <motion.div
+          animate={{
+            rotate: 360,
+          }}
+          transition={{
+            duration: 60,
+            repeat: Infinity,
+            ease: "linear",
+          }}
+          className="absolute -top-40 -left-40 w-[700px] h-[700px] rounded-full border border-violet-500/10"
+        />
+
+        <motion.div
+          animate={{
+            rotate: -360,
+          }}
+          transition={{
+            duration: 80,
+            repeat: Infinity,
+            ease: "linear",
+          }}
+          className="absolute -bottom-60 -right-60 w-[900px] h-[900px] rounded-full border border-fuchsia-500/10"
+        />
+
+        <div
+          className="absolute inset-0 opacity-[0.03]"
+          style={{
+            backgroundImage:
+              'linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)',
+            backgroundSize: '50px 50px',
+          }}
+        />
+
+        <motion.div
+          animate={{
+            y: [0, -30, 0],
+            x: [0, 20, 0],
+          }}
+          transition={{
+            duration: 12,
+            repeat: Infinity,
+          }}
+          className="absolute top-10 left-10 w-96 h-96 bg-violet-600/20 rounded-full blur-[140px]"
+        />
+
+        <motion.div
+          animate={{
+            y: [0, 20, 0],
+            x: [0, -15, 0],
+          }}
+          transition={{
+            duration: 14,
+            repeat: Infinity,
+          }}
+          className="absolute bottom-10 right-10 w-[500px] h-[500px] bg-fuchsia-600/20 rounded-full blur-[160px]"
+        />
       </div>
 
-      {/* Floating orbs */}
-      <motion.div
-        animate={{ y: [0, -20, 0], x: [0, 10, 0] }}
-        transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute top-20 left-20 w-72 h-72 bg-violet-600/20 rounded-full blur-[120px]"
-      />
-      <motion.div
-        animate={{ y: [0, 20, 0], x: [0, -10, 0] }}
-        transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute bottom-20 right-20 w-96 h-96 bg-fuchsia-600/20 rounded-full blur-[140px]"
-      />
+      {/* floating particles */}
+      {[...Array(18)].map((_, i) => (
+        <motion.div
+          key={i}
+          animate={{
+            y: [0, -40, 0],
+            opacity: [0.2, 0.8, 0.2],
+          }}
+          transition={{
+            duration: 4 + i,
+            repeat: Infinity,
+          }}
+          className="absolute w-1 h-1 rounded-full bg-white/40"
+          style={{
+            left: `${Math.random() * 100}%`,
+            top: `${Math.random() * 100}%`,
+          }}
+        />
+      ))}
 
       <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-        className="relative w-full max-w-md"
+        initial={{
+          opacity: 0,
+          y: 30,
+          scale: 0.96,
+        }}
+        animate={{
+          opacity: 1,
+          y: 0,
+          scale: 1,
+        }}
+        transition={{
+          duration: 0.8,
+          ease: [0.16, 1, 0.3, 1],
+        }}
+        className="relative w-full max-w-xl"
       >
-        {/* Premium gradient border */}
-        <div className="absolute -inset-[1px] bg-gradient-to-br from-white/30 via-violet-400/20 to-fuchsia-400/30 rounded-[28px] opacity-80" />
-        <div className="absolute -inset-[1px] bg-gradient-to-tr from-white/10 via-transparent to-white/20 rounded-[28px] blur-sm" />
+        {/* outer glow */}
+        <div className="absolute -inset-[1px] rounded-[34px] bg-gradient-to-br from-white/20 via-violet-500/20 to-fuchsia-500/20 blur-sm" />
 
-        <div className="relative bg-gradient-to-br from-white/[0.07] via-white/[0.04] to-white/[0.02] backdrop-blur-2xl rounded-[28px] shadow-[0_20px_70px_-15px_rgba(0,0,0,0.7)] overflow-hidden">
-
-          {/* Inner shine */}
+        <div className="relative overflow-hidden rounded-[34px] border border-white/10 bg-white/[0.06] backdrop-blur-3xl shadow-[0_30px_100px_-20px_rgba(0,0,0,0.9)]">
+          {/* chrome */}
           <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent" />
-          <div className="absolute inset-y-0 left-0 w-px bg-gradient-to-b from-white/30 via-transparent to-transparent" />
 
-          {/* Header */}
-          <div className="relative px-7 pt-6 pb-5 border-b border-white/[0.06]">
-            <div className="flex items-center gap-3.5">
-              <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-br from-violet-400 to-fuchsia-500 rounded-xl blur-md opacity-60" />
-                <div className="relative w-11 h-11 bg-gradient-to-br from-violet-500 via-purple-500 to-fuchsia-500 rounded-xl flex items-center justify-center shadow-xl">
-                  <Shield className="h-5 w-5 text-white drop-shadow" strokeWidth={2.5} />
+          {/* header */}
+          <div className="relative px-8 pt-7 pb-6 border-b border-white/10">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="relative">
+                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-violet-500 to-fuchsia-500 blur-xl opacity-70" />
+
+                  <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-500 via-purple-500 to-fuchsia-500 flex items-center justify-center shadow-2xl">
+                    <ShieldCheck
+                      className="text-white h-7 w-7"
+                      strokeWidth={2.5}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h1 className="text-white text-lg font-semibold tracking-tight">
+                      Quantum Security v3
+                    </h1>
+
+                    <Sparkles className="w-4 h-4 text-violet-300" />
+                  </div>
+
+                  <div className="flex items-center gap-2 mt-1">
+                    <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+
+                    <p className="text-[11px] uppercase tracking-[0.25em] text-white/45">
+                      Neural protection active
+                    </p>
+                  </div>
                 </div>
               </div>
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <h1 className="text-[15px] font-semibold text-white tracking-tight">Vérification de sécurité</h1>
-                  <Sparkles className="h-3 w-3 text-violet-300" />
-                </div>
-                <div className="flex items-center gap-1.5 mt-0.5">
-                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
-                  <p className="text-[11px] text-white/50 font-medium tracking-wide uppercase">Protection avancée</p>
-                </div>
+
+              <div className="rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-2 text-right">
+                <p className="text-[10px] text-white/40 uppercase tracking-[0.25em]">
+                  Challenge ID
+                </p>
+
+                <p className="text-white font-mono text-xs mt-1">
+                  {challengeId}
+                </p>
               </div>
-              <Lock className="h-4 w-4 text-white/30" />
             </div>
           </div>
 
-          <div className="relative p-7 space-y-6 min-h-[340px]">
-            {/* Honeypot — invisible to humans */}
+          {/* body */}
+          <div className="relative p-8">
+            {/* honeypot */}
             <input
               type="text"
               tabIndex={-1}
               autoComplete="off"
               value={honeypot}
-              onChange={(e) => setHoneypot(e.target.value)}
-              style={{ position: 'absolute', left: '-9999px', width: '1px', height: '1px', opacity: 0 }}
-              aria-hidden="true"
+              onChange={(e) =>
+                setHoneypot(e.target.value)
+              }
+              style={{
+                position: 'absolute',
+                left: '-9999px',
+                opacity: 0,
+              }}
             />
 
+            {/* metrics */}
+            <div className="grid grid-cols-3 gap-3 mb-6">
+              <Metric
+                icon={<Cpu className="w-3 h-3" />}
+                label="ENGINE"
+                value={networkQuality}
+              />
+
+              <Metric
+                icon={<Activity className="w-3 h-3" />}
+                label="SCORE"
+                value={`${securityScore}%`}
+              />
+
+              <Metric
+                icon={<Radar className="w-3 h-3" />}
+                label="STATUS"
+                value={
+                  phase === 'passed'
+                    ? 'TRUSTED'
+                    : 'SCANNING'
+                }
+              />
+            </div>
+
             <AnimatePresence mode="wait">
-              {phase === 'checking' && (
+              {(phase === 'boot' ||
+                phase === 'checking') && (
                 <motion.div
                   key="checking"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="text-center space-y-5 py-10"
+                  className="py-16 text-center"
                 >
-                  <div className="relative w-16 h-16 mx-auto">
-                    <div className="absolute inset-0 rounded-full border-2 border-violet-500/20" />
-                    <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-violet-400 border-r-fuchsia-400 animate-spin" />
-                    <Fingerprint className="absolute inset-0 m-auto h-7 w-7 text-violet-300" />
+                  <div className="relative w-28 h-28 mx-auto">
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{
+                        duration: 8,
+                        repeat: Infinity,
+                        ease: "linear",
+                      }}
+                      className="absolute inset-0 rounded-full border border-violet-500/20"
+                    />
+
+                    <motion.div
+                      animate={{ rotate: -360 }}
+                      transition={{
+                        duration: 6,
+                        repeat: Infinity,
+                        ease: "linear",
+                      }}
+                      className="absolute inset-4 rounded-full border border-fuchsia-500/20"
+                    />
+
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                        ease: "linear",
+                      }}
+                      className="absolute inset-0 rounded-full border-t-2 border-violet-400 border-r-2 border-transparent"
+                    />
+
+                    <Fingerprint className="absolute inset-0 m-auto w-10 h-10 text-violet-300" />
                   </div>
-                  <div>
-                    <p className="text-white/90 font-medium text-sm">Analyse de votre empreinte…</p>
-                    <p className="text-white/40 text-xs mt-1">Initialisation du protocole</p>
-                  </div>
+
+                  <h2 className="mt-8 text-white text-lg font-semibold">
+                    Analyse comportementale
+                  </h2>
+
+                  <p className="mt-2 text-white/45 text-sm">
+                    Vérification neuronale • détection
+                    biométrique • anti automation
+                  </p>
                 </motion.div>
               )}
 
               {phase === 'challenge' && (
                 <motion.div
                   key="challenge"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  className="space-y-5"
+                  initial={{
+                    opacity: 0,
+                    y: 10,
+                  }}
+                  animate={{
+                    opacity: 1,
+                    y: 0,
+                  }}
+                  exit={{
+                    opacity: 0,
+                    y: -10,
+                  }}
+                  className="space-y-6"
                 >
-                  <div className="text-center space-y-1">
-                    <p className="text-[13px] text-white/80 font-medium">
-                      Glissez l'étoile <span className="text-rose-400 font-bold">rouge</span> sur l'étoile <span className="text-white font-bold">blanche</span>
-                    </p>
-                    <p className="text-[11px] text-white/40">Test de cohérence humaine</p>
+                  <div className="text-center">
+                    <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2">
+                      <Orbit className="w-4 h-4 text-violet-300" />
+
+                      <p className="text-white/80 text-xs font-medium">
+                        Synchronisez l'étoile rouge avec
+                        la signature blanche
+                      </p>
+                    </div>
                   </div>
 
-                  {/* Puzzle area */}
-                  <div className="relative group">
-                    <div className="absolute -inset-0.5 bg-gradient-to-r from-violet-500/40 via-fuchsia-500/40 to-pink-500/40 rounded-2xl blur opacity-60 group-hover:opacity-90 transition" />
+                  {/* challenge area */}
+                  <div className="relative">
+                    <div className="absolute -inset-[1px] rounded-[28px] bg-gradient-to-r from-violet-500/30 via-fuchsia-500/30 to-rose-500/30 blur-md" />
+
                     <div
                       ref={containerRef}
-                      className="relative w-full h-52 rounded-2xl overflow-hidden border border-white/10 select-none shadow-2xl"
-                      style={{ touchAction: 'none', cursor: isDragging ? 'grabbing' : 'default' }}
+                      className="relative h-72 overflow-hidden rounded-[28px] border border-white/10 bg-black/40"
+                      style={{
+                        touchAction: 'none',
+                        cursor: isDragging
+                          ? 'grabbing'
+                          : 'default',
+                      }}
                       onMouseDown={onMouseDown}
                       onMouseMove={onMouseMove}
                       onMouseUp={onMouseUp}
@@ -368,83 +869,212 @@ const SecurityCheckPage: React.FC<SecurityCheckPageProps> = ({ onVerified }) => 
                       onTouchMove={onTouchMove}
                       onTouchEnd={onTouchEnd}
                     >
-                      <img src={image} className="w-full h-full object-cover pointer-events-none" draggable={false} />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-black/10 pointer-events-none" />
+                      {/* image */}
+                      <img
+                        src={image}
+                        draggable={false}
+                        className="w-full h-full object-cover scale-105"
+                      />
 
-                      {/* Target ring */}
-                      <div style={{ left: targetX - 8, top: targetY - 8 }} className="absolute pointer-events-none">
-                        <div className="w-16 h-16 rounded-full border-2 border-dashed border-white/40 animate-pulse" />
-                      </div>
+                      {/* overlays */}
+                      <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black/20 to-black/40" />
 
-                      <div style={{ left: targetX, top: targetY }} className="absolute pointer-events-none">
-                        <Star type="fixed" glow={isOverTarget} />
+                      <div className="absolute inset-0 backdrop-blur-[1px]" />
+
+                      {/* scanning lines */}
+                      <motion.div
+                        animate={{
+                          y: [-300, 300],
+                        }}
+                        transition={{
+                          duration: 3,
+                          repeat: Infinity,
+                          ease: "linear",
+                        }}
+                        className="absolute inset-x-0 h-24 bg-gradient-to-b from-transparent via-violet-400/10 to-transparent"
+                      />
+
+                      {/* motion trail */}
+                      {motionTrail.map((p, i) => (
+                        <motion.div
+                          key={i}
+                          initial={{
+                            opacity: 0.8,
+                          }}
+                          animate={{
+                            opacity: 0,
+                            scale: 0.4,
+                          }}
+                          transition={{
+                            duration: 0.6,
+                          }}
+                          className="absolute w-4 h-4 rounded-full bg-rose-400/30 blur-sm pointer-events-none"
+                          style={{
+                            left: p.x + 20,
+                            top: p.y + 20,
+                          }}
+                        />
+                      ))}
+
+                      {/* target */}
+                      <div
+                        style={{
+                          left: targetX - 10,
+                          top: targetY - 10,
+                        }}
+                        className="absolute pointer-events-none"
+                      >
+                        <motion.div
+                          animate={{
+                            scale: [1, 1.1, 1],
+                            opacity: [0.5, 1, 0.5],
+                          }}
+                          transition={{
+                            duration: 2,
+                            repeat: Infinity,
+                          }}
+                          className="absolute inset-0 w-20 h-20 rounded-full border border-white/30"
+                        />
+
+                        <div className="absolute inset-0 w-20 h-20 rounded-full border border-dashed border-white/40" />
                       </div>
 
                       <div
-                        style={{ left: starX, top: starY, cursor: isDragging ? 'grabbing' : 'grab' }}
-                        className="absolute z-10 transition-transform hover:scale-110"
+                        style={{
+                          left: targetX,
+                          top: targetY,
+                        }}
+                        className="absolute pointer-events-none"
+                      >
+                        <Star
+                          type="fixed"
+                          glow={isOverTarget}
+                        />
+                      </div>
+
+                      {/* draggable */}
+                      <div
+                        style={{
+                          left: starX,
+                          top: starY,
+                          cursor: isDragging
+                            ? 'grabbing'
+                            : 'grab',
+                        }}
+                        className="absolute z-20 transition-transform hover:scale-110"
                       >
                         <Star type="moving" glow />
                       </div>
 
+                      {/* corners */}
+                      <div className="absolute top-3 left-3 w-5 h-5 border-t border-l border-white/50" />
+                      <div className="absolute top-3 right-3 w-5 h-5 border-t border-r border-white/50" />
+                      <div className="absolute bottom-3 left-3 w-5 h-5 border-b border-l border-white/50" />
+                      <div className="absolute bottom-3 right-3 w-5 h-5 border-b border-r border-white/50" />
+
+                      {/* success */}
                       {verifiedPuzzle && (
                         <motion.div
-                          initial={{ scale: 0 }}
-                          animate={{ scale: [0, 1.5, 1] }}
-                          className="absolute w-20 h-20 bg-emerald-400/40 blur-2xl rounded-full pointer-events-none"
-                          style={{ left: starX - 10, top: starY - 10 }}
-                        />
-                      )}
+                          initial={{
+                            scale: 0,
+                            opacity: 0,
+                          }}
+                          animate={{
+                            scale: [0, 1.4, 1],
+                            opacity: [0, 1, 0.7],
+                          }}
+                          className="absolute inset-0 flex items-center justify-center bg-emerald-500/10 backdrop-blur-sm"
+                        >
+                          <div className="text-center">
+                            <CheckCircle className="w-16 h-16 text-emerald-400 mx-auto" />
 
-                      {/* Corner decorations */}
-                      <div className="absolute top-2 left-2 w-3 h-3 border-t border-l border-white/40" />
-                      <div className="absolute top-2 right-2 w-3 h-3 border-t border-r border-white/40" />
-                      <div className="absolute bottom-2 left-2 w-3 h-3 border-b border-l border-white/40" />
-                      <div className="absolute bottom-2 right-2 w-3 h-3 border-b border-r border-white/40" />
+                            <p className="mt-3 text-white font-semibold">
+                              Signature validée
+                            </p>
+                          </div>
+                        </motion.div>
+                      )}
                     </div>
                   </div>
 
+                  {/* human checkbox */}
                   <AnimatePresence>
                     {verifiedPuzzle && (
                       <motion.label
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="flex items-center gap-3 text-white/90 cursor-pointer p-3 rounded-xl bg-white/[0.04] border border-white/10 hover:bg-white/[0.08] transition"
+                        initial={{
+                          opacity: 0,
+                          y: 10,
+                        }}
+                        animate={{
+                          opacity: 1,
+                          y: 0,
+                        }}
+                        className="flex items-center gap-4 rounded-2xl border border-white/10 bg-white/[0.04] p-4 cursor-pointer"
                       >
                         <div className="relative">
                           <input
                             type="checkbox"
                             checked={checked}
-                            onChange={(e) => setChecked(e.target.checked)}
-                            className="peer w-5 h-5 appearance-none rounded-md border-2 border-white/30 bg-white/5 checked:bg-gradient-to-br checked:from-violet-500 checked:to-fuchsia-500 checked:border-transparent transition cursor-pointer"
+                            onChange={(e) =>
+                              setChecked(
+                                e.target.checked
+                              )
+                            }
+                            className="peer appearance-none w-6 h-6 rounded-lg border border-white/20 bg-white/5 checked:bg-gradient-to-br checked:from-violet-500 checked:to-fuchsia-500 checked:border-transparent"
                           />
-                          <CheckCircle className="absolute inset-0 m-auto h-3.5 w-3.5 text-white opacity-0 peer-checked:opacity-100 pointer-events-none" strokeWidth={3} />
+
+                          <CheckCircle className="absolute inset-0 m-auto w-4 h-4 text-white opacity-0 peer-checked:opacity-100 pointer-events-none" />
                         </div>
-                        <span className="text-sm font-medium">Je confirme que je suis humain</span>
+
+                        <div>
+                          <p className="text-white font-medium text-sm">
+                            Je confirme être humain
+                          </p>
+
+                          <p className="text-white/40 text-xs mt-1">
+                            Validation biométrique et
+                            comportementale
+                          </p>
+                        </div>
                       </motion.label>
                     )}
                   </AnimatePresence>
 
+                  {/* button */}
                   <button
                     onClick={handleVerify}
-                    disabled={!verifiedPuzzle || !checked}
-                    className={`group relative w-full h-12 rounded-xl font-semibold text-sm overflow-hidden transition-all ${
+                    disabled={
                       !verifiedPuzzle || !checked
-                        ? "bg-white/5 text-white/30 border border-white/10 cursor-not-allowed"
-                        : "text-white shadow-[0_8px_30px_-5px_rgba(139,92,246,0.6)] hover:shadow-[0_12px_40px_-5px_rgba(139,92,246,0.8)] hover:-translate-y-0.5"
+                    }
+                    className={`group relative overflow-hidden w-full h-14 rounded-2xl font-semibold transition-all ${
+                      !verifiedPuzzle || !checked
+                        ? 'bg-white/[0.04] border border-white/10 text-white/30 cursor-not-allowed'
+                        : 'text-white hover:-translate-y-1 shadow-[0_20px_60px_-15px_rgba(139,92,246,0.7)]'
                     }`}
                   >
                     {verifiedPuzzle && checked && (
                       <>
-                        <div className="absolute inset-0 bg-gradient-to-r from-violet-600 via-fuchsia-600 to-pink-600" />
-                        <div className="absolute inset-0 bg-gradient-to-r from-fuchsia-600 via-pink-600 to-violet-600 opacity-0 group-hover:opacity-100 transition-opacity" />
-                        <div className="absolute inset-x-0 top-0 h-px bg-white/40" />
+                        <div className="absolute inset-0 bg-gradient-to-r from-violet-600 via-fuchsia-600 to-rose-600" />
+
+                        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-gradient-to-r from-fuchsia-600 via-rose-600 to-violet-600" />
+
+                        <motion.div
+                          animate={{
+                            x: ['-100%', '200%'],
+                          }}
+                          transition={{
+                            duration: 2,
+                            repeat: Infinity,
+                          }}
+                          className="absolute inset-y-0 w-24 bg-white/20 blur-2xl rotate-12"
+                        />
                       </>
                     )}
-                    <span className="relative flex items-center justify-center gap-2">
-                      <Shield className="h-4 w-4" />
-                      Vérifier mon identité
+
+                    <span className="relative flex items-center justify-center gap-3">
+                      <ScanFace className="w-5 h-5" />
+
+                      Vérification Quantum
                     </span>
                   </button>
                 </motion.div>
@@ -456,40 +1086,112 @@ const SecurityCheckPage: React.FC<SecurityCheckPageProps> = ({ onVerified }) => 
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="text-center space-y-5 py-10"
+                  className="py-16 text-center"
                 >
-                  <div className="relative w-20 h-20 mx-auto">
-                    <div className="absolute inset-0 rounded-full border-2 border-violet-500/20" />
-                    <div className="absolute inset-2 rounded-full border-2 border-transparent border-t-violet-400 animate-spin" />
-                    <div className="absolute inset-4 rounded-full border-2 border-transparent border-b-fuchsia-400 animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }} />
-                    <Fingerprint className="absolute inset-0 m-auto h-8 w-8 text-violet-300" />
+                  <div className="relative w-32 h-32 mx-auto">
+                    <motion.div
+                      animate={{
+                        rotate: 360,
+                      }}
+                      transition={{
+                        duration: 5,
+                        repeat: Infinity,
+                        ease: "linear",
+                      }}
+                      className="absolute inset-0 rounded-full border border-violet-500/20"
+                    />
+
+                    <motion.div
+                      animate={{
+                        rotate: -360,
+                      }}
+                      transition={{
+                        duration: 3,
+                        repeat: Infinity,
+                        ease: "linear",
+                      }}
+                      className="absolute inset-5 rounded-full border border-fuchsia-500/30"
+                    />
+
+                    <motion.div
+                      animate={{
+                        rotate: 360,
+                      }}
+                      transition={{
+                        duration: 1.5,
+                        repeat: Infinity,
+                        ease: "linear",
+                      }}
+                      className="absolute inset-0 rounded-full border-t-2 border-violet-400 border-r-2 border-transparent"
+                    />
+
+                    <Fingerprint className="absolute inset-0 m-auto w-12 h-12 text-violet-300" />
                   </div>
-                  <p className="text-white/90 font-medium text-sm">Vérification cryptographique…</p>
+
+                  <h2 className="mt-8 text-white text-lg font-semibold">
+                    Validation cryptographique
+                  </h2>
+
+                  <div className="mt-5 inline-flex items-center gap-3 rounded-full border border-white/10 bg-white/[0.04] px-5 py-3">
+                    <Loader2 className="w-4 h-4 animate-spin text-violet-300" />
+
+                    <span className="text-white/75 text-sm">
+                      Analyse IA comportementale...
+                    </span>
+                  </div>
                 </motion.div>
               )}
 
               {phase === 'passed' && (
                 <motion.div
                   key="passed"
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="text-center space-y-4 py-10"
+                  initial={{
+                    opacity: 0,
+                    scale: 0.8,
+                  }}
+                  animate={{
+                    opacity: 1,
+                    scale: 1,
+                  }}
+                  className="py-14 text-center"
                 >
                   <motion.div
-                    initial={{ scale: 0, rotate: -180 }}
-                    animate={{ scale: 1, rotate: 0 }}
-                    transition={{ type: 'spring', stiffness: 200 }}
-                    className="relative w-20 h-20 mx-auto"
+                    initial={{
+                      scale: 0,
+                      rotate: -180,
+                    }}
+                    animate={{
+                      scale: 1,
+                      rotate: 0,
+                    }}
+                    transition={{
+                      type: 'spring',
+                      stiffness: 200,
+                    }}
+                    className="relative w-28 h-28 mx-auto"
                   >
-                    <div className="absolute inset-0 bg-emerald-400/40 rounded-full blur-2xl animate-pulse" />
-                    <div className="relative w-full h-full bg-gradient-to-br from-emerald-400 to-green-600 rounded-full flex items-center justify-center shadow-2xl">
-                      <CheckCircle className="h-10 w-10 text-white" strokeWidth={2.5} />
+                    <div className="absolute inset-0 rounded-full bg-emerald-400/40 blur-3xl animate-pulse" />
+
+                    <div className="relative w-full h-full rounded-full bg-gradient-to-br from-emerald-400 to-green-600 flex items-center justify-center shadow-[0_20px_60px_-10px_rgba(16,185,129,0.7)]">
+                      <CheckCircle className="w-14 h-14 text-white" />
                     </div>
                   </motion.div>
-                  <div>
-                    <p className="text-white font-semibold">Vérification réussie</p>
-                    <p className="text-white/50 text-xs mt-1">Accès sécurisé accordé</p>
+
+                  <h2 className="mt-8 text-white text-2xl font-bold">
+                    Accès autorisé
+                  </h2>
+
+                  <p className="mt-3 text-white/50">
+                    Signature humaine confirmée •
+                    environnement sécurisé
+                  </p>
+
+                  <div className="mt-6 inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-4 py-2">
+                    <Shield className="w-4 h-4 text-emerald-300" />
+
+                    <span className="text-emerald-200 text-sm font-medium">
+                      Security score: 98%
+                    </span>
                   </div>
                 </motion.div>
               )}
@@ -497,34 +1199,53 @@ const SecurityCheckPage: React.FC<SecurityCheckPageProps> = ({ onVerified }) => 
               {phase === 'failed' && (
                 <motion.div
                   key="failed"
-                  initial={{ opacity: 0, x: 0 }}
-                  animate={{ opacity: 1, x: [0, -8, 8, -8, 8, 0] }}
-                  exit={{ opacity: 0 }}
-                  className="text-center space-y-4 py-10"
+                  initial={{ opacity: 0 }}
+                  animate={{
+                    opacity: 1,
+                    x: [0, -8, 8, -8, 8, 0],
+                  }}
+                  className="py-14 text-center"
                 >
-                  <div className="relative w-20 h-20 mx-auto">
-                    <div className="absolute inset-0 bg-red-500/40 rounded-full blur-2xl" />
-                    <div className="relative w-full h-full bg-gradient-to-br from-red-500 to-rose-700 rounded-full flex items-center justify-center shadow-2xl">
-                      <AlertTriangle className="h-10 w-10 text-white" strokeWidth={2.5} />
+                  <div className="relative w-28 h-28 mx-auto">
+                    <div className="absolute inset-0 rounded-full bg-red-500/40 blur-3xl" />
+
+                    <div className="relative w-full h-full rounded-full bg-gradient-to-br from-red-500 to-rose-700 flex items-center justify-center">
+                      <AlertTriangle className="w-14 h-14 text-white" />
                     </div>
                   </div>
-                  <div>
-                    <p className="text-white font-semibold">Vérification échouée</p>
-                    <p className="text-white/50 text-xs mt-1">Nouvelle tentative en cours…</p>
-                  </div>
+
+                  <h2 className="mt-8 text-white text-xl font-semibold">
+                    Signature invalide
+                  </h2>
+
+                  <p className="mt-3 text-white/50">
+                    Nouvelle analyse en préparation...
+                  </p>
                 </motion.div>
               )}
             </AnimatePresence>
           </div>
 
-          {/* Footer */}
-          <div className="relative border-t border-white/[0.06] px-7 py-3.5 bg-white/[0.02]">
+          {/* footer */}
+          <div className="relative border-t border-white/10 bg-white/[0.03] px-8 py-4">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1.5">
-                <Lock className="h-3 w-3 text-white/40" />
-                <p className="text-[10px] text-white/50 font-medium tracking-wide">Chiffrement de bout en bout</p>
+              <div className="flex items-center gap-2">
+                <Lock className="w-3 h-3 text-white/40" />
+
+                <p className="text-[11px] text-white/45 uppercase tracking-[0.2em]">
+                  Quantum encrypted tunnel
+                </p>
               </div>
-              <p className="text-[10px] text-white/30 font-mono">v2.0</p>
+
+              <div className="flex items-center gap-3">
+                <Eye className="w-3 h-3 text-white/30" />
+
+                <MousePointer2 className="w-3 h-3 text-white/30" />
+
+                <p className="text-[11px] font-mono text-white/35">
+                  v3.0 ULTRA
+                </p>
+              </div>
             </div>
           </div>
         </div>
