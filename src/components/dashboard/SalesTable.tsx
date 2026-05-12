@@ -67,7 +67,7 @@ const SalesTable: React.FC<SalesTableProps> = ({
   const [isRealtimeActive, setIsRealtimeActive] =
     useState(false);
 
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
   const [sortOrder, setSortOrder] = useState<
     'asc' | 'desc'
@@ -167,13 +167,7 @@ const SalesTable: React.FC<SalesTableProps> = ({
   // LOADING
   // =========================================================
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 1200);
-
-    return () => clearTimeout(timer);
-  }, []);
+  // Chargement instantané : pas de délai artificiel
 
   // =========================================================
   // SORT

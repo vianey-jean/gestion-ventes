@@ -17,8 +17,8 @@ const ModernTable: React.FC<ModernTableProps> = ({ children, className }) => {
   );
 };
 
-const ModernTableHeader: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <TableHeader className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700">
+const ModernTableHeader: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className }) => (
+  <TableHeader className={cn("bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700", className)}>
     {children}
   </TableHeader>
 );
