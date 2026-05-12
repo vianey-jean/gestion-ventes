@@ -109,6 +109,9 @@ const SalesTable: React.FC<SalesTableProps> = ({
 
   useEffect(() => {
     setSales(currentMonthSales);
+    if (currentMonthSales.length > 0) {
+      setIsLoading(false);
+    }
 
     realtimeService.connect();
 
@@ -119,7 +122,7 @@ const SalesTable: React.FC<SalesTableProps> = ({
             filterCurrentMonthSales(data.sales);
 
           setSales(filteredSales);
-
+          setIsLoading(false);
           setLastUpdate(new Date());
         }
       });
@@ -149,7 +152,13 @@ const SalesTable: React.FC<SalesTableProps> = ({
       realtimeService.getConnectionStatus()
     );
 
+    // Fallback: arrête le loader si aucune donnée n'arrive (mois vide)
+    const fallbackTimer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1500);
+
     return () => {
+      clearTimeout(fallbackTimer);
       unsubscribeData();
       unsubscribeSync();
     };
