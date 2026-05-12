@@ -163,7 +163,7 @@ const SecurityCheckPage: React.FC<SecurityCheckPageProps> = ({
   const [checked, setChecked] = useState(false);
 
   const [securityScore, setSecurityScore] = useState(0);
-  const [networkQuality, setNetworkQuality] = useState("SECURE");
+  const [networkQuality, setNetworkQuality] = useState("SÉCURISÉ");
   const [motionTrail, setMotionTrail] = useState<
     { x: number; y: number }[]
   >([]);
@@ -527,10 +527,10 @@ const SecurityCheckPage: React.FC<SecurityCheckPageProps> = ({
     setPhase('verifying');
 
     const statuses = [
-      "SECURE",
-      "QUANTUM",
-      "TRUSTED",
-      "VALIDATED",
+      "SÉCURISÉ",
+      "QUANTIQUE",
+      "FIABLE",
+      "VALIDER",
     ];
 
     setNetworkQuality(
@@ -745,7 +745,7 @@ const SecurityCheckPage: React.FC<SecurityCheckPageProps> = ({
             <div className="grid grid-cols-3 gap-3 mb-6">
               <Metric
                 icon={<Cpu className="w-3 h-3" />}
-                label="ENGINE"
+                label="MOTEUR"
                 value={networkQuality}
               />
 
@@ -757,11 +757,11 @@ const SecurityCheckPage: React.FC<SecurityCheckPageProps> = ({
 
               <Metric
                 icon={<Radar className="w-3 h-3" />}
-                label="STATUS"
+                label="STATUT"
                 value={
                   phase === 'passed'
-                    ? 'TRUSTED'
-                    : 'SCANNING'
+                    ? 'FIABLE'
+                    : 'ANALYSE'
                 }
               />
             </div>
