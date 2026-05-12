@@ -71,7 +71,7 @@ const SalesTable: React.FC<SalesTableProps> = ({
 
   const [sortOrder, setSortOrder] = useState<
     'asc' | 'desc'
-  >('desc');
+  >('asc');
 
   const [collapsedDays, setCollapsedDays] =
     useState<Record<string, boolean>>({});
