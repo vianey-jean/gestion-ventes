@@ -67,7 +67,7 @@ const SalesTable: React.FC<SalesTableProps> = ({
   const [isRealtimeActive, setIsRealtimeActive] =
     useState(false);
 
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   const [sortOrder, setSortOrder] = useState<
     'asc' | 'desc'
