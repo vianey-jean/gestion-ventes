@@ -960,7 +960,7 @@ const DepenseDuMois = () => {
 {/* Dialogue dépenses fixes */}
 <Dialog open={isFixeDialogOpen} onOpenChange={setIsFixeDialogOpen}>
   <DialogContent className="sm:max-w-md bg-gradient-to-br from-white/95 to-gray-50/95 dark:from-gray-900/95 dark:to-gray-800/95
-                             backdrop-blur-2xl border border-white/30 shadow-[0_40px_120px_rgba(0,0,0,0.25)] rounded-2xl sm:rounded-3xl">
+                             backdrop-blur-* border border-white/30 shadow-[0_40px_120px_rgba(0,0,0,0.25)] rounded-2xl sm:rounded-3xl">
     <DialogHeader>
       <DialogTitle className="flex items-center justify-between gap-3 text-xl font-extrabold text-gray-800 dark:text-gray-200">
         <div className="flex items-center gap-3">
@@ -990,7 +990,7 @@ const DepenseDuMois = () => {
       {depensesFixe.map((item, index) => (
         <div key={index} className="flex items-end gap-2 p-3 rounded-2xl bg-white/40 dark:bg-gray-800/40 border border-gray-200/40 backdrop-blur-xl">
           <div className="flex-1 space-y-1">
-            <Label className="text-xs font-semibold text-gray-600 dark:text-gray-400">Libellé</Label>
+            <Label className="text-xs font-semibold text-black-800 dark:text-gray-400">Libellé</Label>
             <Input
               type="text"
               placeholder="Ex: Free, Internet…"
@@ -1000,19 +1000,27 @@ const DepenseDuMois = () => {
             />
           </div>
           <div className="w-32 space-y-1">
-            <Label className="text-xs font-semibold text-gray-600 dark:text-gray-400">Montant (€)</Label>
-            <div className="relative">
-              <ArrowDown className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-red-500" />
-              <Input
-                type="number"
-                min="0"
-                step="0.01"
-                value={item.montant}
-                onChange={(e) => updateDepenseFixeItem(index, 'montant', e.target.value)}
-                className="pl-7 px-2 py-2 bg-white/60 border border-gray-200/40 rounded-xl"
-              />
-            </div>
-          </div>
+  <Label className="text-xs font-semibold text-gray-600 dark:text-gray-400">
+    Montant (€)
+  </Label>
+
+  <div className="relative">
+    {!item.montant && (
+      <ArrowDown className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-red-500" />
+    )}
+
+    <Input
+      type="number"
+      min="0"
+      step="0.01"
+      value={item.montant}
+      onChange={(e) =>
+        updateDepenseFixeItem(index, "montant", e.target.value)
+      }
+      className="pl-7 px-2 py-2 bg-white/60 border border-gray-200/40 rounded-xl"
+    />
+  </div>
+</div>
           <Button
             type="button"
             size="sm"
