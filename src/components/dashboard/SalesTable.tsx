@@ -487,50 +487,91 @@ const SalesTable: React.FC<SalesTableProps> = ({
 
           {/* KPI */}
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
-
-            <div className="rounded-3xl bg-white/15 px-6 py-5">
-              <p className="text-xs uppercase tracking-[0.2em] text-white/70">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            {/* Chiffre A */}
+            <div className="rounded-3xl bg-white/15 p-4 sm:p-5 lg:p-6 backdrop-blur">
+              <p className="text-[10px] sm:text-xs uppercase tracking-[0.18em] text-white/70">
                 Chiffre A
               </p>
 
-              <h3 className="mt-2 text-2xl font-black text-white">
-                {formatCurrency(
-                  globalTotals.sales
-                )}
+              <h3
+                className="
+        mt-2
+        break-words
+        text-xl
+        font-black
+        leading-tight
+        text-white
+        sm:text-2xl
+        lg:text-3xl
+      "
+              >
+                {formatCurrency(globalTotals.sales)}
               </h3>
             </div>
 
-            <div className="rounded-3xl bg-white/15 px-6 py-5">
-              <p className="text-xs uppercase tracking-[0.2em] text-white/70">
-                Bénefice
+            {/* Bénéfice */}
+            <div className="rounded-3xl bg-white/15 p-4 sm:p-5 lg:p-6 backdrop-blur">
+              <p className="text-[10px] sm:text-xs uppercase tracking-[0.18em] text-white/70">
+                Bénéfice
               </p>
 
-              <h3 className="mt-2 text-2xl font-black text-white">
-                {formatCurrency(
-                  globalTotals.profit
-                )}
+              <h3
+                className="
+        mt-2
+        break-words
+        text-xl
+        font-black
+        leading-tight
+        text-white
+        sm:text-2xl
+        lg:text-3xl
+      "
+              >
+                {formatCurrency(globalTotals.profit)}
               </h3>
             </div>
 
-            <div className="rounded-3xl bg-white/15 px-6 py-5">
-              <p className="text-xs uppercase tracking-[0.2em] text-white/70">
+            {/* Prix Achat */}
+            <div className="rounded-3xl bg-white/15 p-4 sm:p-5 lg:p-6 backdrop-blur">
+              <p className="text-[10px] sm:text-xs uppercase tracking-[0.18em] text-white/70">
                 Prix Achat
               </p>
 
-              <h3 className="mt-2 text-2xl font-black text-white">
-                {formatCurrency(
-                  globalTotals.purchase
-                )}
+              <h3
+                className="
+        mt-2
+        break-words
+        text-xl
+        font-black
+        leading-tight
+        text-white
+        sm:text-2xl
+        lg:text-3xl
+      "
+              >
+                {formatCurrency(globalTotals.purchase)}
               </h3>
             </div>
 
-            <div className="rounded-3xl bg-white/15 px-6 py-5">
-              <p className="text-xs uppercase tracking-[0.2em] text-white/70">
+            {/* Quantité */}
+            <div className="rounded-3xl bg-white/15 p-4 sm:p-5 lg:p-6 backdrop-blur">
+              <p className="text-[10px] sm:text-xs uppercase tracking-[0.18em] text-white/70">
                 Quantité
               </p>
 
-              <h3 className="mt-2 text-2xl font-black text-white">
+              <h3
+                className="
+        mt-2
+        break-words
+        text-xl
+        font-black
+        leading-tight
+        text-white
+        sm:text-2xl
+        lg:text-3xl
+      "
+              >
                 {globalTotals.quantity}
               </h3>
             </div>
