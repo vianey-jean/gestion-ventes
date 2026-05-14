@@ -7,6 +7,7 @@ export interface Indisponibilite {
   heureDebut: string;
   heureFin: string;
   journeeComplete: boolean;
+  exception?: boolean;
   motif: string;
   recurrence?: 'once' | 'weekly';
   jourSemaine?: string;
@@ -44,6 +45,7 @@ const indisponibleApi = {
     heureFin?: string;
     motif?: string;
     journeeComplete?: boolean;
+    exception?: boolean;
     recurrence?: 'once' | 'weekly';
     nombreSemaines?: number;
   }): Promise<Indisponibilite[]> {
@@ -64,6 +66,7 @@ const indisponibleApi = {
     heureFin?: string;
     motif?: string;
     journeeComplete?: boolean;
+    exception?: boolean;
     selectedDates?: string[];
   }): Promise<Indisponibilite | Indisponibilite[]> {
 

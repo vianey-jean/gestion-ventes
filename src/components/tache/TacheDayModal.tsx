@@ -100,7 +100,7 @@ const TacheDayModal: React.FC<TacheDayModalProps> = ({
   useEffect(() => {
     if (!open || !selectedDay) return;
     indisponibleApi.getAll().then(data => {
-      setIndisponibilites(data.filter(i => i.date === selectedDay));
+      setIndisponibilites(data.filter(i => i.date === selectedDay && !i.exception));
     }).catch(() => {});
   }, [open, selectedDay]);
 

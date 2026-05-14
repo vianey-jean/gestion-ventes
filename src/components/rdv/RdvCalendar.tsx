@@ -229,6 +229,7 @@ const RdvCalendar: React.FC<RdvCalendarProps> = ({
   const getIndispoForSlot = (dateStr: string, hour: number) => {
     return indisponibilites.filter(ind => {
       if (ind.date !== dateStr) return false;
+      if (ind.exception) return false; // ✅ exception
       if (ind.journeeComplete) return true;
       const slotStart = hour * 60;
       const slotEnd = (hour + 1) * 60;
@@ -241,7 +242,45 @@ const RdvCalendar: React.FC<RdvCalendarProps> = ({
   };
 
   const isDayFullyIndisponible = (dateStr: string) => {
-    return indisponibilites.some(ind => ind.date === dateStr && ind.journeeComplete);
+    return indisponibilites.some(ind => ind.date === dateStr && ind.journeeComplete && !ind.exception);
+  };
+
+  // ✅ Exceptions
+  const isDayFullyException = (dateStr: string) => {
+    return indisponibilites.some(ind => ind.date === dateStr && ind.journeeComplete && ind.exception);
+  };
+
+  const getExceptionForSlot = (dateStr: string, hour: number) => {
+    return indisponibilites.filter(ind => {
+      if (ind.date !== dateStr) return false;
+      if (!ind.exception) return false;
+      if (ind.journeeComplete) return true;
+      const slotStart = hour * 60;
+      const slotEnd = (hour + 1) * 60;
+      const [sh, sm] = ind.heureDebut.split(':').map(Number);
+      const [eh, em] = ind.heureFin.split(':').map(Number);
+      const indStart = sh * 60 + sm;
+      const indEnd = eh * 60 + em;
+      return slotStart < indEnd && slotEnd > indStart;
+    });
+  };
+
+  const isRdvException = (rdv: RDV): boolean => {
+    const exs = indisponibilites.filter(i => i.date === rdv.date && i.exception);
+    if (exs.length === 0) return false;
+    if (exs.some(e => e.journeeComplete)) return true;
+    const [sh, sm] = rdv.heureDebut.split(':').map(Number);
+    const [eh, em] = rdv.heureFin.split(':').map(Number);
+    const rStart = sh * 60 + sm;
+    const rEnd = eh * 60 + em;
+    return exs.some(e => {
+      if (!e.heureDebut || !e.heureFin) return false;
+      const [esh, esm] = e.heureDebut.split(':').map(Number);
+      const [eeh, eem] = e.heureFin.split(':').map(Number);
+      const eStart = esh * 60 + esm;
+      const eEnd = eeh * 60 + eem;
+      return rStart < eEnd && rEnd > eStart;
+    });
   };
 
   const handleDragStart = (e: React.DragEvent, rdv: RDV) => {
@@ -387,25 +426,27 @@ const RdvCalendar: React.FC<RdvCalendarProps> = ({
             {weekDays.map((day, idx) => {
               const dateStr = format(day, 'yyyy-MM-dd');
               const isFullDayIndispo = isDayFullyIndisponible(dateStr);
-              const hasPartialIndispo = !isFullDayIndispo && indisponibilites.some(ind => ind.date === dateStr);
+              const hasPartialIndispo = !isFullDayIndispo && indisponibilites.some(ind => ind.date === dateStr && !ind.exception);
+              const isFullDayException = !isFullDayIndispo && isDayFullyException(dateStr);
               return (
                 <div
                   key={idx}
                   className={cn(
                     "p-3 text-center border-r border-primary/20 last:border-r-0 transition-colors relative",
                     isFullDayIndispo && "bg-red-500/20 dark:bg-red-900/30",
+                    isFullDayException && "bg-green-500/20 dark:bg-green-900/30",
                     isSameDay(day, new Date()) && !isFullDayIndispo && "bg-gradient-to-b from-primary/20 to-primary/10"
                   )}
                 >
                   <div className={cn(
                     "text-xs font-semibold uppercase tracking-wider",
-                    isFullDayIndispo ? "text-red-500" : "text-muted-foreground"
+                    isFullDayIndispo ? "text-red-500" : isFullDayException ? "text-green-600 dark:text-green-400" : "text-muted-foreground"
                   )}>
                     {format(day, 'EEE', { locale: fr })}
                   </div>
                   <div className={cn(
                     "text-2xl font-bold mt-1",
-                    isFullDayIndispo ? "text-red-500" : isSameDay(day, new Date()) ? "text-primary" : "text-foreground"
+                    isFullDayIndispo ? "text-red-500" : isFullDayException ? "text-green-600 dark:text-green-400" : isSameDay(day, new Date()) ? "text-primary" : "text-foreground"
                   )}>
                     {format(day, 'd')}
                   </div>
@@ -413,6 +454,11 @@ const RdvCalendar: React.FC<RdvCalendarProps> = ({
                     <div className="flex items-center justify-center mt-1">
                       <CalendarOff className="w-3 h-3 text-red-500 mr-1" />
                       <span className="text-[9px] font-bold text-red-500">INDISPONIBLE</span>
+                    </div>
+                  )}
+                  {isFullDayException && (
+                    <div className="flex items-center justify-center mt-1">
+                      <span className="text-[9px] font-bold text-green-600 dark:text-green-400">EXCEPTION</span>
                     </div>
                   )}
                   {hasPartialIndispo && (
@@ -438,6 +484,8 @@ const RdvCalendar: React.FC<RdvCalendarProps> = ({
                   const isDropTarget = dropTarget?.date === dateStr && dropTarget?.hour === hour;
                   const slotIndispos = getIndispoForSlot(dateStr, hour);
                   const isIndispo = slotIndispos.length > 0;
+                  const slotExceptions = getExceptionForSlot(dateStr, hour);
+                  const isException = !isIndispo && slotExceptions.length > 0;
                   
                   return (
                     <div
@@ -447,6 +495,7 @@ const RdvCalendar: React.FC<RdvCalendarProps> = ({
                         isIndispo 
                           ? "bg-red-500/15 dark:bg-red-900/25 cursor-not-allowed" 
                           : "cursor-pointer",
+                        isException && "bg-green-500/15 dark:bg-green-900/25",
                         isDropTarget && !isIndispo && "bg-primary/30 ring-2 ring-primary ring-inset",
                         isSameDay(day, new Date()) && !isIndispo && "bg-primary/5"
                       )}
@@ -476,6 +525,7 @@ const RdvCalendar: React.FC<RdvCalendarProps> = ({
                 const leftPercent = (dayIdx + 1) * (100 / 8);
                 const widthPercent = 100 / 8 - 0.5;
                 const colors = statusColors[rdv.statut] || statusColors.planifie;
+                const isExceptionRdv = isRdvException(rdv);
                 
                 // Vérifier si ce RDV doit clignoter
                 const isBlinking = blinkingRdvId === rdv.id;
@@ -497,8 +547,16 @@ const RdvCalendar: React.FC<RdvCalendarProps> = ({
                       isFromCommande ? "cursor-not-allowed" : "cursor-grab active:cursor-grabbing",
                       "text-white text-xs overflow-hidden shadow-lg",
                       "transition-all duration-200 hover:shadow-xl hover:z-20 hover:scale-[1.02]",
-                      showRedBlink ? "bg-gradient-to-r from-red-600 to-red-700 border-red-400" : colors.bg,
-                      showRedBlink ? "border-red-400" : colors.border,
+                      showRedBlink
+                        ? "bg-gradient-to-r from-red-600 to-red-700 border-red-400"
+                        : isExceptionRdv
+                          ? "bg-gradient-to-r from-purple-500 to-fuchsia-600"
+                          : colors.bg,
+                      showRedBlink
+                        ? "border-red-400"
+                        : isExceptionRdv
+                          ? "border-purple-400"
+                          : colors.border,
                       isBlinking && "z-30 scale-105"
                     )}
                     style={{

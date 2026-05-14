@@ -200,7 +200,8 @@ const TacheFormModal: React.FC<TacheFormModalProps> = ({
   })();
 
   // Check indisponibilité for selected date
-  const indispoForDate = form.date ? indisponibilites.filter(i => i.date === form.date) : [];
+  // ✅ Exception: les indispos avec exception=true n'empêchent rien
+  const indispoForDate = form.date ? indisponibilites.filter(i => i.date === form.date && !i.exception) : [];
   const isDayFullyIndispo = indispoForDate.some(i => i.journeeComplete);
 
   const validationMessage = (() => {

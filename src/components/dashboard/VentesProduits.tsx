@@ -90,7 +90,7 @@ const VentesProduits: React.FC = React.memo(() => {
       <div className="space-y-4 sm:space-y-6 md:space-y-8">
         <SalesOverviewSection 
           sales={sales}
-          productData={optimizedProductData}
+          productData={optimizedProductData as any}
           currentMonth={currentMonth}
           currentYear={currentYear}
         />

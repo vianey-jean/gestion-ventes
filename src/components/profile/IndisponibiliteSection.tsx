@@ -70,6 +70,7 @@ const IndisponibiliteSection: React.FC = () => {
     heureFin: '18:00',
     motif: '',
     journeeComplete: false,
+    exception: false,
     recurrence: 'once' as 'once' | 'weekly',
     nombreSemaines: 4,
   });
@@ -82,6 +83,7 @@ const IndisponibiliteSection: React.FC = () => {
     heureFin: '18:00',
     motif: '',
     journeeComplete: false,
+    exception: false,
   });
   const [editSelectedDates, setEditSelectedDates] = useState<string[]>([]);
 
@@ -148,6 +150,7 @@ const IndisponibiliteSection: React.FC = () => {
         heureFin: form.heureFin,
         motif: form.motif,
         journeeComplete: form.journeeComplete,
+        exception: form.journeeComplete ? form.exception : false,
         recurrence: form.recurrence,
         nombreSemaines: form.recurrence === 'weekly' ? form.nombreSemaines : 1,
       });
@@ -166,7 +169,7 @@ const IndisponibiliteSection: React.FC = () => {
       setForm({
         date: new Date().toISOString().split('T')[0],
         heureDebut: '08:00', heureFin: '18:00', motif: '',
-        journeeComplete: false, recurrence: 'once', nombreSemaines: 4
+        journeeComplete: false, exception: false, recurrence: 'once', nombreSemaines: 4
       });
       fetchData();
     } catch {
@@ -183,6 +186,7 @@ const IndisponibiliteSection: React.FC = () => {
       heureFin: group.heureFin,
       motif: group.motif,
       journeeComplete: group.journeeComplete,
+      exception: !!group.firstEntry.exception,
     });
     setEditSelectedDates(group.entries.map(e => e.date));
     setShowEditDialog(true);
@@ -194,6 +198,7 @@ const IndisponibiliteSection: React.FC = () => {
       setSaving(true);
       await indisponibleApi.update(editingGroup.firstEntry.id, {
         ...editForm,
+        exception: editForm.journeeComplete ? editForm.exception : false,
         selectedDates: editSelectedDates,
       });
       toast({
@@ -297,6 +302,7 @@ const IndisponibiliteSection: React.FC = () => {
                 </div>
                 <p className="text-xs text-muted-foreground">
                   {group.journeeComplete ? '🔒 Journée complète' : `⏰ ${group.heureDebut} - ${group.heureFin}`}
+                  {group.firstEntry.exception && <span className="ml-2 text-xs bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 rounded-full px-2 py-0.5 font-semibold">⚡ Exception</span>}
                   {group.motif && ` • ${group.motif}`}
                 </p>
                 {group.entries.length > 1 && (
@@ -401,17 +407,44 @@ const IndisponibiliteSection: React.FC = () => {
               )}
             </AnimatePresence>
 
-            {/* Full day toggle */}
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={() => setForm({ ...form, journeeComplete: !form.journeeComplete })}
-                className={`relative w-11 h-6 rounded-full transition-all duration-300 ${form.journeeComplete ? 'bg-gradient-to-r from-red-500 to-orange-500' : 'bg-muted'}`}
-              >
-                <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-md transition-transform duration-300 ${form.journeeComplete ? 'translate-x-[22px]' : 'translate-x-0.5'}`} />
-              </button>
-              <span className="text-sm text-foreground">Journée complète</span>
+            {/* Full day toggle + Exception */}
+            <div className="flex items-center gap-4 flex-wrap">
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setForm({ ...form, journeeComplete: !form.journeeComplete, exception: !form.journeeComplete ? form.exception : false })}
+                  className={`relative w-11 h-6 rounded-full transition-all duration-300 ${form.journeeComplete ? 'bg-gradient-to-r from-red-500 to-orange-500' : 'bg-muted'}`}
+                >
+                  <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-md transition-transform duration-300 ${form.journeeComplete ? 'translate-x-[22px]' : 'translate-x-0.5'}`} />
+                </button>
+                <span className="text-sm text-foreground">Journée complète</span>
+              </div>
+
+              <AnimatePresence>
+                {form.journeeComplete && (
+                  <motion.div
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -10 }}
+                    className="flex items-center gap-3"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => setForm({ ...form, exception: !form.exception })}
+                      className={`relative w-11 h-6 rounded-full transition-all duration-300 ${form.exception ? 'bg-gradient-to-r from-emerald-500 to-teal-500' : 'bg-muted'}`}
+                    >
+                      <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-md transition-transform duration-300 ${form.exception ? 'translate-x-[22px]' : 'translate-x-0.5'}`} />
+                    </button>
+                    <span className="text-sm text-foreground">Exception</span>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
+            {form.journeeComplete && form.exception && (
+              <p className="text-xs text-emerald-600 dark:text-emerald-400 -mt-2">
+                ⚠️ Exception activée : RDV, tâches, commandes et réservations seront autorisés ce jour.
+              </p>
+            )}
 
             <AnimatePresence>
               {!form.journeeComplete && (
@@ -483,16 +516,43 @@ const IndisponibiliteSection: React.FC = () => {
           {editingGroup && (
             <div className="space-y-4 py-2">
               {/* Time settings */}
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => setEditForm({ ...editForm, journeeComplete: !editForm.journeeComplete })}
-                  className={`relative w-11 h-6 rounded-full transition-all duration-300 ${editForm.journeeComplete ? 'bg-gradient-to-r from-red-500 to-orange-500' : 'bg-muted'}`}
-                >
-                  <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-md transition-transform duration-300 ${editForm.journeeComplete ? 'translate-x-[22px]' : 'translate-x-0.5'}`} />
-                </button>
-                <span className="text-sm text-foreground">Journée complète</span>
+              <div className="flex items-center gap-4 flex-wrap">
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setEditForm({ ...editForm, journeeComplete: !editForm.journeeComplete, exception: !editForm.journeeComplete ? editForm.exception : false })}
+                    className={`relative w-11 h-6 rounded-full transition-all duration-300 ${editForm.journeeComplete ? 'bg-gradient-to-r from-red-500 to-orange-500' : 'bg-muted'}`}
+                  >
+                    <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-md transition-transform duration-300 ${editForm.journeeComplete ? 'translate-x-[22px]' : 'translate-x-0.5'}`} />
+                  </button>
+                  <span className="text-sm text-foreground">Journée complète</span>
+                </div>
+
+                <AnimatePresence>
+                  {editForm.journeeComplete && (
+                    <motion.div
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -10 }}
+                      className="flex items-center gap-3"
+                    >
+                      <button
+                        type="button"
+                        onClick={() => setEditForm({ ...editForm, exception: !editForm.exception })}
+                        className={`relative w-11 h-6 rounded-full transition-all duration-300 ${editForm.exception ? 'bg-gradient-to-r from-emerald-500 to-teal-500' : 'bg-muted'}`}
+                      >
+                        <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-md transition-transform duration-300 ${editForm.exception ? 'translate-x-[22px]' : 'translate-x-0.5'}`} />
+                      </button>
+                      <span className="text-sm text-foreground">Exception</span>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
+              {editForm.journeeComplete && editForm.exception && (
+                <p className="text-xs text-emerald-600 dark:text-emerald-400">
+                  ⚠️ Exception activée : RDV, tâches, commandes et réservations seront autorisés ce jour.
+                </p>
+              )}
 
               <AnimatePresence>
                 {!editForm.journeeComplete && (
@@ -690,6 +750,7 @@ const IndisponibiliteSection: React.FC = () => {
                     </div>
                     <p className="text-xs text-muted-foreground">
                       {group.journeeComplete ? '🔒 Journée complète' : `⏰ ${group.heureDebut} - ${group.heureFin}`}
+                      {group.firstEntry.exception && <span className="ml-2 text-xs bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 rounded-full px-2 py-0.5 font-semibold">⚡ Exception</span>}
                       {group.motif && ` • ${group.motif}`}
                     </p>
                     {group.entries.length > 1 && (
