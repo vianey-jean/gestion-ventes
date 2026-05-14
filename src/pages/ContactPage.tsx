@@ -298,8 +298,8 @@ const ContactPage: React.FC = () => {
                 <CardContent className="space-y-4">
                   {[
                     { icon: Mail, label: 'Email :', value: 'vianey.jean@ymail.com', gradient: 'from-blue-500/10 to-purple-500/10', borderColor: 'border-blue-500/10', iconBg: 'from-blue-500 to-purple-600' },
-                    { icon: Phone, label: 'Ligne Directe', value: '+225 0505050505', gradient: 'from-emerald-500/10 to-teal-500/10', borderColor: 'border-emerald-500/10', iconBg: 'from-emerald-500 to-teal-600' },
-                    { icon: MapPin, label: 'Adresse', value: 'Abidjan, Côte d\'Ivoire', gradient: 'from-purple-500/10 to-indigo-500/10', borderColor: 'border-purple-500/10', iconBg: 'from-purple-500 to-indigo-600' },
+                    { icon: Phone, label: 'Ligne Directe', value: '+262 00 00 00', gradient: 'from-emerald-500/10 to-teal-500/10', borderColor: 'border-emerald-500/10', iconBg: 'from-emerald-500 to-teal-600' },
+                    { icon: MapPin, label: 'Adresse', value: 'Saint-Denis,La Réunion', gradient: 'from-purple-500/10 to-indigo-500/10', borderColor: 'border-purple-500/10', iconBg: 'from-purple-500 to-indigo-600' },
                   ].map((item, i) => (
                     <div key={i} className={`flex items-center gap-4 p-4 bg-gradient-to-r ${item.gradient} rounded-2xl border ${item.borderColor} transition-all duration-300 hover:bg-white/[0.03]`}>
                       <div className={`p-2.5 bg-gradient-to-br ${item.iconBg} rounded-xl shadow-lg border border-white/10`}>
