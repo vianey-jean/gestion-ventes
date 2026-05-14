@@ -475,52 +475,155 @@ const SecurityCheckPage: React.FC<SecurityCheckPageProps> = ({
     return true;
   };
 
-  const performSecurityCheck = useCallback(() => {
-    const timeSpent =
-      Date.now() - startTime.current;
+  // ===== PATCH SÉCURITÉ AVANCÉE — détection de bots réels =====
+  const advancedBotDetection = useCallback((): { passed: boolean; bonus: number; reasons: string[] } => {
+    const nav = navigator as any;
+    const win = window as any;
+    const reasons: string[] = [];
+    let bonus = 0;
 
+    // 1. Drapeaux d'automation explicites
+    if (nav.webdriver) reasons.push('webdriver');
+    if (win.callPhantom || win._phantom) reasons.push('phantom');
+    if (win.__nightmare) reasons.push('nightmare');
+    if (nav.userAgent && /HeadlessChrome|PhantomJS|Selenium|Puppeteer|Playwright|Crawler|Bot|Spider|Scrapy|wget|curl/i.test(nav.userAgent)) {
+      reasons.push('ua-bot');
+    }
+    // Cypress / CDP
+    if (win.Cypress) reasons.push('cypress');
+    if (Object.keys(win).some(k => /^cdc_|^_selenium|^__webdriver|^__driver|^__fxdriver/i.test(k))) {
+      reasons.push('automation-keys');
+    }
+
+    // 2. Cohérence de la pile navigateur
+    try {
+      if (!nav.languages || nav.languages.length === 0) reasons.push('no-languages');
+      if (typeof nav.hardwareConcurrency !== 'number' || nav.hardwareConcurrency < 1) reasons.push('hw-concurrency');
+      if (typeof nav.deviceMemory !== 'undefined' && nav.deviceMemory < 0.25) reasons.push('low-memory');
+      if (!nav.platform) reasons.push('no-platform');
+    } catch { reasons.push('nav-error'); }
+
+    // 3. Permissions API — Headless Chrome ment sur 'notifications'
+    try {
+      if (nav.permissions?.query) {
+        nav.permissions.query({ name: 'notifications' }).then((p: any) => {
+          if (Notification.permission === 'denied' && p.state === 'prompt') {
+            // signature classique de Chrome headless — déjà capté plus tard
+          }
+        }).catch(() => {});
+      }
+    } catch {}
+
+    // 4. WebGL fingerprint — bots renvoient souvent SwiftShader / vide
+    try {
+      const canvas = document.createElement('canvas');
+      const gl = (canvas.getContext('webgl') || canvas.getContext('experimental-webgl')) as WebGLRenderingContext | null;
+      if (!gl) {
+        reasons.push('no-webgl');
+      } else {
+        const ext = gl.getExtension('WEBGL_debug_renderer_info');
+        const renderer = ext ? gl.getParameter((ext as any).UNMASKED_RENDERER_WEBGL) : '';
+        if (typeof renderer === 'string' && /SwiftShader|llvmpipe|Software/i.test(renderer)) {
+          reasons.push('software-gpu');
+        } else if (renderer) {
+          bonus += 5;
+        }
+      }
+    } catch { reasons.push('webgl-error'); }
+
+    // 5. Canvas 2D fingerprint stable
+    try {
+      const c = document.createElement('canvas');
+      c.width = 200; c.height = 50;
+      const ctx = c.getContext('2d');
+      if (ctx) {
+        ctx.textBaseline = 'top';
+        ctx.font = '14px Arial';
+        ctx.fillStyle = '#f60';
+        ctx.fillRect(0, 0, 200, 50);
+        ctx.fillStyle = '#069';
+        ctx.fillText('riziky-bot-check-✓', 2, 2);
+        const data = c.toDataURL();
+        if (!data || data.length < 100) reasons.push('canvas-empty');
+        else bonus += 5;
+      } else {
+        reasons.push('no-canvas');
+      }
+    } catch { reasons.push('canvas-error'); }
+
+    // 6. Cohérence taille fenêtre / écran
+    if (!window.outerWidth || !window.outerHeight) reasons.push('no-outer-size');
+    if (window.screen && (window.screen.width < 100 || window.screen.height < 100)) reasons.push('tiny-screen');
+
+    // 7. Timezone & Intl disponibles
+    try {
+      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      if (!tz) reasons.push('no-tz');
+      else bonus += 3;
+    } catch { reasons.push('no-intl'); }
+
+    // 8. Crypto / SubtleCrypto (signe de vrai navigateur)
+    if (!window.crypto || !window.crypto.subtle) reasons.push('no-subtlecrypto');
+    else bonus += 2;
+
+    // 9. Chrome runtime cohérent (si UA dit Chrome)
+    if (/Chrome/i.test(nav.userAgent) && !win.chrome) reasons.push('chrome-missing');
+
+    return { passed: reasons.length === 0, bonus: Math.min(bonus, 15), reasons };
+  }, []);
+
+  // Score temps réel — recalculé à chaque mouvement
+  const [botReasons, setBotReasons] = useState<string[]>([]);
+  const computeLiveScore = useCallback(() => {
+    const timeSpent = Date.now() - startTime.current;
     const avgVelocity =
-      velocitySamples.current.reduce(
-        (a, b) => a + b,
-        0
-      ) / (velocitySamples.current.length || 1);
+      velocitySamples.current.reduce((a, b) => a + b, 0) /
+      (velocitySamples.current.length || 1);
 
     let score = 0;
-
     if (timeSpent > 2500) score += 20;
-
     if (verifiedPuzzle) score += 20;
-
     if (checked) score += 15;
-
     if (moveCount.current > 8) score += 10;
-
     if (entropyRef.current > 120) score += 15;
-
     if (pathLengthRef.current > 80) score += 10;
-
     if (timingVariance > 5) score += 5;
-
     if (avgVelocity > 1.2) score += 5;
 
-    if (advancedFingerprintCheck()) score += 20;
+    const bot = advancedBotDetection();
+    if (bot.passed) score += 10;
+    score += bot.bonus;
+    if (honeypot.length > 0) score = 0;
 
-    setSecurityScore(score);
+    setSecurityScore(Math.min(100, Math.max(0, Math.round(score))));
+    setBotReasons(bot.reasons);
+    return { score, bot };
+  }, [verifiedPuzzle, checked, timingVariance, honeypot, advancedBotDetection]);
 
-    if (honeypot.length > 0) {
+  // Recalcul périodique (sans dépendre du drag)
+  useEffect(() => {
+    const id = window.setInterval(() => { computeLiveScore(); }, 500);
+    return () => window.clearInterval(id);
+  }, [computeLiveScore]);
+
+  // Recalcul immédiat sur changements clés
+  useEffect(() => { computeLiveScore(); }, [verifiedPuzzle, checked, computeLiveScore]);
+
+  const performSecurityCheck = useCallback(() => {
+    const { score, bot } = computeLiveScore();
+    if (honeypot.length > 0) return false;
+    // Bot réel détecté → blocage immédiat
+    if (!bot.passed && bot.reasons.some(r =>
+      ['webdriver','phantom','nightmare','ua-bot','cypress','automation-keys','software-gpu','chrome-missing'].includes(r)
+    )) {
       return false;
     }
-
-    if (score < 70) {
-      return false;
-    }
-
+    if (!advancedFingerprintCheck()) return false;
+    if (score < 70) return false;
     return true;
   }, [
-    verifiedPuzzle,
-    checked,
+    computeLiveScore,
     honeypot,
-    timingVariance,
   ]);
 
   const handleVerify = () => {

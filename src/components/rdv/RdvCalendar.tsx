@@ -72,6 +72,16 @@ const statusLabels: Record<string, string> = {
   reporte: 'Reporté',
 };
 
+// Backgrounds tintés pour le modal détail (selon statut / exception)
+const statusModalBg: Record<string, string> = {
+  planifie: 'bg-gradient-to-br from-blue-500/30 via-blue-400/15 to-background',
+  confirme: 'bg-gradient-to-br from-emerald-500/30 via-green-400/15 to-background',
+  annule: 'bg-gradient-to-br from-red-500/35 via-rose-400/20 to-background',
+  termine: 'bg-gradient-to-br from-gray-500/30 via-slate-400/15 to-background',
+  reporte: 'bg-gradient-to-br from-amber-500/30 via-orange-400/15 to-background',
+};
+const exceptionModalBg = 'bg-gradient-to-br from-purple-500/35 via-fuchsia-400/20 to-background';
+
 const RdvCalendar: React.FC<RdvCalendarProps> = ({
   rdvs,
   onRdvClick,
@@ -689,12 +699,23 @@ const RdvCalendar: React.FC<RdvCalendarProps> = ({
 
       {/* RDV Detail Modal */}
       <Dialog open={showDetailModal} onOpenChange={setShowDetailModal}>
-        <DialogContent className="sm:max-w-lg bg-gradient-to-br from-background via-background to-primary/5">
+        <DialogContent className={cn(
+          "sm:max-w-lg",
+          selectedRdvDetail
+            ? (isRdvException(selectedRdvDetail)
+                ? exceptionModalBg
+                : (statusModalBg[selectedRdvDetail.statut] || statusModalBg.planifie))
+            : "bg-background"
+        )}>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-3 text-xl">
               <div className={cn(
                 "p-2 rounded-xl",
-                selectedRdvDetail && (statusColors[selectedRdvDetail.statut]?.bg || statusColors.planifie.bg)
+                selectedRdvDetail && (
+                  isRdvException(selectedRdvDetail)
+                    ? 'bg-gradient-to-r from-purple-500 to-fuchsia-600'
+                    : (statusColors[selectedRdvDetail.statut]?.bg || statusColors.planifie.bg)
+                )
               )}>
                 <Calendar className="h-5 w-5 text-white" />
               </div>
@@ -709,10 +730,14 @@ const RdvCalendar: React.FC<RdvCalendarProps> = ({
                 <Badge 
                   className={cn(
                     "text-white",
-                    statusColors[selectedRdvDetail.statut]?.bg || statusColors.planifie.bg
+                    isRdvException(selectedRdvDetail)
+                      ? 'bg-gradient-to-r from-purple-500 to-fuchsia-600'
+                      : (statusColors[selectedRdvDetail.statut]?.bg || statusColors.planifie.bg)
                   )}
                 >
-                  {statusLabels[selectedRdvDetail.statut] || 'Inconnu'}
+                  {isRdvException(selectedRdvDetail)
+                    ? `Exception · ${statusLabels[selectedRdvDetail.statut] || 'Inconnu'}`
+                    : (statusLabels[selectedRdvDetail.statut] || 'Inconnu')}
                 </Badge>
               </div>
 
