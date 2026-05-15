@@ -331,7 +331,7 @@ const DashboardPage = () => {
             <motion.div
               initial={{ opacity: 0, y: -15 }}
               animate={{ opacity: 1, y: 0 }}
-              className="relative overflow-hidden rounded-3xl border border-white/20 bg-white/60 dark:bg-white/[0.04] backdrop-blur-3xl shadow-[0_10px_60px_rgba(0,0,0,0.25)]"
+              className="relative overflow-hidden rounded-3xl border border-white/20 bg-white/60 dark:bg-white/[0.04] backdrop-blur* shadow-[0_10px_60px_rgba(0,0,0,0.25)]"
             >
 
               <div className="absolute inset-0 bg-gradient-to-r from-white/10 via-white/5 to-transparent pointer-events-none" />
@@ -340,7 +340,7 @@ const DashboardPage = () => {
 
                 <button
                   onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                  className="flex items-center gap-2 rounded-2xl border border-white/20 bg-white/40 dark:bg-white/5 px-4 py-2.5 shadow-lg backdrop-blur-xl"
+                  className="flex items-center gap-2 rounded-2xl border border-white/20 bg-white/40 dark:bg-white/5 px-4 py-2.5 shadow-lg backdrop-blur*"
                 >
                   {mobileMenuOpen ? (
                     <X className="h-5 w-5 text-violet-500" />
@@ -421,7 +421,7 @@ const DashboardPage = () => {
                     y: -10,
                     scale: 0.98,
                   }}
-                  className="mt-3 overflow-hidden rounded-3xl border border-white/20 bg-white/70 dark:bg-white/[0.04] backdrop-blur-3xl shadow-[0_20px_80px_rgba(0,0,0,0.35)]"
+                  className="mt-3 overflow-hidden rounded-3xl border border-white/20 bg-white/70 dark:bg-white/[0.04] backdrop-blur* shadow-[0_20px_80px_rgba(0,0,0,0.35)]"
                 >
                   <div className="grid grid-cols-2 gap-2 p-3">
                     {SIDEBAR_ITEMS.map((item) => {
@@ -497,7 +497,7 @@ const DashboardPage = () => {
             >
               <div className="h-full p-4">
 
-                <div className="relative flex h-full flex-col overflow-hidden rounded-[32px] border border-white/15 bg-white/60 dark:bg-white/[0.045] backdrop-blur-[30px] shadow-[0_20px_80px_rgba(0,0,0,0.35)]">
+                <div className="relative flex h-full flex-col overflow-hidden rounded-[32px] border border-white/15 bg-white/60 dark:bg-white/[0.045] backdrop-blur*-[30px] shadow-[0_20px_80px_rgba(0,0,0,0.35)]">
 
                   <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(255,255,255,0.15),transparent_40%,transparent_60%,rgba(255,255,255,0.08))]" />
 
@@ -544,7 +544,7 @@ const DashboardPage = () => {
                             !sidebarCollapsed
                           )
                         }
-                        className="group relative overflow-hidden rounded-2xl border border-white/15 bg-white/40 dark:bg-white/[0.04] p-3 backdrop-blur-xl transition-all duration-300 hover:scale-105 hover:bg-violet-500/10"
+                        className="group relative overflow-hidden rounded-2xl border border-white/15 bg-white/40 dark:bg-white/[0.04] p-3 backdrop-blur* transition-all duration-300 hover:scale-105 hover:bg-violet-500/10"
                       >
                         <div className="absolute inset-0 bg-gradient-to-r from-violet-500/0 via-violet-500/10 to-violet-500/0 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
 
@@ -607,7 +607,7 @@ const DashboardPage = () => {
                                   ? 'h-12 w-12'
                                   : 'h-11 w-11',
                                 isActive
-                                  ? 'bg-white/20 backdrop-blur-xl'
+                                  ? 'bg-white/20 backdrop-blur*'
                                   : `${item.iconBg} shadow-xl`
                               )}
                             >
@@ -670,7 +670,7 @@ const DashboardPage = () => {
                   {!sidebarCollapsed && (
                     <div className="relative border-t border-white/10 p-5">
 
-                      <div className="overflow-hidden rounded-3xl border border-violet-500/10 bg-gradient-to-br from-violet-500/10 via-fuchsia-500/5 to-cyan-500/10 p-4 backdrop-blur-xl">
+                      <div className="overflow-hidden rounded-3xl border border-violet-500/10 bg-gradient-to-br from-violet-500/10 via-fuchsia-500/5 to-cyan-500/10 p-4 backdrop-blur*">
 
                         <div className="flex items-center gap-3">
 
@@ -764,7 +764,7 @@ const DashboardPage = () => {
                     'relative',
                     // IMPORTANT MOBILE CARD EFFECT
                     isMobile &&
-                      'rounded-[28px] border border-white/10 bg-white/20 dark:bg-white/[0.02] backdrop-blur-md overflow-hidden'
+                      'rounded-[28px] border border-white/10 bg-white/20 dark:bg-white/[0.02] backdrop-blur* overflow-hidden'
                   )}
                 >
                   {renderContent()}
