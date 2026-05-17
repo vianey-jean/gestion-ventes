@@ -53,6 +53,20 @@ const MaintenanceGate: React.FC<MaintenanceGateProps> = ({ children }) => {
     }
   }, [maintenant, user, logout]);
 
+  // Bascule le thème global "maintenance" (jaunâtre/orange ultra luxe) sur <html>.
+  // Actif dès que le site est en maintenance, quel que soit le rôle connecté.
+  useEffect(() => {
+    const root = document.documentElement;
+    if (maintenant) {
+      root.classList.add('maintenance-mode');
+    } else {
+      root.classList.remove('maintenance-mode');
+    }
+    return () => {
+      root.classList.remove('maintenance-mode');
+    };
+  }, [maintenant]);
+
   if (!checked) {
     return <PremiumLoading text="Vérification du statut..." size="lg" overlay={true} variant="default" />;
   }

@@ -250,7 +250,7 @@ const MaintenancePage: React.FC<MaintenancePageProps> = ({ message, onAuthentica
                 <CardTitle className="text-4xl md:text-5xl font-black text-white drop-shadow-lg mb-3">
                   Site en <span className="bg-gradient-to-r from-amber-300 via-orange-300 to-yellow-300 bg-clip-text text-transparent">Maintenance</span>
                 </CardTitle>
-                <CardDescription className="text-amber-100/70 text-base md:text-lg mt-4 px-6 leading-relaxed">
+                <CardDescription className="text-amber-800 text-base md:text-lg mt-4 px-6 leading-relaxed">
                   {message || 'Le site est temporairement indisponible. Nous travaillons à améliorer votre expérience.'}
                 </CardDescription>
               </CardHeader>
@@ -262,9 +262,9 @@ const MaintenancePage: React.FC<MaintenancePageProps> = ({ message, onAuthentica
                       <Crown className="w-5 h-5 text-amber-300" />
                     </div>
                     <div className="flex-1">
-                      <p className="text-sm font-bold text-amber-100 mb-1">Accès restreint</p>
-                      <p className="text-xs text-amber-200/70 leading-relaxed">
-                        Seul un <strong className="text-amber-200">administrateur principal</strong> peut se connecter pendant la période de maintenance pour effectuer les opérations critiques.
+                      <p className="text-sm font-bold text-amber-800 mb-1">Accès restreint</p>
+                      <p className="text-xs text-amber-600/70 leading-relaxed">
+                        Seul un <strong className="text-amber-800">administrateur principal</strong> peut se connecter pendant la période de maintenance pour effectuer les opérations critiques.
                       </p>
                     </div>
                   </div>
@@ -280,7 +280,7 @@ const MaintenancePage: React.FC<MaintenancePageProps> = ({ message, onAuthentica
                   Se connecter (Admin principal)
                   <ArrowRight className="h-5 w-5 ml-2" />
                 </Button>
-                <p className="text-[11px] text-center text-amber-200/40 mt-2">
+                <p className="text-[11px] text-center text-amber-800 mt-2">
                   Cette action est journalisée et sécurisée
                 </p>
               </CardFooter>
@@ -326,7 +326,7 @@ const MaintenancePage: React.FC<MaintenancePageProps> = ({ message, onAuthentica
                 <CardTitle className="text-3xl font-bold text-white drop-shadow-lg">
                   Connexion Admin
                 </CardTitle>
-                <CardDescription className="text-amber-200/70 text-base mt-2">
+                <CardDescription className="text-amber-800 text-base mt-2">
                   Maintenance — Accès administrateur principal
                 </CardDescription>
 
@@ -345,7 +345,10 @@ const MaintenancePage: React.FC<MaintenancePageProps> = ({ message, onAuthentica
                 <CardContent className="space-y-5 px-8">
                   <div className="space-y-3">
                     <Label htmlFor="email" className="text-sm font-semibold text-amber-200/80 flex items-center gap-2">
-                      <Mail className="h-4 w-4 text-amber-400" /> Adresse email
+                      <Mail className="h-4 w-4 text-amber-800" />
+<span className="text-amber-800 text-base ml-2">
+  Adresse email
+</span>
                     </Label>
                     <div className="relative group">
                       <div className="absolute -inset-0.5 bg-gradient-to-r from-amber-500/30 to-orange-500/30 rounded-xl blur opacity-0 group-focus-within:opacity-100 transition-opacity duration-300" />
@@ -445,7 +448,7 @@ const MaintenancePage: React.FC<MaintenancePageProps> = ({ message, onAuthentica
                   <Button
                     type="button"
                     onClick={() => { setShowLogin(false); setShowPasswordField(false); setEmail(''); setPassword(''); setErrors({}); }}
-                    className="w-full h-12 bg-white/[0.05] hover:bg-white/[0.1] text-amber-200/80 rounded-xl border border-white/[0.1] backdrop-blur-sm"
+                    className="w-full h-12 bg-white/[0.05] hover:bg-white/[0.1] text-red rounded-xl border border-red backdrop-blur-sm"
                   >
                     Retour
                   </Button>

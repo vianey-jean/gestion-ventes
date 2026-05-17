@@ -540,3 +540,1044 @@
 .confirmation-luxury-shimmer {
   animation: confirmation-luxury-shimmer-kf 2.4s ease-in-out infinite;
 }
+
+/* ============================================
+   MAINTENANCE MODE — Thème jaunâtre/orange ultra luxe
+   Activé via la classe .maintenance-mode sur <html>
+   ============================================ */
+html.maintenance-mode,
+html.maintenance-mode body {
+  --background: 38 60% 96%;
+  --foreground: 25 70% 12%;
+  --card: 40 70% 98%;
+  --card-foreground: 25 70% 12%;
+  --popover: 40 70% 98%;
+  --popover-foreground: 25 70% 12%;
+  --primary: 30 95% 52%;
+  --primary-foreground: 40 80% 98%;
+  --secondary: 45 90% 88%;
+  --secondary-foreground: 25 70% 18%;
+  --muted: 42 60% 92%;
+  --muted-foreground: 28 35% 35%;
+  --accent: 45 95% 60%;
+  --accent-foreground: 25 70% 12%;
+  --destructive: 0 78% 50%;
+  --destructive-foreground: 40 80% 98%;
+  --border: 38 70% 80%;
+  --input: 38 70% 85%;
+  --ring: 30 95% 52%;
+  --chart-1: 30 95% 55%;
+  --chart-2: 45 95% 55%;
+  --chart-3: 20 85% 50%;
+  --chart-4: 50 90% 60%;
+  --chart-5: 15 80% 55%;
+  --app-red: 18 85% 55%;
+  --app-blue: 35 90% 55%;
+  --app-purple: 28 88% 55%;
+}
+
+html.maintenance-mode.dark,
+html.maintenance-mode.dark body {
+  --background: 28 55% 8%;
+  --foreground: 45 95% 92%;
+  --card: 28 55% 11%;
+  --card-foreground: 45 95% 92%;
+  --popover: 28 55% 11%;
+  --popover-foreground: 45 95% 92%;
+  --primary: 38 100% 60%;
+  --primary-foreground: 28 70% 10%;
+  --secondary: 30 50% 18%;
+  --secondary-foreground: 45 95% 92%;
+  --muted: 28 40% 16%;
+  --muted-foreground: 42 60% 75%;
+  --accent: 45 100% 55%;
+  --accent-foreground: 28 70% 10%;
+  --destructive: 0 75% 55%;
+  --destructive-foreground: 45 95% 92%;
+  --border: 32 50% 25%;
+  --input: 32 50% 22%;
+  --ring: 38 100% 60%;
+}
+
+html.maintenance-mode body {
+  background-image:
+    radial-gradient(ellipse 80% 60% at 0% 0%, hsl(45 95% 70% / 0.18), transparent 60%),
+    radial-gradient(ellipse 70% 60% at 100% 0%, hsl(25 95% 60% / 0.18), transparent 60%),
+    radial-gradient(ellipse 100% 50% at 50% 100%, hsl(38 95% 65% / 0.12), transparent 70%);
+  background-attachment: fixed;
+}
+
+html.maintenance-mode.dark body {
+  background-image:
+    radial-gradient(ellipse 80% 60% at 0% 0%, hsl(38 100% 50% / 0.12), transparent 60%),
+    radial-gradient(ellipse 70% 60% at 100% 0%, hsl(20 95% 50% / 0.12), transparent 60%),
+    radial-gradient(ellipse 100% 50% at 50% 100%, hsl(45 100% 55% / 0.08), transparent 70%);
+}
+
+/* Bandeau supérieur luxe */
+html.maintenance-mode body::before {
+  content: "⚠  MODE MAINTENANCE ACTIF  ✦  ACCÈS RESTREINT ADMINISTRATEUR PRINCIPAL  ✦";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-align: center;
+  padding: 6px 12px;
+  color: hsl(28 80% 12%);
+  background: linear-gradient(90deg,
+    hsl(45 100% 60%) 0%,
+    hsl(38 100% 55%) 25%,
+    hsl(30 100% 55%) 50%,
+    hsl(38 100% 55%) 75%,
+    hsl(45 100% 60%) 100%);
+  background-size: 200% 100%;
+  animation: maintenance-shimmer 6s linear infinite;
+  box-shadow: 0 4px 24px hsl(30 95% 50% / 0.45), inset 0 -1px 0 hsl(25 80% 35% / 0.5);
+  text-shadow: 0 1px 0 hsl(45 100% 85% / 0.6);
+  pointer-events: none;
+}
+
+@keyframes maintenance-shimmer {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+
+html.maintenance-mode #main-content,
+html.maintenance-mode nav,
+html.maintenance-mode header { margin-top: 0; }
+html.maintenance-mode body { padding-top: 28px; }
+
+/* Boutons primaires plus dorés */
+html.maintenance-mode .bg-primary {
+  background: linear-gradient(135deg, hsl(38 100% 55%), hsl(28 95% 50%)) !important;
+  box-shadow: 0 6px 20px hsl(30 95% 50% / 0.35);
+}
+
+/* Cards avec léger glow doré */
+html.maintenance-mode .bg-card,
+html.maintenance-mode [class*="card"] {
+  box-shadow: 0 4px 24px hsl(35 80% 50% / 0.08), 0 1px 0 hsl(45 95% 70% / 0.15) inset;
+}
+/* ============================================
+   MAINTENANCE MODE — Palette jaune/orange très claire
+   Fonds très clairs, texte brun chaud lisible
+   ============================================ */
+html.maintenance-mode [class*="text-blue-"],
+html.maintenance-mode [class*="text-sky-"],
+html.maintenance-mode [class*="text-cyan-"],
+html.maintenance-mode [class*="text-teal-"],
+html.maintenance-mode [class*="text-emerald-"],
+html.maintenance-mode [class*="text-green-"],
+html.maintenance-mode [class*="text-lime-"],
+html.maintenance-mode [class*="text-indigo-"],
+html.maintenance-mode [class*="text-violet-"],
+html.maintenance-mode [class*="text-purple-"],
+html.maintenance-mode [class*="text-fuchsia-"],
+html.maintenance-mode [class*="text-pink-"],
+html.maintenance-mode [class*="text-rose-"],
+html.maintenance-mode [class*="text-red-"],
+html.maintenance-mode [class*="text-slate-"],
+html.maintenance-mode [class*="text-gray-"],
+html.maintenance-mode [class*="text-zinc-"],
+html.maintenance-mode [class*="text-neutral-"],
+html.maintenance-mode [class*="text-stone-"] {
+  color: hsl(28 75% 22%) !important;
+}
+html.maintenance-mode.dark [class*="text-blue-"],
+html.maintenance-mode.dark [class*="text-sky-"],
+html.maintenance-mode.dark [class*="text-cyan-"],
+html.maintenance-mode.dark [class*="text-teal-"],
+html.maintenance-mode.dark [class*="text-emerald-"],
+html.maintenance-mode.dark [class*="text-green-"],
+html.maintenance-mode.dark [class*="text-lime-"],
+html.maintenance-mode.dark [class*="text-indigo-"],
+html.maintenance-mode.dark [class*="text-violet-"],
+html.maintenance-mode.dark [class*="text-purple-"],
+html.maintenance-mode.dark [class*="text-fuchsia-"],
+html.maintenance-mode.dark [class*="text-pink-"],
+html.maintenance-mode.dark [class*="text-rose-"],
+html.maintenance-mode.dark [class*="text-red-"],
+html.maintenance-mode.dark [class*="text-slate-"],
+html.maintenance-mode.dark [class*="text-gray-"],
+html.maintenance-mode.dark [class*="text-zinc-"],
+html.maintenance-mode.dark [class*="text-neutral-"],
+html.maintenance-mode.dark [class*="text-stone-"] {
+  color: hsl(45 95% 80%) !important;
+}
+html.maintenance-mode [class*="bg-blue-"],
+html.maintenance-mode [class*="bg-sky-"],
+html.maintenance-mode [class*="bg-cyan-"],
+html.maintenance-mode [class*="bg-teal-"],
+html.maintenance-mode [class*="bg-emerald-"],
+html.maintenance-mode [class*="bg-green-"],
+html.maintenance-mode [class*="bg-lime-"],
+html.maintenance-mode [class*="bg-indigo-"],
+html.maintenance-mode [class*="bg-violet-"],
+html.maintenance-mode [class*="bg-purple-"],
+html.maintenance-mode [class*="bg-fuchsia-"],
+html.maintenance-mode [class*="bg-pink-"],
+html.maintenance-mode [class*="bg-rose-"],
+html.maintenance-mode [class*="bg-red-"],
+html.maintenance-mode [class*="bg-slate-"],
+html.maintenance-mode [class*="bg-gray-"],
+html.maintenance-mode [class*="bg-zinc-"],
+html.maintenance-mode [class*="bg-neutral-"],
+html.maintenance-mode [class*="bg-stone-"] {
+  background-color: hsl(45 100% 96%) !important;
+}
+html.maintenance-mode.dark [class*="bg-blue-"],
+html.maintenance-mode.dark [class*="bg-sky-"],
+html.maintenance-mode.dark [class*="bg-cyan-"],
+html.maintenance-mode.dark [class*="bg-teal-"],
+html.maintenance-mode.dark [class*="bg-emerald-"],
+html.maintenance-mode.dark [class*="bg-green-"],
+html.maintenance-mode.dark [class*="bg-lime-"],
+html.maintenance-mode.dark [class*="bg-indigo-"],
+html.maintenance-mode.dark [class*="bg-violet-"],
+html.maintenance-mode.dark [class*="bg-purple-"],
+html.maintenance-mode.dark [class*="bg-fuchsia-"],
+html.maintenance-mode.dark [class*="bg-pink-"],
+html.maintenance-mode.dark [class*="bg-rose-"],
+html.maintenance-mode.dark [class*="bg-red-"],
+html.maintenance-mode.dark [class*="bg-slate-"],
+html.maintenance-mode.dark [class*="bg-gray-"],
+html.maintenance-mode.dark [class*="bg-zinc-"],
+html.maintenance-mode.dark [class*="bg-neutral-"],
+html.maintenance-mode.dark [class*="bg-stone-"] {
+  background-color: hsl(28 50% 14%) !important;
+}
+html.maintenance-mode [class*="border-t-blue-"],
+html.maintenance-mode [class*="border-t-sky-"],
+html.maintenance-mode [class*="border-t-cyan-"],
+html.maintenance-mode [class*="border-t-teal-"],
+html.maintenance-mode [class*="border-t-emerald-"],
+html.maintenance-mode [class*="border-t-green-"],
+html.maintenance-mode [class*="border-t-lime-"],
+html.maintenance-mode [class*="border-t-indigo-"],
+html.maintenance-mode [class*="border-t-violet-"],
+html.maintenance-mode [class*="border-t-purple-"],
+html.maintenance-mode [class*="border-t-fuchsia-"],
+html.maintenance-mode [class*="border-t-pink-"],
+html.maintenance-mode [class*="border-t-rose-"],
+html.maintenance-mode [class*="border-t-red-"],
+html.maintenance-mode [class*="border-t-slate-"],
+html.maintenance-mode [class*="border-t-gray-"],
+html.maintenance-mode [class*="border-t-zinc-"],
+html.maintenance-mode [class*="border-t-neutral-"],
+html.maintenance-mode [class*="border-t-stone-"] {
+  border-top-color: hsl(38 85% 78%) !important;
+}
+html.maintenance-mode.dark [class*="border-t-blue-"],
+html.maintenance-mode.dark [class*="border-t-sky-"],
+html.maintenance-mode.dark [class*="border-t-cyan-"],
+html.maintenance-mode.dark [class*="border-t-teal-"],
+html.maintenance-mode.dark [class*="border-t-emerald-"],
+html.maintenance-mode.dark [class*="border-t-green-"],
+html.maintenance-mode.dark [class*="border-t-lime-"],
+html.maintenance-mode.dark [class*="border-t-indigo-"],
+html.maintenance-mode.dark [class*="border-t-violet-"],
+html.maintenance-mode.dark [class*="border-t-purple-"],
+html.maintenance-mode.dark [class*="border-t-fuchsia-"],
+html.maintenance-mode.dark [class*="border-t-pink-"],
+html.maintenance-mode.dark [class*="border-t-rose-"],
+html.maintenance-mode.dark [class*="border-t-red-"],
+html.maintenance-mode.dark [class*="border-t-slate-"],
+html.maintenance-mode.dark [class*="border-t-gray-"],
+html.maintenance-mode.dark [class*="border-t-zinc-"],
+html.maintenance-mode.dark [class*="border-t-neutral-"],
+html.maintenance-mode.dark [class*="border-t-stone-"] {
+  border-top-color: hsl(32 55% 30%) !important;
+}
+html.maintenance-mode [class*="border-b-blue-"],
+html.maintenance-mode [class*="border-b-sky-"],
+html.maintenance-mode [class*="border-b-cyan-"],
+html.maintenance-mode [class*="border-b-teal-"],
+html.maintenance-mode [class*="border-b-emerald-"],
+html.maintenance-mode [class*="border-b-green-"],
+html.maintenance-mode [class*="border-b-lime-"],
+html.maintenance-mode [class*="border-b-indigo-"],
+html.maintenance-mode [class*="border-b-violet-"],
+html.maintenance-mode [class*="border-b-purple-"],
+html.maintenance-mode [class*="border-b-fuchsia-"],
+html.maintenance-mode [class*="border-b-pink-"],
+html.maintenance-mode [class*="border-b-rose-"],
+html.maintenance-mode [class*="border-b-red-"],
+html.maintenance-mode [class*="border-b-slate-"],
+html.maintenance-mode [class*="border-b-gray-"],
+html.maintenance-mode [class*="border-b-zinc-"],
+html.maintenance-mode [class*="border-b-neutral-"],
+html.maintenance-mode [class*="border-b-stone-"] {
+  border-bottom-color: hsl(38 85% 78%) !important;
+}
+html.maintenance-mode.dark [class*="border-b-blue-"],
+html.maintenance-mode.dark [class*="border-b-sky-"],
+html.maintenance-mode.dark [class*="border-b-cyan-"],
+html.maintenance-mode.dark [class*="border-b-teal-"],
+html.maintenance-mode.dark [class*="border-b-emerald-"],
+html.maintenance-mode.dark [class*="border-b-green-"],
+html.maintenance-mode.dark [class*="border-b-lime-"],
+html.maintenance-mode.dark [class*="border-b-indigo-"],
+html.maintenance-mode.dark [class*="border-b-violet-"],
+html.maintenance-mode.dark [class*="border-b-purple-"],
+html.maintenance-mode.dark [class*="border-b-fuchsia-"],
+html.maintenance-mode.dark [class*="border-b-pink-"],
+html.maintenance-mode.dark [class*="border-b-rose-"],
+html.maintenance-mode.dark [class*="border-b-red-"],
+html.maintenance-mode.dark [class*="border-b-slate-"],
+html.maintenance-mode.dark [class*="border-b-gray-"],
+html.maintenance-mode.dark [class*="border-b-zinc-"],
+html.maintenance-mode.dark [class*="border-b-neutral-"],
+html.maintenance-mode.dark [class*="border-b-stone-"] {
+  border-bottom-color: hsl(32 55% 30%) !important;
+}
+html.maintenance-mode [class*="border-l-blue-"],
+html.maintenance-mode [class*="border-l-sky-"],
+html.maintenance-mode [class*="border-l-cyan-"],
+html.maintenance-mode [class*="border-l-teal-"],
+html.maintenance-mode [class*="border-l-emerald-"],
+html.maintenance-mode [class*="border-l-green-"],
+html.maintenance-mode [class*="border-l-lime-"],
+html.maintenance-mode [class*="border-l-indigo-"],
+html.maintenance-mode [class*="border-l-violet-"],
+html.maintenance-mode [class*="border-l-purple-"],
+html.maintenance-mode [class*="border-l-fuchsia-"],
+html.maintenance-mode [class*="border-l-pink-"],
+html.maintenance-mode [class*="border-l-rose-"],
+html.maintenance-mode [class*="border-l-red-"],
+html.maintenance-mode [class*="border-l-slate-"],
+html.maintenance-mode [class*="border-l-gray-"],
+html.maintenance-mode [class*="border-l-zinc-"],
+html.maintenance-mode [class*="border-l-neutral-"],
+html.maintenance-mode [class*="border-l-stone-"] {
+  border-left-color: hsl(38 85% 78%) !important;
+}
+html.maintenance-mode.dark [class*="border-l-blue-"],
+html.maintenance-mode.dark [class*="border-l-sky-"],
+html.maintenance-mode.dark [class*="border-l-cyan-"],
+html.maintenance-mode.dark [class*="border-l-teal-"],
+html.maintenance-mode.dark [class*="border-l-emerald-"],
+html.maintenance-mode.dark [class*="border-l-green-"],
+html.maintenance-mode.dark [class*="border-l-lime-"],
+html.maintenance-mode.dark [class*="border-l-indigo-"],
+html.maintenance-mode.dark [class*="border-l-violet-"],
+html.maintenance-mode.dark [class*="border-l-purple-"],
+html.maintenance-mode.dark [class*="border-l-fuchsia-"],
+html.maintenance-mode.dark [class*="border-l-pink-"],
+html.maintenance-mode.dark [class*="border-l-rose-"],
+html.maintenance-mode.dark [class*="border-l-red-"],
+html.maintenance-mode.dark [class*="border-l-slate-"],
+html.maintenance-mode.dark [class*="border-l-gray-"],
+html.maintenance-mode.dark [class*="border-l-zinc-"],
+html.maintenance-mode.dark [class*="border-l-neutral-"],
+html.maintenance-mode.dark [class*="border-l-stone-"] {
+  border-left-color: hsl(32 55% 30%) !important;
+}
+html.maintenance-mode [class*="border-r-blue-"],
+html.maintenance-mode [class*="border-r-sky-"],
+html.maintenance-mode [class*="border-r-cyan-"],
+html.maintenance-mode [class*="border-r-teal-"],
+html.maintenance-mode [class*="border-r-emerald-"],
+html.maintenance-mode [class*="border-r-green-"],
+html.maintenance-mode [class*="border-r-lime-"],
+html.maintenance-mode [class*="border-r-indigo-"],
+html.maintenance-mode [class*="border-r-violet-"],
+html.maintenance-mode [class*="border-r-purple-"],
+html.maintenance-mode [class*="border-r-fuchsia-"],
+html.maintenance-mode [class*="border-r-pink-"],
+html.maintenance-mode [class*="border-r-rose-"],
+html.maintenance-mode [class*="border-r-red-"],
+html.maintenance-mode [class*="border-r-slate-"],
+html.maintenance-mode [class*="border-r-gray-"],
+html.maintenance-mode [class*="border-r-zinc-"],
+html.maintenance-mode [class*="border-r-neutral-"],
+html.maintenance-mode [class*="border-r-stone-"] {
+  border-right-color: hsl(38 85% 78%) !important;
+}
+html.maintenance-mode.dark [class*="border-r-blue-"],
+html.maintenance-mode.dark [class*="border-r-sky-"],
+html.maintenance-mode.dark [class*="border-r-cyan-"],
+html.maintenance-mode.dark [class*="border-r-teal-"],
+html.maintenance-mode.dark [class*="border-r-emerald-"],
+html.maintenance-mode.dark [class*="border-r-green-"],
+html.maintenance-mode.dark [class*="border-r-lime-"],
+html.maintenance-mode.dark [class*="border-r-indigo-"],
+html.maintenance-mode.dark [class*="border-r-violet-"],
+html.maintenance-mode.dark [class*="border-r-purple-"],
+html.maintenance-mode.dark [class*="border-r-fuchsia-"],
+html.maintenance-mode.dark [class*="border-r-pink-"],
+html.maintenance-mode.dark [class*="border-r-rose-"],
+html.maintenance-mode.dark [class*="border-r-red-"],
+html.maintenance-mode.dark [class*="border-r-slate-"],
+html.maintenance-mode.dark [class*="border-r-gray-"],
+html.maintenance-mode.dark [class*="border-r-zinc-"],
+html.maintenance-mode.dark [class*="border-r-neutral-"],
+html.maintenance-mode.dark [class*="border-r-stone-"] {
+  border-right-color: hsl(32 55% 30%) !important;
+}
+html.maintenance-mode [class*="border-blue-"],
+html.maintenance-mode [class*="border-sky-"],
+html.maintenance-mode [class*="border-cyan-"],
+html.maintenance-mode [class*="border-teal-"],
+html.maintenance-mode [class*="border-emerald-"],
+html.maintenance-mode [class*="border-green-"],
+html.maintenance-mode [class*="border-lime-"],
+html.maintenance-mode [class*="border-indigo-"],
+html.maintenance-mode [class*="border-violet-"],
+html.maintenance-mode [class*="border-purple-"],
+html.maintenance-mode [class*="border-fuchsia-"],
+html.maintenance-mode [class*="border-pink-"],
+html.maintenance-mode [class*="border-rose-"],
+html.maintenance-mode [class*="border-red-"],
+html.maintenance-mode [class*="border-slate-"],
+html.maintenance-mode [class*="border-gray-"],
+html.maintenance-mode [class*="border-zinc-"],
+html.maintenance-mode [class*="border-neutral-"],
+html.maintenance-mode [class*="border-stone-"] {
+  border-color: hsl(38 85% 78%) !important;
+}
+html.maintenance-mode.dark [class*="border-blue-"],
+html.maintenance-mode.dark [class*="border-sky-"],
+html.maintenance-mode.dark [class*="border-cyan-"],
+html.maintenance-mode.dark [class*="border-teal-"],
+html.maintenance-mode.dark [class*="border-emerald-"],
+html.maintenance-mode.dark [class*="border-green-"],
+html.maintenance-mode.dark [class*="border-lime-"],
+html.maintenance-mode.dark [class*="border-indigo-"],
+html.maintenance-mode.dark [class*="border-violet-"],
+html.maintenance-mode.dark [class*="border-purple-"],
+html.maintenance-mode.dark [class*="border-fuchsia-"],
+html.maintenance-mode.dark [class*="border-pink-"],
+html.maintenance-mode.dark [class*="border-rose-"],
+html.maintenance-mode.dark [class*="border-red-"],
+html.maintenance-mode.dark [class*="border-slate-"],
+html.maintenance-mode.dark [class*="border-gray-"],
+html.maintenance-mode.dark [class*="border-zinc-"],
+html.maintenance-mode.dark [class*="border-neutral-"],
+html.maintenance-mode.dark [class*="border-stone-"] {
+  border-color: hsl(32 55% 30%) !important;
+}
+html.maintenance-mode [class*="ring-blue-"],
+html.maintenance-mode [class*="ring-sky-"],
+html.maintenance-mode [class*="ring-cyan-"],
+html.maintenance-mode [class*="ring-teal-"],
+html.maintenance-mode [class*="ring-emerald-"],
+html.maintenance-mode [class*="ring-green-"],
+html.maintenance-mode [class*="ring-lime-"],
+html.maintenance-mode [class*="ring-indigo-"],
+html.maintenance-mode [class*="ring-violet-"],
+html.maintenance-mode [class*="ring-purple-"],
+html.maintenance-mode [class*="ring-fuchsia-"],
+html.maintenance-mode [class*="ring-pink-"],
+html.maintenance-mode [class*="ring-rose-"],
+html.maintenance-mode [class*="ring-red-"],
+html.maintenance-mode [class*="ring-slate-"],
+html.maintenance-mode [class*="ring-gray-"],
+html.maintenance-mode [class*="ring-zinc-"],
+html.maintenance-mode [class*="ring-neutral-"],
+html.maintenance-mode [class*="ring-stone-"] {
+  --tw-ring-color: hsl(38 95% 55%) !important;
+}
+html.maintenance-mode.dark [class*="ring-blue-"],
+html.maintenance-mode.dark [class*="ring-sky-"],
+html.maintenance-mode.dark [class*="ring-cyan-"],
+html.maintenance-mode.dark [class*="ring-teal-"],
+html.maintenance-mode.dark [class*="ring-emerald-"],
+html.maintenance-mode.dark [class*="ring-green-"],
+html.maintenance-mode.dark [class*="ring-lime-"],
+html.maintenance-mode.dark [class*="ring-indigo-"],
+html.maintenance-mode.dark [class*="ring-violet-"],
+html.maintenance-mode.dark [class*="ring-purple-"],
+html.maintenance-mode.dark [class*="ring-fuchsia-"],
+html.maintenance-mode.dark [class*="ring-pink-"],
+html.maintenance-mode.dark [class*="ring-rose-"],
+html.maintenance-mode.dark [class*="ring-red-"],
+html.maintenance-mode.dark [class*="ring-slate-"],
+html.maintenance-mode.dark [class*="ring-gray-"],
+html.maintenance-mode.dark [class*="ring-zinc-"],
+html.maintenance-mode.dark [class*="ring-neutral-"],
+html.maintenance-mode.dark [class*="ring-stone-"] {
+  --tw-ring-color: hsl(38 100% 60%) !important;
+}
+html.maintenance-mode [class*="from-blue-"],
+html.maintenance-mode [class*="from-sky-"],
+html.maintenance-mode [class*="from-cyan-"],
+html.maintenance-mode [class*="from-teal-"],
+html.maintenance-mode [class*="from-emerald-"],
+html.maintenance-mode [class*="from-green-"],
+html.maintenance-mode [class*="from-lime-"],
+html.maintenance-mode [class*="from-indigo-"],
+html.maintenance-mode [class*="from-violet-"],
+html.maintenance-mode [class*="from-purple-"],
+html.maintenance-mode [class*="from-fuchsia-"],
+html.maintenance-mode [class*="from-pink-"],
+html.maintenance-mode [class*="from-rose-"],
+html.maintenance-mode [class*="from-red-"],
+html.maintenance-mode [class*="from-slate-"],
+html.maintenance-mode [class*="from-gray-"],
+html.maintenance-mode [class*="from-zinc-"],
+html.maintenance-mode [class*="from-neutral-"],
+html.maintenance-mode [class*="from-stone-"] {
+  --tw-gradient-from: hsl(48 100% 92%) !important;
+}
+html.maintenance-mode.dark [class*="from-blue-"],
+html.maintenance-mode.dark [class*="from-sky-"],
+html.maintenance-mode.dark [class*="from-cyan-"],
+html.maintenance-mode.dark [class*="from-teal-"],
+html.maintenance-mode.dark [class*="from-emerald-"],
+html.maintenance-mode.dark [class*="from-green-"],
+html.maintenance-mode.dark [class*="from-lime-"],
+html.maintenance-mode.dark [class*="from-indigo-"],
+html.maintenance-mode.dark [class*="from-violet-"],
+html.maintenance-mode.dark [class*="from-purple-"],
+html.maintenance-mode.dark [class*="from-fuchsia-"],
+html.maintenance-mode.dark [class*="from-pink-"],
+html.maintenance-mode.dark [class*="from-rose-"],
+html.maintenance-mode.dark [class*="from-red-"],
+html.maintenance-mode.dark [class*="from-slate-"],
+html.maintenance-mode.dark [class*="from-gray-"],
+html.maintenance-mode.dark [class*="from-zinc-"],
+html.maintenance-mode.dark [class*="from-neutral-"],
+html.maintenance-mode.dark [class*="from-stone-"] {
+  --tw-gradient-from: hsl(38 90% 22%) !important;
+}
+html.maintenance-mode [class*="via-blue-"],
+html.maintenance-mode [class*="via-sky-"],
+html.maintenance-mode [class*="via-cyan-"],
+html.maintenance-mode [class*="via-teal-"],
+html.maintenance-mode [class*="via-emerald-"],
+html.maintenance-mode [class*="via-green-"],
+html.maintenance-mode [class*="via-lime-"],
+html.maintenance-mode [class*="via-indigo-"],
+html.maintenance-mode [class*="via-violet-"],
+html.maintenance-mode [class*="via-purple-"],
+html.maintenance-mode [class*="via-fuchsia-"],
+html.maintenance-mode [class*="via-pink-"],
+html.maintenance-mode [class*="via-rose-"],
+html.maintenance-mode [class*="via-red-"],
+html.maintenance-mode [class*="via-slate-"],
+html.maintenance-mode [class*="via-gray-"],
+html.maintenance-mode [class*="via-zinc-"],
+html.maintenance-mode [class*="via-neutral-"],
+html.maintenance-mode [class*="via-stone-"] {
+  --tw-gradient-via: hsl(42 100% 88%) !important;
+}
+html.maintenance-mode.dark [class*="via-blue-"],
+html.maintenance-mode.dark [class*="via-sky-"],
+html.maintenance-mode.dark [class*="via-cyan-"],
+html.maintenance-mode.dark [class*="via-teal-"],
+html.maintenance-mode.dark [class*="via-emerald-"],
+html.maintenance-mode.dark [class*="via-green-"],
+html.maintenance-mode.dark [class*="via-lime-"],
+html.maintenance-mode.dark [class*="via-indigo-"],
+html.maintenance-mode.dark [class*="via-violet-"],
+html.maintenance-mode.dark [class*="via-purple-"],
+html.maintenance-mode.dark [class*="via-fuchsia-"],
+html.maintenance-mode.dark [class*="via-pink-"],
+html.maintenance-mode.dark [class*="via-rose-"],
+html.maintenance-mode.dark [class*="via-red-"],
+html.maintenance-mode.dark [class*="via-slate-"],
+html.maintenance-mode.dark [class*="via-gray-"],
+html.maintenance-mode.dark [class*="via-zinc-"],
+html.maintenance-mode.dark [class*="via-neutral-"],
+html.maintenance-mode.dark [class*="via-stone-"] {
+  --tw-gradient-via: hsl(30 85% 20%) !important;
+}
+html.maintenance-mode [class*="to-blue-"],
+html.maintenance-mode [class*="to-sky-"],
+html.maintenance-mode [class*="to-cyan-"],
+html.maintenance-mode [class*="to-teal-"],
+html.maintenance-mode [class*="to-emerald-"],
+html.maintenance-mode [class*="to-green-"],
+html.maintenance-mode [class*="to-lime-"],
+html.maintenance-mode [class*="to-indigo-"],
+html.maintenance-mode [class*="to-violet-"],
+html.maintenance-mode [class*="to-purple-"],
+html.maintenance-mode [class*="to-fuchsia-"],
+html.maintenance-mode [class*="to-pink-"],
+html.maintenance-mode [class*="to-rose-"],
+html.maintenance-mode [class*="to-red-"],
+html.maintenance-mode [class*="to-slate-"],
+html.maintenance-mode [class*="to-gray-"],
+html.maintenance-mode [class*="to-zinc-"],
+html.maintenance-mode [class*="to-neutral-"],
+html.maintenance-mode [class*="to-stone-"] {
+  --tw-gradient-to: hsl(36 100% 85%) !important;
+}
+html.maintenance-mode.dark [class*="to-blue-"],
+html.maintenance-mode.dark [class*="to-sky-"],
+html.maintenance-mode.dark [class*="to-cyan-"],
+html.maintenance-mode.dark [class*="to-teal-"],
+html.maintenance-mode.dark [class*="to-emerald-"],
+html.maintenance-mode.dark [class*="to-green-"],
+html.maintenance-mode.dark [class*="to-lime-"],
+html.maintenance-mode.dark [class*="to-indigo-"],
+html.maintenance-mode.dark [class*="to-violet-"],
+html.maintenance-mode.dark [class*="to-purple-"],
+html.maintenance-mode.dark [class*="to-fuchsia-"],
+html.maintenance-mode.dark [class*="to-pink-"],
+html.maintenance-mode.dark [class*="to-rose-"],
+html.maintenance-mode.dark [class*="to-red-"],
+html.maintenance-mode.dark [class*="to-slate-"],
+html.maintenance-mode.dark [class*="to-gray-"],
+html.maintenance-mode.dark [class*="to-zinc-"],
+html.maintenance-mode.dark [class*="to-neutral-"],
+html.maintenance-mode.dark [class*="to-stone-"] {
+  --tw-gradient-to: hsl(20 80% 18%) !important;
+}
+html.maintenance-mode [class*="fill-blue-"],
+html.maintenance-mode [class*="fill-sky-"],
+html.maintenance-mode [class*="fill-cyan-"],
+html.maintenance-mode [class*="fill-teal-"],
+html.maintenance-mode [class*="fill-emerald-"],
+html.maintenance-mode [class*="fill-green-"],
+html.maintenance-mode [class*="fill-lime-"],
+html.maintenance-mode [class*="fill-indigo-"],
+html.maintenance-mode [class*="fill-violet-"],
+html.maintenance-mode [class*="fill-purple-"],
+html.maintenance-mode [class*="fill-fuchsia-"],
+html.maintenance-mode [class*="fill-pink-"],
+html.maintenance-mode [class*="fill-rose-"],
+html.maintenance-mode [class*="fill-red-"],
+html.maintenance-mode [class*="fill-slate-"],
+html.maintenance-mode [class*="fill-gray-"],
+html.maintenance-mode [class*="fill-zinc-"],
+html.maintenance-mode [class*="fill-neutral-"],
+html.maintenance-mode [class*="fill-stone-"] {
+  fill: hsl(30 90% 40%) !important;
+}
+html.maintenance-mode.dark [class*="fill-blue-"],
+html.maintenance-mode.dark [class*="fill-sky-"],
+html.maintenance-mode.dark [class*="fill-cyan-"],
+html.maintenance-mode.dark [class*="fill-teal-"],
+html.maintenance-mode.dark [class*="fill-emerald-"],
+html.maintenance-mode.dark [class*="fill-green-"],
+html.maintenance-mode.dark [class*="fill-lime-"],
+html.maintenance-mode.dark [class*="fill-indigo-"],
+html.maintenance-mode.dark [class*="fill-violet-"],
+html.maintenance-mode.dark [class*="fill-purple-"],
+html.maintenance-mode.dark [class*="fill-fuchsia-"],
+html.maintenance-mode.dark [class*="fill-pink-"],
+html.maintenance-mode.dark [class*="fill-rose-"],
+html.maintenance-mode.dark [class*="fill-red-"],
+html.maintenance-mode.dark [class*="fill-slate-"],
+html.maintenance-mode.dark [class*="fill-gray-"],
+html.maintenance-mode.dark [class*="fill-zinc-"],
+html.maintenance-mode.dark [class*="fill-neutral-"],
+html.maintenance-mode.dark [class*="fill-stone-"] {
+  fill: hsl(45 95% 70%) !important;
+}
+html.maintenance-mode [class*="stroke-blue-"],
+html.maintenance-mode [class*="stroke-sky-"],
+html.maintenance-mode [class*="stroke-cyan-"],
+html.maintenance-mode [class*="stroke-teal-"],
+html.maintenance-mode [class*="stroke-emerald-"],
+html.maintenance-mode [class*="stroke-green-"],
+html.maintenance-mode [class*="stroke-lime-"],
+html.maintenance-mode [class*="stroke-indigo-"],
+html.maintenance-mode [class*="stroke-violet-"],
+html.maintenance-mode [class*="stroke-purple-"],
+html.maintenance-mode [class*="stroke-fuchsia-"],
+html.maintenance-mode [class*="stroke-pink-"],
+html.maintenance-mode [class*="stroke-rose-"],
+html.maintenance-mode [class*="stroke-red-"],
+html.maintenance-mode [class*="stroke-slate-"],
+html.maintenance-mode [class*="stroke-gray-"],
+html.maintenance-mode [class*="stroke-zinc-"],
+html.maintenance-mode [class*="stroke-neutral-"],
+html.maintenance-mode [class*="stroke-stone-"] {
+  stroke: hsl(30 90% 40%) !important;
+}
+html.maintenance-mode.dark [class*="stroke-blue-"],
+html.maintenance-mode.dark [class*="stroke-sky-"],
+html.maintenance-mode.dark [class*="stroke-cyan-"],
+html.maintenance-mode.dark [class*="stroke-teal-"],
+html.maintenance-mode.dark [class*="stroke-emerald-"],
+html.maintenance-mode.dark [class*="stroke-green-"],
+html.maintenance-mode.dark [class*="stroke-lime-"],
+html.maintenance-mode.dark [class*="stroke-indigo-"],
+html.maintenance-mode.dark [class*="stroke-violet-"],
+html.maintenance-mode.dark [class*="stroke-purple-"],
+html.maintenance-mode.dark [class*="stroke-fuchsia-"],
+html.maintenance-mode.dark [class*="stroke-pink-"],
+html.maintenance-mode.dark [class*="stroke-rose-"],
+html.maintenance-mode.dark [class*="stroke-red-"],
+html.maintenance-mode.dark [class*="stroke-slate-"],
+html.maintenance-mode.dark [class*="stroke-gray-"],
+html.maintenance-mode.dark [class*="stroke-zinc-"],
+html.maintenance-mode.dark [class*="stroke-neutral-"],
+html.maintenance-mode.dark [class*="stroke-stone-"] {
+  stroke: hsl(45 95% 70%) !important;
+}
+html.maintenance-mode [class*="divide-blue-"],
+html.maintenance-mode [class*="divide-sky-"],
+html.maintenance-mode [class*="divide-cyan-"],
+html.maintenance-mode [class*="divide-teal-"],
+html.maintenance-mode [class*="divide-emerald-"],
+html.maintenance-mode [class*="divide-green-"],
+html.maintenance-mode [class*="divide-lime-"],
+html.maintenance-mode [class*="divide-indigo-"],
+html.maintenance-mode [class*="divide-violet-"],
+html.maintenance-mode [class*="divide-purple-"],
+html.maintenance-mode [class*="divide-fuchsia-"],
+html.maintenance-mode [class*="divide-pink-"],
+html.maintenance-mode [class*="divide-rose-"],
+html.maintenance-mode [class*="divide-red-"],
+html.maintenance-mode [class*="divide-slate-"],
+html.maintenance-mode [class*="divide-gray-"],
+html.maintenance-mode [class*="divide-zinc-"],
+html.maintenance-mode [class*="divide-neutral-"],
+html.maintenance-mode [class*="divide-stone-"] {
+  border-color: hsl(38 85% 80%) !important;
+}
+html.maintenance-mode.dark [class*="divide-blue-"],
+html.maintenance-mode.dark [class*="divide-sky-"],
+html.maintenance-mode.dark [class*="divide-cyan-"],
+html.maintenance-mode.dark [class*="divide-teal-"],
+html.maintenance-mode.dark [class*="divide-emerald-"],
+html.maintenance-mode.dark [class*="divide-green-"],
+html.maintenance-mode.dark [class*="divide-lime-"],
+html.maintenance-mode.dark [class*="divide-indigo-"],
+html.maintenance-mode.dark [class*="divide-violet-"],
+html.maintenance-mode.dark [class*="divide-purple-"],
+html.maintenance-mode.dark [class*="divide-fuchsia-"],
+html.maintenance-mode.dark [class*="divide-pink-"],
+html.maintenance-mode.dark [class*="divide-rose-"],
+html.maintenance-mode.dark [class*="divide-red-"],
+html.maintenance-mode.dark [class*="divide-slate-"],
+html.maintenance-mode.dark [class*="divide-gray-"],
+html.maintenance-mode.dark [class*="divide-zinc-"],
+html.maintenance-mode.dark [class*="divide-neutral-"],
+html.maintenance-mode.dark [class*="divide-stone-"] {
+  border-color: hsl(32 55% 30%) !important;
+}
+html.maintenance-mode [class*="shadow-blue-"],
+html.maintenance-mode [class*="shadow-sky-"],
+html.maintenance-mode [class*="shadow-cyan-"],
+html.maintenance-mode [class*="shadow-teal-"],
+html.maintenance-mode [class*="shadow-emerald-"],
+html.maintenance-mode [class*="shadow-green-"],
+html.maintenance-mode [class*="shadow-lime-"],
+html.maintenance-mode [class*="shadow-indigo-"],
+html.maintenance-mode [class*="shadow-violet-"],
+html.maintenance-mode [class*="shadow-purple-"],
+html.maintenance-mode [class*="shadow-fuchsia-"],
+html.maintenance-mode [class*="shadow-pink-"],
+html.maintenance-mode [class*="shadow-rose-"],
+html.maintenance-mode [class*="shadow-red-"],
+html.maintenance-mode [class*="shadow-slate-"],
+html.maintenance-mode [class*="shadow-gray-"],
+html.maintenance-mode [class*="shadow-zinc-"],
+html.maintenance-mode [class*="shadow-neutral-"],
+html.maintenance-mode [class*="shadow-stone-"] {
+  --tw-shadow-color: hsl(30 90% 50% / 0.25) !important;
+}
+html.maintenance-mode.dark [class*="shadow-blue-"],
+html.maintenance-mode.dark [class*="shadow-sky-"],
+html.maintenance-mode.dark [class*="shadow-cyan-"],
+html.maintenance-mode.dark [class*="shadow-teal-"],
+html.maintenance-mode.dark [class*="shadow-emerald-"],
+html.maintenance-mode.dark [class*="shadow-green-"],
+html.maintenance-mode.dark [class*="shadow-lime-"],
+html.maintenance-mode.dark [class*="shadow-indigo-"],
+html.maintenance-mode.dark [class*="shadow-violet-"],
+html.maintenance-mode.dark [class*="shadow-purple-"],
+html.maintenance-mode.dark [class*="shadow-fuchsia-"],
+html.maintenance-mode.dark [class*="shadow-pink-"],
+html.maintenance-mode.dark [class*="shadow-rose-"],
+html.maintenance-mode.dark [class*="shadow-red-"],
+html.maintenance-mode.dark [class*="shadow-slate-"],
+html.maintenance-mode.dark [class*="shadow-gray-"],
+html.maintenance-mode.dark [class*="shadow-zinc-"],
+html.maintenance-mode.dark [class*="shadow-neutral-"],
+html.maintenance-mode.dark [class*="shadow-stone-"] {
+  --tw-shadow-color: hsl(38 100% 55% / 0.25) !important;
+}
+html.maintenance-mode [class*="accent-blue-"],
+html.maintenance-mode [class*="accent-sky-"],
+html.maintenance-mode [class*="accent-cyan-"],
+html.maintenance-mode [class*="accent-teal-"],
+html.maintenance-mode [class*="accent-emerald-"],
+html.maintenance-mode [class*="accent-green-"],
+html.maintenance-mode [class*="accent-lime-"],
+html.maintenance-mode [class*="accent-indigo-"],
+html.maintenance-mode [class*="accent-violet-"],
+html.maintenance-mode [class*="accent-purple-"],
+html.maintenance-mode [class*="accent-fuchsia-"],
+html.maintenance-mode [class*="accent-pink-"],
+html.maintenance-mode [class*="accent-rose-"],
+html.maintenance-mode [class*="accent-red-"],
+html.maintenance-mode [class*="accent-slate-"],
+html.maintenance-mode [class*="accent-gray-"],
+html.maintenance-mode [class*="accent-zinc-"],
+html.maintenance-mode [class*="accent-neutral-"],
+html.maintenance-mode [class*="accent-stone-"] {
+  accent-color: hsl(30 95% 52%) !important;
+}
+html.maintenance-mode.dark [class*="accent-blue-"],
+html.maintenance-mode.dark [class*="accent-sky-"],
+html.maintenance-mode.dark [class*="accent-cyan-"],
+html.maintenance-mode.dark [class*="accent-teal-"],
+html.maintenance-mode.dark [class*="accent-emerald-"],
+html.maintenance-mode.dark [class*="accent-green-"],
+html.maintenance-mode.dark [class*="accent-lime-"],
+html.maintenance-mode.dark [class*="accent-indigo-"],
+html.maintenance-mode.dark [class*="accent-violet-"],
+html.maintenance-mode.dark [class*="accent-purple-"],
+html.maintenance-mode.dark [class*="accent-fuchsia-"],
+html.maintenance-mode.dark [class*="accent-pink-"],
+html.maintenance-mode.dark [class*="accent-rose-"],
+html.maintenance-mode.dark [class*="accent-red-"],
+html.maintenance-mode.dark [class*="accent-slate-"],
+html.maintenance-mode.dark [class*="accent-gray-"],
+html.maintenance-mode.dark [class*="accent-zinc-"],
+html.maintenance-mode.dark [class*="accent-neutral-"],
+html.maintenance-mode.dark [class*="accent-stone-"] {
+  accent-color: hsl(38 100% 60%) !important;
+}
+html.maintenance-mode [class*="caret-blue-"],
+html.maintenance-mode [class*="caret-sky-"],
+html.maintenance-mode [class*="caret-cyan-"],
+html.maintenance-mode [class*="caret-teal-"],
+html.maintenance-mode [class*="caret-emerald-"],
+html.maintenance-mode [class*="caret-green-"],
+html.maintenance-mode [class*="caret-lime-"],
+html.maintenance-mode [class*="caret-indigo-"],
+html.maintenance-mode [class*="caret-violet-"],
+html.maintenance-mode [class*="caret-purple-"],
+html.maintenance-mode [class*="caret-fuchsia-"],
+html.maintenance-mode [class*="caret-pink-"],
+html.maintenance-mode [class*="caret-rose-"],
+html.maintenance-mode [class*="caret-red-"],
+html.maintenance-mode [class*="caret-slate-"],
+html.maintenance-mode [class*="caret-gray-"],
+html.maintenance-mode [class*="caret-zinc-"],
+html.maintenance-mode [class*="caret-neutral-"],
+html.maintenance-mode [class*="caret-stone-"] {
+  caret-color: hsl(30 95% 52%) !important;
+}
+html.maintenance-mode.dark [class*="caret-blue-"],
+html.maintenance-mode.dark [class*="caret-sky-"],
+html.maintenance-mode.dark [class*="caret-cyan-"],
+html.maintenance-mode.dark [class*="caret-teal-"],
+html.maintenance-mode.dark [class*="caret-emerald-"],
+html.maintenance-mode.dark [class*="caret-green-"],
+html.maintenance-mode.dark [class*="caret-lime-"],
+html.maintenance-mode.dark [class*="caret-indigo-"],
+html.maintenance-mode.dark [class*="caret-violet-"],
+html.maintenance-mode.dark [class*="caret-purple-"],
+html.maintenance-mode.dark [class*="caret-fuchsia-"],
+html.maintenance-mode.dark [class*="caret-pink-"],
+html.maintenance-mode.dark [class*="caret-rose-"],
+html.maintenance-mode.dark [class*="caret-red-"],
+html.maintenance-mode.dark [class*="caret-slate-"],
+html.maintenance-mode.dark [class*="caret-gray-"],
+html.maintenance-mode.dark [class*="caret-zinc-"],
+html.maintenance-mode.dark [class*="caret-neutral-"],
+html.maintenance-mode.dark [class*="caret-stone-"] {
+  caret-color: hsl(38 100% 60%) !important;
+}
+html.maintenance-mode [class*="outline-blue-"],
+html.maintenance-mode [class*="outline-sky-"],
+html.maintenance-mode [class*="outline-cyan-"],
+html.maintenance-mode [class*="outline-teal-"],
+html.maintenance-mode [class*="outline-emerald-"],
+html.maintenance-mode [class*="outline-green-"],
+html.maintenance-mode [class*="outline-lime-"],
+html.maintenance-mode [class*="outline-indigo-"],
+html.maintenance-mode [class*="outline-violet-"],
+html.maintenance-mode [class*="outline-purple-"],
+html.maintenance-mode [class*="outline-fuchsia-"],
+html.maintenance-mode [class*="outline-pink-"],
+html.maintenance-mode [class*="outline-rose-"],
+html.maintenance-mode [class*="outline-red-"],
+html.maintenance-mode [class*="outline-slate-"],
+html.maintenance-mode [class*="outline-gray-"],
+html.maintenance-mode [class*="outline-zinc-"],
+html.maintenance-mode [class*="outline-neutral-"],
+html.maintenance-mode [class*="outline-stone-"] {
+  outline-color: hsl(30 95% 52%) !important;
+}
+html.maintenance-mode.dark [class*="outline-blue-"],
+html.maintenance-mode.dark [class*="outline-sky-"],
+html.maintenance-mode.dark [class*="outline-cyan-"],
+html.maintenance-mode.dark [class*="outline-teal-"],
+html.maintenance-mode.dark [class*="outline-emerald-"],
+html.maintenance-mode.dark [class*="outline-green-"],
+html.maintenance-mode.dark [class*="outline-lime-"],
+html.maintenance-mode.dark [class*="outline-indigo-"],
+html.maintenance-mode.dark [class*="outline-violet-"],
+html.maintenance-mode.dark [class*="outline-purple-"],
+html.maintenance-mode.dark [class*="outline-fuchsia-"],
+html.maintenance-mode.dark [class*="outline-pink-"],
+html.maintenance-mode.dark [class*="outline-rose-"],
+html.maintenance-mode.dark [class*="outline-red-"],
+html.maintenance-mode.dark [class*="outline-slate-"],
+html.maintenance-mode.dark [class*="outline-gray-"],
+html.maintenance-mode.dark [class*="outline-zinc-"],
+html.maintenance-mode.dark [class*="outline-neutral-"],
+html.maintenance-mode.dark [class*="outline-stone-"] {
+  outline-color: hsl(38 100% 60%) !important;
+}
+html.maintenance-mode [class*="decoration-blue-"],
+html.maintenance-mode [class*="decoration-sky-"],
+html.maintenance-mode [class*="decoration-cyan-"],
+html.maintenance-mode [class*="decoration-teal-"],
+html.maintenance-mode [class*="decoration-emerald-"],
+html.maintenance-mode [class*="decoration-green-"],
+html.maintenance-mode [class*="decoration-lime-"],
+html.maintenance-mode [class*="decoration-indigo-"],
+html.maintenance-mode [class*="decoration-violet-"],
+html.maintenance-mode [class*="decoration-purple-"],
+html.maintenance-mode [class*="decoration-fuchsia-"],
+html.maintenance-mode [class*="decoration-pink-"],
+html.maintenance-mode [class*="decoration-rose-"],
+html.maintenance-mode [class*="decoration-red-"],
+html.maintenance-mode [class*="decoration-slate-"],
+html.maintenance-mode [class*="decoration-gray-"],
+html.maintenance-mode [class*="decoration-zinc-"],
+html.maintenance-mode [class*="decoration-neutral-"],
+html.maintenance-mode [class*="decoration-stone-"] {
+  text-decoration-color: hsl(30 90% 40%) !important;
+}
+html.maintenance-mode.dark [class*="decoration-blue-"],
+html.maintenance-mode.dark [class*="decoration-sky-"],
+html.maintenance-mode.dark [class*="decoration-cyan-"],
+html.maintenance-mode.dark [class*="decoration-teal-"],
+html.maintenance-mode.dark [class*="decoration-emerald-"],
+html.maintenance-mode.dark [class*="decoration-green-"],
+html.maintenance-mode.dark [class*="decoration-lime-"],
+html.maintenance-mode.dark [class*="decoration-indigo-"],
+html.maintenance-mode.dark [class*="decoration-violet-"],
+html.maintenance-mode.dark [class*="decoration-purple-"],
+html.maintenance-mode.dark [class*="decoration-fuchsia-"],
+html.maintenance-mode.dark [class*="decoration-pink-"],
+html.maintenance-mode.dark [class*="decoration-rose-"],
+html.maintenance-mode.dark [class*="decoration-red-"],
+html.maintenance-mode.dark [class*="decoration-slate-"],
+html.maintenance-mode.dark [class*="decoration-gray-"],
+html.maintenance-mode.dark [class*="decoration-zinc-"],
+html.maintenance-mode.dark [class*="decoration-neutral-"],
+html.maintenance-mode.dark [class*="decoration-stone-"] {
+  text-decoration-color: hsl(45 95% 65%) !important;
+}
+
+/* Texte par défaut très lisible partout */
+html.maintenance-mode, html.maintenance-mode body, html.maintenance-mode * {
+  /* placeholder muted */
+}
+html.maintenance-mode ::placeholder { color: hsl(28 50% 50%) !important; }
+
+/* Fonds blancs purs → crème très claire */
+html.maintenance-mode .bg-white,
+html.maintenance-mode [class*="bg-white/"] {
+  background-color: hsl(45 100% 97%) !important;
+}
+html.maintenance-mode.dark .bg-white,
+html.maintenance-mode.dark [class*="bg-white/"] {
+  background-color: hsl(28 50% 14%) !important;
+}
+
+/* Noirs → brun très foncé chaud */
+html.maintenance-mode .bg-black,
+html.maintenance-mode [class*="bg-black/"] {
+  background-color: hsl(28 60% 12%) !important;
+}
+
+html.maintenance-mode .text-white { color: hsl(28 80% 18%) !important; }
+html.maintenance-mode .text-black { color: hsl(28 80% 15%) !important; }
+html.maintenance-mode.dark .text-white { color: hsl(45 95% 85%) !important; }
+
+/* Boutons primaires / accents saturés → orange doré lisible */
+html.maintenance-mode [class*="bg-primary"],
+html.maintenance-mode [class*="bg-blue-5"],
+html.maintenance-mode [class*="bg-blue-6"],
+html.maintenance-mode [class*="bg-indigo-5"],
+html.maintenance-mode [class*="bg-indigo-6"],
+html.maintenance-mode [class*="bg-violet-5"],
+html.maintenance-mode [class*="bg-violet-6"],
+html.maintenance-mode [class*="bg-purple-5"],
+html.maintenance-mode [class*="bg-purple-6"],
+html.maintenance-mode [class*="bg-emerald-5"],
+html.maintenance-mode [class*="bg-emerald-6"],
+html.maintenance-mode [class*="bg-green-5"],
+html.maintenance-mode [class*="bg-green-6"],
+html.maintenance-mode [class*="bg-rose-5"],
+html.maintenance-mode [class*="bg-rose-6"],
+html.maintenance-mode [class*="bg-pink-5"],
+html.maintenance-mode [class*="bg-pink-6"],
+html.maintenance-mode [class*="bg-cyan-5"],
+html.maintenance-mode [class*="bg-cyan-6"],
+html.maintenance-mode [class*="bg-teal-5"],
+html.maintenance-mode [class*="bg-teal-6"],
+html.maintenance-mode [class*="bg-sky-5"],
+html.maintenance-mode [class*="bg-sky-6"] {
+  background: linear-gradient(135deg, hsl(42 100% 65%), hsl(32 95% 55%)) !important;
+  color: hsl(28 80% 14%) !important;
+  border-color: hsl(35 90% 50%) !important;
+}
+
+/* Boutons destructifs restent rouge-orangé visible */
+html.maintenance-mode [class*="bg-red-5"],
+html.maintenance-mode [class*="bg-red-6"],
+html.maintenance-mode [class*="bg-destructive"] {
+  background: linear-gradient(135deg, hsl(18 90% 55%), hsl(8 85% 50%)) !important;
+  color: hsl(40 100% 96%) !important;
+}
+
+/* Gradients génériques → dégradé crème → ambre clair */
+html.maintenance-mode [class*="bg-gradient"] {
+  background-image: linear-gradient(135deg, hsl(48 100% 95%), hsl(42 100% 88%), hsl(36 100% 82%)) !important;
+  color: hsl(28 75% 22%) !important;
+}
+html.maintenance-mode.dark [class*="bg-gradient"] {
+  background-image: linear-gradient(135deg, hsl(30 60% 16%), hsl(25 55% 13%), hsl(20 55% 11%)) !important;
+  color: hsl(45 95% 82%) !important;
+}
+
+/* Texte gradient (bg-clip-text) reste orange profond bien visible */
+html.maintenance-mode [class*="bg-clip-text"] {
+  background-image: linear-gradient(135deg, hsl(25 90% 35%), hsl(18 85% 42%)) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+}
+html.maintenance-mode.dark [class*="bg-clip-text"] {
+  background-image: linear-gradient(135deg, hsl(45 100% 72%), hsl(38 100% 62%)) !important;
+}
+
+/* Body global très clair */
+html.maintenance-mode body {
+  background-color: hsl(48 100% 97%) !important;
+}
+html.maintenance-mode.dark body {
+  background-color: hsl(28 55% 9%) !important;
+}
+
+/* ============================================
+   TITRES + SPAN EN MARRON (MAINTENANCE MODE)
+   ============================================ */
+
+html.maintenance-mode h1,
+html.maintenance-mode h2,
+html.maintenance-mode h3,
+html.maintenance-mode h4,
+html.maintenance-mode h5,
+html.maintenance-mode h6,
+html.maintenance-mode span {
+  color: hsl(28 75% 22%) !important;
+}
+
+/* Dark mode */
+html.maintenance-mode.dark h1,
+html.maintenance-mode.dark h2,
+html.maintenance-mode.dark h3,
+html.maintenance-mode.dark h4,
+html.maintenance-mode.dark h5,
+html.maintenance-mode.dark h6,
+html.maintenance-mode.dark span {
+  color: hsl(45 95% 80%) !important;
+}
