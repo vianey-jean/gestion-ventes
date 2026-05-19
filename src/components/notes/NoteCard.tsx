@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useRef } from 'react';
-import { GripVertical, Edit3, Trash2, Mic, MicOff, X, Eye, ArrowRight, Clock, MapPin, GripHorizontal, Bold, Underline, Palette, Check, StickyNote } from 'lucide-react';
+import { GripVertical, Edit3, Trash2, Mic, MicOff, X, Eye, ArrowRight, Clock, MapPin, GripHorizontal, Bold, Underline, Palette, Check, StickyNote, Paperclip, FileText, Download } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Note, NoteHistoryEntry, getDrawingUrl } from '@/services/api/noteApi';
+import { Note, NoteHistoryEntry, NoteFichier, getDrawingUrl, getFichierUrl } from '@/services/api/noteApi';
 import noteApi from '@/services/api/noteApi';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -51,6 +51,9 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, onEdit, onDelete, onDragStart
   const [uploadingDrawing, setUploadingDrawing] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const recognitionRef = useRef<any>(null);
+  const fichierInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingFichier, setUploadingFichier] = useState(false);
+  const [editFichiers, setEditFichiers] = useState<NoteFichier[]>([]);
 
   // History state (local, saved only on confirm)
   const [localHistory, setLocalHistory] = useState<NoteHistoryEntry[]>([]);
@@ -81,9 +84,35 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, onEdit, onDelete, onDragStart
     setEditBold(note.bold || false);
     setEditBoldLines([...(note.boldLines || [])]);
     setEditUnderlineLines([...(note.underlineLines || [])]);
+    // Merge legacy single fichier into list
+    const arr: NoteFichier[] = Array.isArray(note.fichiers) ? [...note.fichiers] : [];
+    if (note.fichier && note.fichier.url && !arr.find(f => f.url === note.fichier!.url)) {
+      arr.unshift(note.fichier);
+    }
+    setEditFichiers(arr);
     setLocalHistory([...(note.history || [])]);
     setIsEditing(true);
     setConfirmAction(null);
+  };
+
+  const handleEditFichierChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+    setUploadingFichier(true);
+    try {
+      const res = await noteApi.uploadFichiers(files);
+      setEditFichiers(prev => [...prev, ...res.data]);
+      toast({ title: '✅ Fichier(s) ajouté(s)', description: `${res.data.length} fichier(s)` });
+    } catch {
+      toast({ title: 'Erreur', description: "Impossible d'enregistrer le(s) fichier(s)", variant: 'destructive' });
+    } finally {
+      setUploadingFichier(false);
+      if (fichierInputRef.current) fichierInputRef.current.value = '';
+    }
+  };
+
+  const removeEditFichier = (url: string) => {
+    setEditFichiers(prev => prev.filter(f => f.url !== url));
   };
 
   // Save all changes to DB
@@ -100,6 +129,8 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, onEdit, onDelete, onDragStart
         boldLines: editBoldLines,
         underlineLines: editUnderlineLines,
         history: localHistory,
+        fichier: null,
+        fichiers: editFichiers,
       });
       toast({ title: '✅ Note modifiée' });
       setIsEditing(false);
@@ -260,6 +291,17 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, onEdit, onDelete, onDragStart
               <img src={drawingUrl} alt="Dessin" className="w-full h-16 object-contain bg-white" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
             </div>
           )}
+          {(() => {
+            const count = (Array.isArray(note.fichiers) ? note.fichiers.length : 0) + (note.fichier ? 1 : 0);
+            const firstName = (note.fichiers && note.fichiers[0]?.originalName) || note.fichier?.originalName;
+            if (count === 0) return null;
+            return (
+              <div className="mt-2 flex items-center gap-1.5 text-[10px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50/80 dark:bg-emerald-900/20 px-2 py-1 rounded-lg border border-emerald-200/50 dark:border-emerald-800/50">
+                <Paperclip className="h-3 w-3 flex-shrink-0" />
+                <span className="truncate">{count} fichier(s){firstName ? ` · ${firstName}` : ''}</span>
+              </div>
+            );
+          })()}
           {note.history && note.history.length > 0 && (
             <div className="mt-2.5 flex items-center gap-1 flex-wrap">
               {note.history.map((h, i) => {
@@ -452,6 +494,82 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, onEdit, onDelete, onDragStart
                 </div>
               )
             )}
+
+            {/* Fichiers joints (multiples) */}
+            {isEditing ? (
+              <div className="space-y-2">
+                <input
+                  ref={fichierInputRef}
+                  type="file"
+                  multiple
+                  accept="image/*,.pdf,.doc,.docx,.txt,.rtf,.odt,.csv,.xls,.xlsx,.ppt,.pptx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
+                  onChange={handleEditFichierChange}
+                  className="hidden"
+                />
+                <button
+                  type="button"
+                  onClick={() => fichierInputRef.current?.click()}
+                  disabled={uploadingFichier}
+                  className={cn(
+                    "w-full flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-bold shadow-md transition-all hover:scale-[1.01]",
+                    editFichiers.length > 0
+                      ? "bg-gradient-to-r from-emerald-500 to-teal-600 text-white"
+                      : "bg-gradient-to-r from-amber-400 to-orange-500 text-white",
+                    uploadingFichier && "opacity-60 animate-pulse"
+                  )}
+                >
+                  <Paperclip className="h-3.5 w-3.5" />
+                  {uploadingFichier ? 'Envoi...' : editFichiers.length > 0 ? `Ajouter d'autres (${editFichiers.length})` : 'Ajouter des fichiers'}
+                </button>
+                {editFichiers.map((f) => (
+                  <div key={f.url} className="flex items-center gap-2 p-2.5 rounded-xl bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 border border-emerald-200 dark:border-emerald-800">
+                    <FileText className="h-4 w-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-bold text-emerald-800 dark:text-emerald-200 truncate">{f.originalName}</p>
+                      <p className="text-[10px] text-emerald-600 dark:text-emerald-400">{(f.size / 1024).toFixed(1)} Ko</p>
+                    </div>
+                    <a href={getFichierUrl(f.url) || '#'} download={f.originalName} target="_blank" rel="noopener noreferrer" className="p-1.5 rounded-lg hover:bg-emerald-200/50 text-emerald-700 dark:text-emerald-300">
+                      <Download className="h-3.5 w-3.5" />
+                    </a>
+                    <button type="button" onClick={() => removeEditFichier(f.url)} className="p-1.5 rounded-lg hover:bg-red-100 text-red-500" title="Retirer">
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              (() => {
+                const list: NoteFichier[] = Array.isArray(note.fichiers) ? [...note.fichiers] : [];
+                if (note.fichier && note.fichier.url && !list.find(f => f.url === note.fichier!.url)) {
+                  list.unshift(note.fichier);
+                }
+                if (list.length === 0) return null;
+                return (
+                  <div className="space-y-2">
+                    {list.map((f) => (
+                      <a
+                        key={f.url}
+                        href={getFichierUrl(f.url) || '#'}
+                        download={f.originalName}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-3 p-3 rounded-2xl bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 border border-emerald-200 dark:border-emerald-800 hover:shadow-md transition-all hover:scale-[1.01] group"
+                      >
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-md flex-shrink-0">
+                          <FileText className="h-5 w-5 text-white" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-bold text-emerald-800 dark:text-emerald-200 truncate">{f.originalName}</p>
+                          <p className="text-[10px] text-emerald-600 dark:text-emerald-400">{(f.size / 1024).toFixed(1)} Ko · {f.mimeType}</p>
+                        </div>
+                        <Download className="h-4 w-4 text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform" />
+                      </a>
+                    ))}
+                  </div>
+                );
+              })()
+            )}
+
 
             {/* History timeline */}
             {localHistory && localHistory.length > 0 && (

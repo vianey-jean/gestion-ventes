@@ -13,6 +13,14 @@ export interface NoteHistoryEntry {
   movedAt: string;
 }
 
+export interface NoteFichier {
+  url: string;
+  filename: string;
+  originalName: string;
+  mimeType: string;
+  size: number;
+}
+
 export interface Note {
   id: string;
   title: string;
@@ -25,6 +33,8 @@ export interface Note {
   underlineLines: number[];
   drawing: string | null;
   voiceText: string;
+  fichier?: NoteFichier | null; // legacy single field
+  fichiers?: NoteFichier[];
   history: NoteHistoryEntry[];
   createdAt: string;
   updatedAt: string;
@@ -40,6 +50,14 @@ export const getDrawingUrl = (drawingPath: string | null): string | null => {
   return `${base}${drawingPath}`;
 };
 
+// Helper to build full URL for note attachment files
+export const getFichierUrl = (fichierPath: string | null | undefined): string | null => {
+  if (!fichierPath) return null;
+  if (fichierPath.startsWith('http') || fichierPath.startsWith('data:')) return fichierPath;
+  const base = getBaseURL();
+  return `${base}${fichierPath}`;
+};
+
 const noteApi = {
   // Notes
   getAll: () => api.get<Note[]>('/api/notes'),
@@ -51,6 +69,27 @@ const noteApi = {
 
   // Upload drawing - returns server URL path
   uploadDrawing: (dataUrl: string) => api.post<{ url: string; filename: string }>('/api/notes/upload-drawing', { drawing: dataUrl }),
+
+  // Upload single attachment file (legacy)
+  uploadFichier: (file: File) => {
+    const fd = new FormData();
+    fd.append('fichier', file);
+    return api.post<NoteFichier>('/api/notes/upload-fichier', fd, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+  },
+
+  // Upload multiple attachment files
+  uploadFichiers: (files: File[]) => {
+    const fd = new FormData();
+    files.forEach(f => fd.append('fichiers', f));
+    return api.post<NoteFichier[]>('/api/notes/upload-fichiers', fd, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+  },
+
+  // Physically delete an uploaded fichier from disk
+  deleteFichier: (url: string) => api.delete('/api/notes/fichier', { data: { url } }),
 
   // Columns
   getColumns: () => api.get<NoteColumn[]>('/api/notes/columns'),

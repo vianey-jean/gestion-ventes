@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Bold, Underline, Mic, MicOff, Edit3, Palette, StickyNote, Check, Trash2 } from 'lucide-react';
+import { Bold, Underline, Mic, MicOff, Edit3, Palette, StickyNote, Check, Trash2, Paperclip, FileText, X, Download } from 'lucide-react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
-import noteApi, { Note, NoteColumn, getDrawingUrl } from '@/services/api/noteApi';
+import noteApi, { Note, NoteColumn, getDrawingUrl, getFichierUrl } from '@/services/api/noteApi';
 import { NOTE_COLORS, applySmartPunctuation } from './constants';
 import DrawingCanvas from './DrawingCanvas';
 import { useToast } from '@/hooks/use-toast';
@@ -22,20 +22,51 @@ const NoteFormModal: React.FC<NoteFormModalProps> = ({ open, onOpenChange, note,
   const { toast } = useToast();
   const [form, setForm] = useState<Partial<Note>>({
     title: '', content: '', columnId: columns[0]?.id || '', color: '#ffffff',
-    bold: false, boldLines: [], underlineLines: [], drawing: null, voiceText: ''
+    bold: false, boldLines: [], underlineLines: [], drawing: null, voiceText: '', fichiers: []
   });
   const [showDrawing, setShowDrawing] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [uploadingDrawing, setUploadingDrawing] = useState(false);
+  const [uploadingFichier, setUploadingFichier] = useState(false);
   const recognitionRef = useRef<any>(null);
+  const fichierInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (note) {
-      setForm({ ...note });
+      // Merge legacy single fichier into fichiers list
+      const merged: any = { ...note };
+      const arr = Array.isArray(note.fichiers) ? [...note.fichiers] : [];
+      if (note.fichier && note.fichier.url && !arr.find(f => f && f.url === note.fichier!.url)) {
+        arr.unshift(note.fichier);
+      }
+      merged.fichiers = arr;
+      merged.fichier = null;
+      setForm(merged);
     } else {
-      setForm({ title: '', content: '', columnId: columns[0]?.id || '', color: '#ffffff', bold: false, boldLines: [], underlineLines: [], drawing: null, voiceText: '' });
+      setForm({ title: '', content: '', columnId: columns[0]?.id || '', color: '#ffffff', bold: false, boldLines: [], underlineLines: [], drawing: null, voiceText: '', fichiers: [] });
     }
   }, [note, columns, open]);
+
+  const handleFichierChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+    setUploadingFichier(true);
+    try {
+      const res = await noteApi.uploadFichiers(files);
+      setForm(prev => ({ ...prev, fichiers: [...(prev.fichiers || []), ...res.data] }));
+      toast({ title: '✅ Fichier(s) ajouté(s)', description: `${res.data.length} fichier(s)` });
+    } catch (err) {
+      console.error('Upload fichier error:', err);
+      toast({ title: 'Erreur', description: "Impossible d'enregistrer le(s) fichier(s)", variant: 'destructive' });
+    } finally {
+      setUploadingFichier(false);
+      if (fichierInputRef.current) fichierInputRef.current.value = '';
+    }
+  };
+
+  const removeFichier = (url: string) => {
+    setForm(prev => ({ ...prev, fichiers: (prev.fichiers || []).filter(f => f.url !== url) }));
+  };
 
   const toggleVoice = () => {
     if (isRecording) {
@@ -124,13 +155,74 @@ const NoteFormModal: React.FC<NoteFormModalProps> = ({ open, onOpenChange, note,
             {note?.id ? 'Modifier la note' : 'Nouvelle note'}
           </h2>
 
-          {/* Title */}
-          <Input
-            placeholder="Titre de la note"
-            value={form.title || ''}
-            onChange={e => setForm({ ...form, title: e.target.value })}
-            className={cn("text-base font-semibold rounded-xl border-white/30 dark:border-white/10 bg-white/50 dark:bg-white/5", form.bold && "font-black text-lg")}
-          />
+          {/* Title + Fichier */}
+          <div className="flex items-center gap-2">
+            <Input
+              placeholder="Titre de la note"
+              value={form.title || ''}
+              onChange={e => setForm({ ...form, title: e.target.value })}
+              className={cn("flex-1 text-base font-semibold rounded-xl border-white/30 dark:border-white/10 bg-white/50 dark:bg-white/5", form.bold && "font-black text-lg")}
+            />
+            <input
+              ref={fichierInputRef}
+              type="file"
+              multiple
+              accept="image/*,.pdf,.doc,.docx,.txt,.rtf,.odt,.csv,.xls,.xlsx,.ppt,.pptx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
+              onChange={handleFichierChange}
+              className="hidden"
+            />
+            <button
+              type="button"
+              onClick={() => fichierInputRef.current?.click()}
+              disabled={uploadingFichier}
+              title="Ajouter un ou plusieurs fichiers"
+              className={cn(
+                "flex-shrink-0 h-10 px-3 rounded-xl flex items-center gap-1.5 font-semibold text-xs shadow-lg transition-all hover:scale-105 active:scale-95",
+                (form.fichiers && form.fichiers.length > 0)
+                  ? "bg-gradient-to-br from-emerald-500 to-teal-600 text-white"
+                  : "bg-gradient-to-br from-amber-400 to-orange-500 text-white",
+                uploadingFichier && "opacity-60 animate-pulse"
+              )}
+            >
+              <Paperclip className="h-4 w-4" />
+              {uploadingFichier ? '...' : (form.fichiers && form.fichiers.length > 0) ? `Fichiers (${form.fichiers.length})` : 'Fichiers'}
+            </button>
+          </div>
+
+          {/* Fichiers preview list */}
+          {form.fichiers && form.fichiers.length > 0 && (
+            <div className="space-y-2">
+              {form.fichiers.map((f) => (
+                <div key={f.url} className="flex items-center gap-2 p-2.5 rounded-xl bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 border border-emerald-200 dark:border-emerald-800">
+                  <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center flex-shrink-0">
+                    <FileText className="h-4 w-4 text-white" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-bold text-emerald-800 dark:text-emerald-200 truncate">{f.originalName}</p>
+                    <p className="text-[10px] text-emerald-600 dark:text-emerald-400">{(f.size / 1024).toFixed(1)} Ko · {f.mimeType}</p>
+                  </div>
+                  <a
+                    href={getFichierUrl(f.url) || '#'}
+                    download={f.originalName}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-1.5 rounded-lg hover:bg-emerald-200/50 dark:hover:bg-emerald-800/40 text-emerald-700 dark:text-emerald-300"
+                    title="Télécharger"
+                  >
+                    <Download className="h-3.5 w-3.5" />
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() => removeFichier(f.url)}
+                    className="p-1.5 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 text-red-500"
+                    title="Retirer"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
 
           {/* Toolbar */}
           <div className="flex items-center gap-1.5 flex-wrap p-2.5 rounded-2xl bg-gray-100/80 dark:bg-gray-800/50 border border-gray-200/50 dark:border-gray-700/50 shadow-inner">
@@ -278,7 +370,7 @@ const NoteFormModal: React.FC<NoteFormModalProps> = ({ open, onOpenChange, note,
             <Button onClick={() => onOpenChange(false)} variant="outline" className="flex-1 rounded-xl">Annuler</Button>
             <Button
               onClick={() => onSave(form)}
-              disabled={uploadingDrawing}
+              disabled={uploadingDrawing || uploadingFichier}
               className="flex-1 bg-gradient-to-r from-cyan-500 to-blue-600 text-white hover:from-cyan-600 hover:to-blue-700 rounded-xl shadow-lg"
             >
               <Check className="h-4 w-4 mr-1" /> {note?.id ? 'Modifier' : 'Créer'}

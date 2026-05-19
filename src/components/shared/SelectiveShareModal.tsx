@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { X, Share2, Filter, User, Calendar, Building2, AlertTriangle, Plus, Copy, Check, KeyRound, LinkIcon, Trash2 } from 'lucide-react';
+import { X, Share2, Filter, User, Calendar, Building2, AlertTriangle, Plus, Copy, Check, KeyRound, LinkIcon, Trash2, StickyNote, Columns3 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import travailleurApi, { Travailleur } from '@/services/api/travailleurApi';
 import entrepriseApi, { Entreprise } from '@/services/api/entrepriseApi';
 import shareLinksApi, { ShareLink } from '@/services/api/shareLinksApi';
+import noteApi, { Note, NoteColumn } from '@/services/api/noteApi';
 
 type DateFilterMode = 'jours' | 'semaines' | 'mois' | 'annees';
-type ShareType = 'pointage' | 'taches';
+type ShareType = 'pointage' | 'taches' | 'notes';
 
 interface SelectiveShareModalProps {
   open: boolean;
@@ -46,6 +47,13 @@ const SelectiveShareModal: React.FC<SelectiveShareModalProps> = ({ open, onClose
   // Taches-specific
   const [importanceFilter, setImportanceFilter] = useState<'all' | 'pertinent' | 'optionnel'>('all');
 
+  // Notes-specific selection
+  const [allNotesData, setAllNotesData] = useState<Note[]>([]);
+  const [notesColumns, setNotesColumns] = useState<NoteColumn[]>([]);
+  const [notesAllColumns, setNotesAllColumns] = useState(true);
+  // map columnId -> { selected: boolean, noteIds: 'all' | string[] }
+  const [notesSelection, setNotesSelection] = useState<Record<string, { selected: boolean; noteIds: 'all' | string[] }>>({});
+
   // Link count
   const [linkCount, setLinkCount] = useState(1);
 
@@ -66,6 +74,8 @@ const SelectiveShareModal: React.FC<SelectiveShareModalProps> = ({ open, onClose
       setAllEntreprises(true);
       setImportanceFilter('all');
       setLinkCount(1);
+      setNotesAllColumns(true);
+      setNotesSelection({});
     }
   }, [open]);
 
@@ -80,6 +90,13 @@ const SelectiveShareModal: React.FC<SelectiveShareModalProps> = ({ open, onClose
     } catch {
       // ignore
     }
+    if (type === 'notes') {
+      try {
+        const [n, c] = await Promise.all([noteApi.getAll(), noteApi.getColumns()]);
+        setAllNotesData(Array.isArray(n.data) ? n.data : []);
+        setNotesColumns(Array.isArray(c.data) ? c.data : []);
+      } catch { /* ignore */ }
+    }
   };
 
   const buildFilters = () => {
@@ -87,6 +104,21 @@ const SelectiveShareModal: React.FC<SelectiveShareModalProps> = ({ open, onClose
       type,
       personne: selectedPersonne,
     };
+
+    if (type === 'notes') {
+      if (notesAllColumns) {
+        filters.notesSelection = { mode: 'all' };
+      } else {
+        const cols = Object.entries(notesSelection)
+          .filter(([, v]) => v.selected)
+          .map(([columnId, v]) => ({
+            columnId: String(columnId),
+            noteIds: v.noteIds === 'all' ? 'all' : v.noteIds.map(id => String(id))
+          }));
+        filters.notesSelection = { mode: 'selected', columns: cols };
+      }
+      return filters;
+    }
 
     if (selectAll) {
       filters.dateFilter = { mode: 'all' };
@@ -112,7 +144,22 @@ const SelectiveShareModal: React.FC<SelectiveShareModalProps> = ({ open, onClose
     return filters;
   };
 
+  const toggleColumnSelected = (colId: string) => {
+    setNotesSelection(prev => {
+      const cur = prev[colId];
+      const nextSelected = !cur?.selected;
+      return { ...prev, [colId]: { selected: nextSelected, noteIds: 'all' } };
+    });
+  };
+
   const handleValidate = () => {
+    if (type === 'notes' && !notesAllColumns) {
+      const cols = Object.entries(notesSelection).filter(([, v]) => v.selected);
+      if (cols.length === 0) {
+        toast({ title: 'Sélectionnez au moins une colonne', variant: 'destructive' });
+        return;
+      }
+    }
     setStep('count');
   };
 
@@ -198,7 +245,7 @@ const SelectiveShareModal: React.FC<SelectiveShareModalProps> = ({ open, onClose
           <div className="flex items-center gap-2">
             <Filter className="h-5 w-5 text-violet-400" />
             <h3 className="font-bold text-white text-sm">
-              Partage sélectif — {type === 'pointage' ? 'Pointage' : 'Tâches'}
+              Partage sélectif — {type === 'pointage' ? 'Pointage' : type === 'taches' ? 'Tâches' : 'Notes'}
             </h3>
           </div>
           <button onClick={onClose} className="p-1 rounded-lg hover:bg-white/10 transition-colors">
@@ -209,30 +256,87 @@ const SelectiveShareModal: React.FC<SelectiveShareModalProps> = ({ open, onClose
         <div className="flex-1 overflow-y-auto space-y-4 pr-1">
           {step === 'filters' && (
             <>
-              {/* Personne */}
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-white/70 flex items-center gap-1.5">
-                  <User className="h-3.5 w-3.5 text-blue-400" /> Personne
-                </label>
-                <select
-                  value={selectedPersonne}
-                  onChange={e => setSelectedPersonne(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:border-violet-500 focus:outline-none"
-                >
-                  <option value="all" className="bg-slate-800">Toutes les personnes</option>
-                  {travailleurs.map(t => (
-                    <option key={t.id} value={t.id} className="bg-slate-800">
-                      {t.prenom} {t.nom}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              {/* Personne (not for notes) */}
+              {type !== 'notes' && (
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-white/70 flex items-center gap-1.5">
+                    <User className="h-3.5 w-3.5 text-blue-400" /> Personne
+                  </label>
+                  <select
+                    value={selectedPersonne}
+                    onChange={e => setSelectedPersonne(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:border-violet-500 focus:outline-none"
+                  >
+                    <option value="all" className="bg-slate-800">Toutes les personnes</option>
+                    {travailleurs.map(t => (
+                      <option key={t.id} value={t.id} className="bg-slate-800">
+                        {t.prenom} {t.nom}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
-              {/* Date */}
+              {/* Notes-specific: select columns/notes */}
+              {type === 'notes' && (
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-white/70 flex items-center gap-1.5">
+                    <Columns3 className="h-3.5 w-3.5 text-amber-400" /> Colonnes & notes
+                  </label>
+                  <label className="flex items-center gap-1.5 text-xs text-white/60 cursor-pointer mb-2">
+                    <input
+                      type="checkbox"
+                      checked={notesAllColumns}
+                      onChange={e => setNotesAllColumns(e.target.checked)}
+                      className="rounded border-white/20"
+                    />
+                    Toutes les colonnes et toutes les notes
+                  </label>
+                  {!notesAllColumns && (
+                    <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+                      {notesColumns.map(col => {
+                        const sel = notesSelection[col.id];
+                        const colNotes = allNotesData.filter(n => n.columnId === col.id);
+                        const isSel = !!sel?.selected;
+                        return (
+                          <div key={col.id} className={cn(
+                            "rounded-xl border p-2.5 transition-colors",
+                            isSel ? "border-violet-500/40 bg-violet-500/5" : "border-white/10 bg-white/5"
+                          )}>
+                            <div className="flex items-center justify-between gap-2">
+                              <label className="flex items-center gap-2 text-xs font-bold text-white cursor-pointer flex-1 min-w-0">
+                                <input
+                                  type="checkbox"
+                                  checked={isSel}
+                                  onChange={() => toggleColumnSelected(col.id)}
+                                  className="rounded border-white/20"
+                                />
+                                <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: col.color }} />
+                                <span className="truncate">{col.title}</span>
+                                <span className="text-[10px] text-white/40 ml-1">({colNotes.length})</span>
+                              </label>
+                              {isSel && (
+                                <span className="text-[10px] text-violet-300 font-bold">Toutes les notes</span>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                      {notesColumns.length === 0 && (
+                        <p className="text-xs text-white/40 text-center py-4">Aucune colonne</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Date (not for notes) */}
+              {type !== 'notes' && (
               <div className="space-y-2">
                 <label className="text-xs font-bold text-white/70 flex items-center gap-1.5">
                   <Calendar className="h-3.5 w-3.5 text-emerald-400" /> Période
                 </label>
+
 
                 <div className="flex items-center gap-2 mb-2">
                   <label className="flex items-center gap-1.5 text-xs text-white/60 cursor-pointer">
@@ -383,6 +487,9 @@ const SelectiveShareModal: React.FC<SelectiveShareModalProps> = ({ open, onClose
                   </>
                 )}
               </div>
+              )}
+
+
 
               {/* Entreprises (pointage only) */}
               {type === 'pointage' && (

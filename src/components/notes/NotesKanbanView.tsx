@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import noteApi, { Note, NoteColumn } from '@/services/api/noteApi';
-import { Plus, StickyNote, Columns3, Sparkles, Share2, MessageCircle } from 'lucide-react';
+import { Plus, StickyNote, Columns3, Sparkles, Share2, MessageCircle, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ShareLinkModal from '@/components/shared/ShareLinkModal';
+import SelectiveShareModal from '@/components/shared/SelectiveShareModal';
 import ShareCommentsViewer from '@/components/shared/ShareCommentsViewer';
 import { useRealtimeCommentNotifications } from '@/hooks/useRealtimeCommentNotifications';
 import KanbanColumn from './KanbanColumn';
@@ -35,6 +36,7 @@ const NotesKanbanView: React.FC = () => {
   const [confirmAction, setConfirmAction] = useState<{ message: string; action: () => void } | null>(null);
   const [dragOverColId, setDragOverColId] = useState<string | null>(null);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [showSelectiveShare, setShowSelectiveShare] = useState(false);
   const [showCommentsViewer, setShowCommentsViewer] = useState(false);
   const [commentCount, setCommentCount] = useState(0);
 
@@ -261,6 +263,12 @@ const NotesKanbanView: React.FC = () => {
                 <Share2 className="h-4 w-4 mr-2" /> Partager notes
               </Button>
               <Button
+                onClick={() => setShowSelectiveShare(true)}
+                className="relative overflow-hidden bg-gradient-to-br from-fuchsia-500 via-pink-600 to-rose-700 border border-fuchsia-300/40 text-white shadow-[0_20px_70px_rgba(217,70,239,0.5)] hover:shadow-[0_35px_100px_rgba(217,70,239,0.7)] rounded-2xl px-5 py-2.5 font-bold text-sm transition-all hover:scale-105 active:scale-95"
+              >
+                <Filter className="h-4 w-4 mr-2" /> Partage sélectif
+              </Button>
+              <Button
                 onClick={() => setShowCommentsViewer(true)}
                 className="relative bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-700 border border-blue-300/40 text-white shadow-[0_20px_70px_rgba(59,130,246,0.5)] rounded-2xl px-5 py-2.5 font-bold text-sm transition-all hover:scale-105 active:scale-95"
               >
@@ -331,6 +339,11 @@ const NotesKanbanView: React.FC = () => {
         onClose={() => setShowShareModal(false)}
         type="notes"
         typeLabel="Notes"
+      />
+      <SelectiveShareModal
+        open={showSelectiveShare}
+        onClose={() => setShowSelectiveShare(false)}
+        type="notes"
       />
       <ShareCommentsViewer
         open={showCommentsViewer}

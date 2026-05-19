@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
-import { StickyNote, Lock, Eye, MessageCircle } from 'lucide-react';
+import { StickyNote, Lock, Eye, MessageCircle, FileText, Download } from 'lucide-react';
 import { getBaseURL } from '@/services/api/api';
-import { getDrawingUrl } from '@/services/api/noteApi';
+import { getDrawingUrl, getFichierUrl, NoteFichier } from '@/services/api/noteApi';
 import SEOHead from '@/components/SEOHead';
 import SharedCommentForm from '@/components/shared/SharedCommentForm';
 import PremiumLoading from '@/components/ui/premium-loading';
@@ -18,6 +18,8 @@ interface SharedNote {
   underlineLines: number[];
   drawing: string | null;
   voiceText: string;
+  fichier?: NoteFichier | null;
+  fichiers?: NoteFichier[];
   createdAt: string;
 }
 
@@ -152,6 +154,31 @@ const SharedNotesPage: React.FC = () => {
                           {note.voiceText && (
                             <p className="mt-1 text-[10px] text-gray-400 italic">🎤 {note.voiceText}</p>
                           )}
+                          {(() => {
+                            const list: NoteFichier[] = Array.isArray((note as any).fichiers) ? [...(note as any).fichiers] : [];
+                            if (note.fichier && note.fichier.url && !list.find(f => f.url === note.fichier!.url)) {
+                              list.unshift(note.fichier);
+                            }
+                            return list.map((f) => (
+                              <a
+                                key={f.url}
+                                href={getFichierUrl(f.url) || '#'}
+                                download={f.originalName}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="mt-2 flex items-center gap-2 p-2 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 hover:shadow-md transition-all"
+                              >
+                                <div className="w-7 h-7 rounded-md bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center flex-shrink-0">
+                                  <FileText className="h-3.5 w-3.5 text-white" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-[11px] font-bold text-emerald-800 dark:text-emerald-200 truncate">{f.originalName}</p>
+                                  <p className="text-[9px] text-emerald-600 dark:text-emerald-400">{(f.size / 1024).toFixed(1)} Ko</p>
+                                </div>
+                                <Download className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                              </a>
+                            ));
+                          })()}
                         </div>
                       );
                     })}
