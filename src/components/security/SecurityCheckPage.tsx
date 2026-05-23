@@ -71,11 +71,11 @@ const randomString = (length: number) =>
 
 const generateCaptcha = () => {
   const chars =
-    'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
 
   let value = '';
 
-  for (let i = 0; i < 6; i++) {
+  for (let i = 0; i < 8; i++) {
     value += chars.charAt(
       Math.floor(Math.random() * chars.length)
     );
@@ -1378,9 +1378,7 @@ const SecurityCheckPage: React.FC<
                             <input
                               value={captchaInput}
                               onChange={(e) =>
-                                setCaptchaInput(
-                                  e.target.value.toUpperCase()
-                                )
+                                setCaptchaInput(e.target.value)
                               }
                               placeholder="Entrer le code"
                               className="flex-1 h-16 rounded-2xl border border-white/10 bg-black/30 px-5 text-white outline-none focus:border-violet-500/50"
@@ -1390,8 +1388,8 @@ const SecurityCheckPage: React.FC<
                           <button
                             onClick={() => {
                               if (
-                                captchaInput ===
-                                captchaText
+                                captchaInput.trim() ===
+                                captchaText.trim()
                               ) {
                                 setCaptchaPassed(
                                   true
@@ -1600,7 +1598,7 @@ const SecurityCheckPage: React.FC<
                         }}
                         className="absolute text-[10px] font-mono text-fuchsia-200 tracking-widest"
                       >
-                        SECURITY
+                        SECURITE
                       </motion.div>
                     </motion.div>
                   </div>
