@@ -230,7 +230,7 @@ const SecurityCheckPage: React.FC<
     useState(0);
 
   const [networkQuality, setNetworkQuality] =
-    useState('ULTRA SECURE');
+    useState('ULTRA SECURETE');
 
   const [motionTrail, setMotionTrail] =
     useState<{ x: number; y: number }[]>(
@@ -267,10 +267,10 @@ const SecurityCheckPage: React.FC<
   const [ipReputation] =
     useState(
       [
-        'TRUSTED',
-        'CLEAN',
-        'SECURE',
-        'PRIVATE',
+        'CONFIANCE',
+        'NETOYER',
+        'SECURESE',
+        'PRIVE',
       ][Math.floor(Math.random() * 4)]
     );
 
@@ -707,10 +707,10 @@ const SecurityCheckPage: React.FC<
       if (score > 90)
         setRiskLevel('MINIMAL');
       else if (score > 75)
-        setRiskLevel('LOW');
+        setRiskLevel('BAS');
       else if (score > 50)
-        setRiskLevel('MEDIUM');
-      else setRiskLevel('HIGH');
+        setRiskLevel('MOYENNE');
+      else setRiskLevel('HAUTE');
 
       return {
         score,
@@ -919,7 +919,7 @@ const SecurityCheckPage: React.FC<
                 <div>
                   <div className="flex items-center gap-2">
                     <h1 className="text-white text-2xl font-bold tracking-tight">
-                      Quantum Security V4
+                      Sécurité quantique
                     </h1>
 
                     <Sparkles className="w-5 h-5 text-violet-300" />
@@ -969,7 +969,7 @@ const SecurityCheckPage: React.FC<
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-7">
               <Metric
                 icon={<Cpu className="w-3 h-3" />}
-                label="ENGINE"
+                label="MOTEUR"
                 value={networkQuality}
               />
 
@@ -983,13 +983,13 @@ const SecurityCheckPage: React.FC<
 
               <Metric
                 icon={<Shield className="w-3 h-3" />}
-                label="RISK"
+                label="RISQUE"
                 value={riskLevel}
               />
 
               <Metric
                 icon={<Wifi className="w-3 h-3" />}
-                label="NETWORK"
+                label="RÉSEAU"
                 value={ipReputation}
               />
             </div>
@@ -1237,7 +1237,7 @@ const SecurityCheckPage: React.FC<
                         <Globe className="w-3 h-3 text-cyan-300" />
 
                         <span className="text-[11px] text-white/70 uppercase tracking-[0.2em]">
-                          Human Pattern Scan
+                          Analyse comportementale humaine
                         </span>
                       </div>
 
@@ -1710,7 +1710,7 @@ const SecurityCheckPage: React.FC<
                 <Lock className="w-3 h-3 text-white/40" />
 
                 <p className="text-[11px] text-white/45 uppercase tracking-[0.2em]">
-                  Quantum encrypted tunnel
+                  Tunnel chiffré quantique
                 </p>
               </div>
 
