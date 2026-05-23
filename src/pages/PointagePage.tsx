@@ -27,6 +27,7 @@ import MonthDetailModal from '@/components/pointage/modals/MonthDetailModal';
 import PointageConfirmDialogs from '@/components/pointage/modals/PointageConfirmDialogs';
 import AvanceModal from '@/components/pointage/modals/AvanceModal';
 import TacheView from '@/components/tache/TacheView';
+import RdvTacheView from '@/components/rdvtache/RdvTacheView';
 import NotesKanbanView from '@/components/notes/NotesKanbanView';
 import ShareLinkModal from '@/components/shared/ShareLinkModal';
 import SelectiveShareModal from '@/components/shared/SelectiveShareModal';
@@ -39,7 +40,7 @@ const mirrorShine = "absolute inset-0 bg-gradient-to-r from-transparent via-whit
 
 const PointagePage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => {
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState<'pointage' | 'tache' | 'notes'>('pointage');
+  const [activeTab, setActiveTab] = useState<'pointage' | 'tache' | 'notes' | 'rdv'>('pointage');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [entreprises, setEntreprises] = useState<Entreprise[]>([]);
   const [pointages, setPointages] = useState<PointageEntry[]>([]);
@@ -345,6 +346,8 @@ const PointagePage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
           </>
         ) : activeTab === 'tache' ? (
           <TacheView />
+        ) : activeTab === 'rdv' ? (
+          <RdvTacheView />
         ) : (
           <NotesKanbanView />
         )}
