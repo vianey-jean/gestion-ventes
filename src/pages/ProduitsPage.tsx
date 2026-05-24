@@ -48,6 +48,7 @@ import { User } from 'lucide-react';
 import ProductCharacteristicCard from '@/components/products/ProductCharacteristicCard';
 import CaracteristiqueModal from '@/components/products/CaracteristiqueModal';
 import ProductMergeModal from '@/components/products/ProductMergeModal';
+import ProductsVenduModal from '@/components/products/ProductsVenduModal';
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://server-gestion-ventes.onrender.com';
 
 type FilterType = 'tous' | 'perruque' | 'tissage' | 'extension' | 'autres';
@@ -72,6 +73,7 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
   const [isCaracteristiqueOpen, setIsCaracteristiqueOpen] = useState(false);
   const [caracteristiqueProduct, setCaracteristiqueProduct] = useState<Product | null>(null);
   const [isMergeOpen, setIsMergeOpen] = useState(false);
+  const [isVenduOpen, setIsVenduOpen] = useState(false);
 
   // Selected product
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -467,90 +469,315 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
 
         <div className="max-w-7xl mx-auto px-4 pb-12 space-y-6">
           {/* Search + Add */}
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-            className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center"
-          >
-            {/* Search */}
-            <div className="relative flex-1">
-              <div className="relative">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-violet-400" />
-                <Input
-                  placeholder="Rechercher un produit (3 caractères min.)..."
-                  value={searchQuery}
-                  onChange={(e) => { setSearchQuery(e.target.value); setShowSearchResults(e.target.value.length >= 3); }}
-                  onFocus={() => { if (searchQuery.length >= 3) setShowSearchResults(true); }}
-                  onBlur={() => setTimeout(() => setShowSearchResults(false), 200)}
-                  className="pl-12 h-14 rounded-2xl border-2 border-violet-200/50 dark:border-violet-800/30 bg-white/80 dark:bg-white/5 backdrop-blur-xl focus:border-violet-500 shadow-lg shadow-violet-500/5 text-base font-medium transition-all duration-300"
-                />
-              </div>
-              {/* Quick search results dropdown */}
-              {/* <AnimatePresence>
-                {showSearchResults && searchResults.length > 0 && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
-                    className="absolute z-50 top-full mt-2 w-full rounded-2xl border border-violet-200/30 dark:border-violet-800/30 bg-white/95 dark:bg-[#0a0020]/95 backdrop-blur-2xl shadow-2xl shadow-violet-500/10 overflow-hidden"
-                  >
-                    {searchResults.map((p) => (
-                      <button
-                        key={p.id}
-                        onMouseDown={(e) => { e.preventDefault(); openView(p); setShowSearchResults(false); }}
-                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-violet-500/10 transition-all duration-200 text-left border-b border-violet-100/20 dark:border-violet-800/20 last:border-0"
-                      >
-                        <div className="w-10 h-10 rounded-xl overflow-hidden bg-violet-100 dark:bg-violet-900/30 flex-shrink-0">
-                          {p.mainPhoto || (p.photos && p.photos.length > 0) ? (
-                            <img src={getPhotoUrl(p.mainPhoto || p.photos![0])} alt="" className="w-full h-full object-cover" />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center"><ImageOff className="h-4 w-4 text-violet-400" /></div>
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-bold text-sm truncate text-foreground">{p.description}</p>
-                          <p className="text-xs text-muted-foreground">{p.code} · {p.quantity} en stock · {p.purchasePrice}€</p>
-                        </div>
-                        <Eye className="h-4 w-4 text-violet-400 flex-shrink-0" />
-                      </button>
-                    ))}
-                  </motion.div>
+          <motion.div
+  initial={{ opacity: 0, y: 10 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ delay: 0.1 }}
+  className="flex flex-col xl:flex-row gap-4 xl:items-center w-full"
+>
+  {/* ================= SEARCH ================= */}
+  <div className="relative flex-1 w-full">
+    <div className="relative">
+      <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-violet-400" />
+
+      <Input
+        placeholder="Rechercher un produit (3 caractères min.)..."
+        value={searchQuery}
+        onChange={(e) => {
+          setSearchQuery(e.target.value);
+          setShowSearchResults(e.target.value.length >= 3);
+        }}
+        onFocus={() => {
+          if (searchQuery.length >= 3) setShowSearchResults(true);
+        }}
+        onBlur={() => setTimeout(() => setShowSearchResults(false), 200)}
+        className="
+          pl-11 sm:pl-12
+          h-12 sm:h-14
+          rounded-2xl
+          border-2
+          border-violet-200/50
+          dark:border-violet-800/30
+          bg-white/80
+          dark:bg-white/5
+          backdrop-blur-xl
+          focus:border-violet-500
+          shadow-lg
+          shadow-violet-500/5
+          text-sm sm:text-base
+          font-medium
+          transition-all
+          duration-300
+          w-full
+        "
+      />
+    </div>
+
+    {/* ================= SEARCH RESULTS ================= */}
+    {/* 
+    <AnimatePresence>
+      {showSearchResults && searchResults.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          className="
+            absolute
+            z-50
+            top-full
+            mt-2
+            w-full
+            rounded-2xl
+            border
+            border-violet-200/30
+            dark:border-violet-800/30
+            bg-white/95
+            dark:bg-[#0a0020]/95
+            backdrop-blur-2xl
+            shadow-2xl
+            shadow-violet-500/10
+            overflow-hidden
+          "
+        >
+          {searchResults.map((p) => (
+            <button
+              key={p.id}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                openView(p);
+                setShowSearchResults(false);
+              }}
+              className="
+                w-full
+                flex
+                items-center
+                gap-3
+                px-4
+                py-3
+                hover:bg-violet-500/10
+                transition-all
+                duration-200
+                text-left
+                border-b
+                border-violet-100/20
+                dark:border-violet-800/20
+                last:border-0
+              "
+            >
+              <div className="w-10 h-10 rounded-xl overflow-hidden bg-violet-100 dark:bg-violet-900/30 flex-shrink-0">
+                {p.mainPhoto || (p.photos && p.photos.length > 0) ? (
+                  <img
+                    src={getPhotoUrl(p.mainPhoto || p.photos![0])}
+                    alt=""
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <ImageOff className="h-4 w-4 text-violet-400" />
+                  </div>
                 )}
-              </AnimatePresence> */}
-            </div>
+              </div>
 
-            {/* Action buttons */}
-            <div className="flex flex-col sm:flex-row gap-3">
-              {/* Add button */}
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Button
-                  onClick={() => setIsAddOpen(true)}
-                  className="h-14 px-6 rounded-2xl font-bold bg-gradient-to-r from-emerald-500 via-green-600 to-teal-600 hover:from-emerald-600 hover:via-green-700 hover:to-teal-700 text-white shadow-xl shadow-green-500/25 hover:shadow-2xl hover:shadow-green-500/40 transition-all duration-300 border-0 w-full sm:w-auto"
-                >
-                  <Plus className="h-5 w-5 mr-2" />
-                  Ajouter Produit
-                </Button>
-              </motion.div>
+              <div className="flex-1 min-w-0">
+                <p className="font-bold text-sm truncate text-foreground">
+                  {p.description}
+                </p>
 
-              {/* Edit button */}
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Button
-                  onClick={() => setIsEditProductOpen(true)}
-                  className="h-14 px-6 rounded-2xl font-bold bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 hover:from-blue-600 hover:via-blue-700 hover:to-indigo-700 text-white shadow-xl shadow-blue-500/25 hover:shadow-2xl hover:shadow-blue-500/40 transition-all duration-300 border-0 w-full sm:w-auto"
-                >
-                  <Pencil className="h-5 w-5 mr-2" />
-                  Modifier Produit
-                </Button>
-              </motion.div>
+                <p className="text-xs text-muted-foreground">
+                  {p.code} · {p.quantity} en stock · {p.purchasePrice}€
+                </p>
+              </div>
 
-              {/* Merge button */}
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Button
-                  onClick={() => setIsMergeOpen(true)}
-                  className="h-14 px-6 rounded-2xl font-bold bg-gradient-to-r from-orange-500 via-amber-500 to-red-500 hover:from-orange-600 hover:via-amber-600 hover:to-red-600 text-white shadow-xl shadow-orange-500/25 hover:shadow-2xl hover:shadow-orange-500/40 transition-all duration-300 border-0 w-full sm:w-auto"
-                >
-                  <Merge className="h-5 w-5 mr-2" />
-                  Fusionner Produit
-                </Button>
-              </motion.div>
-            </div>
-          </motion.div>
+              <Eye className="h-4 w-4 text-violet-400 flex-shrink-0" />
+            </button>
+          ))}
+        </motion.div>
+      )}
+    </AnimatePresence>
+    */}
+  </div>
+
+  {/* ================= ACTION BUTTONS ================= */}
+  <div
+    className="
+      grid
+      grid-cols-1
+      sm:grid-cols-2
+      xl:flex
+      gap-3
+      w-full
+      xl:w-auto
+    "
+  >
+    {/* ================= ADD BUTTON ================= */}
+    <motion.div
+      whileHover={{ scale: 1.03 }}
+      whileTap={{ scale: 0.97 }}
+      className="w-full"
+    >
+      <Button
+        onClick={() => setIsAddOpen(true)}
+        className="
+          w-full
+          xl:w-auto
+          h-12
+          sm:h-14
+          px-4
+          sm:px-6
+          rounded-2xl
+          font-bold
+          text-sm
+          sm:text-base
+          bg-gradient-to-r
+          from-emerald-500
+          via-green-600
+          to-teal-600
+          hover:from-emerald-600
+          hover:via-green-700
+          hover:to-teal-700
+          text-white
+          shadow-lg
+          sm:shadow-xl
+          shadow-green-500/25
+          hover:shadow-2xl
+          hover:shadow-green-500/40
+          transition-all
+          duration-300
+          border-0
+        "
+      >
+        <Plus className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
+        Ajouter Produit
+      </Button>
+    </motion.div>
+
+    {/* ================= EDIT BUTTON ================= */}
+    <motion.div
+      whileHover={{ scale: 1.03 }}
+      whileTap={{ scale: 0.97 }}
+      className="w-full"
+    >
+      <Button
+        onClick={() => setIsEditProductOpen(true)}
+        className="
+          w-full
+          xl:w-auto
+          h-12
+          sm:h-14
+          px-4
+          sm:px-6
+          rounded-2xl
+          font-bold
+          text-sm
+          sm:text-base
+          bg-gradient-to-r
+          from-blue-500
+          via-blue-600
+          to-indigo-600
+          hover:from-blue-600
+          hover:via-blue-700
+          hover:to-indigo-700
+          text-white
+          shadow-lg
+          sm:shadow-xl
+          shadow-blue-500/25
+          hover:shadow-2xl
+          hover:shadow-blue-500/40
+          transition-all
+          duration-300
+          border-0
+        "
+      >
+        <Pencil className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
+        Modifier Produit
+      </Button>
+    </motion.div>
+
+    {/* ================= BEST SELLER BUTTON ================= */}
+    <motion.div
+      whileHover={{ scale: 1.03 }}
+      whileTap={{ scale: 0.97 }}
+      className="w-full"
+    >
+      <Button
+        onClick={() => setIsVenduOpen(true)}
+        className="
+          w-full
+          xl:w-auto
+          h-12
+          sm:h-14
+          px-4
+          sm:px-6
+          rounded-2xl
+          font-bold
+          text-sm
+          sm:text-base
+          bg-gradient-to-r
+          from-amber-500
+          via-yellow-500
+          to-orange-500
+          hover:from-amber-600
+          hover:via-yellow-600
+          hover:to-orange-600
+          text-white
+          shadow-lg
+          sm:shadow-xl
+          shadow-amber-500/30
+          hover:shadow-2xl
+          hover:shadow-amber-500/50
+          transition-all
+          duration-300
+          border-0
+        "
+      >
+        <Star className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
+        Voir plus vendu
+      </Button>
+    </motion.div>
+
+    {/* ================= MERGE BUTTON ================= */}
+    <motion.div
+      whileHover={{ scale: 1.03 }}
+      whileTap={{ scale: 0.97 }}
+      className="w-full"
+    >
+      <Button
+        onClick={() => setIsMergeOpen(true)}
+        className="
+          w-full
+          xl:w-auto
+          h-12
+          sm:h-14
+          px-4
+          sm:px-6
+          rounded-2xl
+          font-bold
+          text-sm
+          sm:text-base
+          bg-gradient-to-r
+          from-orange-500
+          via-amber-500
+          to-red-500
+          hover:from-orange-600
+          hover:via-amber-600
+          hover:to-red-600
+          text-white
+          shadow-lg
+          sm:shadow-xl
+          shadow-orange-500/25
+          hover:shadow-2xl
+          hover:shadow-orange-500/40
+          transition-all
+          duration-300
+          border-0
+        "
+      >
+        <Merge className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
+        Fusionner Produit
+      </Button>
+    </motion.div>
+  </div>
+</motion.div>
 
           {/* Filters */}
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}
@@ -1476,6 +1703,12 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
           if (fetchProducts) await fetchProducts();
           await fetchRatings();
         }}
+      />
+
+      {/* ========== MODALE PRODUITS LES PLUS VENDUS ========== */}
+      <ProductsVenduModal
+        open={isVenduOpen}
+        onClose={() => setIsVenduOpen(false)}
       />
     </div>
   );

@@ -25,8 +25,7 @@ const STATUT_COLORS: Record<string, string> = {
   confirme: 'bg-emerald-500/90 border-emerald-400 text-white',
   annule: 'bg-red-500/90 border-red-400 text-white',
   reporte: 'bg-blue-500/90 border-blue-400 text-white',
-  termine: 'bg-amber-900 border-amber-900 text-amber-100 underline decoration-2 underline-offset-2',
-
+  termine: 'bg-black/80 border-black text-white underline decoration-2 underline-offset-2',
 };
 
 const STATUT_LABEL: Record<string, string> = {
