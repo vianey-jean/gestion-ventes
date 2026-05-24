@@ -29,6 +29,9 @@ import {
   Bot,
   Flame,
   ScanSearch,
+  RefreshCw,
+  Volume2,
+  KeyRound,
 } from 'lucide-react';
 
 import {
@@ -1313,108 +1316,305 @@ const SecurityCheckPage: React.FC<
                     )}
                   </AnimatePresence>
 
-                  {/* CAPTCHA */}
+                  {/* CAPTCHA — ULTRA LUXURY */}
                   <AnimatePresence>
                     {captchaRequired &&
                       verifiedPuzzle && (
                         <motion.div
-                          initial={{
-                            opacity: 0,
-                            y: 15,
-                          }}
-                          animate={{
-                            opacity: 1,
-                            y: 0,
-                          }}
-                          className="rounded-3xl border border-white/10 bg-white/[0.05] p-5"
+                          initial={{ opacity: 0, y: 20, scale: 0.97 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: -10, scale: 0.97 }}
+                          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                          className="relative"
                         >
-                          <div className="flex items-center gap-3 mb-4">
-                            <ShieldAlert className="w-5 h-5 text-yellow-300" />
+                          {/* Aura gradient border */}
+                          <div className="absolute -inset-[1.5px] rounded-[28px] bg-gradient-to-br from-violet-500/50 via-fuchsia-500/40 to-amber-400/40 blur-md opacity-80" />
+                          <motion.div
+                            animate={{ backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'] }}
+                            transition={{ duration: 8, repeat: Infinity }}
+                            className="absolute -inset-[1px] rounded-[28px] opacity-60"
+                            style={{
+                              background:
+                                'linear-gradient(120deg,#8b5cf6,#ec4899,#f59e0b,#8b5cf6)',
+                              backgroundSize: '300% 300%',
+                            }}
+                          />
 
-                            <div>
-                              <p className="text-white font-semibold">
-                                Vérification
-                                CAPTCHA
-                              </p>
+                          <div className="relative rounded-[28px] border border-white/10 bg-gradient-to-br from-white/[0.07] via-white/[0.04] to-white/[0.02] backdrop-blur-2xl p-4 sm:p-6 overflow-hidden">
+                            {/* Decorative floating orbs */}
+                            <motion.div
+                              animate={{ x: [0, 30, 0], y: [0, -20, 0], scale: [1, 1.15, 1] }}
+                              transition={{ duration: 9, repeat: Infinity }}
+                              className="pointer-events-none absolute -top-10 -right-10 w-40 h-40 rounded-full bg-fuchsia-500/20 blur-3xl"
+                            />
+                            <motion.div
+                              animate={{ x: [0, -25, 0], y: [0, 25, 0], scale: [1, 1.1, 1] }}
+                              transition={{ duration: 11, repeat: Infinity }}
+                              className="pointer-events-none absolute -bottom-12 -left-12 w-44 h-44 rounded-full bg-violet-500/20 blur-3xl"
+                            />
 
-                              <p className="text-white/45 text-xs mt-1">
-                                Contrôle
-                                supplémentaire
-                                anti-bot
-                              </p>
-                            </div>
-                          </div>
-
-                          <div className="flex flex-col md:flex-row gap-4">
-                            <div className="relative flex-1 h-16 rounded-2xl overflow-hidden border border-white/10 bg-black/40 flex items-center justify-center">
-                              <div className="absolute inset-0 opacity-30">
-                                {[...Array(40)].map(
-                                  (_, i) => (
-                                    <div
-                                      key={i}
-                                      className="absolute w-1 h-1 bg-white"
-                                      style={{
-                                        left: `${Math.random() * 100}%`,
-                                        top: `${Math.random() * 100}%`,
-                                      }}
-                                    />
-                                  )
-                                )}
+                            {/* Header */}
+                            <div className="relative flex items-start sm:items-center justify-between gap-3 mb-5">
+                              <div className="flex items-center gap-3">
+                                <div className="relative shrink-0">
+                                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-amber-400 to-fuchsia-500 blur-lg opacity-70" />
+                                  <div className="relative w-11 h-11 rounded-2xl bg-gradient-to-br from-amber-400 via-rose-400 to-fuchsia-500 flex items-center justify-center shadow-lg">
+                                    <KeyRound className="w-5 h-5 text-white" />
+                                  </div>
+                                </div>
+                                <div>
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <p className="text-white font-bold text-base sm:text-lg leading-tight">
+                                      Vérification CAPTCHA
+                                    </p>
+                                    <span className="hidden xs:inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gradient-to-r from-violet-500/20 to-fuchsia-500/20 border border-white/10 text-[9px] uppercase tracking-[0.2em] text-violet-200">
+                                      <Sparkles className="w-2.5 h-2.5" /> Luxe
+                                    </span>
+                                  </div>
+                                  <p className="text-white/45 text-[11px] sm:text-xs mt-1">
+                                    Saisissez le code dans les cases
+                                  </p>
+                                </div>
                               </div>
 
-                              <p
-                                className="text-3xl font-black tracking-[0.4em] text-white select-none"
-                                style={{
-                                  transform:
-                                    'rotate(-2deg)',
-                                  textShadow:
-                                    '0 0 20px rgba(255,255,255,0.35)',
-                                }}
-                              >
-                                {captchaText}
-                              </p>
+                              <div className="flex items-center gap-1.5 shrink-0">
+                                <button
+                                  type="button"
+                                  aria-label="Lire le code"
+                                  onClick={() => {
+                                    try {
+                                      const u = new SpeechSynthesisUtterance(
+                                        captchaText.split('').join(' ')
+                                      );
+                                      u.rate = 0.7;
+                                      window.speechSynthesis.cancel();
+                                      window.speechSynthesis.speak(u);
+                                    } catch {}
+                                  }}
+                                  className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl border border-white/10 bg-white/[0.05] hover:bg-white/[0.1] flex items-center justify-center text-white/70 hover:text-white transition-all hover:scale-105 active:scale-95"
+                                >
+                                  <Volume2 className="w-4 h-4" />
+                                </button>
+                                <button
+                                  type="button"
+                                  aria-label="Régénérer le code"
+                                  onClick={() => {
+                                    setCaptchaText(generateCaptcha());
+                                    setCaptchaInput('');
+                                    setCaptchaPassed(false);
+                                  }}
+                                  className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl border border-white/10 bg-white/[0.05] hover:bg-white/[0.1] flex items-center justify-center text-white/70 hover:text-white transition-all hover:scale-105 active:scale-95"
+                                >
+                                  <RefreshCw className="w-4 h-4" />
+                                </button>
+                              </div>
                             </div>
 
-                            <input
-                              value={captchaInput}
-                              onChange={(e) =>
-                                setCaptchaInput(e.target.value)
+                            {/* Captcha display */}
+                            <div className="relative rounded-2xl overflow-hidden border border-white/10 bg-gradient-to-br from-black/60 via-violet-950/40 to-black/60 mb-4">
+                              {/* Mesh background */}
+                              <div
+                                className="absolute inset-0 opacity-[0.15]"
+                                style={{
+                                  backgroundImage:
+                                    'radial-gradient(circle at 20% 30%, #a78bfa 0, transparent 35%), radial-gradient(circle at 80% 70%, #f0abfc 0, transparent 35%), radial-gradient(circle at 50% 50%, #fbbf24 0, transparent 40%)',
+                                }}
+                              />
+                              {/* Grid lines */}
+                              <div
+                                className="absolute inset-0 opacity-[0.08]"
+                                style={{
+                                  backgroundImage:
+                                    'linear-gradient(rgba(255,255,255,0.6) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.6) 1px, transparent 1px)',
+                                  backgroundSize: '14px 14px',
+                                }}
+                              />
+                              {/* Animated scan */}
+                              <motion.div
+                                animate={{ x: ['-100%', '120%'] }}
+                                transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
+                                className="absolute inset-y-0 w-1/3 bg-gradient-to-r from-transparent via-white/10 to-transparent"
+                              />
+                              {/* Noise dots */}
+                              {[...Array(35)].map((_, i) => (
+                                <div
+                                  key={i}
+                                  className="absolute rounded-full bg-white/40"
+                                  style={{
+                                    left: `${(i * 37) % 100}%`,
+                                    top: `${(i * 53) % 100}%`,
+                                    width: `${1 + (i % 3)}px`,
+                                    height: `${1 + (i % 3)}px`,
+                                  }}
+                                />
+                              ))}
+                              {/* Wavy lines */}
+                              <svg
+                                className="absolute inset-0 w-full h-full opacity-30"
+                                preserveAspectRatio="none"
+                                viewBox="0 0 400 100"
+                              >
+                                <path
+                                  d="M0,50 Q100,10 200,50 T400,50"
+                                  stroke="url(#capg1)"
+                                  strokeWidth="1.5"
+                                  fill="none"
+                                />
+                                <path
+                                  d="M0,30 Q100,80 200,30 T400,30"
+                                  stroke="url(#capg2)"
+                                  strokeWidth="1"
+                                  fill="none"
+                                />
+                                <defs>
+                                  <linearGradient id="capg1" x1="0" x2="1">
+                                    <stop offset="0%" stopColor="#a78bfa" />
+                                    <stop offset="100%" stopColor="#f0abfc" />
+                                  </linearGradient>
+                                  <linearGradient id="capg2" x1="0" x2="1">
+                                    <stop offset="0%" stopColor="#fbbf24" />
+                                    <stop offset="100%" stopColor="#ec4899" />
+                                  </linearGradient>
+                                </defs>
+                              </svg>
+
+                              {/* Characters */}
+                              <div className="relative flex items-center justify-center gap-1 sm:gap-2 py-6 sm:py-8 px-3 select-none">
+                                {captchaText.split('').map((ch, i) => {
+                                  const colors = [
+                                    'from-violet-300 to-fuchsia-400',
+                                    'from-amber-300 to-rose-400',
+                                    'from-cyan-300 to-violet-400',
+                                    'from-fuchsia-300 to-amber-300',
+                                    'from-emerald-300 to-cyan-400',
+                                    'from-rose-300 to-fuchsia-400',
+                                    'from-yellow-300 to-orange-400',
+                                    'from-violet-300 to-pink-400',
+                                  ];
+                                  const rot = ((i * 13) % 30) - 15;
+                                  const ty = ((i * 7) % 10) - 5;
+                                  return (
+                                    <motion.span
+                                      key={`${captchaText}-${i}`}
+                                      initial={{ opacity: 0, y: 12 }}
+                                      animate={{ opacity: 1, y: 0 }}
+                                      transition={{ delay: i * 0.05 }}
+                                      className={`bg-gradient-to-br ${colors[i % colors.length]} bg-clip-text text-transparent font-black text-2xl sm:text-3xl md:text-4xl`}
+                                      style={{
+                                        transform: `rotate(${rot}deg) translateY(${ty}px)`,
+                                        textShadow: '0 4px 20px rgba(255,255,255,0.25)',
+                                        fontFamily:
+                                          i % 2 ? '"Georgia", serif' : '"Courier New", monospace',
+                                        letterSpacing: '0.05em',
+                                      }}
+                                    >
+                                      {ch}
+                                    </motion.span>
+                                  );
+                                })}
+                              </div>
+                            </div>
+
+                            {/* Input — case par caractère */}
+                            <div className="flex items-center justify-center gap-1.5 sm:gap-2 mb-4">
+                              {Array.from({ length: captchaText.length }).map((_, i) => (
+                                <input
+                                  key={i}
+                                  id={`captcha-cell-${i}`}
+                                  type="text"
+                                  inputMode="text"
+                                  maxLength={1}
+                                  autoComplete="off"
+                                  value={captchaInput[i] || ''}
+                                  onChange={(e) => {
+                                    const v = e.target.value.slice(-1);
+                                    const arr = captchaInput.split('');
+                                    arr[i] = v;
+                                    const next = arr.join('').slice(0, captchaText.length);
+                                    setCaptchaInput(next);
+                                    if (v && i < captchaText.length - 1) {
+                                      const nxt = document.getElementById(
+                                        `captcha-cell-${i + 1}`
+                                      ) as HTMLInputElement | null;
+                                      nxt?.focus();
+                                    }
+                                  }}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Backspace' && !captchaInput[i] && i > 0) {
+                                      const prv = document.getElementById(
+                                        `captcha-cell-${i - 1}`
+                                      ) as HTMLInputElement | null;
+                                      prv?.focus();
+                                    }
+                                  }}
+                                  onPaste={(e) => {
+                                    e.preventDefault();
+                                    const txt = e.clipboardData
+                                      .getData('text')
+                                      .slice(0, captchaText.length);
+                                    setCaptchaInput(txt);
+                                  }}
+                                  className={`w-8 h-10 sm:w-10 sm:h-12 md:w-11 md:h-14 rounded-lg sm:rounded-xl text-center font-bold text-base sm:text-lg md:text-xl text-white bg-black/40 border outline-none transition-all focus:scale-110 focus:bg-black/60 ${
+                                    captchaInput[i]
+                                      ? 'border-violet-400/60 shadow-[0_0_20px_rgba(167,139,250,0.4)]'
+                                      : 'border-white/10 hover:border-white/20'
+                                  } focus:border-fuchsia-400/80 focus:shadow-[0_0_25px_rgba(236,72,153,0.5)]`}
+                                />
+                              ))}
+                            </div>
+
+                            {/* Status */}
+                            <AnimatePresence>
+                              {captchaPassed && (
+                                <motion.div
+                                  initial={{ opacity: 0, height: 0 }}
+                                  animate={{ opacity: 1, height: 'auto' }}
+                                  exit={{ opacity: 0, height: 0 }}
+                                  className="flex items-center gap-2 mb-3 px-3 py-2 rounded-xl bg-emerald-500/10 border border-emerald-400/30"
+                                >
+                                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                                  <p className="text-emerald-200 text-xs sm:text-sm font-medium">
+                                    Code CAPTCHA validé avec succès
+                                  </p>
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
+
+                            <button
+                              onClick={() => {
+                                if (
+                                  captchaInput.trim().toLowerCase() ===
+                                  captchaText.trim().toLowerCase()
+                                ) {
+                                  setCaptchaPassed(true);
+                                } else {
+                                  setCaptchaPassed(false);
+                                  setCaptchaText(generateCaptcha());
+                                  setCaptchaInput('');
+                                }
+                              }}
+                              disabled={
+                                captchaInput.length !== captchaText.length || captchaPassed
                               }
-                              placeholder="Entrer le code"
-                              className="flex-1 h-16 rounded-2xl border border-white/10 bg-black/30 px-5 text-white outline-none focus:border-violet-500/50"
-                            />
+                              className="group relative w-full h-12 sm:h-14 rounded-2xl overflow-hidden font-semibold text-white text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed transition-transform hover:-translate-y-0.5 active:translate-y-0"
+                            >
+                              <div className="absolute inset-0 bg-gradient-to-r from-violet-600 via-fuchsia-600 to-amber-500" />
+                              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-gradient-to-r from-amber-500 via-fuchsia-600 to-violet-600" />
+                              <motion.div
+                                animate={{ x: ['-120%', '220%'] }}
+                                transition={{ duration: 2.2, repeat: Infinity }}
+                                className="absolute inset-y-0 w-24 bg-white/25 blur-2xl rotate-12"
+                              />
+                              <span className="relative flex items-center justify-center gap-2">
+                                <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5" />
+                                {captchaPassed ? 'CAPTCHA validé' : 'Vérifier le CAPTCHA'}
+                              </span>
+                            </button>
                           </div>
-
-                          <button
-                            onClick={() => {
-                              if (
-                                captchaInput.trim() ===
-                                captchaText.trim()
-                              ) {
-                                setCaptchaPassed(
-                                  true
-                                );
-                              } else {
-                                setCaptchaPassed(
-                                  false
-                                );
-
-                                setCaptchaText(
-                                  generateCaptcha()
-                                );
-
-                                setCaptchaInput(
-                                  ''
-                                );
-                              }
-                            }}
-                            className="mt-4 w-full h-14 rounded-2xl bg-gradient-to-r from-violet-600 via-fuchsia-600 to-rose-600 text-white font-semibold"
-                          >
-                            Vérifier le CAPTCHA
-                          </button>
                         </motion.div>
                       )}
                   </AnimatePresence>
+
 
                   {/* BOT REASONS */}
                   {botReasons.length > 0 && (
