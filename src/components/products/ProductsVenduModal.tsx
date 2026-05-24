@@ -4,12 +4,18 @@
  * Affiche la liste des produits triés du plus vendu vers le moins vendu
  * (et jamais vendus). Filtres par catégorie : Tous / Perruque / Tissages-Extensions.
  * Génération PDF de la liste filtrée.
+ *
+ * Indicateurs de stock :
+ *  - stock >= 3 : clignote en vert
+ *  - stock 1-2 : rien
+ *  - stock = 0 : clignote en rouge + notif (selon niveau de vente)
+ *  - produit peu vendu ou jamais vendu : clignote en jaune + notif (priorité)
  */
 import React, { useEffect, useMemo, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Crown, FileDown, Loader2, Sparkles, TrendingUp } from 'lucide-react';
+import { Crown, FileDown, Loader2, Sparkles, TrendingUp, AlertTriangle } from 'lucide-react';
 import api from '@/services/api/api';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -30,6 +36,12 @@ export interface VenduItem {
 }
 
 type CatFilter = 'tous' | 'perruque' | 'tissage-extension';
+type Tier = 'plus' | 'moyen' | 'peu';
+type Alert =
+  | { kind: 'green' }
+  | { kind: 'none' }
+  | { kind: 'red'; message: string }
+  | { kind: 'yellow'; message: string };
 
 interface Props {
   open: boolean;
@@ -64,8 +76,52 @@ const ProductsVenduModal: React.FC<Props> = ({ open, onClose }) => {
     return items.filter(it => it.category === filter);
   }, [items, filter]);
 
+  // Compute sales tier based on rank within current filtered list
+  const tierMap = useMemo(() => {
+    const sorted = [...filtered].sort((a, b) => b.totalSold - a.totalSold);
+    const soldOnly = sorted.filter(s => s.totalSold > 0);
+    const n = soldOnly.length;
+    const map = new Map<string, Tier>();
+    sorted.forEach((it) => {
+      if (it.totalSold === 0) { map.set(it.id, 'peu'); return; }
+      const rank = soldOnly.findIndex(s => s.id === it.id);
+      if (n <= 2) {
+        map.set(it.id, rank === 0 ? 'plus' : 'moyen');
+      } else {
+        const third = Math.ceil(n / 3);
+        if (rank < third) map.set(it.id, 'plus');
+        else if (rank < third * 2) map.set(it.id, 'moyen');
+        else map.set(it.id, 'peu');
+      }
+    });
+    return map;
+  }, [filtered]);
+
+  const getAlert = (it: VenduItem): Alert => {
+    const tier = tierMap.get(it.id) || 'peu';
+    // Priorité : peu vendu / jamais vendu → jaune
+    if (tier === 'peu' || it.totalSold === 0) {
+      return { kind: 'yellow', message: 'Produit jamais vendu — pas besoin d\'ajouter du stock' };
+    }
+    if (it.stockRestant === 0) {
+      if (tier === 'plus') {
+        return { kind: 'red', message: 'Attention, produit très recherché, il faut ajouter du stock !' };
+      }
+      return { kind: 'red', message: 'Produit moyennement vendu mais en rupture de stock' };
+    }
+    if (it.stockRestant >= 3) return { kind: 'green' };
+    return { kind: 'none' };
+  };
+
   const fmtEuro = (n: number) =>
     new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(n || 0);
+
+  const stockClass = (alert: Alert) => {
+    if (alert.kind === 'green') return 'text-emerald-600 dark:text-emerald-400 animate-pulse font-extrabold';
+    if (alert.kind === 'red') return 'text-red-600 dark:text-red-400 animate-pulse font-extrabold';
+    if (alert.kind === 'yellow') return 'text-yellow-600 dark:text-yellow-400 animate-pulse font-extrabold';
+    return 'text-zinc-700 dark:text-zinc-200 font-semibold';
+  };
 
   const generatePdf = () => {
     try {
@@ -80,21 +136,38 @@ const ProductsVenduModal: React.FC<Props> = ({ open, onClose }) => {
       doc.setTextColor(120);
       doc.text(`Généré le ${new Date().toLocaleString('fr-FR')} — ${filtered.length} produits`, 14, 22);
 
+      // Build body : pour chaque produit, on insère une ligne produit puis une ligne notification si présente
+      const body: any[] = [];
+      filtered.forEach((it, i) => {
+        body.push([
+          { content: String(i + 1) },
+          { content: it.description },
+          { content: it.code || '-' },
+          { content: fmtEuro(it.purchasePrice) },
+          { content: fmtEuro(it.avgSellingPrice || it.sellingPrice) },
+          { content: String(it.totalSold) },
+          { content: String(it.stockRestant) },
+        ]);
+        const alert = getAlert(it);
+        if (alert.kind === 'red' || alert.kind === 'yellow') {
+          const color: [number, number, number] =
+            alert.kind === 'red' ? [254, 226, 226] : [254, 249, 195];
+          const textColor: [number, number, number] =
+            alert.kind === 'red' ? [185, 28, 28] : [161, 98, 7];
+          body.push([{
+            content: `⚠ ${alert.message}`,
+            colSpan: 7,
+            styles: { fillColor: color, textColor, fontStyle: 'italic', fontSize: 8 },
+          }]);
+        }
+      });
+
       autoTable(doc, {
         startY: 28,
         head: [['#', 'Produit', 'Code', 'Prix unitaire', 'Prix vendu (moy.)', 'Nombre vendu', 'Stock restant']],
-        body: filtered.map((it, i) => [
-          String(i + 1),
-          it.description,
-          it.code || '-',
-          fmtEuro(it.purchasePrice),
-          fmtEuro(it.avgSellingPrice || it.sellingPrice),
-          String(it.totalSold),
-          String(it.stockRestant),
-        ]),
+        body,
         styles: { fontSize: 9, cellPadding: 2 },
         headStyles: { fillColor: [202, 138, 4], textColor: 255, fontStyle: 'bold' },
-        alternateRowStyles: { fillColor: [253, 246, 227] },
         columnStyles: {
           0: { cellWidth: 12, halign: 'center' },
           3: { halign: 'right' },
@@ -116,6 +189,23 @@ const ProductsVenduModal: React.FC<Props> = ({ open, onClose }) => {
     { key: 'perruque', label: 'Perruques' },
     { key: 'tissage-extension', label: 'Tissages & Extensions' },
   ];
+
+  const AlertBanner = ({ alert }: { alert: Alert }) => {
+    if (alert.kind !== 'red' && alert.kind !== 'yellow') return null;
+    const isRed = alert.kind === 'red';
+    return (
+      <div
+        className={`mt-1.5 px-2.5 py-1.5 rounded-lg flex items-center gap-2 text-[11px] font-semibold animate-pulse ${
+          isRed
+            ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300 border border-red-300/60'
+            : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300 border border-yellow-300/60'
+        }`}
+      >
+        <AlertTriangle className="h-3.5 w-3.5 flex-shrink-0" />
+        <span>{alert.message}</span>
+      </div>
+    );
+  };
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
@@ -179,74 +269,82 @@ const ProductsVenduModal: React.FC<Props> = ({ open, onClose }) => {
                     </tr>
                   </thead>
                   <tbody>
-                    {filtered.map((it, i) => (
-                      <tr key={it.id} className={`border-t border-amber-100 dark:border-amber-800/30 ${it.totalSold === 0 ? 'bg-red-50/40 dark:bg-red-900/10' : i % 2 ? 'bg-amber-50/30 dark:bg-amber-900/5' : ''}`}>
-                        <td className="px-3 py-2.5 font-bold text-amber-700 dark:text-amber-300">
-                          {i < 3 && it.totalSold > 0 ? (
-                            <span className="inline-flex items-center gap-1">
-                              <Crown className="h-3.5 w-3.5 text-yellow-500" />
-                              {i + 1}
+                    {filtered.map((it, i) => {
+                      const alert = getAlert(it);
+                      return (
+                        <tr key={it.id} className={`border-t border-amber-100 dark:border-amber-800/30 ${it.totalSold === 0 ? 'bg-red-50/40 dark:bg-red-900/10' : i % 2 ? 'bg-amber-50/30 dark:bg-amber-900/5' : ''}`}>
+                          <td className="px-3 py-2.5 font-bold text-amber-700 dark:text-amber-300 align-top">
+                            {i < 3 && it.totalSold > 0 ? (
+                              <span className="inline-flex items-center gap-1">
+                                <Crown className="h-3.5 w-3.5 text-yellow-500" />
+                                {i + 1}
+                              </span>
+                            ) : i + 1}
+                          </td>
+                          <td className="px-3 py-2.5">
+                            <div className="font-semibold text-zinc-800 dark:text-zinc-100">{it.description}</div>
+                            {it.code && <div className="text-[11px] text-zinc-500">{it.code}</div>}
+                            <AlertBanner alert={alert} />
+                          </td>
+                          <td className="px-3 py-2.5 text-right tabular-nums align-top">{fmtEuro(it.purchasePrice)}</td>
+                          <td className="px-3 py-2.5 text-right tabular-nums align-top">{fmtEuro(it.avgSellingPrice || it.sellingPrice)}</td>
+                          <td className="px-3 py-2.5 text-right align-top">
+                            {it.totalSold === 0 ? (
+                              <Badge className="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300 border-0">Jamais vendu</Badge>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 font-bold text-emerald-700 dark:text-emerald-300">
+                                <TrendingUp className="h-3.5 w-3.5" />{it.totalSold}
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-3 py-2.5 text-right align-top">
+                            <span className={stockClass(alert)}>
+                              {it.stockRestant}
                             </span>
-                          ) : i + 1}
-                        </td>
-                        <td className="px-3 py-2.5">
-                          <div className="font-semibold text-zinc-800 dark:text-zinc-100">{it.description}</div>
-                          {it.code && <div className="text-[11px] text-zinc-500">{it.code}</div>}
-                        </td>
-                        <td className="px-3 py-2.5 text-right tabular-nums">{fmtEuro(it.purchasePrice)}</td>
-                        <td className="px-3 py-2.5 text-right tabular-nums">{fmtEuro(it.avgSellingPrice || it.sellingPrice)}</td>
-                        <td className="px-3 py-2.5 text-right">
-                          {it.totalSold === 0 ? (
-                            <Badge className="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300 border-0">Jamais vendu</Badge>
-                          ) : (
-                            <span className="inline-flex items-center gap-1 font-bold text-emerald-700 dark:text-emerald-300">
-                              <TrendingUp className="h-3.5 w-3.5" />{it.totalSold}
-                            </span>
-                          )}
-                        </td>
-                        <td className="px-3 py-2.5 text-right">
-                          <span className={`font-semibold ${it.stockRestant === 0 ? 'text-red-600' : it.stockRestant < 5 ? 'text-orange-600' : 'text-zinc-700 dark:text-zinc-200'}`}>
-                            {it.stockRestant}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
 
               {/* Mobile cards */}
               <div className="md:hidden space-y-3">
-                {filtered.map((it, i) => (
-                  <div key={it.id} className="rounded-2xl p-4 bg-white/70 dark:bg-zinc-950/50 border border-amber-200/60 dark:border-amber-700/30 shadow">
-                    <div className="flex items-start justify-between gap-2 mb-2">
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold text-amber-700 dark:text-amber-300">#{i + 1}</span>
-                        {i < 3 && it.totalSold > 0 && <Crown className="h-4 w-4 text-yellow-500" />}
+                {filtered.map((it, i) => {
+                  const alert = getAlert(it);
+                  return (
+                    <div key={it.id} className="rounded-2xl p-4 bg-white/70 dark:bg-zinc-950/50 border border-amber-200/60 dark:border-amber-700/30 shadow">
+                      <div className="flex items-start justify-between gap-2 mb-2">
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-amber-700 dark:text-amber-300">#{i + 1}</span>
+                          {i < 3 && it.totalSold > 0 && <Crown className="h-4 w-4 text-yellow-500" />}
+                        </div>
+                        {it.totalSold === 0
+                          ? <Badge className="bg-red-100 text-red-700 border-0">Jamais vendu</Badge>
+                          : <Badge className="bg-emerald-100 text-emerald-700 border-0">{it.totalSold} vendu(s)</Badge>}
                       </div>
-                      {it.totalSold === 0
-                        ? <Badge className="bg-red-100 text-red-700 border-0">Jamais vendu</Badge>
-                        : <Badge className="bg-emerald-100 text-emerald-700 border-0">{it.totalSold} vendu(s)</Badge>}
-                    </div>
-                    <div className="font-semibold text-zinc-800 dark:text-zinc-100 mb-2">{it.description}</div>
-                    <div className="grid grid-cols-2 gap-2 text-xs">
-                      <div className="rounded-lg bg-amber-50 dark:bg-amber-900/20 p-2">
-                        <div className="text-zinc-500">Prix unitaire</div>
-                        <div className="font-bold">{fmtEuro(it.purchasePrice)}</div>
-                      </div>
-                      <div className="rounded-lg bg-amber-50 dark:bg-amber-900/20 p-2">
-                        <div className="text-zinc-500">Prix vendu</div>
-                        <div className="font-bold">{fmtEuro(it.avgSellingPrice || it.sellingPrice)}</div>
-                      </div>
-                      <div className="rounded-lg bg-amber-50 dark:bg-amber-900/20 p-2 col-span-2">
-                        <div className="text-zinc-500">Stock restant</div>
-                        <div className={`font-bold ${it.stockRestant === 0 ? 'text-red-600' : it.stockRestant < 5 ? 'text-orange-600' : ''}`}>
-                          {it.stockRestant}
+                      <div className="font-semibold text-zinc-800 dark:text-zinc-100 mb-2">{it.description}</div>
+                      <AlertBanner alert={alert} />
+                      <div className="grid grid-cols-2 gap-2 text-xs mt-2">
+                        <div className="rounded-lg bg-amber-50 dark:bg-amber-900/20 p-2">
+                          <div className="text-zinc-500">Prix unitaire</div>
+                          <div className="font-bold">{fmtEuro(it.purchasePrice)}</div>
+                        </div>
+                        <div className="rounded-lg bg-amber-50 dark:bg-amber-900/20 p-2">
+                          <div className="text-zinc-500">Prix vendu</div>
+                          <div className="font-bold">{fmtEuro(it.avgSellingPrice || it.sellingPrice)}</div>
+                        </div>
+                        <div className="rounded-lg bg-amber-50 dark:bg-amber-900/20 p-2 col-span-2">
+                          <div className="text-zinc-500">Stock restant</div>
+                          <div className={stockClass(alert)}>
+                            {it.stockRestant}
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </>
           )}
