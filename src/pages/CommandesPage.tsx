@@ -144,6 +144,11 @@ const CommandesPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =
         setReporterDate={logic.setReporterDate}
         reporterHoraire={logic.reporterHoraire}
         setReporterHoraire={logic.setReporterHoraire}
+        reporterHoraireFin={logic.reporterHoraireFin}
+        setReporterHoraireFin={logic.setReporterHoraireFin}
+        isRdv={logic.commandes.find(c => c.id === logic.reporterCommandeId)?.type === 'rdv'}
+        rdvBusy={logic.reporterRdvBusy?.busy}
+        rdvBusyMessage={logic.reporterRdvBusy?.message}
         onConfirm={logic.handleReporterConfirm}
         onCancel={() => { logic.setReporterModalOpen(false); }}
       />

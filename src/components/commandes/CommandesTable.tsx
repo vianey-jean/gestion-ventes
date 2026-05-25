@@ -34,7 +34,7 @@ interface CommandesTableProps {
   handleEdit: (commande: Commande) => void;
   handleStatusChange: (id: string, status: CommandeStatut | 'reporter') => void;
   setDeleteId: (id: string) => void;
-  getStatusOptions: (type: 'commande' | 'reservation') => { value: string; label: string }[];
+  getStatusOptions: (type: 'commande' | 'reservation' | 'rdv') => { value: string; label: string }[];
 }
 
 const CommandesTable: React.FC<CommandesTableProps> = ({
@@ -140,7 +140,7 @@ interface CommandeRowProps {
   handleEdit: (commande: Commande) => void;
   handleStatusChange: (id: string, status: CommandeStatut | 'reporter') => void;
   setDeleteId: (id: string) => void;
-  getStatusOptions: (type: 'commande' | 'reservation') => { value: string; label: string }[];
+  getStatusOptions: (type: 'commande' | 'reservation' | 'rdv') => { value: string; label: string }[];
 }
 
 const CommandeTableRow: React.FC<CommandeRowProps> = ({
@@ -242,11 +242,13 @@ const CommandeTableRow: React.FC<CommandeRowProps> = ({
       className={
         commande.type === 'commande'
           ? "bg-gradient-to-br from-purple-600 via-pink-500 to-indigo-500 text-white shadow-md hover:from-purple-700 hover:via-pink-600 hover:to-indigo-600"
+          : commande.type === 'rdv'
+          ? "bg-gradient-to-br from-amber-500 via-orange-500 to-rose-500 text-white shadow-md hover:from-amber-600 hover:via-orange-600 hover:to-rose-600"
           : "bg-gradient-to-br from-blue-500 via-cyan-400 to-green-400 text-white shadow-md hover:from-blue-600 hover:via-cyan-500 hover:to-green-500"
       }
       variant={commande.type === 'commande' ? 'default' : 'secondary'}
     >
-      {commande.type === 'commande' ? 'Commande' : 'Réservation'}
+      {commande.type === 'commande' ? 'Commande' : commande.type === 'rdv' ? 'RDV' : 'Réservation'}
     </Badge>
   </ModernTableCell>
   <ModernTableCell className="align-top text-sm">
@@ -361,10 +363,12 @@ const CommandeMobileCard: React.FC<CommandeRowProps> = ({
       className={`ml-2 text-xs px-3 py-1 rounded-full font-semibold shadow-md ${
         commande.type === 'commande'
           ? "bg-gradient-to-br from-purple-600 via-pink-500 to-indigo-500 text-white"
+          : commande.type === 'rdv'
+          ? "bg-gradient-to-br from-amber-500 via-orange-500 to-rose-500 text-white"
           : "bg-gradient-to-br from-blue-500 via-cyan-400 to-green-400 text-white"
       }`}
     >
-      {commande.type === 'commande' ? 'CMD' : 'RES'}
+      {commande.type === 'commande' ? 'CMD' : commande.type === 'rdv' ? 'RDV' : 'RES'}
     </Badge>
   </div>
   

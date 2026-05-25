@@ -7,7 +7,7 @@ export interface CommandeProduit {
   prixVente: number;
 }
 
-export type CommandeType = 'commande' | 'reservation';
+export type CommandeType = 'commande' | 'reservation' | 'rdv';
 export type CommandeStatut = 'en_attente' | 'en_route' | 'arrive' | 'valide' | 'annule' | 'reporter';
 
 export interface Commande {
@@ -21,17 +21,16 @@ export interface Commande {
   dateArrivagePrevue?: string;
   dateEcheance?: string;
   horaire?: string;
-  /** Heure de fin optionnelle (si non fournie => horaire + 1h calculé côté logique RDV/Tâche) */
   horaireFin?: string;
   statut: CommandeStatut;
   notificationEnvoyee?: boolean;
   createdAt?: string;
   updatedAt?: string;
   saleId?: string;
-  /** ISO timestamp du début du chrono de retard (persisté en DB) */
   overdueTimerStart?: string;
-  /** Caractéristique du client au moment de la création (persistée en DB) */
   clientCaracteristique?: string;
+  /** Id du RDV lié dans rdv-taches.json (si type 'rdv') */
+  rdvTacheId?: string;
 }
 
 export interface CommandeFormData {

@@ -76,7 +76,7 @@ const CommandesStatsButtons: React.FC<CommandesStatsButtonsProps> = ({
     );
     
     // Liste des produits groupés
-    const produitsMap = new Map<string, { nom: string; quantite: number; prixTotal: number; type: 'commande' | 'reservation' }[]>();
+    const produitsMap = new Map<string, { nom: string; quantite: number; prixTotal: number; type: 'commande' | 'reservation' | 'rdv' }[]>();
     
     filteredCommandes.forEach(c => {
       c.produits.forEach(p => {

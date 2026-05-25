@@ -17,8 +17,10 @@ import autoTable from 'jspdf-autotable';
 import { Commande, CommandeProduit, CommandeStatut } from '@/types/commande';
 import api from '@/service/api';
 import { rdvFromReservationService } from '@/services/rdvFromReservationService';
+import { realtimeService } from '@/services/realtimeService';
 import { reservationRdvSyncService } from '@/services/reservationRdvSyncService';
 import tacheApi from '@/services/api/tacheApi';
+import rdvTachesApi from '@/services/api/rdvTachesApi';
 import type { Sale } from '@/types/sale';
 import { computeClientCaracteristique } from '@/utils/clientCharacteristic';
 
@@ -70,7 +72,7 @@ export const useCommandesLogic = () => {
   // =========================================================================
   // États du formulaire type et dates
   // =========================================================================
-  const [type, setType] = useState<'commande' | 'reservation'>('commande');
+  const [type, setType] = useState<'commande' | 'reservation' | 'rdv'>('commande');
   const [dateArrivagePrevue, setDateArrivagePrevue] = useState('');
   const [dateEcheance, setDateEcheance] = useState('');
   const [horaire, setHoraire] = useState('');
@@ -115,6 +117,8 @@ export const useCommandesLogic = () => {
   const [reporterCommandeId, setReporterCommandeId] = useState<string | null>(null);
   const [reporterDate, setReporterDate] = useState('');
   const [reporterHoraire, setReporterHoraire] = useState('');
+  const [reporterHoraireFin, setReporterHoraireFin] = useState('');
+  const [reporterRdvBusy, setReporterRdvBusy] = useState<{ busy: boolean; message?: string }>({ busy: false });
   
   // =========================================================================
   // États création RDV depuis réservation
@@ -137,6 +141,73 @@ export const useCommandesLogic = () => {
   const [overdueReservation, setOverdueReservation] = useState<Commande | null>(null);
   const [showOverdueModal, setShowOverdueModal] = useState(false);
   const [overdueProcessedIds, setOverdueProcessedIds] = useState<Set<string>>(new Set());
+
+  // =========================================================================
+  // Helper: sync rdv-taches.json depuis une commande de type 'rdv'
+  // =========================================================================
+  const mapStatutToRdvTache = (statut: CommandeStatut): 'planifie' | 'confirme' | 'annule' | 'reporte' | 'termine' => {
+    switch (statut) {
+      case 'valide': return 'termine';
+      case 'annule': return 'annule';
+      case 'reporter': return 'reporte';
+      case 'en_attente': return 'planifie';
+      case 'en_route': return 'confirme';
+      case 'arrive': return 'confirme';
+      default: return 'planifie';
+    }
+  };
+
+  const syncRdvTacheForCommande = useCallback(async (
+    commande: Commande,
+    payload: { statut?: CommandeStatut; date?: string; heureDebut?: string; heureFin?: string }
+  ) => {
+    if (!commande || commande.type !== 'rdv') return;
+    const rdvId = commande.rdvTacheId;
+    if (!rdvId) return;
+    try {
+      const update: any = {};
+      if (payload.statut) update.statut = mapStatutToRdvTache(payload.statut);
+      if (payload.date) update.date = payload.date;
+      if (payload.heureDebut) update.heureDebut = payload.heureDebut;
+      if (payload.heureFin) update.heureFin = payload.heureFin;
+      await rdvTachesApi.update(rdvId, update);
+    } catch (err) {
+      console.warn('Sync rdv-taches échouée:', err);
+    }
+  }, []);
+
+  // =========================================================================
+  // Vérification disponibilité créneau RDV lors du report (rdv-taches.json)
+  // =========================================================================
+  useEffect(() => {
+    if (!reporterModalOpen) { setReporterRdvBusy({ busy: false }); return; }
+    const commande = commandes.find(c => c.id === reporterCommandeId);
+    if (!commande || commande.type !== 'rdv') { setReporterRdvBusy({ busy: false }); return; }
+    if (!reporterDate || !reporterHoraire || !reporterHoraireFin) { setReporterRdvBusy({ busy: false }); return; }
+    let cancel = false;
+    const t = setTimeout(async () => {
+      try {
+        const resp: any = await rdvTachesApi.getByDate(reporterDate);
+        const items: any[] = Array.isArray(resp) ? resp : (resp?.data || []);
+        const toMin = (x: string) => { const [h, m] = x.split(':').map(Number); return (h || 0) * 60 + (m || 0); };
+        const s = toMin(reporterHoraire);
+        const e = toMin(reporterHoraireFin);
+        if (e <= s) { if (!cancel) setReporterRdvBusy({ busy: true, message: 'Heure de fin doit être après le début' }); return; }
+        const conflict = items.find((r: any) => {
+          if (r.id === commande.rdvTacheId) return false;
+          if (r.statut === 'annule' || r.statut === 'termine') return false;
+          const rs = toMin(r.heureDebut); const re = toMin(r.heureFin);
+          return s < re && e > rs;
+        });
+        if (!cancel) {
+          if (conflict) setReporterRdvBusy({ busy: true, message: `Créneau occupé par "${conflict.tacheNom}" (${conflict.heureDebut} - ${conflict.heureFin})` });
+          else setReporterRdvBusy({ busy: false });
+        }
+      } catch { if (!cancel) setReporterRdvBusy({ busy: false }); }
+    }, 250);
+    return () => { cancel = true; clearTimeout(t); };
+  }, [reporterModalOpen, reporterCommandeId, reporterDate, reporterHoraire, reporterHoraireFin, commandes]);
+
 
   // =========================================================================
   // Fonctions de chargement des données
@@ -191,7 +262,32 @@ export const useCommandesLogic = () => {
     };
     loadData();
     const interval = setInterval(checkNotifications, 60000);
-    return () => clearInterval(interval);
+
+    // Realtime: refetch commandes when DB pushes commandes.json change via SSE
+    let unsubscribe: (() => void) | undefined;
+    try {
+      realtimeService.connect();
+      unsubscribe = realtimeService.addSyncListener((event: any) => {
+        const t = event?.data?.type;
+        if (event?.type === 'data-changed' && (t === 'commandes' || t === 'sales' || t === 'clients' || t === 'products')) {
+          if (t === 'commandes') fetchCommandes();
+          if (t === 'sales') fetchSales();
+          if (t === 'clients') fetchClients();
+          if (t === 'products') fetchProducts();
+        }
+        if (event?.type === 'force-sync') {
+          fetchCommandes();
+        }
+      });
+    } catch (e) {
+      // ignore
+    }
+
+    return () => {
+      clearInterval(interval);
+      try { unsubscribe?.(); } catch {}
+      try { realtimeService.disconnect(); } catch {}
+    };
   }, []);
 
   // =========================================================================
@@ -698,6 +794,7 @@ export const useCommandesLogic = () => {
     if (newStatus === 'reporter') {
       const currentDate = commande.type === 'commande' ? commande.dateArrivagePrevue : commande.dateEcheance;
       setReporterDate(currentDate || ''); setReporterHoraire(commande.horaire || '');
+      setReporterHoraireFin(commande.horaireFin || '');
       setReporterCommandeId(id); setReporterModalOpen(true); return;
     }
     if (commande.statut === 'valide' && commande.saleId) {
@@ -769,6 +866,9 @@ export const useCommandesLogic = () => {
         await reservationRdvSyncService.syncRdvStatus(cancellingId, 'annule');
         await syncTacheForCommande(cancellingId, 'annule');
       }
+      if (commande && commande.type === 'rdv') {
+        await syncRdvTacheForCommande(commande, { statut: 'annule' });
+      }
       toast({ title: 'Succès', description: 'Commande annulée', className: "bg-app-green text-white" });
       await Promise.all([fetchCommandes(), fetchProducts()]); setCancellingId(null);
     } catch (error) { console.error('Error cancelling:', error); toast({ title: 'Erreur', description: "Impossible d'annuler", className: "bg-app-red text-white", variant: 'destructive' }); }
@@ -803,6 +903,9 @@ export const useCommandesLogic = () => {
         await reservationRdvSyncService.syncRdvStatus(validatingId, 'valide');
         await syncTacheForCommande(validatingId, 'valide');
       }
+      if (commandeToValidate.type === 'rdv') {
+        await syncRdvTacheForCommande(commandeToValidate, { statut: 'valide' });
+      }
       const saleResponse = await api.post('/api/sales', saleData);
       const createdSale = saleResponse.data;
       await api.put(`/api/commandes/${validatingId}`, { statut: 'valide', saleId: createdSale.id });
@@ -830,19 +933,38 @@ export const useCommandesLogic = () => {
     try {
       const commande = commandes.find(c => c.id === reporterCommandeId);
       if (!commande) return;
+      // Pour un RDV: vérifier qu'on a heureDebut + heureFin et créneau libre
+      if (commande.type === 'rdv') {
+        if (!reporterHoraire || !reporterHoraireFin) {
+          toast({ title: 'Erreur', description: 'Heure de début et de fin requises', className: 'bg-app-red text-white', variant: 'destructive' });
+          return;
+        }
+        if (reporterRdvBusy.busy) {
+          toast({ title: 'Créneau occupé', description: reporterRdvBusy.message || 'Choisissez un autre créneau', className: 'bg-app-red text-white', variant: 'destructive' });
+          return;
+        }
+      }
       const updateData: Record<string, unknown> = { statut: 'reporter', horaire: reporterHoraire || undefined };
       if (commande.type === 'commande') updateData.dateArrivagePrevue = reporterDate;
       else updateData.dateEcheance = reporterDate;
+      if (commande.type === 'rdv') updateData.horaireFin = reporterHoraireFin;
       await api.put(`/api/commandes/${reporterCommandeId}`, updateData);
       if (commande.type === 'reservation') {
         try {
           await reservationRdvSyncService.syncRdvReport(reporterCommandeId, reporterDate, extractStartTime(reporterHoraire) || '09:00');
         } catch (rdvError) { console.log('RDV non trouvé:', rdvError); }
-        // Synchroniser la tâche associée (reporter date + horaire)
         await syncTacheForCommande(reporterCommandeId, 'reporter', reporterDate, extractStartTime(reporterHoraire) || '09:00');
       }
+      if (commande.type === 'rdv') {
+        await syncRdvTacheForCommande(commande, {
+          statut: 'reporter',
+          date: reporterDate,
+          heureDebut: reporterHoraire,
+          heureFin: reporterHoraireFin,
+        });
+      }
       toast({ title: 'Succès', description: `Reporté au ${new Date(reporterDate).toLocaleDateString('fr-FR')}${reporterHoraire ? ' à ' + reporterHoraire : ''}`, className: "bg-app-green text-white" });
-      fetchCommandes(); setReporterModalOpen(false); setReporterCommandeId(null); setReporterDate(''); setReporterHoraire('');
+      fetchCommandes(); setReporterModalOpen(false); setReporterCommandeId(null); setReporterDate(''); setReporterHoraire(''); setReporterHoraireFin('');
     } catch (error) { console.error('Error updating date:', error); toast({ title: 'Erreur', description: 'Impossible de reporter', className: "bg-app-red text-white", variant: 'destructive' }); }
   };
 
@@ -971,7 +1093,7 @@ export const useCommandesLogic = () => {
   // Options de statut
   // =========================================================================
 
-  const getStatusOptions = useCallback((commandeType: 'commande' | 'reservation') => {
+  const getStatusOptions = useCallback((commandeType: 'commande' | 'reservation' | 'rdv') => {
     if (commandeType === 'commande') {
       return [
         { value: 'en_route', label: '📦 En Route' }, { value: 'arrive', label: '✅ Arrivé' },
@@ -1036,6 +1158,7 @@ export const useCommandesLogic = () => {
     deleteId, setDeleteId, validatingId, setValidatingId, cancellingId, setCancellingId,
     exportDialogOpen, setExportDialogOpen, exportDate, setExportDate,
     reporterModalOpen, setReporterModalOpen, reporterDate, setReporterDate, reporterHoraire, setReporterHoraire,
+    reporterHoraireFin, setReporterHoraireFin, reporterRdvBusy, reporterCommandeId,
     showRdvConfirmDialog, showRdvFormModal, pendingReservationForRdv, isRdvLoading,
     showTacheConflictModal, conflictingTache,
     // États modale réservation en retard

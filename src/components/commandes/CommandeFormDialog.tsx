@@ -14,14 +14,20 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Plus, Trash2, Edit, ShoppingCart, Crown, Star, Sparkles, Gift, Award, Zap, Filter } from 'lucide-react';
+import { Plus, Trash2, Edit, ShoppingCart, Crown, Star, Sparkles, Gift, Award, Zap, Filter, CalendarClock } from 'lucide-react';
 import SaleQuantityInput from '@/components/dashboard/forms/SaleQuantityInput';
 import { Commande, CommandeProduit } from '@/types/commande';
 import type { ClientCaracteristique } from '@/utils/clientCharacteristic';
 import indisponibleApi from '@/services/api/indisponibleApi';
+import rdvTachesApi from '@/services/api/rdvTachesApi';
+import commandeApi from '@/services/api/commandeApi';
+import travailleurApi from '@/services/api/travailleurApi';
+import tachesRdvApi from '@/services/api/tachesRdvApi';
 import { AlertTriangle } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface Client {
   id: string;
@@ -71,7 +77,7 @@ interface CommandeFormDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   editingCommande: Commande | null;
-  
+
   // Client fields
   clientNom: string;
   setClientNom: (value: string) => void;
@@ -86,11 +92,11 @@ interface CommandeFormDialogProps {
   setShowClientSuggestions: (value: boolean) => void;
   filteredClients: Client[];
   handleClientSelect: (client: Client) => void;
-  
+
   // Type field
-  type: 'commande' | 'reservation';
-  setType: (value: 'commande' | 'reservation') => void;
-  
+  type: 'commande' | 'reservation' | 'rdv';
+  setType: (value: 'commande' | 'reservation' | 'rdv') => void;
+
   // Product fields
   produitNom: string;
   setProduitNom: (value: string) => void;
@@ -108,14 +114,14 @@ interface CommandeFormDialogProps {
   handleProductSelect: (product: Product) => void;
   selectedProduct: Product | null;
   availableQuantityForSelected?: number | null;
-  
+
   // Products list
   produitsListe: CommandeProduit[];
   editingProductIndex: number | null;
   handleAddProduit: () => void;
   handleEditProduit: (index: number) => void;
   handleRemoveProduit: (index: number) => void;
-  
+
   // Date fields
   dateArrivagePrevue: string;
   setDateArrivagePrevue: (value: string) => void;
@@ -125,7 +131,7 @@ interface CommandeFormDialogProps {
   setHoraire: (value: string) => void;
   horaireFin?: string;
   setHoraireFin?: (value: string) => void;
-  
+
   // Actions
   handleSubmit: (e: React.FormEvent) => void;
   resetForm: () => void;
@@ -204,7 +210,7 @@ const CommandeFormDialog: React.FC<CommandeFormDialogProps> = ({
     const [h, m] = horaire.split(':').map(Number);
     if (isNaN(h)) return '';
     const end = new Date(); end.setHours(h + 1, m || 0, 0, 0);
-    return `${String(end.getHours()).padStart(2,'0')}:${String(end.getMinutes()).padStart(2,'0')}`;
+    return `${String(end.getHours()).padStart(2, '0')}:${String(end.getMinutes()).padStart(2, '0')}`;
   }, [horaire, horaireFin]);
 
   React.useEffect(() => {
@@ -220,6 +226,216 @@ const CommandeFormDialog: React.FC<CommandeFormDialogProps> = ({
     }, 250);
     return () => { cancelled = true; clearTimeout(t); };
   }, [isOpen, checkDate, horaire, computedHeureFin]);
+
+  // ===== Mode RDV (3e option du type) =====
+  const [localRdvMode, setLocalRdvMode] = React.useState(false);
+  const [rdvDate, setRdvDate] = React.useState('');
+  const [rdvConflict, setRdvConflict] = React.useState<{ busy: boolean; message?: string }>({ busy: false });
+
+  // Auto-détection: si le nom du produit contient "prestation" => mode RDV
+  React.useEffect(() => {
+    const txt = (productSearch || produitNom || '').toLowerCase();
+    if (txt.includes('prestation')) {
+      setLocalRdvMode(true);
+    }
+  }, [productSearch, produitNom]);
+
+  React.useEffect(() => {
+    if (!isOpen) {
+      setLocalRdvMode(false);
+      setRdvDate('');
+      setRdvConflict({ busy: false });
+    }
+  }, [isOpen]);
+
+  // Vérification créneau dans rdv-taches.json
+  React.useEffect(() => {
+    if (!isOpen || !localRdvMode || !rdvDate || !horaire) {
+      setRdvConflict({ busy: false });
+      return;
+    }
+    let cancelled = false;
+    const t = setTimeout(async () => {
+      try {
+        const resp: any = await rdvTachesApi.getByDate(rdvDate);
+        const items: any[] = Array.isArray(resp) ? resp : (resp?.data || []);
+        const toMin = (t: string) => {
+          const [h, m] = t.split(':').map(Number);
+          return (h || 0) * 60 + (m || 0);
+        };
+        const s = toMin(horaire);
+        const e = toMin(computedHeureFin || horaire);
+        const conflict = items.find((r: any) => {
+          if (r.statut === 'annule' || r.statut === 'termine') return false;
+          const rs = toMin(r.heureDebut);
+          const re = toMin(r.heureFin);
+          return s < re && e > rs;
+        });
+        if (!cancelled) {
+          if (conflict) {
+            setRdvConflict({ busy: true, message: `Créneau occupé par "${(conflict as any).tacheNom}" (${(conflict as any).heureDebut} - ${(conflict as any).heureFin})` });
+          } else {
+            setRdvConflict({ busy: false });
+          }
+        }
+      } catch {
+        if (!cancelled) setRdvConflict({ busy: false });
+      }
+    }, 250);
+    return () => { cancelled = true; clearTimeout(t); };
+  }, [isOpen, localRdvMode, rdvDate, horaire, computedHeureFin]);
+
+  // ===== Modal de complétion RDV =====
+  const [rdvModalOpen, setRdvModalOpen] = React.useState(false);
+  const [createdRdvTacheId, setCreatedRdvTacheId] = React.useState<string | null>(null);
+  const [rdvPersonneNom, setRdvPersonneNom] = React.useState('');
+  const [rdvTacheNom, setRdvTacheNom] = React.useState('');
+  const [rdvCommentaires, setRdvCommentaires] = React.useState('');
+  const [rdvStatut, setRdvStatut] = React.useState<'planifie' | 'confirme' | 'reporte'>('planifie');
+  const [submittingRdv, setSubmittingRdv] = React.useState(false);
+
+  // Autocompletes du modal de complétion
+  const [personneQuery, setPersonneQuery] = React.useState('');
+  const [personneOptions, setPersonneOptions] = React.useState<Array<{ id: string; nom: string; prenom: string; phone?: string }>>([]);
+  const [showPersonneList, setShowPersonneList] = React.useState(false);
+  const [tacheQuery, setTacheQuery] = React.useState('');
+  const [tacheOptions, setTacheOptions] = React.useState<Array<{ id: string; nom: string }>>([]);
+  const [showTacheList, setShowTacheList] = React.useState(false);
+  const [allTaches, setAllTaches] = React.useState<Array<{ id: string; nom: string }>>([]);
+  const [createdCommandeId, setCreatedCommandeId] = React.useState<string | null>(null);
+
+  // Recherche travailleurs (3 caractères min)
+  React.useEffect(() => {
+    if (!showPersonneList) return;
+    const q = personneQuery.trim();
+    if (q.length < 3) { setPersonneOptions([]); return; }
+    let cancel = false;
+    const t = setTimeout(async () => {
+      try {
+        const resp: any = await travailleurApi.search(q);
+        const items: any[] = Array.isArray(resp) ? resp : (resp?.data || []);
+        if (!cancel) setPersonneOptions(items.slice(0, 10));
+      } catch { if (!cancel) setPersonneOptions([]); }
+    }, 200);
+    return () => { cancel = true; clearTimeout(t); };
+  }, [personneQuery, showPersonneList]);
+
+  // Charger toutes les tâches RDV à l'ouverture du modal complétion
+  React.useEffect(() => {
+    if (!rdvModalOpen) return;
+    (async () => {
+      try {
+        const resp: any = await tachesRdvApi.getAll();
+        const items: any[] = Array.isArray(resp) ? resp : (resp?.data || []);
+        setAllTaches(items);
+      } catch { setAllTaches([]); }
+    })();
+  }, [rdvModalOpen]);
+
+  React.useEffect(() => {
+    if (!showTacheList) return;
+    const q = tacheQuery.trim().toLowerCase();
+    if (q.length < 1) { setTacheOptions(allTaches.slice(0, 20)); return; }
+    setTacheOptions(allTaches.filter(t => t.nom.toLowerCase().includes(q)).slice(0, 20));
+  }, [tacheQuery, allTaches, showTacheList]);
+
+  const handleSubmitRdvMode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!clientNom || !rdvDate || !horaire) {
+      toast.error('Veuillez remplir client, date et horaire');
+      return;
+    }
+    if (rdvConflict.busy) {
+      toast.error('Créneau occupé');
+      return;
+    }
+    try {
+      setSubmittingRdv(true);
+      const heureFin = computedHeureFin || horaire;
+      // 1) Pré-enregistrer dans rdv-taches.json
+      const createdResp: any = await rdvTachesApi.create({
+        clientNom,
+        clientTelephone: clientPhone,
+        telephone: clientPhone,
+        lieu: clientAddress,
+        tacheNom: produitNom || 'Prestation',
+        date: rdvDate,
+        heureDebut: horaire,
+        heureFin,
+        statut: 'planifie',
+      } as any);
+      const created = createdResp?.data || createdResp;
+      const newId = created?.id;
+      setCreatedRdvTacheId(newId);
+
+      // 2) Enregistrer la commande (type='rdv') en liant le rdvTacheId
+      let newCommandeId: string | null = null;
+      try {
+        const cmdResp: any = await commandeApi.create({
+          clientNom,
+          clientPhone,
+          clientAddress,
+          type: 'rdv' as any,
+          produits: produitsListe.length > 0 ? produitsListe : [{
+            nom: produitNom || 'Prestation',
+            prixUnitaire: parseFloat(prixUnitaire) || 0,
+            quantite: parseFloat(quantite) || 1,
+            prixVente: parseFloat(prixVente) || 0,
+          }],
+          dateEcheance: rdvDate,
+          horaire,
+          horaireFin: heureFin,
+          rdvTacheId: newId,
+        } as any);
+        const cmd = cmdResp?.data || cmdResp;
+        newCommandeId = cmd?.id || null;
+      } catch (err) {
+        console.error('commande create error', err);
+      }
+      setCreatedCommandeId(newCommandeId);
+
+      setRdvTacheNom('');
+      setTacheQuery('');
+      setRdvPersonneNom('');
+      setPersonneQuery('');
+      setRdvCommentaires('');
+      setRdvStatut('planifie');
+      onOpenChange(false);
+      setRdvModalOpen(true);
+      toast.success('Commande créée. Complétez le RDV.');
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err?.response?.data?.error || 'Erreur lors de la création');
+    } finally {
+      setSubmittingRdv(false);
+    }
+  };
+
+  const handleSubmitRdvCompletion = async () => {
+    if (!createdRdvTacheId) return;
+    if (!rdvTacheNom.trim()) { toast.error('Veuillez sélectionner une tâche'); return; }
+    try {
+      setSubmittingRdv(true);
+      await rdvTachesApi.update(createdRdvTacheId, {
+        personneNom: rdvPersonneNom,
+        tacheNom: rdvTacheNom,
+        commentaires: rdvCommentaires,
+        statut: rdvStatut,
+      } as any);
+      toast.success('Rendez-vous créé avec succès');
+      setRdvModalOpen(false);
+      setCreatedRdvTacheId(null);
+      setCreatedCommandeId(null);
+      resetForm();
+    } catch (err: any) {
+      toast.error(err?.response?.data?.error || 'Erreur lors de la mise à jour');
+    } finally {
+      setSubmittingRdv(false);
+    }
+  };
+
+
 
   // Réinitialiser la photo client quand le dialogue se ferme ou que le nom change manuellement
   React.useEffect(() => {
@@ -270,8 +486,8 @@ const CommandeFormDialog: React.FC<CommandeFormDialogProps> = ({
             ✨ Créez une expérience d'achat exclusive et luxueuse ✨
           </DialogDescription>
         </DialogHeader>
-        
-        <form onSubmit={handleSubmit} className="space-y-6 mt-6">
+
+        <form onSubmit={localRdvMode ? handleSubmitRdvMode : handleSubmit} className="space-y-6 mt-6">
           {/* Section Client Premium */}
           <div className="space-y-4 p-6 rounded-2xl bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-blue-900/30 dark:via-indigo-900/30 dark:to-purple-900/30 border-2 border-blue-300 dark:border-blue-700 shadow-[0_8px_30px_rgba(59,130,246,0.3)]">
             <h3 className="font-black text-xl flex items-center gap-3 text-blue-700 dark:text-blue-300">
@@ -283,7 +499,7 @@ const CommandeFormDialog: React.FC<CommandeFormDialogProps> = ({
                 <Star className="h-5 w-5 text-yellow-500" />
               </span>
             </h3>
-            
+
             {/* Photo du client (si disponible) */}
             {clientPhotoUrl && (
               <div className="flex justify-center">
@@ -410,11 +626,10 @@ const CommandeFormDialog: React.FC<CommandeFormDialogProps> = ({
                   key={option.value}
                   type="button"
                   onClick={() => setProductCategoryFilter(option.value)}
-                  className={`px-3 py-1 text-xs font-bold rounded-full transition-all duration-300 border ${
-                    productCategoryFilter === option.value
+                  className={`px-3 py-1 text-xs font-bold rounded-full transition-all duration-300 border ${productCategoryFilter === option.value
                       ? 'bg-gradient-to-r from-purple-500 to-indigo-600 text-white border-purple-500 shadow-lg shadow-purple-500/30'
                       : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-300 dark:border-gray-600 hover:border-purple-400 hover:text-purple-600'
-                  }`}
+                    }`}
                 >
                   {option.label}
                 </button>
@@ -514,7 +729,7 @@ const CommandeFormDialog: React.FC<CommandeFormDialogProps> = ({
               </div>
             </div>
 
-            <Button 
+            <Button
               type="button"
               onClick={handleAddProduit}
               className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-lg"
@@ -533,11 +748,10 @@ const CommandeFormDialog: React.FC<CommandeFormDialogProps> = ({
                   {produitsListe.map((produit, index) => (
                     <div
                       key={index}
-                      className={`flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded-lg border-2 shadow-sm transition-all ${
-                        editingProductIndex === index 
-                          ? 'border-purple-500 dark:border-purple-400 ring-2 ring-purple-200 dark:ring-purple-800' 
+                      className={`flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded-lg border-2 shadow-sm transition-all ${editingProductIndex === index
+                          ? 'border-purple-500 dark:border-purple-400 ring-2 ring-purple-200 dark:ring-purple-800'
                           : 'border-purple-200 dark:border-purple-700'
-                      }`}
+                        }`}
                     >
                       <div className="flex-1">
                         <div className="font-semibold text-sm">
@@ -592,24 +806,50 @@ const CommandeFormDialog: React.FC<CommandeFormDialogProps> = ({
                 <Zap className="h-5 w-5 text-yellow-500" />
               </span>
             </h3>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="type" className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">
                   📋 Type
                 </Label>
-                <Select value={type} onValueChange={(value: 'commande' | 'reservation') => setType(value)}>
+                <Select
+                  value={localRdvMode ? 'rdv' : type}
+                  onValueChange={(value: string) => {
+                    if (value === 'rdv') {
+                      setLocalRdvMode(true);
+                      setType('rdv');
+                    } else {
+                      setLocalRdvMode(false);
+                      setType(value as 'commande' | 'reservation');
+                    }
+                  }}
+                >
                   <SelectTrigger className="border-2 border-green-300 dark:border-green-700 focus:border-green-500 dark:focus:border-green-500 bg-white dark:bg-gray-900 shadow-sm">
                     <SelectValue placeholder="Sélectionner un type" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="commande">📦 Commande</SelectItem>
                     <SelectItem value="reservation">📅 Réservation</SelectItem>
+                    <SelectItem value="rdv">🗓️ RDV</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
-              {type === 'commande' ? (
+              {localRdvMode ? (
+                <div>
+                  <Label htmlFor="rdvDate" className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">
+                    📅 Date du RDV
+                  </Label>
+                  <Input
+                    id="rdvDate"
+                    type="date"
+                    value={rdvDate}
+                    onChange={(e) => setRdvDate(e.target.value)}
+                    className="border-2 border-green-300 dark:border-green-700 focus:border-green-500 dark:focus:border-green-500 bg-white dark:bg-gray-900 shadow-sm"
+                    required
+                  />
+                </div>
+              ) : type === 'commande' ? (
                 <div>
                   <Label htmlFor="dateArrivagePrevue" className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">
                     📅 Date d'arrivage prévue
@@ -723,6 +963,19 @@ const CommandeFormDialog: React.FC<CommandeFormDialogProps> = ({
             </div>
           )}
 
+          {/* Alerte conflit RDV (rdv-taches.json) */}
+          {localRdvMode && rdvConflict.busy && (
+            <div className="p-4 rounded-xl border-2 border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/30 shadow">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
+                <div className="flex-1">
+                  <p className="font-bold text-red-700 dark:text-red-300 text-sm">🚫 Créneau RDV occupé</p>
+                  <p className="text-xs text-red-600 dark:text-red-400 mt-1">{rdvConflict.message}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Boutons d'action */}
           <div className="flex justify-end gap-3 pt-4">
             <Button
@@ -736,16 +989,300 @@ const CommandeFormDialog: React.FC<CommandeFormDialogProps> = ({
             >
               Annuler
             </Button>
-            <Button
-              type="submit"
-              disabled={!availability.disponible}
-              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {editingCommande ? 'Modifier' : 'Créer'} la {type === 'commande' ? 'commande' : 'réservation'}
-            </Button>
+            {localRdvMode ? (
+              !rdvConflict.busy && (
+                <Button
+                  type="submit"
+                  disabled={submittingRdv || !rdvDate || !horaire || !clientNom}
+                  className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-lg disabled:opacity-50"
+                >
+                  <CalendarClock className="mr-2 h-4 w-4" />
+                  Créer la commande (RDV)
+                </Button>
+              )
+            ) : (
+              <Button
+                type="submit"
+                disabled={!availability.disponible}
+                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {editingCommande ? 'Modifier' : 'Créer'} la {type === 'commande' ? 'commande' : 'réservation'}
+              </Button>
+            )}
           </div>
         </form>
       </DialogContent>
+
+      {/* Modal complétion RDV (rdv-taches.json) */}
+      <Dialog open={rdvModalOpen} onOpenChange={setRdvModalOpen}>
+        <DialogContent
+          className="
+      w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto
+      p-4 sm:p-6
+      bg-gradient-to-br from-white via-emerald-50/40 to-teal-50/40
+      dark:from-gray-900 dark:via-emerald-900/30 dark:to-teal-900/30
+      border-2 border-emerald-300/60 dark:border-emerald-700/60
+      rounded-2xl
+    "
+        >
+          <DialogHeader className="space-y-2">
+            <DialogTitle
+              className="
+          text-lg sm:text-xl md:text-2xl font-black
+          bg-gradient-to-r from-emerald-600 to-teal-600
+          bg-clip-text text-transparent
+          flex items-center gap-2
+        "
+            >
+              <CalendarClock className="h-5 w-5 sm:h-6 sm:w-6 text-emerald-600 shrink-0" />
+
+              <span className="break-words">
+                Compléter le rendez-vous
+              </span>
+            </DialogTitle>
+
+            <DialogDescription className="text-sm leading-relaxed">
+              Les informations client, date et horaires sont déjà enregistrées.
+              Complétez le reste pour créer le RDV.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-5 mt-4">
+
+            {/* Infos client + créneau */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+
+              <div
+                className="
+            p-3 sm:p-4 rounded-xl
+            bg-emerald-50 dark:bg-emerald-900/30
+            border border-emerald-200 dark:border-emerald-700
+            min-w-0
+          "
+              >
+                <div className="text-xs text-muted-foreground mb-1">
+                  👤 Client
+                </div>
+
+                <div className="font-semibold break-words">
+                  {clientNom}
+                </div>
+
+                <div className="text-xs break-all">
+                  {clientPhone}
+                </div>
+
+                <div className="text-xs break-words">
+                  {clientAddress}
+                </div>
+              </div>
+
+              <div
+                className="
+            p-3 sm:p-4 rounded-xl
+            bg-emerald-50 dark:bg-emerald-900/30
+            border border-emerald-200 dark:border-emerald-700
+          "
+              >
+                <div className="text-xs text-muted-foreground mb-1">
+                  📅 Créneau
+                </div>
+
+                <div className="font-semibold break-words">
+                  {rdvDate}
+                </div>
+
+                <div className="text-xs">
+                  {horaire} → {computedHeureFin || horaire}
+                </div>
+              </div>
+            </div>
+
+            {/* Responsable */}
+            <div className="relative">
+              <Label className="text-sm font-semibold">
+                👥 Personne responsable
+              </Label>
+
+              <Input
+                className="mt-1"
+                value={personneQuery}
+                onChange={(e) => {
+                  setPersonneQuery(e.target.value);
+                  setShowPersonneList(true);
+                  setRdvPersonneNom(e.target.value);
+                }}
+                onFocus={() => setShowPersonneList(true)}
+                placeholder="Tapez au moins 3 caractères du nom..."
+              />
+
+              {showPersonneList &&
+                personneQuery.trim().length >= 3 &&
+                personneOptions.length > 0 && (
+                  <div
+                    className="
+                absolute z-50 mt-1 w-full max-h-52 overflow-auto
+                rounded-xl border
+                bg-white dark:bg-gray-900
+                shadow-xl
+              "
+                  >
+                    {personneOptions.map((p) => {
+                      const full = `${p.prenom || ""} ${p.nom || ""}`.trim();
+
+                      return (
+                        <button
+                          type="button"
+                          key={p.id}
+                          onClick={() => {
+                            setRdvPersonneNom(full);
+                            setPersonneQuery(full);
+                            setShowPersonneList(false);
+                          }}
+                          className="
+                      block w-full text-left
+                      px-3 py-3 text-sm
+                      hover:bg-emerald-50 dark:hover:bg-emerald-900/30
+                      transition-colors
+                      break-words
+                    "
+                        >
+                          {full} {p.phone ? `— ${p.phone}` : ""}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+            </div>
+
+            {/* Tâche */}
+            <div className="relative">
+              <Label className="text-sm font-semibold">
+                ✂️ Tâche
+              </Label>
+
+              <Input
+                className="mt-1"
+                value={tacheQuery}
+                onChange={(e) => {
+                  setTacheQuery(e.target.value);
+                  setShowTacheList(true);
+                  setRdvTacheNom(e.target.value);
+                }}
+                onFocus={() => setShowTacheList(true)}
+                placeholder="Tapez 1 caractère pour voir la liste..."
+              />
+
+              {showTacheList && tacheOptions.length > 0 && (
+                <div
+                  className="
+              absolute z-50 mt-1 w-full max-h-52 overflow-auto
+              rounded-xl border
+              bg-white dark:bg-gray-900
+              shadow-xl
+            "
+                >
+                  {tacheOptions.map((t) => (
+                    <button
+                      type="button"
+                      key={t.id}
+                      onClick={() => {
+                        setRdvTacheNom(t.nom);
+                        setTacheQuery(t.nom);
+                        setShowTacheList(false);
+                      }}
+                      className="
+                  block w-full text-left
+                  px-3 py-3 text-sm
+                  hover:bg-emerald-50 dark:hover:bg-emerald-900/30
+                  transition-colors
+                  break-words
+                "
+                    >
+                      {t.nom}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Commentaires */}
+            <div>
+              <Label className="text-sm font-semibold">
+                📝 Commentaires
+              </Label>
+
+              <Textarea
+                className="mt-1 resize-none"
+                value={rdvCommentaires}
+                onChange={(e) => setRdvCommentaires(e.target.value)}
+                placeholder="Commentaires éventuels"
+                rows={4}
+              />
+            </div>
+
+            {/* Statut */}
+            <div>
+              <Label className="text-sm font-semibold">
+                🚦 Statut
+              </Label>
+
+              <Select
+                value={rdvStatut}
+                onValueChange={(v: any) => setRdvStatut(v)}
+              >
+                <SelectTrigger className="mt-1 w-full">
+                  <SelectValue />
+                </SelectTrigger>
+
+                <SelectContent>
+                  <SelectItem value="planifie">
+                    Planifié
+                  </SelectItem>
+
+                  <SelectItem value="confirme">
+                    Confirmé
+                  </SelectItem>
+
+                  <SelectItem value="reporte">
+                    Reporté
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Actions */}
+            <div
+              className="
+          flex flex-col-reverse sm:flex-row
+          justify-end gap-3 pt-2
+        "
+            >
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setRdvModalOpen(false)}
+                className="w-full sm:w-auto"
+              >
+                Fermer
+              </Button>
+
+              <Button
+                type="button"
+                onClick={handleSubmitRdvCompletion}
+                disabled={submittingRdv || !rdvTacheNom}
+                className="
+            w-full sm:w-auto
+            bg-gradient-to-r from-emerald-600 to-teal-600
+            text-white
+          "
+              >
+                Créer le RDV
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 };
