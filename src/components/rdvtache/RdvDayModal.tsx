@@ -88,6 +88,7 @@ const RdvDayModal: React.FC<Props> = ({ open, onOpenChange, selectedDay, rdvs, o
                   {hourRdvs.length === 0 && <div className="h-[1px] bg-white/5 mt-4" />}
                   {hourRdvs.map(r => {
                     const isTermine = r.statut === 'termine';
+                    const isLockedByCommande = Boolean(r.commandeId);
                     return (
                     <div key={r.id} className={cn('flex items-center gap-2 px-3 py-2 rounded-xl border group transition-all', STATUT_COLORS[r.statut] || STATUT_COLORS.planifie)}>
                       <Sparkles className="h-4 w-4 shrink-0" />
@@ -97,6 +98,11 @@ const RdvDayModal: React.FC<Props> = ({ open, onOpenChange, selectedDay, rdvs, o
                           <span className="px-1.5 py-0.5 rounded-md bg-black/20 text-[9px] font-black uppercase tracking-wide">
                             {STATUT_LABEL[r.statut] || r.statut}
                           </span>
+                          {isLockedByCommande && (
+                            <span className="px-1.5 py-0.5 rounded-md bg-amber-500/25 text-[9px] font-black uppercase tracking-wide">
+                              🔒 Commande
+                            </span>
+                          )}
                         </p>
                         <p className="text-[10px] opacity-80 truncate flex items-center gap-1">
                           {r.heureDebut} - {r.heureFin} • <User className="h-3 w-3" /> {r.clientNom}
@@ -109,7 +115,7 @@ const RdvDayModal: React.FC<Props> = ({ open, onOpenChange, selectedDay, rdvs, o
                           </p>
                         )}
                       </div>
-                      {!isTermine && (
+                      {!isTermine && !isLockedByCommande && (
                         <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
                           <button onClick={() => onEdit(r)} className="p-1.5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/40 border border-emerald-500/30">
                             <Pencil className="h-3.5 w-3.5 text-emerald-400" />

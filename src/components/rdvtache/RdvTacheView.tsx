@@ -84,6 +84,13 @@ const RdvTacheView: React.FC = () => {
   // --- Handlers RDV ---
   const handleSubmitRdv = async (data: Omit<RdvTache, 'id' | 'createdAt' | 'updatedAt'>, id?: string) => {
     if (id) {
+      const existing = rdvs.find(r => r.id === id);
+      if (existing?.commandeId) {
+        toast({ title: 'RDV verrouillé', description: 'Ce RDV provient des Commandes. Modifiez-le depuis la page Commandes.', variant: 'destructive' });
+        setShowFormModal(false);
+        setEditing(null);
+        return;
+      }
       const updated = await rdvTachesApi.update(id, data);
       setRdvs(prev => prev.map(r => r.id === id ? updated.data : r));
       toast({ title: '✅ RDV modifié' });
@@ -99,6 +106,12 @@ const RdvTacheView: React.FC = () => {
 
   const handleDelete = async () => {
     if (!deleteId) return;
+    const existing = rdvs.find(r => r.id === deleteId);
+    if (existing?.commandeId) {
+      toast({ title: 'RDV verrouillé', description: 'Ce RDV provient des Commandes. Supprimez-le depuis la page Commandes.', variant: 'destructive' });
+      setDeleteId(null);
+      return;
+    }
     try {
       await rdvTachesApi.delete(deleteId);
       setRdvs(prev => prev.filter(r => r.id !== deleteId));
@@ -287,6 +300,11 @@ const RdvTacheView: React.FC = () => {
         confirmLabel="✏️ Modifier"
         onConfirm={() => {
           if (pendingEdit) {
+            if (pendingEdit.commandeId) {
+              toast({ title: 'RDV verrouillé', description: 'Ce RDV provient des Commandes. Modifiez-le depuis la page Commandes.', variant: 'destructive' });
+              setPendingEdit(null);
+              return;
+            }
             setEditing(pendingEdit);
             setDefaultDate(pendingEdit.date);
             setShowDayModal(false);

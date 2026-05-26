@@ -162,15 +162,13 @@ export const useCommandesLogic = () => {
     payload: { statut?: CommandeStatut; date?: string; heureDebut?: string; heureFin?: string }
   ) => {
     if (!commande || commande.type !== 'rdv') return;
-    const rdvId = commande.rdvTacheId;
-    if (!rdvId) return;
     try {
       const update: any = {};
       if (payload.statut) update.statut = mapStatutToRdvTache(payload.statut);
       if (payload.date) update.date = payload.date;
       if (payload.heureDebut) update.heureDebut = payload.heureDebut;
       if (payload.heureFin) update.heureFin = payload.heureFin;
-      await rdvTachesApi.update(rdvId, update);
+      await rdvTachesApi.updateByCommande(commande.id, update);
     } catch (err) {
       console.warn('Sync rdv-taches échouée:', err);
     }
@@ -719,6 +717,21 @@ export const useCommandesLogic = () => {
           }
         }
         await api.put(`/api/commandes/${editingCommande.id}`, commandeData);
+        if (type === 'rdv') {
+          const rdvPayload: any = {
+            clientNom,
+            clientTelephone: clientPhone,
+            telephone: clientPhone,
+            lieu: clientAddress,
+            tacheNom: produitsListe[0]?.nom || 'Prestation',
+            date: dateEcheance,
+            heureDebut: horaire,
+            heureFin: horaireFin || getOneHourLater(horaire),
+          };
+          try {
+            await rdvTachesApi.updateByCommande(editingCommande.id, rdvPayload);
+          } catch (err) { console.error('Erreur mise à jour RDV-tâche lié:', err); }
+        }
         // Marquer les nouveaux produits comme réservés si c'est une réservation
         if (type === 'reservation') {
           for (const produit of produitsListe) {
@@ -771,8 +784,12 @@ export const useCommandesLogic = () => {
 
   const handleDelete = async (id: string) => {
     try {
+      const commande = commandes.find(c => c.id === id);
       try { await api.delete(`/api/rdv/by-commande/${id}`); } catch (err) { console.error('Erreur suppression RDV lié:', err); }
       try { await api.delete(`/api/taches/by-commande/${id}`); } catch (err) { console.error('Erreur suppression tâches liées:', err); }
+      if (commande?.type === 'rdv') {
+        try { await rdvTachesApi.deleteByCommande(id); } catch (err) { console.error('Erreur suppression RDV-tâche lié:', err); }
+      }
       await api.delete(`/api/commandes/${id}`);
       toast({ title: 'Succès', description: 'Commande supprimée', className: "bg-app-green text-white" });
       fetchCommandes(); setDeleteId(null);

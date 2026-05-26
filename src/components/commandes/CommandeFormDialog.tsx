@@ -390,8 +390,15 @@ const CommandeFormDialog: React.FC<CommandeFormDialogProps> = ({
         } as any);
         const cmd = cmdResp?.data || cmdResp;
         newCommandeId = cmd?.id || null;
+        if (newCommandeId && newId) {
+          await rdvTachesApi.updateByCommande(newCommandeId, { commandeId: newCommandeId } as any);
+        }
       } catch (err) {
         console.error('commande create error', err);
+        if (newId) {
+          try { await rdvTachesApi.delete(newId); } catch {}
+        }
+        throw err;
       }
       setCreatedCommandeId(newCommandeId);
 
@@ -417,12 +424,17 @@ const CommandeFormDialog: React.FC<CommandeFormDialogProps> = ({
     if (!rdvTacheNom.trim()) { toast.error('Veuillez sélectionner une tâche'); return; }
     try {
       setSubmittingRdv(true);
-      await rdvTachesApi.update(createdRdvTacheId, {
+      const completionPayload = {
         personneNom: rdvPersonneNom,
         tacheNom: rdvTacheNom,
         commentaires: rdvCommentaires,
         statut: rdvStatut,
-      } as any);
+      } as any;
+      if (createdCommandeId) {
+        await rdvTachesApi.updateByCommande(createdCommandeId, completionPayload);
+      } else {
+        await rdvTachesApi.update(createdRdvTacheId, completionPayload);
+      }
       toast.success('Rendez-vous créé avec succès');
       setRdvModalOpen(false);
       setCreatedRdvTacheId(null);

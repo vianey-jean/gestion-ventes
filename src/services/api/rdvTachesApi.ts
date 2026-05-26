@@ -20,6 +20,7 @@ export interface RdvTache {
   statut: RdvTacheStatut;
   createdAt?: string;
   updatedAt?: string;
+  commandeId?: string;
 }
 
 export interface FreeSlot { start: string; end: string; }
@@ -36,6 +37,9 @@ const rdvTachesApi = {
   update: (id: string, data: Partial<RdvTache>) =>
     api.put<RdvTache>(`/api/rdv-taches/${id}`, data),
   delete: (id: string) => api.delete(`/api/rdv-taches/${id}`),
+  updateByCommande: (commandeId: string, data: Partial<RdvTache>) =>
+    api.put<RdvTache>(`/api/rdv-taches/by-commande/${commandeId}`, data),
+  deleteByCommande: (commandeId: string) => api.delete(`/api/rdv-taches/by-commande/${commandeId}`),
 };
 
 export default rdvTachesApi;
