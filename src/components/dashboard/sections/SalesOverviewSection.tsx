@@ -18,6 +18,7 @@ import {
   ShoppingCart,
   Box,
   Layers,
+  CalendarClock,
 } from 'lucide-react';
 
 import useCurrencyFormatter from '@/hooks/use-currency-formatter';
@@ -109,9 +110,34 @@ const SalesOverviewSection: React.FC<SalesOverviewSectionProps> = ({
     }, 0);
   }, [sales]);
 
+  // ===== Ventes du jour =====
+  const todayStr = new Date().toISOString().split('T')[0];
+  const toDay = (d?: string) => (d ? new Date(d).toISOString().split('T')[0] : '');
+  const salesToday = useMemo(
+    () => sales.filter((s) => toDay(s.date) === todayStr),
+    [sales, todayStr]
+  );
+  const totalToday = useMemo(
+    () => salesToday.reduce((sum, s) => sum + (s.totalSellingPrice || s.sellingPrice || 0), 0),
+    [salesToday]
+  );
+
+  // Historique du mois courant (du 1er à aujourd'hui inclus, plus récent en premier)
+  const monthSalesHistory = useMemo(() => {
+    return sales
+      .filter((s) => {
+        if (!s.date) return false;
+        const d = new Date(s.date);
+        return d.getFullYear() === currentYear && d.getMonth() + 1 === currentMonth;
+      })
+      .slice()
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }, [sales, currentMonth, currentYear]);
+
   // =========================
   // STATS
   // =========================
+
 
   const stats = [
     {
@@ -183,7 +209,27 @@ const SalesOverviewSection: React.FC<SalesOverviewSectionProps> = ({
       description: 'Unités disponibles',
       modalColor: 'amber',
     },
+
+    // "Ventes du jour" est affichée UNIQUEMENT si au moins une vente a été faite aujourd'hui
+    ...(salesToday.length > 0
+      ? [
+          {
+            id: 'ventes-du-jour',
+            title: 'Ventes du jour',
+            value: formatEuro(totalToday),
+            icon: CalendarClock,
+            luxeIcon: Sparkles,
+            gradient:
+              'from-green-500 via-emerald-500 to-lime-500',
+            bgGradient:
+              'from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30',
+            description: `${salesToday.length} transaction${salesToday.length > 1 ? 's' : ''} aujourd'hui`,
+            modalColor: 'green',
+          },
+        ]
+      : []),
   ];
+
 
   // =========================
   // DETAILS MODAL
@@ -323,6 +369,16 @@ const SalesOverviewSection: React.FC<SalesOverviewSectionProps> = ({
           ],
         };
 
+      case 'ventes-du-jour':
+        return {
+          ...stat,
+          details: [
+            { label: "Total aujourd'hui", value: formatEuro(totalToday), icon: DollarSign },
+            { label: 'Transactions', value: salesToday.length, icon: ShoppingCart },
+            { label: 'Date', value: new Date().toLocaleDateString('fr-FR'), icon: Calendar },
+          ],
+        };
+
       default:
         return {
           ...stat,
@@ -342,6 +398,7 @@ const SalesOverviewSection: React.FC<SalesOverviewSectionProps> = ({
       blue: 'from-blue-500 to-cyan-600',
       pink: 'from-pink-500 to-rose-600',
       amber: 'from-amber-500 to-orange-600',
+      green: 'from-green-500 to-emerald-600',
     };
 
     return gradients[color] || gradients.emerald;
@@ -383,23 +440,13 @@ const SalesOverviewSection: React.FC<SalesOverviewSectionProps> = ({
           </div>
         </div>
 
-        <Badge className="w-fit rounded-full border-0 bg-gradient-to-r from-purple-600 to-indigo-600 px-4 py-2 text-white">
-          <Diamond className="mr-2 h-4 w-4" />
-          Dashboard Premium
-        </Badge>
-      </motion.div> */}
-
-      {/* GRID RESPONSIVE */}
+      {/* GRID RESPONSIVE — adapte le nombre de colonnes au nombre de cartes (4 ou 5) */}
       <div
-        className="
-          grid
-          grid-cols-1
-          gap-4
-          sm:grid-cols-2
-          lg:grid-cols-3
-          xl:grid-cols-5
-        "
+        className={`grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 ${
+          stats.length >= 5 ? 'xl:grid-cols-5' : 'xl:grid-cols-4'
+        }`}
       >
+
         {stats.map((stat, index) => (
           <motion.div
             key={stat.id}
@@ -671,6 +718,52 @@ const SalesOverviewSection: React.FC<SalesOverviewSectionProps> = ({
                       }
                     )}
                   </div>
+
+                  {/* HISTORIQUE DU MOIS (Ventes du jour uniquement) */}
+                  {selectedStat === 'ventes-du-jour' && (
+                    <div className="mt-6">
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="text-sm font-black text-gray-800 dark:text-gray-100 flex items-center gap-2">
+                          <Calendar className="h-4 w-4 text-green-500" />
+                          Historique des ventes — {monthNames[currentMonth - 1]} {currentYear}
+                        </h4>
+                        <Badge className="bg-green-500/15 text-green-700 dark:text-green-300 border-0">
+                          {monthSalesHistory.length} ventes
+                        </Badge>
+                      </div>
+                      <div className="space-y-2 max-h-[280px] overflow-y-auto pr-1">
+                        {monthSalesHistory.length === 0 && (
+                          <p className="text-center text-xs text-gray-500 py-4">Aucune vente ce mois-ci</p>
+                        )}
+                        {monthSalesHistory.map((s: any) => {
+                          const amount = s.totalSellingPrice || s.sellingPrice || 0;
+                          const dateLabel = s.date ? new Date(s.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '';
+                          const products = s.products?.length || (s.description ? 1 : 0);
+                          return (
+                            <div key={s.id} className="flex items-center justify-between gap-3 rounded-xl bg-gray-50 dark:bg-gray-800 px-3 py-2 border border-gray-200/40 dark:border-gray-700/40">
+                              <div className="flex items-center gap-2 min-w-0">
+                                <div className="rounded-lg bg-gradient-to-br from-green-500 to-emerald-500 p-1.5">
+                                  <ShoppingCart className="h-3.5 w-3.5 text-white" />
+                                </div>
+                                <div className="min-w-0">
+                                  <p className="text-xs font-bold text-gray-800 dark:text-gray-100 truncate">
+                                    {s.clientName || 'Client anonyme'}
+                                  </p>
+                                  <p className="text-[10px] text-gray-500 truncate">
+                                    {dateLabel} • {products} produit{products > 1 ? 's' : ''}
+                                  </p>
+                                </div>
+                              </div>
+                              <span className="text-sm font-black bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent shrink-0">
+                                {formatEuro(amount)}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
 
                   {/* FOOTER */}
                   <div className="mt-8 flex items-center justify-center gap-2">

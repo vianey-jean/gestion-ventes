@@ -27,6 +27,7 @@ import PremiumLoading from '@/components/ui/premium-loading';
 import PointageAutoWatcher from '@/components/pointage/PointageAutoWatcher';
 import AutoInjectWatcher from '@/components/AutoInjectWatcher';
 import GlobalRdvTodayNotifier from '@/components/rdv/GlobalRdvTodayNotifier';
+import VisitTracker from '@/components/VisitTracker';
 
 // ==================
 // Lazy loading pages
@@ -182,6 +183,7 @@ function App() {
                   </Routes>
                 </Suspense>
                 </MaintenanceGate>
+                <VisitTracker />
               </Router>
               <Toaster />
               <CookieConsent />

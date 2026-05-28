@@ -419,17 +419,19 @@ const EditProductForm: React.FC<EditProductFormProps> = ({ isOpen, onClose }) =>
             <AlertDialogTitle className="text-2xl font-black bg-gradient-to-r from-red-600 via-red-700 to-rose-700 bg-clip-text text-transparent">
               ⚠️ Supprimer ce produit ?
             </AlertDialogTitle>
-            <AlertDialogDescription className="text-gray-600 space-y-2">
-              <p className="font-semibold text-red-600">
-                Vous êtes sur le point de supprimer définitivement :
-              </p>
-              <p className="text-lg font-bold text-gray-800 bg-red-100/50 px-4 py-2 rounded-xl">
-                "{formData.description}"
-              </p>
-              <p className="text-sm text-red-500 mt-4">
-                ⚠️ Cette action est <span className="font-bold">irréversible</span>. 
-                Toutes les données associées seront perdues.
-              </p>
+            <AlertDialogDescription asChild>
+              <div className="text-gray-600 space-y-2">
+                <p className="font-semibold text-red-600">
+                  Vous êtes sur le point de supprimer définitivement :
+                </p>
+                <p className="text-lg font-bold text-gray-800 bg-red-100/50 px-4 py-2 rounded-xl">
+                  "{formData.description}"
+                </p>
+                <p className="text-sm text-red-500 mt-4">
+                  ⚠️ Cette action est <span className="font-bold">irréversible</span>.
+                  Toutes les données associées seront perdues.
+                </p>
+              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="flex gap-3 pt-6">

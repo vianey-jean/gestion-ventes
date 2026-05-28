@@ -17,6 +17,7 @@ import RdvDayModal from './RdvDayModal';
 import RdvFormModal from './RdvFormModal';
 import AddCatalogTacheModal from './AddCatalogTacheModal';
 import ConfirmDialog from './ConfirmDialog';
+import RdvRescheduleModal from './RdvRescheduleModal';
 import TravailleurModal from '@/components/pointage/modals/TravailleurModal';
 
 const premiumBtnClass = "group relative overflow-hidden rounded-xl sm:rounded-2xl backdrop-blur-xl border transition-all duration-300 hover:scale-105 px-4 py-2 sm:px-5 sm:py-3 text-xs sm:text-sm font-semibold";
@@ -43,6 +44,11 @@ const RdvTacheView: React.FC = () => {
 
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [pendingEdit, setPendingEdit] = useState<RdvTache | null>(null);
+
+  // Drag-drop reschedule
+  const [rescheduleTarget, setRescheduleTarget] = useState<{ rdv: RdvTache; newDate?: string; suggestedStart?: string } | null>(null);
+  const [pickDateMode, setPickDateMode] = useState<{ rdv: RdvTache } | null>(null);
+
 
   const [travForm, setTravForm] = useState({ nom: '', prenom: '', adresse: '', phone: '', genre: 'femme' as 'homme' | 'femme', role: 'autre' as 'administrateur' | 'autre' });
 
@@ -122,6 +128,28 @@ const RdvTacheView: React.FC = () => {
       setDeleteId(null);
     }
   };
+
+  // --- Drag-drop reschedule handler ---
+  const handleReschedule = async ({ date, heureDebut, heureFin }: { date: string; heureDebut: string; heureFin: string }) => {
+    if (!rescheduleTarget) return;
+    const r = rescheduleTarget.rdv;
+    if (r.commandeId) {
+      toast({ title: 'RDV verrouillé', description: 'Ce RDV provient des Commandes.', variant: 'destructive' });
+      return;
+    }
+    try {
+      const updated = await rdvTachesApi.update(r.id, { date, heureDebut, heureFin });
+      setRdvs(prev => prev.map(x => x.id === r.id ? updated.data : x));
+      toast({ title: '✅ RDV déplacé', description: `${date} • ${heureDebut} → ${heureFin}` });
+      setRescheduleTarget(null);
+      fetchData();
+    } catch (err: any) {
+      const msg = err?.response?.data?.error || 'Impossible de déplacer le RDV';
+      toast({ title: 'Erreur', description: msg, variant: 'destructive' });
+      throw new Error(msg);
+    }
+  };
+
 
   // --- Handlers Catalog tâche ---
   const handleAddCatalog = async (data: { nom: string; description?: string }) => {
@@ -226,6 +254,16 @@ const RdvTacheView: React.FC = () => {
           onPrevMonth={() => setCurrentDate(new Date(year, month - 1, 1))}
           onNextMonth={() => setCurrentDate(new Date(year, month + 1, 1))}
           onDayClick={(d) => { setSelectedDay(d); setShowDayModal(true); }}
+          onRdvDropOnDay={(r, dateStr) => {
+            if (r.commandeId) { toast({ title: 'RDV verrouillé', variant: 'destructive' }); return; }
+            setRescheduleTarget({ rdv: r, newDate: dateStr });
+          }}
+          pickMode={pickDateMode}
+          onDayPicked={(r, dateStr) => {
+            setPickDateMode(null);
+            setRescheduleTarget({ rdv: r, newDate: dateStr });
+          }}
+          onCancelPick={() => setPickDateMode(null)}
         />
 
         {/* Liste catalogue compacte */}
@@ -255,6 +293,22 @@ const RdvTacheView: React.FC = () => {
         onAdd={() => { setEditing(null); setDefaultDate(selectedDay || today); setShowDayModal(false); setShowFormModal(true); }}
         onEdit={(r) => setPendingEdit(r)}
         onDelete={(id) => setDeleteId(id)}
+        onMoveRdvSameDay={(r, newStart) => {
+          setRescheduleTarget({ rdv: r, newDate: r.date, suggestedStart: newStart });
+        }}
+        onRequestOtherDate={(r) => {
+          setShowDayModal(false);
+          setPickDateMode({ rdv: r });
+        }}
+      />
+
+      <RdvRescheduleModal
+        open={!!rescheduleTarget}
+        onOpenChange={(v) => { if (!v) setRescheduleTarget(null); }}
+        rdv={rescheduleTarget?.rdv || null}
+        newDate={rescheduleTarget?.newDate}
+        suggestedStart={rescheduleTarget?.suggestedStart}
+        onConfirm={handleReschedule}
       />
 
       <RdvFormModal

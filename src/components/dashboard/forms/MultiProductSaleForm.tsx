@@ -898,12 +898,10 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
             : 'Ajouter une vente multi-produits'}
         </DialogTitle>
 
-        <DialogDescription>
-          <p className="text-sm text-slate-500 leading-relaxed">
-            {editSale
-              ? 'Modifiez les détails de cette vente avec plusieurs produits.'
-              : 'Enregistrez une vente avec un ou plusieurs produits.'}
-          </p>
+        <DialogDescription className="text-sm text-slate-500 leading-relaxed">
+          {editSale
+            ? 'Modifiez les détails de cette vente avec plusieurs produits.'
+            : 'Enregistrez une vente avec un ou plusieurs produits.'}
         </DialogDescription>
       </DialogHeader>
 

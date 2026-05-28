@@ -1361,10 +1361,12 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
               <AlertDialogTitle className="text-2xl font-black bg-gradient-to-r from-red-600 via-red-700 to-rose-700 bg-clip-text text-transparent">
                 ⚠️ Supprimer ce produit ?
               </AlertDialogTitle>
-              <AlertDialogDescription className="space-y-2">
-                <p className="font-semibold text-red-600">Vous êtes sur le point de supprimer définitivement :</p>
-                <p className="text-lg font-bold bg-red-100/50 dark:bg-red-900/20 px-4 py-2 rounded-xl">"{selectedProduct?.description}"</p>
-                <p className="text-sm text-red-500 mt-4">⚠️ Cette action est <span className="font-bold">irréversible</span>. Toutes les données et photos seront perdues.</p>
+              <AlertDialogDescription asChild>
+                <div className="space-y-2">
+                  <p className="font-semibold text-red-600">Vous êtes sur le point de supprimer définitivement :</p>
+                  <p className="text-lg font-bold bg-red-100/50 dark:bg-red-900/20 px-4 py-2 rounded-xl">"{selectedProduct?.description}"</p>
+                  <p className="text-sm text-red-500 mt-4">⚠️ Cette action est <span className="font-bold">irréversible</span>. Toutes les données et photos seront perdues.</p>
+                </div>
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter className="flex gap-3 pt-6">

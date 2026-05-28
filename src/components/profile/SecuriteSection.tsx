@@ -22,6 +22,7 @@ import { useToast } from '@/hooks/use-toast';
 import api from '@/service/api';
 import PasswordStrengthChecker from '@/components/PasswordStrengthChecker';
 import PremiumLoading from '@/components/ui/premium-loading';
+import HistoriqueConnexionCard from './HistoriqueConnexionCard';
 
 interface SecuriteSectionProps {
   userRole?: string;
@@ -648,6 +649,11 @@ const SecuriteSection: React.FC<SecuriteSectionProps> = ({ userRole }) => {
             )}
           </div>
         </motion.div>
+      </div>
+
+      {/* ===== HISTORIQUE DES CONNEXIONS ===== */}
+      <div className="mt-5">
+        <HistoriqueConnexionCard />
       </div>
 
       {/* ========== DIALOGS ========== */}
