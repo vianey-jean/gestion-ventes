@@ -360,6 +360,51 @@ const SecurityCheckPage: React.FC<
   useEffect(() => {
     generateChallenge();
 
+    // Si ce navigateur a déjà passé la vérification précédemment
+    // (localStorage non vidé), on saute la captcha directement.
+    let trusted = false;
+    try {
+      trusted =
+        localStorage.getItem('security_browser_trusted') === '1';
+    } catch {
+      trusted = false;
+    }
+
+    if (trusted) {
+      const bootTrusted = setTimeout(() => {
+        setPhase('checking');
+      }, 400);
+
+      const passTrusted = setTimeout(() => {
+        setPhase('passed');
+        try {
+          sessionStorage.setItem(
+            'security_verified_v4',
+            JSON.stringify({
+              verified: true,
+              timestamp: Date.now(),
+              challengeId,
+              score: 100,
+              version: 'v4',
+              trustedBrowser: true,
+            })
+          );
+        } catch {
+          // ignore
+        }
+      }, 900);
+
+      const callVerified = setTimeout(() => {
+        onVerified();
+      }, 1600);
+
+      return () => {
+        clearTimeout(bootTrusted);
+        clearTimeout(passTrusted);
+        clearTimeout(callVerified);
+      };
+    }
+
     const boot = setTimeout(() => {
       setPhase('checking');
     }, 800);
@@ -372,7 +417,7 @@ const SecurityCheckPage: React.FC<
       clearTimeout(boot);
       clearTimeout(challenge);
     };
-  }, [generateChallenge]);
+  }, [generateChallenge, challengeId, onVerified]);
 
   const getRelativePosition = (
     clientX: number,
@@ -811,6 +856,18 @@ const SecurityCheckPage: React.FC<
             version: 'v4',
           })
         );
+
+        // Marquer ce navigateur comme déjà vérifié, pour sauter
+        // la captcha lors des prochaines visites tant que le
+        // localStorage n'est pas vidé.
+        try {
+          localStorage.setItem(
+            'security_browser_trusted',
+            '1'
+          );
+        } catch {
+          // ignore
+        }
 
         setTimeout(() => {
           onVerified();
