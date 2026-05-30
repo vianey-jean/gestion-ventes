@@ -95,7 +95,7 @@ const ProductCharacteristicCard: React.FC<Props> = ({ product, variant = 'compac
             variant === 'full' ? 'text-6xl' : 'text-2xl'
           )}
         >
-          {size}
+          {size}''
         </div>
       )}
 

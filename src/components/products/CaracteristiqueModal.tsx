@@ -75,7 +75,10 @@ const CaracteristiqueModal: React.FC<Props> = ({ open, onOpenChange, product }) 
       const desc = product.description || '';
       const carac = product.caracteristique;
       const displayName = (carac && carac.nom) || desc;
-      const size = (carac && carac.numero) || extractSize(desc);
+
+      const rawSize = (carac && carac.numero) || extractSize(desc);
+      const size = rawSize ? `${rawSize}''` : '';
+
       const displayCode = (carac && carac.code) || product.code || '—';
       const barcodeValue =
         getBarcodeValue(carac, product.code || product.id?.slice(0, 10) || 'NOCODE');
