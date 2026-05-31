@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Package } from 'lucide-react';
 import ClientSearchInput from '../../ClientSearchInput';
+import { clientsVillesApi } from '@/services/api/villesApi';
 
 interface SaleClientSectionProps {
   clientName: string;
@@ -17,6 +18,8 @@ interface SaleClientSectionProps {
   onClientSelect: (client: any) => void;
   isSubmitting: boolean;
   clientPhoto?: string | null;
+  clientVille?: string;
+  setClientVille?: (v: string) => void;
 }
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:10000';
@@ -32,8 +35,31 @@ const SaleClientSection: React.FC<SaleClientSectionProps> = ({
   onClientSelect,
   isSubmitting,
   clientPhoto,
+  clientVille = '',
+  setClientVille,
 }) => {
   const photoUrl = clientPhoto ? (clientPhoto.startsWith('http') ? clientPhoto : `${API_BASE_URL}${clientPhoto}`) : null;
+
+  const [availableVilles, setAvailableVilles] = useState<string[]>([]);
+  useEffect(() => {
+    clientsVillesApi.getAll().then(setAvailableVilles).catch(() => setAvailableVilles([]));
+  }, []);
+  const isCustomVille = !!clientVille && !availableVilles.some(v => v.toLowerCase() === clientVille.toLowerCase());
+  const onVilleSelectChange = (val: string) => {
+    if (!setClientVille) return;
+    if (val === '__custom__') setClientVille('');
+    else setClientVille(val);
+  };
+  const onCustomVilleBlur = async () => {
+    const v = (clientVille || '').trim();
+    if (!v) return;
+    if (!availableVilles.some(x => x.toLowerCase() === v.toLowerCase())) {
+      try {
+        const list = await clientsVillesApi.add(v);
+        if (Array.isArray(list)) setAvailableVilles(list);
+      } catch {}
+    }
+  };
   return (
     <Card className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-indigo-50/50 to-purple-50/30 dark:from-blue-900/30 dark:via-indigo-900/20 dark:to-purple-900/10 border-0 shadow-xl shadow-blue-500/10 rounded-2xl">
       <div className="absolute inset-0 pointer-events-none">
@@ -77,7 +103,7 @@ const SaleClientSection: React.FC<SaleClientSectionProps> = ({
           />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {/* Téléphone */}
           <div className="space-y-2">
             <Label>Téléphone</Label>
@@ -122,6 +148,31 @@ const SaleClientSection: React.FC<SaleClientSectionProps> = ({
               placeholder="Adresse du client"
               disabled={isSubmitting}
             />
+          </div>
+
+          {/* Ville */}
+          <div className="space-y-2">
+            <Label>Ville</Label>
+            <select
+              value={isCustomVille ? '__custom__' : (clientVille || '')}
+              onChange={(e) => onVilleSelectChange(e.target.value)}
+              disabled={isSubmitting || !setClientVille}
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900"
+            >
+              <option value="">— Choisir une ville —</option>
+              {availableVilles.map(v => <option key={v} value={v}>{v}</option>)}
+              <option value="__custom__">+ Nouvelle ville…</option>
+            </select>
+            {(isCustomVille || (!clientVille && setClientVille)) && (
+              <Input
+                type="text"
+                value={isCustomVille ? clientVille : ''}
+                onChange={(e) => setClientVille && setClientVille(e.target.value)}
+                onBlur={onCustomVilleBlur}
+                placeholder="Saisir une nouvelle ville"
+                disabled={isSubmitting || !setClientVille}
+              />
+            )}
           </div>
         </div>
       </CardContent>

@@ -40,6 +40,8 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
   const [clientPhone, setClientPhone] = useState('');
   const [clientPhones, setClientPhones] = useState<string[]>([]);
   const [clientAddress, setClientAddress] = useState('');
+  const [clientVille, setClientVille] = useState('');
+  
   const [clientPhoto, setClientPhoto] = useState<string | null>(null);
   const [formProducts, setFormProducts] = useState<FormProduct[]>([createEmptyFormProduct()]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -106,6 +108,7 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
         setClientName(editSale.clientName || '');
         setClientPhone(editSale.clientPhone || '');
         setClientAddress(editSale.clientAddress || '');
+        setClientVille((editSale as any).clientVille || '');
         
         const hasReste = editSale.reste && editSale.reste > 0;
         if (hasReste) {
@@ -167,6 +170,7 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
         setClientName('');
         setClientPhone('');
         setClientAddress('');
+        setClientVille('');
         setClientPhoto(null);
         setFormProducts([createEmptyFormProduct()]);
         setShowAdvanceSection(false);
@@ -186,11 +190,13 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
       setClientPhones(phones);
       setClientPhone(phones[0] || '');
       setClientAddress(client.adresse);
+      setClientVille(client.ville || '');
       setClientPhoto(client.photo || null);
     } else {
       setClientPhones([]);
       setClientPhone('');
       setClientAddress('');
+      setClientVille('');
       setClientPhoto(null);
     }
   };
@@ -599,21 +605,38 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
   };
 
   // Gestion des clients
-  const handleClientData = async (clientName: string, clientPhone: string, clientAddress: string) => {
+  const handleClientData = async (clientName: string, clientPhone: string, clientAddress: string, clientVille: string) => {
     if (!clientName.trim()) return null;
     try {
       const token = localStorage.getItem('token');
       const existingClientsResponse = await axios.get(`${API_BASE_URL}/api/clients`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      const existingClient = existingClientsResponse.data.find((client: any) => 
+      const existingClient = existingClientsResponse.data.find((client: any) =>
         client.nom.toLowerCase() === clientName.toLowerCase()
       );
-      if (existingClient) return existingClient;
-      
+      if (existingClient) {
+        // Si on a renseigné une ville et qu'elle n'existe pas encore ou diffère => mettre à jour
+        const newVille = (clientVille || '').trim();
+        if (newVille && newVille !== (existingClient.ville || '').trim()) {
+          try {
+            const fd = new FormData();
+            fd.append('nom', existingClient.nom);
+            fd.append('phones', JSON.stringify(existingClient.phones || (existingClient.phone ? [existingClient.phone] : [])));
+            fd.append('addresses', JSON.stringify(existingClient.addresses || (existingClient.adresse ? [existingClient.adresse] : [])));
+            fd.append('adresse', existingClient.adresse || '');
+            fd.append('ville', newVille);
+            await axios.put(`${API_BASE_URL}/api/clients/${existingClient.id}`, fd, {
+              headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' }
+            });
+          } catch (e) { console.error('Erreur maj ville client:', e); }
+        }
+        return existingClient;
+      }
+
       if (clientPhone.trim() && clientAddress.trim()) {
         const newClientResponse = await axios.post(`${API_BASE_URL}/api/clients`, {
-          nom: clientName, phone: clientPhone, adresse: clientAddress
+          nom: clientName, phone: clientPhone, adresse: clientAddress, ville: (clientVille || '').trim()
         }, { headers: { Authorization: `Bearer ${token}` } });
         toast({
           title: "Client enregistré",
@@ -681,7 +704,7 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
 
     try {
       if (clientName.trim()) {
-        await handleClientData(clientName, clientPhone, clientAddress);
+        await handleClientData(clientName, clientPhone, clientAddress, clientVille);
       }
 
       const saleProducts: SaleProduct[] = validProducts.map(product => {
@@ -736,6 +759,7 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
         clientName: clientName || null,
         clientAddress: clientAddress || null,
         clientPhone: clientPhone || null,
+        clientVille: clientVille || null,
         reste: resteValue,
         nextPaymentDate: isAdvanceMode ? nextPaymentDate : null,
       };
@@ -862,6 +886,8 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
             }
           }
         }
+        // Réinitialiser la ville client après enregistrement
+        setClientVille('');
         onClose();
       }
     } catch (error) {
@@ -958,6 +984,8 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
             onClientSelect={handleClientSelect}
             isSubmitting={isSubmitting}
             clientPhoto={clientPhoto}
+            clientVille={clientVille}
+            setClientVille={setClientVille}
           />
         </div>
 
@@ -1005,6 +1033,7 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
                     onAvanceChange={handleAvanceProductChange}
                     onDeliveryChange={handleDeliveryChange}
                     onShowSlideshow={handleShowSlideshow}
+                    clientVille={clientVille}
                   />
                 </div>
               </div>

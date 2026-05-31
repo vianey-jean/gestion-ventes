@@ -78,13 +78,16 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
   // Selected product
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
+  // Helper: aujourd'hui au format YYYY-MM-DD pour <input type="date">
+  const todayISO = () => new Date().toISOString().slice(0, 10);
+
   // Add form
-  const [addForm, setAddForm] = useState({ description: '', purchasePrice: '', quantity: '', fournisseur: '' });
+  const [addForm, setAddForm] = useState({ description: '', purchasePrice: '', quantity: '', fournisseur: '', dateAchat: todayISO() });
   const [addPhotos, setAddPhotos] = useState<{ files: File[]; existingUrls: string[]; mainIndex: number }>({ files: [], existingUrls: [], mainIndex: 0 });
   const [addErrors, setAddErrors] = useState<Record<string, string>>({});
 
   // Edit form
-  const [editForm, setEditForm] = useState({ description: '', purchasePrice: 0, quantity: 0, additionalQuantity: 0, fournisseur: '' });
+  const [editForm, setEditForm] = useState({ description: '', purchasePrice: 0, quantity: 0, additionalQuantity: 0, fournisseur: '', purchaseDate: todayISO() });
   const [editPhotos, setEditPhotos] = useState<{ files: File[]; existingUrls: string[]; mainIndex: number }>({ files: [], existingUrls: [], mainIndex: 0 });
 
   // Loading
@@ -267,6 +270,7 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
         purchasePrice: Number(addForm.purchasePrice),
         quantity: Number(addForm.quantity),
         fournisseur: addForm.fournisseur.trim() || undefined,
+        dateAchat: addForm.dateAchat || todayISO(),
       });
 
       if (newProduct && addPhotos.files.length > 0) {
@@ -276,7 +280,7 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
       toast({ title: 'Succès', description: 'Produit ajouté avec succès', className: 'notification-success' });
       setIsAddConfirmOpen(false);
       setIsAddOpen(false);
-      setAddForm({ description: '', purchasePrice: '', quantity: '', fournisseur: '' });
+      setAddForm({ description: '', purchasePrice: '', quantity: '', fournisseur: '', dateAchat: todayISO() });
       setAddPhotos({ files: [], existingUrls: [], mainIndex: 0 });
       if (fetchProducts) await fetchProducts();
     } catch {
@@ -295,6 +299,7 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
       quantity: product.quantity,
       additionalQuantity: 0,
       fournisseur: product.fournisseur || '',
+      purchaseDate: todayISO(),
     });
     setEditPhotos({ files: [], existingUrls: product.photos || [], mainIndex: 0 });
     setIsEditOpen(true);
@@ -314,13 +319,22 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
         try { await fournisseurApiService.create(editForm.fournisseur.trim()); } catch (e) { console.error('Fournisseur create error:', e); }
       }
 
-      await productService.updateProduct({
+      const addQty = Number(editForm.additionalQuantity) || 0;
+      const updatePayload: any = {
         ...selectedProduct,
         description: editForm.description,
         purchasePrice: editForm.purchasePrice,
-        quantity: editForm.quantity + editForm.additionalQuantity,
+        quantity: editForm.quantity + addQty,
         fournisseur: editForm.fournisseur.trim() || undefined,
-      });
+      };
+      if (addQty > 0) {
+        updatePayload.newPurchase = {
+          date: editForm.purchaseDate || todayISO(),
+          quantity: addQty,
+          purchasePrice: editForm.purchasePrice,
+        };
+      }
+      await productService.updateProduct(updatePayload);
 
       const hasNewPhotos = editPhotos.files.length > 0;
       const existingPhotosChanged = JSON.stringify(editPhotos.existingUrls) !== JSON.stringify(selectedProduct.photos || []);
@@ -1078,6 +1092,15 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
                 />
                 {addErrors.quantity && <p className="text-sm text-red-400">{addErrors.quantity}</p>}
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="add-date" className="text-sm font-bold text-white/80 flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-fuchsia-400" /> Date d'achat
+                </Label>
+                <Input id="add-date" type="date" value={addForm.dateAchat}
+                  onChange={(e) => setAddForm({ ...addForm, dateAchat: e.target.value })}
+                  className="bg-white/10 border border-white/20 focus:border-fuchsia-400 rounded-xl text-white placeholder:text-white/40 hover:bg-white/15 transition-all [color-scheme:dark]"
+                />
+              </div>
               <FournisseurAutocomplete
                 value={addForm.fournisseur}
                 onChange={(val) => setAddForm({ ...addForm, fournisseur: val })}
@@ -1182,6 +1205,18 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
                     <Sparkles className="h-3 w-3 text-blue-400" /> Quantité finale: <b className="text-white/80">{editForm.quantity + editForm.additionalQuantity}</b>
                   </p>
                 </div>
+                {editForm.additionalQuantity > 0 && (
+                  <div className="space-y-2 p-3 rounded-2xl bg-emerald-500/5 border border-emerald-400/20">
+                    <Label className="text-sm font-bold text-white/80 flex items-center gap-2">
+                      <Sparkles className="h-4 w-4 text-emerald-400" /> Date du nouvel achat
+                    </Label>
+                    <Input type="date" value={editForm.purchaseDate}
+                      onChange={(e) => setEditForm({ ...editForm, purchaseDate: e.target.value })}
+                      className="bg-white/10 border border-white/20 focus:border-emerald-400 rounded-xl text-white placeholder:text-white/40 hover:bg-white/15 transition-all [color-scheme:dark]"
+                    />
+                    <p className="text-xs text-white/50">Cet achat de <b className="text-emerald-300">+{editForm.additionalQuantity}</b> sera enregistré dans l'historique d'achats du produit.</p>
+                  </div>
+                )}
                 <FournisseurAutocomplete
                   value={editForm.fournisseur}
                   onChange={(val) => setEditForm({ ...editForm, fournisseur: val })}

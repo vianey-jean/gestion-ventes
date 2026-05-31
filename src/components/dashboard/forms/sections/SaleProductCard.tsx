@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,6 +8,7 @@ import { Product } from '@/types';
 import ProductSearchInput from '../../ProductSearchInput';
 import SaleQuantityInput from '../SaleQuantityInput';
 import { FormProduct } from '../types/saleFormTypes';
+import { livraisonVilleApi, LivraisonVille } from '@/services/api/villesApi';
 
 interface SaleProductCardProps {
   product: FormProduct;
@@ -21,6 +22,7 @@ interface SaleProductCardProps {
   onAvanceChange: (value: string, index: number) => void;
   onDeliveryChange: (location: string, fee: string, index: number) => void;
   onShowSlideshow: (product: FormProduct) => void;
+  clientVille?: string;
 }
 
 const SaleProductCard: React.FC<SaleProductCardProps> = ({
@@ -35,7 +37,63 @@ const SaleProductCard: React.FC<SaleProductCardProps> = ({
   onAvanceChange,
   onDeliveryChange,
   onShowSlideshow,
+  clientVille,
 }) => {
+  const [villes, setVilles] = useState<LivraisonVille[]>([]);
+  useEffect(() => {
+    livraisonVilleApi.getAll().then(setVilles).catch(() => setVilles([]));
+  }, []);
+  const knownVilleNames = villes.map(v => v.ville);
+  const isCustomLoc = !!product.deliveryLocation && !knownVilleNames.some(v => v.toLowerCase() === product.deliveryLocation.toLowerCase());
+
+  // Auto-préremplissage: dès qu'un produit est sélectionné, comparer la ville du client
+  // avec la base livraison-ville et appliquer le frais correspondant (ou ajouter la nouvelle ville).
+  const lastAutoFillRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!product.selectedProduct) return;
+    if (!villes.length) return;
+    const key = `${product.selectedProduct.id}__${(clientVille || '').toLowerCase()}`;
+    if (lastAutoFillRef.current === key) return;
+    const cv = (clientVille || '').trim();
+    if (!cv) return;
+    lastAutoFillRef.current = key;
+    const found = villes.find(v => v.ville.toLowerCase() === cv.toLowerCase());
+    if (found) {
+      onDeliveryChange(found.ville, String(found.fee), index);
+    } else {
+      // Ville inconnue: on l'enregistre avec frais 0 par défaut (l'utilisateur peut ajuster)
+      onDeliveryChange(cv, '0', index);
+      livraisonVilleApi.add(cv, 0).then(list => Array.isArray(list) && setVilles(list)).catch(() => {});
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [product.selectedProduct?.id, villes.length, clientVille]);
+
+  const handleVilleSelect = (val: string) => {
+    if (val === '__custom__') {
+      onDeliveryChange('', '0', index);
+      return;
+    }
+    if (val === 'Exonération') {
+      onDeliveryChange('Exonération', '0', index);
+      return;
+    }
+    const found = villes.find(v => v.ville === val);
+    const fee = found ? String(found.fee) : '0';
+    onDeliveryChange(val, fee, index);
+  };
+
+  const handleCustomVilleBlur = async () => {
+    const v = (product.deliveryLocation || '').trim();
+    const f = Number(product.deliveryFee || 0);
+    if (!v) return;
+    if (!knownVilleNames.some(x => x.toLowerCase() === v.toLowerCase())) {
+      try {
+        const list = await livraisonVilleApi.add(v, f);
+        if (Array.isArray(list)) setVilles(list);
+      } catch {}
+    }
+  };
+
   return (
     <Card className="relative overflow-hidden bg-gradient-to-br from-purple-50 via-fuchsia-50/50 to-pink-50/30 dark:from-purple-900/30 dark:via-fuchsia-900/20 dark:to-pink-900/10 border-0 shadow-xl shadow-purple-500/10 rounded-2xl transition-all duration-300 hover:shadow-2xl hover:shadow-purple-500/15">
       <div className="absolute inset-0 pointer-events-none">
@@ -173,58 +231,50 @@ const SaleProductCard: React.FC<SaleProductCardProps> = ({
 
             {/* Frais de livraison */}
             <div className="space-y-2 col-span-2">
-              <Label>Frais de livraison</Label>
+              <Label>Ville de livraison & Frais</Label>
               <select
-                value={product.deliveryLocation}
-                onChange={(e) => {
-                  const location = e.target.value;
-                  let fee = '0';
-                  if (['Saint-Suzanne', 'Sainte-Marie', 'Saint-Denis', 'La Possession', 'Le Port', 'Saint-Paul'].includes(location)) {
-                    fee = '0';
-                  } else if (['Saint-André', 'Saint-Benoît', 'Saint-Leu'].includes(location)) {
-                    fee = '10';
-                  } else if (['Saint-Louis', 'Saint-Pierre', 'Le Tampon', 'Saint-Joseph'].includes(location)) {
-                    fee = '20';
-                  } else if (location === 'Exonération') {
-                    fee = '0';
-                  }
-                  onDeliveryChange(location, fee, index);
-                }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={isCustomLoc ? '__custom__' : (product.deliveryLocation || '')}
+                onChange={(e) => handleVilleSelect(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900"
                 disabled={isSubmitting}
               >
-                <option value="Saint-Suzanne">Saint-Suzanne: gratuit</option>
-                <option value="Sainte-Marie">Sainte-Marie: gratuit</option>
-                <option value="Saint-Denis">Saint-Denis: gratuit</option>
-                <option value="La Possession">La Possession: gratuit</option>
-                <option value="Le Port">Le Port: gratuit</option>
-                <option value="Saint-Paul">Saint-Paul: gratuit</option>
-                <option value="Saint-André">Saint-André: 10€</option>
-                <option value="Saint-Benoît">Saint-Benoît: 10€</option>
-                <option value="Saint-Leu">Saint-Leu: 10€</option>
-                <option value="Saint-Louis">Saint-Louis: 20€</option>
-                <option value="Saint-Pierre">Saint-Pierre: 20€</option>
-                <option value="Le Tampon">Le Tampon: 20€</option>
-                <option value="Saint-Joseph">Saint-Joseph: 20€</option>
-                <option value="Autres">Autres: montant personnalisé</option>
-                <option value="Exonération">Exonération: 0€</option>
+                <option value="">— Choisir une ville —</option>
+                {villes.map(v => (
+                  <option key={v.ville} value={v.ville}>
+                    {v.ville}{v.ville === 'Exonération' ? ' (0 €)' : `: ${v.fee === 0 ? 'gratuit' : `${v.fee} €`}`}
+                  </option>
+                ))}
+                <option value="__custom__">+ Nouvelle ville…</option>
               </select>
-              {product.deliveryLocation === 'Autres' && (
-                <Input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={product.deliveryFee}
-                  onChange={(e) => onDeliveryChange('Autres', e.target.value, index)}
-                  placeholder="Montant personnalisé"
-                  className="mt-2"
-                  disabled={isSubmitting}
-                />
+
+              {isCustomLoc && (
+                <div className="grid grid-cols-2 gap-2 mt-2">
+                  <Input
+                    type="text"
+                    value={product.deliveryLocation}
+                    onChange={(e) => onDeliveryChange(e.target.value, product.deliveryFee, index)}
+                    onBlur={handleCustomVilleBlur}
+                    placeholder="Nom de la ville"
+                    disabled={isSubmitting}
+                  />
+                  <Input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={product.deliveryFee}
+                    onChange={(e) => onDeliveryChange(product.deliveryLocation, e.target.value, index)}
+                    onBlur={handleCustomVilleBlur}
+                    placeholder="Frais (€)"
+                    disabled={isSubmitting}
+                  />
+                </div>
               )}
+
               <p className="text-sm text-gray-500">
-                Frais: {Number(product.deliveryFee).toFixed(2)} €
+                Frais: {Number(product.deliveryFee || 0).toFixed(2)} €
               </p>
             </div>
+
 
             {/* Bénéfice */}
             <div className="space-y-2 col-span-2">

@@ -13,8 +13,10 @@ import InvoiceGenerator from '@/components/dashboard/InvoiceGenerator';
 import RefundForm from '@/components/dashboard/RefundForm';
 import ViewRefundsModal from '@/components/dashboard/ViewRefundsModal';
 import { AccessibleButton } from '@/components/accessibility/AccessibleButton';
-import { PlusCircle, Edit, ShoppingCart, FileText, FileSignature, Package, FileDown, Layers, PenLine, CirclePlus, Users, RotateCcw, Eye } from 'lucide-react';
+import { PlusCircle, Edit, ShoppingCart, FileText, FileSignature, Package, FileDown, Layers, PenLine, CirclePlus, Users, RotateCcw, Eye, MapPin, MapPinned } from 'lucide-react';
 import VentesParClientsModal from '@/components/dashboard/VentesParClientsModal';
+import AddLivraisonVilleModal from '@/components/dashboard/forms/modals/AddLivraisonVilleModal';
+import LivraisonVilleListModal from '@/components/dashboard/forms/modals/LivraisonVilleListModal';
 
 interface SalesManagementSectionProps {
   sales: Sale[];
@@ -45,6 +47,8 @@ const SalesManagementSection: React.FC<SalesManagementSectionProps> = ({
   const [refundFormOpen, setRefundFormOpen] = useState(false);
   const [refundFromSale, setRefundFromSale] = useState<Sale | undefined>(undefined);
   const [viewRefundsOpen, setViewRefundsOpen] = useState(false);
+  const [addVilleLivraisonOpen, setAddVilleLivraisonOpen] = useState(false);
+  const [detailVilleLivraisonOpen, setDetailVilleLivraisonOpen] = useState(false);
 
   const handleRowClick = (sale: Sale) => {
     setSelectedSale(sale);
@@ -101,6 +105,20 @@ const SalesManagementSection: React.FC<SalesManagementSectionProps> = ({
   onClick: () => setViewRefundsOpen(true),
   gradient: 'blue' as const,
   'aria-label': 'Voir les remboursements du mois'
+},
+{
+  icon: MapPin,
+  label: 'Ajouter ville de livraison',
+  onClick: () => setAddVilleLivraisonOpen(true),
+  gradient: 'green' as const,
+  'aria-label': 'Ajouter une nouvelle ville de livraison'
+},
+{
+  icon: MapPinned,
+  label: 'Détail ville livraison',
+  onClick: () => setDetailVilleLivraisonOpen(true),
+  gradient: 'purple' as const,
+  'aria-label': 'Voir et gérer les villes de livraison'
 }
   ];
 
@@ -239,6 +257,16 @@ const SalesManagementSection: React.FC<SalesManagementSectionProps> = ({
       <ViewRefundsModal
         isOpen={viewRefundsOpen}
         onClose={() => setViewRefundsOpen(false)}
+      />
+
+      <AddLivraisonVilleModal
+        isOpen={addVilleLivraisonOpen}
+        onClose={() => setAddVilleLivraisonOpen(false)}
+      />
+
+      <LivraisonVilleListModal
+        isOpen={detailVilleLivraisonOpen}
+        onClose={() => setDetailVilleLivraisonOpen(false)}
       />
     </section>
   );

@@ -32,6 +32,7 @@ export interface Sale {
   clientName?: string;
   clientAddress?: string;
   clientPhone?: string;
+  clientVille?: string;
   // Informations d'avance
   reste?: number;
   nextPaymentDate?: string;

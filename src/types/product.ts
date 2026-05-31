@@ -25,6 +25,12 @@ export interface ProductCaracteristique {
   code: string;
 }
 
+export interface ProductAchat {
+  date: string;
+  quantity: number;
+  purchasePrice: number;
+}
+
 export interface Product {
   id: string;
   code?: string; // Code unique du produit (7 caractères: P/T + chiffres + lettres)
@@ -37,7 +43,9 @@ export interface Product {
   photos?: string[]; // URLs des photos du produit (stockées dans /uploads)
   mainPhoto?: string; // URL de la photo principale
   fournisseur?: string; // Nom du fournisseur
-  caracteristique?: ProductCaracteristique; // Caractéristique imprimable (nom, numero, codeBarre, code)
+  caracteristique?: ProductCaracteristique;
+  dateAchat?: string; // Date du premier achat
+  achats?: ProductAchat[]; // Historique des achats
 }
 
 export interface ProductFormData {
@@ -46,4 +54,6 @@ export interface ProductFormData {
   quantity: number;
   sellingPrice?: number;
   fournisseur?: string;
+  dateAchat?: string;
+  newPurchase?: ProductAchat;
 }

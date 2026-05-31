@@ -40,3 +40,4 @@ export { default as indisponibleApiService } from './indisponibleApi';
 export { default as shareLinksApiService } from './shareLinksApi';
 export { default as rdvNotificationsApiService } from './rdvNotificationsApi';
 export { default as nouvelleAchatApiService } from './nouvelleAchatApi';
+export { clientsVillesApi, livraisonVilleApi } from './villesApi';

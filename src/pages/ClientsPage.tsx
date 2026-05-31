@@ -16,6 +16,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Edit, Trash2, Phone, MapPin, Users, Sparkles, Crown, Star, MessageSquare, PhoneCall, Navigation, Plus, Camera, User, ArrowUp, ArrowDown } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import axios from 'axios';
+import { clientsVillesApi } from '@/services/api/villesApi';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import ScrollToTop from '@/components/ScrollToTop';
@@ -61,7 +62,15 @@ const ClientsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formData, setFormData] = useState<{ nom: string; phones: string[]; addresses: string[] }>({ nom: '', phones: [''], addresses: [''] });
+  const [formData, setFormData] = useState<{ nom: string; phones: string[]; addresses: string[]; ville: string; villes: string[] }>({ nom: '', phones: [''], addresses: [''], ville: '', villes: [''] });
+  const [availableVilles, setAvailableVilles] = useState<string[]>([]);
+
+  // Charger les villes disponibles
+  useEffect(() => {
+    if (isAddDialogOpen) {
+      clientsVillesApi.getAll().then(setAvailableVilles).catch(() => setAvailableVilles([]));
+    }
+  }, [isAddDialogOpen]);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [removeExistingPhoto, setRemoveExistingPhoto] = useState(false);
@@ -161,12 +170,14 @@ const ClientsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => 
   // =========================================================================
   // CRUD Handlers
   // =========================================================================
-  const resetForm = () => { setFormData({ nom: '', phones: [''], addresses: [''] }); setEditingClient(null); setPhotoFile(null); setPhotoPreview(null); setRemoveExistingPhoto(false); };
+  const resetForm = () => { setFormData({ nom: '', phones: [''], addresses: [''], ville: '', villes: [''] }); setEditingClient(null); setPhotoFile(null); setPhotoPreview(null); setRemoveExistingPhoto(false); };
   const handleAddClient = () => { resetForm(); setIsAddDialogOpen(true); };
   const handleEditClient = (client: Client) => {
     const phones = client.phones && client.phones.length > 0 ? client.phones : [client.phone || ''];
     const addresses = client.addresses && client.addresses.length > 0 ? client.addresses : [client.adresse || ''];
-    setFormData({ nom: client.nom, phones, addresses });
+    const rawVilles = Array.isArray((client as any).villes) ? (client as any).villes : [];
+    const villes = addresses.map((_, i) => (rawVilles[i] !== undefined ? rawVilles[i] : (i === 0 ? ((client as any).ville || '') : '')));
+    setFormData({ nom: client.nom, phones, addresses, ville: villes[0] || '', villes });
     setEditingClient(client);
     setPhotoFile(null);
     setPhotoPreview(client.photo ? getClientPhotoUrl(client) : null);
@@ -187,21 +198,42 @@ const ClientsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => 
 
   const buildFormData = () => {
     const fd = new FormData();
+    const validAddresses: string[] = [];
+    const validVilles: string[] = [];
+    formData.addresses.forEach((a, i) => {
+      if (a.trim()) {
+        validAddresses.push(a);
+        validVilles.push((formData.villes[i] || '').trim());
+      }
+    });
     const validPhones = formData.phones.filter(p => p.trim());
-    const validAddresses = formData.addresses.filter(a => a.trim());
     fd.append('nom', formData.nom);
     fd.append('phones', JSON.stringify(validPhones));
     fd.append('addresses', JSON.stringify(validAddresses));
     fd.append('adresse', validAddresses[0] || '');
+    fd.append('villes', JSON.stringify(validVilles));
+    fd.append('ville', (validVilles[0] || formData.ville || '').trim());
     if (photoFile) fd.append('photo', photoFile);
     if (editingClient && removeExistingPhoto && !photoFile) fd.append('removePhoto', 'true');
     return fd;
+  };
+
+  // Enregistre toute nouvelle ville saisie dans la base clients-villes.json
+  const persistNewVilles = async () => {
+    const known = new Set(availableVilles.map(v => v.toLowerCase()));
+    const toAdd = (formData.villes || [])
+      .map(v => (v || '').trim())
+      .filter(v => v && !known.has(v.toLowerCase()));
+    for (const v of toAdd) {
+      try { await clientsVillesApi.add(v); } catch {}
+    }
   };
 
   const confirmAdd = async () => {
     setIsSubmitting(true);
     try {
       const token = localStorage.getItem('token');
+      await persistNewVilles();
       const fd = buildFormData();
       await axios.post(`${API_BASE_URL}/api/clients`, fd, { 
         headers: { 
@@ -221,6 +253,7 @@ const ClientsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => 
     setIsSubmitting(true);
     try {
       const token = localStorage.getItem('token');
+      await persistNewVilles();
       const fd = buildFormData();
       await axios.put(`${API_BASE_URL}/api/clients/${editingClient.id}`, fd, { 
         headers: { 
@@ -555,52 +588,95 @@ const ClientsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => 
               </div>
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Adresse(s)</Label>
-                  <Button type="button" variant="ghost" size="sm" onClick={() => setFormData(prev => ({ ...prev, addresses: [...prev.addresses, ''] }))} className="h-7 w-7 p-0 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white shadow-md">
+                  <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Adresse(s) & Ville</Label>
+                  <Button type="button" variant="ghost" size="sm" onClick={() => setFormData(prev => ({ ...prev, addresses: [...prev.addresses, ''], villes: [...(prev.villes || []), ''] }))} className="h-7 w-7 p-0 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white shadow-md">
                     <Plus className="w-3.5 h-3.5" />
                   </Button>
                 </div>
-                <div className="space-y-2">
-                  {formData.addresses.map((addr, index) => (
-                    <div key={index} className="flex items-center gap-2">
-                      <div className="flex-1 relative">
-                        <Input
-                          type="text"
-                          value={addr}
-                          onChange={(e) => setFormData(prev => ({ ...prev, addresses: prev.addresses.map((a, i) => i === index ? e.target.value : a) }))}
-                          placeholder={index === 0 ? "Adresse principale" : `Adresse ${index + 1}`}
-                          className="border-gray-200 dark:border-gray-700 focus:ring-blue-500 focus:border-blue-500 pr-24"
-                          required={index === 0}
-                        />
-                        {index === 0 ? (
-                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/30 px-2 py-0.5 rounded-full">
-                            Principal
-                          </span>
-                        ) : (
-                          <button
-                            type="button"
-                            title="Définir comme principale"
-                            onClick={() => setFormData(prev => {
-                              const arr = [...prev.addresses];
-                              const [item] = arr.splice(index, 1);
-                              arr.unshift(item);
-                              return { ...prev, addresses: arr };
-                            })}
-                            className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 px-2 py-0.5 rounded-full border border-blue-300/40"
-                          >
-                            ★ Principal
-                          </button>
+                <div className="space-y-3">
+                  {formData.addresses.map((addr, index) => {
+                    const villeVal = formData.villes[index] || '';
+                    const isCustomVille = villeVal && !availableVilles.some(v => v.toLowerCase() === villeVal.toLowerCase());
+                    return (
+                    <div key={index} className="space-y-2 p-3 rounded-xl border border-blue-100 dark:border-blue-900/40 bg-blue-50/40 dark:bg-blue-900/10">
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1 relative">
+                          <Input
+                            type="text"
+                            value={addr}
+                            onChange={(e) => setFormData(prev => ({ ...prev, addresses: prev.addresses.map((a, i) => i === index ? e.target.value : a) }))}
+                            placeholder={index === 0 ? "Adresse principale" : `Adresse ${index + 1}`}
+                            className="border-gray-200 dark:border-gray-700 focus:ring-blue-500 focus:border-blue-500 pr-24"
+                            required={index === 0}
+                          />
+                          {index === 0 ? (
+                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/30 px-2 py-0.5 rounded-full">
+                              Principal
+                            </span>
+                          ) : (
+                            <button
+                              type="button"
+                              title="Définir comme principale"
+                              onClick={() => setFormData(prev => {
+                                const arr = [...prev.addresses];
+                                const villesArr = [...(prev.villes || [])];
+                                const [item] = arr.splice(index, 1);
+                                const [vItem] = villesArr.splice(index, 1);
+                                arr.unshift(item);
+                                villesArr.unshift(vItem || '');
+                                return { ...prev, addresses: arr, villes: villesArr, ville: villesArr[0] || prev.ville };
+                              })}
+                              className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 px-2 py-0.5 rounded-full border border-blue-300/40"
+                            >
+                              ★ Principal
+                            </button>
+                          )}
+                        </div>
+                        {formData.addresses.length > 1 && (
+                          <Button type="button" variant="ghost" size="sm" onClick={() => setFormData(prev => ({ ...prev, addresses: prev.addresses.filter((_, i) => i !== index), villes: (prev.villes || []).filter((_, i) => i !== index) }))} className="h-7 w-7 p-0 rounded-full hover:bg-red-100 dark:hover:bg-red-900/30 text-red-500">
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
                         )}
                       </div>
-                      {formData.addresses.length > 1 && (
-                        <Button type="button" variant="ghost" size="sm" onClick={() => setFormData(prev => ({ ...prev, addresses: prev.addresses.filter((_, i) => i !== index) }))} className="h-7 w-7 p-0 rounded-full hover:bg-red-100 dark:hover:bg-red-900/30 text-red-500">
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </Button>
-                      )}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <select
+                          value={isCustomVille ? '__custom__' : villeVal}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setFormData(prev => {
+                              const villesArr = [...(prev.villes || [])];
+                              while (villesArr.length <= index) villesArr.push('');
+                              villesArr[index] = val === '__custom__' ? '' : val;
+                              return { ...prev, villes: villesArr, ville: index === 0 ? (val === '__custom__' ? '' : val) : prev.ville };
+                            });
+                          }}
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900"
+                        >
+                          <option value="">— Ville de l'adresse —</option>
+                          {availableVilles.map(v => <option key={v} value={v}>{v}</option>)}
+                          <option value="__custom__">+ Nouvelle ville…</option>
+                        </select>
+                        {(isCustomVille || (!villeVal && (formData.villes[index] === ''))) && (
+                          <Input
+                            type="text"
+                            value={isCustomVille ? villeVal : ''}
+                            onChange={(e) => setFormData(prev => {
+                              const villesArr = [...(prev.villes || [])];
+                              while (villesArr.length <= index) villesArr.push('');
+                              villesArr[index] = e.target.value;
+                              return { ...prev, villes: villesArr, ville: index === 0 ? e.target.value : prev.ville };
+                            })}
+                            placeholder="Saisir une nouvelle ville"
+                            className="border-gray-200 dark:border-gray-700"
+                          />
+                        )}
+                      </div>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
+
             </div>
             <DialogFooter className="gap-3">
               <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)} disabled={isSubmitting} className="border-gray-300 hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-800">Annuler</Button>
