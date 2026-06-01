@@ -7,7 +7,7 @@ import { Trash2, Edit3, Camera } from 'lucide-react';
 import { Product } from '@/types';
 import ProductSearchInput from '../../ProductSearchInput';
 import SaleQuantityInput from '../SaleQuantityInput';
-import { FormProduct } from '../types/saleFormTypes';
+import { FormProduct, ReductionType, computeReductionAmount } from '../types/saleFormTypes';
 import { livraisonVilleApi, LivraisonVille } from '@/services/api/villesApi';
 
 interface SaleProductCardProps {
@@ -22,6 +22,7 @@ interface SaleProductCardProps {
   onAvanceChange: (value: string, index: number) => void;
   onDeliveryChange: (location: string, fee: string, index: number) => void;
   onShowSlideshow: (product: FormProduct) => void;
+  onReductionChange: (value: string, type: ReductionType, index: number) => void;
   clientVille?: string;
 }
 
@@ -37,6 +38,7 @@ const SaleProductCard: React.FC<SaleProductCardProps> = ({
   onAvanceChange,
   onDeliveryChange,
   onShowSlideshow,
+  onReductionChange,
   clientVille,
 }) => {
   const [villes, setVilles] = useState<LivraisonVille[]>([]);
@@ -209,6 +211,53 @@ const SaleProductCard: React.FC<SaleProductCardProps> = ({
               disabled={isSubmitting || product.isAdvanceProduct}
               showAvailableStock={!product.isAdvanceProduct}
             />
+
+            {/* Réduction (par unité ou %) */}
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2">
+                Réduction
+                <span className="text-[10px] text-muted-foreground font-normal">
+                  (facultatif)
+                </span>
+              </Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={product.reduction}
+                  onChange={(e) => onReductionChange(
+                    e.target.value,
+                    (e.target.value && !product.reductionType ? 'amount' : product.reductionType) as ReductionType,
+                    index
+                  )}
+                  placeholder="0"
+                  disabled={isSubmitting || product.isAdvanceProduct}
+                  className="flex-1"
+                />
+                <select
+                  value={product.reductionType || ''}
+                  onChange={(e) => onReductionChange(product.reduction, e.target.value as ReductionType, index)}
+                  className="px-2 py-2 border border-gray-300 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white dark:bg-gray-900 text-sm"
+                  disabled={isSubmitting || product.isAdvanceProduct}
+                >
+                  <option value="">—</option>
+                  <option value="amount">€ / unité</option>
+                  <option value="percent">% du PU</option>
+                </select>
+              </div>
+              {product.reduction && product.reductionType && (
+                <p className="text-xs text-emerald-600">
+                  -{computeReductionAmount(
+                    Number(product.sellingPriceUnit || 0),
+                    Number(product.quantitySold || 0),
+                    Number(product.reduction || 0),
+                    product.reductionType
+                  ).toFixed(2)} € appliqués
+                </p>
+              )}
+            </div>
+
 
             {/* Avance (visible uniquement pour les prêts produits) */}
             {product.isPretProduit && (

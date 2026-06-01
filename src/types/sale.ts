@@ -9,6 +9,14 @@ export interface SaleProduct {
   profit: number;
   deliveryFee?: number;
   deliveryLocation?: string;
+  /** Montant ou pourcentage saisi pour la réduction */
+  reduction?: number;
+  /** Type de réduction: 'amount' (par unité) ou 'percent' (% du PU) */
+  reductionType?: '' | 'amount' | 'percent';
+  /** Prix de vente total AVANT application de la réduction */
+  sellingPriceBeforeReduction?: number;
+  /** Montant total de réduction appliquée */
+  reductionAmount?: number;
 }
 
 export interface Sale {

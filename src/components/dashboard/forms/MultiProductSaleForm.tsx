@@ -22,7 +22,7 @@ import SaleProductCard from './sections/SaleProductCard';
 import SaleTotalsSection from './sections/SaleTotalsSection';
 import SaleFormActions from './sections/SaleFormActions';
 import ReservedProductModal from './modals/ReservedProductModal';
-import { FormProduct, createEmptyFormProduct } from './types/saleFormTypes';
+import { FormProduct, ReductionType, createEmptyFormProduct, computeReductionAmount } from './types/saleFormTypes';
 
 interface MultiProductSaleFormProps {
   isOpen: boolean;
@@ -160,7 +160,9 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
               isPretProduit: isPret,
               deliveryLocation: saleProduct.deliveryLocation || 'Saint-Denis',
               deliveryFee: (saleProduct.deliveryFee || 0).toString(),
-              avancePretProduit: isPret && saleProduct.sellingPrice > 0 ? saleProduct.sellingPrice.toString() : ''
+              avancePretProduit: isPret && saleProduct.sellingPrice > 0 ? saleProduct.sellingPrice.toString() : '',
+              reduction: (saleProduct as any).reduction !== undefined && (saleProduct as any).reduction !== null ? String((saleProduct as any).reduction) : '',
+              reductionType: ((saleProduct as any).reductionType as any) || ''
             };
           });
           setFormProducts(loadedProducts);
@@ -539,8 +541,8 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
     }
   };
 
-  // Mise à jour du profit
-  const updateProfit = (index: number, priceUnit: string, quantity: string, purchasePriceUnit: string) => {
+  // Mise à jour du profit (en tenant compte de la réduction)
+  const updateProfit = (index: number, priceUnit: string, quantity: string, purchasePriceUnit: string, reductionOverride?: string, reductionTypeOverride?: ReductionType) => {
     const product = formProducts[index];
     if (product.isAdvanceProduct) {
       setFormProducts(prev => {
@@ -549,7 +551,13 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
         return newProducts;
       });
     } else {
-      const profit = calculateSaleProfit(priceUnit, quantity, purchasePriceUnit);
+      const q = Number(quantity || 0);
+      const pu = Number(priceUnit || 0);
+      const cu = Number(purchasePriceUnit || 0);
+      const reductionVal = Number((reductionOverride !== undefined ? reductionOverride : product.reduction) || 0);
+      const reductionTyp = (reductionTypeOverride !== undefined ? reductionTypeOverride : product.reductionType);
+      const reductionAmt = computeReductionAmount(pu, q, reductionVal, reductionTyp);
+      const profit = (pu * q - cu * q - reductionAmt).toFixed(2);
       setFormProducts(prev => {
         const newProducts = [...prev];
         newProducts[index] = { ...newProducts[index], profit };
@@ -557,6 +565,17 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
       });
     }
   };
+
+  const handleReductionChange = (value: string, type: ReductionType, index: number) => {
+    setFormProducts(prev => {
+      const newProducts = [...prev];
+      newProducts[index] = { ...newProducts[index], reduction: value, reductionType: value ? (type || 'amount') : '' };
+      return newProducts;
+    });
+    const product = formProducts[index];
+    updateProfit(index, product.sellingPriceUnit, product.quantitySold, product.purchasePriceUnit, value, value ? (type || 'amount') : '');
+  };
+
 
   const handleSellingPriceChange = (value: string, index: number) => {
     setFormProducts(prev => {
@@ -659,23 +678,30 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
       const purchasePriceUnit = Number(product.purchasePriceUnit || 0);
       const sellingPriceUnit = Number(product.sellingPriceUnit || 0);
       const deliveryFee = Number(product.deliveryFee || 0);
-      
+      const reductionVal = Number(product.reduction || 0);
+      const reductionAmt = product.isAdvanceProduct
+        ? 0
+        : computeReductionAmount(sellingPriceUnit, quantity, reductionVal, product.reductionType);
+
       let purchasePrice, sellingPrice;
       if (product.isAdvanceProduct) {
         purchasePrice = purchasePriceUnit;
         sellingPrice = sellingPriceUnit;
       } else {
         purchasePrice = purchasePriceUnit * quantity;
-        sellingPrice = sellingPriceUnit * quantity;
+        sellingPrice = sellingPriceUnit * quantity - reductionAmt;
       }
-      
+
       return {
         totalPurchasePrice: totals.totalPurchasePrice + purchasePrice,
         totalSellingPrice: totals.totalSellingPrice + sellingPrice + deliveryFee,
         totalProfit: totals.totalProfit + Number(product.profit || 0),
-        totalDeliveryFee: totals.totalDeliveryFee + deliveryFee
+        totalDeliveryFee: totals.totalDeliveryFee + deliveryFee,
+        totalReduction: (totals as any).totalReduction
+          ? (totals as any).totalReduction + reductionAmt
+          : reductionAmt
       };
-    }, { totalPurchasePrice: 0, totalSellingPrice: 0, totalProfit: 0, totalDeliveryFee: 0 });
+    }, { totalPurchasePrice: 0, totalSellingPrice: 0, totalProfit: 0, totalDeliveryFee: 0, totalReduction: 0 });
   };
 
   const handleAvancePriceChange = (value: string) => {
@@ -717,17 +743,26 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
                               product.description.toLowerCase().includes('prêt') || 
                               product.description.toLowerCase().includes('pret');
         
-        let purchasePrice, sellingPrice;
+        const reductionVal = Number(product.reduction || 0);
+        const reductionTyp: ReductionType = product.reductionType || '';
+        const reductionAmt = product.isAdvanceProduct || isPretProduit
+          ? 0
+          : computeReductionAmount(sellingPriceUnit, quantity, reductionVal, reductionTyp);
+
+        let purchasePrice, sellingPrice, sellingPriceBeforeReduction;
         if (product.isAdvanceProduct) {
           purchasePrice = purchasePriceUnit;
           sellingPrice = sellingPriceUnit;
+          sellingPriceBeforeReduction = sellingPriceUnit;
         } else if (isPretProduit) {
           purchasePrice = purchasePriceUnit * quantity;
           const avanceValue = product.avancePretProduit?.trim();
           sellingPrice = avanceValue && Number(avanceValue) > 0 ? Number(avanceValue) : 0;
+          sellingPriceBeforeReduction = sellingPrice;
         } else {
           purchasePrice = purchasePriceUnit * quantity;
-          sellingPrice = sellingPriceUnit * quantity;
+          sellingPriceBeforeReduction = sellingPriceUnit * quantity;
+          sellingPrice = sellingPriceBeforeReduction - reductionAmt;
         }
 
         return {
@@ -738,9 +773,14 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
           sellingPrice,
           profit: Number(product.profit),
           deliveryFee,
-          deliveryLocation: product.deliveryLocation
+          deliveryLocation: product.deliveryLocation,
+          reduction: reductionVal || 0,
+          reductionType: reductionTyp,
+          reductionAmount: reductionAmt,
+          sellingPriceBeforeReduction
         };
       });
+
 
       const totals = getTotals();
       const avancePriceValue = Number(avancePrice) || 0;
@@ -1033,6 +1073,7 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
                     onAvanceChange={handleAvanceProductChange}
                     onDeliveryChange={handleDeliveryChange}
                     onShowSlideshow={handleShowSlideshow}
+                    onReductionChange={handleReductionChange}
                     clientVille={clientVille}
                   />
                 </div>
