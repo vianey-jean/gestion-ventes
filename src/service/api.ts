@@ -174,6 +174,29 @@ export const depenseService = {
   },
 };
 
+export const versementService = {
+  getAll: async () => {
+    const response = await apiInstance.get('/api/versements');
+    return response.data as { maxMonthly: number; versements: Array<{ id: string; date: string; montant: number; description?: string; createdAt?: string }> };
+  },
+  add: async (data: { date: string; montant: number; description?: string }) => {
+    const response = await apiInstance.post('/api/versements', data);
+    return response.data;
+  },
+  update: async (id: string, data: Partial<{ date: string; montant: number; description: string }>) => {
+    const response = await apiInstance.put(`/api/versements/${id}`, data);
+    return response.data;
+  },
+  remove: async (id: string) => {
+    await apiInstance.delete(`/api/versements/${id}`);
+    return true;
+  },
+  setMax: async (maxMonthly: number) => {
+    const response = await apiInstance.put('/api/versements/max', { maxMonthly });
+    return response.data;
+  },
+};
+
 export const pretFamilleService = {
   getPretFamilles: () => pretFamilleApiService.getAll(),
   addPretFamille: (pret: Omit<PretFamille, 'id'>) => pretFamilleApiService.create(pret),

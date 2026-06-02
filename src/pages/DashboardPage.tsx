@@ -310,18 +310,20 @@ const DashboardPage = () => {
 
       <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20 dark:from-[#030014] dark:via-[#090018] dark:to-[#10002d]">
 
-        {/* ======================= BACKGROUND FX ======================= */}
+        {/* ======================= BACKGROUND FX (desktop only pour perf mobile) ======================= */}
 
-        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        {!isMobile && (
+          <div className="pointer-events-none absolute inset-0 overflow-hidden">
 
-          <div className="absolute -top-40 -left-40 h-[500px] w-[500px] rounded-full bg-violet-500/10 blur-[140px]" />
+            <div className="absolute -top-40 -left-40 h-[500px] w-[500px] rounded-full bg-violet-500/10 blur-[140px]" />
 
-          <div className="absolute top-1/2 -right-40 h-[450px] w-[450px] rounded-full bg-fuchsia-500/10 blur-[140px]" />
+            <div className="absolute top-1/2 -right-40 h-[450px] w-[450px] rounded-full bg-fuchsia-500/10 blur-[140px]" />
 
-          <div className="absolute bottom-0 left-1/3 h-[350px] w-[350px] rounded-full bg-cyan-500/10 blur-[120px]" />
+            <div className="absolute bottom-0 left-1/3 h-[350px] w-[350px] rounded-full bg-cyan-500/10 blur-[120px]" />
 
-          <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05] bg-[radial-gradient(circle_at_center,white_1px,transparent_1px)] [background-size:24px_24px]" />
-        </div>
+            <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05] bg-[radial-gradient(circle_at_center,white_1px,transparent_1px)] [background-size:24px_24px]" />
+          </div>
+        )}
 
         {/* ======================= MOBILE BAR ======================= */}
 
@@ -331,7 +333,7 @@ const DashboardPage = () => {
             <motion.div
               initial={{ opacity: 0, y: -15 }}
               animate={{ opacity: 1, y: 0 }}
-              className="relative overflow-hidden rounded-3xl border border-white/20 bg-white/60 dark:bg-white/[0.04] backdrop-blur* shadow-[0_10px_60px_rgba(0,0,0,0.25)]"
+              className="relative overflow-hidden rounded-3xl border border-white/20 bg-white/80 dark:bg-white/[0.04] shadow-[0_10px_60px_rgba(0,0,0,0.25)]"
             >
 
               <div className="absolute inset-0 bg-gradient-to-r from-white/10 via-white/5 to-transparent pointer-events-none" />
@@ -340,7 +342,7 @@ const DashboardPage = () => {
 
                 <button
                   onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                  className="flex items-center gap-2 rounded-2xl border border-white/20 bg-white/40 dark:bg-white/5 px-4 py-2.5 shadow-lg backdrop-blur*"
+                  className="flex items-center gap-2 rounded-2xl border border-white/20 bg-white/60 dark:bg-white/5 px-4 py-2.5 shadow-lg"
                 >
                   {mobileMenuOpen ? (
                     <X className="h-5 w-5 text-violet-500" />

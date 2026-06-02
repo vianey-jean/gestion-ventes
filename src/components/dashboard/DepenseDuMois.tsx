@@ -12,6 +12,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { depenseService } from '@/service/api';
 import { useApp } from '@/contexts/AppContext';
 import PremiumLoading from '@/components/ui/premium-loading';
+import VersementEspece from './VersementEspece';
 
 const formatMonthInFrench = (monthIndex: number): string => {
   const months = [
@@ -610,7 +611,12 @@ const DepenseDuMois = () => {
     </div>
 
   </div>
-</div>
+      </div>
+
+      {/* Versement espèce - composant ultra-luxe */}
+      <VersementEspece />
+
+      
 
       
       {/* Tableau des mouvements modernisé */}
