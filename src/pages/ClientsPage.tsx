@@ -13,7 +13,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Edit, Trash2, Phone, MapPin, Users, Sparkles, Crown, Star, MessageSquare, PhoneCall, Navigation, Plus, Camera, User, ArrowUp, ArrowDown } from 'lucide-react';
+import { Edit, Trash2, Phone, MapPin, Users, Sparkles, Crown, Star, MessageSquare, PhoneCall, Navigation, Plus, Camera, User, ArrowUp, ArrowDown, Eye } from 'lucide-react';
+import ClientDetailModal from '@/components/clients/ClientDetailModal';
 import { useIsMobile } from '@/hooks/use-mobile';
 import axios from 'axios';
 import { clientsVillesApi } from '@/services/api/villesApi';
@@ -88,6 +89,7 @@ const ClientsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => 
   const [selectedAddress, setSelectedAddress] = useState<string>('');
   const [zoomPhoto, setZoomPhoto] = useState<{ url: string; name: string } | null>(null);
   const [isMergeOpen, setIsMergeOpen] = useState(false);
+  const [detailClient, setDetailClient] = useState<Client | null>(null);
 
   const photoInputRef = useRef<HTMLInputElement>(null);
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:10000';
@@ -391,6 +393,9 @@ const ClientsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => 
                     </div>
                   </div>
                   <div className="flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-y-2 group-hover:translate-y-0 shrink-0">
+                    <Button variant="ghost" size="sm" onClick={() => setDetailClient(client)} className="h-10 w-10 p-0 hover:bg-purple-100 dark:hover:bg-purple-900/20 rounded-full hover:scale-110 transition-transform duration-200" title="Voir détail">
+                      <Eye className="w-4 h-4 text-purple-600" />
+                    </Button>
                     <Button variant="ghost" size="sm" onClick={() => handleEditClient(client)} className="h-10 w-10 p-0 hover:bg-blue-100 dark:hover:bg-blue-900/20 rounded-full hover:scale-110 transition-transform duration-200">
                       <Edit className="w-4 h-4 text-blue-600" />
                     </Button>
@@ -750,6 +755,14 @@ const ClientsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => 
         onClose={() => setIsMergeOpen(false)}
         clients={clients}
         onMerged={() => refetch()}
+      />
+
+      {/* Modale de détail client avec impression */}
+      <ClientDetailModal
+        open={!!detailClient}
+        onOpenChange={(o) => { if (!o) setDetailClient(null); }}
+        client={detailClient}
+        photoUrl={detailClient ? getClientPhotoUrl(detailClient as any) : null}
       />
     </div>
     </>
