@@ -139,7 +139,7 @@ const ClientDetailModal: React.FC<Props> = ({ open, onOpenChange, client, photoU
       };
 
       let cursorY = margin;
-      drawBlock(client.nom, cursorY, nameH, 'helvetica', 'bold', [15, 23, 42], 80);
+      drawBlock(`Fb: ${client.nom}`, cursorY, nameH, 'helvetica', 'bold', [15, 23, 42], 80);
       cursorY += nameH + gap;
       drawBlock(mainPhone, cursorY, phoneH, 'helvetica', 'bold', [5, 122, 85], 60);
       cursorY += phoneH + gap;
@@ -183,7 +183,7 @@ const ClientDetailModal: React.FC<Props> = ({ open, onOpenChange, client, photoU
         };
 
         let yMm = margin;
-        drawCanvas(client.nom, yMm, nameH, '900', '#0f172a');
+        drawCanvas(`Fb: ${client.nom}`, yMm, nameH, '900', '#0f172a');
         yMm += nameH + gap;
         drawCanvas(mainPhone, yMm, phoneH, '700', '#057a55');
         yMm += phoneH + gap;
