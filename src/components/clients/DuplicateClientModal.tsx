@@ -107,115 +107,266 @@ const DuplicateClientModal: React.FC<DuplicateClientModalProps> = ({
           </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 -mx-2 px-2">
-          <div className="space-y-3 py-2">
-            {matches.map(({ client, fields }) => {
-              const isEditing = editingClient && editingClient.id === client.id;
-              return (
-                <div
-                  key={client.id || client.nom}
-                  className="rounded-2xl border-2 border-amber-200/70 dark:border-amber-800/50 bg-white/80 dark:bg-gray-900/60 p-4 shadow-md"
-                >
-                  {!isEditing ? (
-                    <>
-                      <div className="flex flex-wrap items-center gap-2 mb-2">
-                        <div className="font-bold text-base text-gray-900 dark:text-white flex items-center gap-2">
-                          <User className="h-4 w-4 text-purple-500" />
-                          {client.nom}
-                        </div>
-                        {fields.map((f) => (
-                          <Badge key={f} className="bg-amber-100 text-amber-800 border border-amber-300 dark:bg-amber-900/40 dark:text-amber-200">
-                            ⚠ {fieldLabel[f]} identique
-                          </Badge>
-                        ))}
-                      </div>
-                      <div className="text-sm text-gray-600 dark:text-gray-300 space-y-1">
-                        {(client.phones && client.phones.length ? client.phones : [client.phone]).filter(Boolean).map((p, i) => (
-                          <div key={i} className="flex items-center gap-2">
-                            <Phone className="h-3.5 w-3.5 text-emerald-500" /> {p}
-                          </div>
-                        ))}
-                        {(client.addresses && client.addresses.length ? client.addresses : [client.adresse]).filter(Boolean).map((a, i) => (
-                          <div key={i} className="flex items-center gap-2">
-                            <MapPin className="h-3.5 w-3.5 text-blue-500" /> {a}
-                          </div>
-                        ))}
-                      </div>
-                      <div className="mt-3 flex flex-wrap gap-2">
-                        <Button
-                          type="button"
-                          size="sm"
-                          onClick={() => { onUseExisting(client); onClose(); }}
-                          className="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white"
-                        >
-                          <UserCheck className="h-4 w-4 mr-1" />
-                          Utiliser ce client
-                        </Button>
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="outline"
-                          onClick={() => startEdit(client)}
-                          className="border-amber-300 hover:bg-amber-50 dark:hover:bg-amber-900/20"
-                        >
-                          <Edit3 className="h-4 w-4 mr-1" />
-                          Modifier puis utiliser
-                        </Button>
-                      </div>
-                    </>
-                  ) : (
-                    <div className="space-y-3">
-                      <div className="font-semibold text-sm flex items-center gap-2 text-amber-700 dark:text-amber-300">
-                        <Edit3 className="h-4 w-4" /> Modification de "{client.nom}"
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-xs font-semibold">Nom</Label>
-                        <Input value={editNom} onChange={(e) => setEditNom(e.target.value)} />
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-xs font-semibold">Téléphone(s)</Label>
-                        {editPhones.map((p, i) => (
-                          <Input
-                            key={i}
-                            value={p}
-                            onChange={(e) => setEditPhones((prev) => prev.map((x, j) => (j === i ? e.target.value : x)))}
-                            placeholder={i === 0 ? 'Principal' : `Téléphone ${i + 1}`}
-                          />
-                        ))}
-                        <Button type="button" variant="ghost" size="sm" onClick={() => setEditPhones((p) => [...p, ''])}>
-                          + Ajouter un numéro
-                        </Button>
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-xs font-semibold">Adresse(s)</Label>
-                        {editAddresses.map((a, i) => (
-                          <Input
-                            key={i}
-                            value={a}
-                            onChange={(e) => setEditAddresses((prev) => prev.map((x, j) => (j === i ? e.target.value : x)))}
-                            placeholder={i === 0 ? 'Principale' : `Adresse ${i + 1}`}
-                          />
-                        ))}
-                        <Button type="button" variant="ghost" size="sm" onClick={() => setEditAddresses((p) => [...p, ''])}>
-                          + Ajouter une adresse
-                        </Button>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button type="button" size="sm" onClick={saveEdit} disabled={saving} className="bg-emerald-600 hover:bg-emerald-700 text-white">
-                          <Save className="h-4 w-4 mr-1" />
-                          {saving ? 'Enregistrement…' : 'Enregistrer & utiliser'}
-                        </Button>
-                        <Button type="button" size="sm" variant="ghost" onClick={() => setEditingClient(null)}>
-                          <X className="h-4 w-4 mr-1" /> Annuler
-                        </Button>
-                      </div>
-                    </div>
-                  )}
+        <ScrollArea
+  className="
+    h-[65vh]
+    md:h-[500px]
+    w-full
+    overflow-hidden
+    touch-pan-y
+  "
+>
+  <div
+    className="
+      px-2
+      py-2
+      pb-12
+      space-y-3
+      min-h-full
+    "
+  >
+    {matches.map(({ client, fields }) => {
+      const isEditing =
+        editingClient && editingClient.id === client.id;
+
+      return (
+        <div
+          key={client.id || client.nom}
+          className="
+            rounded-2xl
+            border-2
+            border-amber-200/70
+            dark:border-amber-800/50
+            bg-white/80
+            dark:bg-gray-900/60
+            p-4
+            shadow-md
+          "
+        >
+          {!isEditing ? (
+            <>
+              <div className="flex flex-wrap items-center gap-2 mb-2">
+                <div className="font-bold text-base text-gray-900 dark:text-white flex items-center gap-2">
+                  <User className="h-4 w-4 text-purple-500" />
+                  {client.nom}
                 </div>
-              );
-            })}
-          </div>
-        </ScrollArea>
+
+                {fields.map((f) => (
+                  <Badge
+                    key={f}
+                    className="
+                      bg-amber-100
+                      text-amber-800
+                      border
+                      border-amber-300
+                      dark:bg-amber-900/40
+                      dark:text-amber-200
+                    "
+                  >
+                    ⚠ {fieldLabel[f]} identique
+                  </Badge>
+                ))}
+              </div>
+
+              <div className="text-sm text-gray-600 dark:text-gray-300 space-y-1">
+                {(client.phones?.length
+                  ? client.phones
+                  : [client.phone]
+                )
+                  .filter(Boolean)
+                  .map((p, i) => (
+                    <div
+                      key={i}
+                      className="flex items-center gap-2"
+                    >
+                      <Phone className="h-3.5 w-3.5 text-emerald-500" />
+                      {p}
+                    </div>
+                  ))}
+
+                {(client.addresses?.length
+                  ? client.addresses
+                  : [client.adresse]
+                )
+                  .filter(Boolean)
+                  .map((a, i) => (
+                    <div
+                      key={i}
+                      className="flex items-center gap-2"
+                    >
+                      <MapPin className="h-3.5 w-3.5 text-blue-500" />
+                      {a}
+                    </div>
+                  ))}
+              </div>
+
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() => {
+                    onUseExisting(client);
+                    onClose();
+                  }}
+                  className="
+                    bg-gradient-to-r
+                    from-emerald-500
+                    to-green-600
+                    hover:from-emerald-600
+                    hover:to-green-700
+                    text-white
+                  "
+                >
+                  <UserCheck className="h-4 w-4 mr-1" />
+                  Utiliser ce client
+                </Button>
+
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => startEdit(client)}
+                  className="
+                    border-amber-300
+                    hover:bg-amber-50
+                    dark:hover:bg-amber-900/20
+                  "
+                >
+                  <Edit3 className="h-4 w-4 mr-1" />
+                  Modifier puis utiliser
+                </Button>
+              </div>
+            </>
+          ) : (
+            <div className="space-y-3">
+              <div className="font-semibold text-sm flex items-center gap-2 text-amber-700 dark:text-amber-300">
+                <Edit3 className="h-4 w-4" />
+                Modification de "{client.nom}"
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-xs font-semibold">
+                  Nom
+                </Label>
+
+                <Input
+                  value={editNom}
+                  onChange={(e) =>
+                    setEditNom(e.target.value)
+                  }
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-xs font-semibold">
+                  Téléphone(s)
+                </Label>
+
+                {editPhones.map((p, i) => (
+                  <Input
+                    key={i}
+                    value={p}
+                    onChange={(e) =>
+                      setEditPhones((prev) =>
+                        prev.map((x, j) =>
+                          j === i ? e.target.value : x
+                        )
+                      )
+                    }
+                    placeholder={
+                      i === 0
+                        ? "Principal"
+                        : `Téléphone ${i + 1}`
+                    }
+                  />
+                ))}
+
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() =>
+                    setEditPhones((p) => [...p, ""])
+                  }
+                >
+                  + Ajouter un numéro
+                </Button>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-xs font-semibold">
+                  Adresse(s)
+                </Label>
+
+                {editAddresses.map((a, i) => (
+                  <Input
+                    key={i}
+                    value={a}
+                    onChange={(e) =>
+                      setEditAddresses((prev) =>
+                        prev.map((x, j) =>
+                          j === i ? e.target.value : x
+                        )
+                      )
+                    }
+                    placeholder={
+                      i === 0
+                        ? "Principale"
+                        : `Adresse ${i + 1}`
+                    }
+                  />
+                ))}
+
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() =>
+                    setEditAddresses((p) => [...p, ""])
+                  }
+                >
+                  + Ajouter une adresse
+                </Button>
+              </div>
+
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={saveEdit}
+                  disabled={saving}
+                  className="
+                    bg-emerald-600
+                    hover:bg-emerald-700
+                    text-white
+                  "
+                >
+                  <Save className="h-4 w-4 mr-1" />
+
+                  {saving
+                    ? "Enregistrement…"
+                    : "Enregistrer & utiliser"}
+                </Button>
+
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  onClick={() =>
+                    setEditingClient(null)
+                  }
+                >
+                  <X className="h-4 w-4 mr-1" />
+                  Annuler
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    })}
+  </div>
+</ScrollArea>
 
         <DialogFooter className="mt-4 gap-2 flex-wrap sm:flex-nowrap">
           <Button type="button" variant="outline" onClick={onClose}>
