@@ -26,6 +26,8 @@ import Layout from '@/components/Layout';
 import PremiumLoading from '@/components/ui/premium-loading';
 import ClientPhotoZoomModal from '@/components/clients/ClientPhotoZoomModal';
 import ClientMergeModal from '@/components/clients/ClientMergeModal';
+import DuplicateClientModal from '@/components/clients/DuplicateClientModal';
+import { findMatchingClients, type ClientMatch } from '@/utils/clientMatch';
 import { motion } from "framer-motion";
 import SEOHead from '@/components/SEOHead';
 
@@ -90,6 +92,8 @@ const ClientsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => 
   const [zoomPhoto, setZoomPhoto] = useState<{ url: string; name: string } | null>(null);
   const [isMergeOpen, setIsMergeOpen] = useState(false);
   const [detailClient, setDetailClient] = useState<Client | null>(null);
+  const [duplicateModalOpen, setDuplicateModalOpen] = useState(false);
+  const [duplicateMatches, setDuplicateMatches] = useState<ClientMatch[]>([]);
 
   const photoInputRef = useRef<HTMLInputElement>(null);
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:10000';
@@ -195,7 +199,19 @@ const ClientsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => 
       toast({ title: "Erreur", description: "Le nom, au moins un téléphone et une adresse sont obligatoires", variant: "destructive", className: "notification-erreur" });
       return;
     }
-    if (editingClient) { setShowEditConfirm(true); } else { setShowAddConfirm(true); }
+    if (editingClient) { setShowEditConfirm(true); return; }
+    // Détection de doublons côté création
+    const matches = findMatchingClients(clients as any, {
+      nom: formData.nom,
+      phones: validPhones,
+      addresses: validAddresses,
+    });
+    if (matches.length > 0) {
+      setDuplicateMatches(matches);
+      setDuplicateModalOpen(true);
+      return;
+    }
+    setShowAddConfirm(true);
   };
 
   const buildFormData = () => {
@@ -763,6 +779,45 @@ const ClientsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => 
         onOpenChange={(o) => { if (!o) setDetailClient(null); }}
         client={detailClient}
         photoUrl={detailClient ? getClientPhotoUrl(detailClient as any) : null}
+      />
+
+      {/* Modale de doublons clients */}
+      <DuplicateClientModal
+        isOpen={duplicateModalOpen}
+        onClose={() => setDuplicateModalOpen(false)}
+        matches={duplicateMatches}
+        typed={{
+          nom: formData.nom,
+          phones: formData.phones.filter(p => p.trim()),
+          addresses: formData.addresses.filter(a => a.trim()),
+        }}
+        onUseExisting={(c) => {
+          // Fermer la modale de doublon ET le formulaire d'ajout/édition (tout est déjà enregistré)
+          setDuplicateModalOpen(false);
+          setIsAddDialogOpen(false);
+          resetForm();
+          refetch();
+          toast({ title: 'Client enregistré', description: `${(c as any).nom} a été pris en compte`, className: 'notification-success' });
+        }}
+        onUpdateClient={async (clientId, patch) => {
+          try {
+            const token = localStorage.getItem('token');
+            const fd = new FormData();
+            fd.append('nom', patch.nom);
+            fd.append('phones', JSON.stringify(patch.phones));
+            fd.append('addresses', JSON.stringify(patch.addresses));
+            fd.append('adresse', patch.addresses[0] || '');
+            await axios.put(`${API_BASE_URL}/api/clients/${clientId}`, fd, {
+              headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' }
+            });
+            toast({ title: 'Client mis à jour', description: `${patch.nom} a été modifié`, className: 'notification-success' });
+            refetch();
+          } catch (err) {
+            console.error(err);
+            toast({ title: 'Erreur', description: 'Mise à jour impossible', variant: 'destructive', className: 'notification-erreur' });
+          }
+        }}
+        onCreateNew={() => setShowAddConfirm(true)}
       />
     </div>
     </>

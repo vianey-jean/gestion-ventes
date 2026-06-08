@@ -86,6 +86,8 @@ interface CommandeFormDialogProps {
   clientPhones?: string[];
   clientAddress: string;
   setClientAddress: (value: string) => void;
+  clientVille?: string;
+  setClientVille?: (value: string) => void;
   clientSearch: string;
   setClientSearch: (value: string) => void;
   showClientSuggestions: boolean;
@@ -154,6 +156,8 @@ const CommandeFormDialog: React.FC<CommandeFormDialogProps> = ({
   clientPhones = [],
   clientAddress,
   setClientAddress,
+  clientVille = '',
+  setClientVille,
   clientSearch,
   setClientSearch,
   showClientSuggestions,
@@ -200,6 +204,15 @@ const CommandeFormDialog: React.FC<CommandeFormDialogProps> = ({
   const [productCategoryFilter, setProductCategoryFilter] = React.useState<ProductCategory>('all');
   const categoryFilteredProducts = React.useMemo(() => filterProductsByCategory(filteredProducts, productCategoryFilter), [filteredProducts, productCategoryFilter]);
   const [selectedClientPhoto, setSelectedClientPhoto] = React.useState<string | null>(null);
+  // Villes disponibles (clients-villes.json)
+  const [availableVilles, setAvailableVilles] = React.useState<string[]>([]);
+  React.useEffect(() => {
+    if (!isOpen) return;
+    import('@/services/api/villesApi').then(({ clientsVillesApi }) => {
+      clientsVillesApi.getAll().then(setAvailableVilles).catch(() => setAvailableVilles([]));
+    });
+  }, [isOpen]);
+  const isCustomVille = !!clientVille && !availableVilles.some(v => v.toLowerCase() === clientVille.toLowerCase());
 
   // ===== Vérification de disponibilité (indisponibilité) =====
   const [availability, setAvailability] = React.useState<{ disponible: boolean; message?: string; suggestions?: Array<{ heureDebut: string; heureFin: string; label: string }> }>({ disponible: true });
@@ -615,6 +628,54 @@ const CommandeFormDialog: React.FC<CommandeFormDialogProps> = ({
                 />
               </div>
             </div>
+
+            {/* Ville du client */}
+            {setClientVille && (
+              <div>
+                <Label htmlFor="clientVille" className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">
+                  🏙️ Ville {clientVille && (
+                    <span className="ml-2 text-xs font-normal text-emerald-600 dark:text-emerald-400">
+                      (pré-remplie depuis la fiche client)
+                    </span>
+                  )}
+                </Label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <select
+                    value={isCustomVille ? '__custom__' : (clientVille || '')}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === '__custom__') setClientVille('');
+                      else setClientVille(val);
+                    }}
+                    className="w-full px-3 py-2 border-2 border-blue-300 dark:border-blue-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 shadow-sm"
+                  >
+                    <option value="">— Choisir une ville —</option>
+                    {availableVilles.map(v => <option key={v} value={v}>{v}</option>)}
+                    <option value="__custom__">+ Nouvelle ville…</option>
+                  </select>
+                  {(isCustomVille || !clientVille) && (
+                    <Input
+                      type="text"
+                      value={isCustomVille ? clientVille : ''}
+                      onChange={(e) => setClientVille(e.target.value)}
+                      onBlur={async () => {
+                        const v = (clientVille || '').trim();
+                        if (!v) return;
+                        if (!availableVilles.some(x => x.toLowerCase() === v.toLowerCase())) {
+                          try {
+                            const { clientsVillesApi } = await import('@/services/api/villesApi');
+                            const list = await clientsVillesApi.add(v);
+                            if (Array.isArray(list)) setAvailableVilles(list);
+                          } catch {}
+                        }
+                      }}
+                      placeholder="Saisir une nouvelle ville"
+                      className="border-2 border-blue-300 dark:border-blue-700 focus:border-blue-500 dark:focus:border-blue-500 bg-white dark:bg-gray-900 shadow-sm"
+                    />
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Section Produit Premium */}

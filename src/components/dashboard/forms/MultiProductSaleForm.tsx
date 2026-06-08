@@ -23,6 +23,9 @@ import SaleTotalsSection from './sections/SaleTotalsSection';
 import SaleFormActions from './sections/SaleFormActions';
 import ReservedProductModal from './modals/ReservedProductModal';
 import { FormProduct, ReductionType, createEmptyFormProduct, computeReductionAmount } from './types/saleFormTypes';
+import DuplicateClientModal from '@/components/clients/DuplicateClientModal';
+import { findMatchingClients, matchSignature, type ClientLike, type ClientMatch } from '@/utils/clientMatch';
+import { computeClientCaracteristique } from '@/utils/clientCharacteristic';
 
 interface MultiProductSaleFormProps {
   isOpen: boolean;
@@ -32,7 +35,7 @@ interface MultiProductSaleFormProps {
 }
 
 const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onClose, editSale, onRefund }) => {
-  const { products, addSale, updateSale, deleteSale } = useApp();
+  const { products, addSale, updateSale, deleteSale, sales } = useApp();
   const { toast } = useToast();
   
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
@@ -73,6 +76,96 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
   const [slideshowProduct, setSlideshowProduct] = useState<{ photos: string[]; mainPhoto?: string; name: string } | null>(null);
 
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:10000';
+
+  // Détection des doublons client + caractéristique
+  const [allClients, setAllClients] = useState<ClientLike[]>([]);
+  const [allCommandes, setAllCommandes] = useState<any[]>([]);
+  const [duplicateModalOpen, setDuplicateModalOpen] = useState(false);
+  const [duplicateMatches, setDuplicateMatches] = useState<ClientMatch[]>([]);
+  /** Empêche la réouverture en boucle pour la même saisie + signatures explicitement rejetées */
+  const dismissedSigsRef = useRef<Set<string>>(new Set());
+  /** Quand l'utilisateur a sélectionné/édité un client, on ne re-détecte pas tant que les données ne changent pas */
+  const acceptedSigRef = useRef<string | null>(null);
+
+  // Charger clients + commandes à l'ouverture (pour matching et caractéristique)
+  useEffect(() => {
+    if (!isOpen) return;
+    const token = localStorage.getItem('token');
+    Promise.all([
+      axios.get(`${API_BASE_URL}/api/clients`, { headers: { Authorization: `Bearer ${token}` } }).then(r => r.data).catch(() => []),
+      axios.get(`${API_BASE_URL}/api/commandes`, { headers: { Authorization: `Bearer ${token}` } }).then(r => r.data).catch(() => []),
+    ]).then(([cs, cmds]) => {
+      setAllClients(Array.isArray(cs) ? cs : []);
+      setAllCommandes(Array.isArray(cmds) ? cmds : []);
+    });
+  }, [isOpen, API_BASE_URL]);
+
+  const currentClientCaracteristique = React.useMemo(() => {
+    if (!clientName || clientName.trim().length < 2) return null;
+    return computeClientCaracteristique(clientName, allClients as any, sales || [], allCommandes as any);
+  }, [clientName, allClients, sales, allCommandes]);
+
+  // Détection debounced des doublons
+  useEffect(() => {
+    if (!isOpen || editSale) return;
+    const phones = [clientPhone, ...clientPhones].filter(Boolean);
+    const addresses = [clientAddress].filter(Boolean);
+    const typed = { nom: clientName, phones, addresses };
+    const sig = matchSignature(typed);
+    if (!clientName.trim() && phones.length === 0 && addresses.length === 0) return;
+    if (acceptedSigRef.current === sig) return;
+    if (dismissedSigsRef.current.has(sig)) return;
+    const t = setTimeout(() => {
+      const matches = findMatchingClients(allClients, typed);
+      if (matches.length > 0) {
+        setDuplicateMatches(matches);
+        setDuplicateModalOpen(true);
+      }
+    }, 600);
+    return () => clearTimeout(t);
+  }, [isOpen, editSale, clientName, clientPhone, clientPhones, clientAddress, allClients]);
+
+  const closeDuplicateModal = () => {
+    const phones = [clientPhone, ...clientPhones].filter(Boolean);
+    const addresses = [clientAddress].filter(Boolean);
+    dismissedSigsRef.current.add(matchSignature({ nom: clientName, phones, addresses }));
+    setDuplicateModalOpen(false);
+  };
+
+  const handleUseExistingFromDuplicate = (client: ClientLike) => {
+    handleClientSelect(client);
+    const phones = client.phones && client.phones.length ? client.phones : (client.phone ? [client.phone] : []);
+    acceptedSigRef.current = matchSignature({
+      nom: client.nom,
+      phones,
+      addresses: client.addresses && client.addresses.length ? client.addresses : (client.adresse ? [client.adresse] : []),
+    });
+    // Rafraîchir la liste locale pour refléter d'éventuelles modifs
+    const token = localStorage.getItem('token');
+    axios.get(`${API_BASE_URL}/api/clients`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => setAllClients(Array.isArray(r.data) ? r.data : []))
+      .catch(() => {});
+  };
+
+  const handleUpdateExistingClient = async (clientId: string, patch: { nom: string; phones: string[]; addresses: string[] }) => {
+    const token = localStorage.getItem('token');
+    const fd = new FormData();
+    fd.append('nom', patch.nom);
+    fd.append('phones', JSON.stringify(patch.phones));
+    fd.append('addresses', JSON.stringify(patch.addresses));
+    fd.append('adresse', patch.addresses[0] || '');
+    try {
+      await axios.put(`${API_BASE_URL}/api/clients/${clientId}`, fd, {
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' }
+      });
+      const r = await axios.get(`${API_BASE_URL}/api/clients`, { headers: { Authorization: `Bearer ${token}` } });
+      setAllClients(Array.isArray(r.data) ? r.data : []);
+      toast({ title: 'Client mis à jour', description: `${patch.nom} a été modifié`, className: 'notification-success' });
+    } catch (err) {
+      console.error('Erreur maj client:', err);
+      toast({ title: 'Erreur', description: 'Impossible de mettre à jour le client', variant: 'destructive', className: 'notification-erreur' });
+    }
+  };
 
   // Référence pour éviter les réinitialisations multiples
   const isInitializedRef = useRef(false);
@@ -1026,6 +1119,7 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
             clientPhoto={clientPhoto}
             clientVille={clientVille}
             setClientVille={setClientVille}
+            currentClientCaracteristique={currentClientCaracteristique}
           />
         </div>
 
@@ -1269,6 +1363,20 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
       isOpen={!!slideshowProduct}
       onClose={() => setSlideshowProduct(null)}
       baseUrl={API_BASE_URL}
+    />
+
+    <DuplicateClientModal
+      isOpen={duplicateModalOpen}
+      onClose={closeDuplicateModal}
+      matches={duplicateMatches}
+      typed={{
+        nom: clientName,
+        phones: [clientPhone, ...clientPhones].filter(Boolean),
+        addresses: [clientAddress].filter(Boolean),
+      }}
+      onUseExisting={handleUseExistingFromDuplicate}
+      onUpdateClient={handleUpdateExistingClient}
+      onCreateNew={() => { /* l'utilisateur garde sa saisie courante */ }}
     />
   </Dialog>
 );

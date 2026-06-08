@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Package } from 'lucide-react';
 import ClientSearchInput from '../../ClientSearchInput';
 import { clientsVillesApi } from '@/services/api/villesApi';
+import type { ClientCaracteristique } from '@/utils/clientCharacteristic';
 
 interface SaleClientSectionProps {
   clientName: string;
@@ -20,6 +21,8 @@ interface SaleClientSectionProps {
   clientPhoto?: string | null;
   clientVille?: string;
   setClientVille?: (v: string) => void;
+  /** Caractéristique calculée du client (nouveau, déjà, fidèle, annule) */
+  currentClientCaracteristique?: ClientCaracteristique | null;
 }
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:10000';
@@ -37,6 +40,7 @@ const SaleClientSection: React.FC<SaleClientSectionProps> = ({
   clientPhoto,
   clientVille = '',
   setClientVille,
+  currentClientCaracteristique,
 }) => {
   const photoUrl = clientPhoto ? (clientPhoto.startsWith('http') ? clientPhoto : `${API_BASE_URL}${clientPhoto}`) : null;
 
@@ -94,7 +98,16 @@ const SaleClientSection: React.FC<SaleClientSectionProps> = ({
 
         {/* Nom */}
         <div className="space-y-2">
-          <Label>Nom du client</Label>
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <Label>Nom du client</Label>
+            {clientName && clientName.length >= 2 && currentClientCaracteristique && (
+              <span
+                className={`text-xs px-3 py-1 rounded-full font-bold tracking-wide ${currentClientCaracteristique.badgeClass}`}
+              >
+                {currentClientCaracteristique.label}
+              </span>
+            )}
+          </div>
           <ClientSearchInput
             value={clientName}
             onChange={setClientName}

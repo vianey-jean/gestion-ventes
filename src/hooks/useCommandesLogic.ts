@@ -66,6 +66,7 @@ export const useCommandesLogic = () => {
   const [clientPhone, setClientPhone] = useState('');
   const [clientPhones, setClientPhones] = useState<string[]>([]);
   const [clientAddress, setClientAddress] = useState('');
+  const [clientVille, setClientVille] = useState('');
   const [clientSearch, setClientSearch] = useState('');
   const [showClientSuggestions, setShowClientSuggestions] = useState(false);
   
@@ -552,6 +553,7 @@ export const useCommandesLogic = () => {
     setClientPhones(phones);
     setClientPhone(phones[0] || '');
     setClientAddress(client.adresse);
+    setClientVille(((client as any).ville || '').trim());
     setClientSearch(client.nom);
     setShowClientSuggestions(false);
   }, []);
@@ -596,7 +598,7 @@ export const useCommandesLogic = () => {
   }, [clientNom, clientPhone, clientAddress, produitsListe, type, dateArrivagePrevue, dateEcheance]);
 
   const resetForm = useCallback(() => {
-    setClientNom(''); setClientPhone(''); setClientAddress('');
+    setClientNom(''); setClientPhone(''); setClientAddress(''); setClientVille('');
     setProduitNom(''); setPrixUnitaire(''); setQuantite('1'); setPrixVente('');
     setDateArrivagePrevue(''); setDateEcheance(''); setHoraire(''); setHoraireFin('');
     setType('commande'); setClientSearch(''); setProductSearch('');
@@ -696,7 +698,21 @@ export const useCommandesLogic = () => {
 
     try {
       const existingClient = clients.find(c => c.nom.toLowerCase() === clientNom.toLowerCase());
-      if (!existingClient) { await api.post('/api/clients', { nom: clientNom, phone: clientPhone, adresse: clientAddress }); await fetchClients(); }
+      const villeTrim = (clientVille || '').trim();
+      if (!existingClient) {
+        await api.post('/api/clients', { nom: clientNom, phone: clientPhone, adresse: clientAddress, ville: villeTrim });
+        await fetchClients();
+      } else if (villeTrim && villeTrim !== ((existingClient as any).ville || '').trim()) {
+        try {
+          await api.put(`/api/clients/${(existingClient as any).id}`, {
+            nom: existingClient.nom,
+            phones: (existingClient as any).phones || ((existingClient as any).phone ? [(existingClient as any).phone] : []),
+            addresses: (existingClient as any).addresses || ((existingClient as any).adresse ? [(existingClient as any).adresse] : []),
+            ville: villeTrim,
+          });
+          await fetchClients();
+        } catch (e) { console.error('Erreur maj ville client:', e); }
+      }
       for (const produit of produitsListe) {
         const existingProduct = products.find(p => p.description.toLowerCase() === produit.nom.toLowerCase());
         if (!existingProduct) { await api.post('/api/products', { description: produit.nom, purchasePrice: produit.prixUnitaire, quantity: produit.quantite }); }
@@ -775,8 +791,12 @@ export const useCommandesLogic = () => {
     setEditingCommande(commande); setClientNom(commande.clientNom); setClientPhone(commande.clientPhone);
     setClientAddress(commande.clientAddress); setType(commande.type); setProduitsListe(commande.produits);
     setDateArrivagePrevue(commande.dateArrivagePrevue || ''); setDateEcheance(commande.dateEcheance || '');
-    setHoraire(commande.horaire || ''); setHoraireFin(commande.horaireFin || ''); setClientSearch(commande.clientNom); setIsDialogOpen(true);
-  }, []);
+    setHoraire(commande.horaire || ''); setHoraireFin(commande.horaireFin || ''); setClientSearch(commande.clientNom);
+    // Pré-remplir la ville depuis la fiche client si disponible
+    const existingClient = clients.find(c => c.nom.toLowerCase() === commande.clientNom.toLowerCase());
+    setClientVille(((existingClient as any)?.ville || '').trim());
+    setIsDialogOpen(true);
+  }, [clients]);
 
   // =========================================================================
   // Suppression
@@ -1163,7 +1183,7 @@ export const useCommandesLogic = () => {
     filteredCommandes, filteredClients, filteredProducts, commandesForExportDate,
     // États formulaire
     isDialogOpen, setIsDialogOpen, editingCommande,
-    clientNom, setClientNom, clientPhone, setClientPhone, clientPhones, clientAddress, setClientAddress,
+    clientNom, setClientNom, clientPhone, setClientPhone, clientPhones, clientAddress, setClientAddress, clientVille, setClientVille,
     clientSearch, setClientSearch, showClientSuggestions, setShowClientSuggestions,
     type, setType, dateArrivagePrevue, setDateArrivagePrevue, dateEcheance, setDateEcheance, horaire, setHoraire, horaireFin, setHoraireFin,
     produitNom, setProduitNom, prixUnitaire, setPrixUnitaire, quantite, setQuantite, prixVente, setPrixVente,
