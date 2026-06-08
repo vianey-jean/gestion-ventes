@@ -48,8 +48,130 @@ const ClientDetailModal: React.FC<Props> = ({ open, onOpenChange, client, photoU
 
   const phones = client.phones && client.phones.length > 0 ? client.phones : [client.phone || ''];
   const addresses = client.addresses && client.addresses.length > 0 ? client.addresses : [client.adresse || ''];
+  const villesArr = Array.isArray(client.villes) ? client.villes : [];
   const mainPhone = phones[0] || '';
   const mainAddress = addresses[0] || '';
+  const mainVille = villesArr[0] || client.ville || '';
+
+  // ---------- Icônes PDF (vecteur jsPDF) ----------
+  const drawPdfIcon = (
+    pdf: jsPDF,
+    kind: 'name' | 'phone' | 'pin' | 'city',
+    cx: number,
+    cy: number,
+    size: number,
+    color: [number, number, number],
+  ) => {
+    const [r, g, b] = color;
+    pdf.setDrawColor(r, g, b);
+    pdf.setFillColor(r, g, b);
+    const s = size;
+    if (kind === 'name') {
+      // tête + buste
+      pdf.circle(cx, cy - s * 0.18, s * 0.22, 'F');
+      pdf.ellipse(cx, cy + s * 0.28, s * 0.42, s * 0.22, 'F');
+    } else if (kind === 'phone') {
+      // combiné stylisé : rectangle arrondi incliné
+      pdf.setLineWidth(s * 0.12);
+      pdf.roundedRect(cx - s * 0.28, cy - s * 0.42, s * 0.56, s * 0.84, s * 0.18, s * 0.18, 'S');
+      pdf.circle(cx, cy + s * 0.28, s * 0.07, 'F');
+    } else if (kind === 'pin') {
+      // pin (goutte) + cercle intérieur
+      pdf.circle(cx, cy - s * 0.1, s * 0.36, 'F');
+      pdf.triangle(
+        cx - s * 0.22, cy + s * 0.12,
+        cx + s * 0.22, cy + s * 0.12,
+        cx, cy + s * 0.5,
+        'F',
+      );
+      pdf.setFillColor(255, 255, 255);
+      pdf.circle(cx, cy - s * 0.12, s * 0.13, 'F');
+    } else if (kind === 'city') {
+      // immeuble
+      pdf.rect(cx - s * 0.4, cy - s * 0.05, s * 0.35, s * 0.55, 'F');
+      pdf.rect(cx + s * 0.05, cy - s * 0.4, s * 0.35, s * 0.9, 'F');
+      pdf.setFillColor(255, 255, 255);
+      const w1 = s * 0.07;
+      // fenêtres immeuble droit
+      pdf.rect(cx + s * 0.12, cy - s * 0.28, w1, w1, 'F');
+      pdf.rect(cx + s * 0.27, cy - s * 0.28, w1, w1, 'F');
+      pdf.rect(cx + s * 0.12, cy - s * 0.10, w1, w1, 'F');
+      pdf.rect(cx + s * 0.27, cy - s * 0.10, w1, w1, 'F');
+      pdf.rect(cx + s * 0.12, cy + s * 0.08, w1, w1, 'F');
+      pdf.rect(cx + s * 0.27, cy + s * 0.08, w1, w1, 'F');
+      // fenêtres immeuble gauche
+      pdf.rect(cx - s * 0.32, cy + s * 0.06, w1, w1, 'F');
+      pdf.rect(cx - s * 0.17, cy + s * 0.06, w1, w1, 'F');
+      pdf.rect(cx - s * 0.32, cy + s * 0.24, w1, w1, 'F');
+      pdf.rect(cx - s * 0.17, cy + s * 0.24, w1, w1, 'F');
+    }
+  };
+
+  // ---------- Icônes Canvas (JPEG) ----------
+  const drawCanvasIcon = (
+    ctx: CanvasRenderingContext2D,
+    kind: 'name' | 'phone' | 'pin' | 'city',
+    cx: number,
+    cy: number,
+    size: number,
+    color: string,
+  ) => {
+    const s = size;
+    ctx.save();
+    ctx.fillStyle = color;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = s * 0.1;
+    if (kind === 'name') {
+      ctx.beginPath();
+      ctx.arc(cx, cy - s * 0.18, s * 0.22, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.ellipse(cx, cy + s * 0.28, s * 0.42, s * 0.22, 0, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (kind === 'phone') {
+      const x = cx - s * 0.28, y = cy - s * 0.42, w = s * 0.56, h = s * 0.84, r = s * 0.18;
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.arcTo(x + w, y, x + w, y + h, r);
+      ctx.arcTo(x + w, y + h, x, y + h, r);
+      ctx.arcTo(x, y + h, x, y, r);
+      ctx.arcTo(x, y, x + w, y, r);
+      ctx.closePath();
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(cx, cy + s * 0.28, s * 0.07, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (kind === 'pin') {
+      ctx.beginPath();
+      ctx.arc(cx, cy - s * 0.1, s * 0.36, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(cx - s * 0.22, cy + s * 0.12);
+      ctx.lineTo(cx + s * 0.22, cy + s * 0.12);
+      ctx.lineTo(cx, cy + s * 0.5);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(cx, cy - s * 0.12, s * 0.13, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (kind === 'city') {
+      ctx.fillRect(cx - s * 0.4, cy - s * 0.05, s * 0.35, s * 0.55);
+      ctx.fillRect(cx + s * 0.05, cy - s * 0.4, s * 0.35, s * 0.9);
+      ctx.fillStyle = '#ffffff';
+      const w1 = s * 0.07;
+      [
+        [s * 0.12, -s * 0.28], [s * 0.27, -s * 0.28],
+        [s * 0.12, -s * 0.10], [s * 0.27, -s * 0.10],
+        [s * 0.12, s * 0.08], [s * 0.27, s * 0.08],
+      ].forEach(([dx, dy]) => ctx.fillRect(cx + dx, cy + dy, w1, w1));
+      [
+        [-s * 0.32, s * 0.06], [-s * 0.17, s * 0.06],
+        [-s * 0.32, s * 0.24], [-s * 0.17, s * 0.24],
+      ].forEach(([dx, dy]) => ctx.fillRect(cx + dx, cy + dy, w1, w1));
+    }
+    ctx.restore();
+  };
 
   const handlePrint = async () => {
     const w = parseFloat(widthMm);
@@ -78,77 +200,91 @@ const ClientDetailModal: React.FC<Props> = ({ open, onOpenChange, client, photoU
       const contentW = pageW - margin * 2;
       const contentH = pageH - margin * 2;
 
-      // Répartition : nom 35%, gap, téléphone 25%, gap, adresse 30%
-      const gap = contentH * 0.04;
-      const nameH = contentH * 0.35;
-      const phoneH = contentH * 0.25;
-      const addrH = contentH - nameH - phoneH - gap * 2;
+      type Item = {
+        text: string;
+        icon: 'name' | 'phone' | 'pin' | 'city';
+        color: [number, number, number];
+        hex: string;
+        weight: 'normal' | 'bold';
+      };
+      const items: Item[] = [
+        { text: client.nom, icon: 'name', color: [15, 23, 42], hex: '#0f172a', weight: 'bold' },
+        { text: mainPhone, icon: 'phone', color: [5, 122, 85], hex: '#057a55', weight: 'bold' },
+        { text: mainAddress, icon: 'pin', color: [30, 64, 175], hex: '#1e40af', weight: 'bold' },
+        { text: mainVille, icon: 'city', color: [124, 58, 237], hex: '#7c3aed', weight: 'bold' },
+      ].filter(it => it.text && it.text.trim()) as Item[];
+
+      const n = items.length || 1;
+      const gap = contentH * 0.015; // espacement réduit
+      const lineH = (contentH - gap * (n - 1)) / n;
+
+      // Espace réservé à l'icône (à gauche de chaque ligne)
+      const iconBox = lineH * 0.85;
+      const iconGap = lineH * 0.18;
+      const textW = contentW - iconBox - iconGap;
 
       const PT_TO_MM = 0.3528;
       const fitFontSize = (
         text: string,
         maxWmm: number,
         maxHmm: number,
-        font: 'helvetica' | 'courier',
         style: 'normal' | 'bold',
-        maxPt = 200,
-        minPt = 4,
-      ): { fontSize: number; lines: string[] } => {
-        pdf.setFont(font, style);
-        let lo = minPt;
-        let hi = maxPt;
-        let best = minPt;
+      ) => {
+        pdf.setFont('helvetica', style);
+        let lo = 4, hi = 200, best = 4;
         let bestLines: string[] = [text];
         while (lo <= hi) {
           const mid = (lo + hi) / 2;
           pdf.setFontSize(mid);
           const lines = pdf.splitTextToSize(text, maxWmm) as string[];
-          const lineHeightMm = mid * PT_TO_MM * 1.15;
-          const totalH = lines.length * lineHeightMm;
-          if (totalH <= maxHmm) {
-            best = mid;
-            bestLines = lines;
-            lo = mid + 0.5;
-          } else {
-            hi = mid - 0.5;
-          }
+          const lh = mid * PT_TO_MM * 1.15;
+          if (lines.length * lh <= maxHmm) { best = mid; bestLines = lines; lo = mid + 0.5; }
+          else hi = mid - 0.5;
         }
         return { fontSize: best, lines: bestLines };
       };
 
-      const drawBlock = (
-        text: string,
-        y: number,
-        zoneH: number,
-        font: 'helvetica' | 'courier',
-        style: 'normal' | 'bold',
-        color: [number, number, number],
-        maxPt: number,
-      ) => {
-        if (!text) return;
-        const { fontSize, lines } = fitFontSize(text, contentW, zoneH, font, style, maxPt, 4);
-        pdf.setFont(font, style);
-        pdf.setFontSize(fontSize);
-        pdf.setTextColor(color[0], color[1], color[2]);
-        const lineH = fontSize * PT_TO_MM * 1.15;
-        const totalH = lines.length * lineH;
-        const startY = y + (zoneH - totalH) / 2 + fontSize * PT_TO_MM * 0.85;
-        lines.forEach((ln, i) => {
-          pdf.text(ln, pageW / 2, startY + i * lineH, { align: 'center' });
-        });
-      };
+      // Taille de police uniforme pour TOUTES les lignes
+      let uniformPt = Infinity;
+      const perItemLines: string[][] = [];
+      for (const it of items) {
+        const { fontSize, lines } = fitFontSize(it.text, textW, lineH, it.weight);
+        uniformPt = Math.min(uniformPt, fontSize);
+        perItemLines.push(lines);
+      }
+      if (!isFinite(uniformPt)) uniformPt = 8;
+
+      // Re-split avec taille uniforme
+      pdf.setFontSize(uniformPt);
+      for (let i = 0; i < items.length; i++) {
+        pdf.setFont('helvetica', items[i].weight);
+        perItemLines[i] = pdf.splitTextToSize(items[i].text, textW) as string[];
+      }
 
       let cursorY = margin;
-      drawBlock(`Fb: ${client.nom}`, cursorY, nameH, 'helvetica', 'bold', [15, 23, 42], 80);
-      cursorY += nameH + gap;
-      drawBlock(mainPhone, cursorY, phoneH, 'helvetica', 'bold', [5, 122, 85], 60);
-      cursorY += phoneH + gap;
-      drawBlock(mainAddress, cursorY, addrH, 'helvetica', 'normal', [30, 64, 175], 40);
+      const xIconCenter = margin + iconBox / 2;
+      const xText = margin + iconBox + iconGap;
+      for (let i = 0; i < items.length; i++) {
+        const it = items[i];
+        const lines = perItemLines[i];
+        const cyIcon = cursorY + lineH / 2;
+        drawPdfIcon(pdf, it.icon, xIconCenter, cyIcon, iconBox, it.color);
+
+        pdf.setFont('helvetica', it.weight);
+        pdf.setFontSize(uniformPt);
+        pdf.setTextColor(it.color[0], it.color[1], it.color[2]);
+        const lh = uniformPt * PT_TO_MM * 1.15;
+        const totalH = lines.length * lh;
+        const startY = cursorY + (lineH - totalH) / 2 + uniformPt * PT_TO_MM * 0.85;
+        lines.forEach((ln, idx) => {
+          pdf.text(ln, xText, startY + idx * lh);
+        });
+        cursorY += lineH + gap;
+      }
 
       const fileBase = `client_${client.nom.replace(/\s+/g, '_')}_${w}x${h}mm`;
 
       if (format === 'jpeg') {
-        // Rendu via canvas à partir du PDF impossible directement → on dessine sur canvas
         const dpi = 300;
         const pxW = Math.round((w / 25.4) * dpi);
         const pxH = Math.round((h / 25.4) * dpi);
@@ -158,36 +294,45 @@ const ClientDetailModal: React.FC<Props> = ({ open, onOpenChange, client, photoU
         const ctx = canvas.getContext('2d')!;
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(0, 0, pxW, pxH);
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
 
         const mmToPx = (mm: number) => (mm / 25.4) * dpi;
+        const textWpx = mmToPx(textW);
+        const lineHpx = mmToPx(lineH);
+
         const fitPxFont = (text: string, maxW: number, maxH: number, weight: string) => {
-          let lo = 6, hi = 400, best = 6;
+          let lo = 6, hi = 800, best = 6;
           while (lo <= hi) {
             const mid = Math.floor((lo + hi) / 2);
             ctx.font = `${weight} ${mid}px Arial, sans-serif`;
             const wText = ctx.measureText(text).width;
-            if (wText <= maxW && mid * 1.15 <= maxH) { best = mid; lo = mid + 1; } else { hi = mid - 1; }
+            if (wText <= maxW && mid * 1.2 <= maxH) { best = mid; lo = mid + 1; } else { hi = mid - 1; }
           }
           return best;
         };
 
-        const drawCanvas = (text: string, yMm: number, hMm: number, weight: string, color: string) => {
-          if (!text) return;
-          const yPx = mmToPx(yMm) + mmToPx(hMm) / 2;
-          const fontPx = fitPxFont(text, mmToPx(contentW), mmToPx(hMm), weight);
-          ctx.font = `${weight} ${fontPx}px Arial, sans-serif`;
-          ctx.fillStyle = color;
-          ctx.fillText(text, pxW / 2, yPx);
-        };
+        // taille uniforme
+        let uniformPx = Infinity;
+        for (const it of items) {
+          const fp = fitPxFont(it.text, textWpx, lineHpx, it.weight === 'bold' ? '700' : '400');
+          uniformPx = Math.min(uniformPx, fp);
+        }
+        if (!isFinite(uniformPx)) uniformPx = 16;
+
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
 
         let yMm = margin;
-        drawCanvas(`Fb: ${client.nom}`, yMm, nameH, '900', '#0f172a');
-        yMm += nameH + gap;
-        drawCanvas(mainPhone, yMm, phoneH, '700', '#057a55');
-        yMm += phoneH + gap;
-        drawCanvas(mainAddress, yMm, addrH, '500', '#1e40af');
+        const iconCx = mmToPx(margin + iconBox / 2);
+        const iconSizePx = mmToPx(iconBox);
+        const xTextPx = mmToPx(xText);
+        for (const it of items) {
+          const cyPx = mmToPx(yMm) + lineHpx / 2;
+          drawCanvasIcon(ctx, it.icon, iconCx, cyPx, iconSizePx, it.hex);
+          ctx.font = `${it.weight === 'bold' ? '700' : '400'} ${uniformPx}px Arial, sans-serif`;
+          ctx.fillStyle = it.hex;
+          ctx.fillText(it.text, xTextPx, cyPx);
+          yMm += lineH + gap;
+        }
 
         const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
         const a = document.createElement('a');
