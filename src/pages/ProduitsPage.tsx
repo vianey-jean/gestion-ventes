@@ -74,6 +74,8 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
   const [caracteristiqueProduct, setCaracteristiqueProduct] = useState<Product | null>(null);
   const [isMergeOpen, setIsMergeOpen] = useState(false);
   const [isVenduOpen, setIsVenduOpen] = useState(false);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [isFournHistoryOpen, setIsFournHistoryOpen] = useState(false);
 
   // Selected product
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -1486,14 +1488,7 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
                     </div>
                   </div>
                 </div>
-              ) : (
-                <div className="aspect-[4/3] rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center">
-                  <div className="text-center space-y-2">
-                    <ImageOff className="h-12 w-12 text-white/30 mx-auto" />
-                    <p className="text-white/40 font-medium">Aucune photo</p>
-                  </div>
-                </div>
-              )}
+              ) : null}
 
               {/* Product details */}
               <div className="space-y-3 pt-2">
@@ -1506,9 +1501,21 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
                     <p className="text-white/50 text-xs font-medium">Prix d'achat</p>
                     <p className="text-amber-400 font-bold text-lg">{selectedProduct.purchasePrice}€</p>
                   </div>
-                  <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
-                    <p className="text-white/50 text-xs font-medium">Quantité</p>
-                    <p className={cn("font-bold text-lg", selectedProduct.quantity > 0 ? "text-emerald-400" : "text-red-400")}>{selectedProduct.quantity}</p>
+                  <div className="p-4 rounded-2xl bg-white/5 border border-white/10 relative">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <p className="text-white/50 text-xs font-medium">Quantité</p>
+                        <p className={cn("font-bold text-lg", selectedProduct.quantity > 0 ? "text-emerald-400" : "text-red-400")}>{selectedProduct.quantity}</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setIsHistoryOpen(true)}
+                        title="Historique achats/ventes"
+                        className="p-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-400/20 text-emerald-300 transition-colors"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </button>
+                    </div>
                   </div>
                   <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
                     <p className="text-white/50 text-xs font-medium">Photos</p>
@@ -1518,9 +1525,23 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
 
                 {/* Fournisseur */}
                 <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
-                  <p className="text-white/50 text-xs font-medium">Fournisseur</p>
-                  <p className="text-cyan-400 font-bold text-lg">{selectedProduct.fournisseur || '—'}</p>
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-white/50 text-xs font-medium">Fournisseur</p>
+                      <p className="text-cyan-400 font-bold text-lg">{selectedProduct.fournisseur || '—'}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsFournHistoryOpen(true)}
+                      title="Historique fournisseurs"
+                      className="p-2 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-400/20 text-cyan-300 transition-colors"
+                    >
+                      <Eye className="h-4 w-4" />
+                    </button>
+                  </div>
                 </div>
+
+
 
                 {/* Commentaires & Notation */}
                 {(() => {
@@ -1747,6 +1768,105 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
         open={isVenduOpen}
         onClose={() => setIsVenduOpen(false)}
       />
+
+      {/* ========== MODALE HISTORIQUE ACHATS / VENTES ========== */}
+      <Dialog open={isHistoryOpen} onOpenChange={setIsHistoryOpen}>
+        <DialogContent className="sm:max-w-xl bg-gradient-to-br from-slate-900 via-emerald-900/30 to-teal-900/20 backdrop-blur-2xl border border-white/10 shadow-2xl rounded-3xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-black bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent flex items-center gap-2">
+              <Eye className="h-5 w-5 text-emerald-400" />
+              Historique stock — {selectedProduct?.description}
+            </DialogTitle>
+          </DialogHeader>
+          {selectedProduct && (
+            <div className="space-y-4">
+              <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border border-emerald-400/30">
+                <p className="text-white/70 text-xs font-semibold">Reste en stock</p>
+                <p className={cn("text-3xl font-black", selectedProduct.quantity > 0 ? "text-emerald-300" : "text-red-400")}>
+                  {selectedProduct.quantity} unité{selectedProduct.quantity > 1 ? 's' : ''}
+                </p>
+              </div>
+
+              <div>
+                <h4 className="text-sm font-bold text-emerald-300 mb-2 flex items-center gap-2">
+                  <PackagePlus className="h-4 w-4" /> Achats ({selectedProduct.achats?.length || 0})
+                </h4>
+                <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                  {(selectedProduct.achats || []).slice().sort((a,b)=> new Date(a.date).getTime()-new Date(b.date).getTime()).map((a, i) => (
+                    <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/10">
+                      <div>
+                        <p className="text-white/90 text-sm font-semibold">+{a.quantity} unité{a.quantity>1?'s':''}</p>
+                        <p className="text-white/50 text-xs">{new Date(a.date).toLocaleDateString('fr-FR')} {a.fournisseur ? `• ${a.fournisseur}` : ''}</p>
+                      </div>
+                      <span className="text-amber-300 font-bold">{a.purchasePrice}€</span>
+                    </div>
+                  ))}
+                  {(!selectedProduct.achats || selectedProduct.achats.length === 0) && (
+                    <p className="text-white/40 text-sm italic">Aucun achat enregistré</p>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <h4 className="text-sm font-bold text-rose-300 mb-2 flex items-center gap-2">
+                  <ShoppingBag className="h-4 w-4" /> Ventes ({selectedProduct.ventes?.length || 0})
+                </h4>
+                <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                  {(selectedProduct.ventes || []).slice().sort((a,b)=> new Date(a.date).getTime()-new Date(b.date).getTime()).map((v, i) => (
+                    <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/10">
+                      <div>
+                        <p className="text-white/90 text-sm font-semibold">-{v.quantity} unité{v.quantity>1?'s':''}</p>
+                        <p className="text-white/50 text-xs">{new Date(v.date).toLocaleDateString('fr-FR')}</p>
+                      </div>
+                      <span className="text-emerald-300 font-bold">{v.sellingPrice}€</span>
+                    </div>
+                  ))}
+                  {(!selectedProduct.ventes || selectedProduct.ventes.length === 0) && (
+                    <p className="text-white/40 text-sm italic">Aucune vente enregistrée</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* ========== MODALE HISTORIQUE FOURNISSEURS ========== */}
+      <Dialog open={isFournHistoryOpen} onOpenChange={setIsFournHistoryOpen}>
+        <DialogContent className="sm:max-w-lg bg-gradient-to-br from-slate-900 via-cyan-900/30 to-blue-900/20 backdrop-blur-2xl border border-white/10 shadow-2xl rounded-3xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-black bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent flex items-center gap-2">
+              <Eye className="h-5 w-5 text-cyan-400" />
+              Historique fournisseurs
+            </DialogTitle>
+          </DialogHeader>
+          {selectedProduct && (() => {
+            const hist = (selectedProduct.fournisseursHistory || []).slice().sort((a,b)=> new Date(a.dateDebut).getTime()-new Date(b.dateDebut).getTime());
+            return (
+              <div className="space-y-2">
+                {hist.length === 0 && (
+                  <p className="text-white/40 text-sm italic">Aucun fournisseur enregistré</p>
+                )}
+                {hist.map((f, i) => {
+                  const dateFin = i < hist.length - 1 ? hist[i+1].dateDebut : null;
+                  return (
+                    <div key={i} className="p-4 rounded-2xl bg-white/5 border border-white/10">
+                      <p className="text-cyan-300 font-bold text-base">{f.nom}</p>
+                      <p className="text-white/50 text-xs mt-1">
+                        Du {new Date(f.dateDebut).toLocaleDateString('fr-FR')}
+                        {dateFin
+                          ? ` au ${new Date(dateFin).toLocaleDateString('fr-FR')}`
+                          : ' — En cours'}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
+
     </div>
   );
 

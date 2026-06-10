@@ -29,7 +29,20 @@ export interface ProductAchat {
   date: string;
   quantity: number;
   purchasePrice: number;
+  fournisseur?: string;
 }
+
+export interface ProductVente {
+  date: string;
+  quantity: number;
+  sellingPrice: number;
+}
+
+export interface ProductFournisseurHistory {
+  nom: string;
+  dateDebut: string;
+}
+
 
 export interface Product {
   id: string;
@@ -46,7 +59,10 @@ export interface Product {
   caracteristique?: ProductCaracteristique;
   dateAchat?: string; // Date du premier achat
   achats?: ProductAchat[]; // Historique des achats
+  ventes?: ProductVente[]; // Historique des ventes
+  fournisseursHistory?: ProductFournisseurHistory[]; // Chronologie des fournisseurs
 }
+
 
 export interface ProductFormData {
   description: string;
