@@ -25,7 +25,7 @@ const HomePage: React.FC = () => {
       <SEOHead
         title="Accueil"
         description="Gestion Vente : solution premium de gestion commerciale. Pilotez vos ventes, stocks et profits avec précision et élégance."
-        canonical="https://riziky-boutic.vercel.app/"
+        canonical="https://riziky-ventes.vercel.app/"
       />
 
       <div className="min-h-[50vh] relative bg-gradient-to-br from-slate-900 via-purple-950/60 to-indigo-950 overflow-hidden">

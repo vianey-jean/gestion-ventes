@@ -307,7 +307,7 @@ http://localhost:3000         ← Développement local frontend
 http://localhost:8080         ← Développement local alternatif
 http://localhost:8081         ← Développement local alternatif
 https://riziky-gestion-ventes.vercel.app  ← Production Vercel
-https://riziky-boutic.vercel.app          ← Production Vercel alt
+https://riziky-ventes.vercel.app          ← Production Vercel alt
 https://server-gestion-ventes.onrender.com ← Backend Render
 ```
 

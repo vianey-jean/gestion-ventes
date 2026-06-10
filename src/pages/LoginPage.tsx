@@ -354,7 +354,7 @@ const LoginPage: React.FC = () => {
       <SEOHead
         title="Connexion Premium"
         description="Connexion sécurisée à votre plateforme de gestion."
-        canonical="https://riziky-boutic.vercel.app/login"
+        canonical="https://riziky-ventes.vercel.app/login"
       />
 
       {/* ================================================= */}

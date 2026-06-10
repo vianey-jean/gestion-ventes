@@ -10,7 +10,7 @@ const AboutPage: React.FC = () => {
       <SEOHead
         title="À propos"
         description="Découvrez l'histoire de Gestion Vente, notre mission de transformer la gestion commerciale avec des solutions innovantes et intuitives."
-        canonical="https://riziky-boutic.vercel.app/about"
+        canonical="https://riziky-ventes.vercel.app/about"
       />
       <div className="min-h-screen relative bg-gradient-to-br from-slate-900 via-purple-950/60 to-indigo-950 overflow-hidden">
         {/* Animated orbs */}

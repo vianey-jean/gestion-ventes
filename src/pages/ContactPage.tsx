@@ -160,7 +160,7 @@ const ContactPage: React.FC = () => {
       <SEOHead
         title="Contact"
         description="Contactez l'équipe Gestion Vente. Support technique, partenariat ou consultation - nous répondons sous 24h."
-        canonical="https://riziky-boutic.vercel.app/contact"
+        canonical="https://riziky-ventes.vercel.app/contact"
       />
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-950/50 to-indigo-950 relative">
         {/* Background effects */}
