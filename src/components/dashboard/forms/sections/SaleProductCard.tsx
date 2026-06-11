@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Trash2, Edit3, Camera } from 'lucide-react';
+import { Trash2, Edit3, Camera, Plus, X } from 'lucide-react';
 import { Product } from '@/types';
 import ProductSearchInput from '../../ProductSearchInput';
 import SaleQuantityInput from '../SaleQuantityInput';
@@ -42,11 +42,14 @@ const SaleProductCard: React.FC<SaleProductCardProps> = ({
   clientVille,
 }) => {
   const [villes, setVilles] = useState<LivraisonVille[]>([]);
+  const [showFeeOverride, setShowFeeOverride] = useState(false);
   useEffect(() => {
     livraisonVilleApi.getAll().then(setVilles).catch(() => setVilles([]));
   }, []);
   const knownVilleNames = villes.map(v => v.ville);
   const isCustomLoc = !!product.deliveryLocation && !knownVilleNames.some(v => v.toLowerCase() === product.deliveryLocation.toLowerCase());
+  const baseVilleFee = villes.find(v => v.ville.toLowerCase() === (product.deliveryLocation || '').toLowerCase())?.fee;
+  const isOverridden = baseVilleFee !== undefined && Number(product.deliveryFee || 0) !== Number(baseVilleFee);
 
   // Auto-préremplissage: dès qu'un produit est sélectionné, comparer la ville du client
   // avec la base livraison-ville et appliquer le frais correspondant (ou ajouter la nouvelle ville).
@@ -319,9 +322,53 @@ const SaleProductCard: React.FC<SaleProductCardProps> = ({
                 </div>
               )}
 
-              <p className="text-sm text-gray-500">
-                Frais: {Number(product.deliveryFee || 0).toFixed(2)} €
-              </p>
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-sm text-gray-500">
+                  Frais: {Number(product.deliveryFee || 0).toFixed(2)} €
+                  {isOverridden && baseVilleFee !== undefined && (
+                    <span className="ml-2 text-[11px] text-emerald-600 font-semibold">
+                      (réduit de {(Number(baseVilleFee) - Number(product.deliveryFee || 0)).toFixed(2)} €)
+                    </span>
+                  )}
+                </p>
+                {!!product.deliveryLocation && product.deliveryLocation !== 'Exonération' && !isCustomLoc && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowFeeOverride(s => !s)}
+                    className="h-7 px-2 text-xs gap-1 text-blue-600 hover:bg-blue-50"
+                    disabled={isSubmitting}
+                  >
+                    {showFeeOverride ? <X className="h-3 w-3" /> : <Plus className="h-3 w-3" />}
+                    Réduction frais
+                  </Button>
+                )}
+              </div>
+
+              {showFeeOverride && !isCustomLoc && !!product.deliveryLocation && product.deliveryLocation !== 'Exonération' && (
+                <div className="mt-2 p-3 rounded-lg bg-blue-50/60 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 space-y-2">
+                  <Label className="text-xs">Nouveau frais pour {product.deliveryLocation} (€)</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={product.deliveryFee}
+                    onChange={(e) => onDeliveryChange(product.deliveryLocation, e.target.value, index)}
+                    placeholder={baseVilleFee !== undefined ? `Frais standard: ${baseVilleFee} €` : 'Frais (€)'}
+                    disabled={isSubmitting}
+                  />
+                  {baseVilleFee !== undefined && (
+                    <button
+                      type="button"
+                      className="text-[11px] text-gray-500 hover:text-gray-700 underline"
+                      onClick={() => onDeliveryChange(product.deliveryLocation, String(baseVilleFee), index)}
+                    >
+                      Rétablir le frais standard ({baseVilleFee} €)
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
 
 
