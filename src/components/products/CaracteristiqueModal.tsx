@@ -141,7 +141,7 @@ const CaracteristiqueModal: React.FC<Props> = ({ open, onOpenChange, product }) 
         );
         pdf.setFont('helvetica', 'bold');
         pdf.setFontSize(sizePt);
-        pdf.setTextColor(124, 58, 237);
+        pdf.setTextColor(255, 0, 0);
         // Centre vertical du bloc
         const sizeY = cursorY + sizeH / 2 + sizePt * PT_TO_MM * 0.35;
         pdf.text(size, pageW / 2, sizeY, { align: 'center' });
@@ -180,7 +180,7 @@ const CaracteristiqueModal: React.FC<Props> = ({ open, onOpenChange, product }) 
           );
           pdf.setFont('helvetica', 'bold');
           pdf.setFontSize(pricePt);
-          pdf.setTextColor(5, 122, 85); // emerald-700
+          pdf.setTextColor(255, 0, 0); // emerald-700
           const priceY = cursorY + bcH / 2 + pricePt * PT_TO_MM * 0.35;
           pdf.text(priceText, priceZoneX + priceZoneW / 2, priceY, { align: 'center' });
         }
