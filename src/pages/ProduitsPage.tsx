@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Layout from '@/components/Layout';
 import { useApp } from '@/contexts/AppContext';
 import { productService } from '@/service/api';
+import { productApiService } from '@/services/api/productApi';
 import { Product } from '@/types';
 import { fournisseurApiService } from '@/services/api/fournisseurApi';
 import FournisseurAutocomplete from '@/components/dashboard/FournisseurAutocomplete';
@@ -79,6 +80,36 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
 
   // Selected product
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  // 🆕 État local pour éviter les doubles clics sur le toggle de disponibilité d'achat
+  const [togglingAchatIndex, setTogglingAchatIndex] = useState<number | null>(null);
+
+  // 🆕 Toggle la disponibilité d'un achat. Met à jour products.json côté serveur
+  // puis rafraîchit le selectedProduct localement pour un retour visuel immédiat.
+  const handleToggleAchatDispo = useCallback(async (achatIndex: number, nextDispo: boolean) => {
+    if (!selectedProduct) return;
+    try {
+      setTogglingAchatIndex(achatIndex);
+      const updated = await productApiService.setAchatDisponibilite(selectedProduct.id, achatIndex, nextDispo);
+      setSelectedProduct(updated);
+      await fetchProducts();
+      toast({
+        title: nextDispo ? 'Achat marqué disponible' : 'Achat marqué indisponible',
+        description: nextDispo
+          ? `+${updated.achats?.[achatIndex]?.quantity || 0} unités ajoutées au stock vendable.`
+          : `Quantité retirée du stock vendable.`,
+      });
+    } catch (e) {
+      console.error('Erreur toggle disponibilité achat:', e);
+      toast({
+        title: 'Erreur',
+        description: "Impossible de modifier la disponibilité de cet achat.",
+        variant: 'destructive',
+      });
+    } finally {
+      setTogglingAchatIndex(null);
+    }
+  }, [selectedProduct, fetchProducts, toast]);
+
 
   // Helper: aujourd'hui au format YYYY-MM-DD pour <input type="date">
   const todayISO = () => new Date().toISOString().slice(0, 10);
@@ -1791,16 +1822,68 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
                 <h4 className="text-sm font-bold text-emerald-300 mb-2 flex items-center gap-2">
                   <PackagePlus className="h-4 w-4" /> Achats ({selectedProduct.achats?.length || 0})
                 </h4>
-                <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
-                  {(selectedProduct.achats || []).slice().sort((a,b)=> new Date(a.date).getTime()-new Date(b.date).getTime()).map((a, i) => (
-                    <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/10">
-                      <div>
-                        <p className="text-white/90 text-sm font-semibold">+{a.quantity} unité{a.quantity>1?'s':''}</p>
-                        <p className="text-white/50 text-xs">{new Date(a.date).toLocaleDateString('fr-FR')} {a.fournisseur ? `• ${a.fournisseur}` : ''}</p>
-                      </div>
-                      <span className="text-amber-300 font-bold">{a.purchasePrice}€</span>
-                    </div>
-                  ))}
+                <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+                  {(selectedProduct.achats || [])
+                    .map((a, originalIndex) => ({ a, originalIndex }))
+                    .slice()
+                    .sort((x, y) => new Date(x.a.date).getTime() - new Date(y.a.date).getTime())
+                    .map(({ a, originalIndex }) => {
+                      const isDispo = a.disponible !== false; // legacy = true
+                      const isToggling = togglingAchatIndex === originalIndex;
+                      return (
+                        <div
+                          key={originalIndex}
+                          className={cn(
+                            "flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3 rounded-xl border transition-all",
+                            isDispo
+                              ? "bg-white/5 border-white/10"
+                              : "bg-rose-500/10 border-rose-400/30"
+                          )}
+                        >
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <p className="text-white/90 text-sm font-semibold">
+                                +{a.quantity} unité{a.quantity > 1 ? 's' : ''}
+                              </p>
+                              <Badge
+                                className={cn(
+                                  "text-[10px] font-bold border-0",
+                                  isDispo
+                                    ? "bg-emerald-500/20 text-emerald-200"
+                                    : "bg-rose-500/20 text-rose-200"
+                                )}
+                              >
+                                {isDispo ? '✓ Disponible' : '✕ Indisponible'}
+                              </Badge>
+                            </div>
+                            <p className="text-white/50 text-xs mt-1">
+                              {new Date(a.date).toLocaleDateString('fr-FR')}{a.fournisseur ? ` • ${a.fournisseur}` : ''}
+                            </p>
+                          </div>
+                          <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto">
+                            <span className="text-amber-300 font-bold whitespace-nowrap">{a.purchasePrice}€</span>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              disabled={isToggling}
+                              onClick={() => handleToggleAchatDispo(originalIndex, !isDispo)}
+                              className={cn(
+                                "h-8 px-3 text-[11px] sm:text-xs rounded-lg border-0 font-bold transition-all whitespace-nowrap",
+                                isDispo
+                                  ? "bg-gradient-to-r from-rose-500 to-red-500 hover:from-rose-600 hover:to-red-600 text-white"
+                                  : "bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white"
+                              )}
+                            >
+                              {isToggling
+                                ? '…'
+                                : isDispo
+                                  ? '→ Indisponible'
+                                  : '→ Disponible'}
+                            </Button>
+                          </div>
+                        </div>
+                      );
+                    })}
                   {(!selectedProduct.achats || selectedProduct.achats.length === 0) && (
                     <p className="text-white/40 text-sm italic">Aucun achat enregistré</p>
                   )}

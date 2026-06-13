@@ -15,6 +15,10 @@ export interface NouvelleAchat {
   categorie?: string;
   /** URL relative (ex: /uploads/depense/recu-xxx.pdf) du reçu de dépense — facultatif */
   receiptUrl?: string | null;
+  /** Indique si la quantité de cet achat est disponible à la vente (défaut: true) */
+  disponible?: boolean;
+  /** Index de l'achat dans product.achats (rempli côté serveur à la création) */
+  productAchatIndex?: number | null;
 }
 
 export interface NouvelleAchatFormData {
@@ -25,6 +29,8 @@ export interface NouvelleAchatFormData {
   fournisseur?: string;
   caracteristiques?: string;
   date?: string;
+  /** Disponibilité de l'achat (défaut: true). Si false, la quantité n'est PAS vendable. */
+  disponible?: boolean;
 }
 
 export interface DepenseFormData {

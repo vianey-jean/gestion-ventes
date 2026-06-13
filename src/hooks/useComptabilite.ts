@@ -91,7 +91,8 @@ export function useComptabilite() {
     quantity: 0,
     fournisseur: '',
     caracteristiques: '',
-    date: ''
+    date: '',
+    disponible: true
   });
   
   // États du formulaire de dépense
@@ -390,7 +391,8 @@ export function useComptabilite() {
         quantity: achatForm.quantity,
         fournisseur: achatForm.fournisseur,
         caracteristiques: achatForm.caracteristiques,
-        date: achatForm.date
+        date: achatForm.date,
+        disponible: achatForm.disponible !== false
       });
 
       // 2) Gestion des photos — uniquement si l'utilisateur a touché la zone photos.
@@ -445,7 +447,8 @@ export function useComptabilite() {
         quantity: 0,
         fournisseur: '',
         caracteristiques: '',
-        date: ''
+        date: '',
+        disponible: true
       });
       setSelectedProduct(null);
       setSearchTerm('');
@@ -603,7 +606,7 @@ export function useComptabilite() {
     }
   }, []);
 
-  const handleAchatFormChange = useCallback((field: keyof NouvelleAchatFormData, value: string | number) => {
+  const handleAchatFormChange = useCallback((field: keyof NouvelleAchatFormData, value: string | number | boolean) => {
     setAchatForm(prev => ({ ...prev, [field]: value }));
     // Sync fournisseur search with form field
     if (field === 'fournisseur') {

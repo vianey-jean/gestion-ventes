@@ -87,6 +87,20 @@ export const productApiService = {
     console.log('✅ Product photos replaced:', response.data);
     return response.data;
   },
+
+  /**
+   * Bascule la disponibilité d'un achat d'un produit.
+   * - disponible=true  -> la quantité est ajoutée au stock vendable
+   * - disponible=false -> la quantité est retirée du stock vendable
+   */
+  async setAchatDisponibilite(productId: string, achatIndex: number, disponible: boolean): Promise<Product> {
+    console.log(`🔄 Toggle achat #${achatIndex} of product ${productId} -> disponible=${disponible}`);
+    const response: AxiosResponse<Product> = await api.patch(
+      `/api/products/${productId}/achats/${achatIndex}/disponibilite`,
+      { disponible }
+    );
+    return response.data;
+  },
 };
 
 export default productApiService;

@@ -83,7 +83,7 @@ export interface AchatFormDialogProps {
   /** Données actuelles du formulaire d'achat */
   achatForm: NouvelleAchatFormData;
   /** Callback lors du changement d'un champ */
-  onFormChange: (field: keyof NouvelleAchatFormData, value: string | number) => void;
+  onFormChange: (field: keyof NouvelleAchatFormData, value: string | number | boolean) => void;
   /** Callback lors de la soumission */
   onSubmit: () => void;
   /** Terme de recherche actuel */
@@ -138,8 +138,8 @@ const AchatFormDialog: React.FC<AchatFormDialogProps> = ({
   // (existant -> nouveau, ou produit existant A -> produit existant B)
   const photoSectionKey = selectedProduct ? `existing-${selectedProduct.id}` : 'new-product';
   // Calcul du coût total
-  const totalCost = (achatForm.purchasePrice > 0 
-    ? achatForm.purchasePrice 
+  const totalCost = (achatForm.purchasePrice > 0
+    ? achatForm.purchasePrice
     : (selectedProduct?.purchasePrice || 0)) * achatForm.quantity;
 
   return (
@@ -205,71 +205,165 @@ const AchatFormDialog: React.FC<AchatFormDialogProps> = ({
               <p className="text-xs text-amber-600 dark:text-amber-400 font-semibold">
                 ⚠️ Le nom sera modifié de "{selectedProduct.description}" à "{achatForm.productDescription}"
               </p>
-          )}
+            )}
           </div>
 
           {/* Grille Prix / Quantité */}
-          <div className="grid grid-cols-2 gap-6">
-            {/* Prix d'achat */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <Label className="text-sm font-bold text-gray-800 dark:text-gray-100 flex items-center gap-2">
-                  <DollarSign className="h-4 w-4 text-emerald-500" />
-                  Prix d'achat (€)
-                </Label>
-                {selectedProduct && (
-                  <span className="text-sm font-bold text-red-600 bg-red-50 dark:bg-red-900/30 px-3 py-1 rounded-full border border-red-200 dark:border-red-700 flex items-center gap-1">
-                    Actuel: {formatEuro(selectedProduct.purchasePrice)}
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
+
+            {/* Prix */}
+            <Card className="overflow-hidden border-0 shadow-lg bg-white/70 dark:bg-slate-900/60 backdrop-blur-xl">
+              <CardContent className="p-5">
+                <div className="flex items-center justify-between mb-4">
+                  <Label className="flex items-center gap-2 text-sm font-bold">
+                    <div className="p-2 rounded-xl bg-emerald-500/10">
+                      <DollarSign className="h-4 w-4 text-emerald-600" />
+                    </div>
+                    Prix d'achat
+                  </Label>
+
+                  {selectedProduct && (
+                    <span className="px-3 py-1 rounded-full text-xs font-bold bg-red-500/10 text-red-600 border border-red-500/20">
+                      Actuel : {formatEuro(selectedProduct.purchasePrice)}
+                    </span>
+                  )}
+                </div>
+
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-emerald-600 font-bold">
+                    €
                   </span>
+
+                  <Input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={achatForm.purchasePrice || ''}
+                    onChange={(e) =>
+                      onFormChange(
+                        'purchasePrice',
+                        parseFloat(e.target.value) || 0
+                      )
+                    }
+                    placeholder="0.00"
+                    className="
+            h-14 pl-10 text-xl font-bold
+            rounded-2xl
+            border-2 border-emerald-200
+            focus:border-emerald-500
+            bg-white dark:bg-slate-900
+            shadow-sm
+          "
+                  />
+                </div>
+
+                {selectedProduct && (
+                  <p className="mt-3 text-xs text-slate-500">
+                    Laissez vide pour conserver le prix actuel.
+                  </p>
                 )}
-              </div>
-              <Input
-                type="number"
-                step="0.01"
-                min="0"
-                value={achatForm.purchasePrice || ''}
-                onChange={(e) => onFormChange('purchasePrice', parseFloat(e.target.value) || 0)}
-                placeholder={selectedProduct ? "Nouveau prix (optionnel)" : "Prix d'achat"}
-                className="h-12 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-600 focus:border-emerald-500 dark:focus:border-emerald-400 rounded-xl text-lg font-medium shadow-sm transition-all duration-200"
-              />
-              {selectedProduct && (
-                <p className="text-xs text-gray-500 dark:text-gray-400 italic">
-                  💡 Laissez vide pour garder le prix actuel
-                </p>
-              )}
-            </div>
-            
+              </CardContent>
+            </Card>
+
             {/* Quantité */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <Label className="text-sm font-bold text-gray-800 dark:text-gray-100 flex items-center gap-2">
-                  <Package className="h-4 w-4 text-blue-500" />
-                  Quantité à ajouter *
-                </Label>
-                {selectedProduct && (
-                  <span className="text-sm font-bold text-red-600 bg-red-50 dark:bg-red-900/30 px-3 py-1 rounded-full border border-red-200 dark:border-red-700 flex items-center gap-1">
-                    Stock: {selectedProduct.quantity}
-                  </span>
+            <Card className="overflow-hidden border-0 shadow-lg bg-white/70 dark:bg-slate-900/60 backdrop-blur-xl">
+              <CardContent className="p-5">
+
+                <div className="flex items-center justify-between mb-4">
+                  <Label className="flex items-center gap-2 text-sm font-bold">
+                    <div className="p-2 rounded-xl bg-blue-500/10">
+                      <Package className="h-4 w-4 text-blue-600" />
+                    </div>
+                    Quantité
+                  </Label>
+
+                  {selectedProduct && (
+                    <span className="px-3 py-1 rounded-full text-xs font-bold bg-blue-500/10 text-blue-600 border border-blue-500/20">
+                      Stock : {selectedProduct.quantity}
+                    </span>
+                  )}
+                </div>
+
+                <Input
+                  type="number"
+                  min="1"
+                  value={achatForm.quantity || ''}
+                  onChange={(e) =>
+                    onFormChange(
+                      'quantity',
+                      parseInt(e.target.value) || 0
+                    )
+                  }
+                  placeholder="0"
+                  className="
+          h-14
+          text-center
+          text-2xl
+          font-black
+          rounded-2xl
+          border-2 border-blue-200
+          focus:border-blue-500
+          bg-white dark:bg-slate-900
+        "
+                />
+
+                {/* Disponibilité moderne */}
+                <div className="mt-5">
+
+                  <div className="grid grid-cols-2 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700">
+
+                    <button
+                      type="button"
+                      onClick={() => onFormChange('disponible', true)}
+                      className={cn(
+                        "h-12 font-bold transition-all duration-300",
+                        achatForm.disponible !== false
+                          ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg"
+                          : "bg-white dark:bg-slate-900 text-slate-600"
+                      )}
+                    >
+                      ✓ Disponible
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => onFormChange('disponible', false)}
+                      className={cn(
+                        "h-12 font-bold transition-all duration-300",
+                        achatForm.disponible === false
+                          ? "bg-gradient-to-r from-rose-500 to-red-500 text-white shadow-lg"
+                          : "bg-white dark:bg-slate-900 text-slate-600"
+                      )}
+                    >
+                      ✕ Indisponible
+                    </button>
+
+                  </div>
+
+                </div>
+
+                {selectedProduct && achatForm.quantity > 0 && (
+                  <div
+                    className={cn(
+                      "mt-4 rounded-xl p-3 text-sm font-semibold",
+                      achatForm.disponible === false
+                        ? "bg-rose-500/10 text-rose-600"
+                        : "bg-emerald-500/10 text-emerald-600"
+                    )}
+                  >
+                    {achatForm.disponible === false
+                      ? `Stock vendable inchangé : ${selectedProduct.quantity}`
+                      : `Nouveau stock : ${selectedProduct.quantity + achatForm.quantity
+                      }`}
+                  </div>
                 )}
-              </div>
-              <Input
-                type="number"
-                min="1"
-                value={achatForm.quantity || ''}
-                onChange={(e) => onFormChange('quantity', parseInt(e.target.value) || 0)}
-                placeholder="Quantité à ajouter"
-                className="h-12 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-600 focus:border-blue-500 dark:focus:border-blue-400 rounded-xl text-lg font-medium shadow-sm transition-all duration-200"
-              />
-              {selectedProduct && achatForm.quantity > 0 && (
-                <p className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold">
-                  ✓ Nouveau stock: {selectedProduct.quantity + achatForm.quantity} unités
-                </p>
-              )}
-            </div>
+              </CardContent>
+            </Card>
+
           </div>
 
           {/* Grille Fournisseur / Caractéristiques */}
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
             <div className="space-y-3 relative" ref={fournisseurRef}>
               <Label className="text-sm font-bold text-gray-800 dark:text-gray-100 flex items-center gap-2">
                 <ShoppingCart className="h-4 w-4 text-purple-500" />
@@ -315,36 +409,36 @@ const AchatFormDialog: React.FC<AchatFormDialogProps> = ({
           </div>
 
           {/* Date d'achat */}
-        <div className="space-y-3">
-          <Label className="text-sm font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-            <CalendarIcon className="h-4 w-4 text-indigo-500" />
-            Date d'achat *
-          </Label>
+          <div className="space-y-3">
+            <Label className="text-sm font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+              <CalendarIcon className="h-4 w-4 text-indigo-500" />
+              Date d'achat *
+            </Label>
 
-          <div className="relative">
-            <CalendarIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-indigo-500" />
+            <div className="relative">
+              <CalendarIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-indigo-500" />
 
-            <Input
-              type="date"
-              value={achatForm.date ? achatForm.date.slice(0, 10) : ""}
-              onChange={(e) =>
-                onFormChange(
-                  "date",
-                  e.target.value ? new Date(e.target.value).toISOString() : ""
-                )
-              }
-              className={cn(
-                "h-12 w-full pl-11 pr-4 rounded-2xl",
-                "bg-white/80 dark:bg-gray-900/70 backdrop-blur-md",
-                "border border-gray-200/60 dark:border-gray-700/60",
-                "text-gray-900 dark:text-gray-100 font-medium",
-                "shadow-sm hover:shadow-md transition-all duration-200",
-                "focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500",
-                "appearance-none"
-              )}
-            />
+              <Input
+                type="date"
+                value={achatForm.date ? achatForm.date.slice(0, 10) : ""}
+                onChange={(e) =>
+                  onFormChange(
+                    "date",
+                    e.target.value ? new Date(e.target.value).toISOString() : ""
+                  )
+                }
+                className={cn(
+                  "h-12 w-full pl-11 pr-4 rounded-2xl",
+                  "bg-white/80 dark:bg-gray-900/70 backdrop-blur-md",
+                  "border border-gray-200/60 dark:border-gray-700/60",
+                  "text-gray-900 dark:text-gray-100 font-medium",
+                  "shadow-sm hover:shadow-md transition-all duration-200",
+                  "focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500",
+                  "appearance-none"
+                )}
+              />
+            </div>
           </div>
-        </div>
 
           {/* Résumé du coût */}
           {achatForm.quantity > 0 && (
@@ -371,8 +465,8 @@ const AchatFormDialog: React.FC<AchatFormDialogProps> = ({
 
         {/* Boutons d'action */}
         <DialogFooter className="gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             onClick={onClose}
             className="h-12 px-6 rounded-xl border-2 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all duration-200"
           >

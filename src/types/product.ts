@@ -30,6 +30,10 @@ export interface ProductAchat {
   quantity: number;
   purchasePrice: number;
   fournisseur?: string;
+  /** Si false, cette quantité n'est PAS ajoutée au stock vendable (défaut: true) */
+  disponible?: boolean;
+  /** Lien vers l'enregistrement nouvelle_achat.json (facultatif) */
+  nouvelleAchatId?: string;
 }
 
 export interface ProductVente {

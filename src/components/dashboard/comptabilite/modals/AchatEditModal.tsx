@@ -103,7 +103,8 @@ const AchatEditModal: React.FC<AchatEditModalProps> = ({
     purchasePrice: 0,
     quantity: 1,
     fournisseur: '',
-    date: new Date()
+    date: new Date(),
+    disponible: true
   });
   const [isSaving, setIsSaving] = useState(false);
   const [showSaveConfirm, setShowSaveConfirm] = useState(false);
@@ -122,7 +123,8 @@ const AchatEditModal: React.FC<AchatEditModalProps> = ({
         purchasePrice: price,
         quantity: achat.quantity || 1,
         fournisseur: achat.fournisseur || '',
-        date: achat.date ? new Date(achat.date) : new Date()
+        date: achat.date ? new Date(achat.date) : new Date(),
+        disponible: achat.disponible !== false
       });
     }
   }, [achat]);
@@ -131,7 +133,7 @@ const AchatEditModal: React.FC<AchatEditModalProps> = ({
 
   const isAchatProduit = achat.type === 'achat_produit';
 
-  const handleChange = (field: string, value: string | number | Date) => {
+  const handleChange = (field: string, value: string | number | Date | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
@@ -151,7 +153,8 @@ const AchatEditModal: React.FC<AchatEditModalProps> = ({
           purchasePrice: Number(formData.purchasePrice),
           quantity: Number(formData.quantity),
           fournisseur: formData.fournisseur,
-          totalCost: Number(formData.purchasePrice) * Number(formData.quantity)
+          totalCost: Number(formData.purchasePrice) * Number(formData.quantity),
+          disponible: formData.disponible
         } : {
           description: formData.description,
           totalCost: Number(formData.purchasePrice)
@@ -272,6 +275,44 @@ const AchatEditModal: React.FC<AchatEditModalProps> = ({
                   className="h-12 rounded-xl"
                   placeholder="Nom du fournisseur..."
                 />
+              </div>
+            )}
+
+            {/* 🆕 Disponibilité (uniquement pour achats produit) */}
+            {isAchatProduit && (
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Disponibilité du stock</Label>
+                <div className="flex rounded-xl overflow-hidden border-2 border-border h-12">
+                  <button
+                    type="button"
+                    onClick={() => handleChange('disponible', true)}
+                    className={cn(
+                      "flex-1 text-xs sm:text-sm font-bold transition-all",
+                      formData.disponible
+                        ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-white"
+                        : "bg-background text-muted-foreground hover:bg-muted"
+                    )}
+                  >
+                    ✓ Disponible
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleChange('disponible', false)}
+                    className={cn(
+                      "flex-1 text-xs sm:text-sm font-bold transition-all border-l-2 border-border",
+                      !formData.disponible
+                        ? "bg-gradient-to-r from-rose-500 to-red-500 text-white"
+                        : "bg-background text-muted-foreground hover:bg-muted"
+                    )}
+                  >
+                    ✕ Indisponible
+                  </button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {formData.disponible
+                    ? 'Cette quantité est vendable depuis la page Ventes.'
+                    : 'Cette quantité ne sera PAS vendable depuis la page Ventes.'}
+                </p>
               </div>
             )}
 
