@@ -126,11 +126,15 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
     if (!selectedProduct || achatEditIndex === null) return;
     try {
       setAchatSaving(true);
+      // Auto-create fournisseur si nouveau
+      if (achatEditForm.fournisseur.trim()) {
+        try { await fournisseurApiService.create(achatEditForm.fournisseur.trim()); } catch (e) { console.error('Fournisseur create error:', e); }
+      }
       const updated = await productApiService.updateAchat(selectedProduct.id, achatEditIndex, {
         date: achatEditForm.date,
         quantity: Number(achatEditForm.quantity) || 0,
         purchasePrice: Number(achatEditForm.purchasePrice) || 0,
-        fournisseur: achatEditForm.fournisseur,
+        fournisseur: achatEditForm.fournisseur.trim(),
         disponible: achatEditForm.disponible,
       });
       setSelectedProduct(updated);
@@ -2107,8 +2111,11 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
               <Input type="number" step="0.01" min="0" value={achatEditForm.purchasePrice} onChange={(e) => setAchatEditForm(f => ({ ...f, purchasePrice: e.target.value }))} />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-white/80 text-xs">Fournisseur</Label>
-              <Input value={achatEditForm.fournisseur} onChange={(e) => setAchatEditForm(f => ({ ...f, fournisseur: e.target.value }))} />
+              <FournisseurAutocomplete
+                value={achatEditForm.fournisseur}
+                onChange={(val) => setAchatEditForm(f => ({ ...f, fournisseur: val }))}
+                variant="dark"
+              />
             </div>
             <div className="sm:col-span-2 flex items-center gap-2 p-2 rounded-lg bg-white/5">
               <Checkbox id="achat-dispo-edit" checked={achatEditForm.disponible} onCheckedChange={(c) => setAchatEditForm(f => ({ ...f, disponible: !!c }))} />
