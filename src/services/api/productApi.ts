@@ -101,6 +101,30 @@ export const productApiService = {
     );
     return response.data;
   },
+
+  /** Met à jour un achat (date / quantity / purchasePrice / fournisseur / disponible). */
+  async updateAchat(productId: string, achatIndex: number, patch: Partial<{ date: string; quantity: number; purchasePrice: number; fournisseur: string; disponible: boolean; }>): Promise<Product> {
+    const response: AxiosResponse<Product> = await api.put(`/api/products/${productId}/achats/${achatIndex}`, patch);
+    return response.data;
+  },
+
+  /** Supprime un achat. */
+  async deleteAchat(productId: string, achatIndex: number): Promise<Product> {
+    const response: AxiosResponse<Product> = await api.delete(`/api/products/${productId}/achats/${achatIndex}`);
+    return response.data;
+  },
+
+  /** Met à jour une vente (date / quantity / sellingPrice). */
+  async updateVente(productId: string, venteIndex: number, patch: Partial<{ date: string; quantity: number; sellingPrice: number; }>): Promise<Product> {
+    const response: AxiosResponse<Product> = await api.put(`/api/products/${productId}/ventes/${venteIndex}`, patch);
+    return response.data;
+  },
+
+  /** Supprime une vente. */
+  async deleteVente(productId: string, venteIndex: number): Promise<Product> {
+    const response: AxiosResponse<Product> = await api.delete(`/api/products/${productId}/ventes/${venteIndex}`);
+    return response.data;
+  },
 };
 
 export default productApiService;

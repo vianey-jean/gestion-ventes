@@ -83,6 +83,123 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
   // 🆕 État local pour éviter les doubles clics sur le toggle de disponibilité d'achat
   const [togglingAchatIndex, setTogglingAchatIndex] = useState<number | null>(null);
 
+  // 🆕 Sous-modales pour voir/modifier/supprimer un achat ou une vente précis
+  const [achatViewIndex, setAchatViewIndex] = useState<number | null>(null);
+  const [achatEditIndex, setAchatEditIndex] = useState<number | null>(null);
+  const [achatDeleteIndex, setAchatDeleteIndex] = useState<number | null>(null);
+  const [achatEditForm, setAchatEditForm] = useState<{ date: string; quantity: string; purchasePrice: string; fournisseur: string; disponible: boolean }>({ date: '', quantity: '', purchasePrice: '', fournisseur: '', disponible: true });
+  const [achatSaving, setAchatSaving] = useState(false);
+  const [achatDeleting, setAchatDeleting] = useState(false);
+
+  const [venteViewIndex, setVenteViewIndex] = useState<number | null>(null);
+  const [venteEditIndex, setVenteEditIndex] = useState<number | null>(null);
+  const [venteDeleteIndex, setVenteDeleteIndex] = useState<number | null>(null);
+  const [venteEditForm, setVenteEditForm] = useState<{ date: string; quantity: string; sellingPrice: string }>({ date: '', quantity: '', sellingPrice: '' });
+  const [venteSaving, setVenteSaving] = useState(false);
+  const [venteDeleting, setVenteDeleting] = useState(false);
+
+  const openAchatEdit = useCallback((i: number) => {
+    if (!selectedProduct?.achats?.[i]) return;
+    const a = selectedProduct.achats[i];
+    setAchatEditForm({
+      date: (a.date || '').slice(0, 10),
+      quantity: String(a.quantity ?? ''),
+      purchasePrice: String(a.purchasePrice ?? ''),
+      fournisseur: a.fournisseur || '',
+      disponible: a.disponible !== false,
+    });
+    setAchatEditIndex(i);
+  }, [selectedProduct]);
+
+  const openVenteEdit = useCallback((i: number) => {
+    if (!selectedProduct?.ventes?.[i]) return;
+    const v = selectedProduct.ventes[i];
+    setVenteEditForm({
+      date: (v.date || '').slice(0, 10),
+      quantity: String(v.quantity ?? ''),
+      sellingPrice: String(v.sellingPrice ?? ''),
+    });
+    setVenteEditIndex(i);
+  }, [selectedProduct]);
+
+  const handleSaveAchat = useCallback(async () => {
+    if (!selectedProduct || achatEditIndex === null) return;
+    try {
+      setAchatSaving(true);
+      const updated = await productApiService.updateAchat(selectedProduct.id, achatEditIndex, {
+        date: achatEditForm.date,
+        quantity: Number(achatEditForm.quantity) || 0,
+        purchasePrice: Number(achatEditForm.purchasePrice) || 0,
+        fournisseur: achatEditForm.fournisseur,
+        disponible: achatEditForm.disponible,
+      });
+      setSelectedProduct(updated);
+      await fetchProducts();
+      toast({ title: 'Achat modifié', description: 'Les changements sont enregistrés.' });
+      setAchatEditIndex(null);
+    } catch (e) {
+      console.error(e);
+      toast({ title: 'Erreur', description: "Impossible de modifier l'achat.", variant: 'destructive' });
+    } finally {
+      setAchatSaving(false);
+    }
+  }, [selectedProduct, achatEditIndex, achatEditForm, fetchProducts, toast]);
+
+  const handleDeleteAchat = useCallback(async () => {
+    if (!selectedProduct || achatDeleteIndex === null) return;
+    try {
+      setAchatDeleting(true);
+      const updated = await productApiService.deleteAchat(selectedProduct.id, achatDeleteIndex);
+      setSelectedProduct(updated);
+      await fetchProducts();
+      toast({ title: 'Achat supprimé' });
+      setAchatDeleteIndex(null);
+    } catch (e) {
+      console.error(e);
+      toast({ title: 'Erreur', description: "Impossible de supprimer l'achat.", variant: 'destructive' });
+    } finally {
+      setAchatDeleting(false);
+    }
+  }, [selectedProduct, achatDeleteIndex, fetchProducts, toast]);
+
+  const handleSaveVente = useCallback(async () => {
+    if (!selectedProduct || venteEditIndex === null) return;
+    try {
+      setVenteSaving(true);
+      const updated = await productApiService.updateVente(selectedProduct.id, venteEditIndex, {
+        date: venteEditForm.date,
+        quantity: Number(venteEditForm.quantity) || 0,
+        sellingPrice: Number(venteEditForm.sellingPrice) || 0,
+      });
+      setSelectedProduct(updated);
+      await fetchProducts();
+      toast({ title: 'Vente modifiée' });
+      setVenteEditIndex(null);
+    } catch (e) {
+      console.error(e);
+      toast({ title: 'Erreur', description: 'Impossible de modifier la vente.', variant: 'destructive' });
+    } finally {
+      setVenteSaving(false);
+    }
+  }, [selectedProduct, venteEditIndex, venteEditForm, fetchProducts, toast]);
+
+  const handleDeleteVente = useCallback(async () => {
+    if (!selectedProduct || venteDeleteIndex === null) return;
+    try {
+      setVenteDeleting(true);
+      const updated = await productApiService.deleteVente(selectedProduct.id, venteDeleteIndex);
+      setSelectedProduct(updated);
+      await fetchProducts();
+      toast({ title: 'Vente supprimée' });
+      setVenteDeleteIndex(null);
+    } catch (e) {
+      console.error(e);
+      toast({ title: 'Erreur', description: 'Impossible de supprimer la vente.', variant: 'destructive' });
+    } finally {
+      setVenteDeleting(false);
+    }
+  }, [selectedProduct, venteDeleteIndex, fetchProducts, toast]);
+
   // 🆕 Toggle la disponibilité d'un achat. Met à jour products.json côté serveur
   // puis rafraîchit le selectedProduct localement pour un retour visuel immédiat.
   const handleToggleAchatDispo = useCallback(async (achatIndex: number, nextDispo: boolean) => {
@@ -1880,6 +1997,17 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
                                   ? '→ Indisponible'
                                   : '→ Disponible'}
                             </Button>
+                            <div className="flex items-center gap-1">
+                              <Button size="icon" variant="ghost" className="h-8 w-8 text-cyan-300 hover:text-cyan-200 hover:bg-cyan-500/10" onClick={() => setAchatViewIndex(originalIndex)} title="Voir">
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                              <Button size="icon" variant="ghost" className="h-8 w-8 text-amber-300 hover:text-amber-200 hover:bg-amber-500/10" onClick={() => openAchatEdit(originalIndex)} title="Modifier">
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button size="icon" variant="ghost" className="h-8 w-8 text-rose-300 hover:text-rose-200 hover:bg-rose-500/10" onClick={() => setAchatDeleteIndex(originalIndex)} title="Supprimer">
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
                           </div>
                         </div>
                       );
@@ -1895,13 +2023,30 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
                   <ShoppingBag className="h-4 w-4" /> Ventes ({selectedProduct.ventes?.length || 0})
                 </h4>
                 <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
-                  {(selectedProduct.ventes || []).slice().sort((a,b)=> new Date(a.date).getTime()-new Date(b.date).getTime()).map((v, i) => (
-                    <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/10">
-                      <div>
+                  {(selectedProduct.ventes || [])
+                    .map((v, originalIndex) => ({ v, originalIndex }))
+                    .slice()
+                    .sort((x, y) => new Date(x.v.date).getTime() - new Date(y.v.date).getTime())
+                    .map(({ v, originalIndex }) => (
+                    <div key={originalIndex} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-3 rounded-xl bg-white/5 border border-white/10">
+                      <div className="flex-1 min-w-0">
                         <p className="text-white/90 text-sm font-semibold">-{v.quantity} unité{v.quantity>1?'s':''}</p>
                         <p className="text-white/50 text-xs">{new Date(v.date).toLocaleDateString('fr-FR')}</p>
                       </div>
-                      <span className="text-emerald-300 font-bold">{v.sellingPrice}€</span>
+                      <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto">
+                        <span className="text-emerald-300 font-bold whitespace-nowrap">{v.sellingPrice}€</span>
+                        <div className="flex items-center gap-1">
+                          <Button size="icon" variant="ghost" className="h-8 w-8 text-cyan-300 hover:text-cyan-200 hover:bg-cyan-500/10" onClick={() => setVenteViewIndex(originalIndex)} title="Voir">
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button size="icon" variant="ghost" className="h-8 w-8 text-amber-300 hover:text-amber-200 hover:bg-amber-500/10" onClick={() => openVenteEdit(originalIndex)} title="Modifier">
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button size="icon" variant="ghost" className="h-8 w-8 text-rose-300 hover:text-rose-200 hover:bg-rose-500/10" onClick={() => setVenteDeleteIndex(originalIndex)} title="Supprimer">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
                     </div>
                   ))}
                   {(!selectedProduct.ventes || selectedProduct.ventes.length === 0) && (
@@ -1913,6 +2058,160 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
           )}
         </DialogContent>
       </Dialog>
+
+      {/* ===== Sous-modales Achat (Voir / Modifier / Supprimer) ===== */}
+      <Dialog open={achatViewIndex !== null} onOpenChange={(o) => !o && setAchatViewIndex(null)}>
+        <DialogContent className="sm:max-w-md bg-gradient-to-br from-slate-900 via-emerald-900/30 to-teal-900/20 border border-white/10 rounded-3xl">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-black bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent flex items-center gap-2">
+              <Eye className="h-5 w-5" /> Détails de l'achat
+            </DialogTitle>
+          </DialogHeader>
+          {selectedProduct && achatViewIndex !== null && selectedProduct.achats?.[achatViewIndex] && (() => {
+            const a = selectedProduct.achats[achatViewIndex];
+            const isDispo = a.disponible !== false;
+            return (
+              <div className="space-y-2 text-sm">
+                <div className="p-3 rounded-xl bg-white/5 border border-white/10"><span className="text-white/60">Date :</span> <span className="text-white font-semibold">{new Date(a.date).toLocaleDateString('fr-FR')}</span></div>
+                <div className="p-3 rounded-xl bg-white/5 border border-white/10"><span className="text-white/60">Quantité :</span> <span className="text-white font-semibold">+{a.quantity}</span></div>
+                <div className="p-3 rounded-xl bg-white/5 border border-white/10"><span className="text-white/60">Prix d'achat :</span> <span className="text-amber-300 font-bold">{a.purchasePrice}€</span></div>
+                <div className="p-3 rounded-xl bg-white/5 border border-white/10"><span className="text-white/60">Fournisseur :</span> <span className="text-cyan-300 font-semibold">{a.fournisseur || '—'}</span></div>
+                <div className="p-3 rounded-xl bg-white/5 border border-white/10"><span className="text-white/60">Disponibilité :</span> <Badge className={cn('ml-2 border-0', isDispo ? 'bg-emerald-500/20 text-emerald-200' : 'bg-rose-500/20 text-rose-200')}>{isDispo ? '✓ Disponible' : '✕ Indisponible'}</Badge></div>
+              </div>
+            );
+          })()}
+          <DialogFooter>
+            <Button onClick={() => setAchatViewIndex(null)} variant="outline">Fermer</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={achatEditIndex !== null} onOpenChange={(o) => !o && setAchatEditIndex(null)}>
+        <DialogContent className="sm:max-w-md bg-gradient-to-br from-slate-900 via-amber-900/30 to-orange-900/20 border border-white/10 rounded-3xl">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-black bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent flex items-center gap-2">
+              <Edit className="h-5 w-5" /> Modifier l'achat
+            </DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label className="text-white/80 text-xs">Date</Label>
+              <Input type="date" value={achatEditForm.date} onChange={(e) => setAchatEditForm(f => ({ ...f, date: e.target.value }))} />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-white/80 text-xs">Quantité</Label>
+              <Input type="number" min="0" value={achatEditForm.quantity} onChange={(e) => setAchatEditForm(f => ({ ...f, quantity: e.target.value }))} />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-white/80 text-xs">Prix d'achat (€)</Label>
+              <Input type="number" step="0.01" min="0" value={achatEditForm.purchasePrice} onChange={(e) => setAchatEditForm(f => ({ ...f, purchasePrice: e.target.value }))} />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-white/80 text-xs">Fournisseur</Label>
+              <Input value={achatEditForm.fournisseur} onChange={(e) => setAchatEditForm(f => ({ ...f, fournisseur: e.target.value }))} />
+            </div>
+            <div className="sm:col-span-2 flex items-center gap-2 p-2 rounded-lg bg-white/5">
+              <Checkbox id="achat-dispo-edit" checked={achatEditForm.disponible} onCheckedChange={(c) => setAchatEditForm(f => ({ ...f, disponible: !!c }))} />
+              <Label htmlFor="achat-dispo-edit" className="text-white/80 text-sm cursor-pointer">Disponible (compte dans le stock vendable)</Label>
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setAchatEditIndex(null)} disabled={achatSaving}>Annuler</Button>
+            <Button onClick={handleSaveAchat} disabled={achatSaving} className="bg-gradient-to-r from-amber-500 to-orange-500 text-white">
+              {achatSaving ? 'Enregistrement…' : 'Enregistrer'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog open={achatDeleteIndex !== null} onOpenChange={(o) => !o && setAchatDeleteIndex(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Supprimer cet achat ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Cette action est irréversible. Si l'achat était disponible, sa quantité sera retirée du stock vendable.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={achatDeleting}>Annuler</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteAchat} disabled={achatDeleting} className="bg-red-600 hover:bg-red-700">
+              {achatDeleting ? 'Suppression…' : 'Supprimer'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* ===== Sous-modales Vente (Voir / Modifier / Supprimer) ===== */}
+      <Dialog open={venteViewIndex !== null} onOpenChange={(o) => !o && setVenteViewIndex(null)}>
+        <DialogContent className="sm:max-w-md bg-gradient-to-br from-slate-900 via-rose-900/30 to-pink-900/20 border border-white/10 rounded-3xl">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-black bg-gradient-to-r from-rose-400 to-pink-400 bg-clip-text text-transparent flex items-center gap-2">
+              <Eye className="h-5 w-5" /> Détails de la vente
+            </DialogTitle>
+          </DialogHeader>
+          {selectedProduct && venteViewIndex !== null && selectedProduct.ventes?.[venteViewIndex] && (() => {
+            const v = selectedProduct.ventes[venteViewIndex];
+            return (
+              <div className="space-y-2 text-sm">
+                <div className="p-3 rounded-xl bg-white/5 border border-white/10"><span className="text-white/60">Date :</span> <span className="text-white font-semibold">{new Date(v.date).toLocaleDateString('fr-FR')}</span></div>
+                <div className="p-3 rounded-xl bg-white/5 border border-white/10"><span className="text-white/60">Quantité :</span> <span className="text-white font-semibold">-{v.quantity}</span></div>
+                <div className="p-3 rounded-xl bg-white/5 border border-white/10"><span className="text-white/60">Prix de vente :</span> <span className="text-emerald-300 font-bold">{v.sellingPrice}€</span></div>
+              </div>
+            );
+          })()}
+          <DialogFooter>
+            <Button onClick={() => setVenteViewIndex(null)} variant="outline">Fermer</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={venteEditIndex !== null} onOpenChange={(o) => !o && setVenteEditIndex(null)}>
+        <DialogContent className="sm:max-w-md bg-gradient-to-br from-slate-900 via-amber-900/30 to-orange-900/20 border border-white/10 rounded-3xl">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-black bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent flex items-center gap-2">
+              <Edit className="h-5 w-5" /> Modifier la vente
+            </DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="space-y-1.5 sm:col-span-2">
+              <Label className="text-white/80 text-xs">Date</Label>
+              <Input type="date" value={venteEditForm.date} onChange={(e) => setVenteEditForm(f => ({ ...f, date: e.target.value }))} />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-white/80 text-xs">Quantité</Label>
+              <Input type="number" min="0" value={venteEditForm.quantity} onChange={(e) => setVenteEditForm(f => ({ ...f, quantity: e.target.value }))} />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-white/80 text-xs">Prix de vente (€)</Label>
+              <Input type="number" step="0.01" min="0" value={venteEditForm.sellingPrice} onChange={(e) => setVenteEditForm(f => ({ ...f, sellingPrice: e.target.value }))} />
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setVenteEditIndex(null)} disabled={venteSaving}>Annuler</Button>
+            <Button onClick={handleSaveVente} disabled={venteSaving} className="bg-gradient-to-r from-amber-500 to-orange-500 text-white">
+              {venteSaving ? 'Enregistrement…' : 'Enregistrer'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog open={venteDeleteIndex !== null} onOpenChange={(o) => !o && setVenteDeleteIndex(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Supprimer cette vente ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Cette action est irréversible. La quantité vendue sera rendue au stock du produit.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={venteDeleting}>Annuler</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteVente} disabled={venteDeleting} className="bg-red-600 hover:bg-red-700">
+              {venteDeleting ? 'Suppression…' : 'Supprimer'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
 
       {/* ========== MODALE HISTORIQUE FOURNISSEURS ========== */}
       <Dialog open={isFournHistoryOpen} onOpenChange={setIsFournHistoryOpen}>
