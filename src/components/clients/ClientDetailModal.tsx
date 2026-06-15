@@ -43,15 +43,19 @@ const ClientDetailModal: React.FC<Props> = ({ open, onOpenChange, client, photoU
   const [heightMm, setHeightMm] = useState<string>('80');
   const [format, setFormat] = useState<'pdf' | 'jpeg'>('pdf');
   const [busy, setBusy] = useState(false);
+  const [selectedPhoneIdx, setSelectedPhoneIdx] = useState(0);
+  const [selectedAddressIdx, setSelectedAddressIdx] = useState(0);
 
   if (!client) return null;
 
   const phones = client.phones && client.phones.length > 0 ? client.phones : [client.phone || ''];
   const addresses = client.addresses && client.addresses.length > 0 ? client.addresses : [client.adresse || ''];
   const villesArr = Array.isArray(client.villes) ? client.villes : [];
-  const mainPhone = phones[0] || '';
-  const mainAddress = addresses[0] || '';
-  const mainVille = villesArr[0] || client.ville || '';
+  const safePhoneIdx = Math.min(selectedPhoneIdx, phones.length - 1);
+  const safeAddrIdx = Math.min(selectedAddressIdx, addresses.length - 1);
+  const mainPhone = phones[safePhoneIdx] || '';
+  const mainAddress = addresses[safeAddrIdx] || '';
+  const mainVille = villesArr[safeAddrIdx] || (safeAddrIdx === 0 ? (client.ville || '') : '');
 
   // ---------- Icônes PDF (vecteur jsPDF) ----------
   const drawPdfIcon = (
@@ -384,30 +388,64 @@ const ClientDetailModal: React.FC<Props> = ({ open, onOpenChange, client, photoU
           </div>
 
           <div className="space-y-2">
-            <h4 className="text-sm font-bold text-gray-700 dark:text-gray-300">Téléphones</h4>
-            {phones.map((p, i) => (
-              <div key={i} className="flex items-center gap-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
-                <Phone className="w-4 h-4 text-green-600 shrink-0" />
-                <span className="text-sm font-semibold break-all">{p}</span>
-                {i === 0 && <span className="ml-auto text-[10px] uppercase font-bold text-green-700 bg-green-100 px-2 py-0.5 rounded-full">Principal</span>}
-              </div>
-            ))}
+            <h4 className="text-sm font-bold text-gray-700 dark:text-gray-300">
+              Téléphones {phones.length >= 2 && <span className="text-xs font-normal text-violet-600">(cliquez pour choisir celui à imprimer)</span>}
+            </h4>
+            {phones.map((p, i) => {
+              const isSelected = i === safePhoneIdx;
+              const clickable = phones.length >= 2;
+              return (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => clickable && setSelectedPhoneIdx(i)}
+                  className={`w-full text-left flex items-center gap-3 p-3 rounded-lg border transition-all ${
+                    isSelected
+                      ? 'bg-green-100 dark:bg-green-900/40 border-green-500 ring-2 ring-green-400 shadow'
+                      : 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 hover:border-green-400'
+                  } ${clickable ? 'cursor-pointer' : 'cursor-default'}`}
+                >
+                  <Phone className="w-4 h-4 text-green-600 shrink-0" />
+                  <span className="text-sm font-semibold break-all">{p}</span>
+                  {isSelected && clickable && (
+                    <span className="ml-auto text-[10px] uppercase font-bold text-white bg-green-600 px-2 py-0.5 rounded-full">Sélectionné</span>
+                  )}
+                  {i === 0 && !clickable && <span className="ml-auto text-[10px] uppercase font-bold text-green-700 bg-green-100 px-2 py-0.5 rounded-full">Principal</span>}
+                </button>
+              );
+            })}
           </div>
 
           <div className="space-y-2">
-            <h4 className="text-sm font-bold text-gray-700 dark:text-gray-300">Adresses</h4>
+            <h4 className="text-sm font-bold text-gray-700 dark:text-gray-300">
+              Adresses {addresses.length >= 2 && <span className="text-xs font-normal text-violet-600">(cliquez pour choisir celle à imprimer)</span>}
+            </h4>
             {addresses.map((a, i) => {
               const villes = Array.isArray(client.villes) ? client.villes : [];
               const ville = villes[i] || (i === 0 ? client.ville : '');
+              const isSelected = i === safeAddrIdx;
+              const clickable = addresses.length >= 2;
               return (
-                <div key={i} className="flex items-center gap-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => clickable && setSelectedAddressIdx(i)}
+                  className={`w-full text-left flex items-center gap-3 p-3 rounded-lg border transition-all ${
+                    isSelected
+                      ? 'bg-blue-100 dark:bg-blue-900/40 border-blue-500 ring-2 ring-blue-400 shadow'
+                      : 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 hover:border-blue-400'
+                  } ${clickable ? 'cursor-pointer' : 'cursor-default'}`}
+                >
                   <MapPin className="w-4 h-4 text-blue-600 shrink-0" />
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-semibold break-words">{a}</p>
                     {ville && <p className="text-xs text-gray-500">{ville}</p>}
                   </div>
-                  {i === 0 && <span className="text-[10px] uppercase font-bold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full shrink-0">Principal</span>}
-                </div>
+                  {isSelected && clickable && (
+                    <span className="text-[10px] uppercase font-bold text-white bg-blue-600 px-2 py-0.5 rounded-full shrink-0">Sélectionné</span>
+                  )}
+                  {i === 0 && !clickable && <span className="text-[10px] uppercase font-bold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full shrink-0">Principal</span>}
+                </button>
               );
             })}
           </div>
