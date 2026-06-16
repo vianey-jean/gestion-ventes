@@ -43,6 +43,8 @@ const SaleProductCard: React.FC<SaleProductCardProps> = ({
 }) => {
   const [villes, setVilles] = useState<LivraisonVille[]>([]);
   const [showFeeOverride, setShowFeeOverride] = useState(false);
+  const [showFeeIncrease, setShowFeeIncrease] = useState(false);
+  const [feeIncreaseAmount, setFeeIncreaseAmount] = useState('');
   useEffect(() => {
     livraisonVilleApi.getAll().then(setVilles).catch(() => setVilles([]));
   }, []);
@@ -322,27 +324,46 @@ const SaleProductCard: React.FC<SaleProductCardProps> = ({
                 </div>
               )}
 
-              <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center justify-between gap-2 flex-wrap">
                 <p className="text-sm text-gray-500">
                   Frais: {Number(product.deliveryFee || 0).toFixed(2)} €
                   {isOverridden && baseVilleFee !== undefined && (
-                    <span className="ml-2 text-[11px] text-emerald-600 font-semibold">
-                      (réduit de {(Number(baseVilleFee) - Number(product.deliveryFee || 0)).toFixed(2)} €)
-                    </span>
+                    Number(product.deliveryFee || 0) < Number(baseVilleFee) ? (
+                      <span className="ml-2 text-[11px] text-emerald-600 font-semibold">
+                        (réduit de {(Number(baseVilleFee) - Number(product.deliveryFee || 0)).toFixed(2)} €)
+                      </span>
+                    ) : (
+                      <span className="ml-2 text-[11px] text-orange-600 font-semibold">
+                        (augmenté de {(Number(product.deliveryFee || 0) - Number(baseVilleFee)).toFixed(2)} €)
+                      </span>
+                    )
                   )}
                 </p>
                 {!!product.deliveryLocation && product.deliveryLocation !== 'Exonération' && !isCustomLoc && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setShowFeeOverride(s => !s)}
-                    className="h-7 px-2 text-xs gap-1 text-blue-600 hover:bg-blue-50"
-                    disabled={isSubmitting}
-                  >
-                    {showFeeOverride ? <X className="h-3 w-3" /> : <Plus className="h-3 w-3" />}
-                    Réduction frais
-                  </Button>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => { setShowFeeOverride(s => !s); if (!showFeeOverride) setShowFeeIncrease(false); }}
+                      className="h-7 px-2 text-xs gap-1 text-blue-600 hover:bg-blue-50"
+                      disabled={isSubmitting}
+                    >
+                      {showFeeOverride ? <X className="h-3 w-3" /> : <Plus className="h-3 w-3" />}
+                      Réduction frais
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => { setShowFeeIncrease(s => !s); if (!showFeeIncrease) setShowFeeOverride(false); }}
+                      className="h-7 px-2 text-xs gap-1 text-orange-600 hover:bg-orange-50"
+                      disabled={isSubmitting}
+                    >
+                      {showFeeIncrease ? <X className="h-3 w-3" /> : <Plus className="h-3 w-3" />}
+                      Augmentation frais
+                    </Button>
+                  </div>
                 )}
               </div>
 
@@ -363,6 +384,48 @@ const SaleProductCard: React.FC<SaleProductCardProps> = ({
                       type="button"
                       className="text-[11px] text-gray-500 hover:text-gray-700 underline"
                       onClick={() => onDeliveryChange(product.deliveryLocation, String(baseVilleFee), index)}
+                    >
+                      Rétablir le frais standard ({baseVilleFee} €)
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {showFeeIncrease && !isCustomLoc && !!product.deliveryLocation && product.deliveryLocation !== 'Exonération' && (
+                <div className="mt-2 p-3 rounded-lg bg-orange-50/60 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 space-y-2">
+                  <Label className="text-xs">
+                    Montant à ajouter au frais standard
+                    {baseVilleFee !== undefined && ` (${baseVilleFee} €)`} pour {product.deliveryLocation}
+                  </Label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={feeIncreaseAmount}
+                      onChange={(e) => {
+                        const add = e.target.value;
+                        setFeeIncreaseAmount(add);
+                        const base = baseVilleFee !== undefined ? Number(baseVilleFee) : Number(product.deliveryFee || 0);
+                        const total = base + Number(add || 0);
+                        onDeliveryChange(product.deliveryLocation, String(total), index);
+                      }}
+                      placeholder="Ex: 10"
+                      disabled={isSubmitting}
+                      className="flex-1"
+                    />
+                    <span className="text-xs text-gray-600 whitespace-nowrap">
+                      = {Number(product.deliveryFee || 0).toFixed(2)} € total
+                    </span>
+                  </div>
+                  {baseVilleFee !== undefined && (
+                    <button
+                      type="button"
+                      className="text-[11px] text-gray-500 hover:text-gray-700 underline"
+                      onClick={() => {
+                        setFeeIncreaseAmount('');
+                        onDeliveryChange(product.deliveryLocation, String(baseVilleFee), index);
+                      }}
                     >
                       Rétablir le frais standard ({baseVilleFee} €)
                     </button>
