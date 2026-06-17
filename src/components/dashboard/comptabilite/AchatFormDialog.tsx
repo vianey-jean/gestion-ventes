@@ -257,11 +257,43 @@ const AchatFormDialog: React.FC<AchatFormDialogProps> = ({
                   />
                 </div>
 
-                {selectedProduct && (
-                  <p className="mt-3 text-xs text-slate-500">
-                    Laissez vide pour conserver le prix actuel.
-                  </p>
-                )}
+                {(() => {
+                  const newPrice = Number(achatForm.purchasePrice) || 0;
+                  const oldPrice = Number(selectedProduct?.purchasePrice) || 0;
+                  if (!selectedProduct || newPrice <= 0 || oldPrice <= 0) {
+                    if (selectedProduct) {
+                      return (
+                        <p className="mt-3 text-xs text-slate-500">
+                          Laissez vide pour conserver le prix actuel.
+                        </p>
+                      );
+                    }
+                    return null;
+                  }
+                  const diff = newPrice - oldPrice;
+                  const pct = (diff / oldPrice) * 100;
+                  let cls = 'bg-blue-500/10 text-blue-600 border-blue-500/30';
+                  let label = `= ${pct.toFixed(2)}% (prix identique)`;
+                  let arrow = '➖';
+                  if (Math.abs(pct) >= 0.01) {
+                    if (pct > 0) {
+                      cls = 'bg-red-500/10 text-red-600 border-red-500/30';
+                      label = `+${pct.toFixed(2)}% (augmentation)`;
+                      arrow = '▲';
+                    } else {
+                      cls = 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30';
+                      label = `${pct.toFixed(2)}% (diminution)`;
+                      arrow = '▼';
+                    }
+                  }
+                  return (
+                    <div className={cn('mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold border', cls)}>
+                      <span>{arrow}</span>
+                      <span>{label}</span>
+                      <span className="opacity-70">· ancien {formatEuro(oldPrice)} → nouveau {formatEuro(newPrice)}</span>
+                    </div>
+                  );
+                })()}
               </CardContent>
             </Card>
 

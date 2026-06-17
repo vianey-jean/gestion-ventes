@@ -9,6 +9,7 @@ import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useApp } from '@/contexts/AppContext';
 import useCurrencyFormatter from '@/hooks/use-currency-formatter';
 import nouvelleAchatApiService from '@/services/api/nouvelleAchatApi';
+import prixProductsApiService from '@/services/api/prixProductsApi';
 import productApiService from '@/services/api/productApi';
 import comptaApiService from '@/services/api/comptaApi';
 import fournisseurApiService, { Fournisseur } from '@/services/api/fournisseurApi';
@@ -394,6 +395,24 @@ export function useComptabilite() {
         date: achatForm.date,
         disponible: achatForm.disponible !== false
       });
+
+      // 1.bis) Enregistrement dans prixproducts.json (historique des prix d'achat)
+      try {
+        await prixProductsApiService.create({
+          productId: selectedProduct?.id || createdAchat?.productId || null,
+          productDescription: achatForm.productDescription,
+          purchasePrice: finalPurchasePrice,
+          previousPrice: selectedProduct ? Number(selectedProduct.purchasePrice) || null : null,
+          quantity: achatForm.quantity,
+          disponible: achatForm.disponible !== false,
+          fournisseur: achatForm.fournisseur,
+          caracteristiques: achatForm.caracteristiques,
+          date: achatForm.date,
+          isNewProduct: !selectedProduct
+        });
+      } catch (prixErr) {
+        console.error('⚠️ Erreur enregistrement prixproducts:', prixErr);
+      }
 
       // 2) Gestion des photos — uniquement si l'utilisateur a touché la zone photos.
       //    Cas A : produit existant -> remplacer les photos (supprime les anciennes

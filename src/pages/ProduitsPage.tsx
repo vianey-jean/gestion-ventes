@@ -19,7 +19,7 @@ import {
   Package, Plus, Search, Filter, Eye, Edit, Trash2, CheckCircle2, XCircle,
   AlertTriangle, Camera, Star, Euro, Hash, Sparkles, ChevronLeft, ChevronRight,
   X, PackagePlus, Pencil, ImageOff, ShoppingBag, MessageSquare, ChevronDown, ChevronUp,
-  ArrowUp, ArrowDown, Merge
+  ArrowUp, ArrowDown, Merge, LineChart as LineChartIcon
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -50,6 +50,7 @@ import ProductCharacteristicCard from '@/components/products/ProductCharacterist
 import CaracteristiqueModal from '@/components/products/CaracteristiqueModal';
 import ProductMergeModal from '@/components/products/ProductMergeModal';
 import ProductsVenduModal from '@/components/products/ProductsVenduModal';
+import PrixHistoryModal from '@/components/products/PrixHistoryModal';
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://server-gestion-ventes.onrender.com';
 
 type FilterType = 'tous' | 'perruque' | 'tissage' | 'extension' | 'autres';
@@ -77,6 +78,7 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
   const [isVenduOpen, setIsVenduOpen] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [isFournHistoryOpen, setIsFournHistoryOpen] = useState(false);
+  const [isPrixHistoryOpen, setIsPrixHistoryOpen] = useState(false);
 
   // Selected product
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -1649,9 +1651,21 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
                     <p className="text-white/50 text-xs font-medium">Code</p>
                     <p className="text-white font-bold text-lg">{selectedProduct.code || '—'}</p>
                   </div>
-                  <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
-                    <p className="text-white/50 text-xs font-medium">Prix d'achat</p>
-                    <p className="text-amber-400 font-bold text-lg">{selectedProduct.purchasePrice}€</p>
+                  <div className="p-4 rounded-2xl bg-white/5 border border-white/10 relative">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <p className="text-white/50 text-xs font-medium">Prix d'achat</p>
+                        <p className="text-amber-400 font-bold text-lg">{selectedProduct.purchasePrice}€</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setIsPrixHistoryOpen(true)}
+                        title="Voir l'historique des prix"
+                        className="p-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-400/20 text-amber-300 transition-colors"
+                      >
+                        <LineChartIcon className="h-4 w-4" />
+                      </button>
+                    </div>
                   </div>
                   <div className="p-4 rounded-2xl bg-white/5 border border-white/10 relative">
                     <div className="flex items-start justify-between">
@@ -1920,6 +1934,14 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
         open={isVenduOpen}
         onClose={() => setIsVenduOpen(false)}
       />
+
+      {/* ========== MODALE HISTORIQUE PRIX D'ACHAT ========== */}
+      <PrixHistoryModal
+        isOpen={isPrixHistoryOpen}
+        onClose={() => setIsPrixHistoryOpen(false)}
+        product={selectedProduct}
+      />
+
 
       {/* ========== MODALE HISTORIQUE ACHATS / VENTES ========== */}
       <Dialog open={isHistoryOpen} onOpenChange={setIsHistoryOpen}>
