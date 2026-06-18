@@ -10,7 +10,7 @@
  * Tous les formulaires et modales sont dans des composants séparés.
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 
 // Hook personnalisé avec toute la logique métier
 import useComptabilite from '@/hooks/useComptabilite';
@@ -24,6 +24,7 @@ import ComptabiliteTabs from './ComptabiliteTabs';
 // Formulaires modales
 import AchatFormDialog from './AchatFormDialog';
 import DepenseFormDialog from './DepenseFormDialog';
+import FacturationModal from './FacturationModal';
 
 // Modales de détails
 import {
@@ -42,6 +43,9 @@ interface ComptabiliteModuleProps {
 }
 
 const ComptabiliteModule: React.FC<ComptabiliteModuleProps> = ({ className }) => {
+  // État local pour la modale de facturation
+  const [showFacturationModal, setShowFacturationModal] = useState(false);
+
   // Utilisation du hook centralisé
   const {
     // Données
@@ -92,6 +96,8 @@ const ComptabiliteModule: React.FC<ComptabiliteModuleProps> = ({ className }) =>
     handlePhotosChange,
     handleReceiptChange,
     pendingReceiptFile,
+    handleAchatReceiptChange,
+    pendingAchatReceiptFile,
 
     // Utilitaires
     formatEuro,
@@ -108,6 +114,7 @@ const ComptabiliteModule: React.FC<ComptabiliteModuleProps> = ({ className }) =>
         onNewAchat={() => toggleModal('showAchatForm', true)}
         onNewDepense={() => toggleModal('showDepenseForm', true)}
         onExport={() => toggleModal('showExportDialog', true)}
+        onOpenFacturation={() => setShowFacturationModal(true)}
       />
 
       {/* Cartes statistiques principales */}
@@ -161,6 +168,8 @@ const ComptabiliteModule: React.FC<ComptabiliteModuleProps> = ({ className }) =>
         showFournisseurList={showFournisseurList}
         onSelectFournisseur={handleSelectFournisseur}
         onPhotosChange={handlePhotosChange}
+        receiptFile={pendingAchatReceiptFile}
+        onReceiptChange={handleAchatReceiptChange}
       />
 
       {/* Modal Formulaire Dépense */}
@@ -261,6 +270,12 @@ const ComptabiliteModule: React.FC<ComptabiliteModuleProps> = ({ className }) =>
         setExportMonth={setExportMonth}
         setExportYear={setExportYear}
         allSales={allSales}
+      />
+
+      {/* Modal Facturation - recherche des factures d'achat/dépense */}
+      <FacturationModal
+        isOpen={showFacturationModal}
+        onClose={() => setShowFacturationModal(false)}
       />
     </div>
   );

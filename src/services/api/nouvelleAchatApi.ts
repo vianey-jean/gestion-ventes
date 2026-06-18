@@ -92,6 +92,19 @@ export const nouvelleAchatApiService = {
     console.log('✅ Receipt uploaded:', response.data.receiptUrl);
     return response.data.receiptUrl;
   },
+
+  // Uploader une facture (image/PDF) pour un achat produit — renvoie l'URL relative
+  async uploadAchatReceipt(file: File): Promise<string> {
+    const fd = new FormData();
+    fd.append('receipt', file);
+    const response = await api.post<{ receiptUrl: string }>(
+      '/api/nouvelle-achat/achat/upload-receipt',
+      fd,
+      { headers: { 'Content-Type': 'multipart/form-data' } }
+    );
+    console.log('✅ Achat receipt uploaded:', response.data.receiptUrl);
+    return response.data.receiptUrl;
+  },
 };
 
 export default nouvelleAchatApiService;

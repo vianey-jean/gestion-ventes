@@ -32,7 +32,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Package, Receipt, Fuel, DollarSign, Sparkles, Edit, Trash2 } from 'lucide-react';
+import { Package, Receipt, Fuel, DollarSign, Sparkles, Edit, Trash2, Paperclip } from 'lucide-react';
 import { NouvelleAchat } from '@/types/comptabilite';
 import { motion } from 'framer-motion';
 import AchatDetailModal from './modals/AchatDetailModal';
@@ -214,6 +214,14 @@ const AchatsHistoriqueList: React.FC<AchatsHistoriqueListProps> = ({
                     <div className="flex-1 min-w-0">
                       <p className="font-semibold text-sm sm:text-base text-gray-800 dark:text-white truncate">
                         {achat.productDescription || achat.description}
+                        {achat.receiptUrl && (
+                          <span
+                            title="Facture / pièce justificative disponible"
+                            className="inline-flex items-center ml-2 align-middle text-amber-500"
+                          >
+                            <Paperclip className="h-3.5 w-3.5" />
+                          </span>
+                        )}
                       </p>
                       <p className="text-xs sm:text-sm text-gray-500">
                         {new Date(achat.date).toLocaleDateString('fr-FR')}

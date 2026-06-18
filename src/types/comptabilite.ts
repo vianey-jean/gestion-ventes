@@ -31,6 +31,8 @@ export interface NouvelleAchatFormData {
   date?: string;
   /** Disponibilité de l'achat (défaut: true). Si false, la quantité n'est PAS vendable. */
   disponible?: boolean;
+  /** URL de la facture d'achat déjà uploadée — facultatif */
+  receiptUrl?: string | null;
 }
 
 export interface DepenseFormData {

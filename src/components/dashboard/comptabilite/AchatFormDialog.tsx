@@ -37,7 +37,7 @@
  * - ComptabiliteModule.tsx
  */
 
-import React, { useRef } from 'react';
+import React, { useRef, useMemo } from 'react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import {
@@ -63,7 +63,11 @@ import {
   Receipt,
   Calculator,
   Plus,
-  CalendarIcon
+  CalendarIcon,
+  Upload,
+  X,
+  FileText,
+  Image as ImageIcon
 } from 'lucide-react';
 import { NouvelleAchatFormData } from '@/types/comptabilite';
 import { Product } from '@/types/product';
@@ -108,6 +112,10 @@ export interface AchatFormDialogProps {
   onSelectFournisseur: (nom: string) => void;
   /** Callback déclenché lorsque les photos du produit changent (facultatif) */
   onPhotosChange?: (newFiles: File[], keptExistingUrls: string[], mainIndex: number) => void;
+  /** Fichier facture en attente (image ou PDF) — facultatif */
+  receiptFile?: File | null;
+  /** Callback lors du changement de la facture (fichier ou null pour retirer) */
+  onReceiptChange?: (file: File | null) => void;
 }
 
 // ============================================
@@ -129,10 +137,25 @@ const AchatFormDialog: React.FC<AchatFormDialogProps> = ({
   filteredFournisseurs,
   showFournisseurList,
   onSelectFournisseur,
-  onPhotosChange
+  onPhotosChange,
+  receiptFile,
+  onReceiptChange
 }) => {
   const fournisseurRef = useRef<HTMLDivElement>(null);
+  const receiptInputRef = useRef<HTMLInputElement>(null);
   const baseUrl = getBaseURL();
+
+  const receiptPreviewUrl = useMemo(() => {
+    if (!receiptFile) return null;
+    return URL.createObjectURL(receiptFile);
+  }, [receiptFile]);
+  const isReceiptPdf = receiptFile?.type === 'application/pdf';
+
+  const handleReceiptInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0] || null;
+    if (f) onReceiptChange?.(f);
+    if (e.target) e.target.value = '';
+  };
 
   // Clé pour réinitialiser PhotoUploadSection quand on change de produit
   // (existant -> nouveau, ou produit existant A -> produit existant B)
@@ -470,6 +493,78 @@ const AchatFormDialog: React.FC<AchatFormDialogProps> = ({
                 )}
               />
             </div>
+          </div>
+
+          {/* ===========================================================
+              PIÈCE JUSTIFICATIVE / FACTURE D'ACHAT — facultatif
+              Accepte image (JPG/JPEG/PNG/GIF/WebP) ou PDF
+          =========================================================== */}
+          <div className="space-y-2">
+            <Label className="text-sm font-semibold text-gray-700 dark:text-gray-200 flex items-center gap-2">
+              <Receipt className="h-4 w-4 text-blue-500" />
+              Pièce justificative (facture)
+              <span className="text-xs font-normal text-gray-400">— facultatif</span>
+            </Label>
+
+            {!receiptFile ? (
+              <button
+                type="button"
+                onClick={() => receiptInputRef.current?.click()}
+                className="w-full py-6 rounded-2xl border-2 border-dashed border-blue-300 dark:border-blue-700 hover:border-blue-500 bg-blue-50/50 dark:bg-blue-900/20 hover:bg-blue-100/60 flex flex-col items-center justify-center gap-2 transition-all"
+              >
+                <Upload className="h-6 w-6 text-blue-500" />
+                <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
+                  Ajouter une pièce justificative
+                </span>
+                <span className="text-xs text-gray-500">JPG, JPEG, PNG, GIF, WebP ou PDF (max 15 MB)</span>
+              </button>
+            ) : (
+              <div className="relative rounded-2xl border border-blue-200 dark:border-blue-700 bg-white dark:bg-gray-800 p-3 flex items-center gap-3 shadow-sm">
+                {isReceiptPdf ? (
+                  <div className="h-16 w-16 shrink-0 rounded-xl bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+                    <FileText className="h-8 w-8 text-red-500" />
+                  </div>
+                ) : receiptPreviewUrl ? (
+                  <img
+                    src={receiptPreviewUrl}
+                    alt="Aperçu facture"
+                    className="h-16 w-16 shrink-0 rounded-xl object-cover border border-gray-200 dark:border-gray-700"
+                  />
+                ) : (
+                  <div className="h-16 w-16 shrink-0 rounded-xl bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+                    <ImageIcon className="h-8 w-8 text-gray-400" />
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-sm text-gray-800 dark:text-gray-100 truncate">
+                    {receiptFile.name}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {(receiptFile.size / 1024).toFixed(1)} KB
+                    {' • '}
+                    {isReceiptPdf ? 'PDF' : 'Image'}
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => onReceiptChange?.(null)}
+                  className="shrink-0 text-red-500 hover:text-red-700 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-xl"
+                  title="Retirer la facture"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+
+            <input
+              ref={receiptInputRef}
+              type="file"
+              accept="image/jpeg,image/jpg,image/png,image/gif,image/webp,application/pdf"
+              onChange={handleReceiptInput}
+              className="hidden"
+            />
           </div>
 
           {/* Résumé du coût */}

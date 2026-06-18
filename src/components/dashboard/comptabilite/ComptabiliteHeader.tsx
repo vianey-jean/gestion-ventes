@@ -9,7 +9,7 @@ import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calculator, ShoppingCart, Receipt, FileDown, Crown, Diamond, Sparkles, Gem, Zap } from 'lucide-react';
+import { Calculator, ShoppingCart, Receipt, FileDown, Crown, Diamond, Sparkles, Gem, Zap, FileSearch } from 'lucide-react';
 import { MONTHS } from '@/hooks/useComptabilite';
 
 export interface ComptabiliteHeaderProps {
@@ -20,6 +20,7 @@ export interface ComptabiliteHeaderProps {
   onNewAchat: () => void;
   onNewDepense: () => void;
   onExport: () => void;
+  onOpenFacturation?: () => void;
 }
 
 const ComptabiliteHeader: React.FC<ComptabiliteHeaderProps> = ({
@@ -29,7 +30,8 @@ const ComptabiliteHeader: React.FC<ComptabiliteHeaderProps> = ({
   onYearChange,
   onNewAchat,
   onNewDepense,
-  onExport
+  onExport,
+  onOpenFacturation
 }) => {
   return (
     <Card className="relative overflow-hidden bg-gradient-to-br from-emerald-900/40 via-teal-900/30 to-green-900/40 border-2 border-emerald-500/30 shadow-2xl backdrop-blur-xl rounded-2xl sm:rounded-3xl">
@@ -122,6 +124,16 @@ const ComptabiliteHeader: React.FC<ComptabiliteHeaderProps> = ({
             <span className="hidden xs:inline">Exporter</span>
             <span className="xs:hidden">PDF</span>
           </Button>
+
+          {onOpenFacturation && (
+            <Button
+              onClick={onOpenFacturation}
+              className="bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-700 hover:to-yellow-700 text-white shadow-xl hover:shadow-amber-500/30 rounded-xl transition-all duration-300 hover:scale-105 text-xs sm:text-sm px-3 sm:px-4 py-2"
+            >
+              <FileSearch className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+              <span>Facturation</span>
+            </Button>
+          )}
         </div>
       </CardContent>
     </Card>

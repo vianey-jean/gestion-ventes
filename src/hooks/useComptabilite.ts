@@ -115,6 +115,9 @@ export function useComptabilite() {
   // ===== Reçu de dépense en attente =====
   const [pendingReceiptFile, setPendingReceiptFile] = useState<File | null>(null);
 
+  // ===== Facture d'achat en attente =====
+  const [pendingAchatReceiptFile, setPendingAchatReceiptFile] = useState<File | null>(null);
+
   const handlePhotosChange = useCallback(
     (files: File[], kept: string[], mainIndex: number) => {
       setPendingPhotoFiles(files);
@@ -134,6 +137,10 @@ export function useComptabilite() {
 
   const handleReceiptChange = useCallback((file: File | null) => {
     setPendingReceiptFile(file);
+  }, []);
+
+  const handleAchatReceiptChange = useCallback((file: File | null) => {
+    setPendingAchatReceiptFile(file);
   }, []);
 
   // Ref pour éviter les appels multiples
@@ -384,6 +391,21 @@ export function useComptabilite() {
         ? achatForm.purchasePrice
         : (selectedProduct?.purchasePrice || 0);
 
+      // 0) Upload facture d'achat (facultatif) — image ou PDF
+      let achatReceiptUrl: string | null = null;
+      if (pendingAchatReceiptFile) {
+        try {
+          achatReceiptUrl = await nouvelleAchatApiService.uploadAchatReceipt(pendingAchatReceiptFile);
+        } catch (upErr) {
+          console.error('⚠️ Upload facture achat échoué:', upErr);
+          toast({
+            title: 'Facture',
+            description: "La facture n'a pas pu être envoyée. L'achat sera enregistré sans facture.",
+            variant: 'destructive'
+          });
+        }
+      }
+
       // 1) Création de l'achat (création ou mise à jour du produit côté serveur)
       const createdAchat = await nouvelleAchatApiService.create({
         productId: selectedProduct?.id,
@@ -393,7 +415,8 @@ export function useComptabilite() {
         fournisseur: achatForm.fournisseur,
         caracteristiques: achatForm.caracteristiques,
         date: achatForm.date,
-        disponible: achatForm.disponible !== false
+        disponible: achatForm.disponible !== false,
+        receiptUrl: achatReceiptUrl
       });
 
       // 1.bis) Enregistrement dans prixproducts.json (historique des prix d'achat)
@@ -475,6 +498,7 @@ export function useComptabilite() {
       setFournisseurSearch('');
       setShowFournisseurList(false);
       resetPendingPhotos();
+      setPendingAchatReceiptFile(null);
       toggleModal('showAchatForm', false);
 
       loadAchats();
@@ -501,7 +525,8 @@ export function useComptabilite() {
     pendingPhotoMainIndex,
     pendingPhotosTouched,
     resetPendingPhotos,
-    loadFournisseurs
+    loadFournisseurs,
+    pendingAchatReceiptFile
   ]);
 
   // Handler soumission dépense
@@ -695,6 +720,8 @@ export function useComptabilite() {
     handlePhotosChange,
     handleReceiptChange,
     pendingReceiptFile,
+    handleAchatReceiptChange,
+    pendingAchatReceiptFile,
     loadAchats,
     
     // Utilitaires
