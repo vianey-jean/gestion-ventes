@@ -47,7 +47,6 @@ const SalesManagementSection: React.FC<SalesManagementSectionProps> = ({
   const [refundFormOpen, setRefundFormOpen] = useState(false);
   const [refundFromSale, setRefundFromSale] = useState<Sale | undefined>(undefined);
   const [viewRefundsOpen, setViewRefundsOpen] = useState(false);
-  const [addVilleLivraisonOpen, setAddVilleLivraisonOpen] = useState(false);
   const [detailVilleLivraisonOpen, setDetailVilleLivraisonOpen] = useState(false);
 
   const handleRowClick = (sale: Sale) => {
@@ -105,13 +104,6 @@ const SalesManagementSection: React.FC<SalesManagementSectionProps> = ({
   onClick: () => setViewRefundsOpen(true),
   gradient: 'blue' as const,
   'aria-label': 'Voir les remboursements du mois'
-},
-{
-  icon: MapPin,
-  label: 'Ajouter ville de livraison',
-  onClick: () => setAddVilleLivraisonOpen(true),
-  gradient: 'green' as const,
-  'aria-label': 'Ajouter une nouvelle ville de livraison'
 },
 {
   icon: MapPinned,
@@ -259,10 +251,6 @@ const SalesManagementSection: React.FC<SalesManagementSectionProps> = ({
         onClose={() => setViewRefundsOpen(false)}
       />
 
-      <AddLivraisonVilleModal
-        isOpen={addVilleLivraisonOpen}
-        onClose={() => setAddVilleLivraisonOpen(false)}
-      />
 
       <LivraisonVilleListModal
         isOpen={detailVilleLivraisonOpen}

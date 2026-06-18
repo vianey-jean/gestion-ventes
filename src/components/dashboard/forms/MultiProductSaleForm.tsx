@@ -26,6 +26,7 @@ import { FormProduct, ReductionType, createEmptyFormProduct, computeReductionAmo
 import DuplicateClientModal from '@/components/clients/DuplicateClientModal';
 import { findMatchingClients, matchSignature, type ClientLike, type ClientMatch } from '@/utils/clientMatch';
 import { computeClientCaracteristique } from '@/utils/clientCharacteristic';
+import { livraisonVilleApi, LivraisonVille } from '@/services/api/villesApi';
 
 interface MultiProductSaleFormProps {
   isOpen: boolean;
@@ -86,6 +87,13 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
   const dismissedSigsRef = useRef<Set<string>>(new Set());
   /** Quand l'utilisateur a sélectionné/édité un client, on ne re-détecte pas tant que les données ne changent pas */
   const acceptedSigRef = useRef<string | null>(null);
+
+  // Villes de livraison (pour récupérer le tarif d'origine de la ville)
+  const [villesLivraison, setVillesLivraison] = useState<LivraisonVille[]>([]);
+  useEffect(() => {
+    if (!isOpen) return;
+    livraisonVilleApi.getAll().then(setVillesLivraison).catch(() => setVillesLivraison([]));
+  }, [isOpen]);
 
   // Charger clients + commandes à l'ouverture (pour matching et caractéristique)
   useEffect(() => {
@@ -858,19 +866,26 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
           sellingPrice = sellingPriceBeforeReduction - reductionAmt;
         }
 
+        // Tarif d'origine de la ville sélectionnée (depuis la base livraison-ville)
+        const cityEntry = villesLivraison.find(v => v.ville.toLowerCase() === (product.deliveryLocation || '').toLowerCase());
+        const originalDeliveryFee = cityEntry ? Number(cityEntry.fee) : deliveryFee;
+        const deliveryFeeAdjustment = deliveryFee - originalDeliveryFee; // négatif = réduction, positif = augmentation
+
         return {
           productId: product.productId,
           description: product.description,
           quantitySold: quantity,
           purchasePrice,
-          sellingPrice,
+          sellingPrice, // prix de vente final (après réduction)
           profit: Number(product.profit),
-          deliveryFee,
+          deliveryFee, // frais de livraison final
           deliveryLocation: product.deliveryLocation,
+          originalDeliveryFee, // tarif standard de la ville
+          deliveryFeeAdjustment, // différence appliquée (- réduction / + augmentation)
           reduction: reductionVal || 0,
           reductionType: reductionTyp,
           reductionAmount: reductionAmt,
-          sellingPriceBeforeReduction
+          sellingPriceBeforeReduction // prix de vente réel avant réduction
         };
       });
 

@@ -17,6 +17,10 @@ export interface SaleProduct {
   sellingPriceBeforeReduction?: number;
   /** Montant total de réduction appliquée */
   reductionAmount?: number;
+  /** Tarif standard de la ville (avant ajustement) */
+  originalDeliveryFee?: number;
+  /** Ajustement appliqué sur les frais (- réduction / + augmentation) */
+  deliveryFeeAdjustment?: number;
 }
 
 export interface Sale {

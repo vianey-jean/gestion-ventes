@@ -6,7 +6,8 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import { livraisonVilleApi, LivraisonVille } from '@/services/api/villesApi';
-import { Pencil, Trash2, Check, X, MapPin } from 'lucide-react';
+import { Pencil, Trash2, Check, X, MapPin, Plus } from 'lucide-react';
+import AddLivraisonVilleModal from './AddLivraisonVilleModal';
 
 interface Props {
   isOpen: boolean;
@@ -20,6 +21,7 @@ const LivraisonVilleListModal: React.FC<Props> = ({ isOpen, onClose }) => {
   const [editName, setEditName] = useState('');
   const [editFee, setEditFee] = useState('0');
   const [confirmDel, setConfirmDel] = useState<LivraisonVille | null>(null);
+  const [addOpen, setAddOpen] = useState(false);
   const { toast } = useToast();
 
   const load = async () => {
@@ -70,8 +72,15 @@ const LivraisonVilleListModal: React.FC<Props> = ({ isOpen, onClose }) => {
       <Dialog open={isOpen} onOpenChange={(o) => !o && onClose()}>
         <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2"><MapPin className="h-5 w-5 text-blue-600" /> Détail des villes de livraison</DialogTitle>
-            <DialogDescription>Modifier ou supprimer une ville et son tarif de livraison.</DialogDescription>
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <DialogTitle className="flex items-center gap-2"><MapPin className="h-5 w-5 text-blue-600" /> Détail des villes de livraison</DialogTitle>
+                <DialogDescription>Modifier ou supprimer une ville et son tarif de livraison.</DialogDescription>
+              </div>
+              <Button size="sm" onClick={() => setAddOpen(true)} className="bg-emerald-600 hover:bg-emerald-700 text-white shrink-0">
+                <Plus className="h-4 w-4 mr-1" /> Ajouter ville de livraison
+              </Button>
+            </div>
           </DialogHeader>
           <ScrollArea className="max-h-[60vh] pr-2">
             <div className="space-y-2">
@@ -120,6 +129,12 @@ const LivraisonVilleListModal: React.FC<Props> = ({ isOpen, onClose }) => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <AddLivraisonVilleModal
+        isOpen={addOpen}
+        onClose={() => setAddOpen(false)}
+        onSaved={load}
+      />
     </>
   );
 };

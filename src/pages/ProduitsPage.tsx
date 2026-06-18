@@ -276,6 +276,7 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
   const [allRatings, setAllRatings] = useState<Record<string, ProductRatingInfo>>({});
   const [viewComments, setViewComments] = useState<ProductComment[]>([]);
   const [showCommentsList, setShowCommentsList] = useState(false);
+  const [isCommentsModalOpen, setIsCommentsModalOpen] = useState(false);
   const [newComment, setNewComment] = useState('');
   const [newRating, setNewRating] = useState(5);
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
@@ -1714,14 +1715,24 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
                   const info = allRatings[selectedProduct.id];
                   const avg = info?.average || 0;
                   const count = info?.count || 0;
-                  const comments = info?.comments || [];
                   const fullStars = Math.floor(avg);
                   const hasHalf = avg - fullStars >= 0.3;
                   const starColor = avg <= 2 ? 'text-red-500' : avg <= 3 ? 'text-yellow-500' : 'text-emerald-500';
                   return (
                     <div className="space-y-3">
                       <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
-                        <p className="text-white/50 text-xs font-medium">Notation moyenne</p>
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="text-white/50 text-xs font-medium">Notation moyenne</p>
+                          <button
+                            type="button"
+                            onClick={() => setIsCommentsModalOpen(true)}
+                            className="p-2 rounded-xl bg-purple-500/10 border border-purple-500/20 hover:bg-purple-500/20 transition-colors text-purple-300 flex items-center gap-1.5"
+                            title="Voir les commentaires"
+                          >
+                            <MessageSquare className="h-4 w-4" />
+                            <span className="text-xs font-bold">{count}</span>
+                          </button>
+                        </div>
                         <div className="flex items-center gap-2 mt-1">
                           <div className={`flex items-center ${starColor}`}>
                             {Array.from({ length: 5 }).map((_, i) => (
@@ -1732,159 +1743,10 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
                           <span className="text-white/40 text-sm">({count} commentaire{count !== 1 ? 's' : ''})</span>
                         </div>
                       </div>
-
-                      {comments.length > 0 && (
-                        <div className="rounded-2xl bg-white/5 border border-white/10 overflow-hidden">
-                          <button
-                            onClick={() => setShowCommentsList(!showCommentsList)}
-                            className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors"
-                          >
-                            <span className="text-white/80 font-bold text-sm flex items-center gap-2">
-                              <MessageSquare className="h-4 w-4" /> Commentaires ({comments.length})
-                            </span>
-                            {showCommentsList ? <ChevronUp className="h-4 w-4 text-white/50" /> : <ChevronDown className="h-4 w-4 text-white/50" />}
-                          </button>
-                          <AnimatePresence>
-                            {showCommentsList && (
-                              <motion.div
-                                initial={{ height: 0, opacity: 0 }}
-                                animate={{ height: 'auto', opacity: 1 }}
-                                exit={{ height: 0, opacity: 0 }}
-                                className="overflow-hidden"
-                              >
-                                <div className="px-4 pb-4 space-y-2 max-h-64 overflow-y-auto">
-                                  {selectedCommentIds.length > 0 && (
-                                    <div className="flex items-center justify-between gap-3 rounded-xl border border-red-500/20 bg-red-500/10 p-3">
-                                      <span className="text-xs font-bold text-red-200">
-                                        {selectedCommentIds.length} commentaire{selectedCommentIds.length > 1 ? 's' : ''} sélectionné{selectedCommentIds.length > 1 ? 's' : ''}
-                                      </span>
-                                      <div className="flex items-center gap-2">
-                                        <Button
-                                          type="button"
-                                          variant="outline"
-                                          onClick={() => setSelectedCommentIds([])}
-                                          className="h-8 border-white/20 bg-white/5 text-white/80 hover:bg-white/10"
-                                        >
-                                          Annuler
-                                        </Button>
-                                        <Button
-                                          type="button"
-                                          onClick={() => handleDeleteComments(selectedCommentIds)}
-                                          disabled={isDeletingComments}
-                                          className="h-8 bg-gradient-to-r from-red-500 to-rose-600 text-white border-0"
-                                        >
-                                          <Trash2 className="mr-2 h-3.5 w-3.5" />
-                                          Supprimer
-                                        </Button>
-                                      </div>
-                                    </div>
-                                  )}
-                                  {comments.map(c => {
-                                    const cColor = c.rating <= 2 ? 'border-red-500/30 bg-red-500/5' : c.rating === 3 ? 'border-yellow-500/30 bg-yellow-500/5' : 'border-emerald-500/30 bg-emerald-500/5';
-                                    const cStarColor = c.rating <= 2 ? 'text-red-500' : c.rating === 3 ? 'text-yellow-500' : 'text-emerald-500';
-                                    const isEditing = editingCommentId === c.id;
-                                    return (
-                                      <div key={c.id} className={`p-3 rounded-xl border ${cColor}`}>
-                                        <div className="flex items-start gap-3">
-                                          <Checkbox
-                                            checked={selectedCommentIds.includes(c.id)}
-                                            onCheckedChange={(checked) => toggleCommentSelection(c.id, checked === true)}
-                                            className="mt-1 border-white/30 data-[state=checked]:bg-red-500 data-[state=checked]:text-white"
-                                          />
-                                          <div className="flex-1 space-y-2">
-                                            <div className="flex items-start justify-between gap-3 mb-1">
-                                              <div>
-                                                <div className={`flex items-center gap-1 ${isEditing ? (editingCommentRating <= 2 ? 'text-red-500' : editingCommentRating === 3 ? 'text-yellow-500' : 'text-emerald-500') : cStarColor}`}>
-                                                  {Array.from({ length: 5 }).map((_, i) => (
-                                                    <button
-                                                      key={i}
-                                                      type="button"
-                                                      onClick={() => isEditing && setEditingCommentRating(i + 1)}
-                                                      className={isEditing ? 'cursor-pointer transition-transform hover:scale-110' : 'cursor-default'}
-                                                    >
-                                                      <Star className={cn('h-3 w-3', i < (isEditing ? editingCommentRating : c.rating) ? 'fill-current' : 'opacity-20')} />
-                                                    </button>
-                                                  ))}
-                                                </div>
-                                                {(isEditing ? editingCommentClientName : c.clientName) && (
-                                                  <span className="text-cyan-400 text-xs font-bold flex items-center gap-1 mt-1">
-                                                    <User className="h-3 w-3" /> {isEditing ? editingCommentClientName : c.clientName}
-                                                  </span>
-                                                )}
-                                              </div>
-                                              <div className="flex items-center gap-1">
-                                                <button
-                                                  type="button"
-                                                  onClick={() => startEditingComment(c)}
-                                                  className="rounded-lg border border-blue-500/20 bg-blue-500/10 p-1.5 text-blue-300 transition-colors hover:bg-blue-500/20"
-                                                  title="Modifier le commentaire"
-                                                >
-                                                  <Pencil className="h-3.5 w-3.5" />
-                                                </button>
-                                                <button
-                                                  type="button"
-                                                  onClick={() => handleDeleteComments([c.id])}
-                                                  className="rounded-lg border border-red-500/20 bg-red-500/10 p-1.5 text-red-300 transition-colors hover:bg-red-500/20"
-                                                  title="Supprimer le commentaire"
-                                                >
-                                                  <Trash2 className="h-3.5 w-3.5" />
-                                                </button>
-                                              </div>
-                                            </div>
-
-                                            {isEditing ? (
-                                              <div className="space-y-2">
-                                                <Input
-                                                  value={editingCommentClientName}
-                                                  onChange={(e) => setEditingCommentClientName(e.target.value)}
-                                                  placeholder="Nom du client"
-                                                  className="bg-white/10 border border-white/20 focus:border-cyan-400 rounded-xl text-white placeholder:text-white/40"
-                                                />
-                                                <Textarea
-                                                  value={editingCommentText}
-                                                  onChange={(e) => setEditingCommentText(e.target.value)}
-                                                  placeholder="Modifier le commentaire..."
-                                                  className="min-h-[96px] bg-white/10 border border-white/20 focus:border-purple-400 rounded-xl text-white placeholder:text-white/40"
-                                                />
-                                                <div className="flex gap-2">
-                                                  <Button
-                                                    type="button"
-                                                    onClick={handleSaveCommentEdit}
-                                                    disabled={isUpdatingComment || !editingCommentText.trim()}
-                                                    className="h-9 bg-gradient-to-r from-emerald-500 to-teal-600 text-white border-0"
-                                                  >
-                                                    {isUpdatingComment ? 'Validation...' : 'Valider'}
-                                                  </Button>
-                                                  <Button
-                                                    type="button"
-                                                    variant="outline"
-                                                    onClick={resetCommentEditor}
-                                                    className="h-9 border-white/20 bg-white/5 text-white/80 hover:bg-white/10"
-                                                  >
-                                                    Annuler
-                                                  </Button>
-                                                </div>
-                                              </div>
-                                            ) : (
-                                              <>
-                                                <p className="text-white/80 text-sm">{c.comment}</p>
-                                                <p className="text-white/30 text-[10px] mt-1">{new Date(c.createdAt).toLocaleDateString('fr-FR')}</p>
-                                              </>
-                                            )}
-                                          </div>
-                                        </div>
-                                      </div>
-                                    );
-                                  })}
-                                </div>
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
-                        </div>
-                      )}
                     </div>
                   );
                 })()}
+
 
                 {/* Action buttons */}
                 <div className="flex gap-3 pt-2">
@@ -1904,6 +1766,101 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
           </Dialog>
         )}
       </div>
+
+      {/* ========== MODALE COMMENTAIRES PRODUIT ========== */}
+      <Dialog open={isCommentsModalOpen} onOpenChange={setIsCommentsModalOpen}>
+        <DialogContent className="w-[95vw] sm:max-w-xl bg-gradient-to-br from-slate-900 via-purple-900/30 to-indigo-900/20 backdrop-blur-2xl border border-white/10 shadow-2xl rounded-3xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-black text-white flex items-center gap-2">
+              <MessageSquare className="h-5 w-5 text-purple-400" /> Commentaires{selectedProduct ? ` — ${selectedProduct.description}` : ''}
+            </DialogTitle>
+          </DialogHeader>
+          {selectedProduct && (() => {
+            const info = allRatings[selectedProduct.id];
+            const comments = info?.comments || [];
+            if (comments.length === 0) {
+              return <p className="text-white/60 text-sm p-4 text-center">Aucun commentaire pour ce produit.</p>;
+            }
+            return (
+              <div className="space-y-2 max-h-[65vh] overflow-y-auto pr-1">
+                {selectedCommentIds.length > 0 && (
+                  <div className="flex items-center justify-between gap-3 rounded-xl border border-red-500/20 bg-red-500/10 p-3">
+                    <span className="text-xs font-bold text-red-200">
+                      {selectedCommentIds.length} commentaire{selectedCommentIds.length > 1 ? 's' : ''} sélectionné{selectedCommentIds.length > 1 ? 's' : ''}
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <Button type="button" variant="outline" onClick={() => setSelectedCommentIds([])} className="h-8 border-white/20 bg-white/5 text-white/80 hover:bg-white/10">Annuler</Button>
+                      <Button type="button" onClick={() => handleDeleteComments(selectedCommentIds)} disabled={isDeletingComments} className="h-8 bg-gradient-to-r from-red-500 to-rose-600 text-white border-0">
+                        <Trash2 className="mr-2 h-3.5 w-3.5" /> Supprimer
+                      </Button>
+                    </div>
+                  </div>
+                )}
+                {comments.map(c => {
+                  const cColor = c.rating <= 2 ? 'border-red-500/30 bg-red-500/5' : c.rating === 3 ? 'border-yellow-500/30 bg-yellow-500/5' : 'border-emerald-500/30 bg-emerald-500/5';
+                  const cStarColor = c.rating <= 2 ? 'text-red-500' : c.rating === 3 ? 'text-yellow-500' : 'text-emerald-500';
+                  const isEditing = editingCommentId === c.id;
+                  return (
+                    <div key={c.id} className={`p-3 rounded-xl border ${cColor}`}>
+                      <div className="flex items-start gap-3">
+                        <Checkbox
+                          checked={selectedCommentIds.includes(c.id)}
+                          onCheckedChange={(checked) => toggleCommentSelection(c.id, checked === true)}
+                          className="mt-1 border-white/30 data-[state=checked]:bg-red-500 data-[state=checked]:text-white"
+                        />
+                        <div className="flex-1 space-y-2">
+                          <div className="flex items-start justify-between gap-3 mb-1">
+                            <div>
+                              <div className={`flex items-center gap-1 ${isEditing ? (editingCommentRating <= 2 ? 'text-red-500' : editingCommentRating === 3 ? 'text-yellow-500' : 'text-emerald-500') : cStarColor}`}>
+                                {Array.from({ length: 5 }).map((_, i) => (
+                                  <button key={i} type="button" onClick={() => isEditing && setEditingCommentRating(i + 1)} className={isEditing ? 'cursor-pointer transition-transform hover:scale-110' : 'cursor-default'}>
+                                    <Star className={cn('h-3 w-3', i < (isEditing ? editingCommentRating : c.rating) ? 'fill-current' : 'opacity-20')} />
+                                  </button>
+                                ))}
+                              </div>
+                              {(isEditing ? editingCommentClientName : c.clientName) && (
+                                <span className="text-cyan-400 text-xs font-bold flex items-center gap-1 mt-1">
+                                  <User className="h-3 w-3" /> {isEditing ? editingCommentClientName : c.clientName}
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <button type="button" onClick={() => startEditingComment(c)} className="rounded-lg border border-blue-500/20 bg-blue-500/10 p-1.5 text-blue-300 transition-colors hover:bg-blue-500/20" title="Modifier le commentaire">
+                                <Pencil className="h-3.5 w-3.5" />
+                              </button>
+                              <button type="button" onClick={() => handleDeleteComments([c.id])} className="rounded-lg border border-red-500/20 bg-red-500/10 p-1.5 text-red-300 transition-colors hover:bg-red-500/20" title="Supprimer le commentaire">
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                          {isEditing ? (
+                            <div className="space-y-2">
+                              <Input value={editingCommentClientName} onChange={(e) => setEditingCommentClientName(e.target.value)} placeholder="Nom du client" className="bg-white/10 border border-white/20 focus:border-cyan-400 rounded-xl text-white placeholder:text-white/40" />
+                              <Textarea value={editingCommentText} onChange={(e) => setEditingCommentText(e.target.value)} placeholder="Modifier le commentaire..." className="min-h-[96px] bg-white/10 border border-white/20 focus:border-purple-400 rounded-xl text-white placeholder:text-white/40" />
+                              <div className="flex gap-2">
+                                <Button type="button" onClick={handleSaveCommentEdit} disabled={isUpdatingComment || !editingCommentText.trim()} className="h-9 bg-gradient-to-r from-emerald-500 to-teal-600 text-white border-0">
+                                  {isUpdatingComment ? 'Validation...' : 'Valider'}
+                                </Button>
+                                <Button type="button" variant="outline" onClick={resetCommentEditor} className="h-9 border-white/20 bg-white/5 text-white/80 hover:bg-white/10">Annuler</Button>
+                              </div>
+                            </div>
+                          ) : (
+                            <>
+                              <p className="text-white/80 text-sm">{c.comment}</p>
+                              <p className="text-white/30 text-[10px] mt-1">{new Date(c.createdAt).toLocaleDateString('fr-FR')}</p>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
+
 
       {/* Edit Product Modal */}
       <EditProductForm
