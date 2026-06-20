@@ -180,16 +180,36 @@ const ProfilePage: React.FC = () => {
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-violet-50/30 to-fuchsia-50/20 dark:from-[#030014] dark:via-[#0a0020] dark:to-[#0e0030] py-8 px-4">
         <div className="max-w-5xl mx-auto space-y-6">
 
-          {/* En-tête de page avec badge et titre */}
-          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-4">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-violet-500/10 to-fuchsia-500/10 border border-violet-300/20 mb-4">
-              <Crown className="w-4 h-4 text-violet-500" />
-              <span className="text-xs font-bold text-violet-600 dark:text-violet-400">Profil Utilisateur</span>
-              <Sparkles className="w-3 h-3 text-fuchsia-500 animate-pulse" />
-            </div>
-            <h1 className="text-3xl font-black bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 bg-clip-text text-transparent">
+          {/* En-tête héroïque ultra moderne */}
+          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}
+            className="relative overflow-hidden text-center py-10 sm:py-12 rounded-3xl bg-gradient-to-br from-slate-950 via-violet-950/70 to-fuchsia-950/60 border border-white/10 shadow-[0_30px_80px_-20px_rgba(168,85,247,0.45)] mb-4">
+            {/* Glow orbs */}
+            <motion.div animate={{ x: [0, 30, 0], y: [0, -25, 0], scale: [1, 1.15, 1] }} transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut' }}
+              className="absolute -top-10 left-1/4 w-72 h-72 bg-violet-500/30 rounded-full blur-[100px] pointer-events-none" />
+            <motion.div animate={{ x: [0, -25, 0], y: [0, 25, 0], scale: [1, 1.1, 1] }} transition={{ duration: 17, repeat: Infinity, ease: 'easeInOut' }}
+              className="absolute -bottom-10 right-1/4 w-72 h-72 bg-fuchsia-500/25 rounded-full blur-[100px] pointer-events-none" />
+            <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.025)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.025)_1px,transparent_1px)] bg-[size:44px_44px] [mask-image:radial-gradient(ellipse_at_center,black_30%,transparent_75%)]" />
+            <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-violet-400/60 to-transparent" />
+            <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-fuchsia-400/50 to-transparent" />
+
+            <motion.div whileHover={{ scale: 1.05, y: -2 }}
+              className="relative z-10 inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/[0.07] backdrop-blur-2xl border border-white/[0.12] mb-5 shadow-[0_10px_40px_rgba(168,85,247,0.3)]">
+              <motion.div animate={{ rotate: [0, -10, 10, 0] }} transition={{ duration: 3, repeat: Infinity }}>
+                <Crown className="w-4 h-4 text-yellow-400 drop-shadow-[0_0_10px_rgba(250,204,21,0.7)]" />
+              </motion.div>
+              <span className="text-xs font-bold text-violet-100 tracking-wide">Profil Utilisateur</span>
+              <motion.div animate={{ rotate: 360 }} transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}>
+                <Sparkles className="w-3.5 h-3.5 text-fuchsia-300 drop-shadow-[0_0_8px_rgba(244,114,182,0.7)]" />
+              </motion.div>
+            </motion.div>
+            <motion.h1
+              initial={{ opacity: 0, y: 30, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: 0.7, ease: 'easeOut' }}
+              className="relative z-10 text-4xl sm:text-5xl md:text-6xl font-black bg-gradient-to-r from-violet-200 via-fuchsia-200 to-violet-200 bg-clip-text text-transparent tracking-tight drop-shadow-[0_4px_30px_rgba(168,85,247,0.5)]">
+              <motion.span animate={{ rotate: [0, 10, -10, 0], scale: [1, 1.1, 1] }} transition={{ duration: 5, repeat: Infinity }} className="inline-block mr-3 align-middle">
+                <User className="inline h-9 w-9 sm:h-12 sm:w-12 text-violet-300 drop-shadow-[0_0_18px_rgba(168,85,247,0.8)]" />
+              </motion.span>
               Mon Profil
-            </h1>
+            </motion.h1>
           </motion.div>
 
           {/* Boutons de navigation entre onglets Profil / Paramètres */}

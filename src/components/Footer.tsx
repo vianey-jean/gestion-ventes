@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import {
   Mail,
   Phone,
@@ -40,16 +41,33 @@ const Footer: React.FC = () => {
       bg-[#050012] border-t border-white/[0.06]"
       style={{ marginLeft: `${sidebarWidth}px` }}
     >
+      <style>{`
+        @keyframes footerOrbit {
+          0% { transform: translate(0,0) scale(1); }
+          50% { transform: translate(20px,-15px) scale(1.1); }
+          100% { transform: translate(0,0) scale(1); }
+        }
+        @keyframes footerShine {
+          0% { background-position: -200% 0; }
+          100% { background-position: 200% 0; }
+        }
+        .footer-shine {
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+          background-size: 200% 100%;
+          animation: footerShine 4s linear infinite;
+        }
+      `}</style>
 
       {/* ================= GLOBAL GLOW ================= */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-fuchsia-600/10 blur-[160px] rounded-full" />
-        <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-cyan-500/10 blur-[160px] rounded-full" />
+        <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-fuchsia-600/10 blur-[160px] rounded-full" style={{ animation: 'footerOrbit 12s ease-in-out infinite' }} />
+        <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-cyan-500/10 blur-[160px] rounded-full" style={{ animation: 'footerOrbit 14s ease-in-out infinite reverse' }} />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.04)_0%,transparent_70%)]" />
       </div>
 
       {/* ================= TOP LINE ================= */}
-      <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+      <div className="absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-fuchsia-400/60 to-transparent" />
+      <div className="absolute top-0 inset-x-0 h-[2px] footer-shine" />
 
       <div className="relative max-w-7xl mx-auto px-6 py-16">
 
@@ -57,13 +75,23 @@ const Footer: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
 
           {/* ================= BRAND ================= */}
-          <div className="lg:col-span-1">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="lg:col-span-1"
+          >
 
             <div className="flex items-center gap-3 mb-6">
-              <div className="relative w-11 h-11 rounded-2xl bg-gradient-to-br from-fuchsia-500 via-violet-500 to-cyan-500 flex items-center justify-center shadow-lg">
+              <motion.div
+                whileHover={{ rotate: 360, scale: 1.1 }}
+                transition={{ duration: 0.8 }}
+                className="relative w-11 h-11 rounded-2xl bg-gradient-to-br from-fuchsia-500 via-violet-500 to-cyan-500 flex items-center justify-center shadow-lg shadow-fuchsia-500/40"
+              >
                 <Sparkles className="w-5 h-5 text-white" />
                 <div className="absolute inset-0 rounded-2xl bg-white/10 animate-pulse" />
-              </div>
+              </motion.div>
 
               <span className="text-2xl font-extrabold bg-gradient-to-r from-fuchsia-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent">
                 Gestion Vente
@@ -79,10 +107,15 @@ const Footer: React.FC = () => {
               <Heart className="w-4 h-4 text-pink-400 animate-pulse" />
               Designed with precision in Réunion
             </div>
-          </div>
+          </motion.div>
 
           {/* ================= NAVIGATION ================= */}
-          <div>
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+          >
             <h3 className="text-sm font-semibold uppercase tracking-widest text-white/70 mb-6">
               Navigation
             </h3>
@@ -93,7 +126,7 @@ const Footer: React.FC = () => {
                 { label: 'À propos', to: '/about' },
                 { label: 'Contact', to: '/contact' }
               ].map((item, i) => (
-                <li key={i}>
+                <motion.li key={i} whileHover={{ x: 6 }} transition={{ type: 'spring', stiffness: 300 }}>
                   <Link
                     to={item.to}
                     className="group flex items-center gap-3 text-white/50 hover:text-white transition"
@@ -103,13 +136,18 @@ const Footer: React.FC = () => {
                       {item.label}
                     </span>
                   </Link>
-                </li>
+                </motion.li>
               ))}
             </ul>
-          </div>
+          </motion.div>
 
           {/* ================= SERVICES ================= */}
-          <div>
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
             <h3 className="text-sm font-semibold uppercase tracking-widest text-white/70 mb-6">
               Services
             </h3>
@@ -121,16 +159,21 @@ const Footer: React.FC = () => {
                 'Analytics avancés',
                 'Support premium 24/7'
               ].map((s, i) => (
-                <li key={i} className="flex items-center gap-2">
-                  <Zap className="w-3.5 h-3.5 text-cyan-400" />
+                <motion.li key={i} whileHover={{ x: 6, color: '#fff' }} className="flex items-center gap-2 cursor-default">
+                  <Zap className="w-3.5 h-3.5 text-cyan-400 hover:scale-125 transition-transform" />
                   {s}
-                </li>
+                </motion.li>
               ))}
             </ul>
-          </div>
+          </motion.div>
 
           {/* ================= CONTACT ================= */}
-          <div>
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+          >
             <h3 className="text-sm font-semibold uppercase tracking-widest text-white/70 mb-6">
               Contact
             </h3>
@@ -154,10 +197,10 @@ const Footer: React.FC = () => {
                   content: '+262 6 92 84 23 70'
                 }
               ].map((item, i) => (
-                <div key={i} className="flex gap-4">
+                <motion.div key={i} whileHover={{ x: 4, scale: 1.02 }} className="flex gap-4 group">
 
-                  <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center">
-                    <item.icon className="w-4 h-4 text-fuchsia-300" />
+                  <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center group-hover:bg-gradient-to-br group-hover:from-fuchsia-500/20 group-hover:to-cyan-500/20 group-hover:border-fuchsia-400/40 transition-all">
+                    <item.icon className="w-4 h-4 text-fuchsia-300 group-hover:scale-125 group-hover:rotate-12 transition-transform" />
                   </div>
 
                   <div>
@@ -169,11 +212,11 @@ const Footer: React.FC = () => {
                     </p>
                   </div>
 
-                </div>
+                </motion.div>
               ))}
 
             </div>
-          </div>
+          </motion.div>
 
         </div>
 
@@ -188,11 +231,11 @@ const Footer: React.FC = () => {
 
             <div className="flex items-center gap-3 text-[11px] text-white/40">
 
-              <span>Confidentialité</span>
+              <motion.span whileHover={{ scale: 1.1, color: '#fff' }} className="cursor-pointer">Confidentialité</motion.span>
               <span className="w-1 h-1 rounded-full bg-white/20" />
-              <span>Conditions</span>
+              <motion.span whileHover={{ scale: 1.1, color: '#fff' }} className="cursor-pointer">Conditions</motion.span>
               <span className="w-1 h-1 rounded-full bg-white/20" />
-              <span>Support</span>
+              <motion.span whileHover={{ scale: 1.1, color: '#fff' }} className="cursor-pointer">Support</motion.span>
 
             </div>
 
@@ -206,18 +249,23 @@ const Footer: React.FC = () => {
               'Système stable & sécurisé',
               'Architecture SaaS avancée'
             ].map((text, i) => (
-              <div
+              <motion.div
                 key={i}
+                initial={{ opacity: 0, scale: 0.8 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                whileHover={{ y: -3, scale: 1.05 }}
                 className="relative px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs text-white/50 flex items-center gap-2 overflow-hidden"
               >
 
                 <div className="absolute inset-0 bg-gradient-to-r from-fuchsia-500/10 to-cyan-500/10" />
 
-                <Rocket className="w-3.5 h-3.5 text-cyan-300 relative z-10" />
+                <Rocket className="w-3.5 h-3.5 text-cyan-300 relative z-10 animate-pulse" />
 
                 <span className="relative z-10">{text}</span>
 
-              </div>
+              </motion.div>
             ))}
 
           </div>

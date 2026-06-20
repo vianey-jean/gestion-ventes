@@ -1,5 +1,5 @@
  import React, { useState, useEffect } from 'react';
- import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
  import { Button } from '@/components/ui/button';
  import { Badge } from '@/components/ui/badge';
 import { motion } from 'framer-motion';
@@ -23,6 +23,8 @@ import {
   X,
   Sparkles,
   Crown,
+  Info,
+  Mail,
 } from 'lucide-react';
  import { cn } from '@/lib/utils';
  
@@ -32,6 +34,8 @@ import {
     const { unreadCount } = useMessages();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
+    const location = useLocation();
+    const isAuthPage = /^\/(login|register|reset-password|forgot-password)/.test(location.pathname);
 
     useEffect(() => {
       if (isAuthenticated) {
@@ -48,12 +52,33 @@ import {
           0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.7); }
           50% { opacity: 0.5; box-shadow: 0 0 10px 3px rgba(52, 211, 153, 0.3); }
         }
+        @keyframes navShine {
+          0% { background-position: -200% 0; }
+          100% { background-position: 200% 0; }
+        }
+        .nav-shine-text {
+          background-image: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
+          background-size: 200% 100%;
+          animation: navShine 3s linear infinite;
+        }
+        @keyframes navFloat {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-3px); }
+        }
+        .nav-float { animation: navFloat 3s ease-in-out infinite; }
+        @keyframes navTopBar {
+          0% { background-position: 0% 50%; }
+          100% { background-position: 200% 50%; }
+        }
       `}</style>
      <header className="sticky top-0 z-50 backdrop-blur-2xl bg-gradient-to-r from-white/90 via-slate-50/90 to-violet-50/90 dark:from-[#030014]/95 dark:via-[#0a0020]/95 dark:to-[#0e0030]/95 border-b border-violet-200/20 dark:border-violet-800/20 shadow-2xl shadow-violet-500/5">
        {/* Mirror top reflection */}
        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/40 dark:via-white/10 to-transparent" />
        {/* Ultra Premium Top Gradient Bar */}
-       <div className="h-[2px] bg-gradient-to-r from-violet-500 via-fuchsia-500 to-pink-500" />
+       <div
+         className="h-[2px] bg-gradient-to-r from-violet-500 via-fuchsia-500 via-pink-500 via-cyan-400 to-violet-500"
+         style={{ backgroundSize: '200% 100%', animation: 'navTopBar 6s linear infinite' }}
+       />
        
        <nav className="max-w-7xl mx-auto px-4 relative">
          {/* Decorative Background Elements */}
@@ -68,8 +93,9 @@ import {
            <div className="flex items-center gap-4">
              <Link to="/" className="flex items-center group relative">
                <motion.div
-                 whileHover={{ scale: 1.05 }}
+                 whileHover={{ scale: 1.08, rotate: -2 }}
                  whileTap={{ scale: 0.95 }}
+                 transition={{ type: 'spring', stiffness: 300, damping: 15 }}
                  className="relative"
                >
                  <div className="absolute -inset-2 bg-gradient-to-r from-violet-500/20 to-fuchsia-500/20 rounded-2xl blur-lg opacity-0 group-hover:opacity-100 transition-all duration-500" />
@@ -81,12 +107,36 @@ import {
                </motion.div>
              </Link>
              
-             {isAuthenticated && <ObjectifIndicator />}
+             {isAuthenticated && !isAuthPage && <ObjectifIndicator />}
            </div>
 
            {/* ================= DESKTOP ================= */}
            <div className="hidden lg:flex items-center space-x-1">
-             {isAuthenticated && (
+             {isAuthPage && (
+               <>
+                 <Link to="/about">
+                   <motion.div whileHover={{ scale: 1.06, y: -2 }} whileTap={{ scale: 0.95 }}>
+                     <Button variant="ghost" className="relative rounded-2xl hover:bg-gradient-to-r hover:from-cyan-500/10 hover:to-blue-500/10 transition-all duration-300 px-4 py-2 group">
+                       <div className="flex items-center justify-center w-8 h-8 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-500 mr-2 shadow-lg shadow-cyan-500/30 group-hover:rotate-12 transition-transform">
+                         <Info className="h-4 w-4 text-white" />
+                       </div>
+                       <span className="font-bold">À propos</span>
+                     </Button>
+                   </motion.div>
+                 </Link>
+                 <Link to="/contact">
+                   <motion.div whileHover={{ scale: 1.06, y: -2 }} whileTap={{ scale: 0.95 }}>
+                     <Button variant="ghost" className="relative rounded-2xl hover:bg-gradient-to-r hover:from-fuchsia-500/10 hover:to-pink-500/10 transition-all duration-300 px-4 py-2 group">
+                       <div className="flex items-center justify-center w-8 h-8 rounded-xl bg-gradient-to-br from-fuchsia-500 to-pink-500 mr-2 shadow-lg shadow-fuchsia-500/30 group-hover:rotate-12 transition-transform">
+                         <Mail className="h-4 w-4 text-white" />
+                       </div>
+                       <span className="font-bold">Contact</span>
+                     </Button>
+                   </motion.div>
+                 </Link>
+               </>
+             )}
+             {isAuthenticated && !isAuthPage && (
                <>
                  <Link to="/dashboard">
                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
@@ -135,7 +185,7 @@ import {
              </motion.div>
 
              {/* USER MENU */}
-              {isAuthenticated ? (
+               {isAuthenticated && !isAuthPage ? (
                 <Link to="/profile">
                   <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                     <Button 
@@ -159,7 +209,7 @@ import {
                     </Button>
                   </motion.div>
                 </Link>
-             ) : (
+              ) : !isAuthPage ? (
                <Link to="/login">
                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                    <button className="btn-mirror mirror-shine rounded-2xl px-6 py-3 text-white flex items-center gap-2">
@@ -171,9 +221,9 @@ import {
                    </button>
                  </motion.div>
                </Link>
-             )}
+              ) : null}
 
-             {isAuthenticated && (
+             {isAuthenticated && !isAuthPage && (
                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                  <Button 
                    variant="ghost" 
@@ -191,7 +241,7 @@ import {
             <div className="lg:hidden flex items-center gap-2">
              
              {/* Profile button - tablette: photo + nom, mobile: photo seulement */}
-             {isAuthenticated && (
+             {isAuthenticated && !isAuthPage && (
                <Link to="/profile">
                  <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                    <Button 
@@ -217,7 +267,40 @@ import {
                  </motion.div>
                </Link>
              )}
-             
+
+             {isAuthPage && (
+               <>
+                 <Link to="/about">
+                   <motion.div whileHover={{ scale: 1.1, rotate: 10 }} whileTap={{ scale: 0.9 }}>
+                     <Button variant="ghost" size="icon" className="rounded-2xl h-10 w-10 bg-gradient-to-br from-cyan-500/10 to-blue-500/10">
+                       <Info className="h-5 w-5 text-cyan-600 dark:text-cyan-400" />
+                     </Button>
+                   </motion.div>
+                 </Link>
+                 <Link to="/contact">
+                   <motion.div whileHover={{ scale: 1.1, rotate: -10 }} whileTap={{ scale: 0.9 }}>
+                     <Button variant="ghost" size="icon" className="rounded-2xl h-10 w-10 bg-gradient-to-br from-fuchsia-500/10 to-pink-500/10">
+                       <Mail className="h-5 w-5 text-fuchsia-600 dark:text-fuchsia-400" />
+                     </Button>
+                   </motion.div>
+                 </Link>
+               </>
+             )}
+
+             <motion.div whileHover={{ scale: 1.1, rotate: 15 }} whileTap={{ scale: 0.9 }}>
+               <Button
+                 variant="ghost"
+                 size="icon"
+                 onClick={toggleTheme}
+                 className="rounded-2xl h-10 w-10 hover:bg-gradient-to-r hover:from-amber-500/10 hover:to-orange-500/10 transition-all duration-300"
+               >
+                 {theme === 'dark'
+                   ? <Sun className="h-5 w-5 text-amber-500" />
+                   : <Moon className="h-5 w-5 text-indigo-600" />}
+               </Button>
+             </motion.div>
+
+             {!isAuthPage && (
              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                <Button
                  variant="ghost"
@@ -228,12 +311,13 @@ import {
                  {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
                </Button>
              </motion.div>
+             )}
            </div>
 
          </div>
  
          {/* MOBILE/TABLET MENU */}
-       {isMobileMenuOpen && (
+       {isMobileMenuOpen && !isAuthPage && (
   <motion.div
     initial={{ opacity: 0, y: -20 }}
     animate={{ opacity: 1, y: 0 }}

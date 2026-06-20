@@ -32,47 +32,66 @@ const PointageHero: React.FC<PointageHeroProps> = ({
   onAddEntreprise, onAddTravailleur, onNewPointage, onShowParPersonne, onShowYearlyTotal, onPriseAvance, onShowMonthDetail, onSharePointage, onSelectiveSharePointage, onViewComments, commentCount = 0, year
 }) => {
   return (
-    <div className="relative overflow-hidden py-8 sm:py-12">
-      <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 via-blue-500/5 to-indigo-500/5" />
+    <div className="relative overflow-hidden py-10 sm:py-14 rounded-3xl bg-gradient-to-br from-slate-950 via-cyan-950/70 to-indigo-950 border border-white/10 shadow-[0_30px_80px_-20px_rgba(6,182,212,0.35)]">
+      {/* Aurora glass orbs */}
+      <motion.div animate={{ x: [0, 40, 0], y: [0, -30, 0], scale: [1, 1.15, 1] }} transition={{ duration: 16, repeat: Infinity, ease: 'easeInOut' }}
+        className="absolute -top-10 left-1/4 w-[26rem] h-[26rem] bg-cyan-500/25 rounded-full blur-[110px] pointer-events-none" />
+      <motion.div animate={{ x: [0, -30, 0], y: [0, 30, 0], scale: [1, 1.1, 1] }} transition={{ duration: 19, repeat: Infinity, ease: 'easeInOut' }}
+        className="absolute -bottom-10 right-1/4 w-[28rem] h-[28rem] bg-blue-500/20 rounded-full blur-[120px] pointer-events-none" />
+
+      {/* Grid mask */}
+      <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.025)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.025)_1px,transparent_1px)] bg-[size:44px_44px] [mask-image:radial-gradient(ellipse_at_center,black_30%,transparent_75%)]" />
+
+      {/* Shimmer borders */}
+      <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-cyan-400/60 to-transparent" />
+      <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-blue-400/50 to-transparent" />
+
       <div className="max-w-7xl mx-auto px-4 relative z-10">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center">
-          <div className="inline-flex items-center gap-3 mb-4 px-6 py-3 rounded-full bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border border-cyan-500/20 backdrop-blur-xl">
-            <Clock className="h-5 w-5 text-cyan-500" />
-            <span className="text-sm font-bold bg-gradient-to-r from-cyan-500 to-blue-500 bg-clip-text text-transparent">Gestion du Pointage</span>
-            <Sparkles className="h-4 w-4 text-amber-500 animate-pulse" />
-          </div>
-          <h1 className="text-3xl sm:text-4xl font-black bg-gradient-to-r from-cyan-400 via-blue-500 to-indigo-500 bg-clip-text text-transparent mb-2">
-            ⏰ Pointage de Travail
-          </h1>
-          <p className="text-muted-foreground">Suivez vos heures et revenus par entreprise</p>
+          <motion.div whileHover={{ scale: 1.05, y: -2 }} className="inline-flex items-center gap-3 mb-5 px-6 py-3 rounded-full bg-white/[0.07] border border-white/[0.12] backdrop-blur-2xl shadow-[0_10px_40px_rgba(6,182,212,0.3)]">
+            <motion.div animate={{ rotate: 360 }} transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}>
+              <Clock className="h-5 w-5 text-cyan-300 drop-shadow-[0_0_10px_rgba(34,211,238,0.7)]" />
+            </motion.div>
+            <span className="text-sm font-bold text-cyan-100">Gestion du Pointage</span>
+            <Sparkles className="h-4 w-4 text-amber-300 animate-pulse drop-shadow-[0_0_8px_rgba(251,191,36,0.7)]" />
+          </motion.div>
+          <motion.h1
+            initial={{ opacity: 0, y: 40, scale: 0.9 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: 0.9, ease: 'easeOut' }}
+            className="text-4xl sm:text-5xl md:text-6xl font-black bg-gradient-to-r from-cyan-200 via-blue-200 to-indigo-200 bg-clip-text text-transparent mb-2 tracking-tight drop-shadow-[0_4px_30px_rgba(6,182,212,0.4)]">
+            <motion.span animate={{ rotate: [0, 10, -10, 0] }} transition={{ duration: 4, repeat: Infinity }} className="inline-block mr-2 align-middle">
+              <Timer className="inline h-9 w-9 sm:h-12 sm:w-12 text-cyan-300 drop-shadow-[0_0_18px_rgba(34,211,238,0.8)]" />
+            </motion.span>
+            Pointage de Travail
+          </motion.h1>
+          <p className="text-cyan-100/60 text-sm sm:text-base font-medium">Suivez vos heures et revenus par entreprise</p>
 
           <div className="flex flex-wrap justify-center gap-3 mt-6">
-            <div className="px-5 py-3 rounded-2xl bg-white/60 dark:bg-white/5 backdrop-blur-xl border border-white/20 shadow-xl">
-              <p className="text-xs text-muted-foreground">Entreprises</p>
-              <p className="text-xl font-black text-cyan-500">{entreprisesCount}</p>
-            </div>
-            <div className="px-5 py-3 rounded-2xl bg-white/60 dark:bg-white/5 backdrop-blur-xl border border-white/20 shadow-xl">
-              <p className="text-xs text-muted-foreground">Travailleurs</p>
-              <p className="text-xl font-black text-purple-500">{travailleursCount}</p>
-            </div>
-            <div className="px-5 py-3 rounded-2xl bg-white/60 dark:bg-white/5 backdrop-blur-xl border border-white/20 shadow-xl">
-              <p className="text-xs text-muted-foreground">Pointages ce mois</p>
-              <p className="text-xl font-black text-blue-500">{pointagesCount}</p>
-            </div>
-            <div className="px-5 py-3 rounded-2xl bg-white/60 dark:bg-white/5 backdrop-blur-xl border border-white/20 shadow-xl cursor-pointer hover:scale-105 transition-transform hover:shadow-2xl hover:border-emerald-500/30"
-              onClick={onShowMonthDetail}>
-              <p className="text-xs text-muted-foreground">Total du mois</p>
-              <p className="text-xl font-black text-emerald-500">{monthTotal.toFixed(2)}€</p>
-              <p className="text-[10px] text-emerald-500/60 font-semibold">Cliquer pour détails</p>
-            </div>
-            <div className="px-5 py-3 rounded-2xl bg-white/60 dark:bg-white/5 backdrop-blur-xl border border-white/20 shadow-xl cursor-pointer hover:scale-105 transition-transform hover:shadow-2xl"
-              onClick={onShowYearlyTotal}>
-              <p className="text-xs text-muted-foreground">Total de l'année {year}</p>
-              <p className="text-xl font-black text-amber-500">📊 Voir</p>
-            </div>
+            {[
+              { label: 'Entreprises', value: entreprisesCount, color: 'text-cyan-300', glow: 'rgba(34,211,238,0.4)' },
+              { label: 'Travailleurs', value: travailleursCount, color: 'text-purple-300', glow: 'rgba(168,85,247,0.4)' },
+              { label: 'Pointages ce mois', value: pointagesCount, color: 'text-blue-300', glow: 'rgba(59,130,246,0.4)' },
+            ].map((s, i) => (
+              <motion.div key={s.label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 + i * 0.08 }}
+                whileHover={{ y: -4, scale: 1.03 }}
+                className="px-5 py-3 rounded-2xl bg-white/[0.06] backdrop-blur-2xl border border-white/[0.12] shadow-[0_10px_40px_rgba(0,0,0,0.3)]">
+                <p className="text-[11px] text-white/50 uppercase tracking-wider font-semibold">{s.label}</p>
+                <p className={`text-xl font-black ${s.color}`} style={{ textShadow: `0 0 20px ${s.glow}` }}>{s.value}</p>
+              </motion.div>
+            ))}
+            <motion.div whileHover={{ y: -4, scale: 1.03 }} onClick={onShowMonthDetail}
+              className="px-5 py-3 rounded-2xl bg-white/[0.06] backdrop-blur-2xl border border-emerald-300/20 shadow-[0_10px_40px_rgba(16,185,129,0.25)] cursor-pointer hover:border-emerald-300/40 transition-colors">
+              <p className="text-[11px] text-white/50 uppercase tracking-wider font-semibold">Total du mois</p>
+              <p className="text-xl font-black text-emerald-300" style={{ textShadow: '0 0 20px rgba(16,185,129,0.5)' }}>{monthTotal.toFixed(2)}€</p>
+              <p className="text-[10px] text-emerald-300/70 font-semibold">Cliquer pour détails</p>
+            </motion.div>
+            <motion.div whileHover={{ y: -4, scale: 1.03 }} onClick={onShowYearlyTotal}
+              className="px-5 py-3 rounded-2xl bg-white/[0.06] backdrop-blur-2xl border border-amber-300/20 shadow-[0_10px_40px_rgba(245,158,11,0.25)] cursor-pointer hover:border-amber-300/40 transition-colors">
+              <p className="text-[11px] text-white/50 uppercase tracking-wider font-semibold">Total de l'année {year}</p>
+              <p className="text-xl font-black text-amber-300" style={{ textShadow: '0 0 20px rgba(245,158,11,0.5)' }}>📊 Voir</p>
+            </motion.div>
           </div>
 
-          <div className="relative overflow-hidden bg-gradient-to-br from-cyan-700 via-blue-700 to-purple-800 rounded-2xl sm:rounded-3xl shadow-[0_40px_120px_rgba(0,0,0,0.45)] p-5 sm:p-7 border border-white/25 mt-6">
+          <div className="relative overflow-hidden bg-gradient-to-br from-cyan-800/70 via-blue-800/70 to-purple-900/70 backdrop-blur-xl rounded-2xl sm:rounded-3xl shadow-[0_40px_120px_rgba(0,0,0,0.45)] p-5 sm:p-7 border border-white/25 mt-6">
             <div className="absolute inset-0 bg-gradient-to-tr from-white/10 via-transparent to-transparent pointer-events-none" />
             <div className="relative flex flex-wrap justify-center gap-3 sm:gap-4">
               <Button onClick={onAddEntreprise}
