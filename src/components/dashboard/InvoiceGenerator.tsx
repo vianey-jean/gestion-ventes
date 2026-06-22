@@ -140,8 +140,8 @@ const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ isOpen, onClose }) 
   const filteredSalesByName =
     searchName.length >= 3
       ? filteredSalesByYear.filter(sale =>
-          sale.clientName?.toLowerCase().includes(searchName.toLowerCase())
-        )
+        sale.clientName?.toLowerCase().includes(searchName.toLowerCase())
+      )
       : [];
 
   const handleSaleSelect = (sale: Sale) => {
@@ -218,11 +218,11 @@ const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ isOpen, onClose }) 
       sale.products && sale.products.length > 0
         ? sale.products
         : [{
-            description: sale.description || '',
-            quantitySold: sale.quantitySold || 0,
-            sellingPrice: sale.sellingPrice || 0,
-            deliveryFee: sale.deliveryFee || 0
-          } as SaleProduct];
+          description: sale.description || '',
+          quantitySold: sale.quantitySold || 0,
+          sellingPrice: sale.sellingPrice || 0,
+          deliveryFee: sale.deliveryFee || 0
+        } as SaleProduct];
 
     const tableData = saleProducts.map(prod => [
       prod.description || '',
@@ -297,7 +297,7 @@ const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ isOpen, onClose }) 
       {/* ================= MODAL PRINCIPAL ================= */}
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent
-  className="
+          className="
     sm:max-w-5xl p-0 overflow-hidden
     rounded-[32px]
     bg-gray-500/30 dark:bg-gray-900/40
@@ -306,7 +306,7 @@ const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ isOpen, onClose }) 
     shadow-[0_35px_140px_-25px_rgba(0,0,0,0.5)]
     animate-in fade-in zoom-in-95 slide-in-from-bottom-6 duration-500
   "
->
+        >
 
           {/* ===== Header ===== */}
           <DialogHeader
@@ -333,13 +333,13 @@ const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ isOpen, onClose }) 
 
               {/* ===== Sélection Année ===== */}
               <Card
-  className="
+                className="
     rounded-3xl
     bg-gray-500/30 dark:bg-gray-900/40
     backdrop-blur-md
     shadow-2xl hover:shadow-3xl
   "
->
+              >
 
                 <CardHeader>
                   <CardTitle className="flex items-center gap-3 text-red-600 dark:text-indigo-400">
@@ -369,15 +369,15 @@ const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ isOpen, onClose }) 
               </Card>
 
               {/* ===== Recherche Client ===== */}
-            <Card
-  className="
+              <Card
+                className="
     rounded-3xl
     bg-gray-500/30 dark:bg-gray-900/40
     backdrop-blur-md
     shadow-2xl
     transition-all duration-300
   "
->
+              >
 
                 <CardHeader>
                   <CardTitle className="flex items-center gap-3 text-emerald-600 dark:text-emerald-400">
@@ -406,25 +406,25 @@ const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ isOpen, onClose }) 
 
               {/* ===== Résultats Ventes ===== */}
               {searchName.length >= 3 && (
-              <Card
-  className="
+                <Card
+                  className="
     border-2 border-gray-300/40 dark:border-gray-700/40
     bg-gray-500/30 dark:bg-gray-900/40
     backdrop-blur-md
     shadow-2xl
     rounded-2xl
   "
->
+                >
 
                   <CardHeader className="pb-3">
                     <CardTitle
-  className="
+                      className="
     text-lg
     flex items-center gap-2
     font-bold
     text-gray-800 dark:text-gray-100
   "
->
+                    >
 
                       <User className="h-5 w-5" />
                       Ventes de : {searchName} en {searchYear}
@@ -500,8 +500,8 @@ const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ isOpen, onClose }) 
 
       {/* ================= MODAL DÉTAIL VENTE ================= */}
       <Dialog open={showSaleDetails} onOpenChange={setShowSaleDetails}>
-      <DialogContent
-  className="
+        <DialogContent
+          className="
     sm:max-w-3xl
     rounded-[32px]
 
@@ -513,7 +513,7 @@ const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ isOpen, onClose }) 
     animate-in fade-in zoom-in-95 slide-in-from-bottom-6 duration-500
     p-0
   "
->
+        >
 
           <DialogHeader className="pb-4 pt-6 px-6 text-center">
             <DialogTitle className="flex items-center justify-center gap-3 text-xl font-black bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">

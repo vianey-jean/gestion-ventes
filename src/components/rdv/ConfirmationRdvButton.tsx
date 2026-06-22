@@ -266,33 +266,53 @@ const ConfirmationRdvButton: React.FC<Props> = ({ rdvs, onAfterUpdate }) => {
                 const isSel = selectedId === e.id;
                 const statutColor =
                   e.confirmationStatut === 'maintenu' ? 'bg-emerald-600' :
-                  e.confirmationStatut === 'annule'   ? 'bg-rose-600' :
-                  e.confirmationStatut === 'reporter' ? 'bg-amber-500' : 'bg-slate-400';
+                    e.confirmationStatut === 'annule' ? 'bg-rose-600' :
+                      e.confirmationStatut === 'reporter' ? 'bg-amber-500' : 'bg-slate-400';
                 const statutLabel =
                   e.confirmationStatut === 'maintenu' ? 'Maintenu' :
-                  e.confirmationStatut === 'annule'   ? 'Annulé' :
-                  e.confirmationStatut === 'reporter' ? 'Reporté' : 'En attente';
+                    e.confirmationStatut === 'annule' ? 'Annulé' :
+                      e.confirmationStatut === 'reporter' ? 'Reporté' : 'En attente';
                 return (
                   <button
                     key={e.id}
                     onClick={() => setSelectedId(e.id)}
-                    className={`w-full text-left p-4 rounded-xl border transition-all duration-200 hover:shadow-lg ${
-                      isSel
-                        ? 'bg-gradient-to-r from-violet-50 to-fuchsia-50 dark:from-violet-950/30 dark:to-fuchsia-950/20 border-fuchsia-400 ring-2 ring-fuchsia-300/50'
-                        : 'bg-white/70 dark:bg-gray-800/50 border-fuchsia-100 dark:border-fuchsia-800/30'
-                    }`}
+                    className={`w-full text-left p-4 rounded-xl border transition-all duration-200 hover:shadow-lg ${isSel
+                      ? 'bg-gradient-to-r from-violet-50 to-fuchsia-50 dark:from-violet-950/30 dark:to-fuchsia-950/20 border-fuchsia-400 ring-2 ring-fuchsia-300/50'
+                      : 'bg-white/70 dark:bg-gray-800/50 border-fuchsia-100 dark:border-fuchsia-800/30'
+                      }`}
                   >
                     <div className="flex items-center gap-3">
-                      <div className={`h-4 w-4 rounded-full border-2 flex items-center justify-center ${
-                        isSel ? 'border-fuchsia-600 bg-fuchsia-600' : 'border-muted-foreground'
-                      }`}>
+                      <div className={`h-4 w-4 rounded-full border-2 flex items-center justify-center ${isSel ? 'border-fuchsia-600 bg-fuchsia-600' : 'border-muted-foreground'
+                        }`}>
                         {isSel && <div className="h-1.5 w-1.5 rounded-full bg-white" />}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="font-bold text-foreground truncate">{e.titre || e.clientNom}</div>
+                        <div className="font-bold text-foreground">
+                          {e.produits && e.produits.length > 0 ? (
+                            <div className="space-y-1">
+                              {e.produits.map((p, i) => (
+                                <div key={i} className="flex justify-between">
+                                  <span>
+                                    {p.nom}{' '}
+                                    <span className="text-fuchsia-600 font-bold">
+                                      x{p.quantite}
+                                    </span>
+                                  </span>
+                                  <span className="font-semibold">
+                                    {p.prixVente}€
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            e.titre || e.clientNom
+                          )}
+                        </div>
+
                         <div className="text-xs text-muted-foreground flex items-center gap-2 mt-0.5">
                           <Clock className="h-3 w-3" />
-                          {e.date} • {e.heureDebut}{e.heureFin ? ' - ' + e.heureFin : ''}
+                          {e.date} • {e.heureDebut}
+                          {e.heureFin ? ' - ' + e.heureFin : ''}
                           <span>•</span>
                           <span>{e.clientNom}</span>
                         </div>
