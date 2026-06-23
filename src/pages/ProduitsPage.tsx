@@ -624,11 +624,11 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
       <SEOHead title="Produits" description="Gestion des produits - Inventaire et catalogue" />
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-violet-50/30 to-fuchsia-50/20 dark:from-[#030014] dark:via-[#0a0025] dark:to-[#0e0030]">
         {/* Hero */}
-        <div className="max-w-7xl mx-auto px-4 pt-8">
+        <div className="w-full px-2 sm:px-4 md:px-6 lg:px-8 pt-4 md:pt-6">
           <ProduitsHero onAdd={() => setIsAddOpen(true)} />
         </div>
 
-        <div className="max-w-7xl mx-auto px-4 pb-12 space-y-6">
+        <div className="w-full px-2 sm:px-4 md:px-6 lg:px-8 pb-12 space-y-6">
           {/* Search + Action buttons */}
           <ProduitsToolbar
             searchQuery={searchQuery}

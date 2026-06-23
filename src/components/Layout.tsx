@@ -10,6 +10,7 @@ import { useAccessibility } from './accessibility/AccessibilityProvider';
 import LiveChatAdmin from './livechat/LiveChatAdmin';
 import { useAutoLogout } from '@/hooks/use-auto-logout';
 import TimeoutNotification from './navbar/TimeoutNotification';
+import BackButton from './shared/BackButton';
 
 interface LayoutProps {
   children?: React.ReactNode;
@@ -34,6 +35,7 @@ const Layout: React.FC<LayoutProps> = ({ children, requireAuth = false }) => {
   const content = (
     <div className="flex flex-col min-h-screen">
       <Navbar />
+      <BackButton />
       <TimeoutNotification
         sessionWarningVisible={sessionWarningVisible}
         sessionMinutesLeft={sessionMinutesLeft}
