@@ -16,34 +16,38 @@ interface LayoutProps {
   children?: React.ReactNode;
   requireAuth?: boolean;
 }
-
 const Layout: React.FC<LayoutProps> = ({ children, requireAuth = false }) => {
   const { isAuthenticated, isLoading } = useAuth();
   const { announceToScreenReader } = useAccessibility();
   const location = useLocation();
+
+  const isDashboardPage = location.pathname.startsWith('/dashboard');
+
   const { sessionWarningVisible, sessionMinutesLeft, inactivityWarningVisible, inactivitySecondsLeft } = useAutoLogout();
-  
+
   React.useEffect(() => {
     const pageTitle = document.title;
     announceToScreenReader(`Page chargée: ${pageTitle}`);
   }, [location.pathname, announceToScreenReader]);
-  
+
   if (requireAuth && !isLoading && !isAuthenticated) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
-  
+
   const content = (
     <div className="flex flex-col min-h-screen">
       <Navbar />
-      <BackButton />
+
+      {!isDashboardPage && <BackButton />}
+
       <TimeoutNotification
         sessionWarningVisible={sessionWarningVisible}
         sessionMinutesLeft={sessionMinutesLeft}
         inactivityWarningVisible={inactivityWarningVisible}
         inactivitySecondsLeft={inactivitySecondsLeft}
       />
-      
-      <main 
+
+      <main
         id="main-content"
         className="flex-grow"
         role="main"
@@ -52,22 +56,17 @@ const Layout: React.FC<LayoutProps> = ({ children, requireAuth = false }) => {
       >
         {children || <Outlet />}
       </main>
-      
+
       <Footer />
       <ScrollToTop />
       <LiveChatAdmin />
     </div>
   );
-  
-  // Envelopper avec la synchronisation temps réel si authentifié
+
   if (isAuthenticated) {
-    return (
-      <RealtimeWrapper>
-        {content}
-      </RealtimeWrapper>
-    );
+    return <RealtimeWrapper>{content}</RealtimeWrapper>;
   }
-  
+
   return content;
 };
 
