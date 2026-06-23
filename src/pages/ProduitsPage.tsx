@@ -7,6 +7,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Layout from '@/components/Layout';
+import ProduitsHero from '@/pages/produits/ProduitsHero';
 import { useApp } from '@/contexts/AppContext';
 import { productService } from '@/service/api';
 import { productApiService } from '@/services/api/productApi';
@@ -51,6 +52,9 @@ import CaracteristiqueModal from '@/components/products/CaracteristiqueModal';
 import ProductMergeModal from '@/components/products/ProductMergeModal';
 import ProductsVenduModal from '@/components/products/ProductsVenduModal';
 import PrixHistoryModal from '@/components/products/PrixHistoryModal';
+import ProduitsToolbar from '@/pages/produits/ProduitsToolbar';
+import ProduitsFiltersStats from '@/pages/produits/ProduitsFiltersStats';
+import AchatVenteSubModals from '@/pages/produits/AchatVenteSubModals';
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://server-gestion-ventes.onrender.com';
 
 type FilterType = 'tous' | 'perruque' | 'tissage' | 'extension' | 'autres';
@@ -620,394 +624,29 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
       <SEOHead title="Produits" description="Gestion des produits - Inventaire et catalogue" />
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-violet-50/30 to-fuchsia-50/20 dark:from-[#030014] dark:via-[#0a0025] dark:to-[#0e0030]">
         {/* Hero */}
-        <div className="relative overflow-hidden">
-          <div className="absolute inset-0">
-            <div className="absolute top-0 left-1/4 w-72 h-72 bg-violet-500/10 rounded-full blur-3xl" />
-            <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-fuchsia-500/10 rounded-full blur-3xl" />
-          </div>
-          <div className="relative max-w-7xl mx-auto px-4 pt-8 pb-6">
-            <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="text-center space-y-3">
-              <div className="mx-auto w-20 h-20 rounded-3xl bg-gradient-to-br from-violet-500 via-purple-600 to-fuchsia-600 flex items-center justify-center shadow-2xl shadow-violet-500/30">
-                <Package className="h-10 w-10 text-white" />
-              </div>
-              <h1 className="text-3xl sm:text-4xl font-black bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 bg-clip-text text-transparent">
-                ✨ Gestion des Produits
-              </h1>
-              <p className="text-muted-foreground font-medium">Gérez votre inventaire premium avec élégance</p>
-            </motion.div>
-          </div>
+        <div className="max-w-7xl mx-auto px-4 pt-8">
+          <ProduitsHero onAdd={() => setIsAddOpen(true)} />
         </div>
 
         <div className="max-w-7xl mx-auto px-4 pb-12 space-y-6">
-          {/* Search + Add */}
-          <motion.div
-  initial={{ opacity: 0, y: 10 }}
-  animate={{ opacity: 1, y: 0 }}
-  transition={{ delay: 0.1 }}
-  className="flex flex-col xl:flex-row gap-4 xl:items-center w-full"
->
-  {/* ================= SEARCH ================= */}
-  <div className="relative flex-1 w-full">
-    <div className="relative">
-      <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-violet-400" />
+          {/* Search + Action buttons */}
+          <ProduitsToolbar
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            setShowSearchResults={setShowSearchResults}
+            onAdd={() => setIsAddOpen(true)}
+            onEdit={() => setIsEditProductOpen(true)}
+            onVendu={() => setIsVenduOpen(true)}
+            onMerge={() => setIsMergeOpen(true)}
+          />
 
-      <Input
-        placeholder="Rechercher un produit (3 caractères min.)..."
-        value={searchQuery}
-        onChange={(e) => {
-          setSearchQuery(e.target.value);
-          setShowSearchResults(e.target.value.length >= 3);
-        }}
-        onFocus={() => {
-          if (searchQuery.length >= 3) setShowSearchResults(true);
-        }}
-        onBlur={() => setTimeout(() => setShowSearchResults(false), 200)}
-        className="
-          pl-11 sm:pl-12
-          h-12 sm:h-14
-          rounded-2xl
-          border-2
-          border-violet-200/50
-          dark:border-violet-800/30
-          bg-white/80
-          dark:bg-white/5
-          backdrop-blur-xl
-          focus:border-violet-500
-          shadow-lg
-          shadow-violet-500/5
-          text-sm sm:text-base
-          font-medium
-          transition-all
-          duration-300
-          w-full
-        "
-      />
-    </div>
-
-    {/* ================= SEARCH RESULTS ================= */}
-    {/* 
-    <AnimatePresence>
-      {showSearchResults && searchResults.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
-          className="
-            absolute
-            z-50
-            top-full
-            mt-2
-            w-full
-            rounded-2xl
-            border
-            border-violet-200/30
-            dark:border-violet-800/30
-            bg-white/95
-            dark:bg-[#0a0020]/95
-            backdrop-blur-2xl
-            shadow-2xl
-            shadow-violet-500/10
-            overflow-hidden
-          "
-        >
-          {searchResults.map((p) => (
-            <button
-              key={p.id}
-              onMouseDown={(e) => {
-                e.preventDefault();
-                openView(p);
-                setShowSearchResults(false);
-              }}
-              className="
-                w-full
-                flex
-                items-center
-                gap-3
-                px-4
-                py-3
-                hover:bg-violet-500/10
-                transition-all
-                duration-200
-                text-left
-                border-b
-                border-violet-100/20
-                dark:border-violet-800/20
-                last:border-0
-              "
-            >
-              <div className="w-10 h-10 rounded-xl overflow-hidden bg-violet-100 dark:bg-violet-900/30 flex-shrink-0">
-                {p.mainPhoto || (p.photos && p.photos.length > 0) ? (
-                  <img
-                    src={getPhotoUrl(p.mainPhoto || p.photos![0])}
-                    alt=""
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <ImageOff className="h-4 w-4 text-violet-400" />
-                  </div>
-                )}
-              </div>
-
-              <div className="flex-1 min-w-0">
-                <p className="font-bold text-sm truncate text-foreground">
-                  {p.description}
-                </p>
-
-                <p className="text-xs text-muted-foreground">
-                  {p.code} · {p.quantity} en stock · {p.purchasePrice}€
-                </p>
-              </div>
-
-              <Eye className="h-4 w-4 text-violet-400 flex-shrink-0" />
-            </button>
-          ))}
-        </motion.div>
-      )}
-    </AnimatePresence>
-    */}
-  </div>
-
-  {/* ================= ACTION BUTTONS ================= */}
-  <div
-    className="
-      grid
-      grid-cols-1
-      sm:grid-cols-2
-      xl:flex
-      gap-3
-      w-full
-      xl:w-auto
-    "
-  >
-    {/* ================= ADD BUTTON ================= */}
-    <motion.div
-      whileHover={{ scale: 1.03 }}
-      whileTap={{ scale: 0.97 }}
-      className="w-full"
-    >
-      <Button
-        onClick={() => setIsAddOpen(true)}
-        className="
-          w-full
-          xl:w-auto
-          h-12
-          sm:h-14
-          px-4
-          sm:px-6
-          rounded-2xl
-          font-bold
-          text-sm
-          sm:text-base
-          bg-gradient-to-r
-          from-emerald-500
-          via-green-600
-          to-teal-600
-          hover:from-emerald-600
-          hover:via-green-700
-          hover:to-teal-700
-          text-white
-          shadow-lg
-          sm:shadow-xl
-          shadow-green-500/25
-          hover:shadow-2xl
-          hover:shadow-green-500/40
-          transition-all
-          duration-300
-          border-0
-        "
-      >
-        <Plus className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
-        Ajouter Produit
-      </Button>
-    </motion.div>
-
-    {/* ================= EDIT BUTTON ================= */}
-    <motion.div
-      whileHover={{ scale: 1.03 }}
-      whileTap={{ scale: 0.97 }}
-      className="w-full"
-    >
-      <Button
-        onClick={() => setIsEditProductOpen(true)}
-        className="
-          w-full
-          xl:w-auto
-          h-12
-          sm:h-14
-          px-4
-          sm:px-6
-          rounded-2xl
-          font-bold
-          text-sm
-          sm:text-base
-          bg-gradient-to-r
-          from-blue-500
-          via-blue-600
-          to-indigo-600
-          hover:from-blue-600
-          hover:via-blue-700
-          hover:to-indigo-700
-          text-white
-          shadow-lg
-          sm:shadow-xl
-          shadow-blue-500/25
-          hover:shadow-2xl
-          hover:shadow-blue-500/40
-          transition-all
-          duration-300
-          border-0
-        "
-      >
-        <Pencil className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
-        Modifier Produit
-      </Button>
-    </motion.div>
-
-    {/* ================= BEST SELLER BUTTON ================= */}
-    <motion.div
-      whileHover={{ scale: 1.03 }}
-      whileTap={{ scale: 0.97 }}
-      className="w-full"
-    >
-      <Button
-        onClick={() => setIsVenduOpen(true)}
-        className="
-          w-full
-          xl:w-auto
-          h-12
-          sm:h-14
-          px-4
-          sm:px-6
-          rounded-2xl
-          font-bold
-          text-sm
-          sm:text-base
-          bg-gradient-to-r
-          from-amber-500
-          via-yellow-500
-          to-orange-500
-          hover:from-amber-600
-          hover:via-yellow-600
-          hover:to-orange-600
-          text-white
-          shadow-lg
-          sm:shadow-xl
-          shadow-amber-500/30
-          hover:shadow-2xl
-          hover:shadow-amber-500/50
-          transition-all
-          duration-300
-          border-0
-        "
-      >
-        <Star className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
-        Voir plus vendu
-      </Button>
-    </motion.div>
-
-    {/* ================= MERGE BUTTON ================= */}
-    <motion.div
-      whileHover={{ scale: 1.03 }}
-      whileTap={{ scale: 0.97 }}
-      className="w-full"
-    >
-      <Button
-        onClick={() => setIsMergeOpen(true)}
-        className="
-          w-full
-          xl:w-auto
-          h-12
-          sm:h-14
-          px-4
-          sm:px-6
-          rounded-2xl
-          font-bold
-          text-sm
-          sm:text-base
-          bg-gradient-to-r
-          from-orange-500
-          via-amber-500
-          to-red-500
-          hover:from-orange-600
-          hover:via-amber-600
-          hover:to-red-600
-          text-white
-          shadow-lg
-          sm:shadow-xl
-          shadow-orange-500/25
-          hover:shadow-2xl
-          hover:shadow-orange-500/40
-          transition-all
-          duration-300
-          border-0
-        "
-      >
-        <Merge className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
-        Fusionner Produit
-      </Button>
-    </motion.div>
-  </div>
-</motion.div>
-
-          {/* Filters */}
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}
-            className="flex flex-wrap gap-2"
-          >
-            {filters.map(f => (
-              <Button
-                key={f.key}
-                variant="outline"
-                onClick={() => setActiveFilter(f.key)}
-                className={cn(
-                  "rounded-2xl font-bold transition-all duration-300 border-2 backdrop-blur-xl",
-                  activeFilter === f.key
-                    ? "bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white border-transparent shadow-lg shadow-violet-500/25"
-                    : "border-violet-200/30 dark:border-violet-800/30 hover:border-violet-400 bg-white/50 dark:bg-white/5"
-                )}
-              >
-                {f.icon}
-                <span className="ml-1.5">{f.label}</span>
-                <Badge variant="secondary" className={cn(
-                  "ml-2 text-xs",
-                  activeFilter === f.key ? "bg-white/20 text-white" : "bg-violet-100 dark:bg-violet-900/30"
-                )}>
-                  {f.key === 'tous' ? products.length : products.filter(p => {
-                    const d = p.description.toLowerCase();
-                    if (f.key === 'perruque') return d.includes('perruque');
-                    if (f.key === 'tissage') return d.includes('tissage');
-                    if (f.key === 'extension') return d.includes('extension');
-                    if (f.key === 'autres') return !d.includes('perruque') && !d.includes('tissage') && !d.includes('extension');
-                    return false;
-                  }).length}
-                </Badge>
-              </Button>
-            ))}
-          </motion.div>
-
-          {/* Stats */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {[
-              { label: 'Total Produits', value: products.length, gradient: 'from-violet-500 to-purple-600', shadow: 'violet' },
-              { label: 'En Stock', value: products.filter(p => p.quantity > 0).length, gradient: 'from-emerald-500 to-teal-600', shadow: 'emerald' },
-              { label: 'Rupture', value: products.filter(p => p.quantity === 0).length, gradient: 'from-red-500 to-rose-600', shadow: 'red' },
-              { label: 'Valeur Stock', value: `${products.reduce((acc, p) => acc + p.purchasePrice * p.quantity, 0).toFixed(0)}€`, gradient: 'from-amber-500 to-orange-600', shadow: 'amber' },
-            ].map((stat, i) => (
-              <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 * i }}
-                className={cn(
-                  "relative rounded-2xl p-4 overflow-hidden backdrop-blur-xl border border-white/10",
-                  "bg-gradient-to-br", stat.gradient,
-                  `shadow-xl shadow-${stat.shadow}-500/20`
-                )}
-              >
-                <div className="absolute inset-0 bg-white/5" />
-                <div className="relative">
-                  <p className="text-white/70 text-xs font-medium">{stat.label}</p>
-                  <p className="text-white text-2xl font-black mt-1">{stat.value}</p>
-                </div>
-              </motion.div>
-            ))}
-          </div>
+          {/* Filters + Stats */}
+          <ProduitsFiltersStats
+            products={products}
+            filters={filters}
+            activeFilter={activeFilter}
+            setActiveFilter={setActiveFilter}
+          />
 
           {/* Products Table */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
@@ -2011,27 +1650,27 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
                     .slice()
                     .sort((x, y) => new Date(x.v.date).getTime() - new Date(y.v.date).getTime())
                     .map(({ v, originalIndex }) => (
-                    <div key={originalIndex} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-3 rounded-xl bg-white/5 border border-white/10">
-                      <div className="flex-1 min-w-0">
-                        <p className="text-white/90 text-sm font-semibold">-{v.quantity} unité{v.quantity>1?'s':''}</p>
-                        <p className="text-white/50 text-xs">{new Date(v.date).toLocaleDateString('fr-FR')}</p>
-                      </div>
-                      <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto">
-                        <span className="text-emerald-300 font-bold whitespace-nowrap">{v.sellingPrice}€</span>
-                        <div className="flex items-center gap-1">
-                          <Button size="icon" variant="ghost" className="h-8 w-8 text-cyan-300 hover:text-cyan-200 hover:bg-cyan-500/10" onClick={() => setVenteViewIndex(originalIndex)} title="Voir">
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button size="icon" variant="ghost" className="h-8 w-8 text-amber-300 hover:text-amber-200 hover:bg-amber-500/10" onClick={() => openVenteEdit(originalIndex)} title="Modifier">
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button size="icon" variant="ghost" className="h-8 w-8 text-rose-300 hover:text-rose-200 hover:bg-rose-500/10" onClick={() => setVenteDeleteIndex(originalIndex)} title="Supprimer">
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                      <div key={originalIndex} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-3 rounded-xl bg-white/5 border border-white/10">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-white/90 text-sm font-semibold">-{v.quantity} unité{v.quantity > 1 ? 's' : ''}</p>
+                          <p className="text-white/50 text-xs">{new Date(v.date).toLocaleDateString('fr-FR')}</p>
+                        </div>
+                        <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto">
+                          <span className="text-emerald-300 font-bold whitespace-nowrap">{v.sellingPrice}€</span>
+                          <div className="flex items-center gap-1">
+                            <Button size="icon" variant="ghost" className="h-8 w-8 text-cyan-300 hover:text-cyan-200 hover:bg-cyan-500/10" onClick={() => setVenteViewIndex(originalIndex)} title="Voir">
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button size="icon" variant="ghost" className="h-8 w-8 text-amber-300 hover:text-amber-200 hover:bg-amber-500/10" onClick={() => openVenteEdit(originalIndex)} title="Modifier">
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button size="icon" variant="ghost" className="h-8 w-8 text-rose-300 hover:text-rose-200 hover:bg-rose-500/10" onClick={() => setVenteDeleteIndex(originalIndex)} title="Supprimer">
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
                   {(!selectedProduct.ventes || selectedProduct.ventes.length === 0) && (
                     <p className="text-white/40 text-sm italic">Aucune vente enregistrée</p>
                   )}
@@ -2042,198 +1681,36 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
         </DialogContent>
       </Dialog>
 
-      {/* ===== Sous-modales Achat (Voir / Modifier / Supprimer) ===== */}
-      <Dialog open={achatViewIndex !== null} onOpenChange={(o) => !o && setAchatViewIndex(null)}>
-        <DialogContent className="sm:max-w-md bg-gradient-to-br from-slate-900 via-emerald-900/30 to-teal-900/20 border border-white/10 rounded-3xl">
-          <DialogHeader>
-            <DialogTitle className="text-lg font-black bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent flex items-center gap-2">
-              <Eye className="h-5 w-5" /> Détails de l'achat
-            </DialogTitle>
-          </DialogHeader>
-          {selectedProduct && achatViewIndex !== null && selectedProduct.achats?.[achatViewIndex] && (() => {
-            const a = selectedProduct.achats[achatViewIndex];
-            const isDispo = a.disponible !== false;
-            return (
-              <div className="space-y-2 text-sm">
-                <div className="p-3 rounded-xl bg-white/5 border border-white/10"><span className="text-white/60">Date :</span> <span className="text-white font-semibold">{new Date(a.date).toLocaleDateString('fr-FR')}</span></div>
-                <div className="p-3 rounded-xl bg-white/5 border border-white/10"><span className="text-white/60">Quantité :</span> <span className="text-white font-semibold">+{a.quantity}</span></div>
-                <div className="p-3 rounded-xl bg-white/5 border border-white/10"><span className="text-white/60">Prix d'achat :</span> <span className="text-amber-300 font-bold">{a.purchasePrice}€</span></div>
-                <div className="p-3 rounded-xl bg-white/5 border border-white/10"><span className="text-white/60">Fournisseur :</span> <span className="text-cyan-300 font-semibold">{a.fournisseur || '—'}</span></div>
-                <div className="p-3 rounded-xl bg-white/5 border border-white/10"><span className="text-white/60">Disponibilité :</span> <Badge className={cn('ml-2 border-0', isDispo ? 'bg-emerald-500/20 text-emerald-200' : 'bg-rose-500/20 text-rose-200')}>{isDispo ? '✓ Disponible' : '✕ Indisponible'}</Badge></div>
-              </div>
-            );
-          })()}
-          <DialogFooter>
-            <Button onClick={() => setAchatViewIndex(null)} variant="outline">Fermer</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={achatEditIndex !== null} onOpenChange={(o) => !o && setAchatEditIndex(null)}>
-        <DialogContent className="sm:max-w-md bg-gradient-to-br from-slate-900 via-amber-900/30 to-orange-900/20 border border-white/10 rounded-3xl">
-          <DialogHeader>
-            <DialogTitle className="text-lg font-black bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent flex items-center gap-2">
-              <Edit className="h-5 w-5" /> Modifier l'achat
-            </DialogTitle>
-          </DialogHeader>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label className="text-white/80 text-xs">Date</Label>
-              <Input type="date" value={achatEditForm.date} onChange={(e) => setAchatEditForm(f => ({ ...f, date: e.target.value }))} />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-white/80 text-xs">Quantité</Label>
-              <Input type="number" min="0" value={achatEditForm.quantity} onChange={(e) => setAchatEditForm(f => ({ ...f, quantity: e.target.value }))} />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-white/80 text-xs">Prix d'achat (€)</Label>
-              <Input type="number" step="0.01" min="0" value={achatEditForm.purchasePrice} onChange={(e) => setAchatEditForm(f => ({ ...f, purchasePrice: e.target.value }))} />
-            </div>
-            <div className="space-y-1.5">
-              <FournisseurAutocomplete
-                value={achatEditForm.fournisseur}
-                onChange={(val) => setAchatEditForm(f => ({ ...f, fournisseur: val }))}
-                variant="dark"
-              />
-            </div>
-            <div className="sm:col-span-2 flex items-center gap-2 p-2 rounded-lg bg-white/5">
-              <Checkbox id="achat-dispo-edit" checked={achatEditForm.disponible} onCheckedChange={(c) => setAchatEditForm(f => ({ ...f, disponible: !!c }))} />
-              <Label htmlFor="achat-dispo-edit" className="text-white/80 text-sm cursor-pointer">Disponible (compte dans le stock vendable)</Label>
-            </div>
-          </div>
-          <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setAchatEditIndex(null)} disabled={achatSaving}>Annuler</Button>
-            <Button onClick={handleSaveAchat} disabled={achatSaving} className="bg-gradient-to-r from-amber-500 to-orange-500 text-white">
-              {achatSaving ? 'Enregistrement…' : 'Enregistrer'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <AlertDialog open={achatDeleteIndex !== null} onOpenChange={(o) => !o && setAchatDeleteIndex(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Supprimer cet achat ?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Cette action est irréversible. Si l'achat était disponible, sa quantité sera retirée du stock vendable.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={achatDeleting}>Annuler</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteAchat} disabled={achatDeleting} className="bg-red-600 hover:bg-red-700">
-              {achatDeleting ? 'Suppression…' : 'Supprimer'}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* ===== Sous-modales Vente (Voir / Modifier / Supprimer) ===== */}
-      <Dialog open={venteViewIndex !== null} onOpenChange={(o) => !o && setVenteViewIndex(null)}>
-        <DialogContent className="sm:max-w-md bg-gradient-to-br from-slate-900 via-rose-900/30 to-pink-900/20 border border-white/10 rounded-3xl">
-          <DialogHeader>
-            <DialogTitle className="text-lg font-black bg-gradient-to-r from-rose-400 to-pink-400 bg-clip-text text-transparent flex items-center gap-2">
-              <Eye className="h-5 w-5" /> Détails de la vente
-            </DialogTitle>
-          </DialogHeader>
-          {selectedProduct && venteViewIndex !== null && selectedProduct.ventes?.[venteViewIndex] && (() => {
-            const v = selectedProduct.ventes[venteViewIndex];
-            return (
-              <div className="space-y-2 text-sm">
-                <div className="p-3 rounded-xl bg-white/5 border border-white/10"><span className="text-white/60">Date :</span> <span className="text-white font-semibold">{new Date(v.date).toLocaleDateString('fr-FR')}</span></div>
-                <div className="p-3 rounded-xl bg-white/5 border border-white/10"><span className="text-white/60">Quantité :</span> <span className="text-white font-semibold">-{v.quantity}</span></div>
-                <div className="p-3 rounded-xl bg-white/5 border border-white/10"><span className="text-white/60">Prix de vente :</span> <span className="text-emerald-300 font-bold">{v.sellingPrice}€</span></div>
-              </div>
-            );
-          })()}
-          <DialogFooter>
-            <Button onClick={() => setVenteViewIndex(null)} variant="outline">Fermer</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={venteEditIndex !== null} onOpenChange={(o) => !o && setVenteEditIndex(null)}>
-        <DialogContent className="sm:max-w-md bg-gradient-to-br from-slate-900 via-amber-900/30 to-orange-900/20 border border-white/10 rounded-3xl">
-          <DialogHeader>
-            <DialogTitle className="text-lg font-black bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent flex items-center gap-2">
-              <Edit className="h-5 w-5" /> Modifier la vente
-            </DialogTitle>
-          </DialogHeader>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="space-y-1.5 sm:col-span-2">
-              <Label className="text-white/80 text-xs">Date</Label>
-              <Input type="date" value={venteEditForm.date} onChange={(e) => setVenteEditForm(f => ({ ...f, date: e.target.value }))} />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-white/80 text-xs">Quantité</Label>
-              <Input type="number" min="0" value={venteEditForm.quantity} onChange={(e) => setVenteEditForm(f => ({ ...f, quantity: e.target.value }))} />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-white/80 text-xs">Prix de vente (€)</Label>
-              <Input type="number" step="0.01" min="0" value={venteEditForm.sellingPrice} onChange={(e) => setVenteEditForm(f => ({ ...f, sellingPrice: e.target.value }))} />
-            </div>
-          </div>
-          <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setVenteEditIndex(null)} disabled={venteSaving}>Annuler</Button>
-            <Button onClick={handleSaveVente} disabled={venteSaving} className="bg-gradient-to-r from-amber-500 to-orange-500 text-white">
-              {venteSaving ? 'Enregistrement…' : 'Enregistrer'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <AlertDialog open={venteDeleteIndex !== null} onOpenChange={(o) => !o && setVenteDeleteIndex(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Supprimer cette vente ?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Cette action est irréversible. La quantité vendue sera rendue au stock du produit.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={venteDeleting}>Annuler</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteVente} disabled={venteDeleting} className="bg-red-600 hover:bg-red-700">
-              {venteDeleting ? 'Suppression…' : 'Supprimer'}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-
-      {/* ========== MODALE HISTORIQUE FOURNISSEURS ========== */}
-      <Dialog open={isFournHistoryOpen} onOpenChange={setIsFournHistoryOpen}>
-        <DialogContent className="sm:max-w-lg bg-gradient-to-br from-slate-900 via-cyan-900/30 to-blue-900/20 backdrop-blur-2xl border border-white/10 shadow-2xl rounded-3xl max-h-[85vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-black bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent flex items-center gap-2">
-              <Eye className="h-5 w-5 text-cyan-400" />
-              Historique fournisseurs
-            </DialogTitle>
-          </DialogHeader>
-          {selectedProduct && (() => {
-            const hist = (selectedProduct.fournisseursHistory || []).slice().sort((a,b)=> new Date(a.dateDebut).getTime()-new Date(b.dateDebut).getTime());
-            return (
-              <div className="space-y-2">
-                {hist.length === 0 && (
-                  <p className="text-white/40 text-sm italic">Aucun fournisseur enregistré</p>
-                )}
-                {hist.map((f, i) => {
-                  const dateFin = i < hist.length - 1 ? hist[i+1].dateDebut : null;
-                  return (
-                    <div key={i} className="p-4 rounded-2xl bg-white/5 border border-white/10">
-                      <p className="text-cyan-300 font-bold text-base">{f.nom}</p>
-                      <p className="text-white/50 text-xs mt-1">
-                        Du {new Date(f.dateDebut).toLocaleDateString('fr-FR')}
-                        {dateFin
-                          ? ` au ${new Date(dateFin).toLocaleDateString('fr-FR')}`
-                          : ' — En cours'}
-                      </p>
-                    </div>
-                  );
-                })}
-              </div>
-            );
-          })()}
-        </DialogContent>
-      </Dialog>
+      {/* ===== Sous-modales Achat/Vente + Historique fournisseurs ===== */}
+      <AchatVenteSubModals
+        selectedProduct={selectedProduct}
+        achatViewIndex={achatViewIndex}
+        setAchatViewIndex={setAchatViewIndex}
+        achatEditIndex={achatEditIndex}
+        setAchatEditIndex={setAchatEditIndex}
+        achatDeleteIndex={achatDeleteIndex}
+        setAchatDeleteIndex={setAchatDeleteIndex}
+        achatEditForm={achatEditForm}
+        setAchatEditForm={setAchatEditForm}
+        achatSaving={achatSaving}
+        achatDeleting={achatDeleting}
+        handleSaveAchat={handleSaveAchat}
+        handleDeleteAchat={handleDeleteAchat}
+        venteViewIndex={venteViewIndex}
+        setVenteViewIndex={setVenteViewIndex}
+        venteEditIndex={venteEditIndex}
+        setVenteEditIndex={setVenteEditIndex}
+        venteDeleteIndex={venteDeleteIndex}
+        setVenteDeleteIndex={setVenteDeleteIndex}
+        venteEditForm={venteEditForm}
+        setVenteEditForm={setVenteEditForm}
+        venteSaving={venteSaving}
+        venteDeleting={venteDeleting}
+        handleSaveVente={handleSaveVente}
+        handleDeleteVente={handleDeleteVente}
+        isFournHistoryOpen={isFournHistoryOpen}
+        setIsFournHistoryOpen={setIsFournHistoryOpen}
+      />
 
     </div>
   );

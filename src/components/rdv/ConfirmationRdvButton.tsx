@@ -289,18 +289,22 @@ const ConfirmationRdvButton: React.FC<Props> = ({ rdvs, onAfterUpdate }) => {
                       <div className="flex-1 min-w-0">
                         <div className="font-bold text-foreground">
                           {e.produits && e.produits.length > 0 ? (
-                            <div className="space-y-1">
+                            <div className="space-y-2">
                               {e.produits.map((p, i) => (
-                                <div key={i} className="flex justify-between">
-                                  <span>
-                                    {p.nom}{' '}
-                                    <span className="text-fuchsia-600 font-bold">
-                                      x{p.quantite}
+                                <div
+                                  key={i}
+                                  className="flex items-start justify-between gap-3 border-b border-fuchsia-100 pb-1 last:border-0"
+                                >
+                                  <div className="flex flex-col text-left">
+                                    <span className="font-medium">{p.nom}</span>
+                                    <span className="text-xs text-fuchsia-600 font-bold">
+                                      Quantité : x{p.quantite}
                                     </span>
-                                  </span>
-                                  <span className="font-semibold">
-                                    {p.prixVente}€
-                                  </span>
+                                  </div>
+
+                                 <span className="whitespace-nowrap font-bold text-blue-600">
+  {p.prixVente}€
+</span>
                                 </div>
                               ))}
                             </div>
@@ -362,11 +366,22 @@ const ConfirmationRdvButton: React.FC<Props> = ({ rdvs, onAfterUpdate }) => {
                   <div className="font-bold flex items-center gap-2 text-foreground">
                     <Package className="h-4 w-4 text-fuchsia-600" /> Produits
                   </div>
-                  <div className="pl-6 space-y-1">
+                  <div className="pl-6 space-y-2">
                     {selected.produits.map((p, i) => (
-                      <div key={i} className="flex justify-between">
-                        <span>{p.nom} <span className="text-fuchsia-600 font-bold">x{p.quantite}</span></span>
-                        <span className="font-semibold">{p.prixVente}€</span>
+                      <div
+                        key={i}
+                        className="flex items-start justify-between gap-3 border-b border-fuchsia-100 pb-1 last:border-0"
+                      >
+                        <div className="flex flex-col">
+                          <span>{p.nom}</span>
+                          <span className="text-fuchsia-600 font-bold text-xs">
+                            Quantité : x{p.quantite}
+                          </span>
+                        </div>
+
+                        <span className="font-semibold whitespace-nowrap font-bold text-blue-600">
+                          {p.prixVente}€
+                        </span>
                       </div>
                     ))}
                   </div>

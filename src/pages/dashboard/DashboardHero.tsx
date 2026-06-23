@@ -1,129 +1,330 @@
 /**
  * =============================================================================
- * DashboardHero - Section héroïque du tableau de bord
+ * DashboardHero V2 - Ultra Premium Futuristic Hero
  * =============================================================================
- * 
- * Affiche le titre animé et la description du dashboard premium.
- * Composant purement visuel sans logique métier.
- * 
- * @module DashboardHero
  */
 
-import React from 'react';
-import { motion } from 'framer-motion';
-import { Crown, Sparkles, Diamond, Gem, Star, Award, Zap } from 'lucide-react';
+import React from "react";
+import { motion } from "framer-motion";
+import {
+  Crown,
+  Sparkles,
+  Diamond,
+  Gem,
+  Star,
+  Award,
+  Zap,
+} from "lucide-react";
+
+const particles = Array.from({ length: 12 });
 
 const DashboardHero: React.FC = () => {
   return (
-    <div className="relative text-center mb-6 sm:mb-8 md:mb-12 overflow-hidden py-10 sm:py-14 md:py-16 rounded-3xl bg-gradient-to-br from-slate-950 via-purple-950/70 to-indigo-950 border border-white/10 shadow-[0_30px_80px_-20px_rgba(139,92,246,0.4)]">
-      {/* Aurora mesh background */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+    <div className="relative overflow-hidden rounded-[40px] border border-white/10 bg-black py-16 sm:py-20 md:py-24 text-center shadow-[0_40px_120px_-20px_rgba(139,92,246,0.55)]">
+
+      {/* ========================= */}
+      {/* Animated Aurora */}
+      {/* ========================= */}
+
+      <div className="absolute inset-0">
+
         <motion.div
-          className="absolute -top-20 left-1/4 w-[28rem] h-[28rem] bg-purple-500/25 blur-[110px] rounded-full"
-          animate={{ y: [0, -30, 0], x: [0, 25, 0], scale: [1, 1.15, 1] }}
-          transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut' }}
+          className="absolute top-[-15%] left-[10%] h-[500px] w-[500px] rounded-full bg-purple-600/25 blur-[140px]"
+          animate={{
+            x: [0, 80, -40, 0],
+            y: [0, -40, 50, 0],
+            scale: [1, 1.3, 0.9, 1],
+          }}
+          transition={{
+            duration: 18,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
         />
+
         <motion.div
-          className="absolute -top-10 right-1/4 w-[26rem] h-[26rem] bg-pink-500/25 blur-[110px] rounded-full"
-          animate={{ y: [0, 30, 0], x: [0, -25, 0], scale: [1, 1.1, 1] }}
-          transition={{ duration: 17, repeat: Infinity, ease: 'easeInOut' }}
+          className="absolute top-[0%] right-[5%] h-[450px] w-[450px] rounded-full bg-pink-500/20 blur-[140px]"
+          animate={{
+            x: [0, -80, 50, 0],
+            y: [0, 50, -40, 0],
+            scale: [1, 1.2, 1, 1],
+          }}
+          transition={{
+            duration: 20,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
         />
+
         <motion.div
-          className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[32rem] h-[32rem] bg-indigo-500/15 blur-[120px] rounded-full"
-          animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0.8, 0.5] }}
-          transition={{ duration: 19, repeat: Infinity, ease: 'easeInOut' }}
+          className="absolute bottom-[-20%] left-1/2 h-[700px] w-[700px] -translate-x-1/2 rounded-full bg-indigo-600/20 blur-[170px]"
+          animate={{
+            scale: [1, 1.25, 1],
+            opacity: [0.4, 0.9, 0.4],
+          }}
+          transition={{
+            duration: 14,
+            repeat: Infinity,
+          }}
         />
       </div>
 
-      {/* Animated grid overlay */}
-      <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.025)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.025)_1px,transparent_1px)] bg-[size:44px_44px] [mask-image:radial-gradient(ellipse_at_center,black_30%,transparent_75%)]" />
+      {/* ========================= */}
+      {/* Noise Texture */}
+      {/* ========================= */}
 
-      {/* Shimmer borders */}
-      <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-purple-400/60 to-transparent" />
-      <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-pink-400/50 to-transparent" />
+      <div
+        className="
+          absolute inset-0 opacity-[0.035]
+          bg-[url('https://grainy-gradients.vercel.app/noise.svg')]
+          mix-blend-soft-light
+        "
+      />
 
-      {/* Floating sparkle particles */}
-      {[...Array(6)].map((_, i) => (
-        <motion.span
+      {/* ========================= */}
+      {/* Grid */}
+      {/* ========================= */}
+
+      <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.025)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.025)_1px,transparent_1px)] bg-[size:50px_50px]" />
+
+      {/* ========================= */}
+      {/* Light Beam */}
+      {/* ========================= */}
+
+      <motion.div
+        className="absolute left-1/2 top-0 h-full w-[350px] -translate-x-1/2 bg-gradient-to-b from-purple-400/15 via-transparent to-transparent blur-3xl"
+        animate={{
+          opacity: [0.2, 0.8, 0.2],
+        }}
+        transition={{
+          duration: 6,
+          repeat: Infinity,
+        }}
+      />
+
+      {/* ========================= */}
+      {/* Floating Particles */}
+      {/* ========================= */}
+
+      {particles.map((_, i) => (
+        <motion.div
           key={i}
-          className="absolute w-1 h-1 rounded-full bg-white/70 shadow-[0_0_10px_rgba(255,255,255,0.8)] pointer-events-none"
-          style={{ top: `${15 + (i * 11) % 70}%`, left: `${8 + (i * 17) % 84}%` }}
-          animate={{ opacity: [0, 1, 0], scale: [0.5, 1.4, 0.5] }}
-          transition={{ duration: 3 + (i % 3), repeat: Infinity, delay: i * 0.4, ease: 'easeInOut' }}
+          className="absolute h-1.5 w-1.5 rounded-full bg-white"
+          style={{
+            left: `${Math.random() * 100}%`,
+            top: `${Math.random() * 100}%`,
+          }}
+          animate={{
+            y: [0, -60, 0],
+            opacity: [0, 1, 0],
+            scale: [0.5, 1.8, 0.5],
+          }}
+          transition={{
+            duration: 4 + i,
+            repeat: Infinity,
+            delay: i * 0.4,
+          }}
         />
       ))}
 
-      {/* Badge premium animé */}
-      <motion.div 
-        initial={{ opacity: 0, y: -20, scale: 0.8 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        whileHover={{ scale: 1.05, y: -2 }}
-        transition={{ duration: 0.5, type: 'spring' }}
-        className="relative z-10 inline-flex items-center px-5 sm:px-7 py-2.5 sm:py-3 bg-white/[0.07] backdrop-blur-2xl rounded-full text-purple-200 text-xs sm:text-sm font-bold mb-5 sm:mb-7 border border-white/[0.12] shadow-[0_10px_40px_rgba(139,92,246,0.35)] cursor-default"
+      {/* ========================= */}
+      {/* Orbit Rings */}
+      {/* ========================= */}
+
+      <motion.div
+        className="absolute left-1/2 top-1/2 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-purple-400/10"
+        animate={{ rotate: 360 }}
+        transition={{
+          duration: 50,
+          repeat: Infinity,
+          ease: "linear",
+        }}
+      />
+
+      <motion.div
+        className="absolute left-1/2 top-1/2 h-[650px] w-[650px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-pink-400/10"
+        animate={{ rotate: -360 }}
+        transition={{
+          duration: 70,
+          repeat: Infinity,
+          ease: "linear",
+        }}
+      />
+
+      {/* ========================= */}
+      {/* Premium Badge */}
+      {/* ========================= */}
+
+      <motion.div
+        initial={{ opacity: 0, y: -30 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="relative z-20 inline-flex items-center gap-3 rounded-full border border-white/10 bg-white/5 px-7 py-3 backdrop-blur-3xl"
       >
-        <motion.div animate={{ rotate: [0, -10, 10, 0] }} transition={{ duration: 2, repeat: Infinity }}>
-          <Crown className="h-4 w-4 sm:h-5 sm:w-5 mr-2 text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.7)]" />
+        <motion.div
+          animate={{
+            rotate: [0, -15, 15, 0],
+          }}
+          transition={{
+            repeat: Infinity,
+            duration: 2,
+          }}
+        >
+          <Crown className="h-5 w-5 text-yellow-400" />
         </motion.div>
-        <span className="hidden xs:inline">Tableau de bord Premium en temps réel</span>
-        <span className="xs:hidden">Dashboard Premium</span>
-        <motion.div animate={{ rotate: 360 }} transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}>
-          <Sparkles className="h-3 w-3 sm:h-4 sm:w-4 ml-2 text-pink-400 drop-shadow-[0_0_8px_rgba(244,114,182,0.7)]" />
+
+        <span className="font-bold text-purple-100">
+          Dashboard Premium Intelligence
+        </span>
+
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{
+            duration: 10,
+            repeat: Infinity,
+            ease: "linear",
+          }}
+        >
+          <Sparkles className="h-4 w-4 text-pink-400" />
         </motion.div>
       </motion.div>
-      
-      {/* Titre principal animé */}
+
+      {/* ========================= */}
+      {/* HERO TITLE */}
+      {/* ========================= */}
+
       <motion.h1
-        initial={{ opacity: 0, y: 60, scale: 0.9 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ duration: 0.9, ease: "easeOut" }}
-        className="relative z-10 text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black 
-                  bg-gradient-to-r from-purple-200 via-pink-200 to-indigo-200
-                  bg-[length:200%_200%] animate-gradient 
-                  bg-clip-text text-transparent mb-4 sm:mb-6 text-center px-2 tracking-tight
-                  drop-shadow-[0_4px_30px_rgba(168,85,247,0.45)]"
-      >
-        <motion.span className="inline-block relative mr-2 sm:mr-3 align-middle" animate={{ rotate: [0, 15, -15, 0], scale: [1, 1.1, 1] }} transition={{ duration: 5, repeat: Infinity }}>
-          <span className="absolute inset-0 bg-purple-400/30 blur-2xl rounded-full" />
-          <Diamond className="relative inline h-9 w-9 sm:h-12 sm:w-12 text-purple-300 drop-shadow-[0_0_20px_rgba(168,85,247,0.8)]" />
-        </motion.span>
-        Tableau de Bord
-        <motion.span className="inline-block relative ml-2 sm:ml-3 align-middle" animate={{ rotate: [0, -15, 15, 0], scale: [1, 1.1, 1] }} transition={{ duration: 5, repeat: Infinity }}>
-          <span className="absolute inset-0 bg-pink-400/30 blur-2xl rounded-full" />
-          <Gem className="relative inline h-9 w-9 sm:h-12 sm:w-12 text-pink-300 drop-shadow-[0_0_20px_rgba(244,114,182,0.8)]" />
-        </motion.span>
-      </motion.h1>
-      
-      {/* Description */}
-      <motion.p 
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 80 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.3 }}
-        className="relative z-10 text-sm sm:text-base md:text-lg lg:text-xl text-purple-100/70 max-w-2xl mx-auto px-4 flex items-center justify-center gap-2 font-medium"
+        transition={{ duration: 1 }}
+        className="
+          relative z-20
+          mt-10
+          text-5xl
+          sm:text-6xl
+          md:text-7xl
+          lg:text-8xl
+          font-black
+          tracking-tight
+        "
       >
-        <motion.span animate={{ scale: [1, 1.3, 1], rotate: [0, 180, 360] }} transition={{ duration: 3, repeat: Infinity }}>
-          <Star className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-400 drop-shadow-[0_0_10px_rgba(250,204,21,0.7)]" />
-        </motion.span>
-        Gérez efficacement vos ventes, inventaires et finances en un seul endroit
-        <motion.span animate={{ scale: [1, 1.3, 1], rotate: [0, -180, -360] }} transition={{ duration: 3, repeat: Infinity, delay: 1 }}>
-          <Award className="h-4 w-4 sm:h-5 sm:w-5 text-amber-400 drop-shadow-[0_0_10px_rgba(251,191,36,0.7)]" />
-        </motion.span>
+        <div className="flex items-center justify-center gap-4">
+
+          <motion.div
+            animate={{
+              rotate: [0, 12, -12, 0],
+              scale: [1, 1.15, 1],
+            }}
+            transition={{
+              duration: 5,
+              repeat: Infinity,
+            }}
+          >
+            <Diamond className="h-12 w-12 text-purple-300" />
+          </motion.div>
+
+          <span
+            className="
+              bg-gradient-to-r
+              from-white
+              via-purple-200
+              to-pink-200
+              bg-clip-text
+              text-transparent
+              drop-shadow-[0_0_50px_rgba(168,85,247,0.8)]
+            "
+          >
+            Tableau de Bord
+          </span>
+
+          <motion.div
+            animate={{
+              rotate: [0, -12, 12, 0],
+              scale: [1, 1.15, 1],
+            }}
+            transition={{
+              duration: 5,
+              repeat: Infinity,
+            }}
+          >
+            <Gem className="h-12 w-12 text-pink-300" />
+          </motion.div>
+
+        </div>
+      </motion.h1>
+
+      {/* ========================= */}
+      {/* Subtitle */}
+      {/* ========================= */}
+
+      <motion.p
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{
+          delay: 0.5,
+        }}
+        className="
+          relative z-20
+          mx-auto
+          mt-8
+          max-w-3xl
+          px-6
+          text-lg
+          md:text-xl
+          text-purple-100/70
+        "
+      >
+        Gérez vos ventes, stocks, finances et performances avec une
+        expérience de nouvelle génération alimentée par des analyses
+        intelligentes en temps réel.
       </motion.p>
 
-      {/* Bottom power line */}
+      {/* ========================= */}
+      {/* Live Indicator */}
+      {/* ========================= */}
+
       <motion.div
-        initial={{ scaleX: 0 }}
-        animate={{ scaleX: 1 }}
-        transition={{ duration: 1.5, delay: 0.5, ease: 'easeOut' }}
-        className="relative z-10 mt-6 mx-auto h-px w-32 sm:w-48 bg-gradient-to-r from-transparent via-purple-400 to-transparent origin-center"
-      />
-      <motion.div
-        animate={{ y: [0, -6, 0] }}
-        transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-        className="relative z-10 mt-3 inline-flex items-center gap-1.5 text-[10px] sm:text-xs font-semibold text-purple-300/60 uppercase tracking-[0.3em]"
+        className="
+          relative z-20
+          mt-10
+          inline-flex
+          items-center
+          gap-3
+          rounded-full
+          border
+          border-emerald-500/20
+          bg-emerald-500/10
+          px-5
+          py-2
+          backdrop-blur-xl
+        "
+        animate={{
+          boxShadow: [
+            "0 0 10px rgba(16,185,129,.2)",
+            "0 0 35px rgba(16,185,129,.8)",
+            "0 0 10px rgba(16,185,129,.2)",
+          ],
+        }}
+        transition={{
+          duration: 2,
+          repeat: Infinity,
+        }}
       >
-        <Zap className="h-3 w-3 text-pink-300" />
-        Live
-        <Zap className="h-3 w-3 text-purple-300" />
+        <motion.div
+          className="h-2 w-2 rounded-full bg-emerald-400"
+          animate={{
+            scale: [1, 1.8, 1],
+          }}
+          transition={{
+            duration: 1.5,
+            repeat: Infinity,
+          }}
+        />
+
+        <Zap className="h-4 w-4 text-emerald-300" />
+
+        <span className="text-sm font-semibold text-emerald-200">
+          LIVE DATA STREAM
+        </span>
       </motion.div>
     </div>
   );

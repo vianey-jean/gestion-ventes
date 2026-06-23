@@ -409,7 +409,7 @@ const CommandeFormDialog: React.FC<CommandeFormDialogProps> = ({
       } catch (err) {
         console.error('commande create error', err);
         if (newId) {
-          try { await rdvTachesApi.delete(newId); } catch {}
+          try { await rdvTachesApi.delete(newId); } catch { }
         }
         throw err;
       }
@@ -666,7 +666,7 @@ const CommandeFormDialog: React.FC<CommandeFormDialogProps> = ({
                             const { clientsVillesApi } = await import('@/services/api/villesApi');
                             const list = await clientsVillesApi.add(v);
                             if (Array.isArray(list)) setAvailableVilles(list);
-                          } catch {}
+                          } catch { }
                         }
                       }}
                       placeholder="Saisir une nouvelle ville"
@@ -700,8 +700,8 @@ const CommandeFormDialog: React.FC<CommandeFormDialogProps> = ({
                   type="button"
                   onClick={() => setProductCategoryFilter(option.value)}
                   className={`px-3 py-1 text-xs font-bold rounded-full transition-all duration-300 border ${productCategoryFilter === option.value
-                      ? 'bg-gradient-to-r from-purple-500 to-indigo-600 text-white border-purple-500 shadow-lg shadow-purple-500/30'
-                      : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-300 dark:border-gray-600 hover:border-purple-400 hover:text-purple-600'
+                    ? 'bg-gradient-to-r from-purple-500 to-indigo-600 text-white border-purple-500 shadow-lg shadow-purple-500/30'
+                    : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-300 dark:border-gray-600 hover:border-purple-400 hover:text-purple-600'
                     }`}
                 >
                   {option.label}
@@ -817,6 +817,7 @@ const CommandeFormDialog: React.FC<CommandeFormDialogProps> = ({
                 <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                   🛒 Panier ({produitsListe.length} produit{produitsListe.length > 1 ? 's' : ''})
                 </Label>
+
                 <div className="space-y-2">
                   {produitsListe.map((produit, index) => (
                     <div
@@ -835,10 +836,22 @@ const CommandeFormDialog: React.FC<CommandeFormDialogProps> = ({
                             </span>
                           )}
                         </div>
+
                         <div className="text-xs text-muted-foreground">
-                          Qté: {produit.quantite} | Prix unitaire: {produit.prixUnitaire}€ | Prix vente: {produit.prixVente}€
+                          <span className="text-red-600 font-bold">
+                            Qté: {produit.quantite}
+                          </span>
+                          {' | '}
+                          <span className="text-green-600 font-bold">
+                            Prix unitaire: {produit.prixUnitaire}€
+                          </span>
+                          {' | '}
+                          <span className="text-blue-600 font-bold">
+                            Prix vente: {produit.prixVente}€
+                          </span>
                         </div>
                       </div>
+
                       <div className="flex gap-1">
                         <Button
                           type="button"
@@ -850,6 +863,7 @@ const CommandeFormDialog: React.FC<CommandeFormDialogProps> = ({
                         >
                           <Edit className="h-5 w-5 text-green-600 dark:text-green-400" />
                         </Button>
+
                         <Button
                           type="button"
                           variant="ghost"

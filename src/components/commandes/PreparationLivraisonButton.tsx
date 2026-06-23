@@ -33,8 +33,8 @@ const isToday = (dateStr?: string | null) => {
   if (isNaN(d.getTime())) return false;
   const t = new Date();
   return d.getFullYear() === t.getFullYear() &&
-         d.getMonth() === t.getMonth() &&
-         d.getDate() === t.getDate();
+    d.getMonth() === t.getMonth() &&
+    d.getDate() === t.getDate();
 };
 
 const getRelevantDate = (c: Commande) =>
@@ -181,11 +181,10 @@ const PreparationLivraisonButton: React.FC<Props> = ({ filteredCommandes }) => {
                 return (
                   <div
                     key={entry.id}
-                    className={`p-4 rounded-xl border shadow-sm transition-all duration-200 ${
-                      fini
+                    className={`p-4 rounded-xl border shadow-sm transition-all duration-200 ${fini
                         ? 'bg-green-50/70 dark:bg-green-900/20 border-green-300 dark:border-green-700'
                         : 'bg-white/70 dark:bg-gray-800/50 border-rose-100 dark:border-rose-800/30'
-                    }`}
+                      }`}
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex items-start gap-3 flex-1 min-w-0">
@@ -261,11 +260,20 @@ const PreparationLivraisonButton: React.FC<Props> = ({ filteredCommandes }) => {
                 <div className="font-bold flex items-center gap-2 text-foreground">
                   <Package className="h-4 w-4 text-rose-600" /> Produits
                 </div>
-                <div className="pl-6 space-y-1">
+                <div className="pl-6 space-y-3">
                   {(detail.produits || []).map((p, i) => (
-                    <div key={i} className="flex justify-between">
-                      <span>{p.nom} <span className="text-red-600 font-bold">x{p.quantite}</span></span>
-                      <span className="font-semibold">{p.prixVente}€</span>
+                    <div key={i} className="border-l-2 border-gray-200 pl-3">
+                      <div className="font-medium">
+                        {p.nom}
+                      </div>
+
+                      <div className="text-red-600 font-bold">
+                        Quantité : x{p.quantite}
+                      </div>
+
+                      <div className="text-blue-600 font-bold">
+                        Prix : {p.prixVente}€
+                      </div>
                     </div>
                   ))}
                 </div>
