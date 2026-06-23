@@ -238,61 +238,185 @@ const ObjectifIndicator: React.FC = () => {
       
       {/* Add New Objectif Button */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7 rounded-full bg-gradient-to-br from-emerald-500/20 to-teal-500/20 hover:from-emerald-500/30 hover:to-teal-500/30 border border-emerald-500/30 shadow-lg shadow-emerald-500/10 transition-all duration-300 hover:scale-110"
-          >
-            <Plus className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
-          </Button>
-        </DialogTrigger>
-        <DialogContent className="sm:max-w-md bg-gradient-to-br from-white via-slate-50 to-violet-50/50 dark:from-[#030014] dark:via-[#0a0020] dark:to-[#0e0030] border border-violet-200/20 dark:border-violet-800/20 rounded-2xl shadow-[0_30px_80px_-20px_rgba(139,92,246,0.2)]">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-3">
-              <div className="p-2 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500 shadow-lg shadow-violet-500/30">
-                <Target className="h-5 w-5 text-white" />
-              </div>
-              <span className="bg-gradient-to-r from-violet-600 to-fuchsia-600 bg-clip-text text-transparent font-bold">
-                Nouvel Objectif du Mois
-              </span>
-              <Sparkles className="h-4 w-4 text-amber-500 animate-pulse" />
-            </DialogTitle>
-          </DialogHeader>
-          
-          <div className="space-y-5 py-4">
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                Objectif de ventes (€)
-              </label>
-              <Input
-                type="number"
-                placeholder="Ex: 2000"
-                value={newObjectif}
-                onChange={(e) => setNewObjectif(e.target.value)}
-                className="text-lg h-12 rounded-xl border-slate-200/50 dark:border-slate-700/50 focus:ring-2 focus:ring-violet-500/30"
-              />
-            </div>
-            
-            <div className="p-4 rounded-xl bg-slate-100/50 dark:bg-slate-800/50 space-y-2">
-              <p className="text-sm text-slate-600 dark:text-slate-400">
-                Objectif actuel: <strong className="text-violet-600 dark:text-violet-400">{formatCurrency(data.objectif)}</strong>
-              </p>
-              <p className="text-sm text-slate-600 dark:text-slate-400">
-                Ventes ce mois: <strong className={getProgressColor()}>{formatCurrency(data.totalVentesMois)}</strong>
-              </p>
-            </div>
-            
-            <Button 
-              onClick={handleAddObjectif} 
-              className="w-full h-12 rounded-xl bg-gradient-to-r from-violet-500 to-fuchsia-500 hover:from-violet-600 hover:to-fuchsia-600 shadow-lg shadow-violet-500/30 transition-all duration-300 hover:scale-[1.02]"
-            >
-              <Target className="mr-2 h-5 w-5" />
-              Définir l'objectif
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+  <DialogTrigger asChild>
+    <Button
+      variant="ghost"
+      size="icon"
+      className="
+        h-8 w-8
+        sm:h-9 sm:w-9
+        rounded-full
+        bg-gradient-to-br
+        from-emerald-500/20
+        to-teal-500/20
+        hover:from-emerald-500/30
+        hover:to-teal-500/30
+        border border-emerald-500/30
+        shadow-lg shadow-emerald-500/10
+        transition-all duration-300
+        hover:scale-110
+      "
+    >
+      <Plus className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+    </Button>
+  </DialogTrigger>
+
+  <DialogContent
+    className="
+      w-[95vw]
+      max-w-[95vw]
+      sm:max-w-md
+      md:max-w-lg
+      lg:max-w-xl
+      max-h-[90vh]
+      overflow-y-auto
+
+      p-4
+      sm:p-6
+
+      bg-gradient-to-br
+      from-white
+      via-slate-50
+      to-violet-50/50
+
+      dark:from-[#030014]
+      dark:via-[#0a0020]
+      dark:to-[#0e0030]
+
+      border border-violet-200/20
+      dark:border-violet-800/20
+
+      rounded-2xl
+      shadow-[0_30px_80px_-20px_rgba(139,92,246,0.2)]
+    "
+  >
+    <DialogHeader>
+      <DialogTitle className="flex items-center gap-2 sm:gap-3">
+        <div
+          className="
+            p-1.5
+            sm:p-2
+            rounded-xl
+            bg-gradient-to-br
+            from-violet-500
+            to-fuchsia-500
+            shadow-lg
+            shadow-violet-500/30
+          "
+        >
+          <Target className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
+        </div>
+
+        <span
+          className="
+            text-base
+            sm:text-lg
+            md:text-xl
+            font-bold
+            bg-gradient-to-r
+            from-violet-600
+            to-fuchsia-600
+            bg-clip-text
+            text-transparent
+            leading-tight
+          "
+        >
+          Nouvel Objectif du Mois
+        </span>
+
+        <Sparkles className="h-4 w-4 text-amber-500 animate-pulse shrink-0" />
+      </DialogTitle>
+    </DialogHeader>
+
+    <div className="space-y-4 sm:space-y-5 py-3 sm:py-4">
+      {/* Objectif */}
+      <div className="space-y-2">
+        <label className="text-sm sm:text-base font-semibold text-slate-700 dark:text-slate-300">
+          Objectif de ventes (€)
+        </label>
+
+        <Input
+          type="number"
+          placeholder="Ex : 2000"
+          value={newObjectif}
+          onChange={(e) => setNewObjectif(e.target.value)}
+          className="
+            h-11
+            sm:h-12
+            text-base
+            sm:text-lg
+            rounded-xl
+            border-slate-200/50
+            dark:border-slate-700/50
+            focus:ring-2
+            focus:ring-violet-500/30
+          "
+        />
+      </div>
+
+      {/* Infos */}
+      <div
+        className="
+          p-3
+          sm:p-4
+          rounded-xl
+          bg-slate-100/50
+          dark:bg-slate-800/50
+          space-y-2
+        "
+      >
+        <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">
+          Objectif actuel :
+          <strong className="ml-1 text-violet-600 dark:text-violet-400">
+            {formatCurrency(data.objectif)}
+          </strong>
+        </p>
+
+        <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">
+          Ventes ce mois :
+          <strong className={`ml-1 ${getProgressColor()}`}>
+            {formatCurrency(data.totalVentesMois)}
+          </strong>
+        </p>
+      </div>
+
+      {/* Bouton */}
+      <Button
+        onClick={handleAddObjectif}
+        className="
+          w-full
+          h-11
+          sm:h-12
+
+          text-sm
+          sm:text-base
+          font-medium
+
+          rounded-xl
+
+          bg-gradient-to-r
+          from-violet-500
+          to-fuchsia-500
+
+          hover:from-violet-600
+          hover:to-fuchsia-600
+
+          shadow-lg
+          shadow-violet-500/30
+
+          transition-all
+          duration-300
+
+          hover:scale-[1.02]
+          active:scale-[0.98]
+        "
+      >
+        <Target className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
+        Définir l'objectif
+      </Button>
+    </div>
+  </DialogContent>
+</Dialog>
        <ObjectifStatsModal />
     </div>
   );
