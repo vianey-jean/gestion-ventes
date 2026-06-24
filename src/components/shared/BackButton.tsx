@@ -31,29 +31,61 @@ const BackButton: React.FC<BackButtonProps> = ({ className }) => {
   };
 
   return (
-    <motion.button
-      type="button"
-      onClick={handleBack}
-      aria-label="Retour à la page précédente"
-      initial={{ opacity: 0, x: -10 }}
-      animate={{ opacity: 1, x: 0 }}
-      whileHover={{ scale: 1.05, x: -2 }}
-      whileTap={{ scale: 0.95 }}
-      transition={{ duration: 0.25 }}
-      className={cn(
-        "fixed z-40 left-2 sm:left-4 top-[72px] sm:top-[84px]",
-        "flex items-center gap-1.5 px-3 py-2 rounded-full",
-        "bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl",
-        "border border-violet-200/60 dark:border-violet-800/40",
-        "text-slate-700 dark:text-slate-200 text-sm font-medium",
-        "shadow-lg hover:shadow-violet-400/30 hover:border-violet-400",
-        "transition-colors",
-        className
-      )}
-    >
-      <ArrowLeft className="w-4 h-4" />
-      <span className="hidden sm:inline">Retour</span>
-    </motion.button>
+<motion.button
+  type="button"
+  onClick={handleBack}
+  aria-label="Retour à la page précédente"
+  initial={{ opacity: 0, x: -10 }}
+  animate={{
+    opacity: [1, 0.8, 1], // clignotement léger
+    y: [0, -2, 0], // flottement discret
+  }}
+  transition={{
+    opacity: {
+      duration: 1,
+      repeat: Infinity,
+      ease: "easeInOut",
+    },
+    y: {
+      duration: 2,
+      repeat: Infinity,
+      ease: "easeInOut",
+    },
+  }}
+  whileHover={{
+    scale: 1.05,
+    x: -2,
+  }}
+  whileTap={{
+    scale: 0.95,
+  }}
+  className={cn(
+    "fixed z-40 left-2 sm:left-4 top-[72px] sm:top-[84px]",
+    "flex items-center gap-1.5 px-3 py-2 rounded-full",
+    "bg-green-500 hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700",
+    "border border-violet-200/60 dark:border-violet-800/40",
+    "text-white text-sm font-medium",
+    "shadow-lg hover:shadow-green-400/30",
+    className
+  )}
+>
+  <motion.div
+    animate={{
+      x: [0, -4, 0],
+      scale: [1, 1.15, 1],
+      rotate: [0, -12, 0],
+    }}
+    transition={{
+      duration: 1,
+      repeat: Infinity,
+      ease: "easeInOut",
+    }}
+  >
+    <ArrowLeft className="w-4 h-4" />
+  </motion.div>
+
+  <span className="hidden sm:inline">Retour</span>
+</motion.button>
   );
 };
 
