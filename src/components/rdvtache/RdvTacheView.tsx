@@ -4,11 +4,9 @@
  * Affiche un calendrier mensuel avec compteur de RDV par jour.
  */
 import React, { useState, useEffect, useCallback } from 'react';
-import { motion } from 'framer-motion';
-import { CalendarHeart, Eye, Plus, Scissors, UserPlus, Sparkles, X } from 'lucide-react';
+import { Scissors, X } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { cn } from '@/lib/utils';
 import rdvTachesApi, { RdvTache } from '@/services/api/rdvTachesApi';
 import tachesRdvApi, { TacheRdvCatalog } from '@/services/api/tachesRdvApi';
 import travailleurApi from '@/services/api/travailleurApi';
@@ -18,6 +16,7 @@ import RdvFormModal from './RdvFormModal';
 import AddCatalogTacheModal from './AddCatalogTacheModal';
 import ConfirmDialog from './ConfirmDialog';
 import RdvRescheduleModal from './RdvRescheduleModal';
+import RdvTachesHero from './RdvTachesHero';
 import TravailleurModal from '@/components/pointage/modals/TravailleurModal';
 
 const premiumBtnClass = "group relative overflow-hidden rounded-xl sm:rounded-2xl backdrop-blur-xl border transition-all duration-300 hover:scale-105 px-4 py-2 sm:px-5 sm:py-3 text-xs sm:text-sm font-semibold";
@@ -185,67 +184,16 @@ const RdvTacheView: React.FC = () => {
 
   return (
     <>
-      {/* HERO */}
-      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}
-        className="max-w-7xl mx-auto px-4 pt-6">
-        <div className="rounded-3xl bg-gradient-to-br from-pink-500/10 via-fuchsia-500/10 to-rose-500/10 dark:from-pink-500/5 dark:via-fuchsia-500/5 dark:to-rose-500/5 backdrop-blur-2xl border border-pink-500/20 shadow-2xl p-6 sm:p-8">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-            <div className="space-y-2">
-              <div className="flex items-center gap-3">
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-pink-500 via-fuchsia-500 to-rose-500 flex items-center justify-center shadow-xl shadow-pink-500/40">
-                  <Sparkles className="h-7 w-7 text-white" />
-                </div>
-                <div>
-                  <h1 className="text-2xl sm:text-3xl font-black bg-gradient-to-r from-pink-500 via-fuchsia-500 to-rose-500 bg-clip-text text-transparent">
-                    Rendez-vous Beauté
-                  </h1>
-                  <p className="text-xs sm:text-sm text-muted-foreground font-medium">
-                    Tissages • Tresses • Perruques • Extensions
-                  </p>
-                </div>
-              </div>
-              <div className="flex flex-wrap gap-2 pt-2">
-                <span className="px-3 py-1 rounded-full bg-pink-500/15 border border-pink-500/30 text-[11px] font-bold text-pink-600 dark:text-pink-300">
-                  📅 {totalActifs} RDV actifs
-                </span>
-                <span className="px-3 py-1 rounded-full bg-fuchsia-500/15 border border-fuchsia-500/30 text-[11px] font-bold text-fuchsia-600 dark:text-fuchsia-300">
-                  🌟 {todayRdvs.length} aujourd'hui
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setShowCatalogListModal(true)}
-                  className="px-3 py-1 rounded-full bg-rose-500/15 border border-rose-500/30 text-[11px] font-bold text-rose-600 dark:text-rose-300 hover:bg-rose-500/25 hover:scale-105 transition-all cursor-pointer"
-                >
-                  ✂️ {catalog.length} tâches au catalogue
-                </button>
-              </div>
-            </div>
-
-            <div className="flex flex-wrap gap-2">
-              <button onClick={() => { setEditing(null); setDefaultDate(today); setShowFormModal(true); }}
-                className={cn(premiumBtnClass, 'bg-gradient-to-br from-pink-500 via-fuchsia-500 to-rose-500 border-pink-300/40 text-white shadow-lg shadow-pink-500/30')}>
-                <span className={mirrorShine} />
-                <span className="relative flex items-center gap-1.5"><CalendarHeart className="h-4 w-4" /> Ajouter RDV</span>
-              </button>
-              <button onClick={() => { setSelectedDay(today); setShowDayModal(true); }}
-                className={cn(premiumBtnClass, 'bg-gradient-to-br from-amber-500 to-orange-500 border-amber-300/40 text-white shadow-lg shadow-amber-500/30')}>
-                <span className={mirrorShine} />
-                <span className="relative flex items-center gap-1.5"><Eye className="h-4 w-4" /> RDV du jour</span>
-              </button>
-              <button onClick={() => setShowAddCatalog(true)}
-                className={cn(premiumBtnClass, 'bg-gradient-to-br from-violet-500 to-purple-600 border-violet-300/40 text-white shadow-lg shadow-violet-500/30')}>
-                <span className={mirrorShine} />
-                <span className="relative flex items-center gap-1.5"><Scissors className="h-4 w-4" /> Ajouter tâche</span>
-              </button>
-              <button onClick={() => setShowTravailleurModal(true)}
-                className={cn(premiumBtnClass, 'bg-gradient-to-br from-red-500 to-rose-600 border-red-300/40 text-white shadow-lg shadow-red-500/30')}>
-                <span className={mirrorShine} />
-                <span className="relative flex items-center gap-1.5"><UserPlus className="h-4 w-4" /> Travailleur</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </motion.div>
+      <RdvTachesHero
+        totalActifs={totalActifs}
+        todayCount={todayRdvs.length}
+        catalogCount={catalog.length}
+        onAddRdv={() => { setEditing(null); setDefaultDate(today); setShowFormModal(true); }}
+        onShowDay={() => { setSelectedDay(today); setShowDayModal(true); }}
+        onAddCatalog={() => setShowAddCatalog(true)}
+        onAddTravailleur={() => setShowTravailleurModal(true)}
+        onShowCatalogList={() => setShowCatalogListModal(true)}
+      />
 
       <div className="max-w-7xl mx-auto px-4 pb-12 pt-6 space-y-6">
         <RdvTacheCalendar

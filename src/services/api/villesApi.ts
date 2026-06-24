@@ -12,6 +12,14 @@ export const clientsVillesApi = {
     const res = await api.post('/api/clients-villes', { ville });
     return res.data?.villes || [];
   },
+  async update(original: string, ville: string): Promise<string[]> {
+    const res = await api.put(`/api/clients-villes/${encodeURIComponent(original)}`, { ville });
+    return res.data?.villes || [];
+  },
+  async remove(ville: string): Promise<string[]> {
+    const res = await api.delete(`/api/clients-villes/${encodeURIComponent(ville)}`);
+    return res.data?.villes || [];
+  },
 };
 
 export const livraisonVilleApi = {

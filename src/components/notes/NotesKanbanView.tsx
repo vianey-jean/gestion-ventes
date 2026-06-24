@@ -1,8 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import noteApi, { Note, NoteColumn } from '@/services/api/noteApi';
-import { Plus, StickyNote, Columns3, Sparkles, Share2, MessageCircle, Filter } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import ShareLinkModal from '@/components/shared/ShareLinkModal';
 import SelectiveShareModal from '@/components/shared/SelectiveShareModal';
 import ShareCommentsViewer from '@/components/shared/ShareCommentsViewer';
@@ -11,6 +9,7 @@ import KanbanColumn from './KanbanColumn';
 import NoteFormModal from './NoteFormModal';
 import ColumnFormModal from './ColumnFormModal';
 import ConfirmModal from './ConfirmModal';
+import NotesHero from './NotesHero';
 import PremiumLoading from '@/components/ui/premium-loading';
 
 const SEPARATOR_COLORS = [
@@ -224,66 +223,16 @@ const NotesKanbanView: React.FC = () => {
 
   return (
     <div className="max-w-full mx-auto px-2 sm:px-4 pb-12">
-      {/* Hero */}
-      <div className="relative overflow-hidden py-6 sm:py-8">
-        <div className="absolute inset-0 bg-gradient-to-r from-amber-500/5 via-orange-500/5 to-rose-500/5" />
-        <div className="relative z-10 text-center">
-          <div className="inline-flex items-center gap-3 px-6 py-3 rounded-2xl bg-white/60 dark:bg-white/5 backdrop-blur-2xl border border-white/20 dark:border-white/10 shadow-xl mb-4">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-lg">
-              <StickyNote className="h-5 w-5 text-white" />
-            </div>
-            <div className="text-left">
-              <h2 className="text-lg font-black text-gray-900 dark:text-white flex items-center gap-2">
-                Prise de Notes
-                <Sparkles className="h-4 w-4 text-amber-500 animate-pulse" />
-              </h2>
-              <p className="text-xs text-gray-500 dark:text-gray-400">{notes.length} notes · {columns.length} colonnes</p>
-            </div>
-          </div>
-
-          <div className="relative overflow-hidden bg-gradient-to-br from-amber-600 via-orange-600 to-rose-700 rounded-2xl sm:rounded-3xl shadow-[0_40px_120px_rgba(0,0,0,0.3)] p-5 sm:p-6 border border-white/25 max-w-xl mx-auto">
-            <div className="absolute inset-0 bg-gradient-to-tr from-white/10 via-transparent to-transparent pointer-events-none" />
-            <div className="relative flex flex-wrap justify-center gap-3">
-              <Button
-                onClick={() => { setEditingNote(null); setShowNoteForm(true); }}
-                className="relative overflow-hidden bg-gradient-to-br from-cyan-500 via-cyan-600 to-blue-700 border border-cyan-300/40 text-white shadow-[0_20px_70px_rgba(6,182,212,0.5)] hover:shadow-[0_35px_100px_rgba(6,182,212,0.7)] rounded-2xl px-5 py-2.5 font-bold text-sm transition-all hover:scale-105 active:scale-95"
-              >
-                <Plus className="h-4 w-4 mr-2" /> Nouvelle note
-              </Button>
-              <Button
-                onClick={() => { setEditingCol(null); setShowColForm(true); }}
-                className="relative overflow-hidden bg-gradient-to-br from-violet-500 via-violet-600 to-purple-700 border border-violet-300/40 text-white shadow-[0_20px_70px_rgba(139,92,246,0.5)] hover:shadow-[0_35px_100px_rgba(139,92,246,0.7)] rounded-2xl px-5 py-2.5 font-bold text-sm transition-all hover:scale-105 active:scale-95"
-              >
-                <Columns3 className="h-4 w-4 mr-2" /> Ajouter colonne
-              </Button>
-              <Button
-                onClick={handleShareNotes}
-                className="relative overflow-hidden bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-700 border border-emerald-300/40 text-white shadow-[0_20px_70px_rgba(16,185,129,0.5)] hover:shadow-[0_35px_100px_rgba(16,185,129,0.7)] rounded-2xl px-5 py-2.5 font-bold text-sm transition-all hover:scale-105 active:scale-95"
-              >
-                <Share2 className="h-4 w-4 mr-2" /> Partager notes
-              </Button>
-              <Button
-                onClick={() => setShowSelectiveShare(true)}
-                className="relative overflow-hidden bg-gradient-to-br from-fuchsia-500 via-pink-600 to-rose-700 border border-fuchsia-300/40 text-white shadow-[0_20px_70px_rgba(217,70,239,0.5)] hover:shadow-[0_35px_100px_rgba(217,70,239,0.7)] rounded-2xl px-5 py-2.5 font-bold text-sm transition-all hover:scale-105 active:scale-95"
-              >
-                <Filter className="h-4 w-4 mr-2" /> Partage sélectif
-              </Button>
-              <Button
-                onClick={() => setShowCommentsViewer(true)}
-                className="relative bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-700 border border-blue-300/40 text-white shadow-[0_20px_70px_rgba(59,130,246,0.5)] rounded-2xl px-5 py-2.5 font-bold text-sm transition-all hover:scale-105 active:scale-95"
-              >
-                <MessageCircle className="h-4 w-4 mr-2" />
-
-                {commentCount > 0 && (
-                  <span className="absolute -top-2 -right-2 min-w-[20px] h-5 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center px-1 shadow-lg animate-pulse z-10">
-                    {commentCount}
-                  </span>
-                )}
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
+      <NotesHero
+        notesCount={notes.length}
+        columnsCount={columns.length}
+        commentCount={commentCount}
+        onNewNote={() => { setEditingNote(null); setShowNoteForm(true); }}
+        onNewColumn={() => { setEditingCol(null); setShowColForm(true); }}
+        onShareNotes={handleShareNotes}
+        onSelectiveShare={() => setShowSelectiveShare(true)}
+        onViewComments={() => setShowCommentsViewer(true)}
+      />
 
       {/* Kanban Board with vertical separators */}
       <div className="overflow-x-auto pb-4 -mx-2 sm:-mx-4 px-2 sm:px-4">

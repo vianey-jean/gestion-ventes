@@ -13,8 +13,10 @@ interface ClientsHeroProps {
 
 const ClientsHero: React.FC<ClientsHeroProps> = ({ clientsCount, onAddClient }) => {
   return (
-    <div className="relative overflow-hidden bg-gradient-to-r from-purple-700 via-pink-700 to-indigo-700 dark:from-purple-900 dark:via-pink-900 dark:to-indigo-900 rounded-3xl shadow-[0_25px_50px_rgba(255,255,255,0.1)] border border-white/10">
-      {/* Overlay sombre avec blur */}
+    <div
+  className="relative overflow-hidden bg-gradient-to-r from-purple-700 via-pink-700 to-indigo-700 dark:from-purple-900 dark:via-pink-900 dark:to-indigo-900 shadow-[0_25px_50px_rgba(255,255,255,0.1)] border border-white/10"
+  style={{ borderRadius: "30px" }}
+>   {/* Overlay sombre avec blur */}
       <div className="absolute inset-0 bg-black/25 backdrop-blur-md rounded-3xl" />
 
       {/* Particules flottantes ultra luxe */}
