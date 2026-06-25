@@ -17,7 +17,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Plus, Trash2, Edit, ShoppingCart, Crown, Star, Sparkles, Gift, Award, Zap, Filter, CalendarClock } from 'lucide-react';
+import { Plus, Trash2, Edit, ShoppingCart, Crown, Star, Sparkles, Gift, Award, Zap, Filter, CalendarClock, X } from 'lucide-react';
 import SaleQuantityInput from '@/components/dashboard/forms/SaleQuantityInput';
 import { Commande, CommandeProduit } from '@/types/commande';
 import type { ClientCaracteristique } from '@/utils/clientCharacteristic';
@@ -140,6 +140,18 @@ interface CommandeFormDialogProps {
 
   // Caractéristique client (calculée en live)
   currentClientCaracteristique?: ClientCaracteristique | null;
+
+  // Réduction et livraison (par produit en édition)
+  productReduction?: string;
+  setProductReduction?: (v: string) => void;
+  productReductionType?: '' | 'amount' | 'percent';
+  setProductReductionType?: (v: '' | 'amount' | 'percent') => void;
+  productDeliveryLocation?: string;
+  setProductDeliveryLocation?: (v: string) => void;
+  productDeliveryFee?: string;
+  setProductDeliveryFee?: (v: string) => void;
+  productBaseDeliveryFee?: number | null;
+  setProductBaseDeliveryFee?: (v: number | null) => void;
 }
 
 /**
@@ -198,6 +210,16 @@ const CommandeFormDialog: React.FC<CommandeFormDialogProps> = ({
   resetForm,
   availableQuantityForSelected,
   currentClientCaracteristique,
+  productReduction = '',
+  setProductReduction,
+  productReductionType = '',
+  setProductReductionType,
+  productDeliveryLocation = '',
+  setProductDeliveryLocation,
+  productDeliveryFee = '0',
+  setProductDeliveryFee,
+  productBaseDeliveryFee = null,
+  setProductBaseDeliveryFee,
 }) => {
   const [showHeureFin, setShowHeureFin] = React.useState(false);
   React.useEffect(() => { if (horaireFin) setShowHeureFin(true); }, [horaireFin, isOpen]);
@@ -206,13 +228,43 @@ const CommandeFormDialog: React.FC<CommandeFormDialogProps> = ({
   const [selectedClientPhoto, setSelectedClientPhoto] = React.useState<string | null>(null);
   // Villes disponibles (clients-villes.json)
   const [availableVilles, setAvailableVilles] = React.useState<string[]>([]);
+  const [livraisonVilles, setLivraisonVilles] = React.useState<Array<{ ville: string; fee: number }>>([]);
+  const [showFeeOverride, setShowFeeOverride] = React.useState(false);
+  const [showFeeIncrease, setShowFeeIncrease] = React.useState(false);
+  const [feeIncreaseAmount, setFeeIncreaseAmount] = React.useState('');
   React.useEffect(() => {
     if (!isOpen) return;
-    import('@/services/api/villesApi').then(({ clientsVillesApi }) => {
+    import('@/services/api/villesApi').then(({ clientsVillesApi, livraisonVilleApi }) => {
       clientsVillesApi.getAll().then(setAvailableVilles).catch(() => setAvailableVilles([]));
+      livraisonVilleApi.getAll().then(setLivraisonVilles).catch(() => setLivraisonVilles([]));
     });
   }, [isOpen]);
   const isCustomVille = !!clientVille && !availableVilles.some(v => v.toLowerCase() === clientVille.toLowerCase());
+
+  // Auto pré-remplissage frais de livraison depuis ville client
+  const lastAutoFillRef = React.useRef<string | null>(null);
+  React.useEffect(() => {
+    if (!selectedProduct || !livraisonVilles.length || !clientVille || !setProductDeliveryLocation || !setProductDeliveryFee) return;
+    const key = `${selectedProduct.id}__${clientVille.toLowerCase()}`;
+    if (lastAutoFillRef.current === key) return;
+    if (productDeliveryLocation && productDeliveryLocation.toLowerCase() === clientVille.toLowerCase()) {
+      lastAutoFillRef.current = key;
+      return;
+    }
+    lastAutoFillRef.current = key;
+    const found = livraisonVilles.find(v => v.ville.toLowerCase() === clientVille.toLowerCase());
+    if (found) {
+      setProductDeliveryLocation(found.ville);
+      setProductDeliveryFee(String(found.fee));
+      setProductBaseDeliveryFee?.(found.fee);
+    } else {
+      setProductDeliveryLocation(clientVille);
+      setProductDeliveryFee('0');
+      setProductBaseDeliveryFee?.(0);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedProduct?.id, livraisonVilles.length, clientVille]);
+
 
   // ===== Vérification de disponibilité (indisponibilité) =====
   const [availability, setAvailability] = React.useState<{ disponible: boolean; message?: string; suggestions?: Array<{ heureDebut: string; heureFin: string; label: string }> }>({ disponible: true });
@@ -802,6 +854,220 @@ const CommandeFormDialog: React.FC<CommandeFormDialogProps> = ({
               </div>
             </div>
 
+            {/* Réduction & Livraison (par produit) */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Réduction */}
+              <div className="space-y-2">
+                <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                  🎁 Réduction
+                  <span className="text-[10px] text-muted-foreground font-normal">(facultatif)</span>
+                </Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={productReduction}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      setProductReduction?.(v);
+                      if (v && !productReductionType) setProductReductionType?.('amount');
+                    }}
+                    placeholder="0"
+                    className="flex-1 border-2 border-purple-300 dark:border-purple-700 bg-white dark:bg-gray-900"
+                  />
+                  <select
+                    value={productReductionType || ''}
+                    onChange={(e) => setProductReductionType?.(e.target.value as any)}
+                    className="px-2 py-2 border-2 border-purple-300 dark:border-purple-700 rounded-md bg-white dark:bg-gray-900 text-sm"
+                  >
+                    <option value="">—</option>
+                    <option value="amount">€ / unité</option>
+                    <option value="percent">% du PU</option>
+                  </select>
+                </div>
+                {productReduction && productReductionType && (() => {
+                  const pv = parseFloat(prixVente || '0') || 0;
+                  const qte = parseFloat(quantite || '0') || 0;
+                  const r = parseFloat(productReduction) || 0;
+                  const amt = productReductionType === 'percent' ? (pv * r / 100) * qte : r * qte;
+                  const total = Math.max(0, pv * qte - amt);
+                  return (
+                    <p className="text-xs text-emerald-600">
+                      -{amt.toFixed(2)} € appliqués · Total après réduction: {total.toFixed(2)} €
+                    </p>
+                  );
+                })()}
+              </div>
+
+              {/* Ville de livraison & Frais */}
+              <div className="space-y-2">
+                <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  🚚 Ville de livraison & Frais
+                </Label>
+                <select
+                  value={productDeliveryLocation || ''}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val === '__custom__') {
+                      setProductDeliveryLocation?.('');
+                      setProductDeliveryFee?.('0');
+                      setProductBaseDeliveryFee?.(null);
+                      return;
+                    }
+                    if (val === 'Exonération') {
+                      setProductDeliveryLocation?.('Exonération');
+                      setProductDeliveryFee?.('0');
+                      setProductBaseDeliveryFee?.(0);
+                      return;
+                    }
+                    const found = livraisonVilles.find(v => v.ville === val);
+                    setProductDeliveryLocation?.(val);
+                    setProductDeliveryFee?.(found ? String(found.fee) : '0');
+                    setProductBaseDeliveryFee?.(found ? found.fee : null);
+                  }}
+                  className="w-full px-3 py-2 border-2 border-purple-300 dark:border-purple-700 rounded-md bg-white dark:bg-gray-900"
+                >
+                  <option value="">— Choisir une ville —</option>
+                  {livraisonVilles.map(v => (
+                    <option key={v.ville} value={v.ville}>
+                      {v.ville}{v.ville === 'Exonération' ? ' (0 €)' : `: ${v.fee === 0 ? 'gratuit' : `${v.fee} €`}`}
+                    </option>
+                  ))}
+                  <option value="__custom__">+ Nouvelle ville…</option>
+                </select>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <Input
+                    type="text"
+                    value={productDeliveryLocation}
+                    onChange={(e) => setProductDeliveryLocation?.(e.target.value)}
+                    placeholder="Ville"
+                    className="border-2 border-purple-300 dark:border-purple-700 bg-white dark:bg-gray-900"
+                  />
+                  <Input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={productDeliveryFee}
+                    onChange={(e) => setProductDeliveryFee?.(e.target.value)}
+                    placeholder="Frais (€)"
+                    className="border-2 border-purple-300 dark:border-purple-700 bg-white dark:bg-gray-900"
+                  />
+                </div>
+                {productBaseDeliveryFee !== null && Number(productDeliveryFee || 0) !== Number(productBaseDeliveryFee) && (
+                  Number(productDeliveryFee || 0) < Number(productBaseDeliveryFee) ? (
+                    <p className="text-[11px] text-emerald-600 font-semibold">
+                      Réduit de {(Number(productBaseDeliveryFee) - Number(productDeliveryFee || 0)).toFixed(2)} € (base: {productBaseDeliveryFee} €)
+                    </p>
+                  ) : (
+                    <p className="text-[11px] text-orange-600 font-semibold">
+                      Augmenté de {(Number(productDeliveryFee || 0) - Number(productBaseDeliveryFee)).toFixed(2)} € (base: {productBaseDeliveryFee} €)
+                    </p>
+                  )
+                )}
+
+                {(() => {
+                  const knownVilleNames = livraisonVilles.map(v => v.ville);
+                  const isCustomLoc = !!productDeliveryLocation && !knownVilleNames.some(v => v.toLowerCase() === productDeliveryLocation.toLowerCase());
+                  const baseVilleFee = productBaseDeliveryFee;
+                  const canAdjust = !!productDeliveryLocation && productDeliveryLocation !== 'Exonération' && !isCustomLoc;
+                  if (!canAdjust) return null;
+                  return (
+                    <>
+                      <div className="flex items-center gap-1 flex-wrap">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => { setShowFeeOverride(s => !s); if (!showFeeOverride) setShowFeeIncrease(false); }}
+                          className="h-7 px-2 text-xs gap-1 text-blue-600 hover:bg-blue-50"
+                        >
+                          {showFeeOverride ? <X className="h-3 w-3" /> : <Plus className="h-3 w-3" />}
+                          Réduction frais
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => { setShowFeeIncrease(s => !s); if (!showFeeIncrease) setShowFeeOverride(false); }}
+                          className="h-7 px-2 text-xs gap-1 text-orange-600 hover:bg-orange-50"
+                        >
+                          {showFeeIncrease ? <X className="h-3 w-3" /> : <Plus className="h-3 w-3" />}
+                          Augmentation frais
+                        </Button>
+                      </div>
+
+                      {showFeeOverride && (
+                        <div className="mt-2 p-3 rounded-lg bg-blue-50/60 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 space-y-2">
+                          <Label className="text-xs">Nouveau frais pour {productDeliveryLocation} (€)</Label>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value={productDeliveryFee}
+                            onChange={(e) => setProductDeliveryFee?.(e.target.value)}
+                            placeholder={baseVilleFee !== null && baseVilleFee !== undefined ? `Frais standard: ${baseVilleFee} €` : 'Frais (€)'}
+                          />
+                          {baseVilleFee !== null && baseVilleFee !== undefined && (
+                            <button
+                              type="button"
+                              className="text-[11px] text-gray-500 hover:text-gray-700 underline"
+                              onClick={() => setProductDeliveryFee?.(String(baseVilleFee))}
+                            >
+                              Rétablir le frais standard ({baseVilleFee} €)
+                            </button>
+                          )}
+                        </div>
+                      )}
+
+                      {showFeeIncrease && (
+                        <div className="mt-2 p-3 rounded-lg bg-orange-50/60 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 space-y-2">
+                          <Label className="text-xs">
+                            Montant à ajouter au frais standard
+                            {baseVilleFee !== null && baseVilleFee !== undefined && ` (${baseVilleFee} €)`} pour {productDeliveryLocation}
+                          </Label>
+                          <div className="flex items-center gap-2">
+                            <Input
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              value={feeIncreaseAmount}
+                              onChange={(e) => {
+                                const add = e.target.value;
+                                setFeeIncreaseAmount(add);
+                                const base = baseVilleFee !== null && baseVilleFee !== undefined ? Number(baseVilleFee) : Number(productDeliveryFee || 0);
+                                const total = base + Number(add || 0);
+                                setProductDeliveryFee?.(String(total));
+                              }}
+                              placeholder="Ex: 10"
+                              className="flex-1"
+                            />
+                            <span className="text-xs text-gray-600 whitespace-nowrap">
+                              = {Number(productDeliveryFee || 0).toFixed(2)} € total
+                            </span>
+                          </div>
+                          {baseVilleFee !== null && baseVilleFee !== undefined && (
+                            <button
+                              type="button"
+                              className="text-[11px] text-gray-500 hover:text-gray-700 underline"
+                              onClick={() => {
+                                setFeeIncreaseAmount('');
+                                setProductDeliveryFee?.(String(baseVilleFee));
+                              }}
+                            >
+                              Rétablir le frais standard ({baseVilleFee} €)
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
+              </div>
+            </div>
+
+
             <Button
               type="button"
               onClick={handleAddProduit}
@@ -849,6 +1115,22 @@ const CommandeFormDialog: React.FC<CommandeFormDialogProps> = ({
                           <span className="text-blue-600 font-bold">
                             Prix vente: {produit.prixVente}€
                           </span>
+                          {(produit.reduction || 0) > 0 && produit.reductionType && (
+                            <>
+                              {' | '}
+                              <span className="text-emerald-600 font-bold">
+                                Réduction: {produit.reduction}{produit.reductionType === 'percent' ? '%' : '€/u'}
+                              </span>
+                            </>
+                          )}
+                          {(produit.deliveryLocation || (produit.deliveryFee || 0) > 0) && (
+                            <>
+                              {' | '}
+                              <span className="text-orange-600 font-bold">
+                                🚚 {produit.deliveryLocation || ''} {(produit.deliveryFee || 0).toFixed(2)}€
+                              </span>
+                            </>
+                          )}
                         </div>
                       </div>
 

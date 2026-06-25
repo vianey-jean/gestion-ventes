@@ -91,6 +91,12 @@ export const useCommandesLogic = () => {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [produitsListe, setProduitsListe] = useState<CommandeProduit[]>([]);
   const [editingProductIndex, setEditingProductIndex] = useState<number | null>(null);
+  // === Nouveaux champs produit: réduction et livraison ===
+  const [productReduction, setProductReduction] = useState<string>('');
+  const [productReductionType, setProductReductionType] = useState<'' | 'amount' | 'percent'>('');
+  const [productDeliveryLocation, setProductDeliveryLocation] = useState<string>('');
+  const [productDeliveryFee, setProductDeliveryFee] = useState<string>('0');
+  const [productBaseDeliveryFee, setProductBaseDeliveryFee] = useState<number | null>(null);
   
   // =========================================================================
   // États de recherche et tri
@@ -371,13 +377,23 @@ export const useCommandesLogic = () => {
       }
       const today = new Date().toISOString().split('T')[0];
       const saleProducts = [];
+      let totalSellingPrice = 0;
+      let totalPurchasePrice = 0;
       for (const p of commandeToValidate.produits) {
         let product = products.find(prod => prod.description.toLowerCase() === p.nom.toLowerCase());
         if (!product) { const newProductResponse = await api.post('/api/products', { description: p.nom, purchasePrice: p.prixUnitaire, quantity: p.quantite }); product = newProductResponse.data; }
-        saleProducts.push({ productId: product.id, description: p.nom, quantitySold: p.quantite, purchasePrice: p.prixUnitaire * p.quantite, sellingPrice: p.prixVente * p.quantite, profit: (p.prixVente - p.prixUnitaire) * p.quantite, deliveryFee: 0, deliveryLocation: "Saint-Denis" });
+        const rawSelling = p.prixVente * p.quantite;
+        const reduc = (p.reduction || 0) > 0 && p.reductionType
+          ? (p.reductionType === 'percent' ? (p.prixVente * (p.reduction as number) / 100) * p.quantite : (p.reduction as number) * p.quantite)
+          : 0;
+        const sellingPrice = Math.max(0, rawSelling - reduc);
+        const purchasePrice = p.prixUnitaire * p.quantite;
+        const delFee = Number(p.deliveryFee || 0);
+        const delLoc = p.deliveryLocation || "Saint-Denis";
+        saleProducts.push({ productId: product.id, description: p.nom, quantitySold: p.quantite, purchasePrice, sellingPrice, profit: sellingPrice - purchasePrice, deliveryFee: delFee, deliveryLocation: delLoc, reduction: p.reduction || 0, reductionType: p.reductionType || '' });
+        totalSellingPrice += sellingPrice;
+        totalPurchasePrice += purchasePrice;
       }
-      const totalPurchasePrice = commandeToValidate.produits.reduce((sum, p) => sum + (p.prixUnitaire * p.quantite), 0);
-      const totalSellingPrice = commandeToValidate.produits.reduce((sum, p) => sum + (p.prixVente * p.quantite), 0);
       const saleData = { date: today, products: saleProducts, totalPurchasePrice, totalSellingPrice, totalProfit: totalSellingPrice - totalPurchasePrice, clientName: commandeToValidate.clientNom, clientAddress: commandeToValidate.clientAddress, clientPhone: commandeToValidate.clientPhone, reste: 0, nextPaymentDate: null };
 
       await reservationRdvSyncService.syncRdvStatus(id, 'valide');
@@ -604,11 +620,15 @@ export const useCommandesLogic = () => {
     setType('commande'); setClientSearch(''); setProductSearch('');
     setProduitsListe([]); setEditingCommande(null); setSelectedProduct(null); setEditingProductIndex(null);
     setAvailableQuantityForSelected(null);
+    setProductReduction(''); setProductReductionType('');
+    setProductDeliveryLocation(''); setProductDeliveryFee('0'); setProductBaseDeliveryFee(null);
   }, []);
 
   const resetProductFields = useCallback(() => {
     setProduitNom(''); setPrixUnitaire(''); setQuantite('1'); setPrixVente('');
     setProductSearch(''); setEditingProductIndex(null); setSelectedProduct(null); setAvailableQuantityForSelected(null);
+    setProductReduction(''); setProductReductionType('');
+    setProductDeliveryLocation(''); setProductDeliveryFee('0'); setProductBaseDeliveryFee(null);
   }, []);
 
   // =========================================================================
@@ -633,7 +653,20 @@ export const useCommandesLogic = () => {
         return;
       }
     }
-    const nouveauProduit: CommandeProduit = { nom: produitNom, prixUnitaire: parseFloat(prixUnitaire), quantite: quantiteInt, prixVente: parseFloat(prixVente) };
+    const redVal = parseFloat(productReduction || '0') || 0;
+    const redType = productReductionType || '';
+    const delLoc = (productDeliveryLocation || '').trim();
+    const delFee = parseFloat(productDeliveryFee || '0') || 0;
+    const nouveauProduit: CommandeProduit = {
+      nom: produitNom,
+      prixUnitaire: parseFloat(prixUnitaire),
+      quantite: quantiteInt,
+      prixVente: parseFloat(prixVente),
+      ...(redVal > 0 && redType ? { reduction: redVal, reductionType: redType } : {}),
+      ...(delLoc ? { deliveryLocation: delLoc } : {}),
+      ...(delFee || delLoc ? { deliveryFee: delFee } : {}),
+      ...(productBaseDeliveryFee !== null ? { baseDeliveryFee: productBaseDeliveryFee } : {}),
+    };
     if (editingProductIndex !== null) {
       const nouveauxProduits = [...produitsListe];
       nouveauxProduits[editingProductIndex] = nouveauProduit;
@@ -644,7 +677,7 @@ export const useCommandesLogic = () => {
       toast({ title: 'Produit ajouté', description: `${nouveauProduit.nom} ajouté au panier` });
     }
     resetProductFields();
-  }, [produitNom, prixUnitaire, quantite, prixVente, products, editingProductIndex, produitsListe, resetProductFields, getAvailableQuantityForProduct]);
+  }, [produitNom, prixUnitaire, quantite, prixVente, products, editingProductIndex, produitsListe, resetProductFields, getAvailableQuantityForProduct, productReduction, productReductionType, productDeliveryLocation, productDeliveryFee, productBaseDeliveryFee]);
 
   const handleEditProduit = useCallback((index: number) => {
     const produit = produitsListe[index];
@@ -653,6 +686,11 @@ export const useCommandesLogic = () => {
     setProductSearch(produit.nom); setEditingProductIndex(index);
     const productFromList = products.find(p => p.description.toLowerCase() === produit.nom.toLowerCase());
     setSelectedProduct(productFromList || null);
+    setProductReduction(produit.reduction ? String(produit.reduction) : '');
+    setProductReductionType((produit.reductionType as any) || '');
+    setProductDeliveryLocation(produit.deliveryLocation || '');
+    setProductDeliveryFee(produit.deliveryFee !== undefined ? String(produit.deliveryFee) : '0');
+    setProductBaseDeliveryFee(produit.baseDeliveryFee !== undefined ? produit.baseDeliveryFee : null);
   }, [produitsListe, products]);
 
   const handleRemoveProduit = useCallback((index: number) => {
@@ -928,13 +966,23 @@ export const useCommandesLogic = () => {
       }
       const today = new Date().toISOString().split('T')[0];
       const saleProducts = [];
+      let totalSellingPrice = 0;
+      let totalPurchasePrice = 0;
       for (const p of commandeToValidate.produits) {
         let product = products.find(prod => prod.description.toLowerCase() === p.nom.toLowerCase());
         if (!product) { const newProductResponse = await api.post('/api/products', { description: p.nom, purchasePrice: p.prixUnitaire, quantity: p.quantite }); product = newProductResponse.data; }
-        saleProducts.push({ productId: product.id, description: p.nom, quantitySold: p.quantite, purchasePrice: p.prixUnitaire * p.quantite, sellingPrice: p.prixVente * p.quantite, profit: (p.prixVente - p.prixUnitaire) * p.quantite, deliveryFee: 0, deliveryLocation: "Saint-Denis" });
+        const rawSelling = p.prixVente * p.quantite;
+        const reduc = (p.reduction || 0) > 0 && p.reductionType
+          ? (p.reductionType === 'percent' ? (p.prixVente * (p.reduction as number) / 100) * p.quantite : (p.reduction as number) * p.quantite)
+          : 0;
+        const sellingPrice = Math.max(0, rawSelling - reduc);
+        const purchasePrice = p.prixUnitaire * p.quantite;
+        const delFee = Number(p.deliveryFee || 0);
+        const delLoc = p.deliveryLocation || "Saint-Denis";
+        saleProducts.push({ productId: product.id, description: p.nom, quantitySold: p.quantite, purchasePrice, sellingPrice, profit: sellingPrice - purchasePrice, deliveryFee: delFee, deliveryLocation: delLoc, reduction: p.reduction || 0, reductionType: p.reductionType || '' });
+        totalSellingPrice += sellingPrice;
+        totalPurchasePrice += purchasePrice;
       }
-      const totalPurchasePrice = commandeToValidate.produits.reduce((sum, p) => sum + (p.prixUnitaire * p.quantite), 0);
-      const totalSellingPrice = commandeToValidate.produits.reduce((sum, p) => sum + (p.prixVente * p.quantite), 0);
       const saleData = { date: today, products: saleProducts, totalPurchasePrice, totalSellingPrice, totalProfit: totalSellingPrice - totalPurchasePrice, clientName: commandeToValidate.clientNom, clientAddress: commandeToValidate.clientAddress, clientPhone: commandeToValidate.clientPhone, reste: 0, nextPaymentDate: null };
       if (commandeToValidate.type === 'reservation') {
         await reservationRdvSyncService.syncRdvStatus(validatingId, 'valide');
@@ -1189,6 +1237,12 @@ export const useCommandesLogic = () => {
     produitNom, setProduitNom, prixUnitaire, setPrixUnitaire, quantite, setQuantite, prixVente, setPrixVente,
     productSearch, setProductSearch, showProductSuggestions, setShowProductSuggestions,
     selectedProduct, produitsListe, editingProductIndex, availableQuantityForSelected,
+    // Nouveaux champs produit
+    productReduction, setProductReduction,
+    productReductionType, setProductReductionType,
+    productDeliveryLocation, setProductDeliveryLocation,
+    productDeliveryFee, setProductDeliveryFee,
+    productBaseDeliveryFee, setProductBaseDeliveryFee,
     // États recherche/tri
     commandeSearch, setCommandeSearch, sortDateAsc, setSortDateAsc,
     // États modales

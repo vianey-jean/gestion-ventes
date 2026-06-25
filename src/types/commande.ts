@@ -1,10 +1,20 @@
 // Types pour les commandes
 
+export type CommandeReductionType = '' | 'amount' | 'percent';
+
 export interface CommandeProduit {
   nom: string;
   prixUnitaire: number;
   quantite: number;
   prixVente: number;
+  /** Réduction appliquée à la ligne (facultatif) */
+  reduction?: number;
+  reductionType?: CommandeReductionType;
+  /** Livraison */
+  deliveryLocation?: string;
+  deliveryFee?: number;
+  /** Frais de base de la ville (avant override) */
+  baseDeliveryFee?: number;
 }
 
 export type CommandeType = 'commande' | 'reservation' | 'rdv';

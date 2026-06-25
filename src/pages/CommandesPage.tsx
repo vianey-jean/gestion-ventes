@@ -117,6 +117,16 @@ const CommandesPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =
           handleSubmit={logic.handleSubmit}
           resetForm={logic.resetForm}
           currentClientCaracteristique={logic.currentClientCaracteristique}
+          productReduction={logic.productReduction}
+          setProductReduction={logic.setProductReduction}
+          productReductionType={logic.productReductionType}
+          setProductReductionType={logic.setProductReductionType}
+          productDeliveryLocation={logic.productDeliveryLocation}
+          setProductDeliveryLocation={logic.setProductDeliveryLocation}
+          productDeliveryFee={logic.productDeliveryFee}
+          setProductDeliveryFee={logic.setProductDeliveryFee}
+          productBaseDeliveryFee={logic.productBaseDeliveryFee}
+          setProductBaseDeliveryFee={logic.setProductBaseDeliveryFee}
         />
 
         {/* Table des commandes */}
