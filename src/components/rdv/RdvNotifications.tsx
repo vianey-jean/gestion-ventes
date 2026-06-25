@@ -25,6 +25,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
+  SheetClose,
 } from '@/components/ui/sheet';
 import {
   Dialog,
@@ -161,8 +162,15 @@ const RdvNotifications: React.FC<RdvNotificationsProps> = ({ onCheckNotification
           </Button>
         </SheetTrigger>
         <SheetContent className="w-full sm:max-w-md bg-gradient-to-b from-orange-50/50 via-white/50 to-orange-100/30 dark:from-orange-900/20 dark:via-gray-900/20 dark:to-orange-950/30 backdrop-blur-lg shadow-2xl rounded-2xl p-6">
+          {/* Bouton de fermeture ultra visible (mobile + desktop) */}
+          <SheetClose
+            aria-label="Fermer les notifications"
+            className="absolute right-3 top-3 z-50 flex h-10 w-10 items-center justify-center rounded-full bg-white/95 dark:bg-[#1a0820]/95 text-orange-600 dark:text-orange-300 border border-orange-300/60 dark:border-orange-700/60 shadow-lg hover:scale-110 hover:bg-orange-50 dark:hover:bg-orange-950/60 transition-all"
+          >
+            <X className="h-5 w-5" />
+          </SheetClose>
           <SheetHeader>
-            <SheetTitle className="flex items-center gap-2 text-xl font-semibold text-orange-700 dark:text-orange-300">
+            <SheetTitle className="flex items-center gap-2 text-xl font-semibold text-orange-700 dark:text-orange-300 pr-12">
               <BellRing className="h-5 w-5 text-orange-600 animate-pulse" />
               Notifications RDV
               {unreadCount > 0 && <Badge variant="destructive">{unreadCount}</Badge>}

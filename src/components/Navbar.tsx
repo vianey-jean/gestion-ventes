@@ -25,8 +25,15 @@ import {
   Crown,
   Info,
   Mail,
+  User as UserIcon,
 } from 'lucide-react';
- import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { Link as RouterLink } from 'react-router-dom';
  
  const Navbar: React.FC = () => {
   const { isAuthenticated, user, logout } = useAuth();
@@ -111,7 +118,7 @@ import {
            </div>
 
            {/* ================= DESKTOP ================= */}
-           <div className="hidden lg:flex items-center space-x-1">
+          <div className="hidden lg:flex items-center space-x-1">
              {isAuthPage && (
                <>
                  <Link to="/about">
@@ -241,7 +248,7 @@ import {
             <div className="lg:hidden flex items-center gap-2">
              
              {/* Profile button - tablette: photo + nom, mobile: photo seulement */}
-             {isAuthenticated && !isAuthPage && (
+              {isAuthenticated && !isAuthPage && (
                <Link to="/profile">
                  <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                    <Button 
@@ -268,37 +275,38 @@ import {
                </Link>
              )}
 
-             {isAuthPage && (
-               <>
-                 <Link to="/about">
-                   <motion.div whileHover={{ scale: 1.1, rotate: 10 }} whileTap={{ scale: 0.9 }}>
-                     <Button variant="ghost" size="icon" className="rounded-2xl h-10 w-10 bg-gradient-to-br from-cyan-500/10 to-blue-500/10">
-                       <Info className="h-5 w-5 text-cyan-600 dark:text-cyan-400" />
-                     </Button>
-                   </motion.div>
-                 </Link>
-                 <Link to="/contact">
-                   <motion.div whileHover={{ scale: 1.1, rotate: -10 }} whileTap={{ scale: 0.9 }}>
-                     <Button variant="ghost" size="icon" className="rounded-2xl h-10 w-10 bg-gradient-to-br from-fuchsia-500/10 to-pink-500/10">
-                       <Mail className="h-5 w-5 text-fuchsia-600 dark:text-fuchsia-400" />
-                     </Button>
-                   </motion.div>
-                 </Link>
-               </>
-             )}
+              {isAuthPage && (
+                <>
+                  <Link to="/about">
+                    <motion.div whileHover={{ scale: 1.1, rotate: 10 }} whileTap={{ scale: 0.9 }}>
+                      <Button variant="ghost" size="icon" className="rounded-2xl h-10 w-10 bg-gradient-to-br from-cyan-500/10 to-blue-500/10">
+                        <Info className="h-5 w-5 text-cyan-600 dark:text-cyan-400" />
+                      </Button>
+                    </motion.div>
+                  </Link>
+                  <Link to="/contact">
+                    <motion.div whileHover={{ scale: 1.1, rotate: -10 }} whileTap={{ scale: 0.9 }}>
+                      <Button variant="ghost" size="icon" className="rounded-2xl h-10 w-10 bg-gradient-to-br from-fuchsia-500/10 to-pink-500/10">
+                        <Mail className="h-5 w-5 text-fuchsia-600 dark:text-fuchsia-400" />
+                      </Button>
+                    </motion.div>
+                  </Link>
+                  {/* Thème (visible uniquement sur pages d'auth où il n'y a pas de profil) */}
+                  <motion.div whileHover={{ scale: 1.1, rotate: 15 }} whileTap={{ scale: 0.9 }}>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={toggleTheme}
+                      className="rounded-2xl h-10 w-10 hover:bg-gradient-to-r hover:from-amber-500/10 hover:to-orange-500/10 transition-all duration-300"
+                    >
+                      {theme === 'dark'
+                        ? <Sun className="h-5 w-5 text-amber-500" />
+                        : <Moon className="h-5 w-5 text-indigo-600" />}
+                    </Button>
+                  </motion.div>
+                </>
+              )}
 
-             <motion.div whileHover={{ scale: 1.1, rotate: 15 }} whileTap={{ scale: 0.9 }}>
-               <Button
-                 variant="ghost"
-                 size="icon"
-                 onClick={toggleTheme}
-                 className="rounded-2xl h-10 w-10 hover:bg-gradient-to-r hover:from-amber-500/10 hover:to-orange-500/10 transition-all duration-300"
-               >
-                 {theme === 'dark'
-                   ? <Sun className="h-5 w-5 text-amber-500" />
-                   : <Moon className="h-5 w-5 text-indigo-600" />}
-               </Button>
-             </motion.div>
 
              {!isAuthPage && (
              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
