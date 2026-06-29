@@ -162,15 +162,18 @@ const RdvPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => {
 
   const confirmDelete = useCallback((rdv: RDV) => { setRdvToDelete(rdv); setDeleteDialogOpen(true); }, []);
 
-  const handleRdvDrop = useCallback(async (rdv: RDV, newDate: string, newTime: string) => {
-    const [startH, startM] = rdv.heureDebut.split(':').map(Number);
-    const [endH, endM] = rdv.heureFin.split(':').map(Number);
-    const durationMinutes = (endH * 60 + endM) - (startH * 60 + startM);
-    const [newH, newM] = newTime.split(':').map(Number);
-    const newEndMinutes = newH * 60 + newM + durationMinutes;
-    const newEndH = Math.floor(newEndMinutes / 60);
-    const newEndMCalc = newEndMinutes % 60;
-    const newHeureFin = `${newEndH.toString().padStart(2, '0')}:${newEndMCalc.toString().padStart(2, '0')}`;
+  const handleRdvDrop = useCallback(async (rdv: RDV, newDate: string, newTime: string, newEndTime?: string) => {
+    let newHeureFin = newEndTime;
+    if (!newHeureFin) {
+      const [startH, startM] = rdv.heureDebut.split(':').map(Number);
+      const [endH, endM] = rdv.heureFin.split(':').map(Number);
+      const durationMinutes = (endH * 60 + endM) - (startH * 60 + startM);
+      const [newH, newM] = newTime.split(':').map(Number);
+      const newEndMinutes = newH * 60 + newM + durationMinutes;
+      const newEndH = Math.floor(newEndMinutes / 60);
+      const newEndMCalc = newEndMinutes % 60;
+      newHeureFin = `${newEndH.toString().padStart(2, '0')}:${newEndMCalc.toString().padStart(2, '0')}`;
+    }
     await updateRdv(rdv.id, { date: newDate, heureDebut: newTime, heureFin: newHeureFin });
   }, [updateRdv]);
 

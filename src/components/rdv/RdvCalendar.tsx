@@ -46,7 +46,7 @@ interface RdvCalendarProps {
   rdvs: RDV[];
   onRdvClick: (rdv: RDV) => void;
   onSlotClick: (date: string, time: string) => void;
-  onRdvDrop: (rdv: RDV, newDate: string, newTime: string) => void;
+  onRdvDrop: (rdv: RDV, newDate: string, newTime: string, newEndTime?: string) => void;
   onRdvDelete?: (rdv: RDV) => void;
   onOpenFormWithDateTime?: (rdv: RDV, date: string, time: string) => void;
   highlightRdvId?: string | null;
@@ -107,6 +107,7 @@ const RdvCalendar: React.FC<RdvCalendarProps> = ({
   const [showTimeDialog, setShowTimeDialog] = useState(false);
   const [pendingDrop, setPendingDrop] = useState<{ rdv: RDV; date: string; time: string } | null>(null);
   const [newTime, setNewTime] = useState('09:00');
+  const [newEndTime, setNewEndTime] = useState('10:00');
   const [newDate, setNewDate] = useState('');
   
   // Drop conflict checking
@@ -180,25 +181,25 @@ const RdvCalendar: React.FC<RdvCalendarProps> = ({
     }
   }, [blinkingRdvId, blinkCount, onHighlightComplete]);
 
-  // Check for drop conflicts when newDate or newTime changes in dialog
+  // Check for drop conflicts when newDate, newTime or newEndTime changes in dialog
   useEffect(() => {
     const checkDropConflict = async () => {
-      if (!showTimeDialog || !newDate || !newTime || !pendingDrop) {
+      if (!showTimeDialog || !newDate || !newTime || !newEndTime || !pendingDrop) {
         setDropConflicts([]);
         setHasDropConflict(false);
         return;
       }
 
-      // Calculate end time (same duration as original rdv)
-      const originalStart = pendingDrop.rdv.heureDebut.split(':').map(Number);
-      const originalEnd = pendingDrop.rdv.heureFin.split(':').map(Number);
-      const durationMinutes = (originalEnd[0] * 60 + originalEnd[1]) - (originalStart[0] * 60 + originalStart[1]);
-      
-      const newStartParts = newTime.split(':').map(Number);
-      const newEndMinutes = newStartParts[0] * 60 + newStartParts[1] + durationMinutes;
-      const newEndHour = Math.floor(newEndMinutes / 60) % 24;
-      const newEndMin = newEndMinutes % 60;
-      const newHeureFin = `${newEndHour.toString().padStart(2, '0')}:${newEndMin.toString().padStart(2, '0')}`;
+      // Validate: end must be strictly after start
+      const [sh, sm] = newTime.split(':').map(Number);
+      const [eh, em] = newEndTime.split(':').map(Number);
+      const startMin = sh * 60 + sm;
+      const endMin = eh * 60 + em;
+      if (endMin <= startMin) {
+        setDropConflicts([]);
+        setHasDropConflict(true);
+        return;
+      }
 
       setIsCheckingDropConflict(true);
       try {
@@ -206,7 +207,7 @@ const RdvCalendar: React.FC<RdvCalendarProps> = ({
         const params = new URLSearchParams({
           date: newDate,
           heureDebut: newTime,
-          heureFin: newHeureFin,
+          heureFin: newEndTime,
           excludeId: pendingDrop.rdv.id // Exclude the rdv being moved
         });
         
@@ -227,7 +228,7 @@ const RdvCalendar: React.FC<RdvCalendarProps> = ({
 
     const debounce = setTimeout(checkDropConflict, 300);
     return () => clearTimeout(debounce);
-  }, [showTimeDialog, newDate, newTime, pendingDrop]);
+  }, [showTimeDialog, newDate, newTime, newEndTime, pendingDrop]);
 
   const navigateWeek = (direction: 'prev' | 'next') => {
     setCurrentDate(prev => addDays(prev, direction === 'prev' ? -7 : 7));
@@ -319,9 +320,16 @@ const RdvCalendar: React.FC<RdvCalendarProps> = ({
     e.preventDefault();
     if (draggedRdv) {
       const timeStr = `${hour.toString().padStart(2, '0')}:00`;
+      // Preserve original duration as default end time
+      const [osh, osm] = draggedRdv.heureDebut.split(':').map(Number);
+      const [oeh, oem] = draggedRdv.heureFin.split(':').map(Number);
+      const durationMin = Math.max(15, (oeh * 60 + oem) - (osh * 60 + osm));
+      const endTotal = Math.min(23 * 60 + 59, hour * 60 + durationMin);
+      const endStr = `${Math.floor(endTotal / 60).toString().padStart(2, '0')}:${(endTotal % 60).toString().padStart(2, '0')}`;
       setPendingDrop({ rdv: draggedRdv, date, time: timeStr });
       setNewDate(date);
       setNewTime(timeStr);
+      setNewEndTime(endStr);
       setDropConflicts([]);
       setHasDropConflict(false);
       setShowTimeDialog(true);
@@ -338,7 +346,7 @@ const RdvCalendar: React.FC<RdvCalendarProps> = ({
       onOpenFormWithDateTime(pendingDrop.rdv, newDate, newTime);
     } else if (pendingDrop) {
       // Fallback: mise à jour directe
-      onRdvDrop(pendingDrop.rdv, newDate, newTime);
+      onRdvDrop(pendingDrop.rdv, newDate, newTime, newEndTime);
     }
     setShowTimeDialog(false);
     setPendingDrop(null);
@@ -659,15 +667,27 @@ const RdvCalendar: React.FC<RdvCalendarProps> = ({
                 className="h-12 text-blue-800 font-bold"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="newTime">Nouvelle heure de début</Label>
-              <Input
-                id="newTime"
-                type="time"
-                value={newTime}
-                onChange={(e) => setNewTime(e.target.value)}
-                className="h-12 text-red-800 font-bold"
-              />
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label htmlFor="newTime">Heure de début</Label>
+                <Input
+                  id="newTime"
+                  type="time"
+                  value={newTime}
+                  onChange={(e) => setNewTime(e.target.value)}
+                  className="h-12 text-red-800 font-bold"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="newEndTime">Heure de fin</Label>
+                <Input
+                  id="newEndTime"
+                  type="time"
+                  value={newEndTime}
+                  onChange={(e) => setNewEndTime(e.target.value)}
+                  className="h-12 text-emerald-800 font-bold"
+                />
+              </div>
             </div>
           </div>
           <DialogFooter>
