@@ -1,17 +1,24 @@
 /**
  * Tableau des commandes et réservations
  */
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ModernTable, ModernTableHeader, ModernTableRow, ModernTableHead, ModernTableCell, TableBody } from '@/components/dashboard/forms/ModernTable';
-import { Gift, Edit, Trash2, ArrowUp, ArrowDown } from 'lucide-react';
+import { Gift, Edit, Trash2, ArrowUp, ArrowDown, Sparkles } from 'lucide-react';
 import { Commande, CommandeStatut } from '@/types/commande';
 import CommandesStatsButtons from './CommandesStatsButtons';
 import PreparationLivraisonButton from './PreparationLivraisonButton';
 import { getCaracteristiqueByLabel } from '@/utils/clientCharacteristic';
+import { useClients } from '@/hooks/useClients';
+import { useProducts } from '@/hooks/useProducts';
+import ClientDetailModal from '@/components/clients/ClientDetailModal';
+import ProductDetailModal from '@/components/products/ProductDetailModal';
+import CaracteristiqueModal from '@/components/products/CaracteristiqueModal';
+import type { Client } from '@/types/client';
+import type { Product } from '@/types/product';
 
 const ClientCaracMarquee: React.FC<{ label?: string }> = ({ label }) => {
   const carac = getCaracteristiqueByLabel(label);
@@ -48,7 +55,51 @@ const CommandesTable: React.FC<CommandesTableProps> = ({
   setDeleteId,
   getStatusOptions
 }) => {
+  const { clients } = useClients();
+  const { products } = useProducts();
+
+  // Variables locales — réinitialisées à null à la fermeture
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [caracProduct, setCaracProduct] = useState<Product | null>(null);
+
+  const clientsByName = useMemo(() => {
+    const m = new Map<string, Client>();
+    clients.forEach((c) => m.set((c.nom || '').toLowerCase().trim(), c));
+    return m;
+  }, [clients]);
+
+  const productsByName = useMemo(() => {
+    const m = new Map<string, Product>();
+    products.forEach((p) => m.set((p.description || '').toLowerCase().trim(), p));
+    return m;
+  }, [products]);
+
+  const handleClientClick = (commande: Commande) => {
+    const found = clientsByName.get((commande.clientNom || '').toLowerCase().trim());
+    if (found) {
+      setSelectedClient(found);
+    } else {
+      // Fallback : créer un ClientLike à la volée depuis les données de la commande
+      setSelectedClient({
+        id: `tmp-${commande.id}`,
+        nom: commande.clientNom,
+        phone: commande.clientPhone,
+        phones: commande.clientPhone ? [commande.clientPhone] : [],
+        adresse: commande.clientAddress,
+        addresses: commande.clientAddress ? [commande.clientAddress] : [],
+        dateCreation: commande.createdAt || commande.dateCommande,
+      } as Client);
+    }
+  };
+
+  const handleProductClick = (produitNom: string) => {
+    const found = productsByName.get((produitNom || '').toLowerCase().trim());
+    if (found) setSelectedProduct(found);
+  };
+
   return (
+    <>
     <Card className="border-2 border-purple-200/50 dark:border-purple-700/50 shadow-[0_20px_70px_rgba(168,85,247,0.3)] bg-gradient-to-br from-white via-purple-50/20 to-pink-50/20 dark:from-gray-900 dark:via-purple-900/10 dark:to-pink-900/10 rounded-2xl sm:rounded-3xl overflow-hidden backdrop-blur-sm">
       <CardHeader className="border-b-2 border-gradient-to-r from-purple-300 via-pink-300 to-indigo-300 dark:from-purple-700 dark:via-pink-700 dark:to-indigo-700 bg-gradient-to-r from-purple-50/50 via-pink-50/50 to-indigo-50/50 dark:from-purple-900/20 dark:via-pink-900/20 dark:to-indigo-900/20 pb-4 sm:pb-6 px-3 sm:px-6">
         <CardTitle className="flex items-center gap-2 sm:gap-4 text-base sm:text-xl md:text-2xl font-black tracking-tight">
@@ -77,6 +128,8 @@ const CommandesTable: React.FC<CommandesTableProps> = ({
               handleStatusChange={handleStatusChange}
               setDeleteId={setDeleteId}
               getStatusOptions={getStatusOptions}
+              onClientClick={handleClientClick}
+              onProductClick={handleProductClick}
             />
           ))}
           {filteredCommandes.length === 0 && (
@@ -124,6 +177,8 @@ const CommandesTable: React.FC<CommandesTableProps> = ({
                   handleStatusChange={handleStatusChange}
                   setDeleteId={setDeleteId}
                   getStatusOptions={getStatusOptions}
+                  onClientClick={handleClientClick}
+                  onProductClick={handleProductClick}
                 />
               ))}
             </TableBody>
@@ -131,6 +186,28 @@ const CommandesTable: React.FC<CommandesTableProps> = ({
         </div>
       </CardContent>
     </Card>
+
+    {/* ===== Modales détail (variables réinitialisées à la fermeture) ===== */}
+    <ClientDetailModal
+      open={!!selectedClient}
+      onOpenChange={(o) => { if (!o) setSelectedClient(null); }}
+      client={selectedClient as any}
+      photoUrl={selectedClient?.photo || null}
+    />
+
+    <ProductDetailModal
+      open={!!selectedProduct}
+      onOpenChange={(o) => { if (!o) setSelectedProduct(null); }}
+      product={selectedProduct}
+      onOpenCaracteristique={(p) => setCaracProduct(p)}
+    />
+
+    <CaracteristiqueModal
+      open={!!caracProduct}
+      onOpenChange={(o) => { if (!o) setCaracProduct(null); }}
+      product={caracProduct as any}
+    />
+    </>
   );
 };
 
@@ -141,6 +218,8 @@ interface CommandeRowProps {
   handleStatusChange: (id: string, status: CommandeStatut | 'reporter') => void;
   setDeleteId: (id: string) => void;
   getStatusOptions: (type: 'commande' | 'reservation' | 'rdv') => { value: string; label: string }[];
+  onClientClick?: (commande: Commande) => void;
+  onProductClick?: (produitNom: string) => void;
 }
 
 const CommandeTableRow: React.FC<CommandeRowProps> = ({
@@ -148,7 +227,9 @@ const CommandeTableRow: React.FC<CommandeRowProps> = ({
   handleEdit,
   handleStatusChange,
   setDeleteId,
-  getStatusOptions
+  getStatusOptions,
+  onClientClick,
+  onProductClick,
 }) => {
   const renderDateCell = () => {
     if (commande.type === 'commande') {
@@ -207,21 +288,37 @@ const CommandeTableRow: React.FC<CommandeRowProps> = ({
   return (
      <ModernTableRow className="bg-gradient-to-r from-purple-50/30 via-pink-50/20 to-indigo-50/30 dark:from-gray-900/20 dark:via-purple-900/10 dark:to-indigo-900/10 hover:shadow-lg hover:bg-gradient-to-r hover:from-purple-100/40 hover:via-pink-100/30 hover:to-indigo-100/30 transition-all duration-500 rounded-xl backdrop-blur-sm">
   <ModernTableCell className="align-top w-52">
-    <div className="font-semibold text-purple-800 dark:text-purple-200 whitespace-normal break-words">{commande.clientNom}</div>
-    <ClientCaracMarquee label={commande.clientCaracteristique} />
-    <div className="text-xs text-muted-foreground whitespace-normal break-words">{commande.clientAddress}</div>
+    <button
+      type="button"
+      onClick={() => onClientClick?.(commande)}
+      className="text-left w-full group rounded-lg hover:bg-purple-100/40 dark:hover:bg-purple-900/20 px-1.5 py-1 -mx-1.5 transition-colors"
+      title="Voir le détail du client"
+    >
+      <div className="font-semibold text-purple-800 dark:text-purple-200 group-hover:underline whitespace-normal break-words">{commande.clientNom}</div>
+      <ClientCaracMarquee label={commande.clientCaracteristique} />
+      <div className="text-xs text-muted-foreground whitespace-normal break-words">{commande.clientAddress}</div>
+    </button>
   </ModernTableCell>
   <ModernTableCell className="align-top">
     <span className="text-sm whitespace-normal break-words text-gray-700 dark:text-gray-300">{commande.clientPhone}</span>
   </ModernTableCell>
   <ModernTableCell className="align-top w-52">
     {commande.produits.map((p, idx) => (
-      <div key={idx} className="text-sm space-y-0.5">
-        <div className="font-medium text-purple-700 dark:text-purple-300 whitespace-normal break-words">{p.nom}</div>
+      <button
+        key={idx}
+        type="button"
+        onClick={() => onProductClick?.(p.nom)}
+        className="block text-left w-full text-sm space-y-0.5 rounded-lg hover:bg-pink-100/40 dark:hover:bg-pink-900/20 px-1.5 py-1 -mx-1.5 transition-colors"
+        title="Voir le détail du produit"
+      >
+        <div className="font-medium text-purple-700 dark:text-purple-300 hover:underline whitespace-normal break-words inline-flex items-center gap-1">
+          {p.nom}
+          <Sparkles className="h-3 w-3 text-fuchsia-500 opacity-60" />
+        </div>
         <div className="text-xs text-muted-foreground">
           Qté: <span className="font-bold text-red-600">{p.quantite}</span>
         </div>
-      </div>
+      </button>
     ))}
   </ModernTableCell>
   <ModernTableCell className="align-top">
@@ -316,7 +413,9 @@ const CommandeMobileCard: React.FC<CommandeRowProps> = ({
   handleEdit,
   handleStatusChange,
   setDeleteId,
-  getStatusOptions
+  getStatusOptions,
+  onClientClick,
+  onProductClick,
 }) => {
   const totalPrice = commande.produits.reduce((sum, p) => sum + (p.prixVente * p.quantite), 0);
   
@@ -353,12 +452,17 @@ const CommandeMobileCard: React.FC<CommandeRowProps> = ({
     <div className="p-4 border-b border-purple-100 dark:border-purple-800/30 hover:bg-gradient-to-r hover:from-purple-50/30 hover:via-pink-50/20 hover:to-indigo-50/30 dark:hover:from-purple-900/10 dark:hover:via-pink-900/10 dark:hover:to-indigo-900/10 transition-all duration-500 shadow-lg backdrop-blur-md rounded-2xl">
   {/* En-tête: Client + Type */}
   <div className="flex justify-between items-start mb-3">
-    <div className="flex-1 min-w-0">
-      <h3 className="font-extrabold text-lg text-purple-800 dark:text-purple-200 truncate">{commande.clientNom}</h3>
+    <button
+      type="button"
+      onClick={() => onClientClick?.(commande)}
+      className="flex-1 min-w-0 text-left rounded-lg hover:bg-purple-100/40 dark:hover:bg-purple-900/20 -mx-1 px-1 py-0.5 transition-colors"
+      title="Voir le détail du client"
+    >
+      <h3 className="font-extrabold text-lg text-purple-800 dark:text-purple-200 truncate hover:underline">{commande.clientNom}</h3>
       <ClientCaracMarquee label={commande.clientCaracteristique} />
       <p className="text-xs text-muted-foreground truncate">{commande.clientAddress}</p>
       <p className="text-xs text-muted-foreground">{commande.clientPhone}</p>
-    </div>
+    </button>
     <Badge
       className={`ml-2 text-xs px-3 py-1 rounded-full font-semibold shadow-md ${
         commande.type === 'commande'
@@ -375,10 +479,16 @@ const CommandeMobileCard: React.FC<CommandeRowProps> = ({
   {/* Produits */}
   <div className="mb-3 space-y-1">
     {commande.produits.map((p, idx) => (
-      <div key={idx} className="flex justify-between text-sm">
-        <span className="truncate flex-1 font-medium text-gray-800 dark:text-gray-200">{p.nom} <span className="text-red-600 font-bold">{`x${p.quantite}`}</span></span>
+      <button
+        key={idx}
+        type="button"
+        onClick={() => onProductClick?.(p.nom)}
+        className="w-full flex justify-between text-sm rounded-md hover:bg-pink-100/40 dark:hover:bg-pink-900/20 px-1 py-0.5 -mx-1 transition-colors"
+        title="Voir le détail du produit"
+      >
+        <span className="truncate flex-1 font-medium text-gray-800 dark:text-gray-200 text-left hover:underline">{p.nom} <span className="text-red-600 font-bold">{`x${p.quantite}`}</span></span>
         <span className="font-semibold ml-2 text-purple-700 dark:text-purple-300">{p.prixVente}€</span>
-      </div>
+      </button>
     ))}
     <div className="pt-2 border-t border-red-200 dark:border-red-800">
       <div className="flex justify-between">
