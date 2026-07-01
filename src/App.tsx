@@ -38,8 +38,6 @@ const ContactPage = lazy(() => import('@/pages/ContactPage'));
 const LoginPage = lazy(() => import('@/pages/LoginPage'));
 const RegisterPage = lazy(() => import('@/pages/RegisterPage'));
 const ResetPasswordPage = lazy(() => import('@/pages/ResetPasswordPage'));
-const VerifyAccountPage = lazy(() => import('@/pages/VerifyAccountPage'));
-const ResetPasswordConfirmPage = lazy(() => import('@/pages/ResetPasswordConfirmPage'));
 const DashboardPage = lazy(() => import('@/pages/DashboardPage'));
 // TendancesPage removed - content moved to Comptabilité & Finances in Dashboard
 const ClientsPage = lazy(() => import('@/pages/ClientsPage'));
@@ -107,10 +105,7 @@ function App() {
                     <Route path="about" element={<AboutPage />} />
                     <Route path="login" element={<LoginPage />} />
                     <Route path="register" element={<RegisterPage />} />
-                   <Route path="reset-password" element={<ResetPasswordPage />} />
-                   <Route path="reset-password-confirm/:token" element={<ResetPasswordConfirmPage />} />
-                   <Route path="verify-account/:token" element={<VerifyAccountPage />} />
-
+                    <Route path="reset-password" element={<ResetPasswordPage />} />
                     <Route path="contact" element={<ContactPage />} />
                     <Route path="shared/notes/:token" element={<SharedNotesPage />} />
                     <Route path="shared/:token" element={<SharedViewPage />} />

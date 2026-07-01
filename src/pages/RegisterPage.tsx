@@ -203,10 +203,9 @@ const RegisterPage: React.FC = () => {
 
       if (success) {
         toast({
-          title: "Compte créé — validation requise",
-          description: `Un lien de confirmation vient d'être envoyé à ${formData.email}. Ouvrez votre email et cliquez sur le lien pour valider votre compte avant de vous connecter.`,
-          className: "bg-blue-600 text-white border-blue-600",
-          duration: 8000,
+          title: "Compte créé avec succès !",
+          description: "Vous pouvez maintenant vous connecter avec vos identifiants.",
+          className: "bg-green-600 text-white border-green-600",
         });
         navigate('/login');
       }

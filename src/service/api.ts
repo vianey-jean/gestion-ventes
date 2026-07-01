@@ -35,32 +35,9 @@ export const authService = {
   async register(credentials: any) {
     const response = await apiInstance.post('/api/auth/register', credentials);
     const data = response.data;
-    // Ne stocke la session QUE si le backend renvoie un token (compte déjà actif)
-    if (data && data.token && data.user) {
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
-    }
+    localStorage.setItem('token', data.token);
+    localStorage.setItem('user', JSON.stringify(data.user));
     return data;
-  },
-  async activateAccount(token: string) {
-    const response = await apiInstance.post('/api/auth/activate-account', { token });
-    return response.data;
-  },
-  async verifyAccountToken(token: string) {
-    const response = await apiInstance.get(`/api/auth/verify-account/${token}`);
-    return response.data;
-  },
-  async sendResetPasswordLink(email: string) {
-    const response = await apiInstance.post('/api/auth/reset-password-link', { email });
-    return response.data;
-  },
-  async verifyResetPasswordToken(token: string) {
-    const response = await apiInstance.get(`/api/auth/reset-password-token/${token}`);
-    return response.data;
-  },
-  async confirmResetPassword(payload: { token: string; newPassword: string; confirmPassword: string }) {
-    const response = await apiInstance.post('/api/auth/reset-password-confirm', payload);
-    return response.data;
   },
   async checkEmail(email: string) {
     const response = await apiInstance.post('/api/auth/check-email', { email });
