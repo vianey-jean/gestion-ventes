@@ -210,8 +210,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const register = async (data: RegistrationData): Promise<boolean> => {
     try {
       setIsLoading(true);
-      
-      // Préparer les données d'inscription
+
       const registerData = {
         email: data.email,
         password: data.password,
@@ -223,41 +222,52 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         phone: data.phone,
         acceptTerms: data.acceptTerms,
       };
-      
-      console.log('📝 Envoi des données d\'inscription au backend:', { ...registerData, password: '***', confirmPassword: '***' });
-      
+
       const result = await authService.register(registerData);
-      
-      console.log('✅ Réponse du backend:', result);
-      
-      if (result && result.user) {
-        // Ne pas stocker la session après inscription - l'utilisateur doit se connecter
-        // Supprimer le token et user du localStorage pour forcer la connexion
+
+      // Nouveau flux : compte en attente de validation par email
+      if (result && result.pending) {
+        // Ne PAS créer de session — utilisateur doit valider via le lien email
         localStorage.removeItem('token');
         localStorage.removeItem('user');
-        
-        // Réinitialiser l'état local
         setUser(null);
         setToken(null);
         setIsVerified(false);
-        
-        console.log('✅ Compte créé avec succès, redirection vers login');
-        return true;
-      } else {
-        toast({
-          title: "Échec de l'inscription",
-          description: "Cet email est déjà utilisé",
-          variant: "destructive",
-        });
-        return false;
-      }
-    } catch (error: any) {
-      console.error('❌ Erreur lors de l\'inscription:', error);
 
+        toast({
+          title: "Compte créé — validation requise",
+          description: result.message || "Un lien de validation a été envoyé sur votre email. Cliquez dessus pour activer votre compte.",
+          className: "bg-blue-600 text-white border-blue-600",
+        });
+
+        // En mode développement, si l'email n'a pas pu être envoyé, on log le lien
+        if (result.devLink) {
+          console.warn('[dev] Lien de validation :', result.devLink);
+        }
+        return true;
+      }
+
+      // Rétro-compatibilité : si le serveur renvoie encore user + token
+      if (result && result.user) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        setUser(null);
+        setToken(null);
+        setIsVerified(false);
+        return true;
+      }
+
+      toast({
+        title: "Échec de l'inscription",
+        description: "Cet email est déjà utilisé",
+        variant: "destructive",
+      });
+      return false;
+    } catch (error: any) {
+      console.error('Erreur inscription:', error);
       const apiData = error?.response?.data;
       const apiDetails = Array.isArray(apiData?.details) ? apiData.details.join(' • ') : null;
       const message = apiData?.message || apiDetails || "Une erreur s'est produite lors de l'inscription";
-
       toast({
         title: "Erreur",
         description: message,
@@ -265,8 +275,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         className: "notification-erreur",
       });
       return false;
+    } finally {
+      setIsLoading(false);
     }
   };
+
 
   const checkEmail = async (email: string): Promise<boolean> => {
     try {

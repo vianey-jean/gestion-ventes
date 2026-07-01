@@ -1,41 +1,31 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { authService } from '@/service/api';
+import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import PasswordInput from '@/components/PasswordInput';
-import PasswordStrengthChecker from '@/components/PasswordStrengthChecker';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import Layout from '@/components/Layout';
 import PremiumLoading from '@/components/ui/premium-loading';
-import { KeyRound, Mail, ArrowLeft, Shield, CheckCircle, Crown, Fingerprint, Star, BarChart3, Users, Package, TrendingUp } from 'lucide-react';
+import { KeyRound, Mail, Shield, CheckCircle, Crown, MailCheck } from 'lucide-react';
 import { motion } from 'framer-motion';
 import SEOHead from '@/components/SEOHead';
 
 const ResetPasswordPage: React.FC = () => {
   const navigate = useNavigate();
-  const { resetPasswordRequest, resetPassword } = useAuth();
-  
-  const [email, setEmail] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [emailVerified, setEmailVerified] = useState(false);
-  const [errors, setErrors] = useState<{ email?: string; newPassword?: string; confirmPassword?: string }>({});
-  const [isLoading, setIsLoading] = useState(false);
-  const [isPasswordValid, setIsPasswordValid] = useState(false);
-  const [showPasswordChecker, setShowPasswordChecker] = useState(true); // Pour fermer le checker automatiquement
+  const { resetPasswordRequest } = useAuth();
+  const { toast } = useToast();
 
-  const validatePassword = () => {
-    const hasLowerCase = /[a-z]/.test(newPassword);
-    const hasUpperCase = /[A-Z]/.test(newPassword);
-    const hasNumber = /[0-9]/.test(newPassword);
-    const hasSpecialChar = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(newPassword);
-    const hasMinLength = newPassword.length >= 6;
-    
-    return hasLowerCase && hasUpperCase && hasNumber && hasSpecialChar && hasMinLength;
-  };
-  
+  const [email, setEmail] = useState('');
+  const [emailVerified, setEmailVerified] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [linkSent, setLinkSent] = useState(false);
+  const [errors, setErrors] = useState<{ email?: string }>({});
+  const [isLoading, setIsLoading] = useState(false);
+
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrors({});
@@ -44,28 +34,34 @@ const ResetPasswordPage: React.FC = () => {
     setIsLoading(true);
     const success = await resetPasswordRequest({ email });
     setIsLoading(false);
-    if (success) setEmailVerified(true);
+    if (success) {
+      setEmailVerified(true);
+      setConfirmOpen(true);
+    }
   };
-  
-  const handlePasswordSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setErrors({});
-    const newErrors: { newPassword?: string; confirmPassword?: string } = {};
-    if (!newPassword) { newErrors.newPassword = 'Veuillez entrer un nouveau mot de passe'; }
-    else if (!validatePassword()) { newErrors.newPassword = 'Le mot de passe ne répond pas aux exigences de sécurité'; }
-    if (!confirmPassword) { newErrors.confirmPassword = 'Veuillez confirmer votre mot de passe'; }
-    else if (newPassword !== confirmPassword) { newErrors.confirmPassword = 'Les mots de passe ne correspondent pas'; }
-    if (Object.keys(newErrors).length > 0) { setErrors(newErrors); return; }
+
+  const handleConfirmSendLink = async () => {
+    setConfirmOpen(false);
     setIsLoading(true);
-    const success = await resetPassword({ email, newPassword, confirmPassword });
-    setIsLoading(false);
-    if (success) navigate('/login');
-  };
-  
-  const handlePasswordValidityChange = (isValid: boolean) => {
-    setIsPasswordValid(isValid);
-    if (isValid) setShowPasswordChecker(false); // Fermer automatiquement le checker
-    else setShowPasswordChecker(true);           // Réouvrir si invalide
+    try {
+      const result = await authService.sendResetPasswordLink(email);
+      if (result?.devLink) console.warn('[dev] Lien reset :', result.devLink);
+      setLinkSent(true);
+      toast({
+        title: "Lien envoyé",
+        description: `Un lien de modification de mot de passe a été envoyé à ${email}. Consultez votre boîte mail et cliquez sur le lien.`,
+        className: "bg-green-600 text-white border-green-600",
+        duration: 8000,
+      });
+    } catch (err: any) {
+      toast({
+        title: "Erreur",
+        description: err?.response?.data?.message || "Impossible d'envoyer le lien",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   if (isLoading) {
@@ -75,6 +71,7 @@ const ResetPasswordPage: React.FC = () => {
       </Layout>
     );
   }
+
   
   return (
     <Layout>
@@ -175,17 +172,17 @@ const ResetPasswordPage: React.FC = () => {
                 </motion.div>
                 
                 <CardTitle className="text-3xl font-bold text-white drop-shadow-lg">
-                  {emailVerified ? 'Nouveau mot de passe' : 'Récupération'}
+                  {linkSent ? 'Email envoyé' : 'Récupération'}
                 </CardTitle>
-                
+
                 <CardDescription className="text-purple-200/70 text-base mt-2">
-                  {emailVerified
-                    ? "Créez un mot de passe sécurisé pour votre compte"
-                    : "Saisissez votre email pour réinitialiser votre mot de passe"}
+                  {linkSent
+                    ? "Consultez votre boîte mail pour continuer"
+                    : "Saisissez votre email pour recevoir un lien de réinitialisation"}
                 </CardDescription>
               </CardHeader>
-              
-              {!emailVerified ? (
+
+              {!linkSent ? (
                 <form onSubmit={handleEmailSubmit}>
                   <CardContent className="space-y-6 px-8">
                     <Label htmlFor="email" className="text-sm font-semibold text-purple-200/80 flex items-center gap-2">
@@ -203,52 +200,26 @@ const ResetPasswordPage: React.FC = () => {
                     />
                     {errors.email && <div className="text-red-400 text-sm">{errors.email}</div>}
                   </CardContent>
-                  <CardFooter className="px-8 pb-10">
+                  <CardFooter className="px-8 pb-10 flex-col gap-3">
                     <Button type="submit" disabled={isLoading} className="w-full h-14 bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 text-white font-bold rounded-xl">
-                      Envoyer le lien
+                      Vérifier l'email
                     </Button>
+                    <Link to="/login" className="text-sm text-purple-200/70 hover:text-white transition-colors">
+                      Retour à la connexion
+                    </Link>
                   </CardFooter>
                 </form>
               ) : (
-                <form onSubmit={handlePasswordSubmit}>
-                  <CardContent className="space-y-6 px-8">
-                    <Label htmlFor="newPassword" className="text-sm font-semibold text-purple-200/80 flex items-center gap-2">
-                      <Shield className="h-4 w-4 text-emerald-400" />
-                      Nouveau mot de passe
-                    </Label>
-                    <PasswordInput
-                      id="newPassword"
-                      placeholder="••••••••"
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      error={errors.newPassword}
-                      disabled={isLoading}
-                      className="h-14 bg-white/[0.06] border-white/[0.1] text-white rounded-xl"
-                    />
-                    <PasswordStrengthChecker
-                        password={newPassword}
-                        onValidityChange={handlePasswordValidityChange}
-                      />
-
-                    <Label htmlFor="confirmPassword" className="text-sm font-semibold text-purple-200/80">
-                      Confirmer le mot de passe
-                    </Label>
-                    <PasswordInput
-                      id="confirmPassword"
-                      placeholder="••••••••"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      error={errors.confirmPassword}
-                      disabled={isLoading}
-                      className="h-14 bg-white/[0.06] border-white/[0.1] text-white rounded-xl"
-                    />
-                  </CardContent>
-                  <CardFooter className="px-8 pb-10">
-                    <Button type="submit" disabled={isLoading || !isPasswordValid || !confirmPassword} className="w-full h-14 bg-gradient-to-r from-emerald-600 via-teal-600 to-green-600 text-white font-bold rounded-xl">
-                      Réinitialiser le mot de passe
-                    </Button>
-                  </CardFooter>
-                </form>
+                <CardContent className="px-8 pb-10 text-center">
+                  <MailCheck className="h-16 w-16 text-emerald-400 mx-auto mb-4" />
+                  <p className="text-purple-200/80 mb-6">
+                    Un lien de modification du mot de passe a été envoyé à <span className="text-white font-semibold">{email}</span>.
+                    Ouvrez votre boîte mail et cliquez sur le lien pour définir votre nouveau mot de passe.
+                  </p>
+                  <Button onClick={() => navigate('/login')} className="w-full h-14 bg-gradient-to-r from-emerald-600 via-teal-600 to-green-600 text-white font-bold rounded-xl">
+                    Retour à la connexion
+                  </Button>
+                </CardContent>
               )}
 
               <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-blue-400/30 to-transparent" />
@@ -256,6 +227,23 @@ const ResetPasswordPage: React.FC = () => {
           </div>
         </motion.div>
       </div>
+
+      {/* Confirmation avant envoi du lien */}
+      <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmer la réinitialisation</AlertDialogTitle>
+            <AlertDialogDescription>
+              Voulez-vous vraiment modifier le mot de passe du compte <strong>{email}</strong> ?
+              Un lien de modification sera envoyé à cette adresse email.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => { setEmailVerified(false); }}>Annuler</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmSendLink}>Oui, envoyer le lien</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Layout>
   );
 };
