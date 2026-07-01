@@ -13,10 +13,11 @@ import InvoiceGenerator from '@/components/dashboard/InvoiceGenerator';
 import RefundForm from '@/components/dashboard/RefundForm';
 import ViewRefundsModal from '@/components/dashboard/ViewRefundsModal';
 import { AccessibleButton } from '@/components/accessibility/AccessibleButton';
-import { PlusCircle, Edit, ShoppingCart, FileText, FileSignature, Package, FileDown, Layers, PenLine, CirclePlus, Users, RotateCcw, Eye, MapPin, MapPinned } from 'lucide-react';
+import { PlusCircle, Edit, ShoppingCart, FileText, FileSignature, Package, FileDown, Layers, PenLine, CirclePlus, Users, RotateCcw, Eye, MapPin, MapPinned, ArrowLeftRight } from 'lucide-react';
 import VentesParClientsModal from '@/components/dashboard/VentesParClientsModal';
 import AddLivraisonVilleModal from '@/components/dashboard/forms/modals/AddLivraisonVilleModal';
 import LivraisonVilleListModal from '@/components/dashboard/forms/modals/LivraisonVilleListModal';
+import EchangerVentesModal from '@/components/dashboard/forms/modals/EchangerVentesModal';
 
 interface SalesManagementSectionProps {
   sales: Sale[];
@@ -48,6 +49,7 @@ const SalesManagementSection: React.FC<SalesManagementSectionProps> = ({
   const [refundFromSale, setRefundFromSale] = useState<Sale | undefined>(undefined);
   const [viewRefundsOpen, setViewRefundsOpen] = useState(false);
   const [detailVilleLivraisonOpen, setDetailVilleLivraisonOpen] = useState(false);
+  const [echangerVentesOpen, setEchangerVentesOpen] = useState(false);
 
   const handleRowClick = (sale: Sale) => {
     setSelectedSale(sale);
@@ -111,6 +113,13 @@ const SalesManagementSection: React.FC<SalesManagementSectionProps> = ({
   onClick: () => setDetailVilleLivraisonOpen(true),
   gradient: 'purple' as const,
   'aria-label': 'Voir et gérer les villes de livraison'
+},
+{
+  icon: ArrowLeftRight,
+  label: 'Echanger ventes',
+  onClick: () => setEchangerVentesOpen(true),
+  gradient: 'orange' as const,
+  'aria-label': 'Échanger les produits d\'une vente existante'
 }
   ];
 
@@ -255,6 +264,11 @@ const SalesManagementSection: React.FC<SalesManagementSectionProps> = ({
       <LivraisonVilleListModal
         isOpen={detailVilleLivraisonOpen}
         onClose={() => setDetailVilleLivraisonOpen(false)}
+      />
+
+      <EchangerVentesModal
+        isOpen={echangerVentesOpen}
+        onClose={() => setEchangerVentesOpen(false)}
       />
     </section>
   );
