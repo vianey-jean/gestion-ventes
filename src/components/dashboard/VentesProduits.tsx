@@ -1,13 +1,15 @@
-import React from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useApp } from '@/contexts/AppContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useOptimizedSalesData, useOptimizedProductData } from '@/services/dataOptimizationService';
 import { useAccessibility } from '@/components/accessibility/AccessibilityProvider';
-import { ShoppingCart, Sparkles, Diamond } from 'lucide-react';
+import { ShoppingCart, Sparkles, Diamond, ChevronDown, ChevronUp, BarChart3, EyeOff } from 'lucide-react';
 import PremiumLoading from '../ui/premium-loading';
 import SalesOverviewSection from './sections/SalesOverviewSection';
 import SalesManagementSection from './sections/SalesManagementSection';
+
+const OVERVIEW_STORAGE_KEY = 'ventesProduits:showOverview';
 
 /**
  * Composant principal pour la gestion des ventes et produits
@@ -27,6 +29,26 @@ const VentesProduits: React.FC = React.memo(() => {
 
   const optimizedSalesData = useOptimizedSalesData(sales);
   const optimizedProductData = useOptimizedProductData(products);
+
+  const [showOverview, setShowOverview] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return true;
+    const stored = localStorage.getItem(OVERVIEW_STORAGE_KEY);
+    return stored === null ? true : stored === 'true';
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(OVERVIEW_STORAGE_KEY, String(showOverview));
+    } catch {}
+  }, [showOverview]);
+
+  const toggleOverview = () => {
+    setShowOverview(v => {
+      const next = !v;
+      announceToScreenReader(next ? 'Vue d\'ensemble affichée' : 'Vue d\'ensemble masquée');
+      return next;
+    });
+  };
 
   if (!isAuthenticated) {
     return (
@@ -88,13 +110,67 @@ const VentesProduits: React.FC = React.memo(() => {
 
       {/* Sales content directly without tabs */}
       <div className="space-y-4 sm:space-y-6 md:space-y-8">
-        <SalesOverviewSection 
-          sales={sales}
-          productData={optimizedProductData as any}
-          currentMonth={currentMonth}
-          currentYear={currentYear}
-        />
-        
+        {/* Toggle bar for SalesOverviewSection */}
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35 }}
+          className="flex items-center justify-between gap-3 rounded-xl sm:rounded-2xl border border-emerald-200/60 dark:border-emerald-800/40 bg-white/70 dark:bg-gray-800/60 backdrop-blur-xl px-3 sm:px-4 py-2 sm:py-3 shadow-sm"
+        >
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            <div className="p-1.5 sm:p-2 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-500 shadow-md shadow-emerald-500/30">
+              <BarChart3 className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-white" />
+            </div>
+            <span className="text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-200 truncate">
+              Vue d'ensemble des ventes
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={toggleOverview}
+            aria-expanded={showOverview}
+            aria-controls="sales-overview-panel"
+            aria-label={showOverview ? "Masquer la vue d'ensemble" : "Afficher la vue d'ensemble"}
+            className="group relative inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-lg sm:rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white text-xs sm:text-sm font-semibold shadow-lg shadow-emerald-500/25 transition-all duration-300 hover:shadow-emerald-500/40 hover:scale-105 active:scale-95"
+          >
+            <span className="hidden xs:inline sm:inline">
+              {showOverview ? 'Masquer' : 'Afficher'}
+            </span>
+            <motion.span
+              animate={{ rotate: showOverview ? 0 : 180 }}
+              transition={{ type: 'spring', stiffness: 260, damping: 20 }}
+              className="inline-flex"
+            >
+              {showOverview ? (
+                <ChevronUp className="h-4 w-4 sm:h-5 sm:w-5" />
+              ) : (
+                <ChevronDown className="h-4 w-4 sm:h-5 sm:w-5" />
+              )}
+            </motion.span>
+          </button>
+        </motion.div>
+
+        <AnimatePresence initial={false}>
+          {showOverview && (
+            <motion.div
+              key="sales-overview-panel"
+              id="sales-overview-panel"
+              initial={{ opacity: 0, height: 0, y: -12 }}
+              animate={{ opacity: 1, height: 'auto', y: 0 }}
+              exit={{ opacity: 0, height: 0, y: -12 }}
+              transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+              className="overflow-hidden"
+            >
+              <SalesOverviewSection
+                sales={sales}
+                productData={optimizedProductData as any}
+                currentMonth={currentMonth}
+                currentYear={currentYear}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         <SalesManagementSection 
           sales={sales}
           products={products}
