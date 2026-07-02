@@ -187,6 +187,25 @@ const DashboardPage = () => {
     return () => clearInterval(interval);
   }, []);
 
+  // ======================= IDLE PREFETCH DES SECTIONS (perf mobile) =======================
+  React.useEffect(() => {
+    const prefetch = () => {
+      import('@/pages/CommandesPage');
+      import('@/pages/RdvPage');
+      import('@/components/dashboard/AdvancedDashboard');
+      import('@/pages/ClientsPage');
+      import('@/pages/ProduitsPage');
+      import('@/pages/PointagePage');
+    };
+    const w = window as any;
+    if (typeof w.requestIdleCallback === 'function') {
+      const id = w.requestIdleCallback(prefetch, { timeout: 3000 });
+      return () => w.cancelIdleCallback?.(id);
+    }
+    const t = setTimeout(prefetch, 1500);
+    return () => clearTimeout(t);
+  }, []);
+
   // ======================= MAIN CONTENT OFFSET =======================
 
   React.useEffect(() => {

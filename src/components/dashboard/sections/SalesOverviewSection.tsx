@@ -121,6 +121,10 @@ const SalesOverviewSection: React.FC<SalesOverviewSectionProps> = ({
     () => salesToday.reduce((sum, s) => sum + (s.totalSellingPrice || s.sellingPrice || 0), 0),
     [salesToday]
   );
+  const totalBeneficeToday = useMemo(
+    () => salesToday.reduce((sum, s) => sum + (s.totalProfit || s.profit || 0), 0),
+    [salesToday]
+  );
 
   // Historique du mois courant (du 1er à aujourd'hui inclus, plus récent en premier)
   const monthSalesHistory = useMemo(() => {
@@ -133,6 +137,24 @@ const SalesOverviewSection: React.FC<SalesOverviewSectionProps> = ({
       .slice()
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [sales, currentMonth, currentYear]);
+
+  // Historique bénéfices par jour du mois en cours
+  const monthBeneficeByDay = useMemo(() => {
+    const map = new Map<string, { date: string; total: number; count: number }>();
+    for (const s of monthSalesHistory) {
+      const key = toDay(s.date);
+      if (!key) continue;
+      const cur = map.get(key) || { date: key, total: 0, count: 0 };
+      cur.total += s.totalProfit || s.profit || 0;
+      cur.count += 1;
+      map.set(key, cur);
+    }
+    return Array.from(map.values()).sort((a, b) => b.date.localeCompare(a.date));
+  }, [monthSalesHistory]);
+  const totalBeneficeMonth = useMemo(
+    () => monthBeneficeByDay.reduce((s, d) => s + d.total, 0),
+    [monthBeneficeByDay]
+  );
 
   // =========================
   // STATS
@@ -225,6 +247,19 @@ const SalesOverviewSection: React.FC<SalesOverviewSectionProps> = ({
               'from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30',
             description: `${salesToday.length} transaction${salesToday.length > 1 ? 's' : ''} aujourd'hui`,
             modalColor: 'green',
+          },
+          {
+            id: 'benefice-du-jour',
+            title: 'Bénéfice du jour',
+            value: formatEuro(totalBeneficeToday),
+            icon: TrendingUp,
+            luxeIcon: Diamond,
+            gradient:
+              'from-fuchsia-500 via-purple-500 to-indigo-500',
+            bgGradient:
+              'from-fuchsia-50 to-indigo-50 dark:from-fuchsia-950/30 dark:to-indigo-950/30',
+            description: `Profit net d'aujourd'hui`,
+            modalColor: 'purple',
           },
         ]
       : []),
@@ -376,6 +411,21 @@ const SalesOverviewSection: React.FC<SalesOverviewSectionProps> = ({
             { label: "Total aujourd'hui", value: formatEuro(totalToday), icon: DollarSign },
             { label: 'Transactions', value: salesToday.length, icon: ShoppingCart },
             { label: 'Date', value: new Date().toLocaleDateString('fr-FR'), icon: Calendar },
+          ],
+        };
+
+      case 'benefice-du-jour':
+        return {
+          ...stat,
+          details: [
+            { label: "Bénéfice aujourd'hui", value: formatEuro(totalBeneficeToday), icon: TrendingUp },
+            { label: 'Transactions', value: salesToday.length, icon: ShoppingCart },
+            {
+              label: 'Marge du jour',
+              value: `${totalToday > 0 ? ((totalBeneficeToday / totalToday) * 100).toFixed(1) : 0}%`,
+              icon: Target,
+            },
+            { label: 'Bénéfice du mois', value: formatEuro(totalBeneficeMonth), icon: Calendar },
           ],
         };
 
@@ -763,6 +813,58 @@ const SalesOverviewSection: React.FC<SalesOverviewSectionProps> = ({
                       </div>
                     </div>
                   )}
+
+                  {/* HISTORIQUE BÉNÉFICE (Bénéfice du jour uniquement) */}
+                  {selectedStat === 'benefice-du-jour' && (
+                    <div className="mt-6">
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="text-sm font-black text-gray-800 dark:text-gray-100 flex items-center gap-2">
+                          <TrendingUp className="h-4 w-4 text-purple-500" />
+                          Historique bénéfices — {monthNames[currentMonth - 1]} {currentYear}
+                        </h4>
+                        <Badge className="bg-purple-500/15 text-purple-700 dark:text-purple-300 border-0">
+                          {monthBeneficeByDay.length} jour{monthBeneficeByDay.length > 1 ? 's' : ''}
+                        </Badge>
+                      </div>
+                      <div className="mb-3 rounded-2xl bg-gradient-to-r from-fuchsia-500/10 to-indigo-500/10 border border-purple-300/30 dark:border-purple-700/30 p-3 flex items-center justify-between">
+                        <span className="text-xs font-bold text-gray-700 dark:text-gray-200">Total bénéfice du mois</span>
+                        <span className="text-lg font-black bg-gradient-to-r from-fuchsia-600 to-indigo-600 bg-clip-text text-transparent">
+                          {formatEuro(totalBeneficeMonth)}
+                        </span>
+                      </div>
+                      <div className="space-y-2 max-h-[280px] overflow-y-auto pr-1">
+                        {monthBeneficeByDay.length === 0 && (
+                          <p className="text-center text-xs text-gray-500 py-4">Aucun bénéfice ce mois-ci</p>
+                        )}
+                        {monthBeneficeByDay.map((d) => {
+                          const dateLabel = new Date(d.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                          const isToday = d.date === todayStr;
+                          return (
+                            <div key={d.date} className={`flex items-center justify-between gap-3 rounded-xl px-3 py-2 border ${isToday ? 'bg-fuchsia-50 dark:bg-fuchsia-950/30 border-fuchsia-300/50 dark:border-fuchsia-700/50' : 'bg-gray-50 dark:bg-gray-800 border-gray-200/40 dark:border-gray-700/40'}`}>
+                              <div className="flex items-center gap-2 min-w-0">
+                                <div className="rounded-lg bg-gradient-to-br from-fuchsia-500 to-indigo-500 p-1.5">
+                                  <TrendingUp className="h-3.5 w-3.5 text-white" />
+                                </div>
+                                <div className="min-w-0">
+                                  <p className="text-xs font-bold text-gray-800 dark:text-gray-100 truncate">
+                                    {dateLabel}{isToday && <span className="ml-2 text-[10px] font-black text-fuchsia-600">AUJOURD'HUI</span>}
+                                  </p>
+                                  <p className="text-[10px] text-gray-500 truncate">
+                                    {d.count} vente{d.count > 1 ? 's' : ''}
+                                  </p>
+                                </div>
+                              </div>
+                              <span className={`text-sm font-black bg-clip-text text-transparent shrink-0 ${d.total >= 0 ? 'bg-gradient-to-r from-fuchsia-600 to-indigo-600' : 'bg-gradient-to-r from-red-500 to-rose-500'}`}>
+                                {formatEuro(d.total)}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+
 
 
                   {/* FOOTER */}

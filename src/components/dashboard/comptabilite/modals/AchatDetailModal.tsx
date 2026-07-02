@@ -255,9 +255,20 @@ const AchatDetailModal: React.FC<AchatDetailModalProps> = ({
                     <div className="grid grid-cols-2 gap-3">
                       <div className="flex items-center gap-3 p-3 rounded-xl bg-white/50 dark:bg-white/5">
                         <Hash className="h-5 w-5 text-primary" />
-                        <div>
+                        <div className="min-w-0 flex-1">
                           <p className="text-xs text-muted-foreground">Quantité</p>
-                          <p className="font-semibold">{achat.quantity}</p>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="font-semibold">{achat.quantity}</p>
+                            <Badge
+                              className={
+                                achat.disponible === false
+                                  ? 'bg-red-500/15 text-red-600 border border-red-400/40 hover:bg-red-500/20'
+                                  : 'bg-emerald-500/15 text-emerald-600 border border-emerald-400/40 hover:bg-emerald-500/20'
+                              }
+                            >
+                              {achat.disponible === false ? '● Indisponible' : '● Disponible'}
+                            </Badge>
+                          </div>
                         </div>
                       </div>
                       <div className="flex items-center gap-3 p-3 rounded-xl bg-white/50 dark:bg-white/5">
