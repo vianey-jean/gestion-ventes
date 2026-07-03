@@ -750,15 +750,51 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
                           <span className="font-bold text-amber-600 dark:text-amber-400">{product.purchasePrice}€</span>
                         </TableCell>
                         <TableCell>
-                          <Badge className={cn(
-                            "font-bold border-0",
-                            product.quantity > 0
-                              ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300"
-                              : "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300"
-                          )}>
-                            {product.quantity}
-                          </Badge>
+                          {(() => {
+                            const qty = product.quantity;
+                            if (qty === 0) {
+                              return (
+                                <div className="flex flex-col items-start gap-1">
+                                  <Badge
+                                    className="font-black border-0 bg-gradient-to-r from-red-500 to-rose-600 text-white shadow-lg shadow-red-500/40 px-3 py-1 text-base animate-[stockBlink_5s_ease-in-out_infinite]"
+                                  >
+                                    <AlertTriangle className="h-3.5 w-3.5 mr-1 animate-[stockBlink_5s_ease-in-out_infinite]" />
+                                    0
+                                  </Badge>
+                                  <span className="inline-flex items-center gap-1 text-[10px] sm:text-xs font-bold uppercase tracking-wide text-red-600 dark:text-red-400 animate-[stockPulse_5s_ease-in-out_infinite]">
+                                    <XCircle className="h-3 w-3" />
+                                    Stock épuisé
+                                  </span>
+                                </div>
+                              );
+                            }
+                            if (qty === 1 || qty === 2) {
+                              return (
+                                <div className="flex flex-col items-start gap-1">
+                                  <Badge className="font-bold border-0 bg-gradient-to-r from-amber-400 to-yellow-500 text-white shadow-md shadow-amber-500/40 px-3 py-1">
+                                    {qty}
+                                  </Badge>
+                                  <span className="inline-flex items-center gap-1 text-[10px] sm:text-xs font-bold uppercase tracking-wide text-amber-600 dark:text-amber-400 animate-[stockPulse_5s_ease-in-out_infinite]">
+                                    <AlertTriangle className="h-3 w-3 animate-[stockPulse_5s_ease-in-out_infinite]" />
+                                    Stock très bas
+                                  </span>
+                                </div>
+                              );
+                            }
+                            return (
+                              <div className="flex flex-col items-start gap-1">
+                                <Badge className="font-bold border-0 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 px-3 py-1">
+                                  {qty}
+                                </Badge>
+                                <span className="inline-flex items-center gap-1 text-[10px] sm:text-xs font-semibold uppercase tracking-wide text-emerald-600 dark:text-emerald-400">
+                                  <CheckCircle2 className="h-3 w-3" />
+                                  Stock bon
+                                </span>
+                              </div>
+                            );
+                          })()}
                         </TableCell>
+
                         {/* Notation */}
                         <TableCell>
                           {(() => {

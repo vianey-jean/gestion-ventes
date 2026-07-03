@@ -1581,3 +1581,13 @@ html.maintenance-mode.dark h6,
 html.maintenance-mode.dark span {
   color: hsl(45 95% 80%) !important;
 }
+/* Stock status animations (5s cadence) */
+@keyframes stockBlink {
+  0%, 90%, 100% { opacity: 1; }
+  93%, 97% { opacity: 0.15; }
+  95% { opacity: 1; }
+}
+@keyframes stockPulse {
+  0%, 85%, 100% { transform: scale(1); filter: brightness(1); }
+  92% { transform: scale(1.08); filter: brightness(1.25); }
+}

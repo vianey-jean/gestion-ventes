@@ -18,13 +18,17 @@ import VentesParClientsModal from '@/components/dashboard/VentesParClientsModal'
 import AddLivraisonVilleModal from '@/components/dashboard/forms/modals/AddLivraisonVilleModal';
 import LivraisonVilleListModal from '@/components/dashboard/forms/modals/LivraisonVilleListModal';
 import EchangerVentesModal from '@/components/dashboard/forms/modals/EchangerVentesModal';
+import { cn } from '@/lib/utils';
+
 
 interface SalesManagementSectionProps {
   sales: Sale[];
   products: Product[];
   currentMonth: number;
   currentYear: number;
+  showActions?: boolean;
 }
+
 
 const monthNames = [
   'JANVIER', 'FÉVRIER', 'MARS', 'AVRIL', 'MAI', 'JUIN',
@@ -35,8 +39,10 @@ const SalesManagementSection: React.FC<SalesManagementSectionProps> = ({
   sales,
   products,
   currentMonth,
-  currentYear
+  currentYear,
+  showActions = true
 }) => {
+
   const [addSaleDialogOpen, setAddSaleDialogOpen] = useState(false);
   const [multiProductSaleDialogOpen, setMultiProductSaleDialogOpen] = useState(false);
   const [addProductDialogOpen, setAddProductDialogOpen] = useState(false);
@@ -149,24 +155,53 @@ const SalesManagementSection: React.FC<SalesManagementSectionProps> = ({
         }
       >
         {/* Boutons d'action */}
-        <div 
-          className="flex flex-wrap gap-4 mb-8"
-          role="toolbar"
-          aria-label="Actions de gestion des ventes"
-        >
-          {actions.map((action) => (
-            <ModernActionButton
-              key={action.label}
-              icon={action.icon}
-              onClick={action.onClick}
-              gradient={action.gradient}
-              buttonSize="md"
-              aria-label={action['aria-label']}
-            >
-              {action.label}
-            </ModernActionButton>
-          ))}
-        </div>
+        {(() => {
+          const multiProductAction = actions.find(a => a.label === 'Ajouter vente multi-produits');
+          const otherActions = actions.filter(a => a.label !== 'Ajouter vente multi-produits');
+          return (
+            <div className="mb-8 space-y-4">
+              {multiProductAction && (
+                <div className="flex flex-wrap gap-4" role="toolbar" aria-label="Action principale">
+                  <ModernActionButton
+                    key={multiProductAction.label}
+                    icon={multiProductAction.icon}
+                    onClick={multiProductAction.onClick}
+                    gradient={multiProductAction.gradient}
+                    buttonSize="md"
+                    aria-label={multiProductAction['aria-label']}
+                  >
+                    {multiProductAction.label}
+                  </ModernActionButton>
+                </div>
+              )}
+              <div
+                aria-hidden={!showActions}
+                className={cn(
+                  "flex flex-wrap gap-4 overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]",
+                  showActions
+                    ? "opacity-100 max-h-[1200px] translate-y-0 pointer-events-auto"
+                    : "opacity-0 max-h-0 -translate-y-2 pointer-events-none"
+                )}
+                role="toolbar"
+                aria-label="Actions secondaires de gestion des ventes"
+              >
+                {otherActions.map((action) => (
+                  <ModernActionButton
+                    key={action.label}
+                    icon={action.icon}
+                    onClick={action.onClick}
+                    gradient={action.gradient}
+                    buttonSize="md"
+                    aria-label={action['aria-label']}
+                  >
+                    {action.label}
+                  </ModernActionButton>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
+
         
         {/* Tableau des ventes */}
         <div 

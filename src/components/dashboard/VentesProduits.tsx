@@ -176,7 +176,9 @@ const VentesProduits: React.FC = React.memo(() => {
           products={products}
           currentMonth={currentMonth}
           currentYear={currentYear}
+          showActions={showOverview}
         />
+
       </div>
     </div>
   );
