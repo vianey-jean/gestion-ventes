@@ -103,7 +103,8 @@ const ProductDetailModal: React.FC<Props> = ({ open, onOpenChange, product, onOp
                 title="Voir / Imprimer la caractéristique"
                 className="ml-auto inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white text-xs font-semibold shadow-lg hover:from-violet-700 hover:to-fuchsia-700 transition-all"
               >
-                <Sparkles className="w-3.5 h-3.5" />
+                  <Printer className="w-3.5 h-3.5" />
+                {/* <Sparkles className="w-3.5 h-3.5" /> */}
                 <BarcodeIcon className="w-3.5 h-3.5" />
                 Caractéristique
               </button>
@@ -183,7 +184,7 @@ const ProductDetailModal: React.FC<Props> = ({ open, onOpenChange, product, onOp
           </div>
         )}
 
-        <DialogFooter className="flex-col sm:flex-row gap-2">
+        {/* <DialogFooter className="flex-col sm:flex-row gap-2">
           {!askFormat ? (
             <>
               <Button variant="outline" onClick={() => onOpenChange(false)} className="w-full sm:w-auto rounded-xl">
@@ -205,7 +206,7 @@ const ProductDetailModal: React.FC<Props> = ({ open, onOpenChange, product, onOp
               </Button>
             </>
           )}
-        </DialogFooter>
+        </DialogFooter> */}
       </DialogContent>
     </Dialog>
   );
