@@ -52,6 +52,7 @@ import CaracteristiqueModal from '@/components/products/CaracteristiqueModal';
 import ProductMergeModal from '@/components/products/ProductMergeModal';
 import ProductsVenduModal from '@/components/products/ProductsVenduModal';
 import PrixHistoryModal from '@/components/products/PrixHistoryModal';
+import StockListModal from '@/components/products/StockListModal';
 import ProduitsToolbar from '@/pages/produits/ProduitsToolbar';
 import ProduitsFiltersStats from '@/pages/produits/ProduitsFiltersStats';
 import AchatVenteSubModals from '@/pages/produits/AchatVenteSubModals';
@@ -94,6 +95,7 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [isFournHistoryOpen, setIsFournHistoryOpen] = useState(false);
   const [isPrixHistoryOpen, setIsPrixHistoryOpen] = useState(false);
+  const [isStockListOpen, setIsStockListOpen] = useState(false);
 
   // Selected product
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -673,7 +675,7 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
             setSearchQuery={setSearchQuery}
             setShowSearchResults={setShowSearchResults}
             onAdd={() => setIsAddOpen(true)}
-            onEdit={() => setIsEditProductOpen(true)}
+            onStock={() => setIsStockListOpen(true)}
             onVendu={() => setIsVenduOpen(true)}
             onMerge={() => setIsMergeOpen(true)}
           />
@@ -1630,6 +1632,14 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
         onClose={() => setIsPrixHistoryOpen(false)}
         product={selectedProduct}
       />
+
+      {/* ========== MODALE LISTE STOCK ========== */}
+      <StockListModal
+        open={isStockListOpen}
+        onClose={() => setIsStockListOpen(false)}
+        products={products}
+      />
+
 
 
       {/* ========== MODALE HISTORIQUE ACHATS / VENTES ========== */}

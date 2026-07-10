@@ -2,20 +2,14 @@
 import React, { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search, X, Filter } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 import { useApp } from '@/contexts/AppContext';
 import { Product } from '@/types';
 import { beneficeService } from '@/service/beneficeService';
+import ClassificationSearchPopover from '@/components/products/attributes/ClassificationSearchPopover';
 
 type ProductCategory = 'all' | 'perruque' | 'tissage' | 'extension' | 'autres';
 
-const CATEGORY_OPTIONS: { value: ProductCategory; label: string }[] = [
-  { value: 'all', label: 'Tous' },
-  { value: 'perruque', label: 'Perruque' },
-  { value: 'tissage', label: 'Tissage' },
-  { value: 'extension', label: 'Extension' },
-  { value: 'autres', label: 'Autres' },
-];
 
 const filterByCategory = (products: Product[], category: ProductCategory): Product[] => {
   if (category === 'all') return products;
@@ -143,25 +137,14 @@ const ProductSearchInput: React.FC<ProductSearchInputProps> = ({
 
   return (
     <div className="relative space-y-2">
-      {/* Filtre par catégorie */}
-      <div className="flex items-center gap-2 flex-wrap">
-        <Filter className="h-4 w-4 text-purple-500" />
-        <span className="text-xs font-semibold text-gray-600 dark:text-gray-400">Filtre :</span>
-        {CATEGORY_OPTIONS.map((option) => (
-          <button
-            key={option.value}
-            type="button"
-            onClick={() => setCategoryFilter(option.value)}
-            className={`px-3 py-1 text-xs font-bold rounded-full transition-all duration-300 border ${
-              categoryFilter === option.value
-                ? 'bg-gradient-to-r from-purple-500 to-indigo-600 text-white border-purple-500 shadow-lg shadow-purple-500/30'
-                : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-300 dark:border-gray-600 hover:border-purple-400 hover:text-purple-600'
-            }`}
-          >
-            {option.label}
-          </button>
-        ))}
-      </div>
+      {/* Filtre par attributs (catégorie/modèle/couleur/taille/devant) */}
+      <ClassificationSearchPopover
+        currentCategory={categoryFilter}
+        onApply={({ name, category }) => {
+          setCategoryFilter(category);
+          if (name) setSearchTerm(name);
+        }}
+      />
 
       <div className="relative">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />

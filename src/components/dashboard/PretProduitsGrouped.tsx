@@ -15,6 +15,7 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
 import { PlusCircle, Edit, CalendarIcon, Loader2, Trash2, Plus, CreditCard, TrendingUp, Wallet, CheckCircle, Clock, Search, Phone, ChevronDown, ChevronUp, ArrowRightLeft, UserPlus, Users, Eye, Pencil, X, Package, DollarSign, Percent, ArrowUpRight, Filter } from 'lucide-react';
+import ClassificationSearchPopover from '@/components/products/attributes/ClassificationSearchPopover';
 import { cn } from '@/lib/utils';
 import { useApp } from '@/contexts/AppContext';
 import { Product, PretProduit } from '@/types';
@@ -1755,25 +1756,14 @@ const PretProduitsGrouped: React.FC = () => {
             <div className="grid gap-2">
               <Label htmlFor="description" className="text-sm font-semibold text-gray-700 dark:text-gray-300">Description du produit</Label>
               
-              {/* Filtre par catégorie */}
-              <div className="flex items-center gap-2 flex-wrap">
-                <Filter className="h-4 w-4 text-purple-500" />
-                <span className="text-xs font-semibold text-gray-600 dark:text-gray-400">Filtre :</span>
-                {CATEGORY_OPTIONS.map((option) => (
-                  <button
-                    key={option.value}
-                    type="button"
-                    onClick={() => setProductCategoryFilter(option.value)}
-                    className={`px-3 py-1 text-xs font-bold rounded-full transition-all duration-300 border ${
-                      productCategoryFilter === option.value
-                        ? 'bg-gradient-to-r from-purple-500 to-indigo-600 text-white border-purple-500 shadow-lg shadow-purple-500/30'
-                        : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-300 dark:border-gray-600 hover:border-purple-400 hover:text-purple-600'
-                    }`}
-                  >
-                    {option.label}
-                  </button>
-                ))}
-              </div>
+              {/* Filtre par attributs (catégorie/modèle/couleur/taille/devant) */}
+              <ClassificationSearchPopover
+                currentCategory={productCategoryFilter}
+                onApply={({ name, category }) => {
+                  setProductCategoryFilter(category);
+                  if (name) handleSearch(name);
+                }}
+              />
 
               <Input
                 id="description"

@@ -5,7 +5,7 @@
  */
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Search, Plus, Pencil, Star, Merge } from 'lucide-react';
+import { Search, Plus, Boxes, Star, Merge } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 
@@ -14,14 +14,16 @@ interface Props {
   setSearchQuery: (v: string) => void;
   setShowSearchResults: (v: boolean) => void;
   onAdd: () => void;
-  onEdit: () => void;
+  /** @deprecated conservé pour compatibilité, non utilisé */
+  onEdit?: () => void;
+  onStock?: () => void;
   onVendu: () => void;
   onMerge: () => void;
 }
 
 const ProduitsToolbar: React.FC<Props> = ({
   searchQuery, setSearchQuery, setShowSearchResults,
-  onAdd, onEdit, onVendu, onMerge,
+  onAdd, onStock, onVendu, onMerge,
 }) => (
   <motion.div
     initial={{ opacity: 0, y: 10 }}
@@ -54,8 +56,8 @@ const ProduitsToolbar: React.FC<Props> = ({
       </motion.div>
 
       <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} className="w-full">
-        <Button onClick={onEdit} className="w-full xl:w-auto h-12 sm:h-14 px-4 sm:px-6 rounded-2xl font-bold text-sm sm:text-base bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 hover:from-blue-600 hover:via-blue-700 hover:to-indigo-700 text-white shadow-lg sm:shadow-xl shadow-blue-500/25 hover:shadow-2xl hover:shadow-blue-500/40 transition-all duration-300 border-0">
-          <Pencil className="h-4 w-4 sm:h-5 sm:w-5 mr-2" /> Modifier Produit
+        <Button onClick={onStock} className="w-full xl:w-auto h-12 sm:h-14 px-4 sm:px-6 rounded-2xl font-bold text-sm sm:text-base bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 hover:from-blue-600 hover:via-blue-700 hover:to-indigo-700 text-white shadow-lg sm:shadow-xl shadow-blue-500/25 hover:shadow-2xl hover:shadow-blue-500/40 transition-all duration-300 border-0">
+          <Boxes className="h-4 w-4 sm:h-5 sm:w-5 mr-2" /> Liste Stock
         </Button>
       </motion.div>
 

@@ -30,19 +30,13 @@ import React, { useState, useMemo } from 'react';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
-import { Search, CheckCircle, Hash, Filter } from 'lucide-react';
+import { Search, CheckCircle, Hash } from 'lucide-react';
 import { Product } from '@/types/product';
 import useProductAttributes from '@/hooks/useProductAttributes';
+import ClassificationSearchPopover from '@/components/products/attributes/ClassificationSearchPopover';
 
 type ProductCategory = 'all' | 'perruque' | 'tissage' | 'extension' | 'autres';
 
-const CATEGORY_OPTIONS: { value: ProductCategory; label: string }[] = [
-  { value: 'all', label: 'Tous' },
-  { value: 'perruque', label: 'Perruque' },
-  { value: 'tissage', label: 'Tissage' },
-  { value: 'extension', label: 'Extension' },
-  { value: 'autres', label: 'Autres' },
-];
 
 const filterByCategory = (products: Product[], category: ProductCategory): Product[] => {
   if (category === 'all') return products;
@@ -148,30 +142,16 @@ const ProductSearchInput: React.FC<ProductSearchInputProps> = ({
         Rechercher un produit (par nom ou code)
       </Label>
 
-      {/* Filtre par catégorie */}
-      <div className="flex items-center gap-2 flex-wrap">
-        <Filter className="h-4 w-4 text-purple-500" />
-        <span className="text-xs font-semibold text-gray-600 dark:text-gray-400">Filtre :</span>
-        {CATEGORY_OPTIONS.map((option) => (
-          <button
-            key={option.value}
-            type="button"
-            onClick={() => setCategoryFilter(option.value)}
-            className={`px-3 py-1 text-xs font-bold rounded-full transition-all duration-300 border ${
-              categoryFilter === option.value
-                ? 'bg-gradient-to-r from-purple-500 to-indigo-600 text-white border-purple-500 shadow-lg shadow-purple-500/30'
-                : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-300 dark:border-gray-600 hover:border-purple-400 hover:text-purple-600'
-            }`}
-          >
-            {option.label}
-          </button>
-        ))}
-      </div>
-
-      {/* 🆕 Filtres par attributs (issus de la base) */}
-      <AttrChips label="Modèle" items={modeles} value={modeleFilter} onChange={setModeleFilter} color="purple" />
-      <AttrChips label="Couleur" items={couleurs} value={couleurFilter} onChange={setCouleurFilter} color="pink" />
-      <AttrChips label="Taille" items={tailles} value={tailleFilter} onChange={setTailleFilter} color="sky" />
+      {/* Filtre par attributs (catégorie/modèle/couleur/taille/devant) */}
+      <ClassificationSearchPopover
+        currentCategory={categoryFilter}
+        onApply={({ name, category }) => {
+          setCategoryFilter(category);
+          if (name) {
+            onSearchChange({ target: { value: name } } as React.ChangeEvent<HTMLInputElement>);
+          }
+        }}
+      />
       
       {/* Champ de recherche avec liste déroulante */}
       <div className="relative">

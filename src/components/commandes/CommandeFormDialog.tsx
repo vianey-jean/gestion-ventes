@@ -18,6 +18,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Plus, Trash2, Edit, ShoppingCart, Crown, Star, Sparkles, Gift, Award, Zap, Filter, CalendarClock, X } from 'lucide-react';
+import ClassificationSearchPopover from '@/components/products/attributes/ClassificationSearchPopover';
 import SaleQuantityInput from '@/components/dashboard/forms/SaleQuantityInput';
 import { Commande, CommandeProduit } from '@/types/commande';
 import type { ClientCaracteristique } from '@/utils/clientCharacteristic';
@@ -742,23 +743,19 @@ const CommandeFormDialog: React.FC<CommandeFormDialogProps> = ({
               </span>
             </h3>
 
-            {/* Filtre par catégorie */}
-            <div className="flex items-center gap-2 flex-wrap mb-3">
-              <Filter className="h-4 w-4 text-purple-500" />
-              <span className="text-xs font-semibold text-gray-600 dark:text-gray-400">Filtre :</span>
-              {CATEGORY_OPTIONS.map((option) => (
-                <button
-                  key={option.value}
-                  type="button"
-                  onClick={() => setProductCategoryFilter(option.value)}
-                  className={`px-3 py-1 text-xs font-bold rounded-full transition-all duration-300 border ${productCategoryFilter === option.value
-                    ? 'bg-gradient-to-r from-purple-500 to-indigo-600 text-white border-purple-500 shadow-lg shadow-purple-500/30'
-                    : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-300 dark:border-gray-600 hover:border-purple-400 hover:text-purple-600'
-                    }`}
-                >
-                  {option.label}
-                </button>
-              ))}
+            {/* Filtre par attributs (catégorie/modèle/couleur/taille/devant) */}
+            <div className="mb-3">
+              <ClassificationSearchPopover
+                currentCategory={productCategoryFilter}
+                onApply={({ name, category }) => {
+                  setProductCategoryFilter(category);
+                  if (name) {
+                    setProductSearch(name);
+                    setProduitNom(name);
+                    setShowProductSuggestions(name.length >= 3);
+                  }
+                }}
+              />
             </div>
 
             {/* Photo principale du produit (si disponible) */}

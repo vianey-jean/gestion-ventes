@@ -15,7 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Sparkles } from 'lucide-react';
 import useProductAttributes from '@/hooks/useProductAttributes';
 
-export type ProductCategory = 'perruque' | 'tissage' | 'extension' | 'autres';
+export type ProductCategory = 'perruque' | 'tissages' | 'extension' | 'autres';
 
 export interface ClassificationValue {
   categorie?: ProductCategory | '';
@@ -38,7 +38,7 @@ interface Props {
 
 const CATEGORIES: { key: ProductCategory; label: string }[] = [
   { key: 'perruque', label: 'Perruque' },
-  { key: 'tissage', label: 'Tissage' },
+  { key: 'tissages', label: 'Tissages' },
   { key: 'extension', label: 'Extension' },
   { key: 'autres', label: 'Autres' },
 ];
