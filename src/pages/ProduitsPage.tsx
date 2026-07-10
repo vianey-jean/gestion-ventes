@@ -55,6 +55,9 @@ import PrixHistoryModal from '@/components/products/PrixHistoryModal';
 import ProduitsToolbar from '@/pages/produits/ProduitsToolbar';
 import ProduitsFiltersStats from '@/pages/produits/ProduitsFiltersStats';
 import AchatVenteSubModals from '@/pages/produits/AchatVenteSubModals';
+import ProductAttributesToolbar from '@/components/products/attributes/ProductAttributesToolbar';
+import ProductClassificationSelector, { ClassificationValue, buildProductName, ProductCategory } from '@/components/products/attributes/ProductClassificationSelector';
+import ProductClassificationFilterModal from '@/components/products/attributes/ProductClassificationFilterModal';
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://server-gestion-ventes.onrender.com';
 
 type FilterType = 'tous' | 'perruque' | 'tissage' | 'extension' | 'autres';
@@ -67,6 +70,14 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<FilterType>('tous');
   const [showSearchResults, setShowSearchResults] = useState(false);
+
+  // 🆕 Classification par attributs (modele/couleur/taille/devant) appliquée en plus du filtre catégorie
+  const [classification, setClassification] = useState<ClassificationValue>({});
+  const [classificationModalOpen, setClassificationModalOpen] = useState(false);
+  const [pendingCategory, setPendingCategory] = useState<ProductCategory | null>(null);
+
+  // 🆕 Classification utilisée pour la création d'un nouveau produit
+  const [addClassification, setAddClassification] = useState<ClassificationValue>({});
 
   // Modals
   const [isAddOpen, setIsAddOpen] = useState(false);
@@ -334,6 +345,19 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
       });
     }
 
+    // Classification (modele/couleur/taille/devant) — chaque champ est un include insensible à la casse
+    const cf = classification;
+    if (cf.modele || cf.couleur || cf.taille || cf.devant) {
+      filtered = filtered.filter(p => {
+        const d = p.description.toLowerCase();
+        if (cf.modele && !d.includes(cf.modele.toLowerCase())) return false;
+        if (cf.couleur && !d.includes(cf.couleur.toLowerCase())) return false;
+        if (cf.taille && !d.includes(cf.taille.toLowerCase())) return false;
+        if (cf.devant && !d.includes(cf.devant.toLowerCase())) return false;
+        return true;
+      });
+    }
+
     if (searchQuery.length >= 3) {
       filtered = filtered.filter(p =>
         p.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -367,12 +391,25 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
     }
 
     return filtered;
-  }, [products, activeFilter, searchQuery, sortField, sortDir, allRatings]);
+  }, [products, activeFilter, searchQuery, sortField, sortDir, allRatings, classification]);
 
   // Reset page when filter/search changes
   useEffect(() => {
     setCurrentPage(1);
   }, [activeFilter, searchQuery]);
+
+  // Poignée : quand on choisit une catégorie autre que "tous", on ouvre la modale de classification
+  const handleFilterChange = useCallback((f: FilterType) => {
+    setActiveFilter(f);
+    if (f === 'tous' || f === 'autres') {
+      setClassification({});
+      return;
+    }
+    // perruque / tissage / extension → propose de raffiner
+    setPendingCategory(f as ProductCategory);
+    setClassification({ categorie: f as ProductCategory });
+    setClassificationModalOpen(true);
+  }, []);
 
   const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
   const paginatedProducts = useMemo(() => {
@@ -443,6 +480,7 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
       setIsAddOpen(false);
       setAddForm({ description: '', purchasePrice: '', quantity: '', fournisseur: '', dateAchat: todayISO() });
       setAddPhotos({ files: [], existingUrls: [], mainIndex: 0 });
+      setAddClassification({});
       if (fetchProducts) await fetchProducts();
     } catch {
       toast({ title: 'Erreur', description: "Erreur lors de l'ajout", variant: 'destructive', className: 'notification-erreur' });
@@ -645,8 +683,11 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
             products={products}
             filters={filters}
             activeFilter={activeFilter}
-            setActiveFilter={setActiveFilter}
+            setActiveFilter={handleFilterChange}
           />
+
+          {/* Barre attributs produit (modèle/taille/couleur/devant) */}
+          <ProductAttributesToolbar />
 
           {/* Products Table */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
@@ -893,9 +934,25 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
               </DialogTitle>
             </DialogHeader>
             <div className="space-y-5">
+              {/* 🆕 Classification : catégorie → modèle → (devant) → couleur → taille */}
+              <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
+                <ProductClassificationSelector
+                  value={addClassification}
+                  onChange={(v) => {
+                    setAddClassification(v);
+                    const name = buildProductName(v);
+                    if (name) {
+                      setAddForm(prev => ({ ...prev, description: name }));
+                      if (addErrors.description) setAddErrors(prev => ({ ...prev, description: '' }));
+                    }
+                  }}
+                  variant="dark"
+                />
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="add-desc" className="text-sm font-bold text-white/80 flex items-center gap-2">
-                  <Package className="h-4 w-4 text-green-400" /> Description du produit
+                  <Package className="h-4 w-4 text-green-400" /> Description du produit (auto-générée, éditable)
                 </Label>
                 <Input id="add-desc" value={addForm.description}
                   onChange={(e) => { setAddForm({ ...addForm, description: e.target.value }); if (addErrors.description) setAddErrors({ ...addErrors, description: '' }); }}
@@ -1747,6 +1804,17 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
         isFournHistoryOpen={isFournHistoryOpen}
         setIsFournHistoryOpen={setIsFournHistoryOpen}
       />
+
+      {/* 🆕 Modale de filtrage par classification (modèle/couleur/taille/devant) */}
+      {pendingCategory && (
+        <ProductClassificationFilterModal
+          open={classificationModalOpen}
+          onOpenChange={setClassificationModalOpen}
+          categorie={pendingCategory}
+          initial={classification}
+          onApply={(v) => setClassification(v)}
+        />
+      )}
 
     </div>
   );

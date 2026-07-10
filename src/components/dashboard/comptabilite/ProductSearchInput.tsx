@@ -32,6 +32,7 @@ import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { Search, CheckCircle, Hash, Filter } from 'lucide-react';
 import { Product } from '@/types/product';
+import useProductAttributes from '@/hooks/useProductAttributes';
 
 type ProductCategory = 'all' | 'perruque' | 'tissage' | 'extension' | 'autres';
 
@@ -90,10 +91,54 @@ const ProductSearchInput: React.FC<ProductSearchInputProps> = ({
   formatEuro
 }) => {
   const [categoryFilter, setCategoryFilter] = useState<ProductCategory>('all');
+  const [modeleFilter, setModeleFilter] = useState<string>('');
+  const [couleurFilter, setCouleurFilter] = useState<string>('');
+  const [tailleFilter, setTailleFilter] = useState<string>('');
+  const { items: modeles } = useProductAttributes('modele');
+  const { items: couleurs } = useProductAttributes('couleur');
+  const { items: tailles } = useProductAttributes('taille');
 
   const displayedProducts = useMemo(() => {
-    return filterByCategory(filteredProducts, categoryFilter);
-  }, [filteredProducts, categoryFilter]);
+    let list = filterByCategory(filteredProducts, categoryFilter);
+    const applyIncl = (v: string) => {
+      if (!v) return;
+      const needle = v.toLowerCase();
+      list = list.filter(p => p.description.toLowerCase().includes(needle));
+    };
+    applyIncl(modeleFilter);
+    applyIncl(couleurFilter);
+    applyIncl(tailleFilter);
+    return list;
+  }, [filteredProducts, categoryFilter, modeleFilter, couleurFilter, tailleFilter]);
+
+  const COLOR_MAP: Record<string, string> = {
+    purple: 'bg-purple-500 text-white border-purple-500',
+    pink: 'bg-pink-500 text-white border-pink-500',
+    sky: 'bg-sky-500 text-white border-sky-500',
+  };
+  const AttrChips: React.FC<{ label: string; items: { id: string; nom: string }[]; value: string; onChange: (v: string) => void; color: 'purple' | 'pink' | 'sky'; }>
+    = ({ label, items, value, onChange, color }) => {
+    if (items.length === 0) return null;
+    const activeCls = COLOR_MAP[color];
+    return (
+      <div className="flex items-center gap-2 flex-wrap">
+        <span className="text-xs font-semibold text-gray-600 dark:text-gray-400">{label} :</span>
+        <button type="button" onClick={() => onChange('')} className={`px-2.5 py-0.5 text-[11px] font-bold rounded-full border transition ${value === '' ? activeCls : 'bg-white dark:bg-gray-800 text-gray-600 border-gray-300'}`}>Tous</button>
+        {items.map(it => (
+          <button
+            key={it.id}
+            type="button"
+            onClick={() => onChange(value === it.nom ? '' : it.nom)}
+            className={`px-2.5 py-0.5 text-[11px] font-bold rounded-full border transition ${
+              value === it.nom
+                ? activeCls
+                : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-300 dark:border-gray-600 hover:border-gray-400'
+            }`}
+          >{it.nom}</button>
+        ))}
+      </div>
+    );
+  };
 
   return (
     <div className="space-y-2">
@@ -122,6 +167,11 @@ const ProductSearchInput: React.FC<ProductSearchInputProps> = ({
           </button>
         ))}
       </div>
+
+      {/* 🆕 Filtres par attributs (issus de la base) */}
+      <AttrChips label="Modèle" items={modeles} value={modeleFilter} onChange={setModeleFilter} color="purple" />
+      <AttrChips label="Couleur" items={couleurs} value={couleurFilter} onChange={setCouleurFilter} color="pink" />
+      <AttrChips label="Taille" items={tailles} value={tailleFilter} onChange={setTailleFilter} color="sky" />
       
       {/* Champ de recherche avec liste déroulante */}
       <div className="relative">
