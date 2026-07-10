@@ -173,8 +173,8 @@ const StockListModal: React.FC<Props> = ({ open, onClose, products }) => {
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-5xl max-h-[92vh] overflow-hidden p-0 rounded-2xl border-violet-200 dark:border-violet-800">
-        <DialogHeader className="p-5 pb-3 bg-gradient-to-br from-violet-600 via-purple-600 to-fuchsia-600 text-white">
+      <DialogContent className="max-w-5xl max-h-[92vh] overflow-hidden p-0 rounded-2xl border-violet-200/60 dark:border-violet-800/60 shadow-2xl bg-white/95 dark:bg-gray-950/95 backdrop-blur-sm flex flex-col">
+        <DialogHeader className="p-5 pb-3 bg-gradient-to-br from-violet-600 via-purple-600 to-fuchsia-600 text-white shrink-0">
           <DialogTitle className="flex items-center gap-3 text-white text-lg font-black">
             <Package className="h-5 w-5" /> Liste du Stock
             <Button
@@ -182,7 +182,7 @@ const StockListModal: React.FC<Props> = ({ open, onClose, products }) => {
               onClick={exportPdf}
               size="sm"
               disabled={results.length === 0}
-              className="ml-auto bg-white text-violet-700 hover:bg-violet-50 rounded-xl font-bold shadow-md"
+              className="ml-auto bg-white/90 text-violet-700 hover:bg-white rounded-xl font-bold shadow-lg backdrop-blur-md transition-all"
             >
               <Printer className="h-4 w-4 mr-1.5" /> PDF
             </Button>
@@ -190,75 +190,77 @@ const StockListModal: React.FC<Props> = ({ open, onClose, products }) => {
           <p className="text-xs text-white/80">Sélectionnez les attributs (choix multiple sauf catégorie et devant)</p>
         </DialogHeader>
 
-        <div className="p-5 space-y-5 overflow-y-auto max-h-[calc(92vh-90px)]">
-          <Section icon={<Sparkles className="h-3.5 w-3.5" />} title="Catégorie" hint="1 seule">
-            {CATEGORIES.map(c => (
-              <Chip key={c.key} active={categorie === c.key} onClick={() => { setCategorie(categorie === c.key ? '' : c.key); if (c.key !== 'perruque') setDevant(''); }}>{c.label}</Chip>
-            ))}
-          </Section>
-
-          {categorie === 'perruque' && devants.length > 0 && (
-            <Section icon={<Sparkles className="h-3.5 w-3.5" />} title="Devant" hint="1 seul">
-              {devants.map(d => (
-                <Chip key={d.id} active={devant === d.nom} onClick={() => setDevant(devant === d.nom ? '' : d.nom)}>{d.nom}</Chip>
+        <div className="flex flex-col flex-1 min-h-0">
+          <div className="shrink-0 p-5 space-y-5 overflow-y-auto max-h-[32vh] scrollbar-thin">
+            <Section icon={<Sparkles className="h-3.5 w-3.5" />} title="Catégorie" hint="1 seule">
+              {CATEGORIES.map(c => (
+                <Chip key={c.key} active={categorie === c.key} onClick={() => { setCategorie(categorie === c.key ? '' : c.key); if (c.key !== 'perruque') setDevant(''); }}>{c.label}</Chip>
               ))}
             </Section>
-          )}
 
-          {modeles.length > 0 && (
-            <Section icon={<Package className="h-3.5 w-3.5" />} title="Modèles" hint="Choix multiple">
-              {modeles.map(m => (
-                <Chip key={m.id} active={selModeles.includes(m.nom)} onClick={() => toggle(selModeles, m.nom, setSelModeles)}>{m.nom}</Chip>
-              ))}
-            </Section>
-          )}
+            {categorie === 'perruque' && devants.length > 0 && (
+              <Section icon={<Sparkles className="h-3.5 w-3.5" />} title="Devant" hint="1 seul">
+                {devants.map(d => (
+                  <Chip key={d.id} active={devant === d.nom} onClick={() => setDevant(devant === d.nom ? '' : d.nom)}>{d.nom}</Chip>
+                ))}
+              </Section>
+            )}
 
-          {couleurs.length > 0 && (
-            <Section icon={<Palette className="h-3.5 w-3.5" />} title="Couleurs" hint="Choix multiple">
-              {couleurs.map(c => (
-                <Chip key={c.id} active={selCouleurs.includes(c.nom)} onClick={() => toggle(selCouleurs, c.nom, setSelCouleurs)}>{c.nom}</Chip>
-              ))}
-            </Section>
-          )}
+            {modeles.length > 0 && (
+              <Section icon={<Package className="h-3.5 w-3.5" />} title="Modèles" hint="Choix multiple">
+                {modeles.map(m => (
+                  <Chip key={m.id} active={selModeles.includes(m.nom)} onClick={() => toggle(selModeles, m.nom, setSelModeles)}>{m.nom}</Chip>
+                ))}
+              </Section>
+            )}
 
-          {tailles.length > 0 && (
-            <Section icon={<Ruler className="h-3.5 w-3.5" />} title="Tailles" hint="Choix multiple">
-              {tailles.map(t => (
-                <Chip key={t.id} active={selTailles.includes(t.nom)} onClick={() => toggle(selTailles, t.nom, setSelTailles)}>{t.nom}</Chip>
-              ))}
-            </Section>
-          )}
+            {couleurs.length > 0 && (
+              <Section icon={<Palette className="h-3.5 w-3.5" />} title="Couleurs" hint="Choix multiple">
+                {couleurs.map(c => (
+                  <Chip key={c.id} active={selCouleurs.includes(c.nom)} onClick={() => toggle(selCouleurs, c.nom, setSelCouleurs)}>{c.nom}</Chip>
+                ))}
+              </Section>
+            )}
 
-          <div className="flex items-center justify-between gap-3 flex-wrap pt-3 border-t border-violet-200/50 dark:border-violet-800/50">
-            <div className="flex items-center gap-2 flex-wrap text-xs">
-              <Badge className="bg-violet-100 text-violet-700 dark:bg-violet-900/50 dark:text-violet-200 font-bold">{results.length} produit(s)</Badge>
-              <Badge className="bg-fuchsia-100 text-fuchsia-700 dark:bg-fuchsia-900/50 dark:text-fuchsia-200 font-bold">Qté totale: {totalQty}</Badge>
-              <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-200 font-bold">Valeur: {totalValue.toFixed(2)}€</Badge>
+            {tailles.length > 0 && (
+              <Section icon={<Ruler className="h-3.5 w-3.5" />} title="Tailles" hint="Choix multiple">
+                {tailles.map(t => (
+                  <Chip key={t.id} active={selTailles.includes(t.nom)} onClick={() => toggle(selTailles, t.nom, setSelTailles)}>{t.nom}</Chip>
+                ))}
+              </Section>
+            )}
+
+            <div className="flex items-center justify-between gap-3 flex-wrap pt-3 border-t border-violet-200/50 dark:border-violet-800/50">
+              <div className="flex items-center gap-2 flex-wrap text-xs">
+                <Badge className="bg-violet-100 text-violet-700 dark:bg-violet-900/50 dark:text-violet-200 font-bold">{results.length} produit(s)</Badge>
+                <Badge className="bg-fuchsia-100 text-fuchsia-700 dark:bg-fuchsia-900/50 dark:text-fuchsia-200 font-bold">Qté totale: {totalQty}</Badge>
+                <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-200 font-bold">Valeur: {totalValue.toFixed(2)}€</Badge>
+              </div>
+              <Button variant="outline" size="sm" className="rounded-xl" onClick={() => { setCategorie(''); setDevant(''); setSelModeles([]); setSelCouleurs([]); setSelTailles([]); }}>
+                <X className="h-3.5 w-3.5 mr-1" /> Réinitialiser
+              </Button>
             </div>
-            <Button variant="outline" size="sm" className="rounded-xl" onClick={() => { setCategorie(''); setDevant(''); setSelModeles([]); setSelCouleurs([]); setSelTailles([]); }}>
-              <X className="h-3.5 w-3.5 mr-1" /> Réinitialiser
-            </Button>
           </div>
 
-          <div className="rounded-2xl border border-violet-200/50 dark:border-violet-800/50 overflow-hidden">
-            <div className="grid grid-cols-12 gap-2 px-4 py-2 bg-gradient-to-r from-violet-50 to-fuchsia-50 dark:from-violet-900/30 dark:to-fuchsia-900/30 text-[11px] font-black text-violet-800 dark:text-violet-200 uppercase tracking-wide">
+          <div className="flex-1 min-h-0 mx-5 mb-5 rounded-2xl border border-violet-200/50 dark:border-violet-800/50 overflow-hidden flex flex-col bg-white/60 dark:bg-gray-900/60 backdrop-blur-sm shadow-inner">
+            <div className="shrink-0 grid grid-cols-12 gap-2 px-4 py-2.5 bg-gradient-to-r from-violet-50/80 to-fuchsia-50/80 dark:from-violet-900/40 dark:to-fuchsia-900/40 text-[11px] font-black text-violet-800 dark:text-violet-200 uppercase tracking-wide backdrop-blur-sm border-b border-violet-100 dark:border-violet-900/40">
               <div className="col-span-3">Code</div>
               <div className="col-span-5">Description</div>
               <div className="col-span-1 text-right">Qté</div>
               <div className="col-span-3 text-right">Prix</div>
             </div>
-            <div className="max-h-[40vh] overflow-y-auto divide-y divide-violet-100 dark:divide-violet-900/50 pb-8">
+            <div className="flex-1 overflow-y-auto divide-y divide-violet-100/60 dark:divide-violet-900/40">
               {results.length === 0 ? (
                 <div className="p-8 text-center text-sm text-muted-foreground">Aucun produit ne correspond aux filtres</div>
               ) : (
                 results.map(p => (
-                  <div key={p.id} className="grid grid-cols-12 gap-2 px-4 py-2.5 items-center text-sm hover:bg-violet-50/50 dark:hover:bg-violet-900/20 transition-colors">
-                    <div className="col-span-3 truncate">
-                      <Badge variant="outline" className="font-mono text-[10px] border-indigo-200 text-indigo-700 dark:border-indigo-700 dark:text-indigo-300">
-                        <Hash className="h-2.5 w-2.5 mr-0.5" />{p.code || '—'}
+                  <div key={p.id} className="grid grid-cols-12 gap-2 px-4 py-3 items-start text-sm hover:bg-violet-50/40 dark:hover:bg-violet-900/15 transition-all duration-200">
+                    <div className="col-span-3">
+                      <Badge variant="outline" className="font-mono text-[10px] border-indigo-200 text-indigo-700 dark:border-indigo-700 dark:text-indigo-300 whitespace-normal break-words">
+                        <Hash className="h-2.5 w-2.5 mr-0.5 shrink-0" />{p.code || '—'}
                       </Badge>
                     </div>
-                    <div className="col-span-5 truncate font-medium text-foreground">{p.description}</div>
+                    <div className="col-span-5 whitespace-normal break-words font-medium text-foreground leading-relaxed">{p.description}</div>
                     <div className="col-span-1 text-right font-bold text-violet-700 dark:text-violet-300">{p.quantity ?? 0}</div>
                     <div className="col-span-3 text-right font-semibold text-emerald-700 dark:text-emerald-300">{(p.purchasePrice ?? 0).toFixed(2)}€</div>
                   </div>

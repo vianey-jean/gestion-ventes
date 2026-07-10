@@ -1,12 +1,12 @@
 /**
- * ClassificationSearchPopover — Bouton + popover utilisant
+ * ClassificationSearchPopover — Bouton + modale centrée utilisant
  * ProductClassificationSelector pour filtrer une liste de produits.
- * Remplace les chips CATEGORY_OPTIONS ; le résultat est injecté dans la
- * barre de recherche du parent via `onApply`.
+ * S'ouvre comme une Dialog centrée (mobile/tablette/desktop), avec un
+ * contenu scrollable et une barre d'actions collée en bas.
  */
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Filter, Sparkles, RotateCcw, Check } from 'lucide-react';
 import ProductClassificationSelector, {
   ClassificationValue,
@@ -14,7 +14,7 @@ import ProductClassificationSelector, {
   ProductCategory as PCCategory,
 } from './ProductClassificationSelector';
 
-export type SearchCategory = 'all' | 'perruque' | 'tissages' | 'extension' | 'autres';
+export type SearchCategory = 'all' | 'perruque' | 'tissage' | 'extension' | 'autres';
 
 interface Props {
   currentCategory: SearchCategory;
@@ -31,12 +31,13 @@ const ClassificationSearchPopover: React.FC<Props> = ({
 }) => {
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState<ClassificationValue>({
-    categorie: currentCategory === 'all' ? '' : (currentCategory as PCCategory),
+    categorie: currentCategory === 'all' ? '' : (currentCategory === 'tissage' ? 'tissages' : (currentCategory as PCCategory)),
   });
 
   const apply = () => {
     const name = buildProductName(value);
-    const category: SearchCategory = (value.categorie || 'all') as SearchCategory;
+    const raw = value.categorie || 'all';
+    const category: SearchCategory = (raw === 'tissages' ? 'tissage' : raw) as SearchCategory;
     onApply({ name, category });
     setOpen(false);
   };
@@ -50,50 +51,54 @@ const ClassificationSearchPopover: React.FC<Props> = ({
   const activeCount = [value.categorie, value.modele, value.couleur, value.taille, value.devant].filter(Boolean).length;
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className={`h-9 rounded-full border-purple-300 dark:border-purple-700 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/30 dark:to-pink-900/30 hover:from-purple-100 hover:to-pink-100 text-purple-700 dark:text-purple-200 font-bold shadow-sm ${className}`}
-        >
-          <Filter className="h-4 w-4 mr-1.5" />
-          {label}
-          {activeCount > 0 && (
-            <span className="ml-1.5 inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-[10px] font-black bg-gradient-to-r from-purple-500 to-fuchsia-500 text-white">
-              {activeCount}
-            </span>
-          )}
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent
-        align="start"
-        sideOffset={8}
-        className="w-[min(92vw,420px)] max-h-[70vh] overflow-y-auto p-4 rounded-2xl border-purple-200 dark:border-purple-800 shadow-2xl bg-white dark:bg-gray-900"
+    <>
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        onClick={() => setOpen(true)}
+        className={`h-9 rounded-full border-purple-300 dark:border-purple-700 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/30 dark:to-pink-900/30 hover:from-purple-100 hover:to-pink-100 text-purple-700 dark:text-purple-200 font-bold shadow-sm ${className}`}
       >
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2 text-purple-700 dark:text-purple-200 font-black">
-            <Sparkles className="h-4 w-4" />
-            <span className="text-sm">Filtre attributs produit</span>
+        <Filter className="h-4 w-4 mr-1.5" />
+        {label}
+        {activeCount > 0 && (
+          <span className="ml-1.5 inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-[10px] font-black bg-gradient-to-r from-purple-500 to-fuchsia-500 text-white">
+            {activeCount}
+          </span>
+        )}
+      </Button>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent
+          className="p-0 gap-0 w-[calc(100vw-2rem)] sm:w-[min(92vw,460px)] max-w-[460px] max-h-[85vh] rounded-2xl border-purple-200 dark:border-purple-800 shadow-2xl bg-white dark:bg-gray-900 flex flex-col top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+        >
+          <DialogHeader className="px-4 pt-4 pb-3 border-b border-purple-100 dark:border-purple-900/50 shrink-0">
+            <DialogTitle className="flex items-center gap-2 text-purple-700 dark:text-purple-200 font-black text-sm">
+              <Sparkles className="h-4 w-4" />
+              Filtre attributs produit
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="flex-1 overflow-y-auto px-4 py-3 min-h-0 overscroll-contain">
+            <ProductClassificationSelector value={value} onChange={setValue} mode="filter" variant="light" />
           </div>
-        </div>
-        <ProductClassificationSelector value={value} onChange={setValue} mode="filter" variant="light" />
-        <div className="mt-4 flex gap-2">
-          <Button type="button" variant="outline" size="sm" onClick={reset} className="rounded-xl">
-            <RotateCcw className="h-3.5 w-3.5 mr-1.5" /> Réinitialiser
-          </Button>
-          <Button
-            type="button"
-            size="sm"
-            onClick={apply}
-            className="flex-1 rounded-xl bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-700 hover:to-fuchsia-700 text-white font-bold"
-          >
-            <Check className="h-3.5 w-3.5 mr-1.5" /> Appliquer
-          </Button>
-        </div>
-      </PopoverContent>
-    </Popover>
+
+          <div className="shrink-0 flex gap-2 px-4 py-3 border-t border-purple-100 dark:border-purple-900/50 bg-white dark:bg-gray-900 rounded-b-2xl">
+            <Button type="button" variant="outline" size="sm" onClick={reset} className="rounded-xl">
+              <RotateCcw className="h-3.5 w-3.5 mr-1.5" /> Réinitialiser
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              onClick={apply}
+              className="flex-1 rounded-xl bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-700 hover:to-fuchsia-700 text-white font-bold"
+            >
+              <Check className="h-3.5 w-3.5 mr-1.5" /> Appliquer
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
 
