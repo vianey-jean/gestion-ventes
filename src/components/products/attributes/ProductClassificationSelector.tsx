@@ -15,7 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Sparkles } from 'lucide-react';
 import useProductAttributes from '@/hooks/useProductAttributes';
 
-export type ProductCategory = 'perruque' | 'tissages' | 'extension' | 'autres';
+export type ProductCategory = 'Perruque' | 'Tissages' | 'Extension' | 'Autres';
 
 export interface ClassificationValue {
   categorie?: ProductCategory | '';
@@ -37,10 +37,10 @@ interface Props {
 }
 
 const CATEGORIES: { key: ProductCategory; label: string }[] = [
-  { key: 'perruque', label: 'Perruque' },
-  { key: 'tissages', label: 'Tissages' },
-  { key: 'extension', label: 'Extension' },
-  { key: 'autres', label: 'Autres' },
+  { key: 'Perruque', label: 'Perruque' },
+  { key: 'Tissages', label: 'Tissages' },
+  { key: 'Extension', label: 'Extension' },
+  { key: 'Autres', label: 'Autres' },
 ];
 
 export function buildProductName(v: ClassificationValue): string {
@@ -61,8 +61,12 @@ const ProductClassificationSelector: React.FC<Props> = ({
   const { items: couleurs } = useProductAttributes('couleur');
   const { items: devants } = useProductAttributes('devant');
 
-  const previewName = useMemo(() => buildProductName(value), [value]);
-  const showDevant = value.categorie === 'perruque';
+  const previewName = useMemo(() => {
+  const name = buildProductName(value);
+  return name ? name.charAt(0).toUpperCase() + name.slice(1) : '';
+}, [value]);
+
+  const showDevant = value.categorie === 'Perruque';
 
   const labelCls = variant === 'dark' ? 'text-white/80' : 'text-foreground';
   const chipBase = 'px-3 py-1.5 rounded-full text-xs font-bold border transition-all cursor-pointer select-none';
@@ -82,7 +86,7 @@ const ProductClassificationSelector: React.FC<Props> = ({
           <Label className={`text-sm font-bold ${labelCls}`}>Catégorie {mode === 'create' && <span className="text-red-500">*</span>}</Label>
           <div className="flex flex-wrap gap-2">
             {CATEGORIES.map(c => (
-              <Chip key={c.key} active={value.categorie === c.key} onClick={() => onChange({ ...value, categorie: c.key, devant: c.key === 'perruque' ? value.devant : '' })}>
+              <Chip key={c.key} active={value.categorie === c.key} onClick={() => onChange({ ...value, categorie: c.key, devant: c.key === 'Perruque' ? value.devant : '' })}>
                 {c.label}
               </Chip>
             ))}
@@ -108,7 +112,7 @@ const ProductClassificationSelector: React.FC<Props> = ({
 
       {showDevant && (
         <div className="space-y-2">
-          <Label className={`text-sm font-bold ${labelCls}`}>Devant (perruque)</Label>
+          <Label className={`text-sm font-bold ${labelCls}`}>Devant (Perruque)</Label>
           {devants.length === 0 ? (
             <p className="text-xs text-muted-foreground">Aucun devant. Ajoutez-en via « Ajouter devant ».</p>
           ) : (
