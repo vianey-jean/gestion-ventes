@@ -158,6 +158,80 @@ const StockListModal: React.FC<Props> = ({ open, onClose, products }) => {
     >{children}</button>
   );
 
+
+  const sortedResults = useMemo(() => {
+  const extractCategory = (desc: string = '') => {
+    const d = desc.toLowerCase();
+
+    if (d.includes('perruque')) return 1;
+    if (d.includes('tissage')) return 2;
+    if (d.includes('extension')) return 3;
+    return 4; // autres
+  };
+
+  const findAttribute = (desc: string = '', list: { nom: string }[]) => {
+    const d = desc.toLowerCase();
+
+    const found = list.find(item =>
+      d.includes(item.nom.toLowerCase())
+    );
+
+    return found?.nom ?? '';
+  };
+
+  const extractSize = (desc: string = '') => {
+    const d = desc.toLowerCase();
+
+    // Recherche une taille numérique (8,10,12,14,16,18,20...)
+    const match = d.match(/\b(\d{1,2})\b/);
+
+    if (match) return Number(match[1]);
+
+    // Sinon on regarde dans les tailles enregistrées
+    const taille = tailles.find(t =>
+      d.includes(t.nom.toLowerCase())
+    );
+
+    if (!taille) return 999;
+
+    const n = Number(taille.nom);
+
+    return isNaN(n) ? 999 : n;
+  };
+
+  return [...results].sort((a, b) => {
+    const da = a.description || '';
+    const db = b.description || '';
+
+    // 1. Catégorie
+    const cat = extractCategory(da) - extractCategory(db);
+    if (cat !== 0) return cat;
+
+    // 2. Modèle
+    const ma = findAttribute(da, modeles);
+    const mb = findAttribute(db, modeles);
+    const modele = ma.localeCompare(mb, 'fr');
+    if (modele !== 0) return modele;
+
+    // 3. Couleur
+    const ca = findAttribute(da, couleurs);
+    const cb = findAttribute(db, couleurs);
+    const couleur = ca.localeCompare(cb, 'fr');
+    if (couleur !== 0) return couleur;
+
+    // 4. Taille (du plus petit au plus grand)
+    const taille = extractSize(da) - extractSize(db);
+    if (taille !== 0) return taille;
+
+    // 5. Code
+    return (a.code || '').localeCompare(b.code || '', 'fr');
+  });
+}, [results, modeles, couleurs, tailles]);
+
+
+
+
+
   const Section: React.FC<{ icon: React.ReactNode; title: string; hint?: string; children: React.ReactNode }> = ({ icon, title, hint, children }) => (
     <div className="space-y-2">
       <div className="flex items-center gap-2">
@@ -253,7 +327,7 @@ const StockListModal: React.FC<Props> = ({ open, onClose, products }) => {
               {results.length === 0 ? (
                 <div className="p-8 text-center text-sm text-muted-foreground">Aucun produit ne correspond aux filtres</div>
               ) : (
-                results.map(p => (
+                sortedResults.map(p => (
                   <div key={p.id} className="grid grid-cols-12 gap-2 px-4 py-3 items-start text-sm hover:bg-violet-50/40 dark:hover:bg-violet-900/15 transition-all duration-200">
                     <div className="col-span-3">
                       <Badge variant="outline" className="font-mono text-[10px] border-indigo-200 text-indigo-700 dark:border-indigo-700 dark:text-indigo-300 whitespace-normal break-words">
