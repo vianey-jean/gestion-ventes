@@ -50,8 +50,16 @@ const ModernTableHead: React.FC<{ children: React.ReactNode; className?: string 
   </TableHead>
 );
 
-const ModernTableCell: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className }) => (
-  <TableCell className={cn("text-gray-600 dark:text-gray-400 text-xs sm:text-sm whitespace-nowrap", className)}>
+const ModernTableCell: React.FC<
+  React.TdHTMLAttributes<HTMLTableCellElement>
+> = ({ children, className, ...props }) => (
+  <TableCell
+    className={cn(
+      "text-gray-600 dark:text-gray-400 text-xs sm:text-sm whitespace-nowrap",
+      className
+    )}
+    {...props}
+  >
     {children}
   </TableCell>
 );
