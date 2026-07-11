@@ -367,7 +367,7 @@ const CommandesTable: React.FC<CommandesTableProps> = ({
 
                             <br />
 
-                            Dès qu'une nouvelle commande sera créée, elle apparaîtra automatiquement ici avec toutes ses informations.
+                            Dès qu'une nouvelle commande sera créée, elle apparaîtra automatiquement ici .
 
                           </p>
 
