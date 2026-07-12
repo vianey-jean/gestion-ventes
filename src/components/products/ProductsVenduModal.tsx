@@ -72,9 +72,56 @@ const ProductsVenduModal: React.FC<Props> = ({ open, onClose }) => {
   }, [open, toast]);
 
   const filtered = useMemo(() => {
-    if (filter === 'tous') return items;
-    return items.filter(it => it.category === filter);
-  }, [items, filter]);
+  const list =
+    filter === 'tous'
+      ? [...items]
+      : items.filter((it) => it.category === filter);
+
+  // Classement des ventes
+  const soldOnly = [...list]
+    .filter((i) => i.totalSold > 0)
+    .sort((a, b) => b.totalSold - a.totalSold);
+
+  const n = soldOnly.length;
+
+  const getTier = (item: VenduItem): number => {
+    if (item.totalSold === 0) return 2;
+
+    const rank = soldOnly.findIndex((s) => s.id === item.id);
+
+    if (n <= 2) {
+      return rank === 0 ? 0 : 1;
+    }
+
+    const third = Math.ceil(n / 3);
+
+    if (rank < third) return 0; // Plus vendu
+
+    if (rank < third * 2) return 1; // Moyen
+
+    return 2; // Peu vendu
+  };
+
+  return list.sort((a, b) => {
+    // priorité : niveau de vente
+    const tierA = getTier(a);
+    const tierB = getTier(b);
+
+    if (tierA !== tierB) return tierA - tierB;
+
+    // ensuite le stock
+    if (a.stockRestant !== b.stockRestant) {
+      return a.stockRestant - b.stockRestant;
+    }
+
+    // enfin le nombre vendu
+    if (a.totalSold !== b.totalSold) {
+      return b.totalSold - a.totalSold;
+    }
+
+    return a.description.localeCompare(b.description);
+  });
+}, [items, filter]);
 
   // Compute sales tier based on rank within current filtered list
   const tierMap = useMemo(() => {

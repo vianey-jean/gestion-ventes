@@ -7,7 +7,7 @@ import React, { useMemo, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Printer, Package, Palette, Ruler, Sparkles, Hash, X } from 'lucide-react';
+import { Printer, Package, Palette, Ruler, Sparkles, Hash, ArrowDown, ArrowUp, X } from 'lucide-react';
 import { Product } from '@/types';
 import useProductAttributes from '@/hooks/useProductAttributes';
 import jsPDF from 'jspdf';
@@ -71,80 +71,156 @@ const StockListModal: React.FC<Props> = ({ open, onClose, products }) => {
 
   const exportPdf = () => {
     try {
-      const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      // Tri A -> Z par description
+      const sortedResults = [...results].sort((a, b) =>
+        (a.description || "").localeCompare(b.description || "", "fr", {
+          sensitivity: "base",
+        })
+      );
+
+      const doc = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4",
+      });
+
       const w = doc.internal.pageSize.getWidth();
       const ph = doc.internal.pageSize.getHeight();
+
+      // En-tête
       doc.setFillColor(124, 58, 237);
-      doc.rect(0, 0, w, 22, 'F');
+      doc.rect(0, 0, w, 22, "F");
+
       doc.setTextColor(255, 255, 255);
-      doc.setFont('helvetica', 'bold');
+      doc.setFont("helvetica", "bold");
       doc.setFontSize(16);
-      doc.text('Liste du stock', 14, 14);
+      doc.text("Liste du stock", 14, 14);
+
+      doc.setFont("helvetica", "normal");
       doc.setFontSize(10);
-      doc.setFont('helvetica', 'normal');
-      doc.text(new Date().toLocaleString('fr-FR'), w - 14, 14, { align: 'right' });
+      doc.text(new Date().toLocaleString("fr-FR"), w - 14, 14, {
+        align: "right",
+      });
 
       let y = 30;
+
+      // Filtres
       doc.setTextColor(60, 60, 60);
       doc.setFontSize(9);
+
       const filters: string[] = [];
+
       if (categorie) filters.push(`Catégorie: ${categorie}`);
       if (devant) filters.push(`Devant: ${devant}`);
-      if (selModeles.length) filters.push(`Modèles: ${selModeles.join(', ')}`);
-      if (selCouleurs.length) filters.push(`Couleurs: ${selCouleurs.join(', ')}`);
-      if (selTailles.length) filters.push(`Tailles: ${selTailles.join(', ')}`);
-      const filterText = filters.length ? filters.join('  |  ') : 'Aucun filtre';
+      if (selModeles.length) filters.push(`Modèles: ${selModeles.join(", ")}`);
+      if (selCouleurs.length) filters.push(`Couleurs: ${selCouleurs.join(", ")}`);
+      if (selTailles.length) filters.push(`Tailles: ${selTailles.join(", ")}`);
+
+      const filterText =
+        filters.length > 0 ? filters.join("  |  ") : "Aucun filtre";
+
       const filterLines = doc.splitTextToSize(filterText, w - 28);
+
       doc.text(filterLines, 14, y);
+
       y += filterLines.length * 4 + 4;
 
-      // Header
+      // En-tête du tableau
       doc.setFillColor(243, 232, 255);
-      doc.rect(10, y, w - 20, 8, 'F');
+      doc.rect(10, y, w - 20, 8, "F");
+
       doc.setTextColor(88, 28, 135);
-      doc.setFont('helvetica', 'bold');
+      doc.setFont("helvetica", "bold");
       doc.setFontSize(9);
-      doc.text('Code', 12, y + 5.5);
-      doc.text('Description', 38, y + 5.5);
-      doc.text('Qté', w - 62, y + 5.5, { align: 'right' });
-      doc.text('Prix', w - 40, y + 5.5, { align: 'right' });
-      doc.text('Valeur', w - 12, y + 5.5, { align: 'right' });
+
+      doc.text("Code", 12, y + 5.5);
+      doc.text("Description", 38, y + 5.5);
+      doc.text("Qté", w - 62, y + 5.5, { align: "right" });
+      doc.text("Prix", w - 40, y + 5.5, { align: "right" });
+      doc.text("Valeur", w - 12, y + 5.5, { align: "right" });
+
       y += 10;
 
-      doc.setFont('helvetica', 'normal');
+      // Lignes
+      doc.setFont("helvetica", "normal");
       doc.setTextColor(30, 30, 30);
-      results.forEach((p, i) => {
-        if (y > ph - 20) { doc.addPage(); y = 20; }
+
+      sortedResults.forEach((p, i) => {
+        if (y > ph - 20) {
+          doc.addPage();
+          y = 20;
+        }
+
         if (i % 2 === 0) {
           doc.setFillColor(250, 245, 255);
-          doc.rect(10, y - 4, w - 20, 7, 'F');
+          doc.rect(10, y - 4, w - 20, 7, "F");
         }
-        const desc = doc.splitTextToSize(p.description || '', w - 100)[0];
+
+        const desc = doc.splitTextToSize(
+          p.description || "",
+          w - 100
+        )[0];
+
         doc.setFontSize(8);
-        doc.text(p.code || '—', 12, y);
+
+        doc.text(p.code || "—", 12, y);
         doc.text(desc, 38, y);
-        doc.text(String(p.quantity ?? 0), w - 62, y, { align: 'right' });
-        doc.text(`${(p.purchasePrice ?? 0).toFixed(2)}€`, w - 40, y, { align: 'right' });
-        doc.text(`${((p.quantity ?? 0) * (p.purchasePrice ?? 0)).toFixed(2)}€`, w - 12, y, { align: 'right' });
+
+        doc.text(String(p.quantity ?? 0), w - 62, y, {
+          align: "right",
+        });
+
+        doc.text(`${(p.purchasePrice ?? 0).toFixed(2)}€`, w - 40, y, {
+          align: "right",
+        });
+
+        doc.text(
+          `${((p.quantity ?? 0) * (p.purchasePrice ?? 0)).toFixed(2)}€`,
+          w - 12,
+          y,
+          {
+            align: "right",
+          }
+        );
+
         y += 7;
       });
 
-      if (y > ph - 20) { doc.addPage(); y = 20; }
+      // Totaux
+      if (y > ph - 20) {
+        doc.addPage();
+        y = 20;
+      }
+
       y += 4;
+
       doc.setDrawColor(168, 85, 247);
       doc.line(10, y, w - 10, y);
+
       y += 6;
-      doc.setFont('helvetica', 'bold');
+
+      doc.setFont("helvetica", "bold");
       doc.setFontSize(10);
       doc.setTextColor(88, 28, 135);
-      doc.text(`Total produits: ${results.length}`, 12, y);
+
+      doc.text(`Total produits: ${sortedResults.length}`, 12, y);
       doc.text(`Quantité totale: ${totalQty}`, 90, y);
-      doc.text(`Valeur: ${totalValue.toFixed(2)}€`, w - 12, y, { align: 'right' });
+      doc.text(`Valeur: ${totalValue.toFixed(2)}€`, w - 12, y, {
+        align: "right",
+      });
 
       doc.save(`stock_${new Date().toISOString().slice(0, 10)}.pdf`);
-      toast({ title: 'PDF généré', description: `${results.length} produit(s) exportés` });
+
+      toast({
+        title: "PDF généré",
+        description: `${sortedResults.length} produit(s) exportés`,
+      });
     } catch (e) {
-      toast({ variant: 'destructive', title: 'Erreur PDF', description: 'Impossible de générer le PDF' });
+      toast({
+        variant: "destructive",
+        title: "Erreur PDF",
+        description: "Impossible de générer le PDF",
+      });
     }
   };
 
@@ -158,75 +234,74 @@ const StockListModal: React.FC<Props> = ({ open, onClose, products }) => {
     >{children}</button>
   );
 
+  const [descriptionOrder, setDescriptionOrder] = useState<"asc" | "desc">("asc");
 
   const sortedResults = useMemo(() => {
-  const extractCategory = (desc: string = '') => {
-    const d = desc.toLowerCase();
+    const extractCategory = (desc: string = '') => {
+      const d = desc.toLowerCase();
 
-    if (d.includes('perruque')) return 1;
-    if (d.includes('tissage')) return 2;
-    if (d.includes('extension')) return 3;
-    return 4; // autres
-  };
+      if (d.includes('perruque')) return 1;
+      if (d.includes('tissages')) return 2;
+      if (d.includes('extension')) return 3;
+      return 4;
+    };
 
-  const findAttribute = (desc: string = '', list: { nom: string }[]) => {
-    const d = desc.toLowerCase();
+    const findAttribute = (desc: string = '', list: { nom: string }[]) => {
+      const d = desc.toLowerCase();
 
-    const found = list.find(item =>
-      d.includes(item.nom.toLowerCase())
-    );
+      const found = list.find(item =>
+        d.includes(item.nom.toLowerCase())
+      );
 
-    return found?.nom ?? '';
-  };
+      return found?.nom ?? '';
+    };
 
-  const extractSize = (desc: string = '') => {
-    const d = desc.toLowerCase();
+    const extractSize = (desc: string = '') => {
+      const d = desc.toLowerCase();
 
-    // Recherche une taille numérique (8,10,12,14,16,18,20...)
-    const match = d.match(/\b(\d{1,2})\b/);
+      const match = d.match(/\b(\d{1,2})\b/);
 
-    if (match) return Number(match[1]);
+      if (match) return Number(match[1]);
 
-    // Sinon on regarde dans les tailles enregistrées
-    const taille = tailles.find(t =>
-      d.includes(t.nom.toLowerCase())
-    );
+      const taille = tailles.find(t =>
+        d.includes(t.nom.toLowerCase())
+      );
 
-    if (!taille) return 999;
+      if (!taille) return 999;
 
-    const n = Number(taille.nom);
+      const n = Number(taille.nom);
 
-    return isNaN(n) ? 999 : n;
-  };
+      return isNaN(n) ? 999 : n;
+    };
 
-  return [...results].sort((a, b) => {
-    const da = a.description || '';
-    const db = b.description || '';
+    return [...results].sort((a, b) => {
+      const da = a.description || '';
+      const db = b.description || '';
 
-    // 1. Catégorie
-    const cat = extractCategory(da) - extractCategory(db);
-    if (cat !== 0) return cat;
+      let result = 0;
 
-    // 2. Modèle
-    const ma = findAttribute(da, modeles);
-    const mb = findAttribute(db, modeles);
-    const modele = ma.localeCompare(mb, 'fr');
-    if (modele !== 0) return modele;
+      // 1. Catégorie
+      result = extractCategory(da) - extractCategory(db);
+      if (result !== 0) return descriptionOrder === "asc" ? result : -result;
 
-    // 3. Couleur
-    const ca = findAttribute(da, couleurs);
-    const cb = findAttribute(db, couleurs);
-    const couleur = ca.localeCompare(cb, 'fr');
-    if (couleur !== 0) return couleur;
+      // 2. Modèle
+      result = findAttribute(da, modeles).localeCompare(findAttribute(db, modeles), "fr");
+      if (result !== 0) return descriptionOrder === "asc" ? result : -result;
 
-    // 4. Taille (du plus petit au plus grand)
-    const taille = extractSize(da) - extractSize(db);
-    if (taille !== 0) return taille;
+      // 3. Couleur
+      result = findAttribute(da, couleurs).localeCompare(findAttribute(db, couleurs), "fr");
+      if (result !== 0) return descriptionOrder === "asc" ? result : -result;
 
-    // 5. Code
-    return (a.code || '').localeCompare(b.code || '', 'fr');
-  });
-}, [results, modeles, couleurs, tailles]);
+      // 4. Taille
+      result = extractSize(da) - extractSize(db);
+      if (result !== 0) return descriptionOrder === "asc" ? result : -result;
+
+      // 5. Code
+      result = (a.code || "").localeCompare(b.code || "", "fr");
+
+      return descriptionOrder === "asc" ? result : -result;
+    });
+  }, [results, modeles, couleurs, tailles, descriptionOrder]);
 
 
 
@@ -319,7 +394,33 @@ const StockListModal: React.FC<Props> = ({ open, onClose, products }) => {
           <div className="flex-1 min-h-0 mx-5 mb-5 rounded-2xl border border-violet-200/50 dark:border-violet-800/50 overflow-hidden flex flex-col bg-white/60 dark:bg-gray-900/60 backdrop-blur-sm shadow-inner">
             <div className="shrink-0 grid grid-cols-12 gap-2 px-4 py-2.5 bg-gradient-to-r from-violet-50/80 to-fuchsia-50/80 dark:from-violet-900/40 dark:to-fuchsia-900/40 text-[11px] font-black text-violet-800 dark:text-violet-200 uppercase tracking-wide backdrop-blur-sm border-b border-violet-100 dark:border-violet-900/40">
               <div className="col-span-3">Code</div>
-              <div className="col-span-5">Description</div>
+              <div className="col-span-5 flex items-center gap-2">
+                <span>Description</span>
+
+                <button
+                  type="button"
+                  onClick={() => setDescriptionOrder("asc")}
+                  className={`p-0.5 rounded transition ${descriptionOrder === "asc"
+                    ? "text-violet-700 dark:text-violet-300"
+                    : "text-gray-400 hover:text-violet-600"
+                    }`}
+                  title="Trier de A vers Z"
+                >
+                  <ArrowDown className="h-3.5 w-3.5" />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setDescriptionOrder("desc")}
+                  className={`p-0.5 rounded transition ${descriptionOrder === "desc"
+                    ? "text-violet-700 dark:text-violet-300"
+                    : "text-gray-400 hover:text-violet-600"
+                    }`}
+                  title="Trier de Z vers A"
+                >
+                  <ArrowUp className="h-3.5 w-3.5" />
+                </button>
+              </div>
               <div className="col-span-1 text-right">Qté</div>
               <div className="col-span-3 text-right">Prix</div>
             </div>
