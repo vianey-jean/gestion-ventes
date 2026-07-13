@@ -30,15 +30,31 @@ const ClassificationSearchPopover: React.FC<Props> = ({
   className = '',
 }) => {
   const [open, setOpen] = useState(false);
+  const toPC = (c: SearchCategory): PCCategory | '' => {
+    switch (c) {
+      case 'perruque': return 'Perruque';
+      case 'tissage': return 'Tissages';
+      case 'extension': return 'Extension';
+      case 'autres': return 'Autres';
+      default: return '';
+    }
+  };
+  const fromPC = (c: PCCategory | '' | undefined): SearchCategory => {
+    switch (c) {
+      case 'Perruque': return 'perruque';
+      case 'Tissages': return 'tissage';
+      case 'Extension': return 'extension';
+      case 'Autres': return 'autres';
+      default: return 'all';
+    }
+  };
   const [value, setValue] = useState<ClassificationValue>({
-    categorie: currentCategory === 'all' ? '' : (currentCategory === 'tissage' ? 'tissages' : (currentCategory as PCCategory)),
+    categorie: toPC(currentCategory),
   });
 
   const apply = () => {
     const name = buildProductName(value);
-    const raw = value.categorie || 'all';
-    const category: SearchCategory = (raw === 'tissages' ? 'tissage' : raw) as SearchCategory;
-    onApply({ name, category });
+    onApply({ name, category: fromPC(value.categorie) });
     setOpen(false);
   };
 

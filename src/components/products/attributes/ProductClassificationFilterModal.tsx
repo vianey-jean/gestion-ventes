@@ -17,7 +17,7 @@ interface Props {
 }
 
 const CATEGORY_LABEL: Record<ProductCategory, string> = {
-  perruque: 'Perruques', tissages: 'Tissages', extension: 'Extensions', autres: 'Autres',
+  Perruque: 'Perruques', Tissages: 'Tissages', Extension: 'Extensions', Autres: 'Autres',
 };
 
 const ProductClassificationFilterModal: React.FC<Props> = ({ open, onOpenChange, categorie, initial, onApply }) => {

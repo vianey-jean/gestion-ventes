@@ -4,6 +4,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { Button } from '@/components/ui/button';
 import { Phone, MapPin, Edit, Trash2, Crown, Star } from 'lucide-react';
 import { Client } from '@/types/client';
+import ClientFideliteBadge from './ClientFideliteBadge';
 
 interface ClientCardProps {
   client: Client;
@@ -54,7 +55,12 @@ const ClientCard: React.FC<ClientCardProps> = ({
           </div>
         </div>
       </CardHeader>
-      
+
+      {/* Badge de fidélité (extrait dans ClientFideliteBadge) */}
+      <div className="px-6 pb-1">
+        <ClientFideliteBadge clientName={client.nom} />
+      </div>
+
       <CardContent className="space-y-4 relative z-10">
         {/* Téléphones - affichage empilé */}
         {(client.phones && client.phones.length > 0 ? client.phones : [client.phone]).map((phone, idx) => (

@@ -27,6 +27,7 @@ import PremiumLoading from '@/components/ui/premium-loading';
 import ClientPhotoZoomModal from '@/components/clients/ClientPhotoZoomModal';
 import ClientMergeModal from '@/components/clients/ClientMergeModal';
 import DuplicateClientModal from '@/components/clients/DuplicateClientModal';
+import ClientFideliteBadge from '@/components/clients/ClientFideliteBadge';
 import { findMatchingClients, type ClientMatch } from '@/utils/clientMatch';
 import { motion } from "framer-motion";
 import SEOHead from '@/components/SEOHead';
@@ -428,7 +429,12 @@ const ClientsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => 
                   </div>
                 </div>
               </CardHeader>
-              
+
+              {/* Badge de fidélité synchronisé fidelite.json */}
+              <div className="px-6 pb-2 relative z-10">
+                <ClientFideliteBadge clientName={client.nom} />
+              </div>
+
               <CardContent className="relative z-10">
                 <div className="space-y-4">
                   {/* Affichage multi-téléphones empilés */}
