@@ -95,14 +95,14 @@ const ClientFideliteModal: React.FC<Props> = ({ open, onOpenChange, clientName }
                 <div className="flex items-center gap-2 text-emerald-200 text-xs font-semibold uppercase tracking-wider">
                   <Receipt className="w-3.5 h-3.5" /> Total dépensé
                 </div>
-                <p className="mt-2 text-2xl sm:text-3xl font-black text-white">{fmt(data?.totalAmount ?? 0)} <span className="text-sm text-emerald-200/80">Ar</span></p>
+                <p className="mt-2 text-2xl sm:text-3xl font-black text-emerald-200/80">{fmt(data?.totalAmount ?? 0)} <span className="mt-2 text-2xl sm:text-3xl  text-emerald-200/80">€</span></p>
               </div>
               <div className="rounded-2xl p-4 bg-gradient-to-br from-amber-500/20 to-orange-600/20 border border-amber-400/20 backdrop-blur col-span-2 sm:col-span-1">
                 <div className="flex items-center gap-2 text-amber-200 text-xs font-semibold uppercase tracking-wider">
                   <TrendingUp className="w-3.5 h-3.5" /> Panier moyen
                 </div>
-                <p className="mt-2 text-2xl sm:text-3xl font-black text-white">
-                  {fmt((data?.count || 0) > 0 ? (data!.totalAmount / data!.count) : 0)} <span className="text-sm text-amber-200/80">Ar</span>
+                <p className="mt-2 text-2xl sm:text-3xl font-black text-amber-200/80">
+                  {fmt((data?.count || 0) > 0 ? (data!.totalAmount / data!.count) : 0)} <span className="mt-2 text-2xl sm:text-3xl text-amber-200/80">€</span>
                 </p>
               </div>
             </div>
@@ -117,7 +117,7 @@ const ClientFideliteModal: React.FC<Props> = ({ open, onOpenChange, clientName }
                   {byMonth.map((m, i) => (
                     <div key={i} className="px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-white/90 text-xs font-semibold backdrop-blur">
                       <span className="capitalize">{m.label}</span>
-                      <span className="ml-2 text-emerald-300">{fmt(m.total)} Ar</span>
+                      <span className="ml-2 text-emerald-300">{fmt(m.total)} €</span>
                       <span className="ml-1.5 text-white/50">· {m.count} achat{m.count > 1 ? 's' : ''}</span>
                     </div>
                   ))}
@@ -152,9 +152,9 @@ const ClientFideliteModal: React.FC<Props> = ({ open, onOpenChange, clientName }
                         {s.clientVille && <p className="text-[11px] text-white/50 mt-0.5">📍 {s.clientVille}</p>}
                       </div>
                       <div className="text-right">
-                        <p className="text-lg font-black text-emerald-300">{fmt(s.amount)} Ar</p>
+                        <p className="text-lg font-black text-emerald-300">{fmt(s.amount)} €</p>
                         {typeof s.profit === 'number' && s.profit !== 0 && (
-                          <p className="text-[11px] text-white/50">Bénéfice: {fmt(s.profit)} Ar</p>
+                          <p className="text-[11px] text-white/50">Bénéfice: {fmt(s.profit)} €</p>
                         )}
                       </div>
                     </div>
@@ -168,7 +168,7 @@ const ClientFideliteModal: React.FC<Props> = ({ open, onOpenChange, clientName }
                               {p.description || p.name || 'Produit'}
                             </span>
                             <span className="text-white/70 font-semibold whitespace-nowrap">
-                              {fmt((Number(p.sellingPrice) || 0) * (Number(p.quantitySold ?? p.quantity ?? 1) || 1))} Ar
+                              {fmt((Number(p.sellingPrice) || 0) * (Number(p.quantitySold ?? p.quantity ?? 1) || 1))} €
                             </span>
                           </div>
                         ))}
