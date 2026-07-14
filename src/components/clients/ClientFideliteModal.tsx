@@ -223,7 +223,7 @@ const ClientFideliteModal: React.FC<Props> = ({ open, onOpenChange, clientName }
                               {p.description || p.name || 'Produit'}
                             </span>
                             <span className="text-white/70 font-semibold whitespace-nowrap">
-                              {fmt((Number(p.sellingPrice) || 0) * (Number(p.quantitySold ?? p.quantity ?? 1) || 1))} €
+                              {fmt((Number(p.sellingPrice) || 0) * (Number(p.quantity ?? 1) || 1))} €
                             </span>
                           </div>
                         ))}
