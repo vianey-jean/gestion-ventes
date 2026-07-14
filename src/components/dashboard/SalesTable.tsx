@@ -42,6 +42,12 @@ import { Button } from '@/components/ui/button';
 interface SalesTableProps {
   sales: Sale[];
   onRowClick: (sale: Sale) => void;
+  /** Mois cible (1-12) pour affichage historique (ex: navigation depuis ClientFideliteModal). */
+  overrideMonth?: number;
+  /** Année cible pour affichage historique. */
+  overrideYear?: number;
+  /** ID de la vente à mettre en évidence (clignotement vert). */
+  highlightSaleId?: string;
 }
 
 /**
@@ -58,6 +64,9 @@ interface SalesTableProps {
 const SalesTable: React.FC<SalesTableProps> = ({
   sales: initialSales,
   onRowClick,
+  overrideMonth,
+  overrideYear,
+  highlightSaleId,
 }) => {
   const [sales, setSales] = useState<Sale[]>([]);
 
@@ -85,23 +94,28 @@ const SalesTable: React.FC<SalesTableProps> = ({
   ) => {
     const now = new Date();
 
-    const currentMonth = now.getMonth();
+    const targetMonth =
+      typeof overrideMonth === 'number' && overrideMonth >= 1 && overrideMonth <= 12
+        ? overrideMonth - 1
+        : now.getMonth();
 
-    const currentYear = now.getFullYear();
+    const targetYear =
+      typeof overrideYear === 'number' ? overrideYear : now.getFullYear();
 
     return salesData.filter((sale) => {
       const saleDate = new Date(sale.date);
 
       return (
-        saleDate.getMonth() === currentMonth &&
-        saleDate.getFullYear() === currentYear
+        saleDate.getMonth() === targetMonth &&
+        saleDate.getFullYear() === targetYear
       );
     });
   };
 
   const currentMonthSales = useMemo(() => {
     return filterCurrentMonthSales(initialSales);
-  }, [initialSales]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialSales, overrideMonth, overrideYear]);
 
   // =========================================================
   // REALTIME
@@ -171,6 +185,22 @@ const SalesTable: React.FC<SalesTableProps> = ({
   useEffect(() => {
     setSales(currentMonthSales);
   }, [currentMonthSales]);
+
+  // =========================================================
+  // AUTO-SCROLL vers la vente mise en évidence (navigation ClientFideliteModal)
+  // =========================================================
+  useEffect(() => {
+    if (!highlightSaleId) return;
+    const t = setTimeout(() => {
+      try {
+        const el = document.querySelector(
+          '.riziky-sale-highlight'
+        ) as HTMLElement | null;
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      } catch {}
+    }, 400);
+    return () => clearTimeout(t);
+  }, [highlightSaleId, sales]);
 
   // =========================================================
   // LOADING
@@ -364,7 +394,18 @@ const SalesTable: React.FC<SalesTableProps> = ({
   // MONTH NAME
   // =========================================================
 
+  const MONTH_NAMES_FR = [
+    'janvier', 'février', 'mars', 'avril', 'mai', 'juin',
+    'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'
+  ];
+
+  const isOverrideDisplay =
+    typeof overrideMonth === 'number' && typeof overrideYear === 'number';
+
   const getCurrentMonthName = () => {
+    if (isOverrideDisplay) {
+      return `${MONTH_NAMES_FR[(overrideMonth as number) - 1]} ${overrideYear}`;
+    }
     return new Date().toLocaleDateString(
       'fr-FR',
       {
@@ -406,6 +447,19 @@ const SalesTable: React.FC<SalesTableProps> = ({
 
   return (
     <div className="overflow-hidden rounded-[32px] border border-white/60 bg-gradient-to-br from-white via-slate-50 to-blue-50/40 shadow-[0_20px_80px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+      <style>{`
+        @keyframes rizikySaleBlink {
+          0%, 100% { background-color: rgba(16, 185, 129, 0.35); box-shadow: 0 0 0 3px rgba(16,185,129,0.6), 0 0 40px rgba(16,185,129,0.55) inset; }
+          50%      { background-color: rgba(16, 185, 129, 0.08); box-shadow: 0 0 0 3px rgba(16,185,129,0.15), 0 0 15px rgba(16,185,129,0.15) inset; }
+        }
+        .riziky-sale-highlight > td { animation: rizikySaleBlink 1.1s ease-in-out infinite; }
+        .riziky-sale-highlight { outline: 2px solid rgba(16,185,129,0.7); outline-offset: -2px; }
+        @keyframes rizikyMonthBlinkWhite {
+          0%,100% { color:#ffffff; text-shadow:0 0 14px rgba(255,255,255,0.95), 0 0 28px rgba(52,211,153,0.65); }
+          50%     { color:#a7f3d0; text-shadow:0 0 4px rgba(255,255,255,0.25); }
+        }
+        .riziky-month-blink-white { animation: rizikyMonthBlinkWhite 1s ease-in-out infinite; }
+      `}</style>
 
       {/* ========================================================= */}
       {/* HEADER */}
@@ -456,7 +510,13 @@ const SalesTable: React.FC<SalesTableProps> = ({
                 </div>
               </div>
 
-              <h2 className="text-4xl font-black tracking-tight text-white">
+              <p className="text-xs font-semibold uppercase tracking-[0.25em] text-white/80">
+                {isOverrideDisplay ? 'Ventes affichées' : 'Mois en cours'}
+              </p>
+              <h2
+                className={`text-4xl font-black tracking-tight text-white ${isOverrideDisplay ? 'riziky-month-blink-white inline-flex items-center gap-2' : ''}`}
+              >
+                {isOverrideDisplay && <span>📅</span>}
                 Ventes {getCurrentMonthName()}
               </h2>
 
@@ -769,13 +829,20 @@ const SalesTable: React.FC<SalesTableProps> = ({
                     {!isCollapsed &&
                       daySales.map((sale, index) => {
                         const isRefund = isRefundSale(sale);
+                        const isHighlighted =
+                          !!highlightSaleId && sale.id === highlightSaleId;
 
                         return (
                           <ModernTableRow
                             key={sale.id}
                             onClick={() => onRowClick(sale)}
-                            className={`cursor-pointer transition-all duration-300 hover:bg-violet-50/60 ${isRefund ? 'bg-red-50/40' : ''
-                              }`}
+                            className={`cursor-pointer transition-all duration-300 hover:bg-violet-50/60 ${
+                              isRefund ? 'bg-red-50/40' : ''
+                            } ${
+                              isHighlighted
+                                ? 'riziky-sale-highlight relative z-10'
+                                : ''
+                            }`}
                           >
 
                             {/* DATE */}

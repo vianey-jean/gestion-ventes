@@ -206,6 +206,30 @@ const DashboardPage = () => {
     return () => clearTimeout(t);
   }, []);
 
+  // ======================= NAVIGATION DEPUIS ClientFideliteModal =======================
+  React.useEffect(() => {
+    const onNav = () => {
+      setActiveSection('ventes');
+      setMobileMenuOpen(false);
+    };
+    window.addEventListener('fidelite-sale-nav', onNav as EventListener);
+
+    // Cas initial : si l'événement a déjà été posé (ex: navigation directe / rechargement)
+    try {
+      const raw = sessionStorage.getItem('fideliteSaleNav');
+      if (raw) {
+        const p = JSON.parse(raw);
+        if (p && Date.now() - (p.ts || 0) < 30_000) {
+          setActiveSection('ventes');
+        }
+      }
+    } catch {}
+
+    return () => window.removeEventListener('fidelite-sale-nav', onNav as EventListener);
+  }, []);
+
+
+
   // ======================= MAIN CONTENT OFFSET =======================
 
   React.useEffect(() => {

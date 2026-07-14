@@ -27,6 +27,11 @@ interface SalesManagementSectionProps {
   currentMonth: number;
   currentYear: number;
   showActions?: boolean;
+  /** Mois cible (1-12) affiché à la place du mois en cours (navigation ClientFideliteModal). */
+  overrideMonth?: number;
+  overrideYear?: number;
+  highlightSaleId?: string;
+  onReturnToCurrent?: () => void;
 }
 
 
@@ -40,8 +45,16 @@ const SalesManagementSection: React.FC<SalesManagementSectionProps> = ({
   products,
   currentMonth,
   currentYear,
-  showActions = true
+  showActions = true,
+  overrideMonth,
+  overrideYear,
+  highlightSaleId,
+  onReturnToCurrent,
 }) => {
+  const isOverride =
+    typeof overrideMonth === 'number' && typeof overrideYear === 'number';
+  const displayMonth = isOverride ? overrideMonth! : currentMonth;
+  const displayYear = isOverride ? overrideYear! : currentYear;
 
   const [addSaleDialogOpen, setAddSaleDialogOpen] = useState(false);
   const [multiProductSaleDialogOpen, setMultiProductSaleDialogOpen] = useState(false);
@@ -131,6 +144,15 @@ const SalesManagementSection: React.FC<SalesManagementSectionProps> = ({
 
   return (
     <section aria-labelledby="sales-management-title">
+      {isOverride && (
+        <style>{`
+          @keyframes rizikyMonthBlink {
+            0%,100% { color:#065f46; text-shadow:0 0 12px rgba(16,185,129,.9), 0 0 24px rgba(16,185,129,.6); }
+            50%     { color:#10b981; text-shadow:0 0 4px rgba(16,185,129,.25); }
+          }
+          .riziky-month-blink { animation: rizikyMonthBlink 1s ease-in-out infinite; }
+        `}</style>
+      )}
       <ModernContainer 
         title="Gestion des Ventes" 
         icon={ShoppingCart}
@@ -138,9 +160,16 @@ const SalesManagementSection: React.FC<SalesManagementSectionProps> = ({
         headerActions={
           <div className="flex items-center space-x-4">
             <div className="text-right">
-              <p className="text-sm text-muted-foreground">Mois en cours</p>
-              <p className="text-lg font-bold text-primary">
-                {monthNames[currentMonth - 1]} {currentYear}
+              <p className="text-sm text-muted-foreground">
+                {isOverride ? 'Ventes affichées' : 'Mois en cours'}
+              </p>
+              <p className={cn(
+                "text-lg font-black",
+                isOverride
+                  ? "riziky-month-blink inline-flex items-center gap-1"
+                  : "text-primary"
+              )}>
+                {isOverride && '📅 '}Ventes {monthNames[displayMonth - 1]} {displayYear}
               </p>
             </div>
             <AccessibleButton
@@ -212,6 +241,9 @@ const SalesManagementSection: React.FC<SalesManagementSectionProps> = ({
           <SalesTable 
             sales={sales} 
             onRowClick={handleRowClick}
+            overrideMonth={overrideMonth}
+            overrideYear={overrideYear}
+            highlightSaleId={highlightSaleId}
           />
         </div>
         

@@ -1,13 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useApp } from '@/contexts/AppContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useOptimizedSalesData, useOptimizedProductData } from '@/services/dataOptimizationService';
 import { useAccessibility } from '@/components/accessibility/AccessibilityProvider';
-import { ShoppingCart, Sparkles, Diamond, ChevronDown, ChevronUp, BarChart3, EyeOff } from 'lucide-react';
+import { ShoppingCart, Sparkles, Diamond, ChevronDown, ChevronUp, BarChart3, EyeOff, ArrowLeft, Zap } from 'lucide-react';
 import PremiumLoading from '../ui/premium-loading';
 import SalesOverviewSection from './sections/SalesOverviewSection';
 import SalesManagementSection from './sections/SalesManagementSection';
+import { saleApiService } from '@/services/api';
+import type { Sale } from '@/types/sale';
 
 const OVERVIEW_STORAGE_KEY = 'ventesProduits:showOverview';
 
@@ -49,6 +51,88 @@ const VentesProduits: React.FC = React.memo(() => {
       return next;
     });
   };
+
+  // ================= NAVIGATION DEPUIS ClientFideliteModal =================
+  // On lit sessionStorage 'fideliteSaleNav' pour surcharger l'affichage.
+  const [fideliteNav, setFideliteNav] = useState<{
+    saleId: string;
+    month: number;
+    year: number;
+    clientName?: string;
+  } | null>(null);
+  const [overrideSales, setOverrideSales] = useState<Sale[] | null>(null);
+  const [loadingOverride, setLoadingOverride] = useState(false);
+
+  const readNav = useCallback(() => {
+    try {
+      const raw = sessionStorage.getItem('fideliteSaleNav');
+      if (!raw) return null;
+      const p = JSON.parse(raw);
+      if (
+        p &&
+        typeof p.saleId === 'string' &&
+        typeof p.month === 'number' &&
+        typeof p.year === 'number'
+      ) {
+        return p;
+      }
+    } catch {}
+    return null;
+  }, []);
+
+  useEffect(() => {
+    const nav = readNav();
+    if (nav) setFideliteNav(nav);
+
+    const onNav = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail) setFideliteNav(detail);
+      else {
+        const n = readNav();
+        if (n) setFideliteNav(n);
+      }
+    };
+    window.addEventListener('fidelite-sale-nav', onNav as EventListener);
+    return () => window.removeEventListener('fidelite-sale-nav', onNav as EventListener);
+  }, [readNav]);
+
+  useEffect(() => {
+    let alive = true;
+    if (!fideliteNav) {
+      setOverrideSales(null);
+      return;
+    }
+    // Si le mois demandé = mois en cours, on utilise directement les ventes du contexte
+    if (fideliteNav.month === currentMonth && fideliteNav.year === currentYear) {
+      setOverrideSales(null);
+      return;
+    }
+    setLoadingOverride(true);
+    saleApiService
+      .getByMonth(fideliteNav.month, fideliteNav.year)
+      .then((data) => {
+        if (alive) setOverrideSales(data || []);
+      })
+      .catch(() => {
+        if (alive) setOverrideSales([]);
+      })
+      .finally(() => {
+        if (alive) setLoadingOverride(false);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [fideliteNav, currentMonth, currentYear]);
+
+  const handleReturnToCurrent = useCallback(() => {
+    try {
+      sessionStorage.removeItem('fideliteSaleNav');
+    } catch {}
+    setFideliteNav(null);
+    setOverrideSales(null);
+  }, []);
+
+  const effectiveSales = overrideSales ?? sales;
 
   if (!isAuthenticated) {
     return (
@@ -99,7 +183,42 @@ const VentesProduits: React.FC = React.memo(() => {
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            {fideliteNav && (
+              <>
+                <style>{`
+                  @keyframes rizikyReturnBtn {
+                    0%,100% { box-shadow: 0 0 0 0 rgba(16,185,129,0.85), 0 0 30px rgba(16,185,129,.75); transform: scale(1); }
+                    50%     { box-shadow: 0 0 0 14px rgba(16,185,129,0), 0 0 10px rgba(16,185,129,.25); transform: scale(1.04); }
+                  }
+                  @keyframes rizikyReturnGlow {
+                    0%,100% { background-position: 0% 50%; }
+                    50%     { background-position: 100% 50%; }
+                  }
+                  .riziky-return-btn {
+                    animation: rizikyReturnBtn 1.15s ease-in-out infinite, rizikyReturnGlow 3s ease infinite;
+                    background-size: 200% 200%;
+                  }
+                `}</style>
+                <motion.button
+                  type="button"
+                  onClick={handleReturnToCurrent}
+                  initial={{ opacity: 0, scale: 0.85, x: 10 }}
+                  animate={{ opacity: 1, scale: 1, x: 0 }}
+                  exit={{ opacity: 0, scale: 0.85 }}
+                  whileHover={{ scale: 1.08 }}
+                  whileTap={{ scale: 0.95 }}
+                  title={`Retour aux ventes du mois en cours (${currentMonth}/${currentYear})`}
+                  aria-label="Revenir à la vente du mois en cours"
+                  className="riziky-return-btn inline-flex items-center gap-2 px-4 py-2 rounded-2xl font-black text-white text-xs sm:text-sm bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 border-2 border-emerald-300/70 shadow-2xl"
+                >
+                  <ArrowLeft className="h-4 w-4 animate-pulse" />
+                  <span className="hidden xs:inline sm:inline">Revenir à la vente du mois en cours</span>
+                  <span className="inline xs:hidden sm:hidden">Retour mois</span>
+                  <Zap className="h-4 w-4 text-yellow-200 animate-pulse" />
+                </motion.button>
+              </>
+            )}
             <Diamond className="h-4 w-4 sm:h-5 sm:w-5 text-purple-500 animate-pulse" />
             <span className="text-xs sm:text-sm font-bold text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-900/30 px-3 py-1 rounded-full">
               Premium
@@ -172,11 +291,15 @@ const VentesProduits: React.FC = React.memo(() => {
         </AnimatePresence>
 
         <SalesManagementSection 
-          sales={sales}
+          sales={effectiveSales}
           products={products}
           currentMonth={currentMonth}
           currentYear={currentYear}
           showActions={showOverview}
+          overrideMonth={fideliteNav ? fideliteNav.month : undefined}
+          overrideYear={fideliteNav ? fideliteNav.year : undefined}
+          highlightSaleId={fideliteNav ? fideliteNav.saleId : undefined}
+          onReturnToCurrent={handleReturnToCurrent}
         />
 
       </div>

@@ -7,7 +7,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Crown, Sparkles, TrendingUp, ShoppingBag, Calendar, Package, Receipt, Award } from 'lucide-react';
+import { Crown, Sparkles, TrendingUp, ShoppingBag, Calendar, Package, Receipt, Award, ExternalLink } from 'lucide-react';
 import fideliteApiService, { FideliteEntry } from '@/services/api/fideliteApi';
 
 interface Props {
@@ -170,14 +170,39 @@ const ClientFideliteModal: React.FC<Props> = ({ open, onOpenChange, clientName }
               )}
 
               <div className="space-y-3">
-                {(data?.sales || []).map((s) => (
-                  <div key={s.id} className={`rounded-2xl p-4 border ${s.isRefund ? 'border-red-500/30 bg-red-500/5' : 'border-white/10 bg-white/5'} backdrop-blur hover:bg-white/10 transition-colors`}>
+                {(data?.sales || []).map((s) => {
+                  const dt = new Date(s.date);
+                  const targetMonth = dt.getMonth() + 1;
+                  const targetYear = dt.getFullYear();
+                  const handleNavigate = () => {
+                    try {
+                      const payload = {
+                        saleId: s.id,
+                        month: targetMonth,
+                        year: targetYear,
+                        clientName,
+                        ts: Date.now(),
+                      };
+                      sessionStorage.setItem('fideliteSaleNav', JSON.stringify(payload));
+                      window.dispatchEvent(new CustomEvent('fidelite-sale-nav', { detail: payload }));
+                    } catch {}
+                    onOpenChange(false);
+                  };
+                  return (
+                    <button
+                      type="button"
+                      key={s.id}
+                      onClick={handleNavigate}
+                      title="Voir cette vente dans la page Ventes"
+                      className={`w-full text-left rounded-2xl p-4 border ${s.isRefund ? 'border-red-500/30 bg-red-500/5' : 'border-white/10 bg-white/5'} backdrop-blur hover:bg-emerald-500/10 hover:border-emerald-400/40 hover:shadow-[0_0_25px_rgba(16,185,129,0.35)] hover:scale-[1.01] transition-all duration-300 group cursor-pointer`}
+                    >
                     <div className="flex items-start justify-between gap-3 flex-wrap">
                       <div>
                         <div className="flex items-center gap-2 text-white/80 text-xs font-semibold">
                           <Calendar className="w-3.5 h-3.5" />
                           {fmtDate(s.date)}
                           {s.isRefund && <Badge className="bg-red-500/80 text-white border-0 text-[10px]">Remboursement</Badge>}
+                          <ExternalLink className="w-3 h-3 text-emerald-300 opacity-0 group-hover:opacity-100 transition-opacity" />
                         </div>
                         {s.clientVille && <p className="text-[11px] text-white/50 mt-0.5">📍 {s.clientVille}</p>}
                       </div>
@@ -204,8 +229,12 @@ const ClientFideliteModal: React.FC<Props> = ({ open, onOpenChange, clientName }
                         ))}
                       </div>
                     )}
-                  </div>
-                ))}
+                    <p className="mt-2 text-[10px] text-emerald-300/70 opacity-0 group-hover:opacity-100 transition-opacity font-semibold uppercase tracking-wider">
+                      → Cliquer pour voir dans la page Ventes
+                    </p>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           </div>
