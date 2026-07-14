@@ -63,7 +63,22 @@ const ClientFideliteModal: React.FC<Props> = ({ open, onOpenChange, clientName }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="p-0 gap-0 w-[calc(100vw-1rem)] sm:w-[min(96vw,760px)] max-w-[760px] max-h-[92vh] rounded-3xl border-0 shadow-2xl overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-purple-950/60">
+      <DialogContent
+        className="
+    p-0
+    gap-0
+    w-[calc(100vw-1rem)]
+    sm:w-[min(96vw,760px)]
+    max-w-[760px]
+    h-[92vh]
+    max-h-[92vh]
+    rounded-3xl
+    border-0
+    shadow-2xl
+    overflow-hidden
+    bg-gradient-to-br from-slate-950 via-slate-900 to-purple-950/60
+  "
+      >
         <DialogHeader className="px-5 sm:px-8 pt-6 pb-5 bg-gradient-to-r from-purple-600/20 via-fuchsia-600/20 to-pink-600/20 border-b border-white/10">
           <DialogTitle className="flex flex-col sm:flex-row sm:items-center gap-3 text-white">
             <div className="flex items-center gap-3 min-w-0">
@@ -81,8 +96,23 @@ const ClientFideliteModal: React.FC<Props> = ({ open, onOpenChange, clientName }
           </DialogTitle>
         </DialogHeader>
 
-        <ScrollArea className="max-h-[calc(92vh-100px)]">
-          <div className="p-5 sm:p-8 space-y-6">
+        <ScrollArea
+          className="
+    h-[calc(92vh-100px)]
+    sm:h-[calc(92vh-110px)]
+    overflow-y-auto
+    overscroll-contain
+  "
+        >
+          <div
+            className="
+      p-5
+      sm:p-8
+      pb-32
+      sm:pb-16
+      space-y-6
+    "
+          >
             {/* KPIs */}
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
               <div className="rounded-2xl p-4 bg-gradient-to-br from-indigo-500/20 to-purple-600/20 border border-indigo-400/20 backdrop-blur">
