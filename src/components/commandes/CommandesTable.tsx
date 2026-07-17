@@ -14,6 +14,7 @@ import PreparationLivraisonButton from './PreparationLivraisonButton';
 import { getCaracteristiqueByLabel } from '@/utils/clientCharacteristic';
 import { useClients } from '@/hooks/useClients';
 import { useProducts } from '@/hooks/useProducts';
+import { useCommandes } from '@/hooks/useCommandes';
 import ClientDetailModal from '@/components/clients/ClientDetailModal';
 import ProductDetailModal from '@/components/products/ProductDetailModal';
 import CaracteristiqueModal from '@/components/products/CaracteristiqueModal';
@@ -57,6 +58,35 @@ const CommandesTable: React.FC<CommandesTableProps> = ({
 }) => {
   const { clients } = useClients();
   const { products } = useProducts();
+  const { commandes: allCommandes } = useCommandes();
+
+  const lastActivityLabel = useMemo(() => {
+    const source = (allCommandes && allCommandes.length ? allCommandes : filteredCommandes) || [];
+    if (!source.length) return '—';
+    const getTime = (c: any): number => {
+      const candidates = [
+        c.updatedAt, c.dateModification, c.dateCreation, c.createdAt,
+        c.dateArrivagePrevue, c.dateEcheance, c.date,
+      ].filter(Boolean);
+      let max = 0;
+      for (const d of candidates) {
+        const t = new Date(d).getTime();
+        if (!isNaN(t) && t > max) max = t;
+      }
+      return max;
+    };
+    const latest = source.reduce<{ t: number; c: any } | null>((acc, c) => {
+      const t = getTime(c);
+      return !acc || t > acc.t ? { t, c } : acc;
+    }, null);
+    if (!latest || !latest.t) return '—';
+    try {
+      return new Date(latest.t).toLocaleDateString('fr-FR', {
+        day: '2-digit', month: 'short', year: 'numeric',
+      });
+    } catch { return '—'; }
+  }, [allCommandes, filteredCommandes]);
+
 
   // Variables locales — réinitialisées à null à la fermeture
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
@@ -227,8 +257,8 @@ const CommandesTable: React.FC<CommandesTableProps> = ({
                     {/* Card 2 */}
                     <div className="rounded-3xl border border-white/30 dark:border-white/10 bg-white/50 dark:bg-slate-900/40 p-6 backdrop-blur-xl">
 
-                      <div className="text-3xl font-black text-fuchsia-600">
-                        —
+                      <div className="text-2xl sm:text-3xl font-black text-fuchsia-600 break-words">
+                        {lastActivityLabel}
                       </div>
 
                       <p className="mt-2 text-sm text-muted-foreground">
@@ -388,8 +418,8 @@ const CommandesTable: React.FC<CommandesTableProps> = ({
 
                             <div className="rounded-2xl border border-white/30 dark:border-white/10 bg-white/60 dark:bg-slate-900/40 p-6 backdrop-blur-xl">
 
-                              <div className="text-3xl font-black text-fuchsia-600">
-                                —
+                              <div className="text-2xl sm:text-3xl font-black text-fuchsia-600 break-words">
+                                {lastActivityLabel}
                               </div>
 
                               <div className="mt-1 text-sm text-muted-foreground">

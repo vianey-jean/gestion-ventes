@@ -19,6 +19,7 @@ const LABELS: Record<AttributeKind, { title: string; nomLabel: string; nomPlaceh
   taille: { title: 'Nouvelle taille', nomLabel: 'Taille (pouces)', nomPlaceholder: 'ex : 10, 12, 14... 32' },
   couleur: { title: 'Nouvelle couleur', nomLabel: 'Nom de la couleur', nomPlaceholder: 'ex : Noir, Blonde miel, Rouge bordeau...' },
   devant: { title: 'Nouveau devant', nomLabel: 'Type de devant', nomPlaceholder: 'ex : Frange, Lace frontale 13x4, Lace frontale T...' },
+  autres: { title: 'Nouvel attribut (Autres)', nomLabel: 'Nom', nomPlaceholder: 'ex : Densité, Matière, Style...' },
 };
 
 interface Props {

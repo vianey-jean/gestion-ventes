@@ -23,6 +23,7 @@ export interface ClassificationValue {
   couleur?: string;
   taille?: string;
   devant?: string;
+  autres?: string;
 }
 
 interface Props {
@@ -47,6 +48,7 @@ export function buildProductName(v: ClassificationValue): string {
   const parts: string[] = [];
   if (v.categorie) parts.push(v.categorie);
   if (v.modele) parts.push(v.modele);
+  if (v.autres) parts.push(v.autres);
   if (v.devant) parts.push(v.devant);
   if (v.couleur) parts.push(v.couleur);
   if (v.taille) parts.push(`${v.taille} pouces`);
@@ -60,6 +62,7 @@ const ProductClassificationSelector: React.FC<Props> = ({
   const { items: tailles } = useProductAttributes('taille');
   const { items: couleurs } = useProductAttributes('couleur');
   const { items: devants } = useProductAttributes('devant');
+  const { items: autres } = useProductAttributes('autres');
 
   const previewName = useMemo(() => {
   const name = buildProductName(value);
@@ -109,6 +112,20 @@ const ProductClassificationSelector: React.FC<Props> = ({
           </div>
         )}
       </div>
+
+      {autres.length > 0 && (
+        <div className="space-y-2">
+          <Label className={`text-sm font-bold ${labelCls}`}>
+            Autres <span className="text-xs font-normal text-muted-foreground">(facultatif)</span>
+          </Label>
+          <div className="flex flex-wrap gap-2">
+            {autres.map(a => (
+              <Chip key={a.id} active={value.autres === a.nom} onClick={() => onChange({ ...value, autres: value.autres === a.nom ? '' : a.nom })}>{a.nom}</Chip>
+            ))}
+          </div>
+        </div>
+      )}
+
 
       {showDevant && (
         <div className="space-y-2">

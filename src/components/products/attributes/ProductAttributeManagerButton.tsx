@@ -14,6 +14,7 @@ const KIND_LABELS: Record<AttributeKind, { button: string; gradient: string; sha
   taille: { button: 'Ajouter taille', gradient: 'from-sky-500 to-cyan-600', shadow: 'shadow-sky-500/30' },
   couleur: { button: 'Ajouter couleur', gradient: 'from-pink-500 to-rose-600', shadow: 'shadow-pink-500/30' },
   devant: { button: 'Ajouter devant', gradient: 'from-amber-500 to-orange-600', shadow: 'shadow-amber-500/30' },
+  autres: { button: 'Ajouter autres', gradient: 'from-emerald-500 to-teal-600', shadow: 'shadow-emerald-500/30' },
 };
 
 interface Props {

@@ -4,7 +4,7 @@
  */
 import api from './api';
 
-export type AttributeKind = 'modele' | 'taille' | 'couleur' | 'devant';
+export type AttributeKind = 'modele' | 'taille' | 'couleur' | 'devant' | 'autres';
 
 export interface ProductAttribute {
   id: string;
@@ -18,6 +18,7 @@ const ENDPOINTS: Record<AttributeKind, string> = {
   taille: '/api/taille-produits',
   couleur: '/api/couleur-produits',
   devant: '/api/devant-produits',
+  autres: '/api/autres-produits',
 };
 
 export const productAttributesApi = {

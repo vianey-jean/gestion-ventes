@@ -49,6 +49,7 @@ const ProductAttributesToolbar: React.FC = () => {
       {visible && (
         <div className="flex flex-wrap gap-2">
           <ProductAttributeManagerButton kind="modele" />
+          <ProductAttributeManagerButton kind="autres" />
           <ProductAttributeManagerButton kind="taille" />
           <ProductAttributeManagerButton kind="couleur" />
           <ProductAttributeManagerButton kind="devant" />
