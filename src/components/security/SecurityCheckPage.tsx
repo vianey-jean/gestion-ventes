@@ -72,19 +72,50 @@ const randomString = (length: number) =>
     .slice(2, 2 + length)
     .toUpperCase();
 
-const generateCaptcha = () => {
+type CaptchaChallenge = {
+  display: string;
+  answer: string;
+  mode: 'text' | 'math';
+  question?: string;
+};
+
+const generateTextCaptcha = (): CaptchaChallenge => {
   const chars =
     'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-
   let value = '';
-
   for (let i = 0; i < 8; i++) {
-    value += chars.charAt(
-      Math.floor(Math.random() * chars.length)
-    );
+    value += chars.charAt(Math.floor(Math.random() * chars.length));
   }
+  return { display: value, answer: value, mode: 'text' };
+};
 
-  return value;
+const generateMathCaptcha = (): CaptchaChallenge => {
+  const ops = ['+', '-', '×'] as const;
+  const op = ops[Math.floor(Math.random() * ops.length)];
+  let a = Math.floor(Math.random() * 90) + 10; // 10-99
+  let b = Math.floor(Math.random() * 90) + 10; // 10-99
+  let result = 0;
+  if (op === '+') result = a + b;
+  else if (op === '-') {
+    if (b > a) [a, b] = [b, a];
+    result = a - b;
+  } else {
+    a = Math.floor(Math.random() * 9) + 2; // 2-10
+    b = Math.floor(Math.random() * 9) + 2;
+    result = a * b;
+  }
+  const question = `Combien font ${a} ${op} ${b} ?`;
+  return {
+    display: `${a} ${op} ${b}`,
+    answer: String(result),
+    mode: 'math',
+    question,
+  };
+};
+
+const generateCaptcha = (): CaptchaChallenge => {
+  // 50% chance math, 50% text — both humain-friendly, hostile aux bots OCR simples
+  return Math.random() < 0.5 ? generateMathCaptcha() : generateTextCaptcha();
 };
 
 const Star = ({
@@ -1429,7 +1460,9 @@ const SecurityCheckPage: React.FC<
                                     </span>
                                   </div>
                                   <p className="text-white/45 text-[11px] sm:text-xs mt-1">
-                                    Saisissez le code dans les cases
+                                    {captchaText.mode === 'math'
+                                      ? 'Résolvez le calcul et saisissez le résultat'
+                                      : 'Saisissez le code dans les cases'}
                                   </p>
                                 </div>
                               </div>
@@ -1441,7 +1474,9 @@ const SecurityCheckPage: React.FC<
                                   onClick={() => {
                                     try {
                                       const u = new SpeechSynthesisUtterance(
-                                        captchaText.split('').join(' ')
+                                        captchaText.mode === 'math'
+                                          ? (captchaText.question || captchaText.display)
+                                          : captchaText.answer.split('').join(' ')
                                       );
                                       u.rate = 0.7;
                                       window.speechSynthesis.cancel();
@@ -1535,9 +1570,17 @@ const SecurityCheckPage: React.FC<
                                 </defs>
                               </svg>
 
+                              {/* Question (mode math) */}
+                              {captchaText.mode === 'math' && (
+                                <div className="relative pt-4 px-3 text-center">
+                                  <p className="text-[10px] sm:text-xs uppercase tracking-[0.25em] text-white/50 font-semibold">
+                                    Résolvez l'opération
+                                  </p>
+                                </div>
+                              )}
                               {/* Characters */}
                               <div className="relative flex items-center justify-center gap-1 sm:gap-2 py-6 sm:py-8 px-3 select-none">
-                                {captchaText.split('').map((ch, i) => {
+                                {captchaText.display.split('').map((ch, i) => {
                                   const colors = [
                                     'from-violet-300 to-fuchsia-400',
                                     'from-amber-300 to-rose-400',
@@ -1548,11 +1591,11 @@ const SecurityCheckPage: React.FC<
                                     'from-yellow-300 to-orange-400',
                                     'from-violet-300 to-pink-400',
                                   ];
-                                  const rot = ((i * 13) % 30) - 15;
-                                  const ty = ((i * 7) % 10) - 5;
+                                  const rot = captchaText.mode === 'math' ? 0 : ((i * 13) % 30) - 15;
+                                  const ty = captchaText.mode === 'math' ? 0 : ((i * 7) % 10) - 5;
                                   return (
                                     <motion.span
-                                      key={`${captchaText}-${i}`}
+                                      key={`${captchaText.display}-${i}`}
                                       initial={{ opacity: 0, y: 12 }}
                                       animate={{ opacity: 1, y: 0 }}
                                       transition={{ delay: i * 0.05 }}
@@ -1561,20 +1604,27 @@ const SecurityCheckPage: React.FC<
                                         transform: `rotate(${rot}deg) translateY(${ty}px)`,
                                         textShadow: '0 4px 20px rgba(255,255,255,0.25)',
                                         fontFamily:
-                                          i % 2 ? '"Georgia", serif' : '"Courier New", monospace',
-                                        letterSpacing: '0.05em',
+                                          captchaText.mode === 'math'
+                                            ? '"Georgia", serif'
+                                            : i % 2 ? '"Georgia", serif' : '"Courier New", monospace',
+                                        letterSpacing: captchaText.mode === 'math' ? '0.15em' : '0.05em',
                                       }}
                                     >
-                                      {ch}
+                                      {ch === ' ' ? '\u00A0' : ch}
                                     </motion.span>
                                   );
                                 })}
+                                {captchaText.mode === 'math' && (
+                                  <span className="bg-gradient-to-br from-white to-white/70 bg-clip-text text-transparent font-black text-2xl sm:text-3xl md:text-4xl ml-1">
+                                    =&nbsp;?
+                                  </span>
+                                )}
                               </div>
                             </div>
 
                             {/* Input — case par caractère */}
                             <div className="flex items-center justify-center gap-1.5 sm:gap-2 mb-4">
-                              {Array.from({ length: captchaText.length }).map((_, i) => (
+                              {Array.from({ length: captchaText.answer.length }).map((_, i) => (
                                 <input
                                   key={i}
                                   id={`captcha-cell-${i}`}
@@ -1587,9 +1637,9 @@ const SecurityCheckPage: React.FC<
                                     const v = e.target.value.slice(-1);
                                     const arr = captchaInput.split('');
                                     arr[i] = v;
-                                    const next = arr.join('').slice(0, captchaText.length);
+                                    const next = arr.join('').slice(0, captchaText.answer.length);
                                     setCaptchaInput(next);
-                                    if (v && i < captchaText.length - 1) {
+                                    if (v && i < captchaText.answer.length - 1) {
                                       const nxt = document.getElementById(
                                         `captcha-cell-${i + 1}`
                                       ) as HTMLInputElement | null;
@@ -1608,7 +1658,7 @@ const SecurityCheckPage: React.FC<
                                     e.preventDefault();
                                     const txt = e.clipboardData
                                       .getData('text')
-                                      .slice(0, captchaText.length);
+                                      .slice(0, captchaText.answer.length);
                                     setCaptchaInput(txt);
                                   }}
                                   className={`w-8 h-10 sm:w-10 sm:h-12 md:w-11 md:h-14 rounded-lg sm:rounded-xl text-center font-bold text-base sm:text-lg md:text-xl text-white bg-black/40 border outline-none transition-all focus:scale-110 focus:bg-black/60 ${
@@ -1641,7 +1691,7 @@ const SecurityCheckPage: React.FC<
                               onClick={() => {
                                 if (
                                   captchaInput.trim().toLowerCase() ===
-                                  captchaText.trim().toLowerCase()
+                                  captchaText.answer.trim().toLowerCase()
                                 ) {
                                   setCaptchaPassed(true);
                                 } else {
@@ -1651,7 +1701,7 @@ const SecurityCheckPage: React.FC<
                                 }
                               }}
                               disabled={
-                                captchaInput.length !== captchaText.length || captchaPassed
+                                captchaInput.length !== captchaText.answer.length || captchaPassed
                               }
                               className="group relative w-full h-12 sm:h-14 rounded-2xl overflow-hidden font-semibold text-white text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed transition-transform hover:-translate-y-0.5 active:translate-y-0"
                             >
