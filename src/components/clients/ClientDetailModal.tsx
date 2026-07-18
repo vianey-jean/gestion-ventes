@@ -1,12 +1,13 @@
 // Modal de détail client avec impression au format millimètres (petites imprimantes)
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Printer, Phone, MapPin, Crown, Download, User as UserIcon, X } from 'lucide-react';
+import { Printer, Phone, MapPin, Crown, Download, User as UserIcon, X, PhoneCall, MessageSquare, Navigation } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useIsMobile } from '@/hooks/use-mobile';
 import jsPDF from 'jspdf';
 
 interface ClientLike {
@@ -38,6 +39,7 @@ const PRESETS = [
 
 const ClientDetailModal: React.FC<Props> = ({ open, onOpenChange, client, photoUrl }) => {
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   const [askFormat, setAskFormat] = useState(false);
   const [widthMm, setWidthMm] = useState<string>('100');
   const [heightMm, setHeightMm] = useState<string>('80');
@@ -45,6 +47,10 @@ const ClientDetailModal: React.FC<Props> = ({ open, onOpenChange, client, photoU
   const [busy, setBusy] = useState(false);
   const [selectedPhoneIdx, setSelectedPhoneIdx] = useState(0);
   const [selectedAddressIdx, setSelectedAddressIdx] = useState(0);
+  const [phoneActionOpen, setPhoneActionOpen] = useState(false);
+  const [selectedPhone, setSelectedPhone] = useState<string>('');
+  const [addressActionOpen, setAddressActionOpen] = useState(false);
+  const [selectedAddress, setSelectedAddress] = useState<string>('');
 
   if (!client) return null;
 
@@ -56,6 +62,42 @@ const ClientDetailModal: React.FC<Props> = ({ open, onOpenChange, client, photoU
   const mainPhone = phones[safePhoneIdx] || '';
   const mainAddress = addresses[safeAddrIdx] || '';
   const mainVille = villesArr[safeAddrIdx] || (safeAddrIdx === 0 ? (client.ville || '') : '');
+
+  const handlePhoneClick = (phone: string, i: number) => {
+    setSelectedPhoneIdx(i);
+    if (phone && phone.trim()) {
+      setSelectedPhone(phone);
+      setPhoneActionOpen(true);
+    }
+  };
+  const handleCall = () => {
+    window.location.href = `tel:${selectedPhone}`;
+    setPhoneActionOpen(false);
+  };
+  const handleMessage = () => {
+    if (isMobile) {
+      window.location.href = `sms:${selectedPhone}`;
+    } else {
+      toast({ title: 'Message', description: `Préparez un message pour ${selectedPhone}` });
+    }
+    setPhoneActionOpen(false);
+  };
+  const handleAddressClick = (addr: string, i: number) => {
+    setSelectedAddressIdx(i);
+    if (!addr || !addr.trim()) return;
+    const villes = Array.isArray(client.villes) ? client.villes : [];
+    const ville = villes[i] || (i === 0 ? (client.ville || '') : '');
+    const full = ville ? `${addr}, ${ville}` : addr;
+    if (isMobile) {
+      setSelectedAddress(full);
+      setAddressActionOpen(true);
+    } else {
+      window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(full)}`, '_blank');
+    }
+  };
+  const openGoogleMaps = () => { window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selectedAddress)}`, '_blank'); setAddressActionOpen(false); };
+  const openWaze = () => { window.open(`https://waze.com/ul?q=${encodeURIComponent(selectedAddress)}`, '_blank'); setAddressActionOpen(false); };
+  const openAppleMaps = () => { window.open(`https://maps.apple.com/?q=${encodeURIComponent(selectedAddress)}`, '_blank'); setAddressActionOpen(false); };
 
   // ---------- Icônes PDF (vecteur jsPDF) ----------
   const drawPdfIcon = (
@@ -358,6 +400,7 @@ const ClientDetailModal: React.FC<Props> = ({ open, onOpenChange, client, photoU
   };
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
@@ -393,24 +436,23 @@ const ClientDetailModal: React.FC<Props> = ({ open, onOpenChange, client, photoU
             </h4>
             {phones.map((p, i) => {
               const isSelected = i === safePhoneIdx;
-              const clickable = phones.length >= 2;
               return (
                 <button
                   key={i}
                   type="button"
-                  onClick={() => clickable && setSelectedPhoneIdx(i)}
+                  onClick={() => handlePhoneClick(p, i)}
                   className={`w-full text-left flex items-center gap-3 p-3 rounded-lg border transition-all ${
                     isSelected
                       ? 'bg-green-100 dark:bg-green-900/40 border-green-500 ring-2 ring-green-400 shadow'
                       : 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 hover:border-green-400'
-                  } ${clickable ? 'cursor-pointer' : 'cursor-default'}`}
+                  } cursor-pointer`}
                 >
                   <Phone className="w-4 h-4 text-green-600 shrink-0" />
                   <span className="text-sm font-semibold break-all">{p}</span>
-                  {isSelected && clickable && (
+                  {isSelected && phones.length >= 2 && (
                     <span className="ml-auto text-[10px] uppercase font-bold text-white bg-green-600 px-2 py-0.5 rounded-full">Sélectionné</span>
                   )}
-                  {i === 0 && !clickable && <span className="ml-auto text-[10px] uppercase font-bold text-green-700 bg-green-100 px-2 py-0.5 rounded-full">Principal</span>}
+                  {i === 0 && phones.length < 2 && <span className="ml-auto text-[10px] uppercase font-bold text-green-700 bg-green-100 px-2 py-0.5 rounded-full">Principal</span>}
                 </button>
               );
             })}
@@ -424,27 +466,26 @@ const ClientDetailModal: React.FC<Props> = ({ open, onOpenChange, client, photoU
               const villes = Array.isArray(client.villes) ? client.villes : [];
               const ville = villes[i] || (i === 0 ? client.ville : '');
               const isSelected = i === safeAddrIdx;
-              const clickable = addresses.length >= 2;
               return (
                 <button
                   key={i}
                   type="button"
-                  onClick={() => clickable && setSelectedAddressIdx(i)}
+                  onClick={() => handleAddressClick(a, i)}
                   className={`w-full text-left flex items-center gap-3 p-3 rounded-lg border transition-all ${
                     isSelected
                       ? 'bg-blue-100 dark:bg-blue-900/40 border-blue-500 ring-2 ring-blue-400 shadow'
                       : 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 hover:border-blue-400'
-                  } ${clickable ? 'cursor-pointer' : 'cursor-default'}`}
+                  } cursor-pointer`}
                 >
                   <MapPin className="w-4 h-4 text-blue-600 shrink-0" />
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-semibold break-words">{a}</p>
                     {ville && <p className="text-xs text-gray-500">{ville}</p>}
                   </div>
-                  {isSelected && clickable && (
+                  {isSelected && addresses.length >= 2 && (
                     <span className="text-[10px] uppercase font-bold text-white bg-blue-600 px-2 py-0.5 rounded-full shrink-0">Sélectionné</span>
                   )}
-                  {i === 0 && !clickable && <span className="text-[10px] uppercase font-bold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full shrink-0">Principal</span>}
+                  {i === 0 && addresses.length < 2 && <span className="text-[10px] uppercase font-bold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full shrink-0">Principal</span>}
                 </button>
               );
             })}
@@ -514,6 +555,40 @@ const ClientDetailModal: React.FC<Props> = ({ open, onOpenChange, client, photoU
         </DialogFooter>
       </DialogContent>
     </Dialog>
+
+    <Dialog open={phoneActionOpen} onOpenChange={setPhoneActionOpen}>
+      <DialogContent className="sm:max-w-md bg-white/95 dark:bg-[#0a0020]/95 backdrop-blur-2xl border border-violet-200/20 dark:border-violet-800/20 shadow-2xl rounded-2xl">
+        <DialogHeader>
+          <DialogTitle className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
+            <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full"><Phone className="w-5 h-5 text-white" /></div>{selectedPhone}
+          </DialogTitle>
+          <DialogDescription className="text-gray-600 dark:text-gray-400">Que souhaitez-vous faire ?</DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-4 py-4">
+          <Button onClick={handleCall} className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white py-6 text-lg font-semibold rounded-xl shadow-lg"><PhoneCall className="w-6 h-6" />Appeler ce numéro</Button>
+          <Button onClick={handleMessage} className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white py-6 text-lg font-semibold rounded-xl shadow-lg"><MessageSquare className="w-6 h-6" />{isMobile ? 'Envoyer un SMS' : 'Envoyer un message'}</Button>
+        </div>
+        <DialogFooter><Button variant="outline" onClick={() => setPhoneActionOpen(false)} className="w-full border-gray-300 hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-800">Annuler</Button></DialogFooter>
+      </DialogContent>
+    </Dialog>
+
+    <Dialog open={addressActionOpen} onOpenChange={setAddressActionOpen}>
+      <DialogContent className="sm:max-w-md bg-white/95 dark:bg-[#0a0020]/95 backdrop-blur-2xl border border-violet-200/20 dark:border-violet-800/20 shadow-2xl rounded-2xl">
+        <DialogHeader>
+          <DialogTitle className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
+            <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-r from-blue-400 to-indigo-500 rounded-full"><Navigation className="w-5 h-5 text-white" /></div>Navigation
+          </DialogTitle>
+          <DialogDescription className="text-gray-600 dark:text-gray-400">Ouvrir l'adresse dans quelle application ?</DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-4 py-4">
+          <Button onClick={openGoogleMaps} className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white py-6 text-lg font-semibold rounded-xl shadow-lg"><MapPin className="w-6 h-6" />Google Maps</Button>
+          <Button onClick={openWaze} className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-cyan-500 to-teal-600 hover:from-cyan-600 hover:to-teal-700 text-white py-6 text-lg font-semibold rounded-xl shadow-lg"><Navigation className="w-6 h-6" />Waze</Button>
+          <Button onClick={openAppleMaps} className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-gray-600 to-gray-800 hover:from-gray-700 hover:to-gray-900 text-white py-6 text-lg font-semibold rounded-xl shadow-lg"><MapPin className="w-6 h-6" />Apple Maps</Button>
+        </div>
+        <DialogFooter><Button variant="outline" onClick={() => setAddressActionOpen(false)} className="w-full border-gray-300 hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-800">Annuler</Button></DialogFooter>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 };
 
