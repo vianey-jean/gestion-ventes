@@ -43,6 +43,7 @@ interface CommandesTableProps {
   handleStatusChange: (id: string, status: CommandeStatut | 'reporter') => void;
   setDeleteId: (id: string) => void;
   getStatusOptions: (type: 'commande' | 'reservation' | 'rdv') => { value: string; label: string }[];
+  lockedIds?: Set<string>;
 }
 
 const CommandesTable: React.FC<CommandesTableProps> = ({
@@ -54,7 +55,8 @@ const CommandesTable: React.FC<CommandesTableProps> = ({
   handleEdit,
   handleStatusChange,
   setDeleteId,
-  getStatusOptions
+  getStatusOptions,
+  lockedIds
 }) => {
   const { clients } = useClients();
   const { products } = useProducts();
@@ -160,6 +162,7 @@ const CommandesTable: React.FC<CommandesTableProps> = ({
                 getStatusOptions={getStatusOptions}
                 onClientClick={handleClientClick}
                 onProductClick={handleProductClick}
+                locked={lockedIds?.has(commande.id)}
               />
             ))}
             {filteredCommandes.length === 0 && (
@@ -332,6 +335,7 @@ const CommandesTable: React.FC<CommandesTableProps> = ({
                       getStatusOptions={getStatusOptions}
                       onClientClick={handleClientClick}
                       onProductClick={handleProductClick}
+                      locked={lockedIds?.has(commande.id)}
                     />
                   ))
                 ) : (
@@ -488,6 +492,7 @@ interface CommandeRowProps {
   getStatusOptions: (type: 'commande' | 'reservation' | 'rdv') => { value: string; label: string }[];
   onClientClick?: (commande: Commande) => void;
   onProductClick?: (produitNom: string) => void;
+  locked?: boolean;
 }
 
 const CommandeTableRow: React.FC<CommandeRowProps> = ({
@@ -498,6 +503,7 @@ const CommandeTableRow: React.FC<CommandeRowProps> = ({
   getStatusOptions,
   onClientClick,
   onProductClick,
+  locked,
 }) => {
   const renderDateCell = () => {
     if (commande.type === 'commande') {
@@ -553,7 +559,7 @@ const CommandeTableRow: React.FC<CommandeRowProps> = ({
   };
 
   return (
-    <ModernTableRow className="bg-gradient-to-r from-purple-50/30 via-pink-50/20 to-indigo-50/30 dark:from-gray-900/20 dark:via-purple-900/10 dark:to-indigo-900/10 hover:shadow-lg hover:bg-gradient-to-r hover:from-purple-100/40 hover:via-pink-100/30 hover:to-indigo-100/30 transition-all duration-500 rounded-xl backdrop-blur-sm">
+    <ModernTableRow className={`bg-gradient-to-r from-purple-50/30 via-pink-50/20 to-indigo-50/30 dark:from-gray-900/20 dark:via-purple-900/10 dark:to-indigo-900/10 hover:shadow-lg hover:bg-gradient-to-r hover:from-purple-100/40 hover:via-pink-100/30 hover:to-indigo-100/30 transition-all duration-500 rounded-xl backdrop-blur-sm ${locked ? 'opacity-50 pointer-events-none grayscale' : ''}`}>
       <ModernTableCell className="align-top w-52">
         <button
           type="button"
@@ -683,6 +689,7 @@ const CommandeMobileCard: React.FC<CommandeRowProps> = ({
   getStatusOptions,
   onClientClick,
   onProductClick,
+  locked,
 }) => {
   const totalPrice = commande.produits.reduce((sum, p) => sum + (p.prixVente * p.quantite), 0);
 
@@ -716,7 +723,7 @@ const CommandeMobileCard: React.FC<CommandeRowProps> = ({
   const dateInfo = getDateInfo();
 
   return (
-    <div className="p-4 border-b border-purple-100 dark:border-purple-800/30 hover:bg-gradient-to-r hover:from-purple-50/30 hover:via-pink-50/20 hover:to-indigo-50/30 dark:hover:from-purple-900/10 dark:hover:via-pink-900/10 dark:hover:to-indigo-900/10 transition-all duration-500 shadow-lg backdrop-blur-md rounded-2xl">
+    <div className={`p-4 border-b border-purple-100 dark:border-purple-800/30 hover:bg-gradient-to-r hover:from-purple-50/30 hover:via-pink-50/20 hover:to-indigo-50/30 dark:hover:from-purple-900/10 dark:hover:via-pink-900/10 dark:hover:to-indigo-900/10 transition-all duration-500 shadow-lg backdrop-blur-md rounded-2xl ${locked ? 'opacity-50 pointer-events-none grayscale' : ''}`}>
       {/* En-tête: Client + Type */}
       <div className="flex justify-between items-start mb-3">
         <button

@@ -23,6 +23,8 @@ import tacheApi from '@/services/api/tacheApi';
 import rdvTachesApi from '@/services/api/rdvTachesApi';
 import type { Sale } from '@/types/sale';
 import { computeClientCaracteristique } from '@/utils/clientCharacteristic';
+import { confirmationRdvApi, type ConfirmationRdvEntry } from '@/services/api/confirmationRdvApi';
+import { computeLockStateForCommande, autoCancelCommandeIfNeeded } from '@/utils/rdvConfirmationLock';
 
 // ============================================================================
 // Types locaux
@@ -461,10 +463,52 @@ export const useCommandesLogic = () => {
   // Mémos de filtrage
   // =========================================================================
 
+  // ---------------------------------------------------------------------------
+  // Verrouillage automatique lié à la confirmation des RDV (24h → 1h → annulé)
+  // ---------------------------------------------------------------------------
+  const [confirmationEntries, setConfirmationEntries] = useState<ConfirmationRdvEntry[]>([]);
+  const [lockTick, setLockTick] = useState(0);
+  useEffect(() => {
+    let cancelled = false;
+    const load = () => {
+      confirmationRdvApi.getAll()
+        .then(d => { if (!cancelled) setConfirmationEntries(d); })
+        .catch(() => {});
+    };
+    load();
+    const id = setInterval(() => { setLockTick(t => t + 1); load(); }, 60_000);
+    return () => { cancelled = true; clearInterval(id); };
+  }, []);
+
+  // Auto-annuler côté serveur les commandes qui passent en "cancelled"
+  useEffect(() => {
+    commandes.forEach(c => {
+      const s = computeLockStateForCommande(c as any, confirmationEntries);
+      autoCancelCommandeIfNeeded(c as any, s);
+    });
+  }, [commandes, confirmationEntries, lockTick]);
+
+  const lockedCommandeIds = useMemo(() => {
+    const ids = new Set<string>();
+    commandes.forEach(c => {
+      if (computeLockStateForCommande(c as any, confirmationEntries) === 'locked') {
+        ids.add(c.id);
+      }
+    });
+    return ids;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [commandes, confirmationEntries, lockTick]);
+
   const filteredCommandes = useMemo(() => {
+    // Masquer uniquement les commandes en état 'hidden' (≤ 1h avant RDV, auto-annulées)
+    const commandesVisibles = commandes.filter(c => {
+      const s = computeLockStateForCommande(c as any, confirmationEntries);
+      return s !== 'hidden';
+    });
+
     const commandesToFilter = commandeSearch.length >= 3 
-      ? commandes 
-      : commandes.filter(c => c.statut !== 'valide' && c.statut !== 'annule');
+      ? commandesVisibles 
+      : commandesVisibles.filter(c => c.statut !== 'valide' && c.statut !== 'annule');
     
     let filtered = commandesToFilter;
     if (commandeSearch.length >= 3) {
@@ -489,7 +533,7 @@ export const useCommandesLogic = () => {
       }
       return dateDiff;
     });
-  }, [commandes, commandeSearch, sortDateAsc]);
+  }, [commandes, commandeSearch, sortDateAsc, confirmationEntries, lockTick]);
 
   const filteredClients = useMemo(() => {
     if (clientSearch.length < 3) return [];
@@ -1229,6 +1273,7 @@ export const useCommandesLogic = () => {
     commandes, clients, products, sales, isLoading,
     currentClientCaracteristique,
     filteredCommandes, filteredClients, filteredProducts, commandesForExportDate,
+    lockedCommandeIds,
     // États formulaire
     isDialogOpen, setIsDialogOpen, editingCommande,
     clientNom, setClientNom, clientPhone, setClientPhone, clientPhones, clientAddress, setClientAddress, clientVille, setClientVille,

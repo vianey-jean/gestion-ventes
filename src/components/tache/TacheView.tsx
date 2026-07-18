@@ -1,6 +1,8 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import tacheApi, { Tache } from '@/services/api/tacheApi';
+import { confirmationRdvApi, type ConfirmationRdvEntry } from '@/services/api/confirmationRdvApi';
+import { computeLockStateForTache, autoCancelTacheIfNeeded } from '@/utils/rdvConfirmationLock';
 import travailleurApi, { Travailleur } from '@/services/api/travailleurApi';
 import parametresApi, { ParametreTache } from '@/services/api/parametresApi';
 import TacheCalendar from './TacheCalendar';
@@ -23,7 +25,35 @@ const mirrorShine = "absolute inset-0 bg-gradient-to-r from-transparent via-whit
 const TacheView: React.FC = () => {
   const { toast } = useToast();
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [taches, setTaches] = useState<Tache[]>([]);
+  const [tachesRaw, setTaches] = useState<Tache[]>([]);
+  const [confEntries, setConfEntries] = useState<ConfirmationRdvEntry[]>([]);
+  const [lockTick, setLockTick] = useState(0);
+
+  useEffect(() => {
+    let cancelled = false;
+    const load = () => confirmationRdvApi.getAll()
+      .then(d => { if (!cancelled) setConfEntries(d); })
+      .catch(() => {});
+    load();
+    const id = setInterval(() => { setLockTick(t => t + 1); load(); }, 60_000);
+    return () => { cancelled = true; clearInterval(id); };
+  }, []);
+
+  // Auto-annulation (marquer completed) des tâches passées à l'état cancelled
+  useEffect(() => {
+    tachesRaw.forEach(t => {
+      const s = computeLockStateForTache(t as any, confEntries);
+      autoCancelTacheIfNeeded(t as any, s);
+    });
+  }, [tachesRaw, confEntries, lockTick]);
+
+  // Version filtrée : masque les tâches "hidden" (24h→1h sans "maintenu")
+  const taches = useMemo(() => {
+    return tachesRaw.filter(t => {
+      const s = computeLockStateForTache(t as any, confEntries);
+      return s !== 'hidden';
+    });
+  }, [tachesRaw, confEntries, lockTick]);
   const [travailleurs, setTravailleurs] = useState<Travailleur[]>([]);
   const [loading, setLoading] = useState(true);
 

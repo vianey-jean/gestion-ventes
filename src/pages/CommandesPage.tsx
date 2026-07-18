@@ -140,6 +140,7 @@ const CommandesPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =
           handleStatusChange={logic.handleStatusChange}
           setDeleteId={logic.setDeleteId}
           getStatusOptions={logic.getStatusOptions}
+          lockedIds={logic.lockedCommandeIds}
         />
       </div>
 
