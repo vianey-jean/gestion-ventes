@@ -825,7 +825,7 @@ const CommandeFormDialog: React.FC<CommandeFormDialogProps> = ({
 
               <div>
                 <Label htmlFor="quantite" className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">
-                  📊 Quantité {selectedProduct && `(disponible: ${availableQuantityForSelected !== null && availableQuantityForSelected !== undefined ? availableQuantityForSelected : selectedProduct.quantity})`}
+                  📊 Quantité {selectedProduct && `(dispo immédiat: ${selectedProduct.quantity}${availableQuantityForSelected !== null && availableQuantityForSelected !== undefined && availableQuantityForSelected > selectedProduct.quantity ? ` · +${availableQuantityForSelected - selectedProduct.quantity} en attente d'arrivage` : ''})`}
                 </Label>
                 <SaleQuantityInput
                   quantity={quantite}

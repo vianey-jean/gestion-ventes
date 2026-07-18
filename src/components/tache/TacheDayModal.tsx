@@ -23,6 +23,7 @@ interface TacheDayModalProps {
   onValidateTache: (t: Tache) => void;
   premiumBtnClass: string;
   mirrorShine: string;
+  lockedIds?: Set<string>;
 }
 
 const HOURS = Array.from({ length: 20 }, (_, i) => i + 4); // 4h to 23h
@@ -90,7 +91,7 @@ const CountdownDisplay: React.FC<{ heureFin: string; date: string; open: boolean
 };
 
 const TacheDayModal: React.FC<TacheDayModalProps> = ({
-  open, onOpenChange, selectedDay, taches, travailleurs, onEdit, onDelete, onAddTache, onMoveTache, onValidateTache, premiumBtnClass, mirrorShine
+  open, onOpenChange, selectedDay, taches, travailleurs, onEdit, onDelete, onAddTache, onMoveTache, onValidateTache, premiumBtnClass, mirrorShine, lockedIds
 }) => {
   const { toast } = useToast();
   const dayTaches = taches.filter(t => t.date === selectedDay);
@@ -132,7 +133,7 @@ const TacheDayModal: React.FC<TacheDayModalProps> = ({
   };
 
   const handleDragStart = (e: React.DragEvent, tache: Tache) => {
-    if (tache.importance === 'pertinent') {
+    if (tache.importance === 'pertinent' || lockedIds?.has(tache.id)) {
       e.preventDefault();
       return;
     }
@@ -262,14 +263,18 @@ const TacheDayModal: React.FC<TacheDayModalProps> = ({
                   {hourTaches.length === 0 && (
                     <div className="h-[1px] bg-white/5 mt-4" />
                   )}
-                  {hourTaches.map(tache => (
+                  {hourTaches.map(tache => {
+                    const locked = !!lockedIds?.has(tache.id);
+                    return (
                     <div
                       key={tache.id}
-                      draggable={tache.importance !== 'pertinent'}
+                      draggable={tache.importance !== 'pertinent' && !locked}
                       onDragStart={(e) => handleDragStart(e, tache)}
+                      title={locked ? 'Tâche verrouillée : RDV non confirmé « maintenu »' : undefined}
                       className={cn(
                         'flex items-center gap-2 px-3 py-2 rounded-xl border transition-all group',
                         tache.completed && 'opacity-60',
+                        locked && 'opacity-60 cursor-not-allowed ring-1 ring-amber-400/40',
                         tache.importance === 'pertinent'
                           ? 'bg-red-500/15 border-red-500/30 shadow-lg shadow-red-500/10'
                           : 'bg-emerald-500/15 border-emerald-500/30 shadow-lg shadow-emerald-500/10 cursor-grab active:cursor-grabbing'
@@ -294,7 +299,12 @@ const TacheDayModal: React.FC<TacheDayModalProps> = ({
                             {tache.heureDebut} - {tache.heureFin}
                             {tache.travailleurNom && ` • ${tache.travailleurNom}`}
                           </p>
-                          {selectedDay && !tache.completed && (
+                          {locked && (
+                            <span className="text-[10px] font-bold text-amber-300 flex items-center gap-0.5">
+                              🔒 Verrouillée (RDV non confirmé)
+                            </span>
+                          )}
+                          {selectedDay && !tache.completed && !locked && (
                             <CountdownDisplay
                               heureFin={tache.heureFin}
                               date={selectedDay}
@@ -311,12 +321,15 @@ const TacheDayModal: React.FC<TacheDayModalProps> = ({
                       <div className="flex items-center gap-1 shrink-0">
                         {!tache.completed && (
                           <button
-                            onClick={(e) => { e.stopPropagation(); onValidateTache(tache); }}
+                            onClick={(e) => { e.stopPropagation(); if (locked) return; onValidateTache(tache); }}
+                            disabled={locked}
                             className={cn(
                               'p-1.5 rounded-lg transition-all',
-                              'bg-emerald-500/20 hover:bg-emerald-500/40 border border-emerald-500/30'
+                              locked
+                                ? 'bg-white/5 border border-white/10 opacity-40 cursor-not-allowed'
+                                : 'bg-emerald-500/20 hover:bg-emerald-500/40 border border-emerald-500/30'
                             )}
-                            title="Valider cette tâche"
+                            title={locked ? 'Verrouillée' : 'Valider cette tâche'}
                           >
                             <Check className="h-3.5 w-3.5 text-emerald-400" />
                           </button>
@@ -326,10 +339,18 @@ const TacheDayModal: React.FC<TacheDayModalProps> = ({
                             <AlertTriangle className="h-3.5 w-3.5 text-red-400" />
                           ) : (
                             <>
-                              <button onClick={() => onEdit(tache)} className="p-1 rounded-lg hover:bg-white/10">
+                              <button
+                                onClick={() => { if (locked) return; onEdit(tache); }}
+                                disabled={locked}
+                                className={cn('p-1 rounded-lg', locked ? 'opacity-40 cursor-not-allowed' : 'hover:bg-white/10')}
+                              >
                                 <Pencil className="h-3 w-3 text-blue-400" />
                               </button>
-                              <button onClick={() => onDelete(tache.id)} className="p-1 rounded-lg hover:bg-white/10">
+                              <button
+                                onClick={() => { if (locked) return; onDelete(tache.id); }}
+                                disabled={locked}
+                                className={cn('p-1 rounded-lg', locked ? 'opacity-40 cursor-not-allowed' : 'hover:bg-white/10')}
+                              >
                                 <Trash2 className="h-3 w-3 text-red-400" />
                               </button>
                             </>
@@ -337,7 +358,8 @@ const TacheDayModal: React.FC<TacheDayModalProps> = ({
                         </div>
                       </div>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             );

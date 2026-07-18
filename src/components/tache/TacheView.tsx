@@ -47,13 +47,33 @@ const TacheView: React.FC = () => {
     });
   }, [tachesRaw, confEntries, lockTick]);
 
-  // Version filtrée : masque les tâches "hidden" (24h→1h sans "maintenu")
+  // Version filtrée : masque les tâches "hidden" (≤1h sans "maintenu")
   const taches = useMemo(() => {
     return tachesRaw.filter(t => {
       const s = computeLockStateForTache(t as any, confEntries);
       return s !== 'hidden';
     });
   }, [tachesRaw, confEntries, lockTick]);
+
+  // Ensemble des tâches verrouillées (24h→1h avant début sans confirmation "maintenu")
+  const lockedIds = useMemo(() => {
+    const set = new Set<string>();
+    tachesRaw.forEach(t => {
+      if (computeLockStateForTache(t as any, confEntries) === 'locked') set.add(t.id);
+    });
+    return set;
+  }, [tachesRaw, confEntries, lockTick]);
+
+  const isLocked = useCallback((id: string) => lockedIds.has(id), [lockedIds]);
+  const blockIfLocked = useCallback((id: string) => {
+    if (!lockedIds.has(id)) return false;
+    toast({
+      title: '🔒 Tâche verrouillée',
+      description: "Le RDV associé n'est pas confirmé « maintenu ». Action indisponible entre 24h et 1h avant le début.",
+      variant: 'destructive'
+    });
+    return true;
+  }, [lockedIds, toast]);
   const [travailleurs, setTravailleurs] = useState<Travailleur[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -232,6 +252,7 @@ const TacheView: React.FC = () => {
   };
 
   const handleUpdateTache = async (id: string, data: Partial<Tache>) => {
+    if (blockIfLocked(id)) return;
     try {
       await tacheApi.update(id, data);
       toast({ title: '✅ Tâche modifiée' });
@@ -245,6 +266,7 @@ const TacheView: React.FC = () => {
   };
 
   const handleDeleteTache = async (id: string) => {
+    if (blockIfLocked(id)) { setDeleteConfirm(null); return; }
     try {
       await tacheApi.delete(id);
       toast({ title: '✅ Tâche supprimée' });
@@ -259,6 +281,7 @@ const TacheView: React.FC = () => {
 
   const handleMoveTache = async () => {
     if (!moveConfirm) return;
+    if (blockIfLocked(moveConfirm.tacheId)) { setMoveConfirm(null); return; }
     try {
       await tacheApi.update(moveConfirm.tacheId, {
         date: moveConfirm.newDate,
@@ -289,6 +312,7 @@ const TacheView: React.FC = () => {
   };
 
   const handleCalendarDrag = (tacheId: string, newDate: string) => {
+    if (blockIfLocked(tacheId)) return;
     const tache = taches.find(t => t.id === tacheId);
     if (!tache || tache.importance === 'pertinent') {
       toast({ title: '⚠️ Interdit', description: 'Les tâches pertinentes ne peuvent pas être déplacées', variant: 'destructive' });
@@ -304,6 +328,7 @@ const TacheView: React.FC = () => {
 
   // Validate task as completed
   const handleValidateTache = (tache: Tache) => {
+    if (blockIfLocked(tache.id)) return;
     setValidationTache(tache);
     setShowValidationModal(true);
   };
@@ -448,10 +473,12 @@ const TacheView: React.FC = () => {
         selectedDay={selectedDay}
         taches={taches}
         travailleurs={travailleurs}
-        onEdit={(t) => { setEditingTache(t); setFollowUpTache(null); setShowDayModal(false); setShowFormModal(true); }}
-        onDelete={(id) => setDeleteConfirm(id)}
+        onEdit={(t) => { if (blockIfLocked(t.id)) return; setEditingTache(t); setFollowUpTache(null); setShowDayModal(false); setShowFormModal(true); }}
+        onDelete={(id) => { if (blockIfLocked(id)) return; setDeleteConfirm(id); }}
         onAddTache={() => { setEditingTache(null); setFollowUpTache(null); setShowDayModal(false); setShowFormModal(true); }}
+        lockedIds={lockedIds}
         onMoveTache={(id, newHeure) => {
+          if (blockIfLocked(id)) return;
           const tache = taches.find(t => t.id === id);
           if (!tache || tache.importance === 'pertinent') {
             toast({ title: '⚠️ Interdit', description: 'Tâche pertinente non modifiable', variant: 'destructive' });

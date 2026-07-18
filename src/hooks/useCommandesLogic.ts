@@ -636,6 +636,16 @@ export const useCommandesLogic = () => {
     return Math.max(0, product.quantity - reservedQty);
   }, [products, commandes, editingCommande]);
 
+  // Quantité en attente (achats "indisponible" pas encore réceptionnés)
+  const getPendingQuantityForProduct = useCallback((productDescription: string): number => {
+    const product: any = products.find(p => p.description.toLowerCase() === productDescription.toLowerCase());
+    if (!product || !Array.isArray(product.achats)) return 0;
+    return product.achats.reduce((sum: number, a: any) => {
+      if (a && a.disponible === false) return sum + (Number(a.quantity) || 0);
+      return sum;
+    }, 0);
+  }, [products]);
+
   const [availableQuantityForSelected, setAvailableQuantityForSelected] = useState<number | null>(null);
 
   const handleProductSelect = useCallback((product: Product) => {
@@ -645,8 +655,10 @@ export const useCommandesLogic = () => {
     setShowProductSuggestions(false);
     setSelectedProduct(product);
     const availQty = getAvailableQuantityForProduct(product.description);
-    setAvailableQuantityForSelected(availQty);
-  }, [getAvailableQuantityForProduct]);
+    const pendingQty = getPendingQuantityForProduct(product.description);
+    // On autorise à commander jusqu'à dispo + en attente d'arrivage
+    setAvailableQuantityForSelected(availQty + pendingQty);
+  }, [getAvailableQuantityForProduct, getPendingQuantityForProduct]);
 
   // =========================================================================
   // Validation et reset
@@ -688,15 +700,22 @@ export const useCommandesLogic = () => {
     const existingProduct = products.find(p => p.description.toLowerCase() === produitNom.toLowerCase());
     if (existingProduct) {
       const availableQty = getAvailableQuantityForProduct(produitNom);
-      if (availableQty <= 0) {
-        toast({ title: 'Stock insuffisant', description: `${produitNom} n'a plus de stock disponible (tout est réservé)`, className: "bg-app-red text-white", variant: 'destructive' });
+      const pendingQty = getPendingQuantityForProduct(produitNom);
+      const totalPossible = availableQty + pendingQty;
+      if (totalPossible <= 0) {
+        toast({ title: 'Stock insuffisant', description: `${produitNom} n'a plus de stock disponible ni de nouvel achat en cours`, className: "bg-app-red text-white", variant: 'destructive' });
         return;
       }
-      if (quantiteInt > availableQty) {
-        toast({ title: 'Quantité insuffisante', description: `Quantité disponible: ${availableQty} unité(s) (stock: ${existingProduct.quantity}, réservé: ${existingProduct.quantity - availableQty})`, className: "bg-app-red text-white", variant: 'destructive' });
+      if (quantiteInt > totalPossible) {
+        toast({ title: 'Quantité insuffisante', description: `Disponible: ${availableQty} · En attente d'arrivage: ${pendingQty} · Total possible: ${totalPossible}`, className: "bg-app-red text-white", variant: 'destructive' });
         return;
+      }
+      if (quantiteInt > availableQty && pendingQty > 0) {
+        const usePending = quantiteInt - availableQty;
+        toast({ title: 'ℹ️ Utilise un nouvel achat en attente', description: `Disponible immédiat: ${availableQty} · À réceptionner: ${usePending}. Il faudra marquer ce nouvel achat comme "disponible" avant de pouvoir cliquer "Arrivé".` });
       }
     }
+
     const redVal = parseFloat(productReduction || '0') || 0;
     const redType = productReductionType || '';
     const delLoc = (productDeliveryLocation || '').trim();
@@ -721,7 +740,7 @@ export const useCommandesLogic = () => {
       toast({ title: 'Produit ajouté', description: `${nouveauProduit.nom} ajouté au panier` });
     }
     resetProductFields();
-  }, [produitNom, prixUnitaire, quantite, prixVente, products, editingProductIndex, produitsListe, resetProductFields, getAvailableQuantityForProduct, productReduction, productReductionType, productDeliveryLocation, productDeliveryFee, productBaseDeliveryFee]);
+  }, [produitNom, prixUnitaire, quantite, prixVente, products, editingProductIndex, produitsListe, resetProductFields, getAvailableQuantityForProduct, getPendingQuantityForProduct, productReduction, productReductionType, productDeliveryLocation, productDeliveryFee, productBaseDeliveryFee]);
 
   const handleEditProduit = useCallback((index: number) => {
     const produit = produitsListe[index];
@@ -908,6 +927,42 @@ export const useCommandesLogic = () => {
   const handleStatusChange = async (id: string, newStatus: CommandeStatut | 'reporter') => {
     const commande = commandes.find(c => c.id === id);
     if (!commande) return;
+
+    // Blocage : passage à "Arrivé" impossible si un produit n'a pas assez de stock RÉELLEMENT disponible
+    if (newStatus === 'arrive' && commande.type === 'commande') {
+      const manquants: string[] = [];
+      for (const p of commande.produits) {
+        const prod: any = products.find(pr => pr.description.toLowerCase() === p.nom.toLowerCase());
+        const stockDispo = prod ? Number(prod.quantity) || 0 : 0;
+        if (stockDispo < p.quantite) {
+          const enAttente = prod && Array.isArray(prod.achats)
+            ? prod.achats.reduce((s: number, a: any) => s + (a && a.disponible === false ? (Number(a.quantity) || 0) : 0), 0)
+            : 0;
+          manquants.push(`${p.nom}: besoin ${p.quantite}, dispo ${stockDispo}, en attente ${enAttente}`);
+        }
+      }
+      if (manquants.length > 0) {
+        toast({
+          title: '🚫 Arrivée impossible',
+          description: `Marquez d'abord le nouvel achat comme "disponible" dans Produits. — ${manquants.join(' · ')}`,
+          className: "bg-app-red text-white",
+          variant: 'destructive',
+        });
+        return;
+      }
+    }
+
+    // Blocage : validation d'une commande uniquement après "Arrivé"
+    if (newStatus === 'valide' && commande.type === 'commande' && commande.statut !== 'arrive') {
+      toast({
+        title: '🚫 Validation impossible',
+        description: 'Cliquez d\'abord sur "Arrivé" une fois que tous les produits sont disponibles.',
+        className: "bg-app-red text-white",
+        variant: 'destructive',
+      });
+      return;
+    }
+
     if (newStatus === 'valide') { setValidatingId(id); return; }
     if (newStatus === 'annule') { setCancellingId(id); return; }
     if (newStatus === 'reporter') {
