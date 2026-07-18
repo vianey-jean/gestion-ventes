@@ -557,11 +557,16 @@ export const useCommandesLogic = () => {
         reservedQuantityByName.set(key, (reservedQuantityByName.get(key) || 0) + produit.quantite);
       });
     });
-    return products.filter(product => {
+    return products.filter((product: any) => {
       const matchesSearch = product.description.toLowerCase().includes(productSearch.toLowerCase());
+      if (!matchesSearch) return false;
       const reservedQty = reservedQuantityByName.get(product.description.toLowerCase()) || 0;
-      const availableQty = product.quantity - reservedQty;
-      return matchesSearch && availableQty > 0;
+      const availableQty = (product.quantity || 0) - reservedQty;
+      const pendingQty = Array.isArray(product.achats)
+        ? product.achats.reduce((sum: number, a: any) => (a && a.disponible === false ? sum + (Number(a.quantity) || 0) : sum), 0)
+        : 0;
+      // Visible si dispo >= 1 OU indisponible (en attente) >= 1
+      return availableQty >= 1 || pendingQty >= 1;
     });
   }, [productSearch, products, commandes, editingCommande]);
 
