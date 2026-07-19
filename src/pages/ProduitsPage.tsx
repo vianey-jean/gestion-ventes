@@ -20,7 +20,7 @@ import {
   Package, Plus, Search, Filter, Eye, Edit, Trash2, CheckCircle2, XCircle,
   AlertTriangle, Camera, Star, Euro, Hash, Sparkles, ChevronLeft, ChevronRight,
   X, PackagePlus, Pencil, ImageOff, ShoppingBag, MessageSquare, ChevronDown, ChevronUp,
-  ArrowUp, ArrowDown, Merge, LineChart as LineChartIcon
+  ArrowUp, ArrowDown, Merge, LineChart as LineChartIcon, PackageX, CheckCircle
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -101,6 +101,9 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   // 🆕 État local pour éviter les doubles clics sur le toggle de disponibilité d'achat
   const [togglingAchatIndex, setTogglingAchatIndex] = useState<number | null>(null);
+  // 🆕 Confirmation « rendre disponibles tous les achats indisponibles » depuis la table
+  const [indispoTarget, setIndispoTarget] = useState<Product | null>(null);
+  const [indispoProcessing, setIndispoProcessing] = useState(false);
 
   // 🆕 Sous-modales pour voir/modifier/supprimer un achat ou une vente précis
   const [achatViewIndex, setAchatViewIndex] = useState<number | null>(null);
@@ -861,6 +864,27 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center justify-center gap-1.5">
+                            {/* 🆕 Indisponibles — badge visible uniquement si quantité indisponible > 0 */}
+                            {(() => {
+                              const indispoQty = (product.achats || [])
+                                .filter(a => a && a.disponible === false)
+                                .reduce((s, a) => s + (Number(a.quantity) || 0), 0);
+                              if (indispoQty <= 0) return null;
+                              return (
+                                <motion.button
+                                  whileHover={{ scale: 1.15 }} whileTap={{ scale: 0.9 }}
+                                  onClick={() => setIndispoTarget(product)}
+                                  className="relative p-2 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-lg shadow-amber-500/30 hover:shadow-xl hover:shadow-amber-500/50 transition-all duration-200"
+                                  title={`${indispoQty} unité(s) indisponible(s) — cliquez pour rendre disponible`}
+                                  type="button"
+                                >
+                                  <PackageX className="h-4 w-4" />
+                                  <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-red-600 text-white text-[10px] font-black flex items-center justify-center border-2 border-white shadow">
+                                    {indispoQty}
+                                  </span>
+                                </motion.button>
+                              );
+                            })()}
                             {/* View */}
                             <motion.button whileHover={{ scale: 1.15 }} whileTap={{ scale: 0.9 }}
                               onClick={() => openView(product)}
@@ -1825,6 +1849,82 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
           onApply={(v) => setClassification(v)}
         />
       )}
+
+      {/* 🆕 Confirmation : rendre disponibles tous les achats indisponibles */}
+      <AlertDialog open={!!indispoTarget} onOpenChange={(open) => { if (!open && !indispoProcessing) setIndispoTarget(null); }}>
+        <AlertDialogContent className="bg-white dark:bg-gray-900 border-2 border-amber-300 shadow-2xl rounded-2xl max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-3 text-xl font-black">
+              <div className="p-2 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 shadow-lg">
+                <PackageX className="h-6 w-6 text-white" />
+              </div>
+              Rendre disponible ?
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3 pt-2 text-sm">
+                {indispoTarget && (() => {
+                  const qty = (indispoTarget.achats || []).filter(a => a && a.disponible === false).reduce((s, a) => s + (Number(a.quantity) || 0), 0);
+                  return (
+                    <>
+                      <div className="text-gray-700 dark:text-gray-200">
+                        Confirmez-vous que <span className="font-bold text-amber-700">{qty}</span> unité(s) de <span className="font-bold">« {indispoTarget.description} »</span> sont vraiment disponibles ?
+                      </div>
+                      <div className="text-xs text-gray-500 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 rounded-lg p-3">
+                        Ces quantités seront ajoutées au stock vendable et les achats correspondants passeront à « Disponible » dans l'historique.
+                      </div>
+                    </>
+                  );
+                })()}
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex gap-3 pt-4">
+            <AlertDialogCancel className="flex-1 rounded-xl border-2 font-bold" disabled={indispoProcessing}>
+              Annuler
+            </AlertDialogCancel>
+            <AlertDialogAction
+              disabled={indispoProcessing}
+              className="flex-1 rounded-xl font-bold bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white"
+              onClick={async (e) => {
+                e.preventDefault();
+                if (!indispoTarget) return;
+                setIndispoProcessing(true);
+                try {
+                  const achats = indispoTarget.achats || [];
+                  const indexes = achats
+                    .map((a, i) => (a && a.disponible === false ? i : -1))
+                    .filter(i => i >= 0)
+                    .sort((a, b) => b - a);
+                  for (const idx of indexes) {
+                    // eslint-disable-next-line no-await-in-loop
+                    await productApiService.setAchatDisponibilite(indispoTarget.id, idx, true);
+                  }
+                  toast({
+                    title: 'Stock mis à jour',
+                    description: `${indexes.length} achat(s) marqué(s) disponible(s).`,
+                    className: 'notification-success',
+                  });
+                  setIndispoTarget(null);
+                  await fetchProducts();
+                } catch (err) {
+                  console.error('Erreur mise à disponibilité:', err);
+                  toast({
+                    title: 'Erreur',
+                    description: "Impossible de mettre à jour la disponibilité.",
+                    variant: 'destructive',
+                    className: 'notification-erreur',
+                  });
+                } finally {
+                  setIndispoProcessing(false);
+                }
+              }}
+            >
+              <CheckCircle className="h-5 w-5 mr-2" />
+              Oui, disponible
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
     </div>
   );

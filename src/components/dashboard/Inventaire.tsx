@@ -8,8 +8,9 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { productService } from '@/service/api';
+import { productApiService } from '@/services/api';
 import { Product } from '@/types';
-import { Search, Plus, Edit, Trash2, Package, Filter, ArrowUpDown, AlertTriangle, ShoppingBag, Star, TrendingUp, Eye, CheckCircle, XCircle, Clock, Sparkles, Crown, Diamond, FileDown, Gem, Award, Zap, Flame, Printer, Settings, Ban, Camera, ImageOff, ChevronLeft, ChevronRight, Upload, X, Image } from 'lucide-react';
+import { Search, Plus, Edit, Trash2, Package, PackageX, Filter, ArrowUpDown, AlertTriangle, ShoppingBag, Star, TrendingUp, Eye, CheckCircle, XCircle, Clock, Sparkles, Crown, Diamond, FileDown, Gem, Award, Zap, Flame, Printer, Settings, Ban, Camera, ImageOff, ChevronLeft, ChevronRight, Upload, X, Image } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import ModernActionButton from '@/components/dashboard/forms/ModernActionButton';
@@ -54,6 +55,10 @@ const Inventaire = () => {
   // Photo upload states for edit form
   const [editPhotos, setEditPhotos] = useState<{ files: File[]; existingUrls: string[]; mainIndex: number }>({ files: [], existingUrls: [], mainIndex: 0 });
   const [isUploadingPhotos, setIsUploadingPhotos] = useState(false);
+  // 🆕 Confirmation de mise à disponible des achats indisponibles
+  const [indispoTarget, setIndispoTarget] = useState<Product | null>(null);
+  const [indispoProcessing, setIndispoProcessing] = useState(false);
+
 
   const [newProduct, setNewProduct] = useState({
     description: '',
@@ -747,6 +752,26 @@ const Inventaire = () => {
                     </td>
                     <td className="p-2 sm:p-4 md:p-6" onClick={(e) => e.stopPropagation()}>
                       <div className="flex flex-wrap justify-center gap-1.5 sm:gap-2">
+                        {/* 🆕 Bouton Achats Indisponibles */}
+                        {(() => {
+                          const indispoQty = (product.achats || [])
+                            .filter(a => a && a.disponible === false)
+                            .reduce((s, a) => s + (Number(a.quantity) || 0), 0);
+                          if (indispoQty <= 0) return null;
+                          return (
+                            <button
+                              onClick={() => setIndispoTarget(product)}
+                              className="group/btn relative p-2 sm:p-2.5 md:p-3 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-lg shadow-amber-500/30 hover:shadow-xl hover:shadow-amber-500/50 hover:scale-110 active:scale-95 transition-all duration-300"
+                              title={`${indispoQty} unité(s) indisponible(s) — cliquez pour rendre disponible`}
+                            >
+                              <PackageX className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-5 md:w-5" />
+                              <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-red-600 text-white text-[10px] font-black flex items-center justify-center border-2 border-white shadow">
+                                {indispoQty}
+                              </span>
+                            </button>
+                          );
+                        })()}
+
                         {/* Bouton Modifier - Design Luxe */}
                         <button
                           onClick={() => setEditingProduct(product)}
@@ -756,6 +781,7 @@ const Inventaire = () => {
                           <Edit className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-5 md:w-5" />
                           <div className="absolute inset-0 rounded-xl bg-white/20 opacity-0 group-hover/btn:opacity-100 transition-opacity" />
                         </button>
+
                         
                         {/* Bouton Supprimer - Design Luxe */}
                         <button
@@ -1413,7 +1439,90 @@ const Inventaire = () => {
           baseUrl={BASE_URL}
         />
       )}
+
+      {/* 🆕 Confirmation : rendre disponibles tous les achats indisponibles */}
+      <AlertDialog open={!!indispoTarget} onOpenChange={(open) => { if (!open && !indispoProcessing) setIndispoTarget(null); }}>
+        <AlertDialogContent className="bg-white dark:bg-gray-900 border-2 border-amber-300 shadow-2xl rounded-2xl max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-3 text-xl font-black">
+              <div className="p-2 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 shadow-lg">
+                <PackageX className="h-6 w-6 text-white" />
+              </div>
+              Rendre disponible ?
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3 pt-2 text-sm">
+                {indispoTarget && (() => {
+                  const qty = (indispoTarget.achats || []).filter(a => a && a.disponible === false).reduce((s, a) => s + (Number(a.quantity) || 0), 0);
+                  return (
+                    <>
+                      <div className="text-gray-700 dark:text-gray-200">
+                        Confirmez-vous que <span className="font-bold text-amber-700">{qty}</span> unité(s) de <span className="font-bold">« {indispoTarget.description} »</span> sont vraiment disponibles ?
+                      </div>
+                      <div className="text-xs text-gray-500 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 rounded-lg p-3">
+                        Ces quantités seront ajoutées au stock vendable et les achats correspondants passeront à « Disponible » dans l'historique.
+                      </div>
+                    </>
+                  );
+                })()}
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex gap-3 pt-4">
+            <AlertDialogCancel asChild>
+              <ModernActionButton variant="outline" gradient="indigo" buttonSize="lg" className="flex-1" disabled={indispoProcessing}>
+                Annuler
+              </ModernActionButton>
+            </AlertDialogCancel>
+            <AlertDialogAction asChild>
+              <ModernActionButton
+                gradient="green"
+                buttonSize="lg"
+                className="flex-1 btn-3d"
+                disabled={indispoProcessing}
+                onClick={async (e: any) => {
+                  e?.preventDefault?.();
+                  if (!indispoTarget) return;
+                  setIndispoProcessing(true);
+                  try {
+                    const achats = indispoTarget.achats || [];
+                    const indexes = achats
+                      .map((a, i) => (a && a.disponible === false ? i : -1))
+                      .filter(i => i >= 0)
+                      .sort((a, b) => b - a); // ordre décroissant pour préserver les index
+                    for (const idx of indexes) {
+                      // eslint-disable-next-line no-await-in-loop
+                      await productApiService.setAchatDisponibilite(indispoTarget.id, idx, true);
+                    }
+                    toast({
+                      title: 'Stock mis à jour',
+                      description: `${indexes.length} achat(s) marqué(s) disponible(s).`,
+                      className: 'notification-success',
+                    });
+                    setIndispoTarget(null);
+                    await loadProducts();
+                  } catch (err) {
+                    console.error('Erreur mise à disponibilité:', err);
+                    toast({
+                      title: 'Erreur',
+                      description: "Impossible de mettre à jour la disponibilité.",
+                      variant: 'destructive',
+                      className: 'notification-erreur',
+                    });
+                  } finally {
+                    setIndispoProcessing(false);
+                  }
+                }}
+              >
+                <CheckCircle className="h-5 w-5 mr-2" />
+                Oui, disponible
+              </ModernActionButton>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
+
   );
 };
 
