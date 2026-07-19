@@ -116,11 +116,10 @@ const ConfirmationRdvButton: React.FC<Props> = ({ rdvs, onAfterUpdate }) => {
 
   const propagate = async (rdvId: string, commandeId: string | null | undefined, action: 'maintenu' | 'annule' | 'reporter', newDate?: string, newHd?: string, newHf?: string) => {
     // Mapping statuts:
-    //  - maintenu -> RDV: confirme; commande/tache: en_attente
+    //  - maintenu -> RDV: confirme; commande: INCHANGÉ (garde son statut, ex: "arrive"); tache: réactivée
     //  - annule  -> RDV/commande: annule; tache: completed
     //  - reporter-> RDV: reporte; commande: reporter; tache: nouvelle date
     const rdvStatut = action === 'maintenu' ? 'confirme' : action === 'annule' ? 'annule' : 'reporte';
-    const cmdStatut = action === 'maintenu' ? 'en_attente' : action === 'annule' ? 'annule' : 'reporter';
 
     // RDV
     try {
@@ -133,8 +132,9 @@ const ConfirmationRdvButton: React.FC<Props> = ({ rdvs, onAfterUpdate }) => {
       await rdvApiService.update(rdvId, payload);
     } catch (e) { console.warn('rdv update failed', e); }
 
-    // Commande
-    if (commandeId) {
+    // Commande — ne pas modifier le statut sur "maintenu" (préserver "arrive" / statut courant)
+    if (commandeId && action !== 'maintenu') {
+      const cmdStatut = action === 'annule' ? 'annule' : 'reporter';
       try {
         const payload: any = { statut: cmdStatut };
         if (action === 'reporter' && newDate && newHd) {

@@ -29,6 +29,8 @@ import {
 } from '@/components/commandes';
 import TacheConflictModal from '@/components/commandes/TacheConflictModal';
 import OverdueReservationModal from '@/components/commandes/OverdueReservationModal';
+import CommandeArriveePlanifDialog from '@/components/commandes/CommandeArriveePlanifDialog';
+
 import SEOHead from '@/components/SEOHead';
 
 const CommandesPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => {
@@ -212,8 +214,17 @@ const CommandesPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =
         onCancel={logic.handleOverdueCancel}
         onPostpone={logic.handleOverduePostpone}
       />
+
+      {/* Modale planification d'arrivée */}
+      <CommandeArriveePlanifDialog
+        isOpen={logic.arriveePlanifId !== null}
+        commande={logic.commandes.find(c => c.id === logic.arriveePlanifId) || null}
+        onClose={() => logic.setArriveePlanifId(null)}
+        onConfirm={logic.confirmArriveePlanification}
+      />
     </>
   );
+
 
   if (embedded) return content;
   return <Layout>{content}</Layout>;

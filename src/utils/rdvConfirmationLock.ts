@@ -22,6 +22,7 @@ export type RdvLockState = 'normal' | 'locked' | 'hidden';
 interface CommandeLike {
   id: string;
   dateEcheance?: string;
+  dateArrivagePrevue?: string;
   horaire?: string;
   type?: string;
   statut?: string;
@@ -34,14 +35,16 @@ export function computeLockStateForCommande(
   commande: CommandeLike,
   confirmationEntries: ConfirmationRdvEntry[]
 ): RdvLockState {
-  if (!commande?.id || !commande.dateEcheance || !commande.horaire) return 'normal';
+  const dateRef = commande?.dateEcheance || commande?.dateArrivagePrevue;
+  if (!commande?.id || !dateRef || !commande.horaire) return 'normal';
   const entry = confirmationEntries.find(e => e.commandeId === commande.id);
   if (!entry) return 'normal';
   if (entry.confirmationStatut !== 'en_attente') return 'normal';
 
   const hDebut = (commande.horaire || '').split('-')[0]?.trim() || '00:00';
-  const start = new Date(`${commande.dateEcheance}T${hDebut}:00`);
+  const start = new Date(`${dateRef}T${hDebut}:00`);
   if (isNaN(start.getTime())) return 'normal';
+
 
   const diff = start.getTime() - Date.now();
   // ≤ 1h avant début (jusqu'à après début) : masqué + auto-annulé

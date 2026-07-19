@@ -21,6 +21,7 @@ import { realtimeService } from '@/services/realtimeService';
 import { reservationRdvSyncService } from '@/services/reservationRdvSyncService';
 import tacheApi from '@/services/api/tacheApi';
 import rdvTachesApi from '@/services/api/rdvTachesApi';
+import rdvApiService from '@/services/api/rdvApi';
 import type { Sale } from '@/types/sale';
 import { computeClientCaracteristique } from '@/utils/clientCharacteristic';
 import { confirmationRdvApi, type ConfirmationRdvEntry } from '@/services/api/confirmationRdvApi';
@@ -150,6 +151,12 @@ export const useCommandesLogic = () => {
   const [overdueReservation, setOverdueReservation] = useState<Commande | null>(null);
   const [showOverdueModal, setShowOverdueModal] = useState(false);
   const [overdueProcessedIds, setOverdueProcessedIds] = useState<Set<string>>(new Set());
+
+  // =========================================================================
+  // Modale planification d'arrivée (statut "arrive" → RDV + tâche)
+  // =========================================================================
+  const [arriveePlanifId, setArriveePlanifId] = useState<string | null>(null);
+
 
   // =========================================================================
   // Helper: sync rdv-taches.json depuis une commande de type 'rdv'
@@ -955,7 +962,11 @@ export const useCommandesLogic = () => {
         });
         return;
       }
+      // ✅ Stock OK → ouvrir la modale de planification (RDV + tâche liés)
+      setArriveePlanifId(id);
+      return;
     }
+
 
     // Blocage : validation d'une commande uniquement après "Arrivé"
     if (newStatus === 'valide' && commande.type === 'commande' && commande.statut !== 'arrive') {
@@ -1025,6 +1036,81 @@ export const useCommandesLogic = () => {
   };
 
   // =========================================================================
+  // Confirmation de planification d'arrivée : passe la commande à "arrivé"
+  // + crée un RDV (rdv-taches) + une tâche liés (statut planifié)
+  // =========================================================================
+  const confirmArriveePlanification = async (payload: { date: string; heureDebut: string; heureFin: string }) => {
+    if (!arriveePlanifId) return;
+    const commande = commandes.find(c => c.id === arriveePlanifId);
+    if (!commande) return;
+    const { date, heureDebut, heureFin } = payload;
+    const produitsLabel = commande.produits.map(p => `${p.nom} × ${p.quantite}`).join(', ');
+    try {
+      // 1) Update commande
+      await api.put(`/api/commandes/${commande.id}`, {
+        statut: 'arrive',
+        dateArrivagePrevue: date,
+        horaire: `${heureDebut}-${heureFin}`,
+        horaireFin: heureFin,
+      });
+      // 2) Créer RDV lié (rdv-taches.json)
+      try {
+        await rdvTachesApi.create({
+          personneId: '', personneNom: '',
+          clientId: '', clientNom: commande.clientNom,
+          clientTelephone: commande.clientPhone,
+          telephone: commande.clientPhone,
+          tacheId: '', tacheNom: `Commande — ${produitsLabel}`,
+          lieu: commande.clientAddress || '',
+          date, heureDebut, heureFin,
+          commentaires: `Créé automatiquement depuis la commande ${commande.id}`,
+          commandeId: commande.id,
+          statut: 'planifie',
+        } as any);
+      } catch (rdvErr) { console.warn('Création RDV lié impossible:', rdvErr); }
+      // 2bis) Créer aussi une entrée dans rdv.json pour intégration ConfirmationRdvButton (verrouillage 24h/1h)
+      try {
+        const produitsRdv = commande.produits.map(p => ({
+          nom: p.nom, quantite: p.quantite,
+          prixUnitaire: p.prixUnitaire, prixVente: p.prixVente,
+        }));
+        await rdvApiService.create({
+          titre: `Commande — ${produitsLabel}`.substring(0, 80),
+          description: `Créé automatiquement depuis la commande ${commande.id}`,
+          clientNom: commande.clientNom,
+          clientTelephone: commande.clientPhone,
+          clientAdresse: commande.clientAddress,
+          date, heureDebut, heureFin,
+          lieu: commande.clientAddress,
+          statut: 'planifie',
+          produits: produitsRdv,
+          commandeId: commande.id,
+        } as any);
+      } catch (rdvJsonErr) { console.warn('Création RDV (rdv.json) impossible:', rdvJsonErr); }
+      // 3) Créer tâche liée
+      try {
+        await tacheApi.create({
+          date, heureDebut, heureFin,
+          description: `[Commande] ${commande.clientNom} — ${produitsLabel}`,
+          importance: 'pertinent',
+          travailleurId: '', travailleurNom: '',
+          commandeId: commande.id,
+          completed: false,
+        } as any);
+      } catch (tacheErr) { console.warn('Création tâche liée impossible:', tacheErr); }
+
+      toast({ title: '✅ Commande arrivée', description: 'RDV + tâche planifiés automatiquement.', className: 'bg-app-green text-white' });
+      setArriveePlanifId(null);
+      await fetchCommandes();
+    } catch (err) {
+      console.error('confirmArriveePlanification error:', err);
+      toast({ title: 'Erreur', description: "Impossible d'enregistrer l'arrivée", className: 'bg-app-red text-white', variant: 'destructive' });
+    }
+  };
+
+
+
+  // =========================================================================
   // Confirmation d'annulation
   // =========================================================================
 
@@ -1047,6 +1133,12 @@ export const useCommandesLogic = () => {
       }
       if (commande && commande.type === 'rdv') {
         await syncRdvTacheForCommande(commande, { statut: 'annule' });
+      }
+      // Commande classique (type 'commande' arrivée) → annuler aussi RDV lié + tâche + rdv.json
+      if (commande && commande.type === 'commande') {
+        try { await rdvTachesApi.updateByCommande(cancellingId, { statut: 'annule' } as any); } catch { /* pas de RDV lié */ }
+        try { await reservationRdvSyncService.syncRdvStatus(cancellingId, 'annule'); } catch { /* pas de RDV (rdv.json) */ }
+        try { await syncTacheForCommande(cancellingId, 'annule'); } catch { /* pas de tâche liée */ }
       }
       toast({ title: 'Succès', description: 'Commande annulée', className: "bg-app-green text-white" });
       await Promise.all([fetchCommandes(), fetchProducts()]); setCancellingId(null);
@@ -1095,9 +1187,18 @@ export const useCommandesLogic = () => {
       if (commandeToValidate.type === 'rdv') {
         await syncRdvTacheForCommande(commandeToValidate, { statut: 'valide' });
       }
+      // Commande classique arrivée → propager la clôture au RDV + tâche liés
+      if (commandeToValidate.type === 'commande') {
+        try { await rdvTachesApi.updateByCommande(validatingId, { statut: 'termine' } as any); } catch { /* pas de RDV lié */ }
+        try { await reservationRdvSyncService.syncRdvStatus(validatingId, 'valide'); } catch { /* pas de RDV (rdv.json) */ }
+        try { await syncTacheForCommande(validatingId, 'valide'); } catch { /* pas de tâche liée */ }
+      }
+
       const saleResponse = await api.post('/api/sales', saleData);
       const createdSale = saleResponse.data;
+      try { await api.post('/api/fidelite/rebuild'); } catch { /* rebuild fidelite best-effort */ }
       await api.put(`/api/commandes/${validatingId}`, { statut: 'valide', saleId: createdSale.id });
+
       // Dé-réserver les produits et déduire la quantité réservée du stock
       if (commandeToValidate.type === 'reservation') {
         for (const p of commandeToValidate.produits) {
@@ -1151,6 +1252,14 @@ export const useCommandesLogic = () => {
           heureDebut: reporterHoraire,
           heureFin: reporterHoraireFin,
         });
+      }
+      // Commande classique (type 'commande') → reporter aussi RDV + tâche + rdv.json
+      if (commande.type === 'commande') {
+        const hd = extractStartTime(reporterHoraire) || '09:00';
+        const hf = reporterHoraireFin || getOneHourLater(hd);
+        try { await reservationRdvSyncService.syncRdvReport(reporterCommandeId, reporterDate, hd); } catch { /* pas de RDV */ }
+        try { await rdvTachesApi.updateByCommande(reporterCommandeId, { date: reporterDate, heureDebut: hd, heureFin: hf, statut: 'reporte' } as any); } catch { /* pas de RDV tâche lié */ }
+        try { await syncTacheForCommande(reporterCommandeId, 'reporter', reporterDate, reporterHoraire); } catch { /* pas de tâche liée */ }
       }
       toast({ title: 'Succès', description: `Reporté au ${new Date(reporterDate).toLocaleDateString('fr-FR')}${reporterHoraire ? ' à ' + reporterHoraire : ''}`, className: "bg-app-green text-white" });
       fetchCommandes(); setReporterModalOpen(false); setReporterCommandeId(null); setReporterDate(''); setReporterHoraire(''); setReporterHoraireFin('');
@@ -1369,6 +1478,9 @@ export const useCommandesLogic = () => {
     handleCreateRdvFromReservation, handleDeclineRdv, handleAcceptRdv, handleCloseRdvModal,
     handleRescheduleTacheAndCreate, handleSkipTacheConflict,
     getStatusOptions, resetForm,
+    // Planification d'arrivée
+    arriveePlanifId, setArriveePlanifId, confirmArriveePlanification,
+
   };
 };
 
