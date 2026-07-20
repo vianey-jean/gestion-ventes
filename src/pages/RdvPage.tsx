@@ -18,7 +18,7 @@ import { useRdv } from '@/hooks/useRdv';
 import { RDV, RDVFormData } from '@/types/rdv';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Calendar, List } from 'lucide-react';
-import { parseISO, isSameMonth } from 'date-fns';
+import { parseISO, isSameMonth, startOfWeek, endOfWeek, isWithinInterval } from 'date-fns';
 import PremiumLoading from '@/components/ui/premium-loading';
 import SEOHead from '@/components/SEOHead';
 import ConfirmationRdvButton from '@/components/rdv/ConfirmationRdvButton';
@@ -130,6 +130,16 @@ const RdvPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => {
       .sort((a, b) => a.date.localeCompare(b.date) || a.heureDebut.localeCompare(b.heureDebut));
   }, [rdvs]);
 
+  // RDV de la semaine en cours (lundi -> dimanche)
+  const weekRdvs = useMemo(() => {
+    const now = new Date();
+    const start = startOfWeek(now, { weekStartsOn: 1 });
+    const end = endOfWeek(now, { weekStartsOn: 1 });
+    return rdvs
+      .filter(r => r.statut !== 'annule' && isWithinInterval(parseISO(r.date), { start, end }))
+      .sort((a, b) => a.date.localeCompare(b.date) || a.heureDebut.localeCompare(b.heureDebut));
+  }, [rdvs]);
+
   // Handlers
   const handleOpenForm = useCallback((rdv?: RDV, date?: string, time?: string) => {
     setSelectedRdv(rdv || null);
@@ -184,9 +194,10 @@ const RdvPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => {
   };
 
   // Handler pour ouvrir la modale stats
-  const handleOpenStatsModal = useCallback((type: 'today' | 'month' | 'pending' | 'total') => {
+  const handleOpenStatsModal = useCallback((type: 'today' | 'week' | 'month' | 'pending' | 'total') => {
     const configs = {
       today: { title: "Rendez-vous d'aujourd'hui", rdvs: todayRdvs, color: 'from-blue-500 to-blue-600' },
+      week: { title: 'Rendez-vous de cette semaine (Lun-Dim)', rdvs: weekRdvs, color: 'from-cyan-500 to-teal-600' },
       month: { title: 'Rendez-vous ce mois', rdvs: currentMonthRdvs, color: 'from-emerald-500 to-emerald-600' },
       pending: { title: 'Rendez-vous en attente', rdvs: pendingRdvsForStats, color: 'from-amber-500 to-orange-500' },
       total: { title: 'Total du mois', rdvs: allMonthRdvs, color: 'from-purple-500 to-purple-600' },
@@ -196,7 +207,7 @@ const RdvPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => {
     setStatsModalRdvs(config.rdvs);
     setStatsModalColor(config.color);
     setStatsModalOpen(true);
-  }, [todayRdvs, currentMonthRdvs, pendingRdvsForStats, allMonthRdvs]);
+  }, [todayRdvs, weekRdvs, currentMonthRdvs, pendingRdvsForStats, allMonthRdvs]);
 
   const handleStatsModalRdvClick = useCallback((rdv: RDV) => {
     setStatsModalOpen(false);
@@ -230,7 +241,7 @@ const RdvPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => {
 
         <div className="max-w-7xl mx-auto px-4 pb-8">
           {/* Stats Cards */}
-          <RdvPageStatsCards stats={stats} currentMonthCount={currentMonthRdvs.length} onOpenModal={handleOpenStatsModal} />
+          <RdvPageStatsCards stats={stats} currentMonthCount={currentMonthRdvs.length} weekCount={weekRdvs.length} onOpenModal={handleOpenStatsModal} />
 
           {/* Search Bar */}
           <RdvSearchBar

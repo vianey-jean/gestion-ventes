@@ -197,6 +197,21 @@ export const versementService = {
   },
 };
 
+export const bankService = {
+  getAll: async () => {
+    const response = await apiInstance.get('/api/banks');
+    return response.data as Array<{ id: string; name: string; createdAt?: string }>;
+  },
+  add: async (name: string) => {
+    const response = await apiInstance.post('/api/banks', { name });
+    return response.data;
+  },
+  remove: async (id: string) => {
+    await apiInstance.delete(`/api/banks/${id}`);
+    return true;
+  },
+};
+
 export const pretFamilleService = {
   getPretFamilles: () => pretFamilleApiService.getAll(),
   addPretFamille: (pret: Omit<PretFamille, 'id'>) => pretFamilleApiService.create(pret),

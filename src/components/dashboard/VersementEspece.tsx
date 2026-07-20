@@ -12,9 +12,10 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useToast } from '@/components/ui/use-toast';
 import {
   Banknote, Plus, Trash2, Pencil, Settings2, Calendar, TrendingUp,
-  Sparkles, Coins, Crown, ShieldCheck, CalendarClock, Wallet
+  Sparkles, Coins, Crown, ShieldCheck, CalendarClock, Wallet, Building2
 } from 'lucide-react';
-import { versementService } from '@/service/api';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { versementService, bankService } from '@/service/api';
 
 type Versement = {
   id: string;
@@ -70,6 +71,40 @@ const VersementEspece: React.FC = () => {
   const [editingV, setEditingV] = useState<Versement | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmData, setConfirmData] = useState<{ title: string; message: string; onConfirm: () => void } | null>(null);
+
+  // Banques
+  type Bank = { id: string; name: string };
+  const [banks, setBanks] = useState<Bank[]>([]);
+  const [addBankOpen, setAddBankOpen] = useState(false);
+  const [newBankName, setNewBankName] = useState('');
+
+  const fetchBanks = async () => {
+    try { setBanks(await bankService.getAll()); } catch (e) { console.error(e); }
+  };
+  useEffect(() => { fetchBanks(); }, []);
+
+  const handleAddBank = async () => {
+    const name = newBankName.trim();
+    if (!name) {
+      toast({ title: 'Erreur', description: 'Nom requis', variant: 'destructive' });
+      return;
+    }
+    try {
+      const bank = await bankService.add(name);
+      await fetchBanks();
+      // sélectionne automatiquement la nouvelle banque
+      if (editOpen && editingV) {
+        setEditingV(s => s ? ({ ...s, description: bank.name }) : null);
+      } else {
+        setNewV(s => ({ ...s, description: bank.name }));
+      }
+      setAddBankOpen(false);
+      setNewBankName('');
+      toast({ title: 'Banque ajoutée', description: bank.name, className: 'bg-app-green text-white' });
+    } catch (e: any) {
+      toast({ title: 'Erreur', description: e?.response?.data?.message || 'Échec ajout', variant: 'destructive' });
+    }
+  };
 
   const fetchAll = async () => {
     try {
@@ -456,8 +491,37 @@ const VersementEspece: React.FC = () => {
               <Input type="number" step="0.01" value={newV.montant} onChange={(e) => setNewV(s => ({ ...s, montant: e.target.value }))} placeholder="ex: 200" />
             </div>
             <div>
-              <Label>Description (optionnel)</Label>
-              <Input value={newV.description} onChange={(e) => setNewV(s => ({ ...s, description: e.target.value }))} placeholder="ex: Versement banque" />
+              <Label className="flex items-center gap-2">
+                <Building2 className="h-4 w-4 text-amber-600" /> Banque (description)
+              </Label>
+              <div className="flex gap-2">
+                <Select
+                  value={newV.description || undefined}
+                  onValueChange={(val) => setNewV(s => ({ ...s, description: val }))}
+                >
+                  <SelectTrigger className="flex-1">
+                    <SelectValue placeholder="Choisir une banque..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {banks.length === 0 ? (
+                      <div className="px-3 py-2 text-sm text-muted-foreground">Aucune banque</div>
+                    ) : banks.map(b => (
+                      <SelectItem key={b.id} value={b.name}>{b.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={() => { setNewBankName(''); setAddBankOpen(true); }}
+                  className="border-amber-300 text-amber-600 hover:bg-amber-50"
+                  title="Ajouter une banque"
+                >
+                  <Plus className="h-4 w-4" />
+                  <Building2 className="h-4 w-4 ml-0.5" />
+                </Button>
+              </div>
             </div>
           </div>
           <DialogFooter>
@@ -488,8 +552,37 @@ const VersementEspece: React.FC = () => {
               <Input type="number" step="0.01" value={editingV?.montant || ''} onChange={(e) => setEditingV(s => s ? ({ ...s, montant: Number(e.target.value) }) : null)} placeholder="ex: 200" />
             </div>
             <div>
-              <Label>Description (optionnel)</Label>
-              <Input value={editingV?.description || ''} onChange={(e) => setEditingV(s => s ? ({ ...s, description: e.target.value }) : null)} placeholder="ex: Versement banque" />
+              <Label className="flex items-center gap-2">
+                <Building2 className="h-4 w-4 text-amber-600" /> Banque (description)
+              </Label>
+              <div className="flex gap-2">
+                <Select
+                  value={editingV?.description || undefined}
+                  onValueChange={(val) => setEditingV(s => s ? ({ ...s, description: val }) : null)}
+                >
+                  <SelectTrigger className="flex-1">
+                    <SelectValue placeholder="Choisir une banque..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {banks.length === 0 ? (
+                      <div className="px-3 py-2 text-sm text-muted-foreground">Aucune banque</div>
+                    ) : banks.map(b => (
+                      <SelectItem key={b.id} value={b.name}>{b.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={() => { setNewBankName(''); setAddBankOpen(true); }}
+                  className="border-amber-300 text-amber-600 hover:bg-amber-50"
+                  title="Ajouter une banque"
+                >
+                  <Plus className="h-4 w-4" />
+                  <Building2 className="h-4 w-4 ml-0.5" />
+                </Button>
+              </div>
             </div>
           </div>
           <DialogFooter>
@@ -544,6 +637,55 @@ const VersementEspece: React.FC = () => {
               </TableBody>
             </Table>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modale Ajouter Banque */}
+      <Dialog open={addBankOpen} onOpenChange={setAddBankOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Building2 className="h-5 w-5 text-amber-600" />
+              Ajouter une banque
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <Label>Nom de la banque</Label>
+            <Input
+              value={newBankName}
+              onChange={(e) => setNewBankName(e.target.value)}
+              placeholder="ex: Crédit Agricole"
+              onKeyDown={(e) => { if (e.key === 'Enter') handleAddBank(); }}
+              autoFocus
+            />
+            {banks.length > 0 && (
+              <div className="pt-2 border-t">
+                <div className="text-xs font-semibold text-gray-500 mb-2">Banques enregistrées</div>
+                <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto">
+                  {banks.map(b => (
+                    <span key={b.id} className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-800 text-xs">
+                      <Building2 className="h-3 w-3" />
+                      {b.name}
+                      <button
+                        type="button"
+                        onClick={async () => { try { await bankService.remove(b.id); fetchBanks(); } catch {} }}
+                        className="text-red-500 hover:text-red-700"
+                        title="Supprimer"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAddBankOpen(false)}>Annuler</Button>
+            <Button onClick={handleAddBank} className="bg-gradient-to-r from-amber-500 to-orange-600 text-white">
+              Enregistrer
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
