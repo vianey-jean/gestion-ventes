@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useMemo } from 'react';
+import React, { memo, useCallback, useMemo, RefObject } from 'react';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -26,6 +26,8 @@ export interface PaginationProps {
   size?: 'sm' | 'md' | 'lg';
   /** Désactiver la pagination */
   disabled?: boolean;
+  /** Référence de l'élément vers lequel scroller après un changement de page */
+  scrollTargetRef?: RefObject<HTMLElement>;
 }
 
 /**
@@ -43,7 +45,8 @@ const Pagination: React.FC<PaginationProps> = memo(({
   siblingCount = 1,
   className,
   size = 'md',
-  disabled = false
+  disabled = false,
+  scrollTargetRef
 }) => {
   const sizeStyles = {
     sm: 'h-8 w-8 text-xs',
@@ -54,8 +57,12 @@ const Pagination: React.FC<PaginationProps> = memo(({
   const handlePageChange = useCallback((page: number) => {
     if (page >= 1 && page <= totalPages && page !== currentPage && !disabled) {
       onPageChange(page);
+      // Remonter en haut de l'élément cible après le changement de page
+      if (scrollTargetRef?.current) {
+        scrollTargetRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
     }
-  }, [currentPage, totalPages, onPageChange, disabled]);
+  }, [currentPage, totalPages, onPageChange, disabled, scrollTargetRef]);
 
   // Calcul des pages visibles
   const visiblePages = useMemo(() => {

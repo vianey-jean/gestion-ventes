@@ -4,7 +4,7 @@
  * CRUD complet avec gestion du stock, recherche, filtrage, commentaires et upload d'images.
  */
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Layout from '@/components/Layout';
 import ProduitsHero from '@/pages/produits/ProduitsHero';
@@ -274,6 +274,7 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
+  const tableContainerRef = useRef<HTMLDivElement>(null);
   const ITEMS_PER_PAGE = 10;
 
   // Tri (sorting)
@@ -695,7 +696,7 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
           <ProductAttributesToolbar />
 
           {/* Products Table */}
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
+          <motion.div ref={tableContainerRef} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
             className="rounded-3xl border border-violet-200/20 dark:border-violet-800/20 overflow-hidden backdrop-blur-xl bg-white/80 dark:bg-white/5 shadow-2xl shadow-violet-500/5"
           >
             <div className="overflow-x-auto">
@@ -945,6 +946,7 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
             showFirstLast={true}
             showItemCount={true}
             siblingCount={1}
+            scrollTargetRef={tableContainerRef}
           />
         </div>
 
