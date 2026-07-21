@@ -54,7 +54,8 @@ interface RdvCalendarProps {
   onHighlightComplete?: () => void;
 }
 
-const HOURS = Array.from({ length: 12 }, (_, i) => i + 8);
+const DEFAULT_START_HOUR = 8;
+const DEFAULT_END_HOUR = 19; // inclusive last displayed hour
 
 const statusColors: Record<string, { bg: string; border: string; text: string }> = {
   planifie: { bg: 'bg-gradient-to-r from-blue-500 to-blue-600', border: 'border-blue-400', text: 'text-blue-600' },
@@ -139,6 +140,26 @@ const RdvCalendar: React.FC<RdvCalendarProps> = ({
 
   const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+
+  // HOURS dynamiques : 8h→19h par défaut, étendus si des RDV de la semaine dépassent
+  const HOURS = useMemo(() => {
+    let minH = DEFAULT_START_HOUR;
+    let maxH = DEFAULT_END_HOUR;
+    const weekDateKeys = weekDays.map(d => format(d, 'yyyy-MM-dd'));
+    rdvs.forEach(rdv => {
+      if (!weekDateKeys.includes(rdv.date)) return;
+      if (rdv.statut === 'annule') return;
+      const [sh] = rdv.heureDebut.split(':').map(Number);
+      const [eh, em] = rdv.heureFin.split(':').map(Number);
+      if (!isNaN(sh) && sh < minH) minH = sh;
+      // fin exclusive : un RDV finissant à 22:30 nécessite d'afficher l'heure 22
+      const endHourNeeded = em > 0 ? eh : eh - 1;
+      if (!isNaN(endHourNeeded) && endHourNeeded > maxH) maxH = endHourNeeded;
+    });
+    minH = Math.max(0, Math.min(minH, DEFAULT_START_HOUR));
+    maxH = Math.min(23, Math.max(maxH, DEFAULT_END_HOUR));
+    return Array.from({ length: maxH - minH + 1 }, (_, i) => i + minH);
+  }, [rdvs, weekDays]);
 
   const rdvsByDay = useMemo(() => {
     const map: Record<string, RDV[]> = {};
@@ -396,7 +417,7 @@ const RdvCalendar: React.FC<RdvCalendarProps> = ({
     const [startHour, startMin] = rdv.heureDebut.split(':').map(Number);
     const [endHour, endMin] = rdv.heureFin.split(':').map(Number);
     
-    const top = ((startHour - 8) * 60 + startMin) * (60 / 60);
+    const top = ((startHour - HOURS[0]) * 60 + startMin) * (60 / 60);
     const height = ((endHour - startHour) * 60 + (endMin - startMin)) * (60 / 60);
     
     return { top: `${top}px`, height: `${Math.max(height, 30)}px` };
@@ -504,6 +525,7 @@ const RdvCalendar: React.FC<RdvCalendarProps> = ({
                   const isIndispo = slotIndispos.length > 0;
                   const slotExceptions = getExceptionForSlot(dateStr, hour);
                   const isException = !isIndispo && slotExceptions.length > 0;
+                  
                   
                   return (
                     <div

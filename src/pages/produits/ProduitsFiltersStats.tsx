@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Product } from '@/types';
 
-export type FilterType = 'tous' | 'perruque' | 'tissage' | 'extension' | 'autres';
+export type FilterType = 'tous' | 'perruque' | 'tissage' | 'extension' | 'autres' | 'indisponible';
 
 interface FilterItem {
   key: FilterType;
@@ -26,6 +26,11 @@ interface Props {
 
 const countByFilter = (products: Product[], key: FilterType): number => {
   if (key === 'tous') return products.length;
+  if (key === 'indisponible') {
+    return products.filter(p =>
+      (p.achats || []).some(a => a && a.disponible === false && (Number(a.quantity) || 0) > 0)
+    ).length;
+  }
   return products.filter(p => {
     const d = p.description.toLowerCase();
     if (key === 'perruque') return d.includes('perruque');

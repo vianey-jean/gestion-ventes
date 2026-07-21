@@ -61,7 +61,7 @@ import ProductClassificationSelector, { ClassificationValue, buildProductName, P
 import ProductClassificationFilterModal from '@/components/products/attributes/ProductClassificationFilterModal';
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://server-gestion-ventes.onrender.com';
 
-type FilterType = 'tous' | 'perruque' | 'tissage' | 'extension' | 'autres';
+type FilterType = 'tous' | 'perruque' | 'tissage' | 'extension' | 'autres' | 'indisponible';
 
 const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => {
   const { products, fetchProducts } = useApp();
@@ -346,6 +346,8 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
           case 'tissage': return desc.includes('tissage');
           case 'extension': return desc.includes('extension');
           case 'autres': return !desc.includes('perruque') && !desc.includes('tissage') && !desc.includes('extension');
+          case 'indisponible':
+            return (p.achats || []).some(a => a && a.disponible === false && (Number(a.quantity) || 0) > 0);
           default: return true;
         }
       });
@@ -407,7 +409,7 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
   // Poignée : quand on choisit une catégorie autre que "tous", on ouvre la modale de classification
   const handleFilterChange = useCallback((f: FilterType) => {
     setActiveFilter(f);
-    if (f === 'tous' || f === 'autres') {
+    if (f === 'tous' || f === 'autres' || f === 'indisponible') {
       setClassification({});
       return;
     }
@@ -661,6 +663,7 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
     { key: 'tissage', label: 'Tissages', icon: <Star className="h-3.5 w-3.5" /> },
     { key: 'extension', label: 'Extensions', icon: <ShoppingBag className="h-3.5 w-3.5" /> },
     { key: 'autres', label: 'Autres', icon: <Filter className="h-3.5 w-3.5" /> },
+    { key: 'indisponible', label: 'Indisponibles', icon: <Filter className="h-3.5 w-3.5" /> },
   ];
 
   const content = (
