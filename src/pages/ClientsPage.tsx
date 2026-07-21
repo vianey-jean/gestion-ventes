@@ -1,44 +1,46 @@
 /**
- * =============================================================================
- * ClientsPage - Page de gestion des clients
- * =============================================================================
+ * ClientsPage - Page de gestion des clients (refactorisée en sous-composants).
+ * Fonctionnalités : recherche, tri par nom, filtre fidélité, filtre ville,
+ * ajout/édition/suppression avec confirmations, actions téléphone / adresse,
+ * gestion des doublons, fusion, gestion des villes, détail & fidélité.
  */
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useClientSync } from '@/hooks/useClientSync';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Edit, Trash2, Phone, MapPin, Users, Sparkles, Crown, Star, MessageSquare, PhoneCall, Navigation, Plus, Camera, User, ArrowUp, ArrowDown, Eye } from 'lucide-react';
-import ClientDetailModal from '@/components/clients/ClientDetailModal';
 import { useIsMobile } from '@/hooks/use-mobile';
 import axios from 'axios';
-import { clientsVillesApi } from '@/services/api/villesApi';
+import { motion } from 'framer-motion';
+import { Crown, Sparkles, Users } from 'lucide-react';
+
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import ScrollToTop from '@/components/ScrollToTop';
-import ConfirmDeleteDialog from '@/components/dashboard/forms/ConfirmDeleteDialog';
 import Layout from '@/components/Layout';
 import PremiumLoading from '@/components/ui/premium-loading';
+import SEOHead from '@/components/SEOHead';
+import { Button } from '@/components/ui/button';
+
+import { clientsVillesApi } from '@/services/api/villesApi';
+import fideliteApiService, { FideliteEntry } from '@/services/api/fideliteApi';
+
+import ConfirmDeleteDialog from '@/components/dashboard/forms/ConfirmDeleteDialog';
+import ClientDetailModal from '@/components/clients/ClientDetailModal';
 import ClientPhotoZoomModal from '@/components/clients/ClientPhotoZoomModal';
 import ClientMergeModal from '@/components/clients/ClientMergeModal';
 import DuplicateClientModal from '@/components/clients/DuplicateClientModal';
-import ClientFideliteBadge from '@/components/clients/ClientFideliteBadge';
-import { findMatchingClients, type ClientMatch } from '@/utils/clientMatch';
-import { motion } from "framer-motion";
-import SEOHead from '@/components/SEOHead';
-
-// Sous-composants décomposés
-import { ClientHero, ClientSearchSection } from './clients';
 import CitiesManagerModal from '@/components/clients/CitiesManagerModal';
+import ClientFilterBar, { FidelityTier } from '@/components/clients/ClientFilterBar';
+import ClientPhoneActionModal from '@/components/clients/ClientPhoneActionModal';
+import ClientAddressActionModal from '@/components/clients/ClientAddressActionModal';
+import ClientConfirmDialogs from '@/components/clients/ClientConfirmDialogs';
+import ClientFormDialog, { ClientFormData } from '@/components/clients/ClientFormDialog';
+import ClientPagination from '@/components/clients/ClientPagination';
+import ClientCardItem from '@/components/clients/ClientCardItem';
 
-// ============================================================================
-// Types
-// ============================================================================
+import { ClientHero, ClientSearchSection } from './clients';
+import { findMatchingClients, type ClientMatch } from '@/utils/clientMatch';
 
 interface Client {
   id: string;
@@ -47,50 +49,49 @@ interface Client {
   phones: string[];
   adresse: string;
   addresses?: string[];
+  ville?: string;
+  villes?: string[];
   dateCreation: string;
   photo?: string;
 }
 
-// ============================================================================
-// Composant Principal
-// ============================================================================
+const norm = (s: string) => (s || '').trim().toLowerCase();
 
 const ClientsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => {
   const { isAuthenticated } = useAuth();
   const { clients, isLoading, refetch } = useClientSync();
   const { toast } = useToast();
   const isMobile = useIsMobile();
-  
-  // =========================================================================
-  // États
-  // =========================================================================
+
+  // États principaux
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formData, setFormData] = useState<{ nom: string; phones: string[]; addresses: string[]; ville: string; villes: string[] }>({ nom: '', phones: [''], addresses: [''], ville: '', villes: [''] });
+  const [formData, setFormData] = useState<ClientFormData>({ nom: '', phones: [''], addresses: [''], ville: '', villes: [''] });
   const [availableVilles, setAvailableVilles] = useState<string[]>([]);
 
-  // Charger les villes disponibles
-  useEffect(() => {
-    if (isAddDialogOpen) {
-      clientsVillesApi.getAll().then(setAvailableVilles).catch(() => setAvailableVilles([]));
-    }
-  }, [isAddDialogOpen]);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [removeExistingPhoto, setRemoveExistingPhoto] = useState(false);
+
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
+
   const [clientSortDir, setClientSortDir] = useState<'asc' | 'desc'>('asc');
+  const [tierFilter, setTierFilter] = useState<FidelityTier | null>(null);
+  const [villeFilter, setVilleFilter] = useState<string | null>(null);
+
   const [showAddConfirm, setShowAddConfirm] = useState(false);
   const [showEditConfirm, setShowEditConfirm] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [clientToDelete, setClientToDelete] = useState<Client | null>(null);
+
   const [phoneActionOpen, setPhoneActionOpen] = useState(false);
-  const [selectedPhone, setSelectedPhone] = useState<string>('');
+  const [selectedPhone, setSelectedPhone] = useState('');
   const [addressActionOpen, setAddressActionOpen] = useState(false);
-  const [selectedAddress, setSelectedAddress] = useState<string>('');
+  const [selectedAddress, setSelectedAddress] = useState('');
+
   const [zoomPhoto, setZoomPhoto] = useState<{ url: string; name: string } | null>(null);
   const [isMergeOpen, setIsMergeOpen] = useState(false);
   const [isVillesOpen, setIsVillesOpen] = useState(false);
@@ -98,12 +99,28 @@ const ClientsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => 
   const [duplicateModalOpen, setDuplicateModalOpen] = useState(false);
   const [duplicateMatches, setDuplicateMatches] = useState<ClientMatch[]>([]);
 
+  const [fideliteMap, setFideliteMap] = useState<Record<string, FideliteEntry>>({});
+
   const photoInputRef = useRef<HTMLInputElement>(null);
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:10000';
 
-  // =========================================================================
+  // Charger villes disponibles pour le formulaire
+  useEffect(() => {
+    if (isAddDialogOpen) {
+      clientsVillesApi.getAll().then(setAvailableVilles).catch(() => setAvailableVilles([]));
+    }
+  }, [isAddDialogOpen]);
+
+  // Charger la fidélité (utilisé pour le filtre)
+  useEffect(() => {
+    const load = () => fideliteApiService.getAll().then(setFideliteMap).catch(() => setFideliteMap({}));
+    load();
+    const onSales = () => load();
+    window.addEventListener('sales-updated', onSales);
+    return () => window.removeEventListener('sales-updated', onSales);
+  }, []);
+
   // Photo handling
-  // =========================================================================
   const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -113,73 +130,79 @@ const ClientsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => 
     reader.onload = (ev) => setPhotoPreview(ev.target?.result as string);
     reader.readAsDataURL(file);
   };
-
   const removePhoto = () => {
     setPhotoFile(null);
     setPhotoPreview(null);
     setRemoveExistingPhoto(Boolean(editingClient?.photo));
     if (photoInputRef.current) photoInputRef.current.value = '';
   };
+  const getClientPhotoUrl = (client: Client) => (client.photo ? `${API_BASE_URL}${client.photo}` : null);
 
-  const getClientPhotoUrl = (client: Client) => {
-    if (!client.photo) return null;
-    return `${API_BASE_URL}${client.photo}`;
-  };
-
-  // =========================================================================
-  // Handlers téléphone et adresse
-  // =========================================================================
+  // Handlers téléphone/adresse
   const handlePhoneClick = (phone: string) => { setSelectedPhone(phone); setPhoneActionOpen(true); };
   const handleCall = () => { window.location.href = `tel:${selectedPhone}`; setPhoneActionOpen(false); };
   const handleMessage = () => {
-    if (isMobile) { window.location.href = `sms:${selectedPhone}`; }
-    else { toast({ title: "Message", description: `Préparez un message pour ${selectedPhone}`, className: "notification-success" }); }
+    if (isMobile) window.location.href = `sms:${selectedPhone}`;
+    else toast({ title: 'Message', description: `Préparez un message pour ${selectedPhone}`, className: 'notification-success' });
     setPhoneActionOpen(false);
   };
   const handleAddressClick = (address: string) => {
     if (isMobile) { setSelectedAddress(address); setAddressActionOpen(true); }
-    else { window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`, '_blank'); }
+    else window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`, '_blank');
   };
   const openGoogleMaps = () => { window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selectedAddress)}`, '_blank'); setAddressActionOpen(false); };
   const openWaze = () => { window.open(`https://waze.com/ul?q=${encodeURIComponent(selectedAddress)}`, '_blank'); setAddressActionOpen(false); };
   const openAppleMaps = () => { window.open(`https://maps.apple.com/?q=${encodeURIComponent(selectedAddress)}`, '_blank'); setAddressActionOpen(false); };
 
-  // =========================================================================
-  // Filtrage et pagination
-  // =========================================================================
+  // Filtrage
   const filteredClients = useMemo(() => {
-    let result = searchQuery.length >= 3 
-      ? clients.filter(client => 
-          client.nom.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          (client.phones || []).some(p => p.includes(searchQuery)) ||
-          client.phone?.includes(searchQuery) ||
-          client.adresse.toLowerCase().includes(searchQuery.toLowerCase())
-        )
+    let result = searchQuery.length >= 3
+      ? clients.filter(c =>
+          c.nom.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (c.phones || []).some(p => p.includes(searchQuery)) ||
+          c.phone?.includes(searchQuery) ||
+          c.adresse.toLowerCase().includes(searchQuery.toLowerCase()))
       : [...clients];
 
-    // Tri par nom A-Z ou Z-A
+    if (tierFilter) {
+      result = result.filter(c => {
+        const entry = fideliteMap[norm(c.nom)];
+        const tier = entry?.tier || 'nouveau';
+        return tier === tierFilter;
+      });
+    }
+
+    if (villeFilter) {
+      const vf = villeFilter.toLowerCase();
+      result = result.filter(c => {
+        const villes: string[] = Array.isArray((c as any).villes) ? (c as any).villes : [];
+        if (villes.some(v => (v || '').toLowerCase() === vf)) return true;
+        if (((c as any).ville || '').toLowerCase() === vf) return true;
+        return false;
+      });
+    }
+
     result.sort((a, b) => {
       const cmp = a.nom.localeCompare(b.nom, 'fr');
       return clientSortDir === 'asc' ? cmp : -cmp;
     });
-
     return result;
-  }, [clients, searchQuery, clientSortDir]);
+  }, [clients, searchQuery, clientSortDir, tierFilter, villeFilter, fideliteMap]);
 
   const totalPages = Math.max(1, Math.ceil(filteredClients.length / itemsPerPage));
-
-  useEffect(() => { setCurrentPage(1); }, [searchQuery]);
+  useEffect(() => { setCurrentPage(1); }, [searchQuery, tierFilter, villeFilter]);
   useEffect(() => { if (currentPage > totalPages) setCurrentPage(totalPages); }, [currentPage, totalPages]);
 
   const paginatedClients = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    return filteredClients.slice(startIndex, startIndex + itemsPerPage);
-  }, [filteredClients, currentPage, itemsPerPage]);
+    const start = (currentPage - 1) * itemsPerPage;
+    return filteredClients.slice(start, start + itemsPerPage);
+  }, [filteredClients, currentPage]);
 
-  // =========================================================================
-  // CRUD Handlers
-  // =========================================================================
-  const resetForm = () => { setFormData({ nom: '', phones: [''], addresses: [''], ville: '', villes: [''] }); setEditingClient(null); setPhotoFile(null); setPhotoPreview(null); setRemoveExistingPhoto(false); };
+  // CRUD
+  const resetForm = () => {
+    setFormData({ nom: '', phones: [''], addresses: [''], ville: '', villes: [''] });
+    setEditingClient(null); setPhotoFile(null); setPhotoPreview(null); setRemoveExistingPhoto(false);
+  };
   const handleAddClient = () => { resetForm(); setIsAddDialogOpen(true); };
   const handleEditClient = (client: Client) => {
     const phones = client.phones && client.phones.length > 0 ? client.phones : [client.phone || ''];
@@ -193,27 +216,18 @@ const ClientsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => 
     setRemoveExistingPhoto(false);
     setIsAddDialogOpen(true);
   };
-  
+
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const validPhones = formData.phones.filter(p => p.trim());
     const validAddresses = formData.addresses.filter(a => a.trim());
     if (!formData.nom.trim() || validPhones.length === 0 || validAddresses.length === 0) {
-      toast({ title: "Erreur", description: "Le nom, au moins un téléphone et une adresse sont obligatoires", variant: "destructive", className: "notification-erreur" });
+      toast({ title: 'Erreur', description: 'Le nom, au moins un téléphone et une adresse sont obligatoires', variant: 'destructive', className: 'notification-erreur' });
       return;
     }
     if (editingClient) { setShowEditConfirm(true); return; }
-    // Détection de doublons côté création
-    const matches = findMatchingClients(clients as any, {
-      nom: formData.nom,
-      phones: validPhones,
-      addresses: validAddresses,
-    });
-    if (matches.length > 0) {
-      setDuplicateMatches(matches);
-      setDuplicateModalOpen(true);
-      return;
-    }
+    const matches = findMatchingClients(clients as any, { nom: formData.nom, phones: validPhones, addresses: validAddresses });
+    if (matches.length > 0) { setDuplicateMatches(matches); setDuplicateModalOpen(true); return; }
     setShowAddConfirm(true);
   };
 
@@ -222,10 +236,7 @@ const ClientsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => 
     const validAddresses: string[] = [];
     const validVilles: string[] = [];
     formData.addresses.forEach((a, i) => {
-      if (a.trim()) {
-        validAddresses.push(a);
-        validVilles.push((formData.villes[i] || '').trim());
-      }
+      if (a.trim()) { validAddresses.push(a); validVilles.push((formData.villes[i] || '').trim()); }
     });
     const validPhones = formData.phones.filter(p => p.trim());
     fd.append('nom', formData.nom);
@@ -239,15 +250,10 @@ const ClientsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => 
     return fd;
   };
 
-  // Enregistre toute nouvelle ville saisie dans la base clients-villes.json
   const persistNewVilles = async () => {
     const known = new Set(availableVilles.map(v => v.toLowerCase()));
-    const toAdd = (formData.villes || [])
-      .map(v => (v || '').trim())
-      .filter(v => v && !known.has(v.toLowerCase()));
-    for (const v of toAdd) {
-      try { await clientsVillesApi.add(v); } catch {}
-    }
+    const toAdd = (formData.villes || []).map(v => (v || '').trim()).filter(v => v && !known.has(v.toLowerCase()));
+    for (const v of toAdd) { try { await clientsVillesApi.add(v); } catch {} }
   };
 
   const confirmAdd = async () => {
@@ -256,16 +262,13 @@ const ClientsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => 
       const token = localStorage.getItem('token');
       await persistNewVilles();
       const fd = buildFormData();
-      await axios.post(`${API_BASE_URL}/api/clients`, fd, { 
-        headers: { 
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data'
-        } 
+      await axios.post(`${API_BASE_URL}/api/clients`, fd, {
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' },
       });
-      toast({ title: "Succès", description: "Client ajouté avec succès", className: "notification-success" });
+      toast({ title: 'Succès', description: 'Client ajouté avec succès', className: 'notification-success' });
       setIsAddDialogOpen(false); setShowAddConfirm(false); resetForm(); refetch();
-    } catch (error) {
-      toast({ title: "Erreur", description: "Une erreur est survenue lors de l'ajout", variant: "destructive", className: "notification-erreur" });
+    } catch {
+      toast({ title: 'Erreur', description: "Une erreur est survenue lors de l'ajout", variant: 'destructive', className: 'notification-erreur' });
     } finally { setIsSubmitting(false); }
   };
 
@@ -276,16 +279,13 @@ const ClientsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => 
       const token = localStorage.getItem('token');
       await persistNewVilles();
       const fd = buildFormData();
-      await axios.put(`${API_BASE_URL}/api/clients/${editingClient.id}`, fd, { 
-        headers: { 
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data'
-        } 
+      await axios.put(`${API_BASE_URL}/api/clients/${editingClient.id}`, fd, {
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' },
       });
-      toast({ title: "Succès", description: "Client mis à jour avec succès", className: "notification-success" });
+      toast({ title: 'Succès', description: 'Client mis à jour avec succès', className: 'notification-success' });
       setIsAddDialogOpen(false); setShowEditConfirm(false); resetForm(); refetch();
-    } catch (error) {
-      toast({ title: "Erreur", description: "Une erreur est survenue lors de la modification", variant: "destructive", className: "notification-erreur" });
+    } catch {
+      toast({ title: 'Erreur', description: 'Une erreur est survenue lors de la modification', variant: 'destructive', className: 'notification-erreur' });
     } finally { setIsSubmitting(false); }
   };
 
@@ -297,655 +297,230 @@ const ClientsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => 
     try {
       const token = localStorage.getItem('token');
       await axios.delete(`${API_BASE_URL}/api/clients/${clientToDelete.id}`, { headers: { Authorization: `Bearer ${token}` } });
-      toast({ title: "Succès", description: "Client supprimé avec succès", className: "notification-success" });
+      toast({ title: 'Succès', description: 'Client supprimé avec succès', className: 'notification-success' });
       setShowDeleteConfirm(false); setClientToDelete(null); refetch();
-    } catch (error) {
-      toast({ title: "Erreur", description: "Erreur lors de la suppression", variant: "destructive", className: "notification-erreur" });
+    } catch {
+      toast({ title: 'Erreur', description: 'Erreur lors de la suppression', variant: 'destructive', className: 'notification-erreur' });
     } finally { setIsSubmitting(false); }
   };
 
-  // =========================================================================
-  // Loading
-  // =========================================================================
   if (isLoading) {
     if (embedded) return <PremiumLoading text="Bienvenue sur Listes des Clients" size="xl" overlay={false} variant="default" />;
-    return (
-      <Layout>
-        <PremiumLoading text="Bienvenue sur Listes des Clients" size="xl" overlay={true} variant="default" />
-      </Layout>
-    );
+    return <Layout><PremiumLoading text="Bienvenue sur Listes des Clients" size="xl" overlay={true} variant="default" /></Layout>;
   }
 
-  // =========================================================================
-  // Rendu
-  // =========================================================================
   const mainContent = (
     <>
-    <SEOHead title="Clients" description="Gestion des clients - Liste et suivi des clients" />
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-purple-50/30 to-indigo-50/50 dark:from-[#030014] dark:via-[#0a0020]/80 dark:to-[#0e0030]">
-      {!embedded && <Navbar />}
-      {!embedded && <ScrollToTop />}
+      <SEOHead title="Clients" description="Gestion des clients - Liste et suivi des clients" />
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-purple-50/30 to-indigo-50/50 dark:from-[#030014] dark:via-[#0a0020]/80 dark:to-[#0e0030]">
+        {!embedded && <Navbar />}
+        {!embedded && <ScrollToTop />}
 
-      {/* Section héroïque décomposée */}
-      <ClientHero
-        clientCount={clients.length}
-        onAddClient={handleAddClient}
-        onMergeClient={() => setIsMergeOpen(true)}
-        onShowVilles={() => setIsVillesOpen(true)}
-      />
-
-      {/* Contenu principal */}
-      <div className="container mx-auto px-3 sm:px-4 md:px-6 py-8 sm:py-12 md:py-20 max-w-7xl">
-        {/* Recherche décomposée */}
-        <ClientSearchSection
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-          filteredCount={filteredClients.length}
+        <ClientHero
+          clientCount={clients.length}
+          onAddClient={handleAddClient}
+          onMergeClient={() => setIsMergeOpen(true)}
+          onShowVilles={() => setIsVillesOpen(true)}
         />
 
-        {/* Tri par nom + Grille des clients */}
-        <div className="flex items-center justify-between mb-4">
-          <button
-            onClick={() => setClientSortDir(prev => prev === 'asc' ? 'desc' : 'asc')}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/80 dark:bg-white/5 border border-violet-200/30 dark:border-violet-800/30 hover:bg-violet-50 dark:hover:bg-violet-900/20 transition-all text-sm font-semibold text-violet-700 dark:text-violet-300"
-          >
-            Nom
-            <span className="flex flex-col">
-              <ArrowUp className={`h-3 w-3 ${clientSortDir === 'asc' ? 'text-violet-500' : 'text-violet-300/40'}`} />
-              <ArrowDown className={`h-3 w-3 -mt-1 ${clientSortDir === 'desc' ? 'text-violet-500' : 'text-violet-300/40'}`} />
-            </span>
-            <span className="text-xs text-muted-foreground">({clientSortDir === 'asc' ? 'A → Z' : 'Z → A'})</span>
-          </button>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 md:gap-8">
-          {paginatedClients.map((client, index) => {
-            const clientPhotoUrl = getClientPhotoUrl(client);
-            return (
-            <Card 
-              key={client.id} 
-              className="group hover:shadow-2xl transition-all duration-700 transform hover:-translate-y-4 card-mirror-light dark:card-mirror mirror-shine backdrop-blur-sm shadow-xl hover:shadow-purple-500/25 relative"
-              style={{ animationDelay: `${index * 150}ms` }}
-            >
-              {/* Badge ÉLITE au hover */}
-              <div className="absolute top-4 right-4 bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400 text-black text-xs font-bold px-3 py-1 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-x-4 group-hover:translate-x-0 animate-bounce z-30">
-                <Star className="w-3 h-3 inline mr-1" />ÉLITE
-              </div>
-              
-              {/* Mirror shine effect */}
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 z-20 pointer-events-none"></div>
-              <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-500 via-pink-500 to-violet-500 rounded-3xl opacity-0 group-hover:opacity-15 blur transition-opacity duration-500 pointer-events-none"></div>
-              
-              <CardHeader className="pb-4 relative z-10">
-                <div className="flex justify-between items-start">
-                  <div className="flex items-center gap-3 flex-1 min-w-0">
-                    {/* Photo du client */}
-                    <div 
-                      className="shrink-0 cursor-pointer group/photo"
-                      onClick={() => {
-                        if (clientPhotoUrl) setZoomPhoto({ url: clientPhotoUrl, name: client.nom });
-                      }}
-                    >
-                      {clientPhotoUrl ? (
-                        <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full overflow-hidden ring-2 ring-purple-400/50 ring-offset-2 ring-offset-white dark:ring-offset-gray-900 shadow-lg group-hover/photo:ring-purple-500 group-hover/photo:scale-110 transition-all duration-300">
-                          <img 
-                            src={clientPhotoUrl} 
-                            alt={client.nom}
-                            className="w-full h-full object-cover"
-                            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden'); }}
-                          />
-                          <div className="hidden w-full h-full bg-gradient-to-br from-purple-500 via-violet-500 to-indigo-500 flex items-center justify-center">
-                            <User className="w-6 h-6 text-white" />
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-purple-500 via-violet-500 to-indigo-500 flex items-center justify-center ring-2 ring-purple-400/30 ring-offset-2 ring-offset-white dark:ring-offset-gray-900 shadow-lg">
-                          <User className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="min-w-0 flex-1">
-                      <CardTitle className="text-sm sm:text-base font-bold text-gray-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors duration-300 break-words">
-                        {client.nom}
-                      </CardTitle>
-                      <CardDescription className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1">
-                        <span className="inline-flex items-center gap-1">
-                          <Crown className="w-3 h-3 text-yellow-500" />
-                          Depuis le {new Date(client.dateCreation).toLocaleDateString('fr-FR')}
-                        </span>
-                      </CardDescription>
-                    </div>
-                  </div>
-                  <div className="flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-y-2 group-hover:translate-y-0 shrink-0">
-                    <Button variant="ghost" size="sm" onClick={() => setDetailClient(client)} className="h-10 w-10 p-0 hover:bg-purple-100 dark:hover:bg-purple-900/20 rounded-full hover:scale-110 transition-transform duration-200" title="Voir détail">
-                      <Eye className="w-4 h-4 text-purple-600" />
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={() => handleEditClient(client)} className="h-10 w-10 p-0 hover:bg-blue-100 dark:hover:bg-blue-900/20 rounded-full hover:scale-110 transition-transform duration-200">
-                      <Edit className="w-4 h-4 text-blue-600" />
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={() => handleDeleteClient(client)} className="h-10 w-10 p-0 hover:bg-red-100 dark:hover:bg-red-900/20 rounded-full hover:scale-110 transition-transform duration-200">
-                      <Trash2 className="w-4 h-4 text-red-600" />
-                    </Button>
-                  </div>
-                </div>
-              </CardHeader>
-
-              {/* Badge de fidélité synchronisé fidelite.json */}
-              <div className="px-6 pb-2 relative z-10">
-                <ClientFideliteBadge clientName={client.nom} />
-              </div>
-
-              <CardContent className="relative z-10">
-                <div className="space-y-4">
-                  {/* Affichage multi-téléphones empilés */}
-                  <div className="space-y-2">
-                    {(client.phones && client.phones.length > 0 ? client.phones : [client.phone]).map((phone, phoneIndex) => (
-                      <div key={phoneIndex} onClick={() => handlePhoneClick(phone)} className="flex items-center gap-4 p-4 bg-gradient-to-r from-green-50 via-emerald-50 to-teal-50 dark:from-green-900/30 dark:via-emerald-900/30 dark:to-teal-900/30 rounded-xl border border-green-200/50 dark:border-green-800/50 backdrop-blur-sm cursor-pointer hover:scale-[1.02] transition-transform duration-200">
-                        <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full shadow-lg">
-                          <Phone className="w-5 h-5 text-white" />
-                        </div>
-                        <div className="flex-1">
-                          <span className="text-gray-700 dark:text-gray-200 font-semibold hover:text-green-600 dark:hover:text-green-400 transition-colors">{phone}</span>
-                          {phoneIndex === 0 && client.phones && client.phones.length > 1 && (
-                            <span className="ml-2 text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/30 px-2 py-0.5 rounded-full">Principal</span>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  
-                  <div onClick={() => handleAddressClick(client.adresse)} className="flex items-start gap-4 p-4 bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 dark:from-blue-900/30 dark:via-indigo-900/30 dark:to-purple-900/30 rounded-xl border border-blue-200/50 dark:border-blue-800/50 backdrop-blur-sm cursor-pointer hover:scale-[1.02] transition-transform duration-200">
-                    <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-r from-blue-400 to-indigo-500 rounded-full shadow-lg mt-0.5">
-                      <MapPin className="w-5 h-5 text-white" />
-                    </div>
-                    <span className="text-gray-700 dark:text-gray-200 leading-relaxed line-clamp-2 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">{client.adresse}</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            );
-          })}
-        </div>
-
-        {/* Empty State pour recherche sans résultat */}
-        {searchQuery.length >= 3 && filteredClients.length === 0 && (
-          <div className="text-center py-20">
-            <div className="relative inline-flex items-center justify-center w-32 h-32 bg-gradient-to-br from-gray-100 via-gray-200 to-gray-100 dark:from-gray-800 dark:via-gray-700 dark:to-gray-800 rounded-full mb-8 shadow-xl">
-              <Users className="w-16 h-16 text-gray-400 dark:text-gray-500" />
-            </div>
-            <h3 className="text-2xl sm:text-3xl font-bold text-gray-700 dark:text-gray-300 mb-4">Aucun client trouvé</h3>
-            <p className="text-lg text-gray-500 dark:text-gray-400 mb-8 max-w-2xl mx-auto">Aucun client ne correspond à votre recherche "{searchQuery}"</p>
-            <Button onClick={() => setSearchQuery('')} className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white px-8 py-4 rounded-xl">Effacer la recherche</Button>
-          </div>
-        )}
-
-        {/* Pagination */}
-        {filteredClients.length > 0 && totalPages > 1 && (
-          <div className="flex flex-wrap justify-center items-center gap-2 sm:gap-3 mt-12 mb-8 px-4">
-            <Button variant="outline" size="sm" onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))} disabled={currentPage === 1} className="border-2 border-purple-300 dark:border-purple-700 hover:bg-purple-100 dark:hover:bg-purple-900/30 disabled:opacity-50 font-semibold">
-              <span className="hidden sm:inline">← Précédent</span><span className="sm:hidden">←</span>
-            </Button>
-            <div className="flex items-center gap-2">
-              <Button variant={currentPage === 1 ? 'default' : 'outline'} size="sm" onClick={() => setCurrentPage(1)} className={`min-w-[40px] font-bold transition-all ${currentPage === 1 ? 'bg-gradient-to-r from-purple-600 via-violet-600 to-indigo-600 text-white shadow-lg scale-110' : 'border-2 border-purple-300 dark:border-purple-700 hover:bg-purple-100 dark:hover:bg-purple-900/30'}`}>1</Button>
-              {currentPage > 4 && <span className="px-2 text-lg font-bold text-gray-400 dark:text-gray-500">…</span>}
-              {Array.from({ length: 3 }, (_, i) => currentPage - 1 + i).filter(page => page > 1 && page < totalPages).map(page => (
-                <Button key={page} variant={currentPage === page ? 'default' : 'outline'} size="sm" onClick={() => setCurrentPage(page)} className={`min-w-[40px] font-bold transition-all ${currentPage === page ? 'bg-gradient-to-r from-purple-600 via-violet-600 to-indigo-600 text-white shadow-lg scale-110' : 'border-2 border-purple-300 dark:border-purple-700 hover:bg-purple-100 dark:hover:bg-purple-900/30'}`}>{page}</Button>
-              ))}
-              {currentPage < totalPages - 3 && <span className="px-2 text-lg font-bold text-gray-400 dark:text-gray-500">…</span>}
-              {totalPages > 1 && (
-                <Button variant={currentPage === totalPages ? 'default' : 'outline'} size="sm" onClick={() => setCurrentPage(totalPages)} className={`min-w-[40px] font-bold transition-all ${currentPage === totalPages ? 'bg-gradient-to-r from-purple-600 via-violet-600 to-indigo-600 text-white shadow-lg scale-110' : 'border-2 border-purple-300 dark:border-purple-700 hover:bg-purple-100 dark:hover:bg-purple-900/30'}`}>{totalPages}</Button>
-              )}
-            </div>
-            <Button variant="outline" size="sm" onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))} disabled={currentPage === totalPages} className="border-2 border-purple-300 dark:border-purple-700 hover:bg-purple-100 dark:hover:bg-purple-900/30 disabled:opacity-50 font-semibold">
-              <span className="hidden sm:inline">Suivant →</span><span className="sm:hidden">→</span>
-            </Button>
-          </div>
-        )}
-
-        {/* Empty State quand aucun client */}
-        {clients.length === 0 && searchQuery.length === 0 && (
-          <div className="text-center py-32">
-            <div className="relative inline-flex items-center justify-center w-48 h-48 bg-gradient-to-br from-purple-100 via-violet-100 to-indigo-100 dark:from-purple-900/20 dark:via-violet-900/20 dark:to-indigo-900/20 rounded-full mb-16 shadow-2xl">
-              <div className="absolute inset-0 bg-gradient-to-r from-purple-400/20 to-violet-400/20 rounded-full animate-pulse"></div>
-              <Users className="w-24 h-24 text-purple-600 dark:text-purple-400 relative z-10" />
-              <div className="absolute -top-6 -right-6 w-16 h-16 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-full flex items-center justify-center shadow-xl animate-bounce">
-                <Crown className="w-8 h-8 text-white" />
-              </div>
-            </div>
-            <h3 className="text-4xl font-bold text-gray-900 dark:text-white mb-6 bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">Votre Empire Clientèle vous attend</h3>
-            <p className="text-xl text-gray-600 dark:text-gray-400 mb-16 max-w-3xl mx-auto leading-relaxed">Commencez à construire votre réseau exclusif de clients VIP</p>
-            <Button onClick={handleAddClient} className="group bg-gradient-to-r from-purple-600 via-violet-600 to-indigo-600 hover:from-purple-700 hover:via-violet-700 hover:to-indigo-700 text-white text-xl px-16 py-8 rounded-2xl shadow-2xl hover:shadow-purple-500/30 transform hover:-translate-y-3 transition-all duration-500 border-2 border-purple-400/30">
-              <Crown className="w-8 h-8 mr-4 group-hover:rotate-12 transition-transform duration-300" />Créer votre Premier Client Élite<Sparkles className="w-8 h-8 ml-4 group-hover:scale-125 transition-transform duration-300" />
-            </Button>
-          </div>
-        )}
-      </div>
-
-      {!embedded && <Footer />}
-      
-      {/* Dialog principal ajout/modification */}
-      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-  <DialogContent className="sm:max-w-md 
-    bg-white/70 dark:bg-[#0a0020]/60 
-    backdrop-blur-3xl 
-    border border-violet-200/20 dark:border-violet-800/20 
-    shadow-[0_0_80px_-20px_rgba(139,92,246,0.4)] 
-    rounded-3xl 
-    animate-in fade-in zoom-in-95 duration-300">
-
-    <DialogHeader className="space-y-2">
-      <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-blue-500 via-purple-500 to-fuchsia-500 bg-clip-text text-transparent animate-pulse">
-        {editingClient ? 'Modifier le client' : 'Nouveau client'}
-      </DialogTitle>
-
-      <DialogDescription className="text-gray-600 dark:text-gray-400 transition-opacity duration-300">
-        {editingClient ? 'Modifiez les informations du client.' : 'Ajoutez un nouveau client à votre portefeuille.'}
-      </DialogDescription>
-    </DialogHeader>
-
-    <form onSubmit={handleFormSubmit}>
-      <div className="grid gap-6 py-6">
-
-        {/* PHOTO */}
-        <div className="flex flex-col items-center gap-2">
-          <input
-            ref={photoInputRef}
-            type="file"
-            accept="image/*"
-            onChange={handlePhotoSelect}
-            className="hidden"
+        <div className="container mx-auto px-3 sm:px-4 md:px-6 py-8 sm:py-12 md:py-20 max-w-7xl">
+          <ClientSearchSection
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            filteredCount={filteredClients.length}
           />
 
-          <div
-            onClick={() => photoInputRef.current?.click()}
-            className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-full cursor-pointer group/upload overflow-hidden
-              ring-2 ring-dashed ring-purple-300/70 dark:ring-purple-700/60
-              hover:ring-purple-500
-              transition-all duration-500 ease-out
-              shadow-xl hover:shadow-purple-500/30
-              hover:scale-105 active:scale-95"
-          >
-            {photoPreview ? (
-              <img
-                src={photoPreview}
-                alt="Preview"
-                className="w-full h-full object-cover transition-transform duration-500 group-hover/upload:scale-110"
-              />
-            ) : (
-              <div className="w-full h-full bg-gradient-to-br from-purple-100 via-violet-100 to-indigo-100 dark:from-purple-900/40 dark:via-violet-900/40 dark:to-indigo-900/40 flex items-center justify-center">
-                <Camera className="w-10 h-10 text-purple-400 dark:text-purple-500 group-hover/upload:rotate-12 transition-transform duration-300" />
-              </div>
-            )}
+          {/* Barre de tri + filtres */}
+          <ClientFilterBar
+            sortDir={clientSortDir}
+            onToggleSort={() => setClientSortDir(p => (p === 'asc' ? 'desc' : 'asc'))}
+            tierFilter={tierFilter}
+            onChangeTier={setTierFilter}
+            villeFilter={villeFilter}
+            onChangeVille={setVilleFilter}
+          />
 
-            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/upload:opacity-100 transition-all duration-300 flex items-center justify-center rounded-full backdrop-blur-sm">
-              <Camera className="w-6 h-6 text-white animate-bounce" />
-            </div>
+          {/* Grille des clients */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 md:gap-8">
+            {paginatedClients.map((client, index) => (
+              <ClientCardItem
+                key={client.id}
+                client={client}
+                index={index}
+                photoUrl={getClientPhotoUrl(client)}
+                onOpenPhotoZoom={(url, name) => setZoomPhoto({ url, name })}
+                onPhoneClick={handlePhoneClick}
+                onAddressClick={handleAddressClick}
+                onDetail={() => setDetailClient(client)}
+                onEdit={() => handleEditClient(client)}
+                onDelete={() => handleDeleteClient(client)}
+              />
+            ))}
           </div>
 
-          <span className="text-xs text-gray-500 dark:text-gray-400">
-            Photo (optionnel)
-          </span>
+          {/* Empty state recherche */}
+          {searchQuery.length >= 3 && filteredClients.length === 0 && (
+            <div className="text-center py-20">
+              <div className="relative inline-flex items-center justify-center w-32 h-32 bg-gradient-to-br from-gray-100 via-gray-200 to-gray-100 dark:from-gray-800 dark:via-gray-700 dark:to-gray-800 rounded-full mb-8 shadow-xl">
+                <Users className="w-16 h-16 text-gray-400 dark:text-gray-500" />
+              </div>
+              <h3 className="text-2xl sm:text-3xl font-bold text-gray-700 dark:text-gray-300 mb-4">Aucun client trouvé</h3>
+              <p className="text-lg text-gray-500 dark:text-gray-400 mb-8 max-w-2xl mx-auto">Aucun client ne correspond à votre recherche "{searchQuery}"</p>
+              <Button onClick={() => setSearchQuery('')} className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white px-8 py-4 rounded-xl">Effacer la recherche</Button>
+            </div>
+          )}
 
-          {photoPreview && (
-            <button
-              type="button"
-              onClick={removePhoto}
-              className="text-xs text-red-500 hover:text-red-600 underline hover:scale-105 transition-transform"
-            >
-              Retirer la photo
-            </button>
+          {/* Pagination */}
+          <ClientPagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onChange={setCurrentPage}
+          />
+
+          {/* Empty state global */}
+          {clients.length === 0 && searchQuery.length === 0 && (
+            <div className="text-center py-32">
+              <div className="relative inline-flex items-center justify-center w-48 h-48 bg-gradient-to-br from-purple-100 via-violet-100 to-indigo-100 dark:from-purple-900/20 dark:via-violet-900/20 dark:to-indigo-900/20 rounded-full mb-16 shadow-2xl">
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-400/20 to-violet-400/20 rounded-full animate-pulse"></div>
+                <Users className="w-24 h-24 text-purple-600 dark:text-purple-400 relative z-10" />
+                <div className="absolute -top-6 -right-6 w-16 h-16 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-full flex items-center justify-center shadow-xl animate-bounce">
+                  <Crown className="w-8 h-8 text-white" />
+                </div>
+              </div>
+              <h3 className="text-4xl font-bold text-gray-900 dark:text-white mb-6 bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">Votre Empire Clientèle vous attend</h3>
+              <p className="text-xl text-gray-600 dark:text-gray-400 mb-16 max-w-3xl mx-auto leading-relaxed">Commencez à construire votre réseau exclusif de clients VIP</p>
+              <Button onClick={handleAddClient} className="group bg-gradient-to-r from-purple-600 via-violet-600 to-indigo-600 hover:from-purple-700 hover:via-violet-700 hover:to-indigo-700 text-white text-xl px-16 py-8 rounded-2xl shadow-2xl hover:shadow-purple-500/30 transform hover:-translate-y-3 transition-all duration-500 border-2 border-purple-400/30">
+                <Crown className="w-8 h-8 mr-4 group-hover:rotate-12 transition-transform duration-300" />
+                Créer votre Premier Client Élite
+                <Sparkles className="w-8 h-8 ml-4 group-hover:scale-125 transition-transform duration-300" />
+              </Button>
+            </div>
           )}
         </div>
 
-        {/* NOM */}
-        <div className="space-y-2">
-          <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-            Nom complet
-          </Label>
-          <Input
-            value={formData.nom}
-            onChange={(e) => setFormData({ ...formData, nom: e.target.value })}
-            placeholder="Nom et prénom"
-            className="transition-all duration-300 border-gray-200 dark:border-gray-700 
-              focus:ring-2 focus:ring-blue-500/50 focus:scale-[1.01] focus:border-blue-500"
-            required
-          />
-        </div>
+        {!embedded && <Footer />}
 
-        {/* TELEPHONES */}
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-              Téléphone(s)
-            </Label>
-
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => setFormData(prev => ({ ...prev, phones: [...prev.phones, ''] }))}
-              className="h-7 w-7 p-0 rounded-full 
-                bg-gradient-to-r from-green-500 to-emerald-500 
-                hover:scale-110 active:scale-95
-                transition-all duration-300 shadow-md"
-            >
-              <Plus className="w-3.5 h-3.5" />
-            </Button>
-          </div>
-
-          <div className="space-y-2">
-            {formData.phones.map((phone, index) => (
-              <div
-                key={index}
-                className="flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2 duration-300"
-              >
-                <div className="flex-1 relative">
-                  <Input
-                    type="tel"
-                    value={phone}
-                    onChange={(e) =>
-                      setFormData(prev => ({
-                        ...prev,
-                        phones: prev.phones.map((p, i) =>
-                          i === index ? e.target.value : p
-                        )
-                      }))
-                    }
-                    placeholder={index === 0 ? "Téléphone principal" : `Téléphone ${index + 1}`}
-                    className="pr-24 transition-all duration-300 focus:scale-[1.01]"
-                    required={index === 0}
-                  />
-
-                  {index === 0 ? (
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold 
-                      text-emerald-600 dark:text-emerald-400 
-                      bg-emerald-100 dark:bg-emerald-900/30 
-                      px-2 py-0.5 rounded-full animate-pulse">
-                      Principal
-                    </span>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setFormData(prev => {
-                          const arr = [...prev.phones];
-                          const [item] = arr.splice(index, 1);
-                          arr.unshift(item);
-                          return { ...prev, phones: arr };
-                        })
-                      }
-                      className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold
-                        text-emerald-700 dark:text-emerald-300
-                        bg-emerald-50 dark:bg-emerald-900/20
-                        hover:bg-emerald-100 dark:hover:bg-emerald-900/40
-                        px-2 py-0.5 rounded-full border border-emerald-300/40
-                        transition-all duration-300 hover:scale-105"
-                    >
-                      ★ Principal
-                    </button>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* ADRESSES */}
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-              Adresse(s) & Ville
-            </Label>
-
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() =>
-                setFormData(prev => ({
-                  ...prev,
-                  addresses: [...prev.addresses, ''],
-                  villes: [...(prev.villes || []), '']
-                }))
-              }
-              className="h-7 w-7 p-0 rounded-full 
-                bg-gradient-to-r from-blue-500 to-indigo-500
-                hover:scale-110 active:scale-95
-                transition-all duration-300 shadow-md"
-            >
-              <Plus className="w-3.5 h-3.5" />
-            </Button>
-          </div>
-
-          <div className="space-y-3">
-            {formData.addresses.map((addr, index) => {
-              const villeVal = formData.villes[index] || '';
-              const isCustomVille =
-                villeVal &&
-                !availableVilles.some(v => v.toLowerCase() === villeVal.toLowerCase());
-
-              return (
-                <div
-                  key={index}
-                  className="space-y-2 p-3 rounded-2xl border
-                    border-blue-100 dark:border-blue-900/40
-                    bg-blue-50/30 dark:bg-blue-900/10
-                    backdrop-blur-md
-                    hover:shadow-lg transition-all duration-300
-                    animate-in fade-in slide-in-from-bottom-2"
-                >
-                  {/* Adresse */}
-                  <div className="flex items-center gap-2">
-                    <div className="flex-1 relative">
-                      <Input
-                        value={addr}
-                        onChange={(e) =>
-                          setFormData(prev => ({
-                            ...prev,
-                            addresses: prev.addresses.map((a, i) =>
-                              i === index ? e.target.value : a
-                            )
-                          }))
-                        }
-                        className="pr-24 transition-all duration-300 focus:scale-[1.01]"
-                        placeholder={index === 0 ? "Adresse principale" : `Adresse ${index + 1}`}
-                        required={index === 0}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Ville */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    <select
-                      value={isCustomVille ? '__custom__' : villeVal}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        setFormData(prev => {
-                          const villesArr = [...(prev.villes || [])];
-                          while (villesArr.length <= index) villesArr.push('');
-                          villesArr[index] = val === '__custom__' ? '' : val;
-                          return { ...prev, villes: villesArr };
-                        });
-                      }}
-                      className="w-full px-3 py-2 rounded-lg border
-                        bg-white dark:bg-gray-900
-                        border-gray-300 dark:border-gray-700
-                        focus:ring-2 focus:ring-blue-500
-                        transition-all duration-300"
-                    >
-                      <option value="">— Ville —</option>
-                      {availableVilles.map(v => (
-                        <option key={v} value={v}>{v}</option>
-                      ))}
-                      <option value="__custom__">+ Nouvelle ville</option>
-                    </select>
-
-                    {(isCustomVille || !villeVal) && (
-                      <Input
-                        value={isCustomVille ? villeVal : ''}
-                        onChange={(e) =>
-                          setFormData(prev => {
-                            const villesArr = [...(prev.villes || [])];
-                            while (villesArr.length <= index) villesArr.push('');
-                            villesArr[index] = e.target.value;
-                            return { ...prev, villes: villesArr };
-                          })
-                        }
-                        placeholder="Nouvelle ville"
-                        className="transition-all duration-300 focus:scale-[1.01]"
-                      />
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-      </div>
-
-      {/* FOOTER */}
-      <DialogFooter className="gap-3">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => setIsAddDialogOpen(false)}
-          disabled={isSubmitting}
-          className="transition-all duration-300 hover:scale-105"
-        >
-          Annuler
-        </Button>
-
-        <Button
-          type="submit"
-          disabled={isSubmitting}
-          className="bg-gradient-to-r from-blue-600 to-purple-600
-            hover:from-blue-700 hover:to-purple-700
-            text-white
-            transition-all duration-300
-            hover:scale-105 active:scale-95"
-        >
-          {editingClient ? 'Modifier' : 'Ajouter'}
-        </Button>
-      </DialogFooter>
-
-    </form>
-  </DialogContent>
-</Dialog>
-
-      {/* Confirmations */}
-      <Dialog open={showAddConfirm} onOpenChange={setShowAddConfirm}>
-        <DialogContent className="sm:max-w-md"><DialogHeader><DialogTitle>Confirmer l'ajout</DialogTitle><DialogDescription>Voulez-vous vraiment ajouter ce client ?</DialogDescription></DialogHeader><DialogFooter><Button variant="outline" onClick={() => setShowAddConfirm(false)} disabled={isSubmitting}>Annuler</Button><Button onClick={confirmAdd} disabled={isSubmitting}>{isSubmitting ? 'Ajout...' : 'Oui, ajouter'}</Button></DialogFooter></DialogContent>
-      </Dialog>
-
-      <Dialog open={showEditConfirm} onOpenChange={setShowEditConfirm}>
-        <DialogContent className="sm:max-w-md"><DialogHeader><DialogTitle>Confirmer la modification</DialogTitle><DialogDescription>Voulez-vous vraiment modifier ce client ?</DialogDescription></DialogHeader><DialogFooter><Button variant="outline" onClick={() => setShowEditConfirm(false)} disabled={isSubmitting}>Annuler</Button><Button onClick={confirmEdit} disabled={isSubmitting}>{isSubmitting ? 'Modification...' : 'Oui, modifier'}</Button></DialogFooter></DialogContent>
-      </Dialog>
-
-      <ConfirmDeleteDialog isOpen={showDeleteConfirm} onClose={() => { setShowDeleteConfirm(false); setClientToDelete(null); }} onConfirm={confirmDelete} title="Confirmer la suppression" description={`Voulez-vous vraiment supprimer ${clientToDelete?.nom} ?`} isSubmitting={isSubmitting} />
-
-      {/* Modale téléphone */}
-      <Dialog open={phoneActionOpen} onOpenChange={setPhoneActionOpen}>
-         <DialogContent className="sm:max-w-md bg-white/95 dark:bg-[#0a0020]/95 backdrop-blur-2xl border border-violet-200/20 dark:border-violet-800/20 shadow-2xl rounded-2xl">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
-              <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full"><Phone className="w-5 h-5 text-white" /></div>{selectedPhone}
-            </DialogTitle>
-            <DialogDescription className="text-gray-600 dark:text-gray-400">Que souhaitez-vous faire ?</DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <Button onClick={handleCall} className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white py-6 text-lg font-semibold rounded-xl shadow-lg"><PhoneCall className="w-6 h-6" />Appeler ce numéro</Button>
-            <Button onClick={handleMessage} className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white py-6 text-lg font-semibold rounded-xl shadow-lg"><MessageSquare className="w-6 h-6" />{isMobile ? 'Envoyer un SMS' : 'Envoyer un message'}</Button>
-          </div>
-          <DialogFooter><Button variant="outline" onClick={() => setPhoneActionOpen(false)} className="w-full border-gray-300 hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-800">Annuler</Button></DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Modale adresse (mobile) */}
-      <Dialog open={addressActionOpen} onOpenChange={setAddressActionOpen}>
-        <DialogContent className="sm:max-w-md bg-white/95 dark:bg-[#0a0020]/95 backdrop-blur-2xl border border-violet-200/20 dark:border-violet-800/20 shadow-2xl rounded-2xl">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
-              <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-r from-blue-400 to-indigo-500 rounded-full"><Navigation className="w-5 h-5 text-white" /></div>Navigation
-            </DialogTitle>
-            <DialogDescription className="text-gray-600 dark:text-gray-400">Ouvrir l'adresse dans quelle application ?</DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <Button onClick={openGoogleMaps} className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white py-6 text-lg font-semibold rounded-xl shadow-lg"><MapPin className="w-6 h-6" />Google Maps</Button>
-            <Button onClick={openWaze} className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-cyan-500 to-teal-600 hover:from-cyan-600 hover:to-teal-700 text-white py-6 text-lg font-semibold rounded-xl shadow-lg"><Navigation className="w-6 h-6" />Waze</Button>
-            <Button onClick={openAppleMaps} className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-gray-600 to-gray-800 hover:from-gray-700 hover:to-gray-900 text-white py-6 text-lg font-semibold rounded-xl shadow-lg"><MapPin className="w-6 h-6" />Apple Maps</Button>
-          </div>
-          <DialogFooter><Button variant="outline" onClick={() => setAddressActionOpen(false)} className="w-full border-gray-300 hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-800">Annuler</Button></DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Photo zoom modal */}
-      {zoomPhoto && (
-        <ClientPhotoZoomModal
-          isOpen={!!zoomPhoto}
-          onClose={() => setZoomPhoto(null)}
-          photoUrl={zoomPhoto.url}
-          clientName={zoomPhoto.name}
+        {/* Dialog principal ajout/modification */}
+        <ClientFormDialog
+          open={isAddDialogOpen}
+          onOpenChange={setIsAddDialogOpen}
+          editing={!!editingClient}
+          formData={formData}
+          setFormData={setFormData}
+          availableVilles={availableVilles}
+          photoInputRef={photoInputRef}
+          photoPreview={photoPreview}
+          isSubmitting={isSubmitting}
+          onSubmit={handleFormSubmit}
+          onPhotoSelect={handlePhotoSelect}
+          onRemovePhoto={removePhoto}
         />
-      )}
 
-      {/* Modale de fusion de clients */}
-      <ClientMergeModal
-        open={isMergeOpen}
-        onClose={() => setIsMergeOpen(false)}
-        clients={clients}
-        onMerged={() => refetch()}
-      />
+        {/* Confirmations */}
+        <ClientConfirmDialogs
+          showAdd={showAddConfirm}
+          setShowAdd={setShowAddConfirm}
+          showEdit={showEditConfirm}
+          setShowEdit={setShowEditConfirm}
+          isSubmitting={isSubmitting}
+          onConfirmAdd={confirmAdd}
+          onConfirmEdit={confirmEdit}
+        />
 
-      <CitiesManagerModal open={isVillesOpen} onOpenChange={setIsVillesOpen} />
+        <ConfirmDeleteDialog
+          isOpen={showDeleteConfirm}
+          onClose={() => { setShowDeleteConfirm(false); setClientToDelete(null); }}
+          onConfirm={confirmDelete}
+          title="Confirmer la suppression"
+          description={`Voulez-vous vraiment supprimer ${clientToDelete?.nom} ?`}
+          isSubmitting={isSubmitting}
+        />
 
-      {/* Modale de détail client avec impression */}
-      <ClientDetailModal
-        open={!!detailClient}
-        onOpenChange={(o) => { if (!o) setDetailClient(null); }}
-        client={detailClient}
-        photoUrl={detailClient ? getClientPhotoUrl(detailClient as any) : null}
-      />
+        {/* Modale téléphone */}
+        <ClientPhoneActionModal
+          open={phoneActionOpen}
+          onOpenChange={setPhoneActionOpen}
+          phone={selectedPhone}
+          isMobile={isMobile}
+          onCall={handleCall}
+          onMessage={handleMessage}
+        />
 
-      {/* Modale de doublons clients */}
-      <DuplicateClientModal
-        isOpen={duplicateModalOpen}
-        onClose={() => setDuplicateModalOpen(false)}
-        matches={duplicateMatches}
-        typed={{
-          nom: formData.nom,
-          phones: formData.phones.filter(p => p.trim()),
-          addresses: formData.addresses.filter(a => a.trim()),
-        }}
-        onUseExisting={(c) => {
-          // Fermer la modale de doublon ET le formulaire d'ajout/édition (tout est déjà enregistré)
-          setDuplicateModalOpen(false);
-          setIsAddDialogOpen(false);
-          resetForm();
-          refetch();
-          toast({ title: 'Client enregistré', description: `${(c as any).nom} a été pris en compte`, className: 'notification-success' });
-        }}
-        onUpdateClient={async (clientId, patch) => {
-          try {
-            const token = localStorage.getItem('token');
-            const fd = new FormData();
-            fd.append('nom', patch.nom);
-            fd.append('phones', JSON.stringify(patch.phones));
-            fd.append('addresses', JSON.stringify(patch.addresses));
-            fd.append('adresse', patch.addresses[0] || '');
-            await axios.put(`${API_BASE_URL}/api/clients/${clientId}`, fd, {
-              headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' }
-            });
-            toast({ title: 'Client mis à jour', description: `${patch.nom} a été modifié`, className: 'notification-success' });
+        {/* Modale adresse (mobile) */}
+        <ClientAddressActionModal
+          open={addressActionOpen}
+          onOpenChange={setAddressActionOpen}
+          onGoogleMaps={openGoogleMaps}
+          onWaze={openWaze}
+          onAppleMaps={openAppleMaps}
+        />
+
+        {/* Photo zoom */}
+        {zoomPhoto && (
+          <ClientPhotoZoomModal
+            isOpen={!!zoomPhoto}
+            onClose={() => setZoomPhoto(null)}
+            photoUrl={zoomPhoto.url}
+            clientName={zoomPhoto.name}
+          />
+        )}
+
+        {/* Fusion */}
+        <ClientMergeModal
+          open={isMergeOpen}
+          onClose={() => setIsMergeOpen(false)}
+          clients={clients}
+          onMerged={() => refetch()}
+        />
+
+        <CitiesManagerModal open={isVillesOpen} onOpenChange={setIsVillesOpen} />
+
+        {/* Détail client */}
+        <ClientDetailModal
+          open={!!detailClient}
+          onOpenChange={(o) => { if (!o) setDetailClient(null); }}
+          client={detailClient}
+          photoUrl={detailClient ? getClientPhotoUrl(detailClient as any) : null}
+        />
+
+        {/* Modale de doublons clients */}
+        <DuplicateClientModal
+          isOpen={duplicateModalOpen}
+          onClose={() => setDuplicateModalOpen(false)}
+          matches={duplicateMatches}
+          typed={{
+            nom: formData.nom,
+            phones: formData.phones.filter(p => p.trim()),
+            addresses: formData.addresses.filter(a => a.trim()),
+          }}
+          onUseExisting={(c) => {
+            setDuplicateModalOpen(false);
+            setIsAddDialogOpen(false);
+            resetForm();
             refetch();
-          } catch (err) {
-            console.error(err);
-            toast({ title: 'Erreur', description: 'Mise à jour impossible', variant: 'destructive', className: 'notification-erreur' });
-          }
-        }}
-        onCreateNew={() => setShowAddConfirm(true)}
-      />
-    </div>
+            toast({ title: 'Client enregistré', description: `${(c as any).nom} a été pris en compte`, className: 'notification-success' });
+          }}
+          onUpdateClient={async (clientId, patch) => {
+            try {
+              const token = localStorage.getItem('token');
+              const fd = new FormData();
+              fd.append('nom', patch.nom);
+              fd.append('phones', JSON.stringify(patch.phones));
+              fd.append('addresses', JSON.stringify(patch.addresses));
+              fd.append('adresse', patch.addresses[0] || '');
+              await axios.put(`${API_BASE_URL}/api/clients/${clientId}`, fd, {
+                headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' },
+              });
+              toast({ title: 'Client mis à jour', description: `${patch.nom} a été modifié`, className: 'notification-success' });
+              refetch();
+            } catch (err) {
+              console.error(err);
+              toast({ title: 'Erreur', description: 'Mise à jour impossible', variant: 'destructive', className: 'notification-erreur' });
+            }
+          }}
+          onCreateNew={() => setShowAddConfirm(true)}
+        />
+      </div>
     </>
   );
 

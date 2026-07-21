@@ -1,19 +1,15 @@
 /**
- * ProfilePage — Page principale du profil utilisateur
- * 
- * Contient deux onglets :
- * - "Profil" (visible par tous) : carte profil, infos personnelles, mot de passe
- * - "Paramètres" (visible par les admins) : configuration globale, rôles, sauvegarde
- * 
- * Gère l'upload de photo avec aperçu et confirmation,
- * la modification du profil avec dialogue de confirmation,
- * et le changement de mot de passe sécurisé.
- * 
- * Composants enfants :
- * - ProfileCard : avatar + identité
- * - ProfileInfoCard : formulaire d'édition des informations
- * - PasswordSection : changement de mot de passe
- * - ParametresSection : paramètres admin (sauvegarde, rôles, modules)
+ * ProfilePage — Page principale du profil utilisateur (refactorisée).
+ *
+ * Onglets :
+ * - Profil : ProfileCard + ProfileInfoCard + PasswordSection
+ * - Paramètres (admin) : ParametresSection
+ * - Sécurité (admin principal) : SecuriteSection + MaintenanceSection
+ *
+ * Sous-composants extraits :
+ * - ProfileHero        : en-tête héroïque animé
+ * - ProfileTabsNav     : boutons de navigation entre onglets
+ * - ProfileConfirmDialogs : 3 dialogues de confirmation
  */
 import React, { useState, useEffect, useRef } from 'react';
 import Layout from '@/components/Layout';
@@ -21,45 +17,35 @@ import PremiumLoading from '@/components/ui/premium-loading';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import profileApi, { ProfileData } from '@/services/api/profileApi';
-import { motion } from 'framer-motion';
-import { User, Camera, Lock, Shield, Sparkles, Crown, Settings, Heart, Zap, Activity } from 'lucide-react';
-import ParametresSection from '@/components/profile/ParametresSection';
-import SecuriteSection from '@/components/profile/SecuriteSection';
-import MaintenanceSection from '@/components/profile/MaintenanceSection';
+import SEOHead from '@/components/SEOHead';
+
 import ProfileCard from '@/components/profile/ProfileCard';
 import ProfileInfoCard from '@/components/profile/ProfileInfoCard';
 import PasswordSection from '@/components/profile/PasswordSection';
-import { Button } from '@/components/ui/button';
-import SEOHead from '@/components/SEOHead';
-import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-
-/** Classe CSS commune pour les boutons premium avec effet glassmorphism */
-const premiumBtnClass = "group relative overflow-hidden rounded-xl sm:rounded-2xl backdrop-blur-xl border transition-all duration-300 hover:scale-105 px-4 py-2 sm:px-5 sm:py-3 text-xs sm:text-sm font-semibold";
+import ParametresSection from '@/components/profile/ParametresSection';
+import SecuriteSection from '@/components/profile/SecuriteSection';
+import MaintenanceSection from '@/components/profile/MaintenanceSection';
+import ProfileHero from '@/components/profile/ProfileHero';
+import ProfileTabsNav, { ProfileTab } from '@/components/profile/ProfileTabsNav';
+import ProfileConfirmDialogs from '@/components/profile/ProfileConfirmDialogs';
 
 const ProfilePage: React.FC = () => {
   const { user, verifySession } = useAuth();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Onglet actif (profil ou paramètres)
-  const [activeTab, setActiveTab] = useState<'profil' | 'parametres' | 'securite'>('profil');
-  // Données du profil chargées depuis l'API
+  const [activeTab, setActiveTab] = useState<ProfileTab>('profil');
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
-  // Mode édition des informations personnelles
+
   const [editing, setEditing] = useState(false);
   const [editForm, setEditForm] = useState({ firstName: '', lastName: '', gender: '', address: '', phone: '' });
 
-  // État du formulaire de changement de mot de passe
   const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [pwForm, setPwForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
   const [showPw, setShowPw] = useState({ current: false, new: false, confirm: false });
   const [isNewPasswordValid, setIsNewPasswordValid] = useState(false);
 
-  // Dialogues de confirmation (profil, mot de passe, photo)
   const [confirmProfile, setConfirmProfile] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState(false);
   const [confirmPhoto, setConfirmPhoto] = useState(false);
@@ -67,23 +53,25 @@ const ProfilePage: React.FC = () => {
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-  // Détermination du rôle pour l'affichage conditionnel de l'onglet Paramètres
   const userRole = (profile as any)?.role || (user as any)?.role || '';
   const isAdminPrincipal = userRole === 'administrateur principale';
   const isAdmin = userRole === 'administrateur' || isAdminPrincipal;
   const canSeeSettings = isAdmin;
 
-  /** Charge le profil utilisateur depuis l'API au montage */
-  useEffect(() => {
-    fetchProfile();
-  }, []);
+  useEffect(() => { fetchProfile(); }, []);
 
   const fetchProfile = async () => {
     try {
       setLoading(true);
       const data = await profileApi.getProfile();
       setProfile(data);
-      setEditForm({ firstName: data.firstName, lastName: data.lastName, gender: data.gender || '', address: data.address || '', phone: data.phone || '' });
+      setEditForm({
+        firstName: data.firstName,
+        lastName: data.lastName,
+        gender: data.gender || '',
+        address: data.address || '',
+        phone: data.phone || '',
+      });
     } catch (e) {
       console.error(e);
     } finally {
@@ -91,7 +79,6 @@ const ProfilePage: React.FC = () => {
     }
   };
 
-  /** Gère la sélection d'une photo et affiche l'aperçu avec confirmation */
   const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -100,26 +87,22 @@ const ProfilePage: React.FC = () => {
     setConfirmPhoto(true);
   };
 
-  /** Envoie la photo sélectionnée au serveur après confirmation */
   const uploadPhoto = async () => {
     if (!pendingPhoto) return;
     try {
       setSaving(true);
       const result = await profileApi.uploadPhoto(pendingPhoto);
-      setProfile(prev => prev ? { ...prev, profilePhoto: result.photoUrl } : prev);
+      setProfile(prev => (prev ? { ...prev, profilePhoto: result.photoUrl } : prev));
       localStorage.setItem('user', JSON.stringify({ ...profile, profilePhoto: result.photoUrl }));
       await verifySession();
       toast({ title: '✅ Photo mise à jour', description: 'Votre photo de profil a été enregistrée', className: 'bg-green-600 text-white border-green-600' });
-    } catch (e) {
+    } catch {
       toast({ title: 'Erreur', description: "Échec de l'envoi de la photo", variant: 'destructive' });
     } finally {
-      setSaving(false);
-      setPendingPhoto(null);
-      setPhotoPreview(null);
+      setSaving(false); setPendingPhoto(null); setPhotoPreview(null);
     }
   };
 
-  /** Sauvegarde les modifications du profil après confirmation */
   const saveProfile = async () => {
     try {
       setSaving(true);
@@ -129,14 +112,13 @@ const ProfilePage: React.FC = () => {
       await verifySession();
       setEditing(false);
       toast({ title: '✅ Profil mis à jour', description: 'Vos informations ont été enregistrées', className: 'bg-green-600 text-white border-green-600' });
-    } catch (e) {
+    } catch {
       toast({ title: 'Erreur', description: 'Échec de la mise à jour', variant: 'destructive' });
     } finally {
       setSaving(false);
     }
   };
 
-  /** Change le mot de passe après confirmation (vérifie l'ancien côté serveur) */
   const changePassword = async () => {
     try {
       setSaving(true);
@@ -154,10 +136,8 @@ const ProfilePage: React.FC = () => {
     }
   };
 
-  // URL complète de la photo de profil (construite via profileApi.getPhotoUrl)
   const photoUrl = profile?.profilePhoto ? profileApi.getPhotoUrl(profile.profilePhoto) : null;
 
-  // Affichage du loader pendant le chargement initial
   if (loading) {
     return (
       <Layout>
@@ -169,7 +149,6 @@ const ProfilePage: React.FC = () => {
   return (
     <Layout>
       <SEOHead title="Profil" description="Gestion du profil utilisateur" />
-      {/* Animation CSS pour les anneaux pulsants verts autour de l'avatar */}
       <style>{`
         @keyframes greenPulse {
           0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.7); }
@@ -180,197 +159,15 @@ const ProfilePage: React.FC = () => {
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-violet-50/30 to-fuchsia-50/20 dark:from-[#030014] dark:via-[#0a0020] dark:to-[#0e0030] py-8 px-4">
         <div className="max-w-5xl mx-auto space-y-6">
 
-          {/* En-tête héroïque ultra moderne */}
-         <motion.div
-  initial={{ opacity: 0, y: -25, scale: 0.97 }}
-  animate={{ opacity: 1, y: 0, scale: 1 }}
-  transition={{ duration: 0.8, ease: "easeOut" }}
-  className="relative overflow-hidden text-center py-12 sm:py-14 rounded-3xl
-             bg-black border border-white/10
-             shadow-[0_50px_140px_-40px_rgba(168,85,247,0.6)] mb-4"
->
-  {/* ================= DEEP BACKGROUND LAYERS ================= */}
-  <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <ProfileHero />
 
-    {/* animated aurora */}
-    <motion.div
-      animate={{
-        x: [0, 40, -30, 0],
-        y: [0, -30, 20, 0],
-        scale: [1, 1.1, 1],
-        opacity: [0.3, 0.6, 0.3],
-      }}
-      transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
-      className="absolute -top-24 left-1/4 w-[420px] h-[420px]
-                 bg-violet-500/30 blur-[140px] rounded-full"
-    />
+          <ProfileTabsNav
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            canSeeSettings={canSeeSettings}
+            isAdminPrincipal={isAdminPrincipal}
+          />
 
-    <motion.div
-      animate={{
-        x: [0, -35, 20, 0],
-        y: [0, 30, -20, 0],
-        scale: [1, 1.15, 1],
-      }}
-      transition={{ duration: 22, repeat: Infinity, ease: "easeInOut" }}
-      className="absolute -bottom-24 right-1/4 w-[420px] h-[420px]
-                 bg-fuchsia-500/25 blur-[150px] rounded-full"
-    />
-
-    {/* central pulse */}
-    <motion.div
-      animate={{ scale: [1, 1.3, 1], opacity: [0.15, 0.4, 0.15] }}
-      transition={{ duration: 14, repeat: Infinity }}
-      className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2
-                 w-[650px] h-[650px] bg-indigo-500/10 blur-[180px] rounded-full"
-    />
-  </div>
-
-  {/* ================= GRID + NOISE ================= */}
-  <div className="absolute inset-0 opacity-[0.22]
-    bg-[linear-gradient(rgba(255,255,255,.04)_1px,transparent_1px),
-    linear-gradient(90deg,rgba(255,255,255,.04)_1px,transparent_1px)]
-    bg-[size:48px_48px]" />
-
-  {/* scan beam */}
-  <motion.div
-    className="absolute inset-x-0 h-[2px] bg-gradient-to-r
-               from-transparent via-violet-400 to-transparent blur-sm"
-    animate={{ top: ["0%", "100%", "0%"] }}
-    transition={{ duration: 9, repeat: Infinity, ease: "linear" }}
-  />
-
-  {/* floating dots layer */}
-  <motion.div
-    animate={{ rotate: 360 }}
-    transition={{ duration: 80, repeat: Infinity, ease: "linear" }}
-    className="absolute inset-0 opacity-20"
-  >
-    <div className="absolute top-10 left-10 w-1 h-1 bg-white rounded-full" />
-    <div className="absolute top-20 right-20 w-1.5 h-1.5 bg-violet-300 rounded-full" />
-    <div className="absolute bottom-16 left-1/3 w-1 h-1 bg-fuchsia-300 rounded-full" />
-  </motion.div>
-
-  {/* ================= TOP / BOTTOM BORDER ================= */}
-  <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-violet-400/70 to-transparent" />
-  <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-fuchsia-400/60 to-transparent" />
-
-  {/* ================= BADGE ================= */}
-  <motion.div
-    whileHover={{ scale: 1.06, y: -2 }}
-    className="relative z-10 inline-flex items-center gap-2 px-5 py-2.5
-               rounded-full bg-white/5 backdrop-blur-2xl border border-white/10 mb-6
-               shadow-[0_20px_60px_rgba(168,85,247,0.35)]"
-  >
-    <motion.div animate={{ rotate: [0, -12, 12, 0] }} transition={{ duration: 3.5, repeat: Infinity }}>
-      <Crown className="w-4 h-4 text-yellow-400" />
-    </motion.div>
-
-    <span className="text-xs font-bold text-violet-100 tracking-widest">
-      PROFIL UTILISATEUR
-    </span>
-
-    <motion.div animate={{ rotate: 360 }} transition={{ duration: 6, repeat: Infinity }}>
-      <Sparkles className="w-3.5 h-3.5 text-fuchsia-300" />
-    </motion.div>
-
-    <Zap className="w-3.5 h-3.5 text-amber-300 animate-pulse" />
-  </motion.div>
-
-  {/* ================= TITLE ================= */}
-  <motion.h1
-    initial={{ opacity: 0, y: 35, scale: 0.95 }}
-    animate={{ opacity: 1, y: 0, scale: 1 }}
-    transition={{ duration: 0.8, ease: "easeOut" }}
-    className="relative z-10 text-4xl sm:text-5xl md:text-6xl font-black
-               bg-gradient-to-r from-violet-200 via-fuchsia-200 to-violet-200
-               bg-clip-text text-transparent tracking-tight"
-  >
-    <motion.span
-      animate={{ rotate: [0, 12, -12, 0], scale: [1, 1.1, 1] }}
-      transition={{ duration: 5, repeat: Infinity }}
-      className="inline-block mr-3 align-middle"
-    >
-      <User className="inline h-10 w-10 sm:h-12 sm:w-12 text-violet-300 drop-shadow-[0_0_20px_rgba(168,85,247,0.6)]" />
-    </motion.span>
-
-    Mon Profil
-  </motion.h1>
-
-  {/* ================= SUBTITLE ================= */}
-  <p className="relative z-10 mt-5 text-sm sm:text-base text-violet-100/70 max-w-xl mx-auto">
-    Gérez vos informations, sécurité et préférences avec une expérience fluide et moderne.
-  </p>
-
-  {/* ================= MINI STATUS ROW ================= */}
-  <div className="relative z-10 mt-6 flex items-center justify-center gap-6 text-xs text-violet-200/70">
-
-    <motion.div whileHover={{ scale: 1.1 }} className="flex items-center gap-2">
-      <Shield className="w-4 h-4 text-emerald-300" />
-      Sécurisé
-    </motion.div>
-
-    <motion.div whileHover={{ scale: 1.1 }} className="flex items-center gap-2">
-      <Activity className="w-4 h-4 text-amber-300" />
-      Actif
-    </motion.div>
-
-    <motion.div whileHover={{ scale: 1.1 }} className="flex items-center gap-2">
-      <Heart className="w-4 h-4 text-fuchsia-300" />
-      Personnalisé
-    </motion.div>
-
-    <motion.div whileHover={{ scale: 1.1 }} className="flex items-center gap-2">
-      <Settings className="w-4 h-4 text-violet-300" />
-      Contrôle total
-    </motion.div>
-  </div>
-</motion.div>
-
-          {/* Boutons de navigation entre onglets Profil / Paramètres */}
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
-            className="flex justify-center gap-3"
-          >
-            <Button
-              onClick={() => setActiveTab('profil')}
-              className={`${premiumBtnClass} ${
-                activeTab === 'profil'
-                  ? 'bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white border-violet-400/30 shadow-lg shadow-violet-500/25'
-                  : 'bg-white/50 dark:bg-white/5 border-violet-200/30 dark:border-violet-800/20 text-foreground hover:bg-violet-50 dark:hover:bg-white/10'
-              }`}
-            >
-              <User className="w-4 h-4 mr-2" /> Profil
-            </Button>
-
-            {/* Onglet Paramètres visible uniquement pour les administrateurs */}
-            {canSeeSettings && (
-              <Button
-                onClick={() => setActiveTab('parametres')}
-                className={`${premiumBtnClass} ${
-                  activeTab === 'parametres'
-                    ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white border-amber-400/30 shadow-lg shadow-amber-500/25'
-                    : 'bg-white/50 dark:bg-white/5 border-violet-200/30 dark:border-violet-800/20 text-foreground hover:bg-amber-50 dark:hover:bg-white/10'
-                }`}
-              >
-                <Settings className="w-4 h-4 mr-2" /> Paramètres
-              </Button>
-            )}
-
-            {/* Onglet Sécurité visible uniquement pour l'admin principal */}
-            {isAdminPrincipal && (
-              <Button
-                onClick={() => setActiveTab('securite')}
-                className={`${premiumBtnClass} ${
-                  activeTab === 'securite'
-                    ? 'bg-gradient-to-r from-red-500 to-rose-500 text-white border-red-400/30 shadow-lg shadow-red-500/25'
-                    : 'bg-white/50 dark:bg-white/5 border-violet-200/30 dark:border-violet-800/20 text-foreground hover:bg-red-50 dark:hover:bg-white/10'
-                }`}
-              >
-                <Shield className="w-4 h-4 mr-2" /> Sécurité
-              </Button>
-            )}
-          </motion.div>
-
-          {/* Contenu de l'onglet Profil : carte, infos, mot de passe */}
           {activeTab === 'profil' && (
             <>
               <ProfileCard
@@ -407,74 +204,33 @@ const ProfilePage: React.FC = () => {
             </>
           )}
 
-          {/* Contenu de l'onglet Paramètres (admin uniquement) */}
           {activeTab === 'parametres' && canSeeSettings && (
             <ParametresSection userRole={userRole} />
           )}
 
-          {/* Contenu de l'onglet Sécurité (admin principal uniquement) */}
           {activeTab === 'securite' && isAdminPrincipal && (
             <>
               <SecuriteSection userRole={userRole} />
               <MaintenanceSection userRole={userRole} />
             </>
           )}
-
         </div>
       </div>
 
-      {/* Dialogue de confirmation pour la modification du profil */}
-      <AlertDialog open={confirmProfile} onOpenChange={setConfirmProfile}>
-        <AlertDialogContent className="rounded-3xl backdrop-blur-2xl bg-white/95 dark:bg-[#0a0020]/95 border border-violet-200/30">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2"><Shield className="w-5 h-5 text-violet-500" /> Confirmer la modification</AlertDialogTitle>
-            <AlertDialogDescription>Voulez-vous enregistrer les modifications de votre profil ?</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel className="rounded-xl">Annuler</AlertDialogCancel>
-            <AlertDialogAction onClick={saveProfile} disabled={saving} className="rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white">
-              {saving ? 'Enregistrement...' : 'Confirmer'}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Dialogue de confirmation pour le changement de mot de passe */}
-      <AlertDialog open={confirmPassword} onOpenChange={setConfirmPassword}>
-        <AlertDialogContent className="rounded-3xl backdrop-blur-2xl bg-white/95 dark:bg-[#0a0020]/95 border border-violet-200/30">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2"><Lock className="w-5 h-5 text-rose-500" /> Confirmer le changement de mot de passe</AlertDialogTitle>
-            <AlertDialogDescription>Voulez-vous vraiment changer votre mot de passe ? Cette action est irréversible.</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel className="rounded-xl">Annuler</AlertDialogCancel>
-            <AlertDialogAction onClick={changePassword} disabled={saving} className="rounded-xl bg-gradient-to-r from-rose-500 to-orange-500 text-white">
-              {saving ? 'Modification...' : 'Confirmer'}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Dialogue de confirmation pour l'upload de photo avec aperçu */}
-      <AlertDialog open={confirmPhoto} onOpenChange={v => { setConfirmPhoto(v); if (!v) { setPendingPhoto(null); setPhotoPreview(null); } }}>
-        <AlertDialogContent className="rounded-3xl backdrop-blur-2xl bg-white/95 dark:bg-[#0a0020]/95 border border-violet-200/30">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2"><Camera className="w-5 h-5 text-violet-500" /> Confirmer la photo</AlertDialogTitle>
-            <AlertDialogDescription>Voulez-vous utiliser cette photo comme photo de profil ?</AlertDialogDescription>
-          </AlertDialogHeader>
-          {photoPreview && (
-            <div className="flex justify-center py-4">
-              <img src={photoPreview} alt="Preview" className="w-32 h-32 rounded-full object-cover border-4 border-violet-300/30" />
-            </div>
-          )}
-          <AlertDialogFooter>
-            <AlertDialogCancel className="rounded-xl">Annuler</AlertDialogCancel>
-            <AlertDialogAction onClick={uploadPhoto} disabled={saving} className="rounded-xl bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white">
-              {saving ? 'Envoi...' : 'Confirmer'}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ProfileConfirmDialogs
+        confirmProfile={confirmProfile}
+        setConfirmProfile={setConfirmProfile}
+        onSaveProfile={saveProfile}
+        confirmPassword={confirmPassword}
+        setConfirmPassword={setConfirmPassword}
+        onChangePassword={changePassword}
+        confirmPhoto={confirmPhoto}
+        setConfirmPhoto={setConfirmPhoto}
+        photoPreview={photoPreview}
+        onUploadPhoto={uploadPhoto}
+        saving={saving}
+        onPhotoDialogClose={() => { setPendingPhoto(null); setPhotoPreview(null); }}
+      />
     </Layout>
   );
 };
