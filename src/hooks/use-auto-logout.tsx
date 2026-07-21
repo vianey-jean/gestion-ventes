@@ -1,5 +1,5 @@
-
 import { useEffect, useRef, useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
 import api from '@/service/api';
@@ -12,6 +12,7 @@ interface TimeoutSettings {
 export function useAutoLogout() {
   const { logout, isAuthenticated } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const inactivityTimerRef = useRef<number | null>(null);
   const inactivityWarningRef = useRef<number | null>(null);
   const sessionTimerRef = useRef<number | null>(null);
@@ -105,13 +106,14 @@ export function useAutoLogout() {
     inactivityTimerRef.current = window.setTimeout(() => {
       setInactivityWarningVisible(false);
       logout();
+      try { navigate('/', { replace: true }); } catch { window.location.href = '/'; }
       toast({
         title: "⏱️ Session expirée",
         description: `Déconnecté après ${settings.active} minutes d'inactivité`,
         variant: "destructive",
       });
     }, inactivityMs);
-  }, [isAuthenticated, settings.active, logout, toast, clearInactivityTimers]);
+  }, [isAuthenticated, settings.active, logout, toast, clearInactivityTimers, navigate]);
 
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -155,6 +157,7 @@ export function useAutoLogout() {
     sessionTimerRef.current = window.setTimeout(() => {
       setSessionWarningVisible(false);
       logout();
+      try { navigate('/', { replace: true }); } catch { window.location.href = '/'; }
       toast({
         title: "⏱️ Timeout de session",
         description: `Session expirée après ${settings.timeout}h. Veuillez vous reconnecter.`,
@@ -167,7 +170,7 @@ export function useAutoLogout() {
       if (sessionWarningRef.current) window.clearTimeout(sessionWarningRef.current);
       setSessionWarningVisible(false);
     };
-  }, [isAuthenticated, settings.timeout, logout, toast]);
+  }, [isAuthenticated, settings.timeout, logout, toast, navigate]);
 
   // Extend session (add more time)
   const extendSession = useCallback(() => {
