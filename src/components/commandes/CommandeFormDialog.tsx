@@ -1,25 +1,31 @@
 /**
  * =============================================================================
- * Composant CommandeFormDialog
+ * Composant CommandeFormDialog (orchestrateur)
  * =============================================================================
- * 
- * Modal de création/édition de commande ou réservation.
- * Contient le formulaire complet avec gestion client, produits et dates.
- * 
+ *
+ * Décomposé en sous-composants réutilisables :
+ *  - ClientSection, ProductSection, TypeDateSection
+ *  - IndisponibiliteAlert, FormActionButtons, RdvCompletionModal
+ *
+ * Toute la logique (états, effets, handlers) reste ici afin de garantir la
+ * compatibilité totale avec l'API existante (props identiques).
+ *
  * @module CommandeFormDialog
- * @version 1.0.0
+ * @version 2.0.0
  */
 
 import React from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Plus, Trash2, Edit, ShoppingCart, Crown, Star, Sparkles, Gift, Award, Zap, Filter, CalendarClock, X } from 'lucide-react';
-import ClassificationSearchPopover from '@/components/products/attributes/ClassificationSearchPopover';
-import SaleQuantityInput from '@/components/dashboard/forms/SaleQuantityInput';
+import { Crown, Sparkles, Edit, Gift } from 'lucide-react';
+import { toast } from 'sonner';
+
+import ClientSection, { ClientLite } from './form/ClientSection';
+import ProductSection, { ProductLite, ProductCategory } from './form/ProductSection';
+import TypeDateSection from './form/TypeDateSection';
+import IndisponibiliteAlert from './form/IndisponibiliteAlert';
+import FormActionButtons from './form/FormActionButtons';
+import RdvCompletionModal from './form/RdvCompletionModal';
+
 import { Commande, CommandeProduit } from '@/types/commande';
 import type { ClientCaracteristique } from '@/utils/clientCharacteristic';
 import indisponibleApi from '@/services/api/indisponibleApi';
@@ -27,42 +33,12 @@ import rdvTachesApi from '@/services/api/rdvTachesApi';
 import commandeApi from '@/services/api/commandeApi';
 import travailleurApi from '@/services/api/travailleurApi';
 import tachesRdvApi from '@/services/api/tachesRdvApi';
-import { AlertTriangle } from 'lucide-react';
-import { toast } from 'sonner';
-
-interface Client {
-  id: string;
-  nom: string;
-  phone: string;
-  phones?: string[];
-  adresse: string;
-  photo?: string;
-}
-
-interface Product {
-  id: string;
-  description: string;
-  purchasePrice: number;
-  quantity: number;
-  mainPhoto?: string;
-  photos?: string[];
-}
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:10000';
 
-type ProductCategory = 'all' | 'perruque' | 'tissage' | 'extension' | 'autres';
-
-const CATEGORY_OPTIONS: { value: ProductCategory; label: string }[] = [
-  { value: 'all', label: 'Tous' },
-  { value: 'perruque', label: 'Perruque' },
-  { value: 'tissage', label: 'Tissage' },
-  { value: 'extension', label: 'Extension' },
-  { value: 'autres', label: 'Autres' },
-];
-
-const filterProductsByCategory = (products: Product[], category: ProductCategory): Product[] => {
+const filterProductsByCategory = (products: ProductLite[], category: ProductCategory): ProductLite[] => {
   if (category === 'all') return products;
-  const check = (p: Product) => p.description.toLowerCase();
+  const check = (p: ProductLite) => p.description.toLowerCase();
   switch (category) {
     case 'perruque': return products.filter(p => check(p).includes('perruque'));
     case 'tissage': return products.filter(p => check(p).includes('tissage'));
@@ -79,70 +55,62 @@ interface CommandeFormDialogProps {
   onOpenChange: (open: boolean) => void;
   editingCommande: Commande | null;
 
-  // Client fields
   clientNom: string;
-  setClientNom: (value: string) => void;
+  setClientNom: (v: string) => void;
   clientPhone: string;
-  setClientPhone: (value: string) => void;
+  setClientPhone: (v: string) => void;
   clientPhones?: string[];
   clientAddress: string;
-  setClientAddress: (value: string) => void;
+  setClientAddress: (v: string) => void;
   clientVille?: string;
-  setClientVille?: (value: string) => void;
+  setClientVille?: (v: string) => void;
   clientSearch: string;
-  setClientSearch: (value: string) => void;
+  setClientSearch: (v: string) => void;
   showClientSuggestions: boolean;
-  setShowClientSuggestions: (value: boolean) => void;
-  filteredClients: Client[];
-  handleClientSelect: (client: Client) => void;
+  setShowClientSuggestions: (v: boolean) => void;
+  filteredClients: ClientLite[];
+  handleClientSelect: (client: ClientLite) => void;
 
-  // Type field
   type: 'commande' | 'reservation' | 'rdv';
-  setType: (value: 'commande' | 'reservation' | 'rdv') => void;
+  setType: (v: 'commande' | 'reservation' | 'rdv') => void;
 
-  // Product fields
   produitNom: string;
-  setProduitNom: (value: string) => void;
+  setProduitNom: (v: string) => void;
   prixUnitaire: string;
-  setPrixUnitaire: (value: string) => void;
+  setPrixUnitaire: (v: string) => void;
   quantite: string;
-  setQuantite: (value: string) => void;
+  setQuantite: (v: string) => void;
   prixVente: string;
-  setPrixVente: (value: string) => void;
+  setPrixVente: (v: string) => void;
   productSearch: string;
-  setProductSearch: (value: string) => void;
+  setProductSearch: (v: string) => void;
   showProductSuggestions: boolean;
-  setShowProductSuggestions: (value: boolean) => void;
-  filteredProducts: Product[];
-  handleProductSelect: (product: Product) => void;
-  selectedProduct: Product | null;
+  setShowProductSuggestions: (v: boolean) => void;
+  filteredProducts: ProductLite[];
+  handleProductSelect: (p: ProductLite) => void;
+  selectedProduct: ProductLite | null;
   availableQuantityForSelected?: number | null;
 
-  // Products list
   produitsListe: CommandeProduit[];
   editingProductIndex: number | null;
   handleAddProduit: () => void;
-  handleEditProduit: (index: number) => void;
-  handleRemoveProduit: (index: number) => void;
+  handleEditProduit: (i: number) => void;
+  handleRemoveProduit: (i: number) => void;
 
-  // Date fields
   dateArrivagePrevue: string;
-  setDateArrivagePrevue: (value: string) => void;
+  setDateArrivagePrevue: (v: string) => void;
   dateEcheance: string;
-  setDateEcheance: (value: string) => void;
+  setDateEcheance: (v: string) => void;
   horaire: string;
-  setHoraire: (value: string) => void;
+  setHoraire: (v: string) => void;
   horaireFin?: string;
-  setHoraireFin?: (value: string) => void;
+  setHoraireFin?: (v: string) => void;
 
-  // Actions
   handleSubmit: (e: React.FormEvent) => void;
   resetForm: () => void;
 
-  // Caractéristique client (calculée en live)
   currentClientCaracteristique?: ClientCaracteristique | null;
 
-  // Réduction et livraison (par produit en édition)
   productReduction?: string;
   setProductReduction?: (v: string) => void;
   productReductionType?: '' | 'amount' | 'percent';
@@ -153,91 +121,51 @@ interface CommandeFormDialogProps {
   setProductDeliveryFee?: (v: string) => void;
   productBaseDeliveryFee?: number | null;
   setProductBaseDeliveryFee?: (v: number | null) => void;
-  // Réservation ultérieure
+
   ulterieurConfig?: { mode: 'date' | 'inconnu'; date?: string } | null;
   onOpenUlterieurModal?: () => void;
 }
 
-/**
- * Modal de formulaire pour créer/éditer une commande ou réservation
- */
 const CommandeFormDialog: React.FC<CommandeFormDialogProps> = ({
-  isOpen,
-  onOpenChange,
-  editingCommande,
-  clientNom,
-  setClientNom,
-  clientPhone,
-  setClientPhone,
-  clientPhones = [],
-  clientAddress,
-  setClientAddress,
-  clientVille = '',
-  setClientVille,
-  clientSearch,
-  setClientSearch,
-  showClientSuggestions,
-  setShowClientSuggestions,
-  filteredClients,
-  handleClientSelect,
-  type,
-  setType,
-  produitNom,
-  setProduitNom,
-  prixUnitaire,
-  setPrixUnitaire,
-  quantite,
-  setQuantite,
-  prixVente,
-  setPrixVente,
-  productSearch,
-  setProductSearch,
-  showProductSuggestions,
-  setShowProductSuggestions,
-  filteredProducts,
-  handleProductSelect,
-  selectedProduct,
-  produitsListe,
-  editingProductIndex,
-  handleAddProduit,
-  handleEditProduit,
-  handleRemoveProduit,
-  dateArrivagePrevue,
-  setDateArrivagePrevue,
-  dateEcheance,
-  setDateEcheance,
-  horaire,
-  setHoraire,
-  horaireFin = '',
-  setHoraireFin,
-  handleSubmit,
-  resetForm,
-  availableQuantityForSelected,
-  currentClientCaracteristique,
-  productReduction = '',
-  setProductReduction,
-  productReductionType = '',
-  setProductReductionType,
-  productDeliveryLocation = '',
-  setProductDeliveryLocation,
-  productDeliveryFee = '0',
-  setProductDeliveryFee,
-  productBaseDeliveryFee = null,
-  setProductBaseDeliveryFee,
-  ulterieurConfig = null,
-  onOpenUlterieurModal,
+  isOpen, onOpenChange, editingCommande,
+  clientNom, setClientNom, clientPhone, setClientPhone, clientPhones = [],
+  clientAddress, setClientAddress, clientVille = '', setClientVille,
+  clientSearch, setClientSearch, showClientSuggestions, setShowClientSuggestions,
+  filteredClients, handleClientSelect,
+  type, setType,
+  produitNom, setProduitNom, prixUnitaire, setPrixUnitaire, quantite, setQuantite,
+  prixVente, setPrixVente, productSearch, setProductSearch,
+  showProductSuggestions, setShowProductSuggestions,
+  filteredProducts, handleProductSelect, selectedProduct,
+  produitsListe, editingProductIndex, handleAddProduit, handleEditProduit, handleRemoveProduit,
+  dateArrivagePrevue, setDateArrivagePrevue, dateEcheance, setDateEcheance,
+  horaire, setHoraire, horaireFin = '', setHoraireFin,
+  handleSubmit, resetForm,
+  availableQuantityForSelected, currentClientCaracteristique,
+  productReduction = '', setProductReduction,
+  productReductionType = '', setProductReductionType,
+  productDeliveryLocation = '', setProductDeliveryLocation,
+  productDeliveryFee = '0', setProductDeliveryFee,
+  productBaseDeliveryFee = null, setProductBaseDeliveryFee,
+  ulterieurConfig = null, onOpenUlterieurModal,
 }) => {
+  // ===== États UI =====
   const [showHeureFin, setShowHeureFin] = React.useState(false);
   React.useEffect(() => { if (horaireFin) setShowHeureFin(true); }, [horaireFin, isOpen]);
+
   const [productCategoryFilter, setProductCategoryFilter] = React.useState<ProductCategory>('all');
-  const categoryFilteredProducts = React.useMemo(() => filterProductsByCategory(filteredProducts, productCategoryFilter), [filteredProducts, productCategoryFilter]);
+  const categoryFilteredProducts = React.useMemo(
+    () => filterProductsByCategory(filteredProducts, productCategoryFilter),
+    [filteredProducts, productCategoryFilter]
+  );
+
   const [selectedClientPhoto, setSelectedClientPhoto] = React.useState<string | null>(null);
-  // Villes disponibles (clients-villes.json)
   const [availableVilles, setAvailableVilles] = React.useState<string[]>([]);
   const [livraisonVilles, setLivraisonVilles] = React.useState<Array<{ ville: string; fee: number }>>([]);
   const [showFeeOverride, setShowFeeOverride] = React.useState(false);
   const [showFeeIncrease, setShowFeeIncrease] = React.useState(false);
   const [feeIncreaseAmount, setFeeIncreaseAmount] = React.useState('');
+
   React.useEffect(() => {
     if (!isOpen) return;
     import('@/services/api/villesApi').then(({ clientsVillesApi, livraisonVilleApi }) => {
@@ -245,6 +173,7 @@ const CommandeFormDialog: React.FC<CommandeFormDialogProps> = ({
       livraisonVilleApi.getAll().then(setLivraisonVilles).catch(() => setLivraisonVilles([]));
     });
   }, [isOpen]);
+
   const isCustomVille = !!clientVille && !availableVilles.some(v => v.toLowerCase() === clientVille.toLowerCase());
 
   // Auto pré-remplissage frais de livraison depuis ville client
@@ -270,7 +199,6 @@ const CommandeFormDialog: React.FC<CommandeFormDialogProps> = ({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedProduct?.id, livraisonVilles.length, clientVille]);
-
 
   // ===== Vérification de disponibilité (indisponibilité) =====
   const [availability, setAvailability] = React.useState<{ disponible: boolean; message?: string; suggestions?: Array<{ heureDebut: string; heureFin: string; label: string }> }>({ disponible: true });
@@ -298,17 +226,14 @@ const CommandeFormDialog: React.FC<CommandeFormDialogProps> = ({
     return () => { cancelled = true; clearTimeout(t); };
   }, [isOpen, checkDate, horaire, computedHeureFin]);
 
-  // ===== Mode RDV (3e option du type) =====
+  // ===== Mode RDV =====
   const [localRdvMode, setLocalRdvMode] = React.useState(false);
   const [rdvDate, setRdvDate] = React.useState('');
   const [rdvConflict, setRdvConflict] = React.useState<{ busy: boolean; message?: string }>({ busy: false });
 
-  // Auto-détection: si le nom du produit contient "prestation" => mode RDV
   React.useEffect(() => {
     const txt = (productSearch || produitNom || '').toLowerCase();
-    if (txt.includes('prestation')) {
-      setLocalRdvMode(true);
-    }
+    if (txt.includes('prestation')) setLocalRdvMode(true);
   }, [productSearch, produitNom]);
 
   React.useEffect(() => {
@@ -319,7 +244,6 @@ const CommandeFormDialog: React.FC<CommandeFormDialogProps> = ({
     }
   }, [isOpen]);
 
-  // Vérification créneau dans rdv-taches.json
   React.useEffect(() => {
     if (!isOpen || !localRdvMode || !rdvDate || !horaire) {
       setRdvConflict({ busy: false });
@@ -365,7 +289,6 @@ const CommandeFormDialog: React.FC<CommandeFormDialogProps> = ({
   const [rdvStatut, setRdvStatut] = React.useState<'planifie' | 'confirme' | 'reporte'>('planifie');
   const [submittingRdv, setSubmittingRdv] = React.useState(false);
 
-  // Autocompletes du modal de complétion
   const [personneQuery, setPersonneQuery] = React.useState('');
   const [personneOptions, setPersonneOptions] = React.useState<Array<{ id: string; nom: string; prenom: string; phone?: string }>>([]);
   const [showPersonneList, setShowPersonneList] = React.useState(false);
@@ -375,7 +298,6 @@ const CommandeFormDialog: React.FC<CommandeFormDialogProps> = ({
   const [allTaches, setAllTaches] = React.useState<Array<{ id: string; nom: string }>>([]);
   const [createdCommandeId, setCreatedCommandeId] = React.useState<string | null>(null);
 
-  // Recherche travailleurs (3 caractères min)
   React.useEffect(() => {
     if (!showPersonneList) return;
     const q = personneQuery.trim();
@@ -391,7 +313,6 @@ const CommandeFormDialog: React.FC<CommandeFormDialogProps> = ({
     return () => { cancel = true; clearTimeout(t); };
   }, [personneQuery, showPersonneList]);
 
-  // Charger toutes les tâches RDV à l'ouverture du modal complétion
   React.useEffect(() => {
     if (!rdvModalOpen) return;
     (async () => {
@@ -417,14 +338,10 @@ const CommandeFormDialog: React.FC<CommandeFormDialogProps> = ({
       toast.error('Veuillez remplir client, date et horaire');
       return;
     }
-    if (rdvConflict.busy) {
-      toast.error('Créneau occupé');
-      return;
-    }
+    if (rdvConflict.busy) { toast.error('Créneau occupé'); return; }
     try {
       setSubmittingRdv(true);
       const heureFin = computedHeureFin || horaire;
-      // 1) Pré-enregistrer dans rdv-taches.json
       const createdResp: any = await rdvTachesApi.create({
         clientNom,
         clientTelephone: clientPhone,
@@ -440,13 +357,10 @@ const CommandeFormDialog: React.FC<CommandeFormDialogProps> = ({
       const newId = created?.id;
       setCreatedRdvTacheId(newId);
 
-      // 2) Enregistrer la commande (type='rdv') en liant le rdvTacheId
       let newCommandeId: string | null = null;
       try {
         const cmdResp: any = await commandeApi.create({
-          clientNom,
-          clientPhone,
-          clientAddress,
+          clientNom, clientPhone, clientAddress,
           type: 'rdv' as any,
           produits: produitsListe.length > 0 ? produitsListe : [{
             nom: produitNom || 'Prestation',
@@ -466,19 +380,13 @@ const CommandeFormDialog: React.FC<CommandeFormDialogProps> = ({
         }
       } catch (err) {
         console.error('commande create error', err);
-        if (newId) {
-          try { await rdvTachesApi.delete(newId); } catch { }
-        }
+        if (newId) { try { await rdvTachesApi.delete(newId); } catch { } }
         throw err;
       }
       setCreatedCommandeId(newCommandeId);
 
-      setRdvTacheNom('');
-      setTacheQuery('');
-      setRdvPersonneNom('');
-      setPersonneQuery('');
-      setRdvCommentaires('');
-      setRdvStatut('planifie');
+      setRdvTacheNom(''); setTacheQuery(''); setRdvPersonneNom(''); setPersonneQuery('');
+      setRdvCommentaires(''); setRdvStatut('planifie');
       onOpenChange(false);
       setRdvModalOpen(true);
       toast.success('Commande créée. Complétez le RDV.');
@@ -518,14 +426,11 @@ const CommandeFormDialog: React.FC<CommandeFormDialogProps> = ({
     }
   };
 
-
-
-  // Réinitialiser la photo client quand le dialogue se ferme ou que le nom change manuellement
   React.useEffect(() => {
     if (!isOpen) setSelectedClientPhoto(null);
   }, [isOpen]);
 
-  const onClientPick = (client: Client) => {
+  const onClientPick = (client: ClientLite) => {
     setSelectedClientPhoto(client.photo || null);
     handleClientSelect(client);
   };
@@ -542,10 +447,7 @@ const CommandeFormDialog: React.FC<CommandeFormDialogProps> = ({
     : null;
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => {
-      onOpenChange(open);
-      if (!open) resetForm();
-    }}>
+    <Dialog open={isOpen} onOpenChange={(open) => { onOpenChange(open); if (!open) resetForm(); }}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-white via-purple-50/40 to-pink-50/40 dark:from-gray-900 dark:via-purple-900/30 dark:to-pink-900/30 backdrop-blur-2xl border-2 border-purple-300/50 dark:border-purple-600/50 shadow-[0_20px_70px_rgba(168,85,247,0.4)]">
         <DialogHeader className="border-b-2 border-gradient-to-r from-purple-300 via-pink-300 to-indigo-300 dark:from-purple-700 dark:via-pink-700 dark:to-indigo-700 pb-6">
           <div className="flex items-center justify-center gap-3 mb-2">
@@ -571,1123 +473,146 @@ const CommandeFormDialog: React.FC<CommandeFormDialogProps> = ({
         </DialogHeader>
 
         <form onSubmit={localRdvMode ? handleSubmitRdvMode : handleSubmit} className="space-y-6 mt-6">
-          {/* Section Client Premium */}
-          <div className="space-y-4 p-6 rounded-2xl bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-blue-900/30 dark:via-indigo-900/30 dark:to-purple-900/30 border-2 border-blue-300 dark:border-blue-700 shadow-[0_8px_30px_rgba(59,130,246,0.3)]">
-            <h3 className="font-black text-xl flex items-center gap-3 text-blue-700 dark:text-blue-300">
-              <span className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 flex items-center justify-center text-white text-sm shadow-lg">
-                <Crown className="h-5 w-5" />
-              </span>
-              <span className="flex items-center gap-2">
-                Client Premium
-                <Star className="h-5 w-5 text-yellow-500" />
-              </span>
-            </h3>
+          <ClientSection
+            clientPhotoUrl={clientPhotoUrl}
+            clientNom={clientNom}
+            clientSearch={clientSearch}
+            setClientSearch={setClientSearch}
+            setClientNom={setClientNom}
+            setShowClientSuggestions={setShowClientSuggestions}
+            showClientSuggestions={showClientSuggestions}
+            filteredClients={filteredClients}
+            onClientPick={onClientPick}
+            setSelectedClientPhoto={setSelectedClientPhoto}
+            currentClientCaracteristique={currentClientCaracteristique}
+            clientPhone={clientPhone}
+            setClientPhone={setClientPhone}
+            clientPhones={clientPhones}
+            clientAddress={clientAddress}
+            setClientAddress={setClientAddress}
+            clientVille={clientVille}
+            setClientVille={setClientVille}
+            availableVilles={availableVilles}
+            setAvailableVilles={setAvailableVilles}
+            isCustomVille={isCustomVille}
+          />
 
-            {/* Photo du client (si disponible) */}
-            {clientPhotoUrl && (
-              <div className="flex justify-center">
-                <div className="relative group">
-                  <div className="absolute -inset-1 bg-gradient-to-br from-blue-400 via-indigo-500 to-purple-500 rounded-full blur-md opacity-70" />
-                  <img
-                    src={clientPhotoUrl}
-                    alt={clientNom || 'Client'}
-                    className="relative w-24 h-24 rounded-full object-cover border-4 border-white dark:border-gray-800 shadow-2xl"
-                    onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
-                  />
-                </div>
-              </div>
-            )}
+          <ProductSection
+            productPhotoUrl={productPhotoUrl}
+            selectedProduct={selectedProduct}
+            productCategoryFilter={productCategoryFilter}
+            setProductCategoryFilter={setProductCategoryFilter}
+            productSearch={productSearch}
+            setProductSearch={setProductSearch}
+            produitNom={produitNom}
+            setProduitNom={setProduitNom}
+            showProductSuggestions={showProductSuggestions}
+            setShowProductSuggestions={setShowProductSuggestions}
+            categoryFilteredProducts={categoryFilteredProducts}
+            handleProductSelect={handleProductSelect}
+            prixUnitaire={prixUnitaire}
+            setPrixUnitaire={setPrixUnitaire}
+            quantite={quantite}
+            setQuantite={setQuantite}
+            prixVente={prixVente}
+            setPrixVente={setPrixVente}
+            availableQuantityForSelected={availableQuantityForSelected}
+            productReduction={productReduction}
+            setProductReduction={setProductReduction}
+            productReductionType={productReductionType}
+            setProductReductionType={setProductReductionType}
+            productDeliveryLocation={productDeliveryLocation}
+            setProductDeliveryLocation={setProductDeliveryLocation}
+            productDeliveryFee={productDeliveryFee}
+            setProductDeliveryFee={setProductDeliveryFee}
+            productBaseDeliveryFee={productBaseDeliveryFee}
+            setProductBaseDeliveryFee={setProductBaseDeliveryFee}
+            livraisonVilles={livraisonVilles}
+            showFeeOverride={showFeeOverride}
+            setShowFeeOverride={setShowFeeOverride}
+            showFeeIncrease={showFeeIncrease}
+            setShowFeeIncrease={setShowFeeIncrease}
+            feeIncreaseAmount={feeIncreaseAmount}
+            setFeeIncreaseAmount={setFeeIncreaseAmount}
+            produitsListe={produitsListe}
+            editingProductIndex={editingProductIndex}
+            handleAddProduit={handleAddProduit}
+            handleEditProduit={handleEditProduit}
+            handleRemoveProduit={handleRemoveProduit}
+          />
 
-            <div className="relative">
-              <div className="flex items-center justify-between mb-2">
-                <Label htmlFor="clientNom" className="text-sm font-semibold text-gray-700 dark:text-gray-300 block">
-                  👤 Nom du Client
-                </Label>
-                {clientNom && clientNom.length >= 2 && currentClientCaracteristique && (
-                  <span
-                    className={`text-xs px-3 py-1 rounded-full font-bold tracking-wide ${currentClientCaracteristique.badgeClass}`}
-                  >
-                    {currentClientCaracteristique.label}
-                  </span>
-                )}
-              </div>
-              <Input
-                id="clientNom"
-                value={clientSearch}
-                onChange={(e) => {
-                  setClientSearch(e.target.value);
-                  setClientNom(e.target.value);
-                  setShowClientSuggestions(e.target.value.length >= 3);
-                  if (e.target.value.length < 3) setSelectedClientPhoto(null);
-                }}
-                placeholder="Saisir au moins 3 caractères..."
-                className="border-2 border-blue-300 dark:border-blue-700 focus:border-blue-500 dark:focus:border-blue-500 bg-white dark:bg-gray-900 shadow-sm"
-                required
-              />
-              {showClientSuggestions && filteredClients.length > 0 && (
-                <div className="absolute z-50 w-full mt-2 bg-white dark:bg-gray-800 border-2 border-purple-300 dark:border-purple-700 rounded-xl shadow-2xl max-h-60 overflow-y-auto">
-                  {filteredClients.map((client) => (
-                    <div
-                      key={client.id}
-                      className="p-3 hover:bg-gradient-to-r hover:from-purple-100 hover:to-blue-100 dark:hover:from-purple-900/30 dark:hover:to-blue-900/30 cursor-pointer transition-all duration-200 border-b border-gray-100 dark:border-gray-700 last:border-0"
-                      onClick={() => onClientPick(client)}
-                    >
-                      <div className="font-semibold text-gray-900 dark:text-white">{client.nom}</div>
-                      <div className="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-1 mt-1">
-                        📱 {client.phone}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+          <TypeDateSection
+            type={type}
+            setType={setType}
+            localRdvMode={localRdvMode}
+            setLocalRdvMode={setLocalRdvMode}
+            ulterieurConfig={ulterieurConfig}
+            onOpenUlterieurModal={onOpenUlterieurModal}
+            rdvDate={rdvDate}
+            setRdvDate={setRdvDate}
+            dateArrivagePrevue={dateArrivagePrevue}
+            setDateArrivagePrevue={setDateArrivagePrevue}
+            dateEcheance={dateEcheance}
+            setDateEcheance={setDateEcheance}
+            horaire={horaire}
+            setHoraire={setHoraire}
+            horaireFin={horaireFin}
+            setHoraireFin={setHoraireFin}
+            showHeureFin={showHeureFin}
+            setShowHeureFin={setShowHeureFin}
+          />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="clientPhone" className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">
-                  📞 Téléphone
-                </Label>
-                {clientPhones.length > 1 ? (
-                  <Select value={clientPhone} onValueChange={setClientPhone}>
-                    <SelectTrigger className="w-full border-2 border-blue-300 dark:border-blue-700 focus:border-blue-500 dark:focus:border-blue-500 bg-white dark:bg-gray-900 shadow-sm">
-                      <SelectValue placeholder="Choisir un numéro" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {clientPhones.map((phone, idx) => (
-                        <SelectItem key={idx} value={phone}>
-                          {phone} {idx === 0 ? '(principal)' : ''}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <Input
-                    id="clientPhone"
-                    value={clientPhone}
-                    onChange={(e) => setClientPhone(e.target.value)}
-                    placeholder="Numéro de téléphone"
-                    className="border-2 border-blue-300 dark:border-blue-700 focus:border-blue-500 dark:focus:border-blue-500 bg-white dark:bg-gray-900 shadow-sm"
-                    required
-                  />
-                )}
-              </div>
+          <IndisponibiliteAlert
+            availability={availability}
+            localRdvMode={localRdvMode}
+            rdvConflict={rdvConflict}
+            onApplySuggestion={(s) => { setHoraire(s.heureDebut); setHoraireFin?.(s.heureFin); setShowHeureFin(true); }}
+          />
 
-              <div>
-                <Label htmlFor="clientAddress" className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">
-                  🏠 Adresse
-                </Label>
-                <Input
-                  id="clientAddress"
-                  value={clientAddress}
-                  onChange={(e) => setClientAddress(e.target.value)}
-                  placeholder="Adresse complète"
-                  className="border-2 border-blue-300 dark:border-blue-700 focus:border-blue-500 dark:focus:border-blue-500 bg-white dark:bg-gray-900 shadow-sm"
-                  required
-                />
-              </div>
-            </div>
-
-            {/* Ville du client */}
-            {setClientVille && (
-              <div>
-                <Label htmlFor="clientVille" className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">
-                  🏙️ Ville {clientVille && (
-                    <span className="ml-2 text-xs font-normal text-emerald-600 dark:text-emerald-400">
-                      (pré-remplie depuis la fiche client)
-                    </span>
-                  )}
-                </Label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <select
-                    value={isCustomVille ? '__custom__' : (clientVille || '')}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      if (val === '__custom__') setClientVille('');
-                      else setClientVille(val);
-                    }}
-                    className="w-full px-3 py-2 border-2 border-blue-300 dark:border-blue-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 shadow-sm"
-                  >
-                    <option value="">— Choisir une ville —</option>
-                    {availableVilles.map(v => <option key={v} value={v}>{v}</option>)}
-                    <option value="__custom__">+ Nouvelle ville…</option>
-                  </select>
-                  {(isCustomVille || !clientVille) && (
-                    <Input
-                      type="text"
-                      value={isCustomVille ? clientVille : ''}
-                      onChange={(e) => setClientVille(e.target.value)}
-                      onBlur={async () => {
-                        const v = (clientVille || '').trim();
-                        if (!v) return;
-                        if (!availableVilles.some(x => x.toLowerCase() === v.toLowerCase())) {
-                          try {
-                            const { clientsVillesApi } = await import('@/services/api/villesApi');
-                            const list = await clientsVillesApi.add(v);
-                            if (Array.isArray(list)) setAvailableVilles(list);
-                          } catch { }
-                        }
-                      }}
-                      placeholder="Saisir une nouvelle ville"
-                      className="border-2 border-blue-300 dark:border-blue-700 focus:border-blue-500 dark:focus:border-blue-500 bg-white dark:bg-gray-900 shadow-sm"
-                    />
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Section Produit Premium */}
-          <div className="space-y-4 p-6 rounded-2xl bg-gradient-to-br from-purple-50 via-pink-50 to-rose-50 dark:from-purple-900/30 dark:via-pink-900/30 dark:to-rose-900/30 border-2 border-purple-300 dark:border-purple-700 shadow-[0_8px_30px_rgba(168,85,247,0.3)]">
-            <h3 className="font-black text-xl flex items-center gap-3 text-purple-700 dark:text-purple-300">
-              <span className="w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center text-white text-sm shadow-lg">
-                <ShoppingCart className="h-5 w-5" />
-              </span>
-              <span className="flex items-center gap-2">
-                Produits Elite
-                <Sparkles className="h-5 w-5 text-pink-500" />
-              </span>
-            </h3>
-
-            {/* Filtre par attributs (catégorie/modèle/couleur/taille/devant) */}
-            <div className="mb-3">
-              <ClassificationSearchPopover
-                currentCategory={productCategoryFilter}
-                onApply={({ name, category }) => {
-                  setProductCategoryFilter(category);
-                  if (name) {
-                    setProductSearch(name);
-                    setProduitNom(name);
-                    setShowProductSuggestions(name.length >= 3);
-                  }
-                }}
-              />
-            </div>
-
-            {/* Photo principale du produit (si disponible) */}
-            {productPhotoUrl && (
-              <div className="flex justify-center">
-                <div className="relative group">
-                  <div className="absolute -inset-1 bg-gradient-to-br from-purple-400 via-pink-500 to-rose-500 rounded-2xl blur-md opacity-70" />
-                  <img
-                    src={productPhotoUrl}
-                    alt={selectedProduct?.description || 'Produit'}
-                    className="relative w-24 h-24 rounded-2xl object-cover border-4 border-white dark:border-gray-800 shadow-2xl"
-                    onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
-                  />
-                </div>
-              </div>
-            )}
-
-            <div className="relative">
-              <Label htmlFor="produitNom" className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">
-                📦 Nom du Produit
-              </Label>
-              <Input
-                id="produitNom"
-                value={productSearch}
-                onChange={(e) => {
-                  setProductSearch(e.target.value);
-                  setProduitNom(e.target.value);
-                  setShowProductSuggestions(e.target.value.length >= 3);
-                }}
-                placeholder="Saisir au moins 3 caractères..."
-                className="border-2 border-purple-300 dark:border-purple-700 focus:border-purple-500 dark:focus:border-purple-500 bg-white dark:bg-gray-900 shadow-sm"
-              />
-              {showProductSuggestions && categoryFilteredProducts.length > 0 && (
-                <div className="absolute z-50 w-full mt-2 bg-white dark:bg-gray-800 border-2 border-purple-300 dark:border-purple-700 rounded-xl shadow-2xl max-h-60 overflow-y-auto">
-                  {categoryFilteredProducts.map((product) => (
-                    <div
-                      key={product.id}
-                      className="p-3 hover:bg-gradient-to-r hover:from-purple-100 hover:to-pink-100 dark:hover:from-purple-900/30 dark:hover:to-pink-900/30 cursor-pointer transition-all duration-200 border-b border-gray-100 dark:border-gray-700 last:border-0"
-                      onClick={() => handleProductSelect(product)}
-                    >
-                      <div className="font-semibold text-gray-900 dark:text-white">{product.description}</div>
-                      <div className="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-2 mt-1">
-                        <span>💰 {product.purchasePrice}€</span>
-                        <span>📊 Stock: {product.quantity}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <Label htmlFor="prixUnitaire" className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">
-                  💵 Prix Unitaire (€)
-                </Label>
-                <Input
-                  id="prixUnitaire"
-                  type="number"
-                  step="0.01"
-                  value={prixUnitaire}
-                  onChange={(e) => setPrixUnitaire(e.target.value)}
-                  placeholder="Prix d'achat"
-                  className="border-2 border-purple-300 dark:border-purple-700 focus:border-purple-500 dark:focus:border-purple-500 bg-white dark:bg-gray-900 shadow-sm"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="quantite" className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">
-                  📊 Quantité {selectedProduct && `(dispo immédiat: ${selectedProduct.quantity}${availableQuantityForSelected !== null && availableQuantityForSelected !== undefined && availableQuantityForSelected > selectedProduct.quantity ? ` · +${availableQuantityForSelected - selectedProduct.quantity} en attente d'arrivage` : ''})`}
-                </Label>
-                <SaleQuantityInput
-                  quantity={quantite}
-                  onChange={setQuantite}
-                  maxQuantity={availableQuantityForSelected !== null && availableQuantityForSelected !== undefined ? availableQuantityForSelected : selectedProduct?.quantity}
-                  showAvailableStock={false}
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="prixVente" className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">
-                  💎 Prix de Vente (€)
-                </Label>
-                <Input
-                  id="prixVente"
-                  type="number"
-                  step="0.01"
-                  value={prixVente}
-                  onChange={(e) => setPrixVente(e.target.value)}
-                  placeholder="Prix de vente"
-                  className="border-2 border-purple-300 dark:border-purple-700 focus:border-purple-500 dark:focus:border-purple-500 bg-white dark:bg-gray-900 shadow-sm"
-                />
-              </div>
-            </div>
-
-            {/* Réduction & Livraison (par produit) */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Réduction */}
-              <div className="space-y-2">
-                <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
-                  🎁 Réduction
-                  <span className="text-[10px] text-muted-foreground font-normal">(facultatif)</span>
-                </Label>
-                <div className="flex items-center gap-2">
-                  <Input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={productReduction}
-                    onChange={(e) => {
-                      const v = e.target.value;
-                      setProductReduction?.(v);
-                      if (v && !productReductionType) setProductReductionType?.('amount');
-                    }}
-                    placeholder="0"
-                    className="flex-1 border-2 border-purple-300 dark:border-purple-700 bg-white dark:bg-gray-900"
-                  />
-                  <select
-                    value={productReductionType || ''}
-                    onChange={(e) => setProductReductionType?.(e.target.value as any)}
-                    className="px-2 py-2 border-2 border-purple-300 dark:border-purple-700 rounded-md bg-white dark:bg-gray-900 text-sm"
-                  >
-                    <option value="">—</option>
-                    <option value="amount">€ / unité</option>
-                    <option value="percent">% du PU</option>
-                  </select>
-                </div>
-                {productReduction && productReductionType && (() => {
-                  const pv = parseFloat(prixVente || '0') || 0;
-                  const qte = parseFloat(quantite || '0') || 0;
-                  const r = parseFloat(productReduction) || 0;
-                  const amt = productReductionType === 'percent' ? (pv * r / 100) * qte : r * qte;
-                  const total = Math.max(0, pv * qte - amt);
-                  return (
-                    <p className="text-xs text-emerald-600">
-                      -{amt.toFixed(2)} € appliqués · Total après réduction: {total.toFixed(2)} €
-                    </p>
-                  );
-                })()}
-              </div>
-
-              {/* Ville de livraison & Frais */}
-              <div className="space-y-2">
-                <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                  🚚 Ville de livraison & Frais
-                </Label>
-                <select
-                  value={productDeliveryLocation || ''}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    if (val === '__custom__') {
-                      setProductDeliveryLocation?.('');
-                      setProductDeliveryFee?.('0');
-                      setProductBaseDeliveryFee?.(null);
-                      return;
-                    }
-                    if (val === 'Exonération') {
-                      setProductDeliveryLocation?.('Exonération');
-                      setProductDeliveryFee?.('0');
-                      setProductBaseDeliveryFee?.(0);
-                      return;
-                    }
-                    const found = livraisonVilles.find(v => v.ville === val);
-                    setProductDeliveryLocation?.(val);
-                    setProductDeliveryFee?.(found ? String(found.fee) : '0');
-                    setProductBaseDeliveryFee?.(found ? found.fee : null);
-                  }}
-                  className="w-full px-3 py-2 border-2 border-purple-300 dark:border-purple-700 rounded-md bg-white dark:bg-gray-900"
-                >
-                  <option value="">— Choisir une ville —</option>
-                  {livraisonVilles.map(v => (
-                    <option key={v.ville} value={v.ville}>
-                      {v.ville}{v.ville === 'Exonération' ? ' (0 €)' : `: ${v.fee === 0 ? 'gratuit' : `${v.fee} €`}`}
-                    </option>
-                  ))}
-                  <option value="__custom__">+ Nouvelle ville…</option>
-                </select>
-
-                <div className="grid grid-cols-2 gap-2">
-                  <Input
-                    type="text"
-                    value={productDeliveryLocation}
-                    onChange={(e) => setProductDeliveryLocation?.(e.target.value)}
-                    placeholder="Ville"
-                    className="border-2 border-purple-300 dark:border-purple-700 bg-white dark:bg-gray-900"
-                  />
-                  <Input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={productDeliveryFee}
-                    onChange={(e) => setProductDeliveryFee?.(e.target.value)}
-                    placeholder="Frais (€)"
-                    className="border-2 border-purple-300 dark:border-purple-700 bg-white dark:bg-gray-900"
-                  />
-                </div>
-                {productBaseDeliveryFee !== null && Number(productDeliveryFee || 0) !== Number(productBaseDeliveryFee) && (
-                  Number(productDeliveryFee || 0) < Number(productBaseDeliveryFee) ? (
-                    <p className="text-[11px] text-emerald-600 font-semibold">
-                      Réduit de {(Number(productBaseDeliveryFee) - Number(productDeliveryFee || 0)).toFixed(2)} € (base: {productBaseDeliveryFee} €)
-                    </p>
-                  ) : (
-                    <p className="text-[11px] text-orange-600 font-semibold">
-                      Augmenté de {(Number(productDeliveryFee || 0) - Number(productBaseDeliveryFee)).toFixed(2)} € (base: {productBaseDeliveryFee} €)
-                    </p>
-                  )
-                )}
-
-                {(() => {
-                  const knownVilleNames = livraisonVilles.map(v => v.ville);
-                  const isCustomLoc = !!productDeliveryLocation && !knownVilleNames.some(v => v.toLowerCase() === productDeliveryLocation.toLowerCase());
-                  const baseVilleFee = productBaseDeliveryFee;
-                  const canAdjust = !!productDeliveryLocation && productDeliveryLocation !== 'Exonération' && !isCustomLoc;
-                  if (!canAdjust) return null;
-                  return (
-                    <>
-                      <div className="flex items-center gap-1 flex-wrap">
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => { setShowFeeOverride(s => !s); if (!showFeeOverride) setShowFeeIncrease(false); }}
-                          className="h-7 px-2 text-xs gap-1 text-blue-600 hover:bg-blue-50"
-                        >
-                          {showFeeOverride ? <X className="h-3 w-3" /> : <Plus className="h-3 w-3" />}
-                          Réduction frais
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => { setShowFeeIncrease(s => !s); if (!showFeeIncrease) setShowFeeOverride(false); }}
-                          className="h-7 px-2 text-xs gap-1 text-orange-600 hover:bg-orange-50"
-                        >
-                          {showFeeIncrease ? <X className="h-3 w-3" /> : <Plus className="h-3 w-3" />}
-                          Augmentation frais
-                        </Button>
-                      </div>
-
-                      {showFeeOverride && (
-                        <div className="mt-2 p-3 rounded-lg bg-blue-50/60 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 space-y-2">
-                          <Label className="text-xs">Nouveau frais pour {productDeliveryLocation} (€)</Label>
-                          <Input
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            value={productDeliveryFee}
-                            onChange={(e) => setProductDeliveryFee?.(e.target.value)}
-                            placeholder={baseVilleFee !== null && baseVilleFee !== undefined ? `Frais standard: ${baseVilleFee} €` : 'Frais (€)'}
-                          />
-                          {baseVilleFee !== null && baseVilleFee !== undefined && (
-                            <button
-                              type="button"
-                              className="text-[11px] text-gray-500 hover:text-gray-700 underline"
-                              onClick={() => setProductDeliveryFee?.(String(baseVilleFee))}
-                            >
-                              Rétablir le frais standard ({baseVilleFee} €)
-                            </button>
-                          )}
-                        </div>
-                      )}
-
-                      {showFeeIncrease && (
-                        <div className="mt-2 p-3 rounded-lg bg-orange-50/60 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 space-y-2">
-                          <Label className="text-xs">
-                            Montant à ajouter au frais standard
-                            {baseVilleFee !== null && baseVilleFee !== undefined && ` (${baseVilleFee} €)`} pour {productDeliveryLocation}
-                          </Label>
-                          <div className="flex items-center gap-2">
-                            <Input
-                              type="number"
-                              step="0.01"
-                              min="0"
-                              value={feeIncreaseAmount}
-                              onChange={(e) => {
-                                const add = e.target.value;
-                                setFeeIncreaseAmount(add);
-                                const base = baseVilleFee !== null && baseVilleFee !== undefined ? Number(baseVilleFee) : Number(productDeliveryFee || 0);
-                                const total = base + Number(add || 0);
-                                setProductDeliveryFee?.(String(total));
-                              }}
-                              placeholder="Ex: 10"
-                              className="flex-1"
-                            />
-                            <span className="text-xs text-gray-600 whitespace-nowrap">
-                              = {Number(productDeliveryFee || 0).toFixed(2)} € total
-                            </span>
-                          </div>
-                          {baseVilleFee !== null && baseVilleFee !== undefined && (
-                            <button
-                              type="button"
-                              className="text-[11px] text-gray-500 hover:text-gray-700 underline"
-                              onClick={() => {
-                                setFeeIncreaseAmount('');
-                                setProductDeliveryFee?.(String(baseVilleFee));
-                              }}
-                            >
-                              Rétablir le frais standard ({baseVilleFee} €)
-                            </button>
-                          )}
-                        </div>
-                      )}
-                    </>
-                  );
-                })()}
-              </div>
-            </div>
-
-
-            <Button
-              type="button"
-              onClick={handleAddProduit}
-              className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-lg"
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              {editingProductIndex !== null ? 'Modifier ce produit' : 'Ajouter ce produit au panier'}
-            </Button>
-
-            {/* Liste des produits dans le panier */}
-            {produitsListe.length > 0 && (
-              <div className="space-y-2 mt-4">
-                <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                  🛒 Panier ({produitsListe.length} produit{produitsListe.length > 1 ? 's' : ''})
-                </Label>
-
-                <div className="space-y-2">
-                  {produitsListe.map((produit, index) => (
-                    <div
-                      key={index}
-                      className={`flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded-lg border-2 shadow-sm transition-all ${editingProductIndex === index
-                          ? 'border-purple-500 dark:border-purple-400 ring-2 ring-purple-200 dark:ring-purple-800'
-                          : 'border-purple-200 dark:border-purple-700'
-                        }`}
-                    >
-                      <div className="flex-1">
-                        <div className="font-semibold text-sm">
-                          {produit.nom}
-                          {editingProductIndex === index && (
-                            <span className="ml-2 text-xs bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 px-2 py-0.5 rounded">
-                              En édition
-                            </span>
-                          )}
-                        </div>
-
-                        <div className="text-xs text-muted-foreground">
-                          <span className="text-red-600 font-bold">
-                            Qté: {produit.quantite}
-                          </span>
-                          {' | '}
-                          <span className="text-green-600 font-bold">
-                            Prix unitaire: {produit.prixUnitaire}€
-                          </span>
-                          {' | '}
-                          <span className="text-blue-600 font-bold">
-                            Prix vente: {produit.prixVente}€
-                          </span>
-                          {(produit.reduction || 0) > 0 && produit.reductionType && (
-                            <>
-                              {' | '}
-                              <span className="text-emerald-600 font-bold">
-                                Réduction: {produit.reduction}{produit.reductionType === 'percent' ? '%' : '€/u'}
-                              </span>
-                            </>
-                          )}
-                          {(produit.deliveryLocation || (produit.deliveryFee || 0) > 0) && (
-                            <>
-                              {' | '}
-                              <span className="text-orange-600 font-bold">
-                                🚚 {produit.deliveryLocation || ''} {(produit.deliveryFee || 0).toFixed(2)}€
-                              </span>
-                            </>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="flex gap-1">
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleEditProduit(index)}
-                          className="hover:bg-gradient-to-r hover:from-green-100 hover:to-emerald-100 dark:hover:from-green-900/30 dark:hover:to-emerald-900/30 rounded-xl transition-all duration-300"
-                          title="Modifier ce produit"
-                        >
-                          <Edit className="h-5 w-5 text-green-600 dark:text-green-400" />
-                        </Button>
-
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleRemoveProduit(index)}
-                          className="hover:bg-gradient-to-r hover:from-red-100 hover:to-rose-100 dark:hover:from-red-900/30 dark:hover:to-rose-900/30 rounded-xl transition-all duration-300"
-                          title="Retirer ce produit"
-                        >
-                          <Trash2 className="h-5 w-5 text-red-600 dark:text-red-400" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Section Type et Date */}
-          <div className="space-y-4 p-6 rounded-2xl bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 dark:from-green-900/30 dark:via-emerald-900/30 dark:to-teal-900/30 border-2 border-green-300 dark:border-green-700 shadow-[0_8px_30px_rgba(34,197,94,0.3)]">
-            <h3 className="font-black text-xl flex items-center gap-3 text-green-700 dark:text-green-300">
-              <span className="w-10 h-10 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 flex items-center justify-center text-white text-sm shadow-lg">
-                <Award className="h-5 w-5" />
-              </span>
-              <span className="flex items-center gap-2">
-                Type & Planification
-                <Zap className="h-5 w-5 text-yellow-500" />
-              </span>
-            </h3>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="type" className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">
-                  📋 Type
-                </Label>
-                <div className="flex items-center gap-2">
-                  <div className="flex-1">
-                    <Select
-                      value={localRdvMode ? 'rdv' : type}
-                      onValueChange={(value: string) => {
-                        if (value === 'rdv') { setLocalRdvMode(true); setType('rdv'); }
-                        else { setLocalRdvMode(false); setType(value as 'commande' | 'reservation'); }
-                      }}
-                    >
-                      <SelectTrigger className="border-2 border-green-300 dark:border-green-700 focus:border-green-500 dark:focus:border-green-500 bg-white dark:bg-gray-900 shadow-sm">
-                        <SelectValue placeholder="Sélectionner un type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="commande">📦 Commande</SelectItem>
-                        <SelectItem value="reservation">📅 Réservation</SelectItem>
-                        <SelectItem value="rdv">🗓️ RDV</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  {type === 'reservation' && !localRdvMode && onOpenUlterieurModal && (
-                    <button
-                      type="button"
-                      onClick={onOpenUlterieurModal}
-                      title="Réservation ultérieure"
-                      className={`relative shrink-0 w-11 h-11 rounded-2xl flex items-center justify-center transition-all shadow-lg group ${
-                        ulterieurConfig
-                          ? 'bg-gradient-to-br from-amber-500 via-orange-500 to-rose-500 text-white ring-2 ring-orange-300 animate-pulse'
-                          : 'bg-white/70 dark:bg-gray-900/70 border-2 border-amber-300 text-amber-600 hover:bg-gradient-to-br hover:from-amber-100 hover:to-orange-100'
-                      }`}
-                    >
-                      <CalendarClock className="h-5 w-5" />
-                      <span className="pointer-events-none absolute -top-9 left-1/2 -translate-x-1/2 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity bg-amber-900 text-white text-[10px] px-2 py-1 rounded-md shadow-xl">
-                        Réservation ultérieure
-                      </span>
-                    </button>
-                  )}
-                </div>
-              </div>
-
-
-              {localRdvMode ? (
-                <div>
-                  <Label htmlFor="rdvDate" className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">
-                    📅 Date du RDV
-                  </Label>
-                  <Input
-                    id="rdvDate"
-                    type="date"
-                    value={rdvDate}
-                    onChange={(e) => setRdvDate(e.target.value)}
-                    className="border-2 border-green-300 dark:border-green-700 focus:border-green-500 dark:focus:border-green-500 bg-white dark:bg-gray-900 shadow-sm"
-                    required
-                  />
-                </div>
-              ) : type === 'commande' ? (
-                <div>
-                  <Label htmlFor="dateArrivagePrevue" className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">
-                    📅 Date d'arrivage prévue
-                  </Label>
-                  <Input
-                    id="dateArrivagePrevue"
-                    type="date"
-                    value={dateArrivagePrevue}
-                    onChange={(e) => setDateArrivagePrevue(e.target.value)}
-                    className="border-2 border-green-300 dark:border-green-700 focus:border-green-500 dark:focus:border-green-500 bg-white dark:bg-gray-900 shadow-sm"
-                    required
-                  />
-                </div>
-              ) : (
-                <div>
-                  <Label htmlFor="dateEcheance" className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">
-                    📅 Date d'échéance {ulterieurConfig && <span className="text-xs text-amber-600">(verrouillée — mode ultérieur)</span>}
-                  </Label>
-                  <Input
-                    id="dateEcheance"
-                    type="date"
-                    value={ulterieurConfig ? (ulterieurConfig.date || '') : dateEcheance}
-                    onChange={(e) => setDateEcheance(e.target.value)}
-                    disabled={!!ulterieurConfig}
-                    className={`border-2 border-green-300 dark:border-green-700 focus:border-green-500 dark:focus:border-green-500 bg-white dark:bg-gray-900 shadow-sm ${ulterieurConfig ? 'opacity-60 cursor-not-allowed bg-amber-50 dark:bg-amber-950/30' : ''}`}
-                    required={!ulterieurConfig}
-                  />
-                  {ulterieurConfig && (
-                    <p className="text-xs text-amber-700 dark:text-amber-300 mt-1">
-                      {ulterieurConfig.mode === 'date'
-                        ? `Réservation ultérieure au ${new Date(ulterieurConfig.date!).toLocaleDateString('fr-FR')} — modifiable via la bascule "En attente".`
-                        : `Réservation ultérieure sans date — expire dans 10 jours si non basculée.`}
-                    </p>
-                  )}
-                </div>
-              )}
-            </div>
-
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <Label htmlFor="horaire" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                  ⏰ Horaire (optionnel) {ulterieurConfig && <span className="text-xs text-amber-600">(verrouillé)</span>}
-                </Label>
-                {!showHeureFin && !ulterieurConfig && (
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setShowHeureFin(true)}
-                    className="h-7 px-2 border-green-400 text-green-700 dark:text-green-300 hover:bg-green-50 dark:hover:bg-green-900/30"
-                    title="Définir une heure de fin personnalisée"
-                  >
-                    <Plus className="w-4 h-4 mr-1" /> Heure fin
-                  </Button>
-                )}
-              </div>
-              <div className={showHeureFin ? "grid grid-cols-2 gap-3" : ""}>
-                <Input
-                  id="horaire"
-                  type="time"
-                  value={horaire}
-                  onChange={(e) => setHoraire(e.target.value)}
-                  disabled={!!ulterieurConfig}
-                  className={`border-2 border-green-300 dark:border-green-700 focus:border-green-500 dark:focus:border-green-500 bg-white dark:bg-gray-900 shadow-sm ${ulterieurConfig ? 'opacity-60 cursor-not-allowed bg-amber-50 dark:bg-amber-950/30' : ''}`}
-                  placeholder="Heure de début"
-                />
-                {showHeureFin && (
-                  <div className="relative">
-                    <Input
-                      id="horaireFin"
-                      type="time"
-                      value={horaireFin}
-                      onChange={(e) => setHoraireFin?.(e.target.value)}
-                      disabled={!!ulterieurConfig}
-                      className={`border-2 border-emerald-400 dark:border-emerald-600 focus:border-emerald-500 bg-white dark:bg-gray-900 shadow-sm pr-9 ${ulterieurConfig ? 'opacity-60 cursor-not-allowed bg-amber-50 dark:bg-amber-950/30' : ''}`}
-                      placeholder="Heure de fin"
-                    />
-                    {!ulterieurConfig && (
-                      <button
-                        type="button"
-                        onClick={() => { setHoraireFin?.(''); setShowHeureFin(false); }}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500"
-                        title="Retirer (auto +1h)"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    )}
-                  </div>
-                )}
-              </div>
-              {!showHeureFin && horaire && !ulterieurConfig && (
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  Heure de fin auto: +1h après {horaire}
-                </p>
-              )}
-              {ulterieurConfig && (
-                <p className="text-xs text-amber-700 dark:text-amber-300 mt-1">
-                  Horaire à définir lors du passage au statut « En attente ».
-                </p>
-              )}
-            </div>
-          </div>
-
-          {/* Alerte indisponibilité */}
-          {!availability.disponible && (
-            <div className="p-4 rounded-xl border-2 border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/30 shadow">
-              <div className="flex items-start gap-3">
-                <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
-                <div className="flex-1">
-                  <p className="font-bold text-red-700 dark:text-red-300 text-sm">🚫 Créneau indisponible</p>
-                  <p className="text-xs text-red-600 dark:text-red-400 mt-1">{availability.message}</p>
-                  {availability.suggestions && availability.suggestions.length > 0 && (
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      {availability.suggestions.map((s, i) => (
-                        <button
-                          key={i}
-                          type="button"
-                          onClick={() => { setHoraire(s.heureDebut); setHoraireFin?.(s.heureFin); setShowHeureFin(true); }}
-                          className="px-3 py-1 rounded-full bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 text-xs font-semibold border border-green-300 dark:border-green-700 hover:bg-green-200 dark:hover:bg-green-800/50 transition"
-                        >
-                          ✅ {s.label} ({s.heureDebut} - {s.heureFin})
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Alerte conflit RDV (rdv-taches.json) */}
-          {localRdvMode && rdvConflict.busy && (
-            <div className="p-4 rounded-xl border-2 border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/30 shadow">
-              <div className="flex items-start gap-3">
-                <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
-                <div className="flex-1">
-                  <p className="font-bold text-red-700 dark:text-red-300 text-sm">🚫 Créneau RDV occupé</p>
-                  <p className="text-xs text-red-600 dark:text-red-400 mt-1">{rdvConflict.message}</p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Boutons d'action */}
-          <div className="flex justify-end gap-3 pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                onOpenChange(false);
-                resetForm();
-              }}
-              className="border-2 border-gray-300 dark:border-gray-700"
-            >
-              Annuler
-            </Button>
-            {localRdvMode ? (
-              !rdvConflict.busy && (
-                <Button
-                  type="submit"
-                  disabled={submittingRdv || !rdvDate || !horaire || !clientNom}
-                  className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-lg disabled:opacity-50"
-                >
-                  <CalendarClock className="mr-2 h-4 w-4" />
-                  Créer la commande (RDV)
-                </Button>
-              )
-            ) : (
-              <Button
-                type="submit"
-                disabled={!availability.disponible}
-                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {editingCommande ? 'Modifier' : 'Créer'} la {type === 'commande' ? 'commande' : 'réservation'}
-              </Button>
-            )}
-          </div>
+          <FormActionButtons
+            onCancel={() => { onOpenChange(false); resetForm(); }}
+            localRdvMode={localRdvMode}
+            rdvConflictBusy={rdvConflict.busy}
+            submittingRdv={submittingRdv}
+            rdvDate={rdvDate}
+            horaire={horaire}
+            clientNom={clientNom}
+            editingCommande={!!editingCommande}
+            type={type}
+            availabilityDisponible={availability.disponible}
+          />
         </form>
       </DialogContent>
 
-      {/* Modal complétion RDV (rdv-taches.json) */}
-      <Dialog open={rdvModalOpen} onOpenChange={setRdvModalOpen}>
-        <DialogContent
-          className="
-      w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto
-      p-4 sm:p-6
-      bg-gradient-to-br from-white via-emerald-50/40 to-teal-50/40
-      dark:from-gray-900 dark:via-emerald-900/30 dark:to-teal-900/30
-      border-2 border-emerald-300/60 dark:border-emerald-700/60
-      rounded-2xl
-    "
-        >
-          <DialogHeader className="space-y-2">
-            <DialogTitle
-              className="
-          text-lg sm:text-xl md:text-2xl font-black
-          bg-gradient-to-r from-emerald-600 to-teal-600
-          bg-clip-text text-transparent
-          flex items-center gap-2
-        "
-            >
-              <CalendarClock className="h-5 w-5 sm:h-6 sm:w-6 text-emerald-600 shrink-0" />
-
-              <span className="break-words">
-                Compléter le rendez-vous
-              </span>
-            </DialogTitle>
-
-            <DialogDescription className="text-sm leading-relaxed">
-              Les informations client, date et horaires sont déjà enregistrées.
-              Complétez le reste pour créer le RDV.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-5 mt-4">
-
-            {/* Infos client + créneau */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-
-              <div
-                className="
-            p-3 sm:p-4 rounded-xl
-            bg-emerald-50 dark:bg-emerald-900/30
-            border border-emerald-200 dark:border-emerald-700
-            min-w-0
-          "
-              >
-                <div className="text-xs text-muted-foreground mb-1">
-                  👤 Client
-                </div>
-
-                <div className="font-semibold break-words">
-                  {clientNom}
-                </div>
-
-                <div className="text-xs break-all">
-                  {clientPhone}
-                </div>
-
-                <div className="text-xs break-words">
-                  {clientAddress}
-                </div>
-              </div>
-
-              <div
-                className="
-            p-3 sm:p-4 rounded-xl
-            bg-emerald-50 dark:bg-emerald-900/30
-            border border-emerald-200 dark:border-emerald-700
-          "
-              >
-                <div className="text-xs text-muted-foreground mb-1">
-                  📅 Créneau
-                </div>
-
-                <div className="font-semibold break-words">
-                  {rdvDate}
-                </div>
-
-                <div className="text-xs">
-                  {horaire} → {computedHeureFin || horaire}
-                </div>
-              </div>
-            </div>
-
-            {/* Responsable */}
-            <div className="relative">
-              <Label className="text-sm font-semibold">
-                👥 Personne responsable
-              </Label>
-
-              <Input
-                className="mt-1"
-                value={personneQuery}
-                onChange={(e) => {
-                  setPersonneQuery(e.target.value);
-                  setShowPersonneList(true);
-                  setRdvPersonneNom(e.target.value);
-                }}
-                onFocus={() => setShowPersonneList(true)}
-                placeholder="Tapez au moins 3 caractères du nom..."
-              />
-
-              {showPersonneList &&
-                personneQuery.trim().length >= 3 &&
-                personneOptions.length > 0 && (
-                  <div
-                    className="
-                absolute z-50 mt-1 w-full max-h-52 overflow-auto
-                rounded-xl border
-                bg-white dark:bg-gray-900
-                shadow-xl
-              "
-                  >
-                    {personneOptions.map((p) => {
-                      const full = `${p.prenom || ""} ${p.nom || ""}`.trim();
-
-                      return (
-                        <button
-                          type="button"
-                          key={p.id}
-                          onClick={() => {
-                            setRdvPersonneNom(full);
-                            setPersonneQuery(full);
-                            setShowPersonneList(false);
-                          }}
-                          className="
-                      block w-full text-left
-                      px-3 py-3 text-sm
-                      hover:bg-emerald-50 dark:hover:bg-emerald-900/30
-                      transition-colors
-                      break-words
-                    "
-                        >
-                          {full} {p.phone ? `— ${p.phone}` : ""}
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-            </div>
-
-            {/* Tâche */}
-            <div className="relative">
-              <Label className="text-sm font-semibold">
-                ✂️ Tâche
-              </Label>
-
-              <Input
-                className="mt-1"
-                value={tacheQuery}
-                onChange={(e) => {
-                  setTacheQuery(e.target.value);
-                  setShowTacheList(true);
-                  setRdvTacheNom(e.target.value);
-                }}
-                onFocus={() => setShowTacheList(true)}
-                placeholder="Tapez 1 caractère pour voir la liste..."
-              />
-
-              {showTacheList && tacheOptions.length > 0 && (
-                <div
-                  className="
-              absolute z-50 mt-1 w-full max-h-52 overflow-auto
-              rounded-xl border
-              bg-white dark:bg-gray-900
-              shadow-xl
-            "
-                >
-                  {tacheOptions.map((t) => (
-                    <button
-                      type="button"
-                      key={t.id}
-                      onClick={() => {
-                        setRdvTacheNom(t.nom);
-                        setTacheQuery(t.nom);
-                        setShowTacheList(false);
-                      }}
-                      className="
-                  block w-full text-left
-                  px-3 py-3 text-sm
-                  hover:bg-emerald-50 dark:hover:bg-emerald-900/30
-                  transition-colors
-                  break-words
-                "
-                    >
-                      {t.nom}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Commentaires */}
-            <div>
-              <Label className="text-sm font-semibold">
-                📝 Commentaires
-              </Label>
-
-              <Textarea
-                className="mt-1 resize-none"
-                value={rdvCommentaires}
-                onChange={(e) => setRdvCommentaires(e.target.value)}
-                placeholder="Commentaires éventuels"
-                rows={4}
-              />
-            </div>
-
-            {/* Statut */}
-            <div>
-              <Label className="text-sm font-semibold">
-                🚦 Statut
-              </Label>
-
-              <Select
-                value={rdvStatut}
-                onValueChange={(v: any) => setRdvStatut(v)}
-              >
-                <SelectTrigger className="mt-1 w-full">
-                  <SelectValue />
-                </SelectTrigger>
-
-                <SelectContent>
-                  <SelectItem value="planifie">
-                    Planifié
-                  </SelectItem>
-
-                  <SelectItem value="confirme">
-                    Confirmé
-                  </SelectItem>
-
-                  <SelectItem value="reporte">
-                    Reporté
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Actions */}
-            <div
-              className="
-          flex flex-col-reverse sm:flex-row
-          justify-end gap-3 pt-2
-        "
-            >
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setRdvModalOpen(false)}
-                className="w-full sm:w-auto"
-              >
-                Fermer
-              </Button>
-
-              <Button
-                type="button"
-                onClick={handleSubmitRdvCompletion}
-                disabled={submittingRdv || !rdvTacheNom}
-                className="
-            w-full sm:w-auto
-            bg-gradient-to-r from-emerald-600 to-teal-600
-            text-white
-          "
-              >
-                Créer le RDV
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <RdvCompletionModal
+        open={rdvModalOpen}
+        onOpenChange={setRdvModalOpen}
+        clientNom={clientNom}
+        clientPhone={clientPhone}
+        clientAddress={clientAddress}
+        rdvDate={rdvDate}
+        horaire={horaire}
+        computedHeureFin={computedHeureFin}
+        personneQuery={personneQuery}
+        setPersonneQuery={setPersonneQuery}
+        setRdvPersonneNom={setRdvPersonneNom}
+        showPersonneList={showPersonneList}
+        setShowPersonneList={setShowPersonneList}
+        personneOptions={personneOptions}
+        tacheQuery={tacheQuery}
+        setTacheQuery={setTacheQuery}
+        setRdvTacheNom={setRdvTacheNom}
+        rdvTacheNom={rdvTacheNom}
+        showTacheList={showTacheList}
+        setShowTacheList={setShowTacheList}
+        tacheOptions={tacheOptions}
+        rdvCommentaires={rdvCommentaires}
+        setRdvCommentaires={setRdvCommentaires}
+        rdvStatut={rdvStatut}
+        setRdvStatut={setRdvStatut}
+        submittingRdv={submittingRdv}
+        onSubmit={handleSubmitRdvCompletion}
+      />
     </Dialog>
   );
 };
