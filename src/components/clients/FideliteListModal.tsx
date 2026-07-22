@@ -28,6 +28,49 @@ const emptyForm = (): FideliteTierConfig => ({
   id: '', label: '', min: 0, max: 0, order: 0, grad: 'from-slate-500 to-slate-700',
 });
 
+/** Palette de gradients prédéfinis (Tailwind). */
+const GRAD_PRESETS: { label: string; grad: string }[] = [
+  { label: 'Ardoise', grad: 'from-slate-500 to-slate-700' },
+  { label: 'Bleu', grad: 'from-sky-500 to-blue-600' },
+  { label: 'Vert', grad: 'from-emerald-500 to-teal-600' },
+  { label: 'Violet', grad: 'from-purple-500 via-fuchsia-500 to-pink-500' },
+  { label: 'Or', grad: 'from-yellow-400 via-amber-500 to-orange-500' },
+  { label: 'Rouge', grad: 'from-rose-500 to-red-600' },
+  { label: 'Rose', grad: 'from-pink-400 to-rose-500' },
+  { label: 'Indigo', grad: 'from-indigo-500 to-violet-600' },
+  { label: 'Cyan', grad: 'from-cyan-400 to-sky-600' },
+  { label: 'Lime', grad: 'from-lime-400 to-green-600' },
+  { label: 'Ambre', grad: 'from-amber-400 to-orange-600' },
+  { label: 'Noir', grad: 'from-zinc-700 to-black' },
+];
+
+
+interface ColorPickerProps {
+  value: string;
+  onChange: (grad: string) => void;
+}
+const GradPicker: React.FC<ColorPickerProps> = ({ value, onChange }) => {
+  return (
+    <div className="space-y-2">
+      <Label>Couleur du palier</Label>
+      <div className="grid grid-cols-4 gap-2">
+        {GRAD_PRESETS.map(p => (
+          <button
+            key={p.grad}
+            type="button"
+            onClick={() => onChange(p.grad)}
+            className={`h-10 rounded-lg bg-gradient-to-r ${p.grad} border-2 transition-all ${value === p.grad ? 'border-white ring-2 ring-violet-500 scale-105' : 'border-transparent hover:scale-105'}`}
+            title={p.label}
+          />
+        ))}
+      </div>
+      <div className={`h-8 rounded-lg bg-gradient-to-r ${value} flex items-center justify-center text-white text-xs font-bold`}>
+        Aperçu
+      </div>
+    </div>
+  );
+};
+
 const FideliteListModal: React.FC<Props> = ({ open, onOpenChange }) => {
   const { toast } = useToast();
   const [list, setList] = useState<FideliteTierConfig[]>([]);
@@ -59,6 +102,7 @@ const FideliteListModal: React.FC<Props> = ({ open, onOpenChange }) => {
         label: editing.label,
         min: Number(editing.min),
         max: maxOpen ? null : Number(editing.max),
+        grad: editing.grad,
       };
       const data = await listesFideliteApi.update(editing.id, patch);
       setList(data); setEditing(null); notify();
@@ -213,6 +257,7 @@ const FideliteListModal: React.FC<Props> = ({ open, onOpenChange }) => {
                 <input type="checkbox" checked={maxOpen} onChange={(e) => setMaxOpen(e.target.checked)} />
                 Palier ouvert (aucun maximum)
               </label>
+              <GradPicker value={editing.grad} onChange={(g) => setEditing({ ...editing, grad: g })} />
               <div className="flex gap-2 justify-end pt-2">
                 <Button variant="outline" onClick={() => setEditing(null)} className="text-red-600 border-red-300 hover:bg-red-50 font-bold">
                   <X className="w-4 h-4 mr-1" /> Annuler
@@ -254,6 +299,7 @@ const FideliteListModal: React.FC<Props> = ({ open, onOpenChange }) => {
                 <input type="checkbox" checked={maxOpen} onChange={(e) => setMaxOpen(e.target.checked)} />
                 Palier ouvert (aucun maximum)
               </label>
+              <GradPicker value={creating.grad} onChange={(g) => setCreating({ ...creating, grad: g })} />
               <p className="text-xs text-muted-foreground">
                 Astuce : si le minimum est déjà couvert par un autre palier, modifiez-le d'abord.
               </p>

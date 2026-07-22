@@ -43,11 +43,13 @@ const ClientFideliteBadge: React.FC<Props> = ({ clientName, className = '' }) =>
 
   const count = fid?.count ?? 0;
   const tier = tiers.length > 0 ? tierForCount(count, tiers) : null;
-  const grad = tier?.grad || 'from-slate-500 to-slate-700';
-  const label = tier?.label || fid?.tierLabel || 'Nouveau Client';
+  // Aucun palier configuré ou aucun ne correspond → pas de badge de fidélité.
+  if (!tier) return null;
+  const grad = tier.grad || 'from-slate-500 to-slate-700';
+  const label = tier.label;
   const textCls = /yellow|amber|orange/.test(grad) ? 'text-black' : 'text-white';
   const ringCls = 'ring-white/30';
-  const icon = ICONS[Math.min(tier?.order ?? 0, ICONS.length - 1)];
+  const icon = ICONS[Math.min(tier.order ?? 0, ICONS.length - 1)];
 
   return (
     <div className={`relative z-10 ${className}`}>

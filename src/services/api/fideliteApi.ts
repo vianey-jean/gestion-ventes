@@ -2,6 +2,10 @@
  * fideliteApi — Récupération des données de fidélité client depuis fidelite.json.
  * Fallback: si l'endpoint /api/fidelite n'est pas disponible (ancien serveur),
  * les données sont calculées côté client à partir de /api/sales.
+ *
+ * ⚠️ Aucun palier par défaut n'est codé en dur. Les libellés/tiers proviennent
+ * exclusivement de listes-fidelite.json (via listesFideliteApi). Si aucun palier
+ * n'est configuré, les entrées renvoyées ont tier='' et tierLabel=''.
  */
 import api from './api';
 
@@ -24,27 +28,9 @@ export interface FideliteEntry {
   sales: FideliteSaleEntry[];
   tier: string;
   tierLabel: string;
-
 }
 
 const norm = (s: string) => (s || '').trim().toLowerCase();
-
-const tierOf = (count: number): string => {
-  if (count >= 5) return 'vip';
-  if (count >= 3) return 'fidele';
-  if (count === 2) return 'bon';
-  if (count === 1) return 'standard';
-  return 'nouveau';
-};
-
-const tierLabelOf = (count: number) => ({
-  nouveau: 'Nouveau Client',
-  standard: 'Client Standard',
-  bon: 'Bon Client',
-  fidele: 'Client Fidèle',
-  vip: 'Client VIP',
-}[tierOf(count) as 'nouveau' | 'standard' | 'bon' | 'fidele' | 'vip']);
-
 
 let _salesCache: { at: number; data: any[] } | null = null;
 const getSales = async (): Promise<any[]> => {
@@ -67,7 +53,7 @@ const buildFromSales = (sales: any[]): Record<string, FideliteEntry> => {
     if (!name) return;
     const key = norm(name);
     if (!map[key]) {
-      map[key] = { name, count: 0, totalAmount: 0, sales: [], tier: 'nouveau', tierLabel: 'Nouveau Client' };
+      map[key] = { name, count: 0, totalAmount: 0, sales: [], tier: '', tierLabel: '' };
     }
     const amount = Number(s.totalSellingPrice ?? s.sellingPrice ?? 0) || 0;
     map[key].count += 1;
@@ -90,8 +76,6 @@ const buildFromSales = (sales: any[]): Record<string, FideliteEntry> => {
     });
   });
   Object.values(map).forEach((e) => {
-    e.tier = tierOf(e.count);
-    e.tierLabel = tierLabelOf(e.count);
     e.sales.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   });
   return map;
@@ -99,7 +83,7 @@ const buildFromSales = (sales: any[]): Record<string, FideliteEntry> => {
 
 const emptyEntry = (name: string): FideliteEntry => ({
   name, count: 0, totalAmount: 0, sales: [],
-  tier: 'nouveau', tierLabel: 'Nouveau Client',
+  tier: '', tierLabel: '',
 });
 
 export const fideliteApiService = {
