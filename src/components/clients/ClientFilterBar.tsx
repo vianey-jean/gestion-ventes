@@ -7,20 +7,15 @@
 import React, { useEffect, useState } from 'react';
 import { ArrowUp, ArrowDown, Crown, MapPin, X } from 'lucide-react';
 import { clientsVillesApi } from '@/services/api/villesApi';
+import listesFideliteApi, { FideliteTierConfig } from '@/services/api/listesFideliteApi';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
   DropdownMenuLabel, DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 
-export type FidelityTier = 'nouveau' | 'standard' | 'bon' | 'fidele' | 'vip';
+/** Tier alias : id du palier tel que stocké dans listes-fidelite.json. */
+export type FidelityTier = string;
 
-const TIERS: { value: FidelityTier; label: string; grad: string }[] = [
-  { value: 'nouveau', label: 'Nouveau', grad: 'from-slate-500 to-slate-700' },
-  { value: 'standard', label: 'Standard', grad: 'from-sky-500 to-blue-600' },
-  { value: 'bon', label: 'Bon', grad: 'from-emerald-500 to-teal-600' },
-  { value: 'fidele', label: 'Fidèle', grad: 'from-purple-500 to-pink-500' },
-  { value: 'vip', label: 'VIP', grad: 'from-yellow-400 to-orange-500' },
-];
 
 interface Props {
   sortDir: 'asc' | 'desc';
@@ -35,12 +30,18 @@ const ClientFilterBar: React.FC<Props> = ({
   sortDir, onToggleSort, tierFilter, onChangeTier, villeFilter, onChangeVille,
 }) => {
   const [villes, setVilles] = useState<string[]>([]);
+  const [tiers, setTiers] = useState<FideliteTierConfig[]>([]);
 
   useEffect(() => {
     clientsVillesApi.getAll().then(setVilles).catch(() => setVilles([]));
+    const loadTiers = () => listesFideliteApi.getAll().then(setTiers).catch(() => setTiers([]));
+    loadTiers();
+    window.addEventListener('listes-fidelite-updated', loadTiers);
+    return () => window.removeEventListener('listes-fidelite-updated', loadTiers);
   }, []);
 
-  const currentTier = TIERS.find(t => t.value === tierFilter);
+  const currentTier = tiers.find(t => t.id === tierFilter);
+
 
   return (
     <div className="flex flex-wrap items-center gap-2 mb-4">
@@ -80,12 +81,13 @@ const ClientFilterBar: React.FC<Props> = ({
         <DropdownMenuContent align="start" className="w-52">
           <DropdownMenuLabel>Filtrer par fidélité</DropdownMenuLabel>
           <DropdownMenuSeparator />
-          {TIERS.map(t => (
-            <DropdownMenuItem key={t.value} onClick={() => onChangeTier(t.value)}>
+          {tiers.map(t => (
+            <DropdownMenuItem key={t.id} onClick={() => onChangeTier(t.id)}>
               <span className={`inline-block w-2.5 h-2.5 rounded-full mr-2 bg-gradient-to-r ${t.grad}`} />
               {t.label}
             </DropdownMenuItem>
           ))}
+
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => onChangeTier(null)}>
             Toutes les fidélités

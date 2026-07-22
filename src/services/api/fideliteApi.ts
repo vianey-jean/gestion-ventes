@@ -22,26 +22,29 @@ export interface FideliteEntry {
   count: number;
   totalAmount: number;
   sales: FideliteSaleEntry[];
-  tier: 'nouveau' | 'standard' | 'bon' | 'fidele' | 'vip';
+  tier: string;
   tierLabel: string;
+
 }
 
 const norm = (s: string) => (s || '').trim().toLowerCase();
 
-const tierOf = (count: number): FideliteEntry['tier'] => {
+const tierOf = (count: number): string => {
   if (count >= 5) return 'vip';
   if (count >= 3) return 'fidele';
   if (count === 2) return 'bon';
   if (count === 1) return 'standard';
   return 'nouveau';
 };
+
 const tierLabelOf = (count: number) => ({
   nouveau: 'Nouveau Client',
   standard: 'Client Standard',
   bon: 'Bon Client',
   fidele: 'Client Fidèle',
   vip: 'Client VIP',
-}[tierOf(count)]);
+}[tierOf(count) as 'nouveau' | 'standard' | 'bon' | 'fidele' | 'vip']);
+
 
 let _salesCache: { at: number; data: any[] } | null = null;
 const getSales = async (): Promise<any[]> => {

@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Crown, Sparkles, TrendingUp, ShoppingBag, Calendar, Package, Receipt, Award, ExternalLink } from 'lucide-react';
 import fideliteApiService, { FideliteEntry } from '@/services/api/fideliteApi';
+import listesFideliteApi, { FideliteTierConfig, tierForCount } from '@/services/api/listesFideliteApi';
 
 interface Props {
   open: boolean;
@@ -16,13 +17,13 @@ interface Props {
   clientName: string;
 }
 
-const TIER_STYLES: Record<string, { label: string; grad: string; text: string; ring: string; icon: React.ReactNode }> = {
-  nouveau: { label: 'Nouveau Client', grad: 'from-slate-500 to-slate-700', text: 'text-slate-50', ring: 'ring-slate-400/40', icon: <Sparkles className="w-4 h-4" /> },
-  standard: { label: 'Client Standard', grad: 'from-sky-500 to-blue-600', text: 'text-white', ring: 'ring-sky-400/40', icon: <ShoppingBag className="w-4 h-4" /> },
-  bon: { label: 'Bon Client', grad: 'from-emerald-500 to-teal-600', text: 'text-white', ring: 'ring-emerald-400/40', icon: <TrendingUp className="w-4 h-4" /> },
-  fidele: { label: 'Client Fidèle', grad: 'from-purple-500 via-fuchsia-500 to-pink-500', text: 'text-white', ring: 'ring-fuchsia-400/50', icon: <Award className="w-4 h-4" /> },
-  vip: { label: 'Client VIP', grad: 'from-yellow-400 via-amber-500 to-orange-500', text: 'text-black', ring: 'ring-amber-400/60', icon: <Crown className="w-4 h-4" /> },
-};
+const ICONS = [
+  <Sparkles className="w-4 h-4" />,
+  <ShoppingBag className="w-4 h-4" />,
+  <TrendingUp className="w-4 h-4" />,
+  <Award className="w-4 h-4" />,
+  <Crown className="w-4 h-4" />,
+];
 
 const fmt = (n: number) => new Intl.NumberFormat('fr-FR').format(Math.round(n || 0));
 const fmtDate = (d: string) => {
@@ -32,20 +33,32 @@ const fmtDate = (d: string) => {
 
 const ClientFideliteModal: React.FC<Props> = ({ open, onOpenChange, clientName }) => {
   const [data, setData] = useState<FideliteEntry | null>(null);
+  const [tiers, setTiers] = useState<FideliteTierConfig[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (!open || !clientName) return;
     let alive = true;
     setLoading(true);
-    fideliteApiService.getByName(clientName)
-      .then((res) => { if (alive) setData(res); })
+    Promise.all([
+      fideliteApiService.getByName(clientName),
+      listesFideliteApi.getAll(),
+    ])
+      .then(([res, t]) => { if (alive) { setData(res); setTiers(t); } })
       .catch(() => { if (alive) setData(null); })
       .finally(() => { if (alive) setLoading(false); });
     return () => { alive = false; };
   }, [open, clientName]);
 
-  const tier = TIER_STYLES[data?.tier || 'nouveau'];
+  const count = data?.count ?? 0;
+  const tierCfg = tiers.length > 0 ? tierForCount(count, tiers) : null;
+  const grad = tierCfg?.grad || 'from-slate-500 to-slate-700';
+  const label = tierCfg?.label || data?.tierLabel || 'Nouveau Client';
+  const textCls = /yellow|amber|orange/.test(grad) ? 'text-black' : 'text-white';
+  const ringCls = 'ring-white/30';
+  const icon = ICONS[Math.min(tierCfg?.order ?? 0, ICONS.length - 1)];
+  const tier = { grad, text: textCls, ring: ringCls, icon, label };
+
 
   const byMonth = useMemo(() => {
     const map = new Map<string, { label: string; total: number; count: number }>();

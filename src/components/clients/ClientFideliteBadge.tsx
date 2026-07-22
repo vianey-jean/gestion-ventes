@@ -1,21 +1,25 @@
-// Badge de fidélité client (synchronisé fidelite.json) — extrait pour usage dans ClientsPage
+// Badge de fidélité client (synchronisé fidelite.json + listes-fidelite.json)
+// Les libellés/gradients viennent de listes-fidelite.json (dynamique).
+// Les icônes restent basées sur des heuristiques par ordre du palier.
 import React, { useEffect, useState } from 'react';
 import { Eye, Crown, Sparkles, ShoppingBag, TrendingUp, Award } from 'lucide-react';
 import fideliteApiService, { FideliteEntry } from '@/services/api/fideliteApi';
+import listesFideliteApi, { FideliteTierConfig, tierForCount } from '@/services/api/listesFideliteApi';
 import ClientFideliteModal from './ClientFideliteModal';
 
-const TIER_META: Record<string, { label: string; grad: string; text: string; icon: React.ReactNode; ring: string }> = {
-  nouveau: { label: 'Nouveau Client', grad: 'from-slate-500 to-slate-700', text: 'text-white', icon: <Sparkles className="w-3.5 h-3.5" />, ring: 'ring-slate-400/40' },
-  standard: { label: 'Client Standard', grad: 'from-sky-500 to-blue-600', text: 'text-white', icon: <ShoppingBag className="w-3.5 h-3.5" />, ring: 'ring-sky-400/40' },
-  bon: { label: 'Bon Client', grad: 'from-emerald-500 to-teal-600', text: 'text-white', icon: <TrendingUp className="w-3.5 h-3.5" />, ring: 'ring-emerald-400/40' },
-  fidele: { label: 'Client Fidèle', grad: 'from-purple-500 via-fuchsia-500 to-pink-500', text: 'text-white', icon: <Award className="w-3.5 h-3.5" />, ring: 'ring-fuchsia-400/50' },
-  vip: { label: 'Client VIP', grad: 'from-yellow-400 via-amber-500 to-orange-500', text: 'text-black', icon: <Crown className="w-3.5 h-3.5" />, ring: 'ring-amber-400/60' },
-};
+const ICONS = [
+  <Sparkles className="w-3.5 h-3.5" />,
+  <ShoppingBag className="w-3.5 h-3.5" />,
+  <TrendingUp className="w-3.5 h-3.5" />,
+  <Award className="w-3.5 h-3.5" />,
+  <Crown className="w-3.5 h-3.5" />,
+];
 
 interface Props { clientName: string; className?: string; }
 
 const ClientFideliteBadge: React.FC<Props> = ({ clientName, className = '' }) => {
   const [fid, setFid] = useState<FideliteEntry | null>(null);
+  const [tiers, setTiers] = useState<FideliteTierConfig[]>([]);
   const [showFid, setShowFid] = useState(false);
 
   useEffect(() => {
@@ -23,28 +27,41 @@ const ClientFideliteBadge: React.FC<Props> = ({ clientName, className = '' }) =>
     const load = () => {
       fideliteApiService.getByName(clientName).then((r) => { if (alive) setFid(r); }).catch(() => {});
     };
-    load();
-    const onSales = () => load();
+    const loadTiers = () => {
+      listesFideliteApi.getAll().then((r) => { if (alive) setTiers(r); }).catch(() => {});
+    };
+    load(); loadTiers();
+    const onSales = () => { load(); loadTiers(); };
     window.addEventListener('sales-updated', onSales);
-    return () => { alive = false; window.removeEventListener('sales-updated', onSales); };
+    window.addEventListener('listes-fidelite-updated', onSales);
+    return () => {
+      alive = false;
+      window.removeEventListener('sales-updated', onSales);
+      window.removeEventListener('listes-fidelite-updated', onSales);
+    };
   }, [clientName]);
 
-  const tierKey = fid?.tier || 'nouveau';
-  const tier = TIER_META[tierKey];
+  const count = fid?.count ?? 0;
+  const tier = tiers.length > 0 ? tierForCount(count, tiers) : null;
+  const grad = tier?.grad || 'from-slate-500 to-slate-700';
+  const label = tier?.label || fid?.tierLabel || 'Nouveau Client';
+  const textCls = /yellow|amber|orange/.test(grad) ? 'text-black' : 'text-white';
+  const ringCls = 'ring-white/30';
+  const icon = ICONS[Math.min(tier?.order ?? 0, ICONS.length - 1)];
 
   return (
     <div className={`relative z-10 ${className}`}>
-      <div className={`group/fid flex items-center justify-between gap-2 p-2.5 rounded-2xl bg-gradient-to-r ${tier.grad} ${tier.text} shadow-lg ring-2 ${tier.ring} transition-all duration-500 hover:shadow-2xl hover:scale-[1.02]`}>
+      <div className={`group/fid flex items-center justify-between gap-2 p-2.5 rounded-2xl bg-gradient-to-r ${grad} ${textCls} shadow-lg ring-2 ${ringCls} transition-all duration-500 hover:shadow-2xl hover:scale-[1.02]`}>
         <div className="flex items-center gap-2 min-w-0">
           <span className="w-7 h-7 rounded-full bg-white/25 backdrop-blur flex items-center justify-center shrink-0 group-hover/fid:rotate-12 transition-transform duration-500">
-            {tier.icon}
+            {icon}
           </span>
           <div className="min-w-0">
             <p className="text-[10px] uppercase tracking-widest opacity-80 font-bold leading-none">Fidélité</p>
             <p className="text-sm font-black truncate leading-tight">
-              {tier.label}
-              {fid && fid.count > 0 && (
-                <span className="ml-1.5 text-[10px] opacity-80 font-semibold">· {fid.count} achat{fid.count > 1 ? 's' : ''}</span>
+              {label}
+              {count > 0 && (
+                <span className="ml-1.5 text-[10px] opacity-80 font-semibold">· {count} achat{count > 1 ? 's' : ''}</span>
               )}
             </p>
           </div>

@@ -38,8 +38,10 @@ import ClientConfirmDialogs from '@/components/clients/ClientConfirmDialogs';
 import ClientFormDialog, { ClientFormData } from '@/components/clients/ClientFormDialog';
 import ClientPagination from '@/components/clients/ClientPagination';
 import ClientCardItem from '@/components/clients/ClientCardItem';
+import FideliteListModal from '@/components/clients/FideliteListModal';
 
 import { ClientHero, ClientSearchSection } from './clients';
+
 import { findMatchingClients, type ClientMatch } from '@/utils/clientMatch';
 
 interface Client {
@@ -95,6 +97,8 @@ const ClientsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => 
   const [zoomPhoto, setZoomPhoto] = useState<{ url: string; name: string } | null>(null);
   const [isMergeOpen, setIsMergeOpen] = useState(false);
   const [isVillesOpen, setIsVillesOpen] = useState(false);
+  const [isFideliteListOpen, setIsFideliteListOpen] = useState(false);
+
   const [detailClient, setDetailClient] = useState<Client | null>(null);
   const [duplicateModalOpen, setDuplicateModalOpen] = useState(false);
   const [duplicateMatches, setDuplicateMatches] = useState<ClientMatch[]>([]);
@@ -111,14 +115,21 @@ const ClientsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => 
     }
   }, [isAddDialogOpen]);
 
-  // Charger la fidélité (utilisé pour le filtre)
+  // Charger la fidélité (utilisé pour le filtre) — rechargée aussi quand les
+  // paliers (listes-fidelite.json) sont modifiés, car le backend recalcule
+  // fidelite.json à chaque changement.
   useEffect(() => {
     const load = () => fideliteApiService.getAll().then(setFideliteMap).catch(() => setFideliteMap({}));
     load();
     const onSales = () => load();
     window.addEventListener('sales-updated', onSales);
-    return () => window.removeEventListener('sales-updated', onSales);
+    window.addEventListener('listes-fidelite-updated', onSales);
+    return () => {
+      window.removeEventListener('sales-updated', onSales);
+      window.removeEventListener('listes-fidelite-updated', onSales);
+    };
   }, []);
+
 
   // Photo handling
   const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -321,7 +332,9 @@ const ClientsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => 
           onAddClient={handleAddClient}
           onMergeClient={() => setIsMergeOpen(true)}
           onShowVilles={() => setIsVillesOpen(true)}
+          onShowFidelites={() => setIsFideliteListOpen(true)}
         />
+
 
         <div className="container mx-auto px-3 sm:px-4 md:px-6 py-8 sm:py-12 md:py-20 max-w-7xl">
           <ClientSearchSection
@@ -474,6 +487,10 @@ const ClientsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => 
         />
 
         <CitiesManagerModal open={isVillesOpen} onOpenChange={setIsVillesOpen} />
+
+        {/* Gestion des paliers de fidélité (Nouveau/Standard/Bon/Fidèle/VIP) */}
+        <FideliteListModal open={isFideliteListOpen} onOpenChange={setIsFideliteListOpen} />
+
 
         {/* Détail client */}
         <ClientDetailModal

@@ -5,7 +5,7 @@
  */
 
 import { motion } from "framer-motion";
-import { Activity, Crown, Diamond, MapPin, Merge, Plus, ShieldCheck, Sparkles, Star, Users } from "lucide-react";
+import { Activity, Award, Crown, Diamond, MapPin, Merge, Plus, ShieldCheck, Sparkles, Star, Users } from "lucide-react";
 import { useMemo } from "react";
 import { Button } from "react-day-picker";
 
@@ -14,7 +14,9 @@ interface ClientHeroProps {
   onAddClient: () => void;
   onMergeClient?: () => void;
   onShowVilles?: () => void;
+  onShowFidelites?: () => void;
 }
+
 
 type Particle = {
   left: string;
@@ -36,7 +38,9 @@ const ClientHero: React.FC<ClientHeroProps> = ({
   onAddClient,
   onMergeClient,
   onShowVilles,
+  onShowFidelites,
 }) => {
+
   const particles = useMemo(() => generateParticles(20), []);
 
   return (
@@ -487,6 +491,17 @@ const ClientHero: React.FC<ClientHeroProps> = ({
               Voir les villes
             </Button>
           )}
+
+          {onShowFidelites && (
+            <Button
+              onClick={onShowFidelites}
+              className="h-14 px-8 rounded-2xl font-bold text-white bg-gradient-to-r from-yellow-500 via-amber-500 to-orange-500 shadow-[0_25px_80px_rgba(245,158,11,.4)]"
+            >
+              <Award className="w-5 h-5 mr-2" />
+              Listes Fidélité
+            </Button>
+          )}
+
         </div>
       </div>
 
