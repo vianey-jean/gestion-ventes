@@ -1,97 +1,92 @@
 
-# Cycle de vie synchronisé Commande / RDV / Tâche
+## Objectif
+Ajouter la logique de « réservation ultérieure » dans `CommandeFormDialog` (type = Réservation), avec verrouillage stock, auto-suppression après 10 jours, et notification globale 24h avant.
 
-Objectif : quand une commande de type **commande classique** (non-RDV créée à l'origine) passe à **"arrivé"**, ouvrir une modale de planification qui vérifie la disponibilité (commandes + RDV + tâches en même temps), puis crée automatiquement un RDV et une tâche liés. Ensuite, statut, visibilité et fin de vie sont synchronisés entre les trois entités.
+## 1. Backend
 
-## 1. Modale "Planifier l'arrivée" (frontend)
+### `server/db/commandes.json` — champs additionnels
+Nouveaux champs sur une commande de type `reservation` :
+- `reservationUlterieure: boolean`
+- `dateReprise?: string` (YYYY-MM-DD, max +10j ; `null` si mode "ulterieur")
+- `ulterieurLibre: boolean` (si aucune date, juste "à décider" dans les 10j)
+- `expiresAt: string` (ISO — création + 10 jours) — utilisé pour la purge et le compte à rebours
+- `statut: 'ulterieur' | ...` (nouveau statut)
 
-Nouveau composant `src/components/commandes/CommandeArriveePlanifDialog.tsx` :
-- S'ouvre depuis `CommandesTable` quand l'utilisateur change le statut d'une commande à **"arrivé"**.
-- Affiche toutes les infos de la commande (produit, client, quantité, prix).
-- Champs modifiables : `date`, `heureDebut`, `heureFin`.
-- Panneau "Créneaux disponibles ce jour-là" : liste les plages libres (croisement commandes ↔ RDV ↔ tâches).
-- Bouton **Confirmer** actif seulement si le créneau est libre dans les 3 sources.
+### `server/services/reservationCleanupService.js` (nouveau)
+- Fonction `purgeExpiredUlterieures()` : lit `commandes.json`, supprime celles avec `statut === 'ulterieur'` et `expiresAt < now`.
+- `getExpiringSoon()` : renvoie celles qui expirent dans les prochaines 24h.
+- Démarré au boot du serveur via `setInterval` (toutes les 15 min).
 
-Nouveau endpoint `GET /api/availability/slots?date=YYYY-MM-DD` (dans `server/services/availabilityService.js`) qui retourne :
-- `busy: [{ start, end, source }]` en fusionnant `commandes.json` (arrivé/planifié), `rdv-taches.json`, `tache.json`.
-- `freeSlots: [{ start, end }]` sur une plage jour (08:00–20:00 par défaut).
+### `server/routes/commandes.js` (extension légère)
+- À `POST /`, si `reservationUlterieure === true` :
+  - Ignorer le check d'indisponibilité (pas de créneau)
+  - Forcer `statut = 'ulterieur'`
+  - Calculer `expiresAt = createdAt + 10j`
+  - **Ne pas** créer de RDV/tâche associé (déjà côté frontend, mais garder cohérence)
+- `GET /expiring-soon` : renvoie les réservations ultérieures qui expirent dans 24h.
 
-## 2. Enregistrement synchronisé
+### `server/routes/products.js` (ou hook stock existant) — verrouillage
+- Nouvelle route `GET /api/products/:id/available-quantity` qui renvoie :
+  ```
+  { total, reservedByUlterieures, available }
+  ```
+- `reservedByUlterieures` = somme des quantités de ce produit dans commandes `reservation` (ultérieures + en_attente non validées).
 
-À la confirmation de la modale (frontend `useCommandesLogic`) :
-1. `PATCH /api/commandes/:id` → statut = `arrivé`, `date`, `heureDebut`, `heureFin`, `linkedRdvId`, `linkedTacheId`.
-2. `POST /api/rdv-taches` → crée un RDV `statut='planifie'`, `sourceCommandeId=<id>`, `locked=true`.
-3. `POST /api/tache` → crée une tâche `importance='pertinente'`, `statut='planifie'`, `sourceCommandeId=<id>`, `locked=true`.
+Alternative plus simple : ajouter cette info dans un endpoint agrégé `GET /api/reservations/stock-locks` renvoyant `{ [productName]: reservedQty }`.
 
-Les 3 opérations sont enveloppées côté serveur dans un nouvel endpoint atomique `POST /api/commandes/:id/planifier-arrivee` (dans `commandeController.js`) pour éviter les états incohérents.
+### Types partagés
+Mettre à jour `src/types/commande.ts` :
+- `CommandeStatut` : ajouter `'ulterieur'`
+- Champs `reservationUlterieure`, `dateReprise`, `ulterieurLibre`, `expiresAt`.
 
-## 3. Visibilité / activation basée sur le temps
+## 2. Frontend
 
-Nouveau hook `src/hooks/useCommandeVisibility.ts` qui, pour chaque commande liée à un RDV :
-- Si `now` < `rdv.dateHeureDebut - 24h` → **visible + active**.
-- Entre `-24h` et `-1h` → **visible mais désactivée** (grisée, boutons off).
-- ≥ `-1h` et RDV non confirmé "maintenu" → **invisible**.
-- RDV confirmé "maintenu" → **visible + active** peu importe l'heure.
+### `src/components/commandes/ReservationUlterieureModal.tsx` (nouveau)
+- Ultra moderne (glass, gradient violet/rose), responsive.
+- Champ date (max = today + 10j).
+- Toggle « À décider (ultérieur libre) ».
+- Boutons Valider / Annuler.
+- Note : « Cette réservation sera automatiquement supprimée après 10 jours si non modifiée. »
 
-Appliqué dans `CommandesTable.tsx` (classes `opacity-50 pointer-events-none` + filtrage) et symétriquement pour les tâches liées dans `TacheView.tsx`.
+### `src/components/commandes/CommandeFormDialog.tsx` (édit chirurgical)
+Section « Type & Planification » :
+- Si `type === 'reservation'` (et pas RDV) → afficher icône `CalendarClock` (ou `Hourglass`) juste à droite du Select Type, tooltip "Réservation ultérieure".
+- Icône invisible pour `commande` et `rdv`.
+- Clic → ouvre `ReservationUlterieureModal`.
+- Une fois validée :
+  - État local `ulterieurConfig = { dateReprise?, libre }` mémorisé.
+  - Champs date + horaire deviennent `disabled` + badge "Mode ultérieur".
+  - Alert visuelle : "Statut sera : Ultérieur — expire le JJ/MM/AAAA".
+- À la soumission, passer `reservationUlterieure`, `dateReprise`, `ulterieurLibre` dans le payload. Ne pas déclencher la logique RDV/tâche/indispo.
 
-## 4. Fin de cycle : commande "validé"
+### `src/components/commandes/StatutUlterieurTransitionModal.tsx` (nouveau)
+- Déclenché depuis la table commandes quand l'utilisateur veut passer un statut `ulterieur → en_attente`.
+- Formulaire : `dateEcheance`, `heureDebut`, `heureFin`, puis confirmation "Créer RDV + tâche ?" avec vérification de disponibilité (réutiliser `availabilityApi`).
+- Si oui → PUT `/api/commandes/:id` avec nouveau statut + création RDV/tâche existante (réutiliser le service RDV déjà en place).
 
-Dans `useCommandesLogic.updateCommande`, si statut passe à **`validé`** ET `linkedRdvId` existe :
-- `PATCH rdv-taches` → `statut='termine'`.
-- `PATCH tache` → `completed=true`, `statut='termine'`.
-- `POST /api/sales` → nouvelle vente avec produit, client, prix, date.
-- `POST /api/fidelite` → incrément fidélité (produit + client).
+### Table `CommandesTable.tsx` (ajout léger)
+- Afficher badge `Ultérieur` (violet/dégradé) pour `statut === 'ulterieur'`.
+- Action "Passer en attente" ouvrant `StatutUlterieurTransitionModal`.
 
-## 5. Propagation modification / annulation / report
+### `MultiProductSaleForm` — verrouillage stock
+- Au moment du choix produit, fetcher `reservedByUlterieures` (via nouveau endpoint agrégé) et calculer `availableForSale = product.quantity - reserved`.
+- Si `availableForSale <= 0` → bloquer, message : "Toute la quantité est réservée."
+- Si `qty demandée > availableForSale` → bloquer.
 
-Dans `useCommandesLogic` :
-- **Update** date/heure sur commande liée → PATCH RDV + tâche avec mêmes valeurs.
-- **Delete** commande → delete RDV + tâche liés (via `/by-commande/:id`, déjà existant).
-- **Statut `annulé`** → RDV `statut='annule'`, tâche supprimée.
-- **Statut `reporté`** → réouvre la modale de planification pour choisir un nouveau créneau, puis propage.
+### Notification globale 24h avant expiration
+`src/components/commandes/ReservationExpiryNotifier.tsx` (nouveau)
+- Monté globalement dans `Layout.tsx` (auth requise).
+- Au login + toutes les 1h : fetch `GET /api/commandes/expiring-soon`.
+- Pour chaque réservation trouvée non déjà notifiée cette heure, `toast(...)` orange (Sonner) en bas de l'écran : "La réservation de <Client> (<produits>) sera supprimée dans XXh YYmin."
+- Persist dernier tick dans `sessionStorage` pour éviter spam au refresh (une fois par login + tick 1h).
 
-## 6. Verrouillage côté RDV / Tâches
+## 3. UX/Design
+- Icône `Hourglass` (lucide) violet dégradé, tooltip natif via `title` + `Tooltip` shadcn.
+- Modales : `rounded-3xl`, glass, ombres douces, cohérent avec l'existant.
+- Responsive mobile-first (grilles `sm:`, `md:`).
 
-Déjà partiellement fait pour les RDV (`sourceCommandeId` + guard 403 dans `rdvTaches.js`). Étendre le même verrou aux tâches :
-- Ajouter `sourceCommandeId` + `locked` dans `Tache.js`.
-- Guards 403 dans `tacheController.update/delete` si `locked=true` (sauf appel interne `?fromCommande=1`).
-- Badge cadenas dans `TacheView.tsx` pour ces tâches.
-
-## Détails techniques
-
-**Fichiers créés**
-- `src/components/commandes/CommandeArriveePlanifDialog.tsx`
-- `src/hooks/useCommandeVisibility.ts`
-- `server/routes/availability.js` (endpoint slots) + montage dans `server.js`
-
-**Fichiers modifiés**
-- `server/services/availabilityService.js` : ajouter `getBusySlots(date)` et `getFreeSlots(date)`.
-- `server/controllers/commandeController.js` : endpoint `planifier-arrivee`, propagation validé→sale+fidelite.
-- `server/routes/commandes.js` : monter le nouveau endpoint.
-- `server/models/Tache.js` : champs `sourceCommandeId`, `locked`, `statut`.
-- `server/controllers/tacheController.js` : guards 403.
-- `src/hooks/useCommandesLogic.ts` : brancher modale, propagation update/delete/statut.
-- `src/components/commandes/CommandesTable.tsx` : trigger statut "arrivé" → modale, appliquer visibilité.
-- `src/components/rdvtache/RdvTacheView.tsx` + `TacheView.tsx` : lecture `sourceCommandeId` pour affichage cadenas.
-
-**Format de données ajouté**
-```text
-commande = {
-  ...existing,
-  statut: 'en_attente' | 'arrivé' | 'validé' | 'annulé' | 'reporté',
-  linkedRdvId?: string,
-  linkedTacheId?: string
-}
-rdv-tache = { ...existing, sourceCommandeId?, locked?, statut }
-tache     = { ...existing, sourceCommandeId?, locked?, statut }
-```
-
-## Ordre d'implémentation
-
-1. Backend : `Tache` (champs + guards), `availabilityService.getFreeSlots`, endpoint `planifier-arrivee`, endpoint `slots`, propagation validé.
-2. Frontend : `CommandeArriveePlanifDialog`, branchement dans `CommandesTable` + `useCommandesLogic`.
-3. Visibilité : hook `useCommandeVisibility` + intégration.
-4. Propagation update/annule/reporte + verrous UI tâches.
-
-Je ne toucherai pas au reste du code existant hors des fichiers listés ci-dessus.
+## 4. Points de vigilance
+- Ne toucher qu'aux zones décrites, préserver la logique RDV/tâche existante pour les autres statuts.
+- Le check indisponibilité côté backend doit ignorer les réservations ultérieures (pas de date/horaire réel).
+- Purge côté serveur idempotente ; interval démarré une seule fois.
+- Verrouillage stock : cohérent avec l'existant (ventes en cours) sans double-comptage.

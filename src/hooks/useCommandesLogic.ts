@@ -128,6 +128,13 @@ export const useCommandesLogic = () => {
   const [reporterDate, setReporterDate] = useState('');
   const [reporterHoraire, setReporterHoraire] = useState('');
   const [reporterHoraireFin, setReporterHoraireFin] = useState('');
+
+  // =========================================================================
+  // Réservation ultérieure
+  // =========================================================================
+  const [ulterieurConfig, setUlterieurConfig] = useState<{ mode: 'date' | 'inconnu'; date?: string } | null>(null);
+  const [ulterieurModalOpen, setUlterieurModalOpen] = useState(false);
+  const [ulterieurTransitionId, setUlterieurTransitionId] = useState<string | null>(null);
   const [reporterRdvBusy, setReporterRdvBusy] = useState<{ busy: boolean; message?: string }>({ busy: false });
   
   // =========================================================================
@@ -677,9 +684,12 @@ export const useCommandesLogic = () => {
   // =========================================================================
 
   const isFormValid = useCallback(() => {
+    const hasDate = type === 'commande'
+      ? dateArrivagePrevue.trim() !== ''
+      : (ulterieurConfig ? true : dateEcheance.trim() !== '');
     return clientNom.trim() !== '' && clientPhone.trim() !== '' && clientAddress.trim() !== '' &&
-      produitsListe.length > 0 && (type === 'commande' ? dateArrivagePrevue.trim() !== '' : dateEcheance.trim() !== '');
-  }, [clientNom, clientPhone, clientAddress, produitsListe, type, dateArrivagePrevue, dateEcheance]);
+      produitsListe.length > 0 && hasDate;
+  }, [clientNom, clientPhone, clientAddress, produitsListe, type, dateArrivagePrevue, dateEcheance, ulterieurConfig]);
 
   const resetForm = useCallback(() => {
     setClientNom(''); setClientPhone(''); setClientAddress(''); setClientVille('');
@@ -690,6 +700,7 @@ export const useCommandesLogic = () => {
     setAvailableQuantityForSelected(null);
     setProductReduction(''); setProductReductionType('');
     setProductDeliveryLocation(''); setProductDeliveryFee('0'); setProductBaseDeliveryFee(null);
+    setUlterieurConfig(null);
   }, []);
 
   const resetProductFields = useCallback(() => {
@@ -809,6 +820,22 @@ export const useCommandesLogic = () => {
     if (horaire) commandeData.horaire = horaire;
     if (horaireFin) commandeData.horaireFin = horaireFin;
 
+    // ✅ Réservation ultérieure : override
+    if (type === 'reservation' && ulterieurConfig) {
+      commandeData.statut = 'ulterieur';
+      (commandeData as any).reservationUlterieure = true;
+      (commandeData as any).expiresAt = new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString();
+      if (ulterieurConfig.mode === 'date' && ulterieurConfig.date) {
+        (commandeData as any).ulterieurDate = ulterieurConfig.date;
+        commandeData.dateEcheance = ulterieurConfig.date;
+      } else {
+        commandeData.dateEcheance = '';
+      }
+      commandeData.horaire = '';
+      commandeData.horaireFin = '';
+    }
+
+
     try {
       const existingClient = clients.find(c => c.nom.toLowerCase() === clientNom.toLowerCase());
       const villeTrim = (clientVille || '').trim();
@@ -886,7 +913,7 @@ export const useCommandesLogic = () => {
             }
           }
         }
-        if (type === 'reservation' && dateEcheance && horaire) { setPendingReservationForRdv(newCommande); setShowRdvConfirmDialog(true); }
+        if (type === 'reservation' && !ulterieurConfig && dateEcheance && horaire) { setPendingReservationForRdv(newCommande); setShowRdvConfirmDialog(true); }
         toast({ title: 'Succès', description: 'Commande ajoutée avec succès', className: "bg-app-green text-white" });
       }
       fetchCommandes(); resetForm(); setIsDialogOpen(false);
@@ -908,6 +935,14 @@ export const useCommandesLogic = () => {
     // Pré-remplir la ville depuis la fiche client si disponible
     const existingClient = clients.find(c => c.nom.toLowerCase() === commande.clientNom.toLowerCase());
     setClientVille(((existingClient as any)?.ville || '').trim());
+    if ((commande as any).reservationUlterieure) {
+      setUlterieurConfig({
+        mode: (commande as any).ulterieurDate ? 'date' : 'inconnu',
+        date: (commande as any).ulterieurDate,
+      });
+    } else {
+      setUlterieurConfig(null);
+    }
     setIsDialogOpen(true);
   }, [clients]);
 
@@ -939,6 +974,13 @@ export const useCommandesLogic = () => {
   const handleStatusChange = async (id: string, newStatus: CommandeStatut | 'reporter') => {
     const commande = commandes.find(c => c.id === id);
     if (!commande) return;
+
+    // ✅ Réservation ultérieure → transition vers "en_attente" ouvre la modale de planification
+    if (commande.statut === 'ulterieur' && newStatus === 'en_attente') {
+      setUlterieurTransitionId(id);
+      return;
+    }
+
 
     // Blocage : passage à "Arrivé" impossible si un produit n'a pas assez de stock RÉELLEMENT disponible
     if (newStatus === 'arrive' && commande.type === 'commande') {
@@ -1387,6 +1429,34 @@ export const useCommandesLogic = () => {
   const handleAcceptRdv = useCallback(() => { setShowRdvConfirmDialog(false); setShowRdvFormModal(true); }, []);
   const handleCloseRdvModal = useCallback(() => { setShowRdvFormModal(false); setPendingReservationForRdv(null); }, []);
 
+  // Confirmation de bascule "ulterieur" → "en_attente"
+  const confirmUlterieurTransition = useCallback(async (payload: { dateEcheance: string; horaire: string; horaireFin: string }) => {
+    if (!ulterieurTransitionId) return;
+    const commande = commandes.find(c => c.id === ulterieurTransitionId);
+    if (!commande) return;
+    try {
+      await api.put(`/api/commandes/${ulterieurTransitionId}`, {
+        statut: 'en_attente',
+        dateEcheance: payload.dateEcheance,
+        horaire: payload.horaire,
+        horaireFin: payload.horaireFin,
+        reservationUlterieure: false,
+        expiresAt: null,
+        ulterieurDate: null,
+      });
+      const updated = { ...commande, ...payload, statut: 'en_attente' as CommandeStatut };
+      setUlterieurTransitionId(null);
+      await fetchCommandes();
+      toast({ title: '✅ Réservation planifiée', description: 'La réservation est passée en attente', className: 'bg-app-green text-white' });
+      // Proposer la création du RDV lié
+      setPendingReservationForRdv(updated as Commande);
+      setShowRdvConfirmDialog(true);
+    } catch (e) {
+      console.error('Erreur bascule ulterieur:', e);
+      toast({ title: 'Erreur', description: 'Impossible de planifier la réservation', className: 'bg-app-red text-white', variant: 'destructive' });
+    }
+  }, [ulterieurTransitionId, commandes]);
+
   // =========================================================================
   // Options de statut
   // =========================================================================
@@ -1399,6 +1469,7 @@ export const useCommandesLogic = () => {
       ];
     }
     return [
+      { value: 'ulterieur', label: '⏳ Ultérieur' },
       { value: 'en_attente', label: '⏳ En Attente' }, { value: 'valide', label: '💎 Validé' },
       { value: 'annule', label: '❌ Annulé' }, { value: 'reporter', label: '📅 Reporter' },
     ];
@@ -1480,7 +1551,11 @@ export const useCommandesLogic = () => {
     getStatusOptions, resetForm,
     // Planification d'arrivée
     arriveePlanifId, setArriveePlanifId, confirmArriveePlanification,
-
+    // Réservation ultérieure
+    ulterieurConfig, setUlterieurConfig,
+    ulterieurModalOpen, setUlterieurModalOpen,
+    ulterieurTransitionId, setUlterieurTransitionId,
+    confirmUlterieurTransition,
   };
 };
 

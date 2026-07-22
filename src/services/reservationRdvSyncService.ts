@@ -48,6 +48,7 @@ const STATUS_MAPPING: Record<CommandeStatut, RdvStatut> = {
   'valide': 'termine',          // Réservation validée → RDV terminé
   'annule': 'annule',           // Réservation annulée → RDV annulé
   'reporter': 'reporte',        // Réservation reportée → RDV reporté
+  'ulterieur': 'planifie',      // Réservation ultérieure → RDV planifié (aucun RDV créé tant que non transitionné)
 };
 
 /**

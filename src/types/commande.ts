@@ -18,7 +18,7 @@ export interface CommandeProduit {
 }
 
 export type CommandeType = 'commande' | 'reservation' | 'rdv';
-export type CommandeStatut = 'en_attente' | 'en_route' | 'arrive' | 'valide' | 'annule' | 'reporter';
+export type CommandeStatut = 'en_attente' | 'en_route' | 'arrive' | 'valide' | 'annule' | 'reporter' | 'ulterieur';
 
 export interface Commande {
   id: string;
@@ -41,6 +41,14 @@ export interface Commande {
   clientCaracteristique?: string;
   /** Id du RDV lié dans rdv-taches.json (si type 'rdv') */
   rdvTacheId?: string;
+  /** Réservation ultérieure : purge auto après 10j si pas de bascule */
+  reservationUlterieure?: boolean;
+  /** Date/heure ISO d'expiration (10 jours après création si ulterieur) */
+  expiresAt?: string;
+  /** Date choisie pour la réservation ultérieure (facultative, <= +10j) */
+  ulterieurDate?: string;
+  /** Dernière notification 24h envoyée */
+  ulterieurLastNotifiedAt?: string;
 }
 
 export interface CommandeFormData {
@@ -53,4 +61,7 @@ export interface CommandeFormData {
   dateEcheance?: string;
   horaire?: string;
   horaireFin?: string;
+  reservationUlterieure?: boolean;
+  ulterieurDate?: string;
+  expiresAt?: string;
 }

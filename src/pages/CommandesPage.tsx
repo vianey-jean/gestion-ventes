@@ -30,6 +30,8 @@ import {
 import TacheConflictModal from '@/components/commandes/TacheConflictModal';
 import OverdueReservationModal from '@/components/commandes/OverdueReservationModal';
 import CommandeArriveePlanifDialog from '@/components/commandes/CommandeArriveePlanifDialog';
+import ReservationUlterieureModal from '@/components/commandes/ReservationUlterieureModal';
+import StatutUlterieurTransitionModal from '@/components/commandes/StatutUlterieurTransitionModal';
 
 import SEOHead from '@/components/SEOHead';
 
@@ -129,7 +131,10 @@ const CommandesPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =
           setProductDeliveryFee={logic.setProductDeliveryFee}
           productBaseDeliveryFee={logic.productBaseDeliveryFee}
           setProductBaseDeliveryFee={logic.setProductBaseDeliveryFee}
+          ulterieurConfig={logic.ulterieurConfig}
+          onOpenUlterieurModal={() => logic.setUlterieurModalOpen(true)}
         />
+
 
         {/* Table des commandes */}
         <CommandesTable
@@ -221,6 +226,19 @@ const CommandesPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =
         commande={logic.commandes.find(c => c.id === logic.arriveePlanifId) || null}
         onClose={() => logic.setArriveePlanifId(null)}
         onConfirm={logic.confirmArriveePlanification}
+      />
+
+      {/* Modales Réservation ultérieure */}
+      <ReservationUlterieureModal
+        isOpen={logic.ulterieurModalOpen}
+        onClose={() => logic.setUlterieurModalOpen(false)}
+        initial={logic.ulterieurConfig}
+        onConfirm={(cfg) => { logic.setUlterieurConfig(cfg); logic.setUlterieurModalOpen(false); }}
+      />
+      <StatutUlterieurTransitionModal
+        isOpen={logic.ulterieurTransitionId !== null}
+        onClose={() => logic.setUlterieurTransitionId(null)}
+        onConfirm={logic.confirmUlterieurTransition}
       />
     </>
   );

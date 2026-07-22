@@ -153,6 +153,9 @@ interface CommandeFormDialogProps {
   setProductDeliveryFee?: (v: string) => void;
   productBaseDeliveryFee?: number | null;
   setProductBaseDeliveryFee?: (v: number | null) => void;
+  // Réservation ultérieure
+  ulterieurConfig?: { mode: 'date' | 'inconnu'; date?: string } | null;
+  onOpenUlterieurModal?: () => void;
 }
 
 /**
@@ -221,6 +224,8 @@ const CommandeFormDialog: React.FC<CommandeFormDialogProps> = ({
   setProductDeliveryFee,
   productBaseDeliveryFee = null,
   setProductBaseDeliveryFee,
+  ulterieurConfig = null,
+  onOpenUlterieurModal,
 }) => {
   const [showHeureFin, setShowHeureFin] = React.useState(false);
   React.useEffect(() => { if (horaireFin) setShowHeureFin(true); }, [horaireFin, isOpen]);
@@ -1178,28 +1183,45 @@ const CommandeFormDialog: React.FC<CommandeFormDialogProps> = ({
                 <Label htmlFor="type" className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">
                   📋 Type
                 </Label>
-                <Select
-                  value={localRdvMode ? 'rdv' : type}
-                  onValueChange={(value: string) => {
-                    if (value === 'rdv') {
-                      setLocalRdvMode(true);
-                      setType('rdv');
-                    } else {
-                      setLocalRdvMode(false);
-                      setType(value as 'commande' | 'reservation');
-                    }
-                  }}
-                >
-                  <SelectTrigger className="border-2 border-green-300 dark:border-green-700 focus:border-green-500 dark:focus:border-green-500 bg-white dark:bg-gray-900 shadow-sm">
-                    <SelectValue placeholder="Sélectionner un type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="commande">📦 Commande</SelectItem>
-                    <SelectItem value="reservation">📅 Réservation</SelectItem>
-                    <SelectItem value="rdv">🗓️ RDV</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className="flex items-center gap-2">
+                  <div className="flex-1">
+                    <Select
+                      value={localRdvMode ? 'rdv' : type}
+                      onValueChange={(value: string) => {
+                        if (value === 'rdv') { setLocalRdvMode(true); setType('rdv'); }
+                        else { setLocalRdvMode(false); setType(value as 'commande' | 'reservation'); }
+                      }}
+                    >
+                      <SelectTrigger className="border-2 border-green-300 dark:border-green-700 focus:border-green-500 dark:focus:border-green-500 bg-white dark:bg-gray-900 shadow-sm">
+                        <SelectValue placeholder="Sélectionner un type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="commande">📦 Commande</SelectItem>
+                        <SelectItem value="reservation">📅 Réservation</SelectItem>
+                        <SelectItem value="rdv">🗓️ RDV</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {type === 'reservation' && !localRdvMode && onOpenUlterieurModal && (
+                    <button
+                      type="button"
+                      onClick={onOpenUlterieurModal}
+                      title="Réservation ultérieure"
+                      className={`relative shrink-0 w-11 h-11 rounded-2xl flex items-center justify-center transition-all shadow-lg group ${
+                        ulterieurConfig
+                          ? 'bg-gradient-to-br from-amber-500 via-orange-500 to-rose-500 text-white ring-2 ring-orange-300 animate-pulse'
+                          : 'bg-white/70 dark:bg-gray-900/70 border-2 border-amber-300 text-amber-600 hover:bg-gradient-to-br hover:from-amber-100 hover:to-orange-100'
+                      }`}
+                    >
+                      <CalendarClock className="h-5 w-5" />
+                      <span className="pointer-events-none absolute -top-9 left-1/2 -translate-x-1/2 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity bg-amber-900 text-white text-[10px] px-2 py-1 rounded-md shadow-xl">
+                        Réservation ultérieure
+                      </span>
+                    </button>
+                  )}
+                </div>
               </div>
+
 
               {localRdvMode ? (
                 <div>
@@ -1232,16 +1254,24 @@ const CommandeFormDialog: React.FC<CommandeFormDialogProps> = ({
               ) : (
                 <div>
                   <Label htmlFor="dateEcheance" className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">
-                    📅 Date d'échéance
+                    📅 Date d'échéance {ulterieurConfig && <span className="text-xs text-amber-600">(verrouillée — mode ultérieur)</span>}
                   </Label>
                   <Input
                     id="dateEcheance"
                     type="date"
-                    value={dateEcheance}
+                    value={ulterieurConfig ? (ulterieurConfig.date || '') : dateEcheance}
                     onChange={(e) => setDateEcheance(e.target.value)}
-                    className="border-2 border-green-300 dark:border-green-700 focus:border-green-500 dark:focus:border-green-500 bg-white dark:bg-gray-900 shadow-sm"
-                    required
+                    disabled={!!ulterieurConfig}
+                    className={`border-2 border-green-300 dark:border-green-700 focus:border-green-500 dark:focus:border-green-500 bg-white dark:bg-gray-900 shadow-sm ${ulterieurConfig ? 'opacity-60 cursor-not-allowed bg-amber-50 dark:bg-amber-950/30' : ''}`}
+                    required={!ulterieurConfig}
                   />
+                  {ulterieurConfig && (
+                    <p className="text-xs text-amber-700 dark:text-amber-300 mt-1">
+                      {ulterieurConfig.mode === 'date'
+                        ? `Réservation ultérieure au ${new Date(ulterieurConfig.date!).toLocaleDateString('fr-FR')} — modifiable via la bascule "En attente".`
+                        : `Réservation ultérieure sans date — expire dans 10 jours si non basculée.`}
+                    </p>
+                  )}
                 </div>
               )}
             </div>
@@ -1249,9 +1279,9 @@ const CommandeFormDialog: React.FC<CommandeFormDialogProps> = ({
             <div>
               <div className="flex items-center justify-between mb-2">
                 <Label htmlFor="horaire" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                  ⏰ Horaire (optionnel)
+                  ⏰ Horaire (optionnel) {ulterieurConfig && <span className="text-xs text-amber-600">(verrouillé)</span>}
                 </Label>
-                {!showHeureFin && (
+                {!showHeureFin && !ulterieurConfig && (
                   <Button
                     type="button"
                     size="sm"
@@ -1270,7 +1300,8 @@ const CommandeFormDialog: React.FC<CommandeFormDialogProps> = ({
                   type="time"
                   value={horaire}
                   onChange={(e) => setHoraire(e.target.value)}
-                  className="border-2 border-green-300 dark:border-green-700 focus:border-green-500 dark:focus:border-green-500 bg-white dark:bg-gray-900 shadow-sm"
+                  disabled={!!ulterieurConfig}
+                  className={`border-2 border-green-300 dark:border-green-700 focus:border-green-500 dark:focus:border-green-500 bg-white dark:bg-gray-900 shadow-sm ${ulterieurConfig ? 'opacity-60 cursor-not-allowed bg-amber-50 dark:bg-amber-950/30' : ''}`}
                   placeholder="Heure de début"
                 />
                 {showHeureFin && (
@@ -1280,23 +1311,31 @@ const CommandeFormDialog: React.FC<CommandeFormDialogProps> = ({
                       type="time"
                       value={horaireFin}
                       onChange={(e) => setHoraireFin?.(e.target.value)}
-                      className="border-2 border-emerald-400 dark:border-emerald-600 focus:border-emerald-500 bg-white dark:bg-gray-900 shadow-sm pr-9"
+                      disabled={!!ulterieurConfig}
+                      className={`border-2 border-emerald-400 dark:border-emerald-600 focus:border-emerald-500 bg-white dark:bg-gray-900 shadow-sm pr-9 ${ulterieurConfig ? 'opacity-60 cursor-not-allowed bg-amber-50 dark:bg-amber-950/30' : ''}`}
                       placeholder="Heure de fin"
                     />
-                    <button
-                      type="button"
-                      onClick={() => { setHoraireFin?.(''); setShowHeureFin(false); }}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500"
-                      title="Retirer (auto +1h)"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    {!ulterieurConfig && (
+                      <button
+                        type="button"
+                        onClick={() => { setHoraireFin?.(''); setShowHeureFin(false); }}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500"
+                        title="Retirer (auto +1h)"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
                   </div>
                 )}
               </div>
-              {!showHeureFin && horaire && (
+              {!showHeureFin && horaire && !ulterieurConfig && (
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                   Heure de fin auto: +1h après {horaire}
+                </p>
+              )}
+              {ulterieurConfig && (
+                <p className="text-xs text-amber-700 dark:text-amber-300 mt-1">
+                  Horaire à définir lors du passage au statut « En attente ».
                 </p>
               )}
             </div>

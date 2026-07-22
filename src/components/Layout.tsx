@@ -11,6 +11,7 @@ import LiveChatAdmin from './livechat/LiveChatAdmin';
 import { useAutoLogout } from '@/hooks/use-auto-logout';
 import TimeoutNotification from './navbar/TimeoutNotification';
 import BackButton from './shared/BackButton';
+import ReservationExpiryNotifier from './notifications/ReservationExpiryNotifier';
 
 interface LayoutProps {
   children?: React.ReactNode;
@@ -60,6 +61,7 @@ const Layout: React.FC<LayoutProps> = ({ children, requireAuth = false }) => {
       <Footer />
       <ScrollToTop />
       <LiveChatAdmin />
+      {isAuthenticated && <ReservationExpiryNotifier />}
     </div>
   );
 
