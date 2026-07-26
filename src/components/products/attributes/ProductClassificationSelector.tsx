@@ -8,11 +8,11 @@
  * Le nom du produit est reconstruit dans l'ordre :
  *   categorie [modele] [devant] [couleur] [taille pouces]
  */
-import React, { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, ChevronUp, ChevronDown } from 'lucide-react';
 import useProductAttributes from '@/hooks/useProductAttributes';
 
 export type ProductCategory = 'Perruque' | 'Tissages' | 'Extension' | 'Autres';
@@ -69,6 +69,8 @@ const ProductClassificationSelector: React.FC<Props> = ({
   return name ? name.charAt(0).toUpperCase() + name.slice(1) : '';
 }, [value]);
 
+const [collapsed, setCollapsed] = useState(false);
+
   const showDevant = value.categorie === 'Perruque';
 
   const labelCls = variant === 'dark' ? 'text-white/80' : 'text-foreground';
@@ -83,7 +85,58 @@ const ProductClassificationSelector: React.FC<Props> = ({
   );
 
   return (
-    <div className="space-y-4">
+  
+  <div
+    className={`rounded-xl border ${
+      variant === 'dark'
+        ? 'border-white/10 bg-white/5'
+        : 'border-violet-200 bg-white'
+    }`}
+  >
+    <div
+      className="flex items-center justify-between px-4 py-3 cursor-pointer"
+      onClick={() => setCollapsed(!collapsed)}
+    >
+      <div>
+        <h3
+          className={`font-bold ${
+            variant === 'dark' ? 'text-white' : 'text-violet-700'
+          }`}
+        >
+          Classification du produit
+        </h3>
+
+        <p
+          className={`text-xs ${
+            variant === 'dark'
+              ? 'text-white/60'
+              : 'text-gray-500'
+          }`}
+        >
+          Catégorie, modèle, couleur, taille...
+        </p>
+      </div>
+
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        onClick={(e) => {
+          e.stopPropagation();
+          setCollapsed(!collapsed);
+        }}
+      >
+        {collapsed ? (
+          <ChevronDown className="h-5 w-5" />
+        ) : (
+          <ChevronUp className="h-5 w-5" />
+        )}
+      </Button>
+    </div>
+
+    {!collapsed && (
+      <div className="space-y-4 px-4 pb-4">
+
       {!hideCategorie && (
         <div className="space-y-2">
           <Label className={`text-sm font-bold ${labelCls}`}>Catégorie {mode === 'create' && <span className="text-red-500">*</span>}</Label>
@@ -176,7 +229,10 @@ const ProductClassificationSelector: React.FC<Props> = ({
           </p>
         </div>
       )}
-    </div>
+          </div>
+    )}
+  </div>
+
   );
 };
 

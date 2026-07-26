@@ -1,7 +1,7 @@
 /**
  * EditProductModal.tsx — Modale d'édition d'un produit (+ ajout de commentaire).
  */
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,6 +10,10 @@ import { cn } from '@/lib/utils';
 import { Package, Star, Hash, Sparkles, Edit, CheckCircle2, XCircle, MessageSquare, User } from 'lucide-react';
 import PhotoUploadSection from '@/components/dashboard/PhotoUploadSection';
 import FournisseurAutocomplete from '@/components/dashboard/FournisseurAutocomplete';
+import ProductClassificationSelector, {
+  ClassificationValue,
+  buildProductName,
+} from '@/components/products/attributes/ProductClassificationSelector';
 import { Product } from '@/types';
 import { Client } from '@/types/client';
 
@@ -57,6 +61,13 @@ interface Props {
 }
 
 const EditProductModal: React.FC<Props> = (p) => {
+  const [editClassification, setEditClassification] = useState<ClassificationValue>({});
+
+  // Reset classification when the modal opens on a new product
+  useEffect(() => {
+    if (p.open) setEditClassification({});
+  }, [p.open, p.selectedProduct?.id]);
+
   if (!p.selectedProduct) return null;
   return (
     <Dialog open={p.open} onOpenChange={(open) => { if (!open) { p.onOpenChange(false); p.setEditPhotos({ files: [], existingUrls: [], mainIndex: 0 }); } }}>
@@ -70,9 +81,22 @@ const EditProductModal: React.FC<Props> = (p) => {
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-5">
+          <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
+            <ProductClassificationSelector
+              value={editClassification}
+              onChange={(v) => {
+                setEditClassification(v);
+                const name = buildProductName(v);
+                if (name) {
+                  p.setEditForm(prev => ({ ...prev, description: name }));
+                }
+              }}
+              variant="dark"
+            />
+          </div>
           <div className="space-y-2">
             <Label className="text-sm font-bold text-white/80 flex items-center gap-2">
-              <Package className="h-4 w-4 text-blue-400" /> Description
+              <Package className="h-4 w-4 text-blue-400" /> Description (auto-générée, éditable)
             </Label>
             <Input value={p.editForm.description}
               onChange={(e) => p.setEditForm({ ...p.editForm, description: e.target.value })}
