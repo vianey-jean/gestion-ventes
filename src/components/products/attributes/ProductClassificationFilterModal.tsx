@@ -32,7 +32,7 @@ const ProductClassificationFilterModal: React.FC<Props> = ({ open, onOpenChange,
       <DialogContent className="sm:max-w-lg rounded-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Filtrer : {CATEGORY_LABEL[categorie]}</DialogTitle>
-          <DialogDescription>Sélectionnez le modèle, la couleur et la taille (facultatif).</DialogDescription>
+          <DialogDescription>Sélectionnez les types attributions.</DialogDescription>
         </DialogHeader>
         <ProductClassificationSelector
           value={value}
