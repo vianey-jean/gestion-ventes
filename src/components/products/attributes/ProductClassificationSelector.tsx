@@ -129,6 +129,7 @@ const KindSection: React.FC<{
   );
 };
 
+
 const ProductClassificationSelector: React.FC<Props> = ({
   value, onChange, mode = 'create', hideCategorie = false, variant = 'light',
 }) => {
@@ -139,7 +140,7 @@ const ProductClassificationSelector: React.FC<Props> = ({
     return name ? name.charAt(0).toUpperCase() + name.slice(1) : '';
   }, [value]);
 
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(true);
 
   const labelCls = variant === 'dark' ? 'text-white/80' : 'text-foreground';
   const chipBase = 'px-3 py-1.5 rounded-full text-xs font-bold border transition-all cursor-pointer select-none';
@@ -152,6 +153,7 @@ const ProductClassificationSelector: React.FC<Props> = ({
     <button type="button" onClick={onClick} className={`${chipBase} ${active ? chipActive : chipInactive}`}>{children}</button>
   );
 
+  
   return (
     <div className={`rounded-xl border ${variant === 'dark' ? 'border-white/10 bg-white/5' : 'border-violet-200 bg-white'}`}>
       <div className="flex items-center justify-between px-4 py-3 cursor-pointer" onClick={() => setCollapsed(!collapsed)}>
