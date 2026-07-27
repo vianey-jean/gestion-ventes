@@ -39,6 +39,10 @@ interface Props {
   mode?: 'create' | 'filter';
   hideCategorie?: boolean;
   variant?: 'light' | 'dark';
+  /** Autorise plusieurs valeurs par attribut (stockées séparées par ' | '). */
+  multiple?: boolean;
+  /** Ouvre le panneau par défaut. */
+  defaultOpen?: boolean;
 }
 
 const CATEGORIES: { key: ProductCategory; label: string }[] = [
@@ -93,6 +97,11 @@ export function countActive(v: ClassificationValue): number {
   return n;
 }
 
+/** Découpe une valeur multiple en liste. */
+export function splitValues(v?: string): string[] {
+  return (v || '').split('|').map(s => s.trim()).filter(Boolean);
+}
+
 /** Rendu d'une section d'attribut pour un kind donné. */
 const KindSection: React.FC<{
   kind: AttributeKindDef;
@@ -102,9 +111,11 @@ const KindSection: React.FC<{
   chipBase: string;
   chipInactive: string;
   chipActive: string;
-}> = ({ kind, value, onChange, labelCls, chipBase, chipInactive, chipActive }) => {
+  multiple?: boolean;
+}> = ({ kind, value, onChange, labelCls, chipBase, chipInactive, chipActive, multiple }) => {
   const { items } = useProductAttributes(kind.legacy || kind.id);
   const selected = getKindValue(value, kind);
+  const selectedList = splitValues(selected);
   const isDevant = kind.legacy === 'devant';
   // "devant" n'apparaît que pour la catégorie Perruque
   if (isDevant && value.categorie !== 'Perruque') return null;
@@ -115,14 +126,20 @@ const KindSection: React.FC<{
         <p className="text-xs text-muted-foreground">Aucune valeur. Ajoutez-en depuis « {kind.nom} ».</p>
       ) : (
         <div className="flex flex-wrap gap-2">
-          {items.map(it => (
-            <button
-              key={it.id}
-              type="button"
-              onClick={() => onChange(setKindValue(value, kind, selected === it.nom ? '' : it.nom))}
-              className={`${chipBase} ${selected === it.nom ? chipActive : chipInactive}`}
-            >{it.nom}</button>
-          ))}
+          {items.map(it => {
+            const active = multiple ? selectedList.includes(it.nom) : selected === it.nom;
+            const next = multiple
+              ? (active ? selectedList.filter(x => x !== it.nom) : [...selectedList, it.nom]).join(' | ')
+              : (active ? '' : it.nom);
+            return (
+              <button
+                key={it.id}
+                type="button"
+                onClick={() => onChange(setKindValue(value, kind, next))}
+                className={`${chipBase} ${active ? chipActive : chipInactive}`}
+              >{it.nom}</button>
+            );
+          })}
         </div>
       )}
     </div>
@@ -131,7 +148,7 @@ const KindSection: React.FC<{
 
 
 const ProductClassificationSelector: React.FC<Props> = ({
-  value, onChange, mode = 'create', hideCategorie = false, variant = 'light',
+  value, onChange, mode = 'create', hideCategorie = false, variant = 'light', multiple = false, defaultOpen = false,
 }) => {
   const { kinds } = useAttributeKinds();
 
@@ -140,7 +157,7 @@ const ProductClassificationSelector: React.FC<Props> = ({
     return name ? name.charAt(0).toUpperCase() + name.slice(1) : '';
   }, [value]);
 
-  const [collapsed, setCollapsed] = useState(true);
+  const [collapsed, setCollapsed] = useState(!defaultOpen);
 
   const labelCls = variant === 'dark' ? 'text-white/80' : 'text-foreground';
   const chipBase = 'px-3 py-1.5 rounded-full text-xs font-bold border transition-all cursor-pointer select-none';
@@ -190,6 +207,7 @@ const ProductClassificationSelector: React.FC<Props> = ({
               kind={k}
               value={value}
               onChange={onChange}
+              multiple={multiple}
               labelCls={labelCls}
               chipBase={chipBase}
               chipInactive={chipInactive}
@@ -197,7 +215,7 @@ const ProductClassificationSelector: React.FC<Props> = ({
             />
           ))}
 
-          {previewName && (
+          {previewName && !multiple && (
             <div className={`p-3 rounded-xl ${variant === 'dark' ? 'bg-white/5 border border-white/10' : 'bg-violet-50 border border-violet-200'}`}>
               <p className={`text-xs font-bold uppercase tracking-wide ${variant === 'dark' ? 'text-white/60' : 'text-violet-600'} mb-1`}>Nom généré</p>
               <p className={`text-sm font-bold ${variant === 'dark' ? 'text-white' : 'text-violet-900'} flex items-center gap-1.5`}>
