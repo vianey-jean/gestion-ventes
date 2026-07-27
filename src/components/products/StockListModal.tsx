@@ -7,9 +7,10 @@ import React, { useMemo, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Printer, Package, Palette, Ruler, Sparkles, Hash, ArrowDown, ArrowUp, X } from 'lucide-react';
+import { Printer, Package, Hash, ArrowDown, ArrowUp, X } from 'lucide-react';
 import { Product } from '@/types';
 import useProductAttributes from '@/hooks/useProductAttributes';
+import ProductClassificationSelector, { ClassificationValue, splitValues } from './attributes/ProductClassificationSelector';
 import jsPDF from 'jspdf';
 import { useToast } from '@/hooks/use-toast';
 
@@ -21,29 +22,31 @@ interface Props {
   products: Product[];
 }
 
-const CATEGORIES: { key: Category; label: string }[] = [
-  { key: 'perruque', label: 'Perruque' },
-  { key: 'tissage', label: 'Tissage' },
-  { key: 'extension', label: 'Extension' },
-  { key: 'autres', label: 'Autres' },
-];
+/** Mappe la catégorie du sélecteur vers la clé de filtrage sur la description. */
+const CATEGORY_MAP: Record<string, Category> = {
+  Perruque: 'perruque',
+  Tissages: 'tissage',
+  Extension: 'extension',
+  Autres: 'autres',
+};
 
 const StockListModal: React.FC<Props> = ({ open, onClose, products }) => {
   const { items: modeles } = useProductAttributes('modele');
   const { items: couleurs } = useProductAttributes('couleur');
   const { items: tailles } = useProductAttributes('taille');
-  const { items: devants } = useProductAttributes('devant');
   const { toast } = useToast();
 
-  const [categorie, setCategorie] = useState<Category>('');
-  const [devant, setDevant] = useState<string>('');
-  const [selModeles, setSelModeles] = useState<string[]>([]);
-  const [selCouleurs, setSelCouleurs] = useState<string[]>([]);
-  const [selTailles, setSelTailles] = useState<string[]>([]);
+  /** Sélection complète (catégorie + tous les attributs, choix multiple). */
+  const [classification, setClassification] = useState<ClassificationValue>({});
 
-  const toggle = (arr: string[], v: string, setter: (x: string[]) => void) => {
-    setter(arr.includes(v) ? arr.filter(x => x !== v) : [...arr, v]);
-  };
+  const categorie: Category = CATEGORY_MAP[classification.categorie || ''] || '';
+  const devant = classification.devant || '';
+  const selModeles = splitValues(classification.modele);
+  const selCouleurs = splitValues(classification.couleur);
+  const selTailles = splitValues(classification.taille);
+  const selDevants = splitValues(devant);
+  const selAutres = splitValues(classification.autres);
+  const selExtras = Object.values(classification.extras || {}).map(v => splitValues(v)).filter(g => g.length > 0);
 
   const results = useMemo(() => {
     const cat = categorie;
@@ -58,13 +61,16 @@ const StockListModal: React.FC<Props> = ({ open, onClose, products }) => {
     return products.filter(p => {
       const d = (p.description || '').toLowerCase();
       if (!catMatch(p)) return false;
-      if (cat === 'perruque' && devant && !d.includes(devant.toLowerCase())) return false;
+      if (cat === 'perruque' && !has(d, selDevants)) return false;
       if (!has(d, selModeles)) return false;
       if (!has(d, selCouleurs)) return false;
       if (!has(d, selTailles)) return false;
+      if (!has(d, selAutres)) return false;
+      for (const group of selExtras) if (!has(d, group)) return false;
       return true;
     });
-  }, [products, categorie, devant, selModeles, selCouleurs, selTailles]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [products, classification]);
 
   const totalQty = results.reduce((s, p) => s + (p.quantity || 0), 0);
   const totalValue = results.reduce((s, p) => s + (p.quantity || 0) * (p.purchasePrice || 0), 0);
@@ -224,16 +230,6 @@ const StockListModal: React.FC<Props> = ({ open, onClose, products }) => {
     }
   };
 
-  const Chip: React.FC<{ active: boolean; onClick: () => void; children: React.ReactNode }> = ({ active, onClick, children }) => (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all select-none ${active
-        ? 'bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white border-transparent shadow-md shadow-violet-500/30'
-        : 'bg-white dark:bg-gray-800 border-violet-200 dark:border-violet-800 text-gray-700 dark:text-gray-300 hover:border-violet-400'}`}
-    >{children}</button>
-  );
-
   const [descriptionOrder, setDescriptionOrder] = useState<"asc" | "desc">("asc");
 
   const sortedResults = useMemo(() => {
@@ -307,19 +303,6 @@ const StockListModal: React.FC<Props> = ({ open, onClose, products }) => {
 
 
 
-  const Section: React.FC<{ icon: React.ReactNode; title: string; hint?: string; children: React.ReactNode }> = ({ icon, title, hint, children }) => (
-    <div className="space-y-2">
-      <div className="flex items-center gap-2">
-        <span className="h-7 w-7 rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-600 text-white flex items-center justify-center">{icon}</span>
-        <div>
-          <p className="text-sm font-black text-foreground">{title}</p>
-          {hint && <p className="text-[10px] text-muted-foreground">{hint}</p>}
-        </div>
-      </div>
-      <div className="flex flex-wrap gap-2">{children}</div>
-    </div>
-  );
-
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="max-w-5xl max-h-[92vh] overflow-hidden p-0 rounded-2xl border-violet-200/60 dark:border-violet-800/60 shadow-2xl bg-white/95 dark:bg-gray-950/95 backdrop-blur-sm flex flex-col">
@@ -336,48 +319,18 @@ const StockListModal: React.FC<Props> = ({ open, onClose, products }) => {
               <Printer className="h-4 w-4 mr-1.5" /> PDF
             </Button>
           </DialogTitle>
-          <p className="text-xs text-white/80">Sélectionnez les attributs (choix multiple sauf catégorie et devant)</p>
+          <p className="text-xs text-white/80">Sélectionnez les attributs (choix multiple sur chaque attribut)</p>
         </DialogHeader>
 
         <div className="flex flex-col flex-1 min-h-0">
-          <div className="shrink-0 p-5 space-y-5 overflow-y-auto max-h-[32vh] scrollbar-thin">
-            <Section icon={<Sparkles className="h-3.5 w-3.5" />} title="Catégorie" hint="1 seule">
-              {CATEGORIES.map(c => (
-                <Chip key={c.key} active={categorie === c.key} onClick={() => { setCategorie(categorie === c.key ? '' : c.key); if (c.key !== 'perruque') setDevant(''); }}>{c.label}</Chip>
-              ))}
-            </Section>
-
-            {categorie === 'perruque' && devants.length > 0 && (
-              <Section icon={<Sparkles className="h-3.5 w-3.5" />} title="Devant" hint="1 seul">
-                {devants.map(d => (
-                  <Chip key={d.id} active={devant === d.nom} onClick={() => setDevant(devant === d.nom ? '' : d.nom)}>{d.nom}</Chip>
-                ))}
-              </Section>
-            )}
-
-            {modeles.length > 0 && (
-              <Section icon={<Package className="h-3.5 w-3.5" />} title="Modèles" hint="Choix multiple">
-                {modeles.map(m => (
-                  <Chip key={m.id} active={selModeles.includes(m.nom)} onClick={() => toggle(selModeles, m.nom, setSelModeles)}>{m.nom}</Chip>
-                ))}
-              </Section>
-            )}
-
-            {couleurs.length > 0 && (
-              <Section icon={<Palette className="h-3.5 w-3.5" />} title="Couleurs" hint="Choix multiple">
-                {couleurs.map(c => (
-                  <Chip key={c.id} active={selCouleurs.includes(c.nom)} onClick={() => toggle(selCouleurs, c.nom, setSelCouleurs)}>{c.nom}</Chip>
-                ))}
-              </Section>
-            )}
-
-            {tailles.length > 0 && (
-              <Section icon={<Ruler className="h-3.5 w-3.5" />} title="Tailles" hint="Choix multiple">
-                {tailles.map(t => (
-                  <Chip key={t.id} active={selTailles.includes(t.nom)} onClick={() => toggle(selTailles, t.nom, setSelTailles)}>{t.nom}</Chip>
-                ))}
-              </Section>
-            )}
+          <div className="shrink-0 p-5 space-y-4 overflow-y-auto max-h-[38vh] scrollbar-thin">
+            <ProductClassificationSelector
+              value={classification}
+              onChange={setClassification}
+              mode="filter"
+              multiple
+              defaultOpen
+            />
 
             <div className="flex items-center justify-between gap-3 flex-wrap pt-3 border-t border-violet-200/50 dark:border-violet-800/50">
               <div className="flex items-center gap-2 flex-wrap text-xs">
@@ -385,7 +338,7 @@ const StockListModal: React.FC<Props> = ({ open, onClose, products }) => {
                 <Badge className="bg-fuchsia-100 text-fuchsia-700 dark:bg-fuchsia-900/50 dark:text-fuchsia-200 font-bold">Qté totale: {totalQty}</Badge>
                 <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-200 font-bold">Valeur: {totalValue.toFixed(2)}€</Badge>
               </div>
-              <Button variant="outline" size="sm" className="rounded-xl" onClick={() => { setCategorie(''); setDevant(''); setSelModeles([]); setSelCouleurs([]); setSelTailles([]); }}>
+              <Button variant="outline" size="sm" className="rounded-xl" onClick={() => setClassification({})}>
                 <X className="h-3.5 w-3.5 mr-1" /> Réinitialiser
               </Button>
             </div>
