@@ -11,6 +11,7 @@ import { Filter, Sparkles, RotateCcw, Check } from 'lucide-react';
 import ProductClassificationSelector, {
   ClassificationValue,
   buildProductName,
+  countActive,
   ProductCategory as PCCategory,
 } from './ProductClassificationSelector';
 
@@ -64,7 +65,7 @@ const ClassificationSearchPopover: React.FC<Props> = ({
     setOpen(false);
   };
 
-  const activeCount = [value.categorie, value.modele, value.couleur, value.taille, value.devant].filter(Boolean).length;
+  const activeCount = countActive(value);
 
   return (
     <>

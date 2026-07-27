@@ -298,13 +298,18 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
       });
     }
     const cf = classification;
-    if (cf.modele || cf.couleur || cf.taille || cf.devant) {
+    const extrasValues = cf.extras ? Object.values(cf.extras).filter(Boolean) as string[] : [];
+    if (cf.modele || cf.couleur || cf.taille || cf.devant || cf.autres || extrasValues.length > 0) {
       filtered = filtered.filter(p => {
-        const d = p.description.toLowerCase();
+        const d = (p.description || '').toLowerCase();
         if (cf.modele && !d.includes(cf.modele.toLowerCase())) return false;
         if (cf.couleur && !d.includes(cf.couleur.toLowerCase())) return false;
         if (cf.taille && !d.includes(cf.taille.toLowerCase())) return false;
         if (cf.devant && !d.includes(cf.devant.toLowerCase())) return false;
+        if (cf.autres && !d.includes(cf.autres.toLowerCase())) return false;
+        for (const ev of extrasValues) {
+          if (!d.includes(ev.toLowerCase())) return false;
+        }
         return true;
       });
     }
@@ -333,7 +338,7 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
     return filtered;
   }, [products, activeFilter, searchQuery, sortField, sortDir, allRatings, classification]);
 
-  useEffect(() => { setCurrentPage(1); }, [activeFilter, searchQuery]);
+  useEffect(() => { setCurrentPage(1); }, [activeFilter, searchQuery, classification]);
 
   const handleFilterChange = useCallback((f: FilterType) => {
     setActiveFilter(f);
