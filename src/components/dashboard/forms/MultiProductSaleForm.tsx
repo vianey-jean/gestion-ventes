@@ -33,9 +33,17 @@ interface MultiProductSaleFormProps {
   onClose: () => void;
   editSale?: Sale;
   onRefund?: (sale: Sale) => void;
+  /** Pré-remplissage optionnel (ex: vente créée depuis un rendez-vous terminé) */
+  initialData?: {
+    date?: string;
+    clientName?: string;
+    clientPhone?: string;
+    clientAddress?: string;
+    clientVille?: string;
+  };
 }
 
-const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onClose, editSale, onRefund }) => {
+const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onClose, editSale, onRefund, initialData }) => {
   const { products, addSale, updateSale, deleteSale, sales } = useApp();
   const { toast } = useToast();
   
@@ -269,11 +277,11 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
           setFormProducts(loadedProducts);
         }
       } else {
-        setDate(new Date().toISOString().split('T')[0]);
-        setClientName('');
-        setClientPhone('');
-        setClientAddress('');
-        setClientVille('');
+        setDate(initialData?.date || new Date().toISOString().split('T')[0]);
+        setClientName(initialData?.clientName || '');
+        setClientPhone(initialData?.clientPhone || '');
+        setClientAddress(initialData?.clientAddress || '');
+        setClientVille(initialData?.clientVille || '');
         setClientPhoto(null);
         setFormProducts([createEmptyFormProduct()]);
         setShowAdvanceSection(false);

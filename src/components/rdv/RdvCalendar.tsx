@@ -39,6 +39,9 @@ import { ConfirmDialog } from '@/components/shared';
 import axios from 'axios';
 import { toast } from 'sonner';
 import indisponibleApi, { Indisponibilite } from '@/services/api/indisponibleApi';
+import rdvApiService from '@/services/api/rdvApi';
+import clientApiService from '@/services/api/clientApi';
+import MultiProductSaleForm from '@/components/dashboard/forms/MultiProductSaleForm';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://server-gestion-ventes.onrender.com';
 
@@ -133,6 +136,19 @@ const RdvCalendar: React.FC<RdvCalendarProps> = ({
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [rdvToModify, setRdvToModify] = useState<RDV | null>(null);
   const [rdvToDelete, setRdvToDelete] = useState<RDV | null>(null);
+
+  // Passage du statut "Confirmé" → "Terminé"
+  const [confirmTerminerOpen, setConfirmTerminerOpen] = useState(false);
+  const [askVenteOpen, setAskVenteOpen] = useState(false);
+  const [isTerminating, setIsTerminating] = useState(false);
+  const [saleFormOpen, setSaleFormOpen] = useState(false);
+  const [saleInitialData, setSaleInitialData] = useState<{
+    date?: string;
+    clientName?: string;
+    clientPhone?: string;
+    clientAddress?: string;
+    clientVille?: string;
+  } | null>(null);
   
   // État pour le clignotement du RDV highlight
   const [blinkingRdvId, setBlinkingRdvId] = useState<string | null>(null);
@@ -411,6 +427,58 @@ const RdvCalendar: React.FC<RdvCalendarProps> = ({
     }
     setConfirmDeleteOpen(false);
     setRdvToDelete(null);
+  };
+
+  /** Le badge de statut n'est cliquable que pour un RDV confirmé (maintenu) */
+  const canTerminate = (rdv: RDV | null): boolean => !!rdv && rdv.statut === 'confirme';
+
+  /** Marque le RDV comme terminé côté serveur puis demande s'il y a eu une vente */
+  const handleConfirmTerminer = async () => {
+    if (!selectedRdvDetail) return;
+    setIsTerminating(true);
+    try {
+      const updated = await rdvApiService.update(selectedRdvDetail.id, { statut: 'termine' } as any);
+      setSelectedRdvDetail(prev => (prev ? { ...prev, ...updated, statut: 'termine' } : prev));
+      toast.success('Rendez-vous marqué comme terminé');
+      setConfirmTerminerOpen(false);
+      setAskVenteOpen(true);
+    } catch (error) {
+      toast.error("Impossible de mettre à jour le statut du rendez-vous");
+      setConfirmTerminerOpen(false);
+    } finally {
+      setIsTerminating(false);
+    }
+  };
+
+  /** Ouvre le formulaire de vente pré-rempli avec les infos du client du RDV */
+  const handleOuvrirVente = async () => {
+    if (!selectedRdvDetail) return;
+    const rdv = selectedRdvDetail;
+    let clientPhone = rdv.clientTelephone || '';
+    let clientAddress = rdv.clientAdresse || rdv.lieu || '';
+    let clientVille = '';
+    try {
+      const clients = await clientApiService.getAll();
+      const target = (rdv.clientNom || '').trim().toLowerCase();
+      const found = clients.find(c => (c.nom || '').trim().toLowerCase() === target);
+      if (found) {
+        clientPhone = clientPhone || found.phone || (found.phones && found.phones[0]) || '';
+        clientAddress = clientAddress || found.adresse || (found.addresses && found.addresses[0]) || '';
+        clientVille = found.ville || (found.villes && found.villes[0]) || '';
+      }
+    } catch {
+      // On continue avec les infos du RDV si les clients ne sont pas récupérables
+    }
+    setSaleInitialData({
+      date: rdv.date,
+      clientName: rdv.clientNom || '',
+      clientPhone,
+      clientAddress,
+      clientVille,
+    });
+    setAskVenteOpen(false);
+    setShowDetailModal(false);
+    setSaleFormOpen(true);
   };
 
   const getRdvPosition = (rdv: RDV) => {
@@ -770,8 +838,19 @@ const RdvCalendar: React.FC<RdvCalendarProps> = ({
               {/* Status Badge */}
               <div className="flex items-center gap-2">
                 <Badge 
+                  role={canTerminate(selectedRdvDetail) ? 'button' : undefined}
+                  tabIndex={canTerminate(selectedRdvDetail) ? 0 : undefined}
+                  title={canTerminate(selectedRdvDetail) ? 'Cliquer pour marquer ce rendez-vous comme terminé' : undefined}
+                  onClick={() => { if (canTerminate(selectedRdvDetail)) setConfirmTerminerOpen(true); }}
+                  onKeyDown={(e) => {
+                    if (canTerminate(selectedRdvDetail) && (e.key === 'Enter' || e.key === ' ')) {
+                      e.preventDefault();
+                      setConfirmTerminerOpen(true);
+                    }
+                  }}
                   className={cn(
                     "text-white",
+                    canTerminate(selectedRdvDetail) && "cursor-pointer hover:opacity-90 hover:scale-105 transition-all ring-1 ring-white/40",
                     isRdvException(selectedRdvDetail)
                       ? 'bg-gradient-to-r from-purple-500 to-fuchsia-600'
                       : (statusColors[selectedRdvDetail.statut]?.bg || statusColors.planifie.bg)
@@ -781,6 +860,9 @@ const RdvCalendar: React.FC<RdvCalendarProps> = ({
                     ? `Exception · ${statusLabels[selectedRdvDetail.statut] || 'Inconnu'}`
                     : (statusLabels[selectedRdvDetail.statut] || 'Inconnu')}
                 </Badge>
+                {canTerminate(selectedRdvDetail) && (
+                  <span className="text-xs text-muted-foreground">Cliquez sur le statut pour terminer</span>
+                )}
               </div>
 
               {/* Client Info */}
@@ -917,6 +999,58 @@ const RdvCalendar: React.FC<RdvCalendarProps> = ({
         onConfirm={confirmDelete}
         variant="danger"
       />
+
+      {/* Confirmation passage au statut Terminé */}
+      <ConfirmDialog
+        open={confirmTerminerOpen}
+        onOpenChange={setConfirmTerminerOpen}
+        title="Terminer le rendez-vous"
+        description={`Voulez-vous marquer le rendez-vous "${selectedRdvDetail?.titre || ''}" comme Terminé ?`}
+        confirmText={isTerminating ? 'Validation...' : 'Oui, terminer'}
+        cancelText="Annuler"
+        onConfirm={handleConfirmTerminer}
+        variant="info"
+      />
+
+      {/* Demande : une vente a-t-elle été réalisée ? */}
+      <Dialog open={askVenteOpen} onOpenChange={(o) => { if (!o) { setAskVenteOpen(false); setShowDetailModal(false); } }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-3 text-xl">
+              <div className="p-2 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600">
+                <User className="h-5 w-5 text-white" />
+              </div>
+              Vente réalisée ?
+            </DialogTitle>
+            <DialogDescription>
+              Avez-vous réalisé une vente auprès de {selectedRdvDetail?.clientNom} lors de ce rendez-vous ?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => { setAskVenteOpen(false); setShowDetailModal(false); }}
+            >
+              Non
+            </Button>
+            <Button
+              onClick={handleOuvrirVente}
+              className="bg-gradient-to-r from-emerald-500 to-green-600 text-white"
+            >
+              Oui, enregistrer la vente
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Formulaire de vente pré-rempli depuis le rendez-vous */}
+      {saleFormOpen && (
+        <MultiProductSaleForm
+          isOpen={saleFormOpen}
+          onClose={() => { setSaleFormOpen(false); setSaleInitialData(null); }}
+          initialData={saleInitialData || undefined}
+        />
+      )}
 
       {/* Phone Action Modal */}
       <Dialog open={showPhoneModal} onOpenChange={setShowPhoneModal}>
