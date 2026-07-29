@@ -74,7 +74,7 @@ const DashboardHero: React.FC = () => {
       {/* ========================= */}
 
       <div
-        className="absolute inset-0 opacity-[0.035] bg-[url('https://grainy-gradients.vercel.app/noise.svg')] mix-blend-soft-light"
+        className="absolute inset-0 opacity-[0.035] bg-[url('/images/noise.svg')] mix-blend-soft-light"
       />
 
       {/* ========================= */}

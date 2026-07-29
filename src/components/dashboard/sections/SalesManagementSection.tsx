@@ -206,7 +206,7 @@ const SalesManagementSection: React.FC<SalesManagementSectionProps> = ({
               <div
                 aria-hidden={!showActions}
                 className={cn(
-                  "flex flex-wrap gap-4 overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]",
+                  "flex flex-wrap gap-4 overflow-hidden transition-all duration-500 ease-out",
                   showActions
                     ? "opacity-100 max-h-[1200px] translate-y-0 pointer-events-auto"
                     : "opacity-0 max-h-0 -translate-y-2 pointer-events-none"
