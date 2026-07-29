@@ -719,7 +719,7 @@ const PretFamilles: React.FC = () => {
       <div className="bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 rounded-xl sm:rounded-2xl lg:rounded-3xl shadow-2xl p-4 sm:p-6 md:p-8 border border-white/20">
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 sm:gap-6">
           <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
-            <div className="bg-white/20 backdrop-blur-sm rounded-full p-2 sm:p-3 md:p-4">
+            <div className="bg-white/20 rounded-full p-2 sm:p-3 md:p-4">
               <HandCoins className="h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8 text-white" />
             </div>
             <div>
@@ -732,11 +732,7 @@ const PretFamilles: React.FC = () => {
           {/* Stats rapides */}
          <div className="flex flex-wrap gap-3 sm:gap-4 md:gap-5">
   {/* Carte Familles */}
-  <div className="relative overflow-hidden rounded-xl sm:rounded-2xl md:rounded-3xl 
-                  bg-gradient-to-br from-white/25 to-white/5 
-                  backdrop-blur-xl border border-white/20 
-                  shadow-[0_20px_50px_rgba(0,0,0,0.25)]
-                  px-4 py-3 sm:px-6 sm:py-4 md:px-8 md:py-6 text-center">
+  <div className="relative overflow-hidden rounded-xl sm:rounded-2xl md:rounded-3xl bg-gradient-to-br from-white/25 to-white/5 border border-white/20 shadow-[0_20px_50px_rgba(0,0,0,0.25)] px-4 py-3 sm:px-6 sm:py-4 md:px-8 md:py-6 text-center">
     <div className="absolute inset-0 bg-gradient-to-tr from-white/10 via-transparent to-transparent pointer-events-none" />
 
     <div className="flex items-center justify-center gap-2 mb-1">
@@ -752,11 +748,7 @@ const PretFamilles: React.FC = () => {
   </div>
 
   {/* Carte Total prêté */}
-  <div className="relative overflow-hidden rounded-xl sm:rounded-2xl md:rounded-3xl 
-                  bg-gradient-to-br from-emerald-400/25 to-emerald-900/10 
-                  backdrop-blur-xl border border-emerald-300/30 
-                  shadow-[0_20px_50px_rgba(16,185,129,0.25)]
-                  px-4 py-3 sm:px-6 sm:py-4 md:px-8 md:py-6 text-center">
+  <div className="relative overflow-hidden rounded-xl sm:rounded-2xl md:rounded-3xl bg-gradient-to-br from-emerald-400/25 to-emerald-900/10 border border-emerald-300/30 shadow-[0_20px_50px_rgba(16,185,129,0.25)] px-4 py-3 sm:px-6 sm:py-4 md:px-8 md:py-6 text-center">
     <div className="absolute inset-0 bg-gradient-to-tr from-emerald-400/10 via-transparent to-transparent pointer-events-none" />
 
     <div className="flex items-center justify-center gap-2 mb-1">
@@ -781,15 +773,7 @@ const PretFamilles: React.FC = () => {
   {/* Bouton Remboursement */}
   <Button
     onClick={() => setRemboursementDialogOpen(true)}
-    className="group relative flex-1 sm:flex-none overflow-hidden
-               rounded-xl sm:rounded-2xl
-               bg-gradient-to-br from-white/30 to-white/10
-               backdrop-blur-xl border border-white/30
-               text-white font-medium
-               shadow-[0_15px_40px_rgba(0,0,0,0.25)]
-               transition-all duration-300
-               hover:scale-105 hover:shadow-[0_20px_60px_rgba(255,255,255,0.25)]
-               px-4 py-2 sm:px-6 sm:py-3 text-xs sm:text-sm"
+    className="group relative flex-1 sm:flex-none overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-br from-white/30 to-white/10 border border-white/30 text-white font-medium shadow-[0_15px_40px_rgba(0,0,0,0.25)] transition-all duration-300 hover:scale-105 hover:shadow-[0_20px_60px_rgba(255,255,255,0.25)] px-4 py-2 sm:px-6 sm:py-3 text-xs sm:text-sm"
   >
     <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
     <span className="relative flex items-center justify-center">
@@ -802,15 +786,7 @@ const PretFamilles: React.FC = () => {
   {/* Bouton Nouveau Prêt */}
   <Button
     onClick={() => setDemandePretDialogOpen(true)}
-    className="group relative flex-1 sm:flex-none overflow-hidden
-               rounded-xl sm:rounded-2xl
-               bg-gradient-to-br from-emerald-500 to-emerald-700
-               border border-emerald-300/40
-               text-white font-semibold
-               shadow-[0_15px_40px_rgba(16,185,129,0.45)]
-               transition-all duration-300
-               hover:scale-105 hover:shadow-[0_20px_60px_rgba(16,185,129,0.6)]
-               px-4 py-2 sm:px-6 sm:py-3 text-xs sm:text-sm"
+    className="group relative flex-1 sm:flex-none overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-700 border border-emerald-300/40 text-white font-semibold shadow-[0_15px_40px_rgba(16,185,129,0.45)] transition-all duration-300 hover:scale-105 hover:shadow-[0_20px_60px_rgba(16,185,129,0.6)] px-4 py-2 sm:px-6 sm:py-3 text-xs sm:text-sm"
   >
     <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
     <span className="relative flex items-center justify-center">
@@ -825,7 +801,7 @@ const PretFamilles: React.FC = () => {
       </div>
 
       {/* Tableau modernisé */}
-      <Card className="bg-gradient-to-br from-white/95 to-gray-50/95 dark:from-gray-900/95 dark:to-gray-800/95 backdrop-blur-xl shadow-2xl border border-white/20 rounded-lg sm:rounded-xl md:rounded-2xl lg:rounded-3xl overflow-hidden -mx-3 sm:mx-0">
+      <Card className="bg-gradient-to-br from-white/95 to-gray-50/95 dark:from-gray-900/95 dark:to-gray-800/95 shadow-2xl border border-white/20 rounded-lg sm:rounded-xl md:rounded-2xl lg:rounded-3xl overflow-hidden -mx-3 sm:mx-0">
         <div className="p-3 sm:p-4 md:p-6">
           {loading ? (
             <div className="flex justify-center items-center py-16">
@@ -961,7 +937,7 @@ const PretFamilles: React.FC = () => {
                     </TableCell>
 
                             <TableCell className="text-right bg-gradient-to-r from-indigo-900 via-purple-900 to-pink-900 text-white border-b border-white">
-                              <div className="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full inline-block">
+                              <div className="bg-white/20 px-4 py-2 rounded-full inline-block">
                                 <span className="font-bold text-lg text-blue-200">
                                   {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(totalPret)}
                                 </span>
@@ -969,7 +945,7 @@ const PretFamilles: React.FC = () => {
                             </TableCell>
 
                             <TableCell className="text-right bg-gradient-to-r from-indigo-900 via-purple-900 to-pink-900 text-white border-b border-white">
-                              <div className="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full inline-block">
+                              <div className="bg-white/20 px-4 py-2 rounded-full inline-block">
                                 <span className="font-bold text-lg text-red-200">
                                   {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(totalSolde)}
                                 </span>
@@ -1162,10 +1138,10 @@ const PretFamilles: React.FC = () => {
                   value={searchText} 
                   onChange={(e) => handleSearch(e.target.value)} 
                   placeholder="Saisir au moins 3 caractères"
-                  className="bg-white/50 backdrop-blur-sm border border-gray-200/50 rounded-xl px-4 py-3 focus:ring-2 focus:ring-purple-500/20 transition-all duration-200"
+                  className="bg-white/50 border border-gray-200/50 rounded-xl px-4 py-3 focus:ring-2 focus:ring-purple-500/20 transition-all duration-200"
                 />
                 {searchResults.length > 0 && (
-                  <div className="absolute z-10 w-full bg-white/95 dark:bg-gray-800/95 backdrop-blur-xl border border-gray-200/50 rounded-xl shadow-2xl mt-2 overflow-hidden">
+                  <div className="absolute z-10 w-full bg-white/95 dark:bg-gray-800/95 border border-gray-200/50 rounded-xl shadow-2xl mt-2 overflow-hidden">
                     {searchResults.map((result) => (
                       <div 
                         key={result.id} 
@@ -1199,7 +1175,7 @@ const PretFamilles: React.FC = () => {
                   min="0"
                   step="0.01"
                   className={cn(
-                    "pl-12 bg-white/50 backdrop-blur-sm border rounded-xl px-4 py-3 focus:ring-2 transition-all duration-200",
+                    "pl-12 bg-white/50  border rounded-xl px-4 py-3 focus:ring-2 transition-all duration-200",
                     montantRemboursementError 
                       ? "border-red-500 focus:ring-red-500/20" 
                       : "border-gray-200/50 focus:ring-emerald-500/20"
@@ -1295,7 +1271,7 @@ const PretFamilles: React.FC = () => {
                   min="0"
                   step="0.01"
                   className={cn(
-                    "pl-12 bg-white/50 backdrop-blur-sm border rounded-xl px-4 py-3 focus:ring-2 transition-all duration-200",
+                    "pl-12 bg-white/50  border rounded-xl px-4 py-3 focus:ring-2 transition-all duration-200",
                     editMontantError 
                       ? "border-red-500 focus:ring-red-500/20" 
                       : "border-gray-200/50 focus:ring-emerald-500/20"
@@ -1318,7 +1294,7 @@ const PretFamilles: React.FC = () => {
                   <Button
                     variant="outline"
                     className={cn(
-                      "w-full justify-start text-left font-normal bg-white/50 backdrop-blur-sm border border-gray-200/50 rounded-xl px-4 py-3 hover:bg-white/80 transition-all duration-200",
+                      "w-full justify-start text-left font-normal bg-white/50  border border-gray-200/50 rounded-xl px-4 py-3 hover:bg-white/80 transition-all duration-200",
                       !editDateRemboursement && "text-muted-foreground"
                     )}
                   >
@@ -1428,7 +1404,7 @@ const PretFamilles: React.FC = () => {
                   placeholder="0.00"
                   min="0"
                   step="0.01"
-                  className="pl-10 sm:pl-12 bg-white/50 backdrop-blur-sm border border-gray-200/50 rounded-xl px-3 sm:px-4 py-2 sm:py-3 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 text-sm sm:text-base"
+                  className="pl-10 sm:pl-12 bg-white/50 border border-gray-200/50 rounded-xl px-3 sm:px-4 py-2 sm:py-3 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 text-sm sm:text-base"
                 />
               </div>
             </div>
@@ -1442,7 +1418,7 @@ const PretFamilles: React.FC = () => {
                   <Button
                     variant="outline"
                     className={cn(
-                      "justify-start text-left font-normal bg-white/50 backdrop-blur-sm border border-gray-200/50 rounded-xl px-3 sm:px-4 py-2 sm:py-3 hover:bg-white/70 text-sm sm:text-base",
+                      "justify-start text-left font-normal bg-white/50  border border-gray-200/50 rounded-xl px-3 sm:px-4 py-2 sm:py-3 hover:bg-white/70 text-sm sm:text-base",
                       !editDatePret && "text-muted-foreground"
                     )}
                   >
@@ -1519,7 +1495,7 @@ const PretFamilles: React.FC = () => {
                 value={nouvNom} 
                 onChange={(e) => handleNouvNomSearch(e.target.value)}
                 placeholder="Tapez au moins 3 caractères..."
-                className="bg-white/50 backdrop-blur-sm border border-gray-200/50 rounded-xl px-4 py-3 focus:ring-2 focus:ring-purple-500/20 transition-all duration-200"
+                className="bg-white/50 border border-gray-200/50 rounded-xl px-4 py-3 focus:ring-2 focus:ring-purple-500/20 transition-all duration-200"
               />
               
               {/* Liste d'autocomplétion */}
@@ -1575,7 +1551,7 @@ const PretFamilles: React.FC = () => {
                   placeholder="0.00"
                   min="0"
                   step="0.01"
-                  className="pl-12 bg-white/50 backdrop-blur-sm border border-gray-200/50 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200"
+                  className="pl-12 bg-white/50 border border-gray-200/50 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200"
                 />
               </div>
             </div>
@@ -1587,7 +1563,7 @@ const PretFamilles: React.FC = () => {
                   <Button
                     variant={"outline"}
                     className={cn(
-                      "w-full justify-start text-left font-normal bg-white/50 backdrop-blur-sm border border-gray-200/50 rounded-xl px-4 py-3 hover:bg-white/70 transition-all duration-200",
+                      "w-full justify-start text-left font-normal bg-white/50  border border-gray-200/50 rounded-xl px-4 py-3 hover:bg-white/70 transition-all duration-200",
                       !nouvDate && "text-muted-foreground"
                     )}
                   >
@@ -1595,7 +1571,7 @@ const PretFamilles: React.FC = () => {
                     {nouvDate ? format(nouvDate, 'PP', { locale: fr }) : <span>Sélectionner une date</span>}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0 bg-white/95 backdrop-blur-xl border border-gray-200/50 shadow-2xl" align="start">
+                <PopoverContent className="w-auto p-0 bg-white/95 border border-gray-200/50 shadow-2xl" align="start">
                   <Calendar
                     mode="single"
                     selected={nouvDate}

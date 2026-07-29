@@ -1067,7 +1067,7 @@ const LiveChatAdmin: React.FC = () => {
                 {showCreateGroup && (
                   <motion.div
                     initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                    className="absolute inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
+                    className="absolute inset-0 z-50 bg-black/60 flex items-center justify-center p-4"
                     onClick={() => setShowCreateGroup(false)}
                   >
                     <motion.div
@@ -1210,7 +1210,7 @@ const LiveChatAdmin: React.FC = () => {
             {showEmojis && (
               <motion.div
                 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }}
-                className="bg-slate-800/95 backdrop-blur border-t border-white/[0.06] px-3 py-2 shrink-0"
+                className="bg-slate-800/95 border-t border-white/[0.06] px-3 py-2 shrink-0"
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="flex flex-wrap gap-1">
@@ -1224,7 +1224,7 @@ const LiveChatAdmin: React.FC = () => {
           </AnimatePresence>
 
           {/* Input */}
-          <div className="p-3 bg-slate-900/90 backdrop-blur border-t border-white/[0.06] shrink-0">
+          <div className="p-3 bg-slate-900/90 border-t border-white/[0.06] shrink-0">
             <div className="flex items-center gap-2">
               <button onClick={(e) => { e.stopPropagation(); setShowEmojis(!showEmojis); }}
                 className="h-11 w-11 shrink-0 flex items-center justify-center rounded-xl bg-white/[0.05] hover:bg-white/[0.1] border border-white/[0.08] transition-colors">
@@ -1244,7 +1244,7 @@ const LiveChatAdmin: React.FC = () => {
             {adminDeleteConfirm && (
               <motion.div
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                className="absolute inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
+                className="absolute inset-0 z-50 bg-black/60 flex items-center justify-center p-4"
                 onClick={() => setAdminDeleteConfirm(null)}
               >
                 <motion.div
@@ -1384,7 +1384,7 @@ const LiveChatAdmin: React.FC = () => {
             {showEmojis && (
               <motion.div
                 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }}
-                className="bg-slate-800/95 backdrop-blur border-t border-white/[0.06] px-3 py-2 shrink-0"
+                className="bg-slate-800/95 border-t border-white/[0.06] px-3 py-2 shrink-0"
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="flex flex-wrap gap-1">
@@ -1398,7 +1398,7 @@ const LiveChatAdmin: React.FC = () => {
           </AnimatePresence>
 
           {/* Input */}
-          <div className="p-3 bg-slate-900/90 backdrop-blur border-t border-white/[0.06] shrink-0">
+          <div className="p-3 bg-slate-900/90 border-t border-white/[0.06] shrink-0">
             <div className="flex items-center gap-2">
               <button onClick={(e) => { e.stopPropagation(); setShowEmojis(!showEmojis); }}
                 className="h-11 w-11 shrink-0 flex items-center justify-center rounded-xl bg-white/[0.05] hover:bg-white/[0.1] border border-white/[0.08] transition-colors">
@@ -1531,7 +1531,7 @@ const LiveChatAdmin: React.FC = () => {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 10 }}
-                className="bg-slate-800/95 backdrop-blur border-t border-white/[0.06] px-3 py-2 shrink-0"
+                className="bg-slate-800/95 border-t border-white/[0.06] px-3 py-2 shrink-0"
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="flex flex-wrap gap-1">
@@ -1550,7 +1550,7 @@ const LiveChatAdmin: React.FC = () => {
           </AnimatePresence>
 
           {/* Input */}
-          <div className="p-3 bg-slate-900/90 backdrop-blur border-t border-white/[0.06] shrink-0">
+          <div className="p-3 bg-slate-900/90 border-t border-white/[0.06] shrink-0">
             <div className="flex items-center gap-2">
               <button
                 onClick={(e) => { e.stopPropagation(); setShowEmojis(!showEmojis); }}

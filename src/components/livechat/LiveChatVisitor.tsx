@@ -515,7 +515,7 @@ const LiveChatVisitor: React.FC<LiveChatVisitorProps> = ({ visitorNom, adminId, 
             </button>
           )}
           <div className="relative">
-            <div className="w-9 h-9 rounded-full bg-white/20 backdrop-blur flex items-center justify-center">
+            <div className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center">
               {viewMode === 'group-chat' ? <UsersRound className="h-4 w-4 text-white" /> : <User className="h-4 w-4 text-white" />}
             </div>
             {viewMode === 'chat' && <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-400 rounded-full border-2 border-purple-600" />}
@@ -665,7 +665,7 @@ const LiveChatVisitor: React.FC<LiveChatVisitorProps> = ({ visitorNom, adminId, 
             {showEmojis && (
               <motion.div
                 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }}
-                className="bg-slate-800/95 backdrop-blur border-t border-white/[0.06] px-3 py-2"
+                className="bg-slate-800/95 border-t border-white/[0.06] px-3 py-2"
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="flex flex-wrap gap-1">
@@ -679,7 +679,7 @@ const LiveChatVisitor: React.FC<LiveChatVisitorProps> = ({ visitorNom, adminId, 
           </AnimatePresence>
 
           {/* Input (groupe) */}
-          <div className="p-3 bg-slate-900/90 backdrop-blur border-t border-white/[0.06]">
+          <div className="p-3 bg-slate-900/90 border-t border-white/[0.06]">
             <div className="flex items-center gap-2">
               <button onClick={(e) => { e.stopPropagation(); setShowEmojis(!showEmojis); }}
                 className="h-11 w-11 shrink-0 flex items-center justify-center rounded-xl bg-white/[0.05] hover:bg-white/[0.1] border border-white/[0.08] transition-colors">
@@ -804,7 +804,7 @@ const LiveChatVisitor: React.FC<LiveChatVisitorProps> = ({ visitorNom, adminId, 
             {showEmojis && (
               <motion.div
                 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }}
-                className="bg-slate-800/95 backdrop-blur border-t border-white/[0.06] px-3 py-2"
+                className="bg-slate-800/95 border-t border-white/[0.06] px-3 py-2"
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="flex flex-wrap gap-1">
@@ -818,7 +818,7 @@ const LiveChatVisitor: React.FC<LiveChatVisitorProps> = ({ visitorNom, adminId, 
           </AnimatePresence>
 
           {/* Input (privé) */}
-          <div className="p-3 bg-slate-900/90 backdrop-blur border-t border-white/[0.06]">
+          <div className="p-3 bg-slate-900/90 border-t border-white/[0.06]">
             <div className="flex items-center gap-2">
               <button onClick={(e) => { e.stopPropagation(); setShowEmojis(!showEmojis); }}
                 className="h-11 w-11 shrink-0 flex items-center justify-center rounded-xl bg-white/[0.05] hover:bg-white/[0.1] border border-white/[0.08] transition-colors">

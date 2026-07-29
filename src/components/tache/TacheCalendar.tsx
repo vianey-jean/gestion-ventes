@@ -105,7 +105,7 @@ const TacheCalendar: React.FC<TacheCalendarProps> = ({
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-      className="rounded-3xl bg-white/70 dark:bg-white/5 backdrop-blur-2xl border border-white/20 dark:border-white/10 shadow-2xl p-4 sm:p-6">
+      className="rounded-3xl bg-white/70 dark:bg-white/5 border border-white/20 dark:border-white/10 shadow-2xl p-4 sm:p-6">
       <div className="flex items-center justify-between mb-6">
         <button onClick={onPrevMonth}
           className="p-2 rounded-xl bg-white/50 dark:bg-white/10 hover:bg-white/80 dark:hover:bg-white/20 transition-all shadow-lg">

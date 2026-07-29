@@ -43,7 +43,7 @@ const ProduitsToolbar: React.FC<Props> = ({
           }}
           onFocus={() => { if (searchQuery.length >= 3) setShowSearchResults(true); }}
           onBlur={() => setTimeout(() => setShowSearchResults(false), 200)}
-          className="pl-11 sm:pl-12 h-12 sm:h-14 rounded-2xl border-2 border-violet-200/50 dark:border-violet-800/30 bg-white/80 dark:bg-white/5 backdrop-blur-xl focus:border-violet-500 shadow-lg shadow-violet-500/5 text-sm sm:text-base font-medium transition-all duration-300 w-full"
+          className="pl-11 sm:pl-12 h-12 sm:h-14 rounded-2xl border-2 border-violet-200/50 dark:border-violet-800/30 bg-white/80 dark:bg-white/5 focus:border-violet-500 shadow-lg shadow-violet-500/5 text-sm sm:text-base font-medium transition-all duration-300 w-full"
         />
       </div>
     </div>

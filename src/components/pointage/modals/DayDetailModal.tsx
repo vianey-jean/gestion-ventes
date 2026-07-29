@@ -24,7 +24,7 @@ const DayDetailModal: React.FC<DayDetailModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-gradient-to-br from-slate-900 via-indigo-900/30 to-violet-900/20 backdrop-blur-2xl border border-white/10 shadow-2xl rounded-3xl max-w-lg max-h-[85vh] overflow-y-auto">
+      <DialogContent className="bg-gradient-to-br from-slate-900 via-indigo-900/30 to-violet-900/20 border border-white/10 shadow-2xl rounded-3xl max-w-lg max-h-[85vh] overflow-y-auto">
         <DialogHeader className="text-center space-y-3 pb-4">
           <div className="mx-auto w-14 h-14 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-2xl flex items-center justify-center shadow-xl shadow-indigo-500/30">
             <CalendarDays className="h-7 w-7 text-white" />
@@ -48,7 +48,7 @@ const DayDetailModal: React.FC<DayDetailModalProps> = ({
             ) : (
               <>
                 {dayPointages.map(pt => (
-                  <div key={pt.id} className="p-4 rounded-2xl bg-white/10 border border-white/10 backdrop-blur-xl">
+                  <div key={pt.id} className="p-4 rounded-2xl bg-white/10 border border-white/10">
                     <div className="flex items-start justify-between">
                       <div>
                         <h4 className="font-bold text-white text-sm">{pt.entrepriseNom}</h4>

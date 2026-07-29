@@ -18,17 +18,17 @@ const ProfileHero: React.FC = () => (
       <motion.div
         animate={{ x: [0, 40, -30, 0], y: [0, -30, 20, 0], scale: [1, 1.1, 1], opacity: [0.3, 0.6, 0.3] }}
         transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut' }}
-        className="absolute -top-24 left-1/4 w-[420px] h-[420px] bg-violet-500/30 blur-[140px] rounded-full"
+        className="absolute -top-24 left-1/4 w-[420px] h-[420px] bg-violet-500/30 rounded-full"
       />
       <motion.div
         animate={{ x: [0, -35, 20, 0], y: [0, 30, -20, 0], scale: [1, 1.15, 1] }}
         transition={{ duration: 22, repeat: Infinity, ease: 'easeInOut' }}
-        className="absolute -bottom-24 right-1/4 w-[420px] h-[420px] bg-fuchsia-500/25 blur-[150px] rounded-full"
+        className="absolute -bottom-24 right-1/4 w-[420px] h-[420px] bg-fuchsia-500/25 rounded-full"
       />
       <motion.div
         animate={{ scale: [1, 1.3, 1], opacity: [0.15, 0.4, 0.15] }}
         transition={{ duration: 14, repeat: Infinity }}
-        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[650px] h-[650px] bg-indigo-500/10 blur-[180px] rounded-full"
+        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[650px] h-[650px] bg-indigo-500/10 rounded-full"
       />
     </div>
 
@@ -36,7 +36,7 @@ const ProfileHero: React.FC = () => (
     <div className="absolute inset-0 opacity-[0.22] bg-[linear-gradient(rgba(255,255,255,.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.04)_1px,transparent_1px)] bg-[size:48px_48px]" />
 
     <motion.div
-      className="absolute inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-violet-400 to-transparent blur-sm"
+      className="absolute inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-violet-400 to-transparent"
       animate={{ top: ['0%', '100%', '0%'] }}
       transition={{ duration: 9, repeat: Infinity, ease: 'linear' }}
     />
@@ -53,7 +53,7 @@ const ProfileHero: React.FC = () => (
     {/* Badge */}
     <motion.div
       whileHover={{ scale: 1.06, y: -2 }}
-      className="relative z-10 inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/5 backdrop-blur-2xl border border-white/10 mb-6 shadow-[0_20px_60px_rgba(168,85,247,0.35)]"
+      className="relative z-10 inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/5 border border-white/10 mb-6 shadow-[0_20px_60px_rgba(168,85,247,0.35)]"
     >
       <motion.div animate={{ rotate: [0, -12, 12, 0] }} transition={{ duration: 3.5, repeat: Infinity }}>
         <Crown className="w-4 h-4 text-yellow-400" />

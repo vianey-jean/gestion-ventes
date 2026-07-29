@@ -71,7 +71,7 @@ const EditProductModal: React.FC<Props> = (p) => {
   if (!p.selectedProduct) return null;
   return (
     <Dialog open={p.open} onOpenChange={(open) => { if (!open) { p.onOpenChange(false); p.setEditPhotos({ files: [], existingUrls: [], mainIndex: 0 }); } }}>
-      <DialogContent className="sm:max-w-lg bg-gradient-to-br from-slate-900 via-blue-900/40 to-indigo-900/30 backdrop-blur-2xl border border-white/10 shadow-2xl rounded-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-lg bg-gradient-to-br from-slate-900 via-blue-900/40 to-indigo-900/30 border border-white/10 shadow-2xl rounded-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader className="text-center space-y-4 pb-4">
           <div className="mx-auto w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-xl shadow-blue-500/30">
             <Edit className="h-8 w-8 text-white" />
@@ -169,7 +169,7 @@ const EditProductModal: React.FC<Props> = (p) => {
                 className="bg-white/10 border border-white/20 focus:border-cyan-400 rounded-xl text-white placeholder:text-white/40"
               />
               {p.showClientDropdown && p.clientSearchResults.length > 0 && (
-                <div className="absolute z-50 top-full mt-1 w-full rounded-xl border border-white/20 bg-slate-900/95 backdrop-blur-2xl shadow-2xl max-h-40 overflow-y-auto">
+                <div className="absolute z-50 top-full mt-1 w-full rounded-xl border border-white/20 bg-slate-900/95 shadow-2xl max-h-40 overflow-y-auto">
                   {p.clientSearchResults.map(client => (
                     <button key={client.id} type="button"
                       onMouseDown={(e) => {

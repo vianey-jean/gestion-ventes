@@ -268,17 +268,17 @@ const RegisterPage: React.FC = () => {
           <motion.div
             animate={{ x: [0, 30, 0], y: [0, -20, 0], scale: [1, 1.1, 1] }}
             transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute top-1/4 left-1/6 w-80 h-80 bg-purple-500/20 rounded-full blur-[100px]"
+            className="absolute top-1/4 left-1/6 w-80 h-80 bg-purple-500/20 rounded-full"
           />
           <motion.div
             animate={{ x: [0, -40, 0], y: [0, 30, 0], scale: [1, 1.2, 1] }}
             transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute bottom-1/4 right-1/6 w-[500px] h-[500px] bg-pink-500/15 rounded-full blur-[120px]"
+            className="absolute bottom-1/4 right-1/6 w-[500px] h-[500px] bg-pink-500/15 rounded-full"
           />
           <motion.div
             animate={{ x: [0, 20, 0], y: [0, 40, 0] }}
             transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-r from-violet-500/10 to-fuchsia-500/10 rounded-full blur-[100px]"
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-r from-violet-500/10 to-fuchsia-500/10 rounded-full"
           />
           
           {/* Floating particles */}
@@ -328,7 +328,7 @@ const RegisterPage: React.FC = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.4 + i * 0.1 }}
-                  className="p-3 bg-white/[0.04] border border-white/[0.08] rounded-xl backdrop-blur-sm"
+                  className="p-3 bg-white/[0.04] border border-white/[0.08] rounded-xl"
                 >
                   <item.icon className="h-5 w-5 text-purple-400 mb-1.5" />
                   <p className="text-sm font-bold text-white/90">{item.label}</p>
@@ -341,9 +341,9 @@ const RegisterPage: React.FC = () => {
           {/* RIGHT SIDE — Register form */}
           <div className="relative w-full max-w-2xl flex-1">
             {/* Glow behind card */}
-            <div className="absolute -inset-4 bg-gradient-to-r from-purple-600/20 via-pink-600/20 to-blue-600/20 rounded-[2rem] blur-2xl" />
+            <div className="absolute -inset-4 bg-gradient-to-r from-purple-600/20 via-pink-600/20 to-blue-600/20 rounded-[2rem]" />
             
-            <Card className="relative bg-white/[0.08] backdrop-blur-2xl border border-white/[0.12] shadow-[0_32px_64px_rgba(0,0,0,0.4)] rounded-3xl overflow-hidden">
+            <Card className="relative bg-white/[0.08] border border-white/[0.12] shadow-[0_32px_64px_rgba(0,0,0,0.4)] rounded-3xl overflow-hidden">
               {/* Top shimmer line */}
               <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-purple-400/50 to-transparent" />
               
@@ -358,7 +358,7 @@ const RegisterPage: React.FC = () => {
                   className="flex justify-center mb-4"
                 >
                   <div className="relative">
-                    <div className="absolute inset-0 bg-gradient-to-r from-violet-500 to-fuchsia-500 rounded-3xl blur-xl opacity-50" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-violet-500 to-fuchsia-500 rounded-3xl opacity-50" />
                     <div className="relative w-20 h-20 bg-gradient-to-br from-violet-500 via-purple-500 to-fuchsia-500 rounded-3xl flex items-center justify-center shadow-2xl border border-white/20">
                       <UserPlus className="h-10 w-10 text-white drop-shadow-lg" />
                     </div>
@@ -423,7 +423,7 @@ const RegisterPage: React.FC = () => {
                           Prénom
                         </Label>
                         <div className="relative group">
-                          <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-xl blur opacity-0 group-focus-within:opacity-100 transition-opacity duration-300" />
+                          <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-300" />
                           <Input
                             id="firstName"
                             name="firstName"
@@ -446,7 +446,7 @@ const RegisterPage: React.FC = () => {
                           Nom
                         </Label>
                         <div className="relative group">
-                          <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-xl blur opacity-0 group-focus-within:opacity-100 transition-opacity duration-300" />
+                          <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-300" />
                           <Input
                             id="lastName"
                             name="lastName"
@@ -472,7 +472,7 @@ const RegisterPage: React.FC = () => {
                         Adresse email
                       </Label>
                       <div className="relative group">
-                        <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-xl blur opacity-0 group-focus-within:opacity-100 transition-opacity duration-300" />
+                        <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-300" />
                         <Input
                           id="email"
                           name="email"
@@ -509,7 +509,7 @@ const RegisterPage: React.FC = () => {
                           <SelectTrigger className={`h-12 bg-white/[0.06] border-white/[0.1] text-white rounded-xl transition-all duration-300 focus:bg-white/[0.1] focus:border-purple-400/50 ${errors.gender ? "border-red-400/50" : ""}`}>
                             <SelectValue placeholder="Sélectionnez votre genre" />
                           </SelectTrigger>
-                          <SelectContent className="bg-slate-900/95 backdrop-blur-2xl border border-white/[0.1] text-white">
+                          <SelectContent className="bg-slate-900/95 border border-white/[0.1] text-white">
                             <SelectItem value="male">Homme</SelectItem>
                             <SelectItem value="female">Femme</SelectItem>
                             <SelectItem value="other">Autre</SelectItem>
@@ -529,7 +529,7 @@ const RegisterPage: React.FC = () => {
                           Téléphone
                         </Label>
                         <div className="relative group">
-                          <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-xl blur opacity-0 group-focus-within:opacity-100 transition-opacity duration-300" />
+                          <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-300" />
                           <Input
                             id="phone"
                             name="phone"
@@ -555,7 +555,7 @@ const RegisterPage: React.FC = () => {
                         Adresse
                       </Label>
                       <div className="relative group">
-                        <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-xl blur opacity-0 group-focus-within:opacity-100 transition-opacity duration-300" />
+                        <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-300" />
                         <Input
                           id="address"
                           name="address"

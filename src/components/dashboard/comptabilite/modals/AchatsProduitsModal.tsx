@@ -31,11 +31,7 @@ const AchatsProduitsModal: React.FC<AchatsProduitsModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto
-        bg-gradient-to-br from-white to-indigo-50/50 dark:from-gray-900 dark:to-indigo-950/30
-        backdrop-blur-xl border border-indigo-100/50 dark:border-indigo-800/30
-        shadow-[0_40px_120px_rgba(0,0,0,0.15)] dark:shadow-[0_40px_120px_rgba(0,0,0,0.5)]
-        rounded-2xl sm:rounded-3xl">
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto bg-gradient-to-br from-white to-indigo-50/50 dark:from-gray-900 dark:to-indigo-950/30 border border-indigo-100/50 dark:border-indigo-800/30 shadow-[0_40px_120px_rgba(0,0,0,0.15)] dark:shadow-[0_40px_120px_rgba(0,0,0,0.5)] rounded-2xl sm:rounded-3xl">
 
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3">
@@ -56,10 +52,7 @@ const AchatsProduitsModal: React.FC<AchatsProduitsModalProps> = ({
             achatsProducts.map((achat) => (
               <div
                 key={achat.id}
-                className="flex items-center justify-between p-4
-                  rounded-xl bg-gradient-to-r from-indigo-50/80 to-purple-50/80 dark:from-indigo-900/20 dark:to-purple-900/20
-                  border border-indigo-100 dark:border-indigo-800/50
-                  transition-all hover:scale-[1.01]"
+                className="flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-indigo-50/80 to-purple-50/80 dark:from-indigo-900/20 dark:to-purple-900/20 border border-indigo-100 dark:border-indigo-800/50 transition-all hover:scale-[1.01]"
               >
                 <div className="flex items-center gap-3">
                   <div className="p-2.5 rounded-xl bg-indigo-100 dark:bg-indigo-500/20 border border-indigo-200 dark:border-indigo-500/20">

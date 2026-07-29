@@ -18,7 +18,7 @@ const ClientSearchBar: React.FC<ClientSearchBarProps> = ({
 }) => {
   return (
     <div className="mb-8 sm:mb-10 md:mb-12">
-      <Card className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-2 border-purple-200 dark:border-purple-800 shadow-xl hover:shadow-2xl transition-all duration-300">
+      <Card className="bg-white/80 dark:bg-gray-800/80 border-2 border-purple-200 dark:border-purple-800 shadow-xl hover:shadow-2xl transition-all duration-300">
         <CardContent className="p-4 sm:p-6">
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
             <Label htmlFor="search" className="text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 whitespace-nowrap">

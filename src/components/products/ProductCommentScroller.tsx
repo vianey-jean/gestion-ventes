@@ -63,7 +63,7 @@ const ProductCommentScroller: React.FC<ProductCommentScrollerProps> = ({ comment
           transition={{ duration: 0.6, ease: 'easeInOut' }}
           className={`relative rounded-xl border bg-gradient-to-r ${getRatingGradient(
             comment.rating
-          )} p-2.5 backdrop-blur-sm`}
+          )} p-2.5 `}
         >
           {/* shimmer line */}
           <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/40 to-transparent" />

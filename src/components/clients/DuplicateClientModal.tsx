@@ -108,22 +108,10 @@ const DuplicateClientModal: React.FC<DuplicateClientModalProps> = ({
         </DialogHeader>
 
         <ScrollArea
-  className="
-    h-[65vh]
-    md:h-[500px]
-    w-full
-    overflow-hidden
-    touch-pan-y
-  "
+  className="h-[65vh] md:h-[500px] w-full overflow-hidden touch-pan-y"
 >
   <div
-    className="
-      px-2
-      py-2
-      pb-12
-      space-y-3
-      min-h-full
-    "
+    className="px-2 py-2 pb-12 space-y-3 min-h-full"
   >
     {matches.map(({ client, fields }) => {
       const isEditing =
@@ -132,16 +120,7 @@ const DuplicateClientModal: React.FC<DuplicateClientModalProps> = ({
       return (
         <div
           key={client.id || client.nom}
-          className="
-            rounded-2xl
-            border-2
-            border-amber-200/70
-            dark:border-amber-800/50
-            bg-white/80
-            dark:bg-gray-900/60
-            p-4
-            shadow-md
-          "
+          className="rounded-2xl border-2 border-amber-200/70 dark:border-amber-800/50 bg-white/80 dark:bg-gray-900/60 p-4 shadow-md"
         >
           {!isEditing ? (
             <>
@@ -154,14 +133,7 @@ const DuplicateClientModal: React.FC<DuplicateClientModalProps> = ({
                 {fields.map((f) => (
                   <Badge
                     key={f}
-                    className="
-                      bg-amber-100
-                      text-amber-800
-                      border
-                      border-amber-300
-                      dark:bg-amber-900/40
-                      dark:text-amber-200
-                    "
+                    className="bg-amber-100 text-amber-800 border border-amber-300 dark:bg-amber-900/40 dark:text-amber-200"
                   >
                     ⚠ {fieldLabel[f]} identique
                   </Badge>
@@ -208,14 +180,7 @@ const DuplicateClientModal: React.FC<DuplicateClientModalProps> = ({
                     onUseExisting(client);
                     onClose();
                   }}
-                  className="
-                    bg-gradient-to-r
-                    from-emerald-500
-                    to-green-600
-                    hover:from-emerald-600
-                    hover:to-green-700
-                    text-white
-                  "
+                  className="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white"
                 >
                   <UserCheck className="h-4 w-4 mr-1" />
                   Utiliser ce client
@@ -226,11 +191,7 @@ const DuplicateClientModal: React.FC<DuplicateClientModalProps> = ({
                   size="sm"
                   variant="outline"
                   onClick={() => startEdit(client)}
-                  className="
-                    border-amber-300
-                    hover:bg-amber-50
-                    dark:hover:bg-amber-900/20
-                  "
+                  className="border-amber-300 hover:bg-amber-50 dark:hover:bg-amber-900/20"
                 >
                   <Edit3 className="h-4 w-4 mr-1" />
                   Modifier puis utiliser
@@ -335,11 +296,7 @@ const DuplicateClientModal: React.FC<DuplicateClientModalProps> = ({
                   size="sm"
                   onClick={saveEdit}
                   disabled={saving}
-                  className="
-                    bg-emerald-600
-                    hover:bg-emerald-700
-                    text-white
-                  "
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white"
                 >
                   <Save className="h-4 w-4 mr-1" />
 

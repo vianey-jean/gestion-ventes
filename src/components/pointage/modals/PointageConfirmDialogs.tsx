@@ -20,7 +20,7 @@ const PointageConfirmDialogs: React.FC<PointageConfirmDialogsProps> = ({
   return (
     <>
       <AlertDialog open={!!deleteConfirm} onOpenChange={() => setDeleteConfirm(null)}>
-        <AlertDialogContent className="bg-gradient-to-br from-slate-900 via-red-900/30 to-rose-900/20 backdrop-blur-2xl border border-white/10 rounded-3xl">
+        <AlertDialogContent className="bg-gradient-to-br from-slate-900 via-red-900/30 to-rose-900/20 border border-white/10 rounded-3xl">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-white font-black">🗑️ Confirmer la suppression</AlertDialogTitle>
             <AlertDialogDescription className="text-white/70">
@@ -41,7 +41,7 @@ const PointageConfirmDialogs: React.FC<PointageConfirmDialogsProps> = ({
       </AlertDialog>
 
       <AlertDialog open={editConfirm} onOpenChange={setEditConfirm}>
-        <AlertDialogContent className="bg-gradient-to-br from-slate-900 via-blue-900/30 to-indigo-900/20 backdrop-blur-2xl border border-white/10 rounded-3xl">
+        <AlertDialogContent className="bg-gradient-to-br from-slate-900 via-blue-900/30 to-indigo-900/20 border border-white/10 rounded-3xl">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-white font-black">✏️ Confirmer la modification</AlertDialogTitle>
             <AlertDialogDescription className="text-white/70">

@@ -12,7 +12,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 
-const premiumBtnClass = "group relative overflow-hidden rounded-xl sm:rounded-2xl backdrop-blur-xl border transition-all duration-300 hover:scale-105 px-4 py-2 sm:px-5 sm:py-3 text-xs sm:text-sm font-semibold";
+const premiumBtnClass = "group relative overflow-hidden rounded-xl sm:rounded-2xl  border transition-all duration-300 hover:scale-105 px-4 py-2 sm:px-5 sm:py-3 text-xs sm:text-sm font-semibold";
 const mirrorShine = "absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-700";
 
 interface EntrepriseEditModalProps {
@@ -47,7 +47,7 @@ const EntrepriseEditModal: React.FC<EntrepriseEditModalProps> = ({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="bg-gradient-to-br from-slate-900 via-cyan-900/30 to-blue-900/20 backdrop-blur-2xl border border-white/10 shadow-2xl rounded-3xl max-w-md">
+        <DialogContent className="bg-gradient-to-br from-slate-900 via-cyan-900/30 to-blue-900/20 border border-white/10 shadow-2xl rounded-3xl max-w-md">
           <DialogHeader className="text-center space-y-3 pb-4">
             <div className="mx-auto w-14 h-14 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-xl shadow-blue-500/30">
               <Building2 className="h-7 w-7 text-white" />
@@ -107,7 +107,7 @@ const EntrepriseEditModal: React.FC<EntrepriseEditModalProps> = ({
 
       {/* Confirmation dialog */}
       <AlertDialog open={showConfirm} onOpenChange={setShowConfirm}>
-        <AlertDialogContent className="rounded-3xl backdrop-blur-2xl bg-white/95 dark:bg-[#0a0020]/95 border border-blue-200/30 max-w-md">
+        <AlertDialogContent className="rounded-3xl bg-white/95 dark:bg-[#0a0020]/95 border border-blue-200/30 max-w-md">
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2 text-blue-600">
               <Building2 className="w-5 h-5" /> Confirmer la modification

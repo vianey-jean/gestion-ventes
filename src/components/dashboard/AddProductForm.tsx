@@ -153,11 +153,11 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ isOpen, onClose }) => {
   return (
     <>
       <Dialog open={isOpen} onOpenChange={handleClose}>
-        <DialogContent className="sm:max-w-lg bg-gradient-to-br from-white via-emerald-50/30 to-green-50/50 backdrop-blur-xl border-0 shadow-2xl rounded-3xl overflow-hidden max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-lg bg-gradient-to-br from-white via-emerald-50/30 to-green-50/50 border-0 shadow-2xl rounded-3xl overflow-hidden max-h-[90vh] overflow-y-auto">
           {/* Decorative background elements */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <div className="absolute -top-24 -right-24 w-48 h-48 bg-gradient-to-br from-emerald-200/20 to-green-200/20 rounded-full blur-3xl" />
-            <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-gradient-to-br from-green-200/20 to-teal-200/20 rounded-full blur-3xl" />
+            <div className="absolute -top-24 -right-24 w-48 h-48 bg-gradient-to-br from-emerald-200/20 to-green-200/20 rounded-full" />
+            <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-gradient-to-br from-green-200/20 to-teal-200/20 rounded-full" />
           </div>
 
           <DialogHeader className="relative text-center space-y-4 pb-2">
@@ -166,7 +166,7 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ isOpen, onClose }) => {
               <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 via-green-600 to-teal-600 rounded-2xl flex items-center justify-center shadow-xl shadow-emerald-500/30 transform hover:scale-105 transition-transform duration-300">
                 <PackagePlus className="h-8 w-8 text-white drop-shadow-lg" />
               </div>
-              <div className="absolute inset-0 bg-gradient-to-br from-emerald-400 to-green-500 rounded-2xl blur-xl opacity-40 -z-10 scale-110" />
+              <div className="absolute inset-0 bg-gradient-to-br from-emerald-400 to-green-500 rounded-2xl opacity-40 -z-10 scale-110" />
             </div>
 
             <DialogTitle className="text-2xl font-black bg-gradient-to-r from-emerald-600 via-green-700 to-teal-700 bg-clip-text text-transparent">
@@ -200,7 +200,7 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ isOpen, onClose }) => {
                     errors.description && "border-red-300 focus:border-red-500 bg-red-50/30"
                   )}
                 />
-                <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-emerald-500/10 to-green-500/5 opacity-0 group-focus-within:opacity-100 transition-opacity duration-300 pointer-events-none -z-10 blur-sm scale-105" />
+                <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-emerald-500/10 to-green-500/5 opacity-0 group-focus-within:opacity-100 transition-opacity duration-300 pointer-events-none -z-10 scale-105" />
               </div>
               {errors.description && (
                 <p className="text-sm font-medium text-red-500 flex items-center gap-1">
@@ -335,9 +335,9 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ isOpen, onClose }) => {
 
       {/* Premium Confirmation Dialog */}
       <AlertDialog open={openConfirm} onOpenChange={setOpenConfirm}>
-        <AlertDialogContent className="bg-gradient-to-br from-white via-emerald-50/30 to-green-50/50 backdrop-blur-xl border-0 shadow-2xl rounded-3xl overflow-hidden">
+        <AlertDialogContent className="bg-gradient-to-br from-white via-emerald-50/30 to-green-50/50 border-0 shadow-2xl rounded-3xl overflow-hidden">
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <div className="absolute -top-24 -right-24 w-48 h-48 bg-gradient-to-br from-emerald-200/20 to-green-200/20 rounded-full blur-3xl" />
+            <div className="absolute -top-24 -right-24 w-48 h-48 bg-gradient-to-br from-emerald-200/20 to-green-200/20 rounded-full" />
           </div>
 
           <AlertDialogHeader className="relative text-center space-y-4">
@@ -345,7 +345,7 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ isOpen, onClose }) => {
               <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-green-600 rounded-2xl flex items-center justify-center shadow-xl shadow-emerald-500/30">
                 <PackagePlus className="h-8 w-8 text-white" />
               </div>
-              <div className="absolute inset-0 bg-gradient-to-br from-emerald-400 to-green-500 rounded-2xl blur-xl opacity-40 -z-10 scale-110" />
+              <div className="absolute inset-0 bg-gradient-to-br from-emerald-400 to-green-500 rounded-2xl opacity-40 -z-10 scale-110" />
             </div>
 
             <AlertDialogTitle className="text-xl font-black bg-gradient-to-r from-emerald-600 to-green-700 bg-clip-text text-transparent">

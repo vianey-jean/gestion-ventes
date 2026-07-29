@@ -306,7 +306,7 @@ const PointageAutoSection: React.FC = () => {
                   initial={{ opacity: 0, y: -4 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, x: -10 }}
-                  className="rounded-lg bg-white/60 dark:bg-white/5 backdrop-blur-sm border border-emerald-200/50 dark:border-emerald-500/20 p-2.5"
+                  className="rounded-lg bg-white/60 dark:bg-white/5 border border-emerald-200/50 dark:border-emerald-500/20 p-2.5"
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1 min-w-0">
@@ -367,7 +367,7 @@ const PointageAutoSection: React.FC = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60"
             onClick={() => setShowForm(false)}
           >
             <motion.div
@@ -376,7 +376,7 @@ const PointageAutoSection: React.FC = () => {
               exit={{ scale: 0.9, y: 20 }}
               transition={{ type: 'spring', damping: 22 }}
               onClick={e => e.stopPropagation()}
-              className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-3xl bg-gradient-to-br from-emerald-900/95 via-teal-900/95 to-green-900/95 border-2 border-emerald-500/40 shadow-2xl shadow-emerald-500/30 backdrop-blur-2xl"
+              className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-3xl bg-gradient-to-br from-emerald-900/95 via-teal-900/95 to-green-900/95 border-2 border-emerald-500/40 shadow-2xl shadow-emerald-500/30"
             >
               {/* Decoratives */}
               <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-emerald-400/20 to-transparent rounded-bl-full pointer-events-none" />
@@ -420,7 +420,7 @@ const PointageAutoSection: React.FC = () => {
                     <SelectTrigger className="bg-white/10 border-emerald-400/30 text-emerald-100 rounded-xl h-10">
                       <SelectValue placeholder="Sélectionner une personne" />
                     </SelectTrigger>
-                    <SelectContent className="bg-emerald-900/95 backdrop-blur-xl border-emerald-600/50 text-emerald-100">
+                    <SelectContent className="bg-emerald-900/95 border-emerald-600/50 text-emerald-100">
                       {travailleurs.map(t => (
                         <SelectItem key={t.id} value={t.id}>{t.prenom} {t.nom}</SelectItem>
                       ))}
@@ -493,7 +493,7 @@ const PointageAutoSection: React.FC = () => {
                     <SelectTrigger className="bg-white/10 border-emerald-400/30 text-emerald-100 rounded-xl h-10">
                       <SelectValue placeholder="Sélectionner une entreprise" />
                     </SelectTrigger>
-                    <SelectContent className="bg-emerald-900/95 backdrop-blur-xl border-emerald-600/50 text-emerald-100">
+                    <SelectContent className="bg-emerald-900/95 border-emerald-600/50 text-emerald-100">
                       {entreprises.map(e => (
                         <SelectItem key={e.id} value={e.id}>{e.nom}</SelectItem>
                       ))}
@@ -584,12 +584,12 @@ const PointageAutoSection: React.FC = () => {
 
       {/* Dialog de confirmation ultra luxe */}
       <AlertDialog open={!!deleteTarget} onOpenChange={(o) => !o && !deleting && setDeleteTarget(null)}>
-        <AlertDialogContent className="bg-gradient-to-br from-slate-950 via-rose-950/40 to-red-950/30 backdrop-blur-3xl border border-rose-300/20 rounded-3xl overflow-hidden shadow-[0_30px_120px_rgba(244,63,94,0.45)] max-w-md p-0">
+        <AlertDialogContent className="bg-gradient-to-br from-slate-950 via-rose-950/40 to-red-950/30 border border-rose-300/20 rounded-3xl overflow-hidden shadow-[0_30px_120px_rgba(244,63,94,0.45)] max-w-md p-0">
           {/* Décor lumineux */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <div className="absolute -top-32 -right-32 w-72 h-72 bg-gradient-to-br from-rose-500/30 via-red-500/20 to-transparent rounded-full blur-3xl animate-pulse" />
-            <div className="absolute -bottom-32 -left-32 w-72 h-72 bg-gradient-to-tr from-red-600/30 via-rose-500/20 to-transparent rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-radial from-rose-500/10 to-transparent rounded-full blur-2xl" />
+            <div className="absolute -top-32 -right-32 w-72 h-72 bg-gradient-to-br from-rose-500/30 via-red-500/20 to-transparent rounded-full animate-pulse" />
+            <div className="absolute -bottom-32 -left-32 w-72 h-72 bg-gradient-to-tr from-red-600/30 via-rose-500/20 to-transparent rounded-full animate-pulse" style={{ animationDelay: '1s' }} />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-radial from-rose-500/10 to-transparent rounded-full" />
           </div>
 
           {/* Bordure dégradée */}
@@ -617,7 +617,7 @@ const PointageAutoSection: React.FC = () => {
                   <Sparkles className="absolute -bottom-1 -left-1 h-4 w-4 text-yellow-200 fill-yellow-300 drop-shadow-lg" />
                 </motion.div>
                 {/* Halo */}
-                <div className="absolute inset-0 bg-gradient-to-br from-rose-400 via-red-500 to-rose-700 rounded-3xl blur-2xl opacity-50 -z-10 scale-125 animate-pulse" />
+                <div className="absolute inset-0 bg-gradient-to-br from-rose-400 via-red-500 to-rose-700 rounded-3xl opacity-50 -z-10 scale-125 animate-pulse" />
               </div>
 
               <AlertDialogTitle className="text-center text-2xl font-black tracking-tight">
@@ -637,7 +637,7 @@ const PointageAutoSection: React.FC = () => {
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.15 }}
-                      className="relative mx-auto rounded-2xl bg-gradient-to-br from-white/10 via-rose-500/10 to-red-500/10 backdrop-blur-xl border border-rose-300/20 p-4 shadow-inner"
+                      className="relative mx-auto rounded-2xl bg-gradient-to-br from-white/10 via-rose-500/10 to-red-500/10 border border-rose-300/20 p-4 shadow-inner"
                     >
                       <div className="flex items-center gap-3 justify-center">
                         <div className="p-2 bg-gradient-to-br from-rose-400/30 to-red-500/30 rounded-xl border border-rose-300/30">
@@ -671,7 +671,7 @@ const PointageAutoSection: React.FC = () => {
                 disabled={deleting}
                 className={cn(
                   "flex-1 h-12 rounded-2xl font-bold text-sm m-0",
-                  "bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl",
+                  "bg-gradient-to-br from-white/10 to-white/5 ",
                   "border border-white/20 hover:border-white/30",
                   "text-white/90 hover:text-white hover:bg-white/15",
                   "shadow-lg transition-all duration-300",
@@ -724,7 +724,7 @@ const PointageAutoSection: React.FC = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+            className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/60"
             onClick={() => setDeactivateTarget(null)}
           >
             <motion.div
@@ -733,7 +733,7 @@ const PointageAutoSection: React.FC = () => {
               exit={{ scale: 0.9, y: 20 }}
               transition={{ type: 'spring', damping: 22 }}
               onClick={e => e.stopPropagation()}
-              className="relative w-full max-w-md rounded-3xl bg-gradient-to-br from-amber-900/95 via-orange-900/95 to-red-900/95 border-2 border-amber-500/40 shadow-2xl shadow-amber-500/30 backdrop-blur-2xl overflow-hidden"
+              className="relative w-full max-w-md rounded-3xl bg-gradient-to-br from-amber-900/95 via-orange-900/95 to-red-900/95 border-2 border-amber-500/40 shadow-2xl shadow-amber-500/30 overflow-hidden"
             >
               <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-amber-400/20 to-transparent rounded-bl-full pointer-events-none" />
               <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-red-400/20 to-transparent rounded-tr-full pointer-events-none" />
@@ -801,7 +801,7 @@ const PointageAutoSection: React.FC = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+            className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/60"
             onClick={() => setReactivateTarget(null)}
           >
             <motion.div
@@ -810,7 +810,7 @@ const PointageAutoSection: React.FC = () => {
               exit={{ scale: 0.9, y: 20 }}
               transition={{ type: 'spring', damping: 22 }}
               onClick={e => e.stopPropagation()}
-              className="relative w-full max-w-md rounded-3xl bg-gradient-to-br from-emerald-900/95 via-teal-900/95 to-green-900/95 border-2 border-emerald-500/40 shadow-2xl shadow-emerald-500/30 backdrop-blur-2xl overflow-hidden"
+              className="relative w-full max-w-md rounded-3xl bg-gradient-to-br from-emerald-900/95 via-teal-900/95 to-green-900/95 border-2 border-emerald-500/40 shadow-2xl shadow-emerald-500/30 overflow-hidden"
             >
               <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-emerald-400/20 to-transparent rounded-bl-full pointer-events-none" />
               <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-teal-400/20 to-transparent rounded-tr-full pointer-events-none" />

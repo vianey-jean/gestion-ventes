@@ -67,7 +67,7 @@ const PointageEntreprisesList: React.FC<PointageEntreprisesListProps> = ({ entre
   return (
     <>
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
-        className="mt-6 rounded-3xl bg-white/70 dark:bg-white/5 backdrop-blur-2xl border border-white/20 dark:border-white/10 shadow-2xl p-4 sm:p-6">
+        className="mt-6 rounded-3xl bg-white/70 dark:bg-white/5 border border-white/20 dark:border-white/10 shadow-2xl p-4 sm:p-6">
         <button onClick={() => setShow(!show)}
           className="w-full flex items-center justify-between mb-4 cursor-pointer hover:opacity-80 transition-opacity">
           <h3 className="text-lg font-black bg-gradient-to-r from-cyan-500 to-blue-500 bg-clip-text text-transparent flex items-center gap-2">
@@ -78,7 +78,7 @@ const PointageEntreprisesList: React.FC<PointageEntreprisesListProps> = ({ entre
         {show && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {entreprises.map(ent => (
-              <div key={ent.id} className="p-4 rounded-2xl bg-white/50 dark:bg-white/5 border border-white/20 dark:border-white/10 backdrop-blur-xl">
+              <div key={ent.id} className="p-4 rounded-2xl bg-white/50 dark:bg-white/5 border border-white/20 dark:border-white/10">
                 <div className="flex items-start justify-between">
                   <div>
                     <h4 className="font-bold text-sm">{ent.nom}</h4>
@@ -123,7 +123,7 @@ const PointageEntreprisesList: React.FC<PointageEntreprisesListProps> = ({ entre
 
       {/* Delete confirmation */}
       <AlertDialog open={!!deleteTarget} onOpenChange={v => { if (!v) setDeleteTarget(null); }}>
-        <AlertDialogContent className="rounded-3xl backdrop-blur-2xl bg-white/95 dark:bg-[#0a0020]/95 border border-red-200/30 max-w-md">
+        <AlertDialogContent className="rounded-3xl bg-white/95 dark:bg-[#0a0020]/95 border border-red-200/30 max-w-md">
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2 text-red-600">
               <Trash2 className="w-5 h-5" /> Supprimer l'entreprise

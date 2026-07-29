@@ -99,7 +99,7 @@ const RdvDayModal: React.FC<Props> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-gradient-to-br from-slate-900 via-pink-900/30 to-fuchsia-900/20 backdrop-blur-2xl border border-white/10 shadow-2xl rounded-3xl max-w-2xl max-h-[85vh] overflow-hidden">
+      <DialogContent className="bg-gradient-to-br from-slate-900 via-pink-900/30 to-fuchsia-900/20 border border-white/10 shadow-2xl rounded-3xl max-w-2xl max-h-[85vh] overflow-hidden">
         <DialogHeader className="text-center space-y-2 pb-3">
           <DialogTitle className="text-lg font-black bg-gradient-to-r from-pink-400 via-fuchsia-400 to-rose-400 bg-clip-text text-transparent">
             💇 RDV du {formatDate(selectedDay)}

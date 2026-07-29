@@ -42,12 +42,12 @@ const NotesHero: React.FC<NotesHeroProps> = ({
       <motion.div
         animate={{ x: [0, 40, 0], y: [0, -30, 0], scale: [1, 1.15, 1] }}
         transition={{ duration: 16, repeat: Infinity, ease: 'easeInOut' }}
-        className="absolute -top-10 left-1/4 w-[24rem] h-[24rem] bg-amber-500/20 rounded-full blur-[110px] pointer-events-none"
+        className="absolute -top-10 left-1/4 w-[24rem] h-[24rem] bg-amber-500/20 rounded-full pointer-events-none"
       />
       <motion.div
         animate={{ x: [0, -30, 0], y: [0, 30, 0], scale: [1, 1.1, 1] }}
         transition={{ duration: 19, repeat: Infinity, ease: 'easeInOut' }}
-        className="absolute -bottom-10 right-1/4 w-[26rem] h-[26rem] bg-rose-500/20 rounded-full blur-[120px] pointer-events-none"
+        className="absolute -bottom-10 right-1/4 w-[26rem] h-[26rem] bg-rose-500/20 rounded-full pointer-events-none"
       />
       {/* Grid mask */}
       <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.025)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.025)_1px,transparent_1px)] bg-[size:44px_44px] [mask-image:radial-gradient(ellipse_at_center,black_30%,transparent_75%)]" />
@@ -57,7 +57,7 @@ const NotesHero: React.FC<NotesHeroProps> = ({
       <div className="relative z-10 text-center px-4">
         <motion.div
           whileHover={{ scale: 1.05, y: -2 }}
-          className="inline-flex items-center gap-3 px-6 py-3 rounded-2xl bg-white/[0.07] backdrop-blur-2xl border border-white/[0.12] shadow-[0_10px_40px_rgba(245,158,11,0.3)] mb-4"
+          className="inline-flex items-center gap-3 px-6 py-3 rounded-2xl bg-white/[0.07] border border-white/[0.12] shadow-[0_10px_40px_rgba(245,158,11,0.3)] mb-4"
         >
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-lg">
             <StickyNote className="h-5 w-5 text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]" />
@@ -73,7 +73,7 @@ const NotesHero: React.FC<NotesHeroProps> = ({
           </div>
         </motion.div>
 
-        <div className="relative overflow-hidden bg-gradient-to-br from-amber-700/70 via-orange-700/70 to-rose-800/70 backdrop-blur-xl rounded-2xl sm:rounded-3xl shadow-[0_40px_120px_rgba(0,0,0,0.45)] p-5 sm:p-6 border border-white/25 max-w-2xl mx-auto">
+        <div className="relative overflow-hidden bg-gradient-to-br from-amber-700/70 via-orange-700/70 to-rose-800/70 rounded-2xl sm:rounded-3xl shadow-[0_40px_120px_rgba(0,0,0,0.45)] p-5 sm:p-6 border border-white/25 max-w-2xl mx-auto">
           <div className="absolute inset-0 bg-gradient-to-tr from-white/10 via-transparent to-transparent pointer-events-none" />
           <div className="relative flex flex-wrap justify-center gap-3">
             <Button

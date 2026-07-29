@@ -23,7 +23,7 @@ const TendancesOverviewTab: React.FC<TendancesOverviewTabProps> = ({ salesOverTi
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* Évolution des ventes */}
-      <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl border border-white/20 shadow-2xl">
+      <Card className="bg-white/90 dark:bg-gray-800/90 border border-white/20 shadow-2xl">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <TrendingUp className="h-5 w-5 text-emerald-600" />
@@ -75,7 +75,7 @@ const TendancesOverviewTab: React.FC<TendancesOverviewTabProps> = ({ salesOverTi
       </Card>
 
       {/* Top 10 Produits Rentables */}
-      <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl border border-white/20 shadow-2xl">
+      <Card className="bg-white/90 dark:bg-gray-800/90 border border-white/20 shadow-2xl">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Package className="h-5 w-5 text-blue-600" />

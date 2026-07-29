@@ -55,7 +55,7 @@ const ProductsTable: React.FC<Props> = ({
 
   return (
     <motion.div ref={tableContainerRef} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
-      className="rounded-3xl border border-violet-200/20 dark:border-violet-800/20 overflow-hidden backdrop-blur-xl bg-white/80 dark:bg-white/5 shadow-2xl shadow-violet-500/5"
+      className="rounded-3xl border border-violet-200/20 dark:border-violet-800/20 overflow-hidden bg-white/80 dark:bg-white/5 shadow-2xl shadow-violet-500/5"
     >
       <div className="overflow-x-auto">
         <Table>
@@ -202,21 +202,21 @@ const ProductsTable: React.FC<Props> = ({
                       })()}
                       <motion.button whileHover={{ scale: 1.15 }} whileTap={{ scale: 0.9 }}
                         onClick={() => onView(product)}
-                        className="p-2 rounded-xl bg-violet-500/10 hover:bg-violet-500/20 text-violet-600 dark:text-violet-400 transition-all duration-200 backdrop-blur-xl border border-violet-200/20 dark:border-violet-800/20"
+                        className="p-2 rounded-xl bg-violet-500/10 hover:bg-violet-500/20 text-violet-600 dark:text-violet-400 transition-all duration-200 border border-violet-200/20 dark:border-violet-800/20"
                         title="Voir"
                       >
                         <Eye className="h-4 w-4" />
                       </motion.button>
                       <motion.button whileHover={{ scale: 1.15 }} whileTap={{ scale: 0.9 }}
                         onClick={() => onEdit(product)}
-                        className="p-2 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 transition-all duration-200 backdrop-blur-xl border border-blue-200/20 dark:border-blue-800/20"
+                        className="p-2 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 transition-all duration-200 border border-blue-200/20 dark:border-blue-800/20"
                         title="Modifier"
                       >
                         <Edit className="h-4 w-4" />
                       </motion.button>
                       <motion.button whileHover={{ scale: 1.15 }} whileTap={{ scale: 0.9 }}
                         onClick={() => onDelete(product)}
-                        className="p-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 transition-all duration-200 backdrop-blur-xl border border-red-200/20 dark:border-red-800/20"
+                        className="p-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 transition-all duration-200 border border-red-200/20 dark:border-red-800/20"
                         title="Supprimer"
                       >
                         <Trash2 className="h-4 w-4" />
@@ -228,7 +228,7 @@ const ProductsTable: React.FC<Props> = ({
                       <ProductCharacteristicCard product={product} variant="compact" />
                       <motion.button whileHover={{ scale: 1.15 }} whileTap={{ scale: 0.9 }}
                         onClick={() => onOpenCaracteristique(product)}
-                        className="p-2 rounded-xl bg-fuchsia-500/10 hover:bg-fuchsia-500/20 text-fuchsia-600 dark:text-fuchsia-400 transition-all duration-200 backdrop-blur-xl border border-fuchsia-200/30 dark:border-fuchsia-800/30"
+                        className="p-2 rounded-xl bg-fuchsia-500/10 hover:bg-fuchsia-500/20 text-fuchsia-600 dark:text-fuchsia-400 transition-all duration-200 border border-fuchsia-200/30 dark:border-fuchsia-800/30"
                         title="Voir caractéristique"
                         type="button"
                       >

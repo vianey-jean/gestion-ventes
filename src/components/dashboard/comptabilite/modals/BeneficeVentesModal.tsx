@@ -31,11 +31,7 @@ const BeneficeVentesModal: React.FC<BeneficeVentesModalProps> = ({
 }) => {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto
-        bg-gradient-to-br from-white to-blue-50/50 dark:from-gray-900 dark:to-blue-950/30
-        backdrop-blur-xl border border-blue-100/50 dark:border-blue-800/30
-        shadow-[0_40px_120px_rgba(0,0,0,0.15)] dark:shadow-[0_40px_120px_rgba(0,0,0,0.5)]
-        rounded-2xl sm:rounded-3xl">
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto bg-gradient-to-br from-white to-blue-50/50 dark:from-gray-900 dark:to-blue-950/30 border border-blue-100/50 dark:border-blue-800/30 shadow-[0_40px_120px_rgba(0,0,0,0.15)] dark:shadow-[0_40px_120px_rgba(0,0,0,0.5)] rounded-2xl sm:rounded-3xl">
 
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3">
@@ -60,10 +56,7 @@ const BeneficeVentesModal: React.FC<BeneficeVentesModalProps> = ({
               return (
                 <div
                   key={sale.id}
-                  className="flex items-center justify-between p-4
-                    rounded-xl bg-gradient-to-r from-blue-50/80 to-indigo-50/80 dark:from-blue-900/20 dark:to-indigo-900/20
-                    border border-blue-100 dark:border-blue-800/50
-                    transition-all hover:scale-[1.01]"
+                  className="flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-blue-50/80 to-indigo-50/80 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-100 dark:border-blue-800/50 transition-all hover:scale-[1.01]"
                 >
                   <div>
                     <p className="font-semibold text-gray-800 dark:text-white/90">

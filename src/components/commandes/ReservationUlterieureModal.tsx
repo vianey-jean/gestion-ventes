@@ -58,7 +58,7 @@ const ReservationUlterieureModal: React.FC<Props> = ({ isOpen, onClose, initial,
 
   return (
     <Dialog open={isOpen} onOpenChange={(o) => { if (!o) onClose(); }}>
-      <DialogContent className="max-w-lg rounded-3xl border-2 border-amber-300/60 bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 dark:from-amber-950/40 dark:via-orange-950/40 dark:to-yellow-950/40 shadow-[0_20px_60px_-15px_rgba(251,146,60,0.6)] backdrop-blur-xl">
+      <DialogContent className="max-w-lg rounded-3xl border-2 border-amber-300/60 bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 dark:from-amber-950/40 dark:via-orange-950/40 dark:to-yellow-950/40 shadow-[0_20px_60px_-15px_rgba(251,146,60,0.6)]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3 text-2xl font-black bg-gradient-to-r from-amber-600 via-orange-600 to-rose-600 bg-clip-text text-transparent">
             <span className="relative inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-400 via-orange-500 to-rose-500 shadow-lg text-white">

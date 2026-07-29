@@ -23,7 +23,7 @@ import { Input } from '@/components/ui/input';
 import PasswordStrengthChecker from '@/components/PasswordStrengthChecker';
 
 /** Classe CSS commune pour les boutons premium */
-const premiumBtnClass = "group relative overflow-hidden rounded-xl sm:rounded-2xl backdrop-blur-xl border transition-all duration-300 hover:scale-105 px-4 py-2 sm:px-5 sm:py-3 text-xs sm:text-sm font-semibold";
+const premiumBtnClass = "group relative overflow-hidden rounded-xl sm:rounded-2xl  border transition-all duration-300 hover:scale-105 px-4 py-2 sm:px-5 sm:py-3 text-xs sm:text-sm font-semibold";
 
 interface PasswordSectionProps {
   showPasswordForm: boolean;
@@ -52,7 +52,7 @@ const PasswordSection: React.FC<PasswordSectionProps> = ({
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
-      className="relative rounded-3xl backdrop-blur-2xl bg-white/70 dark:bg-white/5 border border-violet-200/30 dark:border-violet-800/20 shadow-2xl shadow-violet-500/5 overflow-hidden p-8"
+      className="relative rounded-3xl bg-white/70 dark:bg-white/5 border border-violet-200/30 dark:border-violet-800/20 shadow-2xl shadow-violet-500/5 overflow-hidden p-8"
     >
       {/* Ligne gradient décorative (rose → orange → ambre) */}
       <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-rose-500 via-orange-500 to-amber-500" />

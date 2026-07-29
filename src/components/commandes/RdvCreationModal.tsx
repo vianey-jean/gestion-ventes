@@ -98,13 +98,13 @@ const RdvCreationModal: React.FC<RdvCreationModalProps> = ({
               initial={{ opacity: 0 }}
               animate={{ opacity: 0.4 }}
               transition={{ delay: 0.2 }}
-              className="absolute -top-20 -right-20 w-40 h-40 bg-gradient-to-br from-primary/30 to-transparent rounded-full blur-3xl"
+              className="absolute -top-20 -right-20 w-40 h-40 bg-gradient-to-br from-primary/30 to-transparent rounded-full"
             />
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 0.25 }}
               transition={{ delay: 0.3 }}
-              className="absolute -bottom-12 -left-12 w-28 h-28 bg-gradient-to-tr from-amber-500/20 to-transparent rounded-full blur-2xl"
+              className="absolute -bottom-12 -left-12 w-28 h-28 bg-gradient-to-tr from-amber-500/20 to-transparent rounded-full"
             />
           </div>
 

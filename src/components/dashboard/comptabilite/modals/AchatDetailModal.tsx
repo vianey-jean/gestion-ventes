@@ -160,22 +160,22 @@ const AchatDetailModal: React.FC<AchatDetailModalProps> = ({
             className={`
               relative rounded-3xl overflow-hidden
               bg-gradient-to-br ${getTypeGradient(achat.type)}
-              backdrop-blur-xl
+              
               border border-white/30 dark:border-white/10
               shadow-[0_30px_80px_-20px_rgba(0,0,0,0.5)]
             `}
           >
             {/* Background effects */}
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.15),transparent_60%)]" />
-            <div className="absolute -top-20 -right-20 w-60 h-60 bg-white/10 rounded-full blur-3xl" />
-            <div className="absolute -bottom-20 -left-20 w-60 h-60 bg-white/5 rounded-full blur-3xl" />
+            <div className="absolute -top-20 -right-20 w-60 h-60 bg-white/10 rounded-full" />
+            <div className="absolute -bottom-20 -left-20 w-60 h-60 bg-white/5 rounded-full" />
 
             {/* Close button */}
             <Button
               variant="ghost"
               size="icon"
               onClick={onClose}
-              className="absolute top-4 right-4 z-50 h-10 w-10 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm"
+              className="absolute top-4 right-4 z-50 h-10 w-10 rounded-full bg-white/10 hover:bg-white/20"
             >
               <X className="h-5 w-5" />
             </Button>
@@ -212,13 +212,7 @@ const AchatDetailModal: React.FC<AchatDetailModalProps> = ({
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
-                className="
-                  mb-6 p-5 rounded-2xl text-center
-                  bg-white/70 dark:bg-white/10
-                  backdrop-blur-sm
-                  border border-white/30
-                  shadow-[0_10px_30px_-10px_rgba(0,0,0,0.2)]
-                "
+                className="mb-6 p-5 rounded-2xl text-center bg-white/70 dark:bg-white/10 border border-white/30 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.2)]"
               >
                 <p className="text-sm text-muted-foreground mb-1">Montant Total</p>
                 <p className="text-4xl font-extrabold text-red-500">
@@ -370,30 +364,14 @@ const AchatDetailModal: React.FC<AchatDetailModalProps> = ({
               >
                 <Button
                   onClick={() => setShowEditConfirm(true)}
-                  className="
-                    flex-1 h-12 rounded-xl
-                    bg-gradient-to-r from-emerald-500 to-green-600
-                    hover:from-emerald-600 hover:to-green-700
-                    text-white font-semibold
-                    shadow-[0_10px_30px_-10px_rgba(16,185,129,0.5)]
-                    transition-all duration-300
-                    hover:scale-[1.02]
-                  "
+                  className="flex-1 h-12 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-semibold shadow-[0_10px_30px_-10px_rgba(16,185,129,0.5)] transition-all duration-300 hover:scale-[1.02]"
                 >
                   <Edit className="h-5 w-5 mr-2" />
                   Modifier
                 </Button>
                 <Button
                   onClick={() => setShowDeleteConfirm(true)}
-                  className="
-                    flex-1 h-12 rounded-xl
-                    bg-gradient-to-r from-red-500 to-rose-600
-                    hover:from-red-600 hover:to-rose-700
-                    text-white font-semibold
-                    shadow-[0_10px_30px_-10px_rgba(239,68,68,0.5)]
-                    transition-all duration-300
-                    hover:scale-[1.02]
-                  "
+                  className="flex-1 h-12 rounded-xl bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white font-semibold shadow-[0_10px_30px_-10px_rgba(239,68,68,0.5)] transition-all duration-300 hover:scale-[1.02]"
                 >
                   <Trash2 className="h-5 w-5 mr-2" />
                   Supprimer

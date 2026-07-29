@@ -144,7 +144,7 @@ const SharedViewPage: React.FC = () => {
       onContextMenu={e => e.preventDefault()}>
       <SEOHead title="Données partagées" description="Consultation des données partagées" noindex />
       {/* Header */}
-      <div className="sticky top-0 z-50 backdrop-blur-xl bg-white/70 dark:bg-gray-900/70 border-b border-gray-200/50 dark:border-gray-700/50">
+      <div className="sticky top-0 z-50 bg-white/70 dark:bg-gray-900/70 border-b border-gray-200/50 dark:border-gray-700/50">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${config.color} flex items-center justify-center shadow-lg`}>
@@ -173,7 +173,7 @@ const SharedViewPage: React.FC = () => {
                 {[...data.columns].sort((a: any, b: any) => a.order - b.order).map((col: any) => {
                   const colNotes = data.notes.filter((n: any) => n.columnId === col.id).sort((a: any, b: any) => a.order - b.order);
                   return (
-                    <div key={col.id} className="flex-shrink-0 w-[300px] rounded-2xl border border-gray-200/60 dark:border-gray-700/40 bg-white/50 dark:bg-white/5 backdrop-blur-xl shadow-lg">
+                    <div key={col.id} className="flex-shrink-0 w-[300px] rounded-2xl border border-gray-200/60 dark:border-gray-700/40 bg-white/50 dark:bg-white/5 shadow-lg">
                       <div className="p-4 border-b border-gray-200/40 dark:border-gray-700/30">
                         <div className="flex items-center gap-2">
                           <div className="w-3 h-3 rounded-full shadow" style={{ backgroundColor: col.color }} />
@@ -243,7 +243,7 @@ const SharedViewPage: React.FC = () => {
           <div className="space-y-3">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {sortedItems.map((p: any, i: number) => (
-                <div key={i} className="shared-item-wrapper relative p-4 rounded-2xl border border-gray-200/60 dark:border-gray-700/40 bg-white/80 dark:bg-white/5 backdrop-blur-xl shadow-lg">
+                <div key={i} className="shared-item-wrapper relative p-4 rounded-2xl border border-gray-200/60 dark:border-gray-700/40 bg-white/80 dark:bg-white/5 shadow-lg">
                   {commentMode && (
                     <button
                       onClick={() => (window as any).__addInlineComment?.(i)}
@@ -284,7 +284,7 @@ const SharedViewPage: React.FC = () => {
           <div className="space-y-3">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {sortedItems.map((t: any, i: number) => (
-                <div key={i} className={`shared-item-wrapper relative p-4 rounded-2xl border backdrop-blur-xl shadow-lg ${
+                <div key={i} className={`shared-item-wrapper relative p-4 rounded-2xl border  shadow-lg ${
                   t.importance === 'pertinent'
                     ? 'border-red-300/40 dark:border-red-700/40 bg-red-50/80 dark:bg-red-900/10'
                     : 'border-emerald-300/40 dark:border-emerald-700/40 bg-emerald-50/80 dark:bg-emerald-900/10'

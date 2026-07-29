@@ -126,7 +126,7 @@
                    animate={{ opacity: 1, y: 0 }}
                    transition={{ delay: index * 0.05 }}
                  >
-                   <Card className="overflow-hidden border border-white/50 dark:border-white/10 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm hover:shadow-lg transition-all">
+                   <Card className="overflow-hidden border border-white/50 dark:border-white/10 bg-white/80 dark:bg-slate-800/80 hover:shadow-lg transition-all">
                      <div className={cn("h-1", statusColors[rdv.statut])} />
                      <CardContent className="p-4">
                        <div className="flex items-start justify-between gap-3">

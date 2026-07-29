@@ -186,29 +186,13 @@ const GlobalRdvTodayNotifier: React.FC = () => {
       {/* ZONE SENSIBLE GAUCHE */}
       {hiddenLeft && (
         <div
-          className="
-            fixed
-            left-0
-            top-0
-            z-[9997]
-            h-full
-            w-5
-          "
+          className="fixed left-0 top-0 z-[9997] h-full w-5"
           onMouseEnter={() => setHiddenLeft(false)}
         />
       )}
 
       <div
-        className="
-          fixed
-          z-[9998]
-
-          bottom-3
-          left-3
-
-          sm:bottom-5
-          sm:left-5
-        "
+        className="fixed z-[9998] bottom-3 left-3 sm:bottom-5 sm:left-5"
       >
         <AnimatePresence mode="wait">
           <motion.div
@@ -298,7 +282,7 @@ const GlobalRdvTodayNotifier: React.FC = () => {
               to-teal-500/95
 
               text-white
-              backdrop-blur-2xl
+              
 
               shadow-[0_8px_40px_rgba(16,185,129,0.45)]
 
@@ -337,16 +321,7 @@ const GlobalRdvTodayNotifier: React.FC = () => {
                     repeat: Infinity,
                     duration: 2.5,
                   }}
-                  className="
-                    absolute
-                    -top-10
-                    -left-10
-                    h-24
-                    w-24
-                    rounded-full
-                    bg-white/20
-                    blur-2xl
-                  "
+                  className="absolute -top-10 -left-10 h-24 w-24 rounded-full bg-white/20"
                 />
 
                 <motion.div
@@ -358,15 +333,7 @@ const GlobalRdvTodayNotifier: React.FC = () => {
                     duration: 2.8,
                     ease: 'linear',
                   }}
-                  className="
-                    absolute
-                    inset-0
-                    skew-x-[-20deg]
-                    bg-gradient-to-r
-                    from-transparent
-                    via-white/20
-                    to-transparent
-                  "
+                  className="absolute inset-0 skew-x-[-20deg] bg-gradient-to-r from-transparent via-white/20 to-transparent"
                 />
               </>
             )}
@@ -375,28 +342,11 @@ const GlobalRdvTodayNotifier: React.FC = () => {
             {expanded ? (
               <>
                 <div
-                  className="
-                    relative
-                    z-10
-                    flex
-                    gap-3
-
-                    p-4
-                    sm:p-5
-                  "
+                  className="relative z-10 flex gap-3 p-4 sm:p-5"
                 >
                   {/* ICON */}
                   <div
-                    className="
-                      mt-0.5
-                      shrink-0
-
-                      rounded-full
-                      bg-white/20
-                      p-2
-
-                      backdrop-blur-md
-                    "
+                    className="mt-0.5 shrink-0 rounded-full bg-white/20 p-2"
                   >
                     <CalendarClock className="h-5 w-5" />
                   </div>
@@ -406,15 +356,7 @@ const GlobalRdvTodayNotifier: React.FC = () => {
                     {/* HEADER */}
                     <div className="flex items-start justify-between gap-2">
                       <p
-                        className="
-                          text-[10px]
-                          sm:text-xs
-
-                          font-bold
-                          uppercase
-                          tracking-wider
-                          opacity-90
-                        "
+                        className="text-[10px] sm:text-xs font-bold uppercase tracking-wider opacity-90"
                       >
                         RDV aujourd&apos;hui{' '}
                         {visibleRdvs.length > 1
@@ -440,21 +382,7 @@ const GlobalRdvTodayNotifier: React.FC = () => {
                             return next;
                           });
                         }}
-                        className="
-                          flex
-                          h-8
-                          w-8
-                          items-center
-                          justify-center
-
-                          rounded-full
-                          bg-red-500
-
-                          shadow-lg
-                          transition-colors
-
-                          hover:bg-red-400
-                        "
+                        className="flex h-8 w-8 items-center justify-center rounded-full bg-red-500 shadow-lg transition-colors hover:bg-red-400"
                       >
                         <X className="h-4 w-4 text-white" />
                       </motion.button>
@@ -462,32 +390,14 @@ const GlobalRdvTodayNotifier: React.FC = () => {
 
                     {/* TITLE */}
                     <p
-                      className="
-                        mt-1
-                        truncate
-
-                        text-sm
-                        sm:text-base
-
-                        font-bold
-                      "
+                      className="mt-1 truncate text-sm sm:text-base font-bold"
                     >
                       {current.titre || 'Rendez-vous'}
                     </p>
 
                     {/* CLIENT */}
                     <div
-                      className="
-                        mt-2
-                        flex
-                        items-center
-                        gap-1.5
-
-                        text-xs
-                        sm:text-sm
-
-                        opacity-95
-                      "
+                      className="mt-2 flex items-center gap-1.5 text-xs sm:text-sm opacity-95"
                     >
                       <User className="h-3.5 w-3.5 shrink-0" />
 
@@ -498,15 +408,7 @@ const GlobalRdvTodayNotifier: React.FC = () => {
 
                     {/* HEURE */}
                     <div
-                      className="
-                        mt-1
-
-                        text-xs
-                        sm:text-sm
-
-                        font-mono
-                        opacity-95
-                      "
+                      className="mt-1 text-xs sm:text-sm font-mono opacity-95"
                     >
                       {current.heureDebut} →{' '}
                       {current.heureFin}
@@ -515,17 +417,7 @@ const GlobalRdvTodayNotifier: React.FC = () => {
                     {/* LIEU */}
                     {current.lieu && (
                       <div
-                        className="
-                          mt-1
-                          flex
-                          items-center
-                          gap-1.5
-
-                          text-xs
-                          sm:text-sm
-
-                          opacity-90
-                        "
+                        className="mt-1 flex items-center gap-1.5 text-xs sm:text-sm opacity-90"
                       >
                         <MapPin className="h-3.5 w-3.5 shrink-0" />
 
@@ -539,29 +431,13 @@ const GlobalRdvTodayNotifier: React.FC = () => {
 
                 {/* BARRE */}
                 <div
-                  className="
-                    h-1
-                    bg-gradient-to-r
-                    from-white/80
-                    via-white/30
-                    to-transparent
-                  "
+                  className="h-1 bg-gradient-to-r from-white/80 via-white/30 to-transparent"
                 />
               </>
             ) : (
               /* MODE MINIMISÉ */
               <div
-                className="
-                  relative
-                  z-10
-
-                  flex
-                  h-full
-                  items-center
-                  justify-between
-
-                  px-4
-                "
+                className="relative z-10 flex h-full items-center justify-between px-4"
               >
                 {/* LEFT */}
                 <div className="flex min-w-0 items-center gap-3">
@@ -575,23 +451,7 @@ const GlobalRdvTodayNotifier: React.FC = () => {
                       repeat: Infinity,
                       duration: 2.5,
                     }}
-                    className="
-                      relative
-                      flex
-
-                      h-10
-                      w-10
-
-                      items-center
-                      justify-center
-
-                      rounded-2xl
-                      border
-                      border-white/20
-
-                      bg-white/15
-                      backdrop-blur-md
-                    "
+                    className="relative flex h-10 w-10 items-center justify-center rounded-2xl border border-white/20 bg-white/15"
                   >
                     <motion.div
                       animate={{
@@ -602,13 +462,7 @@ const GlobalRdvTodayNotifier: React.FC = () => {
                         repeat: Infinity,
                         duration: 2,
                       }}
-                      className="
-                        absolute
-                        inset-0
-                        rounded-2xl
-                        bg-white/20
-                        blur-md
-                      "
+                      className="absolute inset-0 rounded-2xl bg-white/20"
                     />
 
                     <CalendarClock className="relative z-10 h-4 w-4" />
@@ -617,24 +471,13 @@ const GlobalRdvTodayNotifier: React.FC = () => {
                   {/* TEXT */}
                   <div className="min-w-0">
                     <p
-                      className="
-                        text-[10px]
-                        font-bold
-                        uppercase
-                        tracking-widest
-                        text-white/75
-                      "
+                      className="text-[10px] font-bold uppercase tracking-widest text-white/75"
                     >
                       RDV
                     </p>
 
                     <p
-                      className="
-                        truncate
-                        text-xs
-                        sm:text-sm
-                        font-semibold
-                      "
+                      className="truncate text-xs sm:text-sm font-semibold"
                     >
                       {current.heureDebut}
                     </p>
@@ -651,13 +494,7 @@ const GlobalRdvTodayNotifier: React.FC = () => {
                     repeat: Infinity,
                     duration: 1.3,
                   }}
-                  className="
-                    h-2.5
-                    w-2.5
-                    rounded-full
-                    bg-white
-                    shadow-[0_0_12px_rgba(255,255,255,0.9)]
-                  "
+                  className="h-2.5 w-2.5 rounded-full bg-white shadow-[0_0_12px_rgba(255,255,255,0.9)]"
                 />
               </div>
             )}

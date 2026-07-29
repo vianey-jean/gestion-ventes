@@ -16,7 +16,7 @@ const PointageTravailleursList: React.FC<PointageTravailleurs_ListProps> = ({ tr
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
-      className="mt-6 rounded-3xl bg-white/70 dark:bg-white/5 backdrop-blur-2xl border border-white/20 dark:border-white/10 shadow-2xl p-4 sm:p-6">
+      className="mt-6 rounded-3xl bg-white/70 dark:bg-white/5 border border-white/20 dark:border-white/10 shadow-2xl p-4 sm:p-6">
       <button onClick={() => setShow(!show)}
         className="w-full flex items-center justify-between mb-4 cursor-pointer hover:opacity-80 transition-opacity">
         <h3 className="text-lg font-black bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent flex items-center gap-2">
@@ -27,7 +27,7 @@ const PointageTravailleursList: React.FC<PointageTravailleurs_ListProps> = ({ tr
       {show && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {travailleurs.map(trav => (
-            <div key={trav.id} className="p-4 rounded-2xl bg-white/50 dark:bg-white/5 border border-white/20 dark:border-white/10 backdrop-blur-xl">
+            <div key={trav.id} className="p-4 rounded-2xl bg-white/50 dark:bg-white/5 border border-white/20 dark:border-white/10">
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-sm shadow-lg">

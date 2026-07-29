@@ -19,7 +19,7 @@ export interface RdvTachesHeroProps {
 }
 
 const premiumBtnClass =
-  'group relative overflow-hidden rounded-xl sm:rounded-2xl backdrop-blur-xl border transition-all duration-300 hover:scale-105 px-4 py-2 sm:px-5 sm:py-3 text-xs sm:text-sm font-semibold';
+  'group relative overflow-hidden rounded-xl sm:rounded-2xl  border transition-all duration-300 hover:scale-105 px-4 py-2 sm:px-5 sm:py-3 text-xs sm:text-sm font-semibold';
 const mirrorShine =
   'absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500';
 
@@ -44,12 +44,12 @@ const RdvTachesHero: React.FC<RdvTachesHeroProps> = ({
         <motion.div
           animate={{ x: [0, 40, 0], y: [0, -30, 0], scale: [1, 1.15, 1] }}
           transition={{ duration: 16, repeat: Infinity, ease: 'easeInOut' }}
-          className="absolute -top-10 left-1/4 w-[22rem] h-[22rem] bg-pink-500/25 rounded-full blur-[110px] pointer-events-none"
+          className="absolute -top-10 left-1/4 w-[22rem] h-[22rem] bg-pink-500/25 rounded-full pointer-events-none"
         />
         <motion.div
           animate={{ x: [0, -30, 0], y: [0, 30, 0], scale: [1, 1.1, 1] }}
           transition={{ duration: 19, repeat: Infinity, ease: 'easeInOut' }}
-          className="absolute -bottom-10 right-1/4 w-[24rem] h-[24rem] bg-fuchsia-500/20 rounded-full blur-[120px] pointer-events-none"
+          className="absolute -bottom-10 right-1/4 w-[24rem] h-[24rem] bg-fuchsia-500/20 rounded-full pointer-events-none"
         />
         {/* Grid mask */}
         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.025)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.025)_1px,transparent_1px)] bg-[size:44px_44px] [mask-image:radial-gradient(ellipse_at_center,black_30%,transparent_75%)]" />

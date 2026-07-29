@@ -57,7 +57,7 @@ const VentesHistoriqueModal: React.FC<VentesHistoriqueModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-lg bg-gradient-to-br from-rose-50 via-white to-pink-50 dark:from-slate-950 dark:via-rose-950/30 dark:to-slate-900 border-rose-200/50 dark:border-rose-800/50 backdrop-blur-xl">
+      <DialogContent className="sm:max-w-lg bg-gradient-to-br from-rose-50 via-white to-pink-50 dark:from-slate-950 dark:via-rose-950/30 dark:to-slate-900 border-rose-200/50 dark:border-rose-800/50">
         <DialogHeader className="pb-2">
           <DialogTitle className="flex items-center gap-3 text-xl font-bold">
             <div className="p-2.5 rounded-xl bg-gradient-to-br from-rose-500 to-pink-500 shadow-lg shadow-rose-500/30">
@@ -73,7 +73,7 @@ const VentesHistoriqueModal: React.FC<VentesHistoriqueModalProps> = ({
         <div className="space-y-4 pt-2">
 
           {/* Total */}
-          <div className="p-4 rounded-2xl bg-gradient-to-r from-rose-500/20 to-pink-500/20 border border-rose-300/50 dark:border-rose-700/50 backdrop-blur-sm">
+          <div className="p-4 rounded-2xl bg-gradient-to-r from-rose-500/20 to-pink-500/20 border border-rose-300/50 dark:border-rose-700/50">
             <div className="flex items-center gap-3">
               <div className="p-3 rounded-xl bg-gradient-to-br from-rose-500 to-pink-500 shadow-lg">
                 <TrendingUp className="h-6 w-6 text-white" />
@@ -94,7 +94,7 @@ const VentesHistoriqueModal: React.FC<VentesHistoriqueModalProps> = ({
                 <div
                   key={`${item.mois}-${item.annee}`}
                   className={cn(
-                    "p-3 rounded-xl bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg",
+                    "p-3 rounded-xl bg-white/80 dark:bg-slate-800/80  border border-slate-200/50 dark:border-slate-700/50 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg",
                     "animate-fade-in"
                   )}
                   style={{ animationDelay: `${index * 50}ms` }}

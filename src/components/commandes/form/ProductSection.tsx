@@ -116,7 +116,7 @@ const ProductSection: React.FC<ProductSectionProps> = (props) => {
       {productPhotoUrl && (
         <div className="flex justify-center">
           <div className="relative group">
-            <div className="absolute -inset-1 bg-gradient-to-br from-purple-400 via-pink-500 to-rose-500 rounded-2xl blur-md opacity-70" />
+            <div className="absolute -inset-1 bg-gradient-to-br from-purple-400 via-pink-500 to-rose-500 rounded-2xl opacity-70" />
             <img
               src={productPhotoUrl}
               alt={selectedProduct?.description || 'Produit'}

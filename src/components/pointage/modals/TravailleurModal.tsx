@@ -22,7 +22,7 @@ const TravailleurModal: React.FC<TravailleurModalProps> = ({
 }) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-gradient-to-br from-slate-900 via-red-900/30 to-rose-900/20 backdrop-blur-2xl border border-white/10 shadow-2xl rounded-3xl max-w-md">
+      <DialogContent className="bg-gradient-to-br from-slate-900 via-red-900/30 to-rose-900/20 border border-white/10 shadow-2xl rounded-3xl max-w-md">
         <DialogHeader className="text-center space-y-3 pb-4">
           <div className="mx-auto w-14 h-14 bg-gradient-to-br from-red-500 to-rose-600 rounded-2xl flex items-center justify-center shadow-xl shadow-red-500/30">
             <UserPlus className="h-7 w-7 text-white" />

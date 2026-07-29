@@ -53,7 +53,7 @@ const StatCard: React.FC<StatCardProps> = ({
   return (
     <Card className={cn(
       'card-3d relative overflow-hidden group transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl',
-      'bg-gradient-to-br backdrop-blur-xl border',
+      'bg-gradient-to-br  border',
       gradientClasses[gradient],
       borderClasses[gradient]
     )}>

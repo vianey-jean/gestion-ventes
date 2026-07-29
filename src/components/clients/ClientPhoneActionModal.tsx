@@ -18,7 +18,7 @@ interface Props {
 
 const ClientPhoneActionModal: React.FC<Props> = ({ open, onOpenChange, phone, isMobile, onCall, onMessage }) => (
   <Dialog open={open} onOpenChange={onOpenChange}>
-    <DialogContent className="sm:max-w-md bg-white/95 dark:bg-[#0a0020]/95 backdrop-blur-2xl border border-violet-200/20 dark:border-violet-800/20 shadow-2xl rounded-2xl">
+    <DialogContent className="sm:max-w-md bg-white/95 dark:bg-[#0a0020]/95 border border-violet-200/20 dark:border-violet-800/20 shadow-2xl rounded-2xl">
       <DialogHeader>
         <DialogTitle className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
           <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full">

@@ -66,7 +66,7 @@ const ProductAttributesToolbar: React.FC = () => {
   };
 
   return (
-    <div className="rounded-2xl border border-violet-200/30 dark:border-violet-800/30 bg-white/60 dark:bg-white/5 backdrop-blur-xl p-3 sm:p-4 space-y-3">
+    <div className="rounded-2xl border border-violet-200/30 dark:border-violet-800/30 bg-white/60 dark:bg-white/5 p-3 sm:p-4 space-y-3">
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0">
           <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-600 flex items-center justify-center shadow-md shadow-violet-500/30 shrink-0">

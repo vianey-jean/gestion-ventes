@@ -40,10 +40,10 @@ const MessagesPage: React.FC = () => {
     return (
       <Layout>
         <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-950 to-indigo-950 flex items-center justify-center p-4">
-          <Card className="w-full max-w-md text-center border-0 bg-white/[0.06] backdrop-blur-2xl border-white/[0.1] shadow-[0_32px_64px_rgba(0,0,0,0.4)] rounded-3xl">
+          <Card className="w-full max-w-md text-center border-0 bg-white/[0.06] border-white/[0.1] shadow-[0_32px_64px_rgba(0,0,0,0.4)] rounded-3xl">
             <CardContent className="pt-12 pb-8">
               <div className="relative mb-6">
-                <div className="absolute inset-0 bg-gradient-to-r from-purple-500/30 to-pink-500/30 rounded-full blur-2xl" />
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-500/30 to-pink-500/30 rounded-full" />
                 <MessageSquare className="relative h-20 w-20 text-purple-400 mx-auto drop-shadow-[0_0_20px_rgba(168,85,247,0.5)]" />
               </div>
               <h2 className="text-3xl font-bold text-white mb-3">Accès Requis</h2>
@@ -106,7 +106,7 @@ const MessagesPage: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             className="text-center mb-10"
           >
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/[0.05] backdrop-blur-xl rounded-full border border-white/[0.08] mb-4">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/[0.05] rounded-full border border-white/[0.08] mb-4">
               <Crown className="h-4 w-4 text-amber-400" />
               <span className="text-sm font-medium text-purple-300/80">Messagerie Premium</span>
             </div>
@@ -116,7 +116,7 @@ const MessagesPage: React.FC = () => {
             </h1>
 
             <div className="flex items-center justify-center gap-4 sm:gap-6 mb-8">
-              <div className="flex items-center gap-3 px-6 py-3 bg-white/[0.05] backdrop-blur-2xl rounded-2xl border border-white/[0.08] shadow-[0_10px_30px_rgba(0,0,0,0.2)]">
+              <div className="flex items-center gap-3 px-6 py-3 bg-white/[0.05] rounded-2xl border border-white/[0.08] shadow-[0_10px_30px_rgba(0,0,0,0.2)]">
                 <MessageSquare className="h-5 w-5 text-purple-400" />
                 <span className="font-semibold text-white text-base">
                   {messages.length} message{messages.length > 1 ? 's' : ''}
@@ -124,7 +124,7 @@ const MessagesPage: React.FC = () => {
               </div>
 
               {unreadCount > 0 && (
-                <div className="flex items-center gap-3 px-6 py-3 bg-red-500/10 backdrop-blur-2xl rounded-2xl border border-red-500/20 shadow-[0_10px_30px_rgba(239,68,68,0.1)]">
+                <div className="flex items-center gap-3 px-6 py-3 bg-red-500/10 rounded-2xl border border-red-500/20 shadow-[0_10px_30px_rgba(239,68,68,0.1)]">
                   <Mail className="h-5 w-5 text-red-400" />
                   <span className="font-semibold text-red-300 text-base">
                     {unreadCount} non lu{unreadCount > 1 ? 's' : ''}
@@ -137,7 +137,7 @@ const MessagesPage: React.FC = () => {
           <div className="grid lg:grid-cols-5 gap-6 max-w-8xl mx-auto">
             {/* Sidebar */}
             <div className="lg:col-span-2">
-              <Card className="border-0 bg-white/[0.04] backdrop-blur-2xl border border-white/[0.08] rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] overflow-hidden">
+              <Card className="border-0 bg-white/[0.04] border border-white/[0.08] rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] overflow-hidden">
                 {/* Top shimmer */}
                 <div className="h-px bg-gradient-to-r from-transparent via-purple-400/30 to-transparent" />
                 
@@ -150,7 +150,7 @@ const MessagesPage: React.FC = () => {
                   </CardTitle>
 
                   <div className="relative mt-4 group">
-                    <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-xl blur opacity-0 group-focus-within:opacity-100 transition-opacity" />
+                    <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-xl opacity-0 group-focus-within:opacity-100 transition-opacity" />
                     <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 text-purple-300/40 z-10" />
                     <Input
                       placeholder="Rechercher dans les messages..."
@@ -219,7 +219,7 @@ const MessagesPage: React.FC = () => {
             {/* Reading panel */}
             <div className="lg:col-span-3">
               {selectedMessage ? (
-                <Card className="border-0 bg-white/[0.04] backdrop-blur-2xl border border-white/[0.08] rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] overflow-hidden">
+                <Card className="border-0 bg-white/[0.04] border border-white/[0.08] rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] overflow-hidden">
                   <div className="h-px bg-gradient-to-r from-transparent via-purple-400/30 to-transparent" />
                   
                   <CardHeader className="border-b border-white/[0.06] pb-6">
@@ -267,7 +267,7 @@ const MessagesPage: React.FC = () => {
                               <Trash2 className="h-4 w-4 mr-1.5" />Supprimer
                             </Button>
                           </AlertDialogTrigger>
-                          <AlertDialogContent className="bg-slate-900/95 backdrop-blur-2xl border border-white/[0.1] shadow-[0_32px_64px_rgba(0,0,0,0.5)] rounded-2xl">
+                          <AlertDialogContent className="bg-slate-900/95 border border-white/[0.1] shadow-[0_32px_64px_rgba(0,0,0,0.5)] rounded-2xl">
                             <AlertDialogHeader>
                               <AlertDialogTitle className="text-xl font-bold text-white">Confirmer la suppression</AlertDialogTitle>
                               <AlertDialogDescription className="text-purple-200/60">Cette action est irréversible.</AlertDialogDescription>
@@ -291,7 +291,7 @@ const MessagesPage: React.FC = () => {
                   </CardContent>
                 </Card>
               ) : (
-                <Card className="h-full border-0 bg-white/[0.04] backdrop-blur-2xl border border-white/[0.08] rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.3)]">
+                <Card className="h-full border-0 bg-white/[0.04] border border-white/[0.08] rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.3)]">
                   <CardContent className="flex items-center justify-center h-full py-32">
                     <div className="text-center">
                       <MessageSquare className="h-20 w-20 mx-auto text-purple-400/15 mb-6" />

@@ -45,7 +45,7 @@ const EntrepriseModal: React.FC<EntrepriseModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-gradient-to-br from-slate-900 via-cyan-900/30 to-blue-900/20 backdrop-blur-2xl border border-white/10 shadow-2xl rounded-3xl max-w-md">
+      <DialogContent className="bg-gradient-to-br from-slate-900 via-cyan-900/30 to-blue-900/20 border border-white/10 shadow-2xl rounded-3xl max-w-md">
         <DialogHeader className="text-center space-y-3 pb-4">
           <div className="mx-auto w-14 h-14 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-xl shadow-cyan-500/30">
             <Building2 className="h-7 w-7 text-white" />

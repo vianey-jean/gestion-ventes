@@ -34,7 +34,7 @@ const TendancesStockTab: React.FC<TendancesStockTabProps> = ({ stockAnalysis, da
           <div className="space-y-4">
             {stockAnalysis.recommendations.length > 0 ? (
               stockAnalysis.recommendations.map((item, index) => (
-                <div key={index} className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl p-4 border border-red-200 dark:border-red-800">
+                <div key={index} className="bg-white/70 dark:bg-gray-800/70 rounded-xl p-4 border border-red-200 dark:border-red-800">
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="font-semibold text-red-700 dark:text-red-300">{item.description}</h3>
                     <div className="flex items-center gap-2">
@@ -82,7 +82,7 @@ const TendancesStockTab: React.FC<TendancesStockTabProps> = ({ stockAnalysis, da
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <div className="bg-white/70 backdrop-blur-sm rounded-xl p-4 border border-emerald-200">
+            <div className="bg-white/70 rounded-xl p-4 border border-emerald-200">
               <h3 className="font-semibold text-emerald-700 mb-2">📈 Tendances Identifiées</h3>
               <ul className="text-sm space-y-1 text-gray-600">
                 <li>• Les ventes sont {dailySalesAnalysis.length > 15 ? 'plus élevées' : 'plus faibles'} en milieu de mois</li>
@@ -91,7 +91,7 @@ const TendancesStockTab: React.FC<TendancesStockTabProps> = ({ stockAnalysis, da
               </ul>
             </div>
             
-            <div className="bg-white/70 backdrop-blur-sm rounded-xl p-4 border border-blue-200">
+            <div className="bg-white/70 rounded-xl p-4 border border-blue-200">
               <h3 className="font-semibold text-blue-700 mb-2">🎯 Actions Recommandées</h3>
               <ul className="text-sm space-y-1 text-gray-600">
                 <li>• Réapprovisionner {stockAnalysis.recommendations.length} produits critiques</li>

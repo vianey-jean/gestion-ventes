@@ -207,7 +207,7 @@ const FideliteListModal: React.FC<Props> = ({ open, onOpenChange }) => {
                 <div className="flex items-center gap-2 shrink-0">
                   <button
                     onClick={() => startEdit(t)}
-                    className="w-9 h-9 rounded-xl bg-white/20 hover:bg-white/30 backdrop-blur flex items-center justify-center text-white transition-all"
+                    className="w-9 h-9 rounded-xl bg-white/20 hover:bg-white/30 flex items-center justify-center text-white transition-all"
                     title="Modifier"
                   >
                     <Pencil className="w-4 h-4" />

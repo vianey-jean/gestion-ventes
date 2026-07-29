@@ -369,7 +369,7 @@ const AvanceModal: React.FC<AvanceModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-gradient-to-br from-slate-900 via-amber-900/20 to-orange-900/20 backdrop-blur-2xl border border-white/10 shadow-2xl rounded-3xl max-w-lg max-h-[90vh] overflow-y-auto">
+      <DialogContent className="bg-gradient-to-br from-slate-900 via-amber-900/20 to-orange-900/20 border border-white/10 shadow-2xl rounded-3xl max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader className="text-center space-y-3 pb-4">
           <div className="mx-auto w-14 h-14 bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl flex items-center justify-center shadow-xl shadow-amber-500/30">
             <Banknote className="h-7 w-7 text-white" />
@@ -413,7 +413,7 @@ const AvanceModal: React.FC<AvanceModalProps> = ({
                 className="bg-white/10 border border-white/20 focus:border-amber-400 rounded-xl text-white placeholder:text-white/40 pl-10"
               />
               {showTravDropdown && filteredTravailleurs.length > 0 && (
-                <div className="absolute z-50 w-full mt-1 max-h-48 overflow-y-auto rounded-xl bg-slate-800/95 backdrop-blur-2xl border border-white/20 shadow-2xl">
+                <div className="absolute z-50 w-full mt-1 max-h-48 overflow-y-auto rounded-xl bg-slate-800/95 border border-white/20 shadow-2xl">
                   {filteredTravailleurs.map(t => (
                     <button key={t.id} type="button"
                       onClick={() => {

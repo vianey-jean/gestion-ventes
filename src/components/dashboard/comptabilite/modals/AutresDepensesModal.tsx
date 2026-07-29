@@ -70,11 +70,7 @@ const AutresDepensesModal: React.FC<AutresDepensesModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto
-        bg-gradient-to-br from-white to-orange-50/50 dark:from-gray-900 dark:to-orange-950/30
-        backdrop-blur-xl border border-orange-100/50 dark:border-orange-800/30
-        shadow-[0_40px_120px_rgba(0,0,0,0.15)] dark:shadow-[0_40px_120px_rgba(0,0,0,0.5)]
-        rounded-2xl sm:rounded-3xl">
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto bg-gradient-to-br from-white to-orange-50/50 dark:from-gray-900 dark:to-orange-950/30 border border-orange-100/50 dark:border-orange-800/30 shadow-[0_40px_120px_rgba(0,0,0,0.15)] dark:shadow-[0_40px_120px_rgba(0,0,0,0.5)] rounded-2xl sm:rounded-3xl">
 
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3">
@@ -97,10 +93,7 @@ const AutresDepensesModal: React.FC<AutresDepensesModalProps> = ({
               return (
                 <div
                   key={depense.id}
-                  className="flex items-center justify-between p-4
-                    rounded-xl bg-gradient-to-r from-orange-50/80 to-amber-50/80 dark:from-orange-900/20 dark:to-amber-900/20
-                    border border-orange-100 dark:border-orange-800/50
-                    transition-all hover:scale-[1.01]"
+                  className="flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-orange-50/80 to-amber-50/80 dark:from-orange-900/20 dark:to-amber-900/20 border border-orange-100 dark:border-orange-800/50 transition-all hover:scale-[1.01]"
                 >
                   <div className="flex items-center gap-3">
                     <div className={`p-2.5 rounded-xl border ${colors.bg} ${colors.border}`}>

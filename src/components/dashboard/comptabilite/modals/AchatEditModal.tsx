@@ -342,12 +342,7 @@ const AchatEditModal: React.FC<AchatEditModalProps> = ({
               <Button
                 onClick={handleSubmit}
                 disabled={isSaving}
-                className="
-                  flex-1 h-12 rounded-xl
-                  bg-gradient-to-r from-primary to-primary/80
-                  hover:from-primary/90 hover:to-primary/70
-                  shadow-lg
-                "
+                className="flex-1 h-12 rounded-xl bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg"
               >
                 {isSaving ? (
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />

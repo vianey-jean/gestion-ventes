@@ -437,7 +437,7 @@ const Inventaire = () => {
                 placeholder="🔍 Recherche par nom ou code... (min. 3 caractères)"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-12 pr-4 py-3 bg-gradient-to-r from-white to-gray-50 border-2 border-gray-200 focus:border-blue-500 focus:from-blue-50 focus:to-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300  placeholder:text-gray-500"
+                className="pl-12 pr-4 py-3 bg-gradient-to-r from-white to-gray-50 border-2 border-gray-200 focus:border-blue-500 focus:from-blue-50 focus:to-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 placeholder:text-gray-500"
               />
               <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
                 <Sparkles className="h-4 w-4 text-blue-400" />
@@ -452,7 +452,7 @@ const Inventaire = () => {
                   <SelectValue placeholder="Catégorie" />
                 </div>
               </SelectTrigger>
-              <SelectContent className="bg-white/95 backdrop-blur-xl border-white/20 shadow-2xl rounded-xl">
+              <SelectContent className="bg-white/95 border-white/20 shadow-2xl rounded-xl">
                 <SelectItem value="all" className="hover:bg-purple-50 rounded-lg">
                   <div className="flex items-center gap-2">
                     <Package className="h-4 w-4 text-gray-500" />
@@ -515,7 +515,7 @@ const Inventaire = () => {
                 ✨ Ajouter Produit Premium
               </ModernActionButton>
             </DialogTrigger>
-            <DialogContent className="bg-gradient-to-br from-slate-900 via-green-900/30 to-emerald-900/20 backdrop-blur-2xl border border-white/10 shadow-2xl rounded-3xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="bg-gradient-to-br from-slate-900 via-green-900/30 to-emerald-900/20 border border-white/10 shadow-2xl rounded-3xl max-h-[90vh] overflow-y-auto">
               <DialogHeader className="text-center space-y-4 pb-4">
                 <div className="mx-auto w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center shadow-xl shadow-green-500/30">
                   <Plus className="h-8 w-8 text-white" />
@@ -847,7 +847,7 @@ const Inventaire = () => {
                     <SelectValue />
                   </div>
                 </SelectTrigger>
-                <SelectContent className="bg-white/95 backdrop-blur-xl border-2 border-emerald-200 shadow-2xl rounded-xl">
+                <SelectContent className="bg-white/95 border-2 border-emerald-200 shadow-2xl rounded-xl">
                   {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
                     <SelectItem 
                       key={page} 
@@ -988,7 +988,7 @@ const Inventaire = () => {
       {/* Dialog de modification Premium */}
       {editingProduct && (
         <Dialog open={!!editingProduct} onOpenChange={() => { setEditingProduct(null); setEditPhotos({ files: [], existingUrls: [], mainIndex: 0 }); }}>
-          <DialogContent className="bg-gradient-to-br from-slate-900 via-blue-900/40 to-indigo-900/30 backdrop-blur-2xl border border-white/10 shadow-2xl rounded-3xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="bg-gradient-to-br from-slate-900 via-blue-900/40 to-indigo-900/30 border border-white/10 shadow-2xl rounded-3xl max-h-[90vh] overflow-y-auto">
             <DialogHeader className="text-center space-y-4 pb-4">
               <div className="mx-auto w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-xl shadow-blue-500/30">
                 <Edit className="h-8 w-8 text-white" />
@@ -1081,7 +1081,7 @@ const Inventaire = () => {
       {/* Dialog de visualisation Premium */}
       {viewingProduct && (
         <Dialog open={!!viewingProduct} onOpenChange={() => setViewingProduct(null)}>
-          <DialogContent className="bg-gradient-to-br from-white via-purple-50 to-indigo-50 backdrop-blur-xl border-0 shadow-2xl rounded-3xl max-w-lg">
+          <DialogContent className="bg-gradient-to-br from-white via-purple-50 to-indigo-50 border-0 shadow-2xl rounded-3xl max-w-lg">
             <DialogHeader className="text-center space-y-4 pb-6">
               <div className="mx-auto w-16 h-16 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-xl">
                 <Eye className="h-8 w-8 text-white" />
@@ -1183,7 +1183,7 @@ const Inventaire = () => {
                   >
                     <Edit className="h-6 w-6 text-white group-hover:animate-pulse" />
                     <div className="absolute inset-0 rounded-2xl bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-8 h-1 bg-blue-300 rounded-full opacity-0 group-hover:opacity-100 blur-sm transition-opacity" />
+                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-8 h-1 bg-blue-300 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
                   </button>
 
                   {/* Icône Supprimer Luxe */}
@@ -1194,7 +1194,7 @@ const Inventaire = () => {
                   >
                     <Trash2 className="h-6 w-6 text-white group-hover:animate-pulse" />
                     <div className="absolute inset-0 rounded-2xl bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-8 h-1 bg-red-300 rounded-full opacity-0 group-hover:opacity-100 blur-sm transition-opacity" />
+                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-8 h-1 bg-red-300 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
                   </button>
 
                   {/* Icône Imprimer Luxe */}
@@ -1207,7 +1207,7 @@ const Inventaire = () => {
                   >
                     <Printer className="h-6 w-6 text-white group-hover:animate-pulse" />
                     <div className="absolute inset-0 rounded-2xl bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-8 h-1 bg-emerald-300 rounded-full opacity-0 group-hover:opacity-100 blur-sm transition-opacity" />
+                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-8 h-1 bg-emerald-300 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
                   </button>
                 </div>
                 <div className="flex justify-center gap-6 mt-3">
@@ -1236,7 +1236,7 @@ const Inventaire = () => {
 
       {/* Dialog de confirmation pour modifier depuis détail */}
       <AlertDialog open={showEditConfirmFromDetail} onOpenChange={setShowEditConfirmFromDetail}>
-        <AlertDialogContent className="bg-gradient-to-br from-white via-blue-50 to-indigo-50 backdrop-blur-xl border-0 shadow-2xl rounded-3xl">
+        <AlertDialogContent className="bg-gradient-to-br from-white via-blue-50 to-indigo-50 border-0 shadow-2xl rounded-3xl">
           <AlertDialogHeader className="text-center space-y-4 pb-6">
             <div className="mx-auto w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-xl">
               <Edit className="h-8 w-8 text-white" />
@@ -1298,7 +1298,7 @@ const Inventaire = () => {
 
       {/* Dialog de confirmation pour supprimer depuis détail */}
       <AlertDialog open={showDeleteConfirmFromDetail} onOpenChange={setShowDeleteConfirmFromDetail}>
-        <AlertDialogContent className="bg-gradient-to-br from-white via-red-50 to-pink-50 backdrop-blur-xl border-0 shadow-2xl rounded-3xl">
+        <AlertDialogContent className="bg-gradient-to-br from-white via-red-50 to-pink-50 border-0 shadow-2xl rounded-3xl">
           <AlertDialogHeader className="text-center space-y-4 pb-6">
             <div className="mx-auto w-16 h-16 bg-gradient-to-br from-red-500 to-rose-600 rounded-2xl flex items-center justify-center shadow-xl animate-pulse">
               <Trash2 className="h-8 w-8 text-white" />
@@ -1378,7 +1378,7 @@ const Inventaire = () => {
 
       {/* Dialog de suppression Premium */}
       <AlertDialog open={!!deletingProduct} onOpenChange={() => setDeletingProduct(null)}>
-        <AlertDialogContent className="bg-gradient-to-br from-white via-red-50 to-pink-50 backdrop-blur-xl border-0 shadow-2xl rounded-3xl">
+        <AlertDialogContent className="bg-gradient-to-br from-white via-red-50 to-pink-50 border-0 shadow-2xl rounded-3xl">
           <AlertDialogHeader className="text-center space-y-4 pb-6">
             <div className="mx-auto w-16 h-16 bg-gradient-to-br from-red-500 to-red-600 rounded-2xl flex items-center justify-center shadow-xl">
               <AlertTriangle className="h-8 w-8 text-white" />

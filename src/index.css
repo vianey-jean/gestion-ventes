@@ -329,7 +329,7 @@
 @layer utilities {
   /* ======== Mirror / Glass Ultra Luxe Effects ======== */
   .mirror-glass {
-    @apply relative backdrop-blur-2xl border border-white/10;
+    @apply relative  border border-white/10;
     background: linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 50%, rgba(255,255,255,0.04) 100%);
     box-shadow: 0 20px 60px -15px rgba(139, 92, 246, 0.15), inset 0 1px 0 rgba(255,255,255,0.1);
   }
@@ -388,7 +388,7 @@
   }
 
   .card-mirror {
-    @apply relative rounded-3xl backdrop-blur-xl overflow-hidden;
+    @apply relative rounded-3xl  overflow-hidden;
     background: linear-gradient(145deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.02) 100%);
     border: 1px solid rgba(255,255,255,0.08);
     box-shadow: 0 25px 80px -20px rgba(139,92,246,0.12), inset 0 1px 0 rgba(255,255,255,0.08);
@@ -406,7 +406,7 @@
 
   /* Light mode mirror variants */
   .mirror-glass-light {
-    @apply relative backdrop-blur-2xl border border-violet-200/30;
+    @apply relative  border border-violet-200/30;
     background: linear-gradient(135deg, rgba(255,255,255,0.85) 0%, rgba(245,243,255,0.7) 50%, rgba(255,255,255,0.8) 100%);
     box-shadow: 0 20px 60px -15px rgba(139, 92, 246, 0.1), inset 0 1px 0 rgba(255,255,255,0.9);
   }
@@ -421,7 +421,7 @@
   }
 
   .card-mirror-light {
-    @apply relative rounded-3xl backdrop-blur-xl overflow-hidden;
+    @apply relative rounded-3xl  overflow-hidden;
     background: linear-gradient(145deg, rgba(255,255,255,0.95) 0%, rgba(245,243,255,0.8) 100%);
     border: 1px solid rgba(139,92,246,0.12);
     box-shadow: 0 25px 80px -20px rgba(139,92,246,0.08), inset 0 1px 0 rgba(255,255,255,0.8);

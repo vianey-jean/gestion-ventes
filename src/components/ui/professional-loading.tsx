@@ -78,7 +78,7 @@ const ProfessionalLoading: React.FC<ProfessionalLoadingProps> = ({
   if (overlay) {
     return (
       <div 
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center"
+        className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center"
         role="dialog"
         aria-modal="true"
         aria-label="Chargement en cours"

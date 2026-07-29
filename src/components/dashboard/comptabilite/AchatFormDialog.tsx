@@ -167,7 +167,7 @@ const AchatFormDialog: React.FC<AchatFormDialogProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-2xl bg-gradient-to-br from-white via-blue-50/30 to-indigo-50/50 dark:from-gray-900 dark:via-blue-900/20 dark:to-indigo-900/20 backdrop-blur-xl border-0 shadow-2xl rounded-3xl">
+      <DialogContent className="sm:max-w-2xl bg-gradient-to-br from-white via-blue-50/30 to-indigo-50/50 dark:from-gray-900 dark:via-blue-900/20 dark:to-indigo-900/20 border-0 shadow-2xl rounded-3xl">
         {/* En-tête de la modale */}
         <DialogHeader>
           <DialogTitle className="text-2xl font-black bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent flex items-center gap-3">
@@ -235,7 +235,7 @@ const AchatFormDialog: React.FC<AchatFormDialogProps> = ({
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
 
             {/* Prix */}
-            <Card className="overflow-hidden border-0 shadow-lg bg-white/70 dark:bg-slate-900/60 backdrop-blur-xl">
+            <Card className="overflow-hidden border-0 shadow-lg bg-white/70 dark:bg-slate-900/60">
               <CardContent className="p-5">
                 <div className="flex items-center justify-between mb-4">
                   <Label className="flex items-center gap-2 text-sm font-bold">
@@ -269,14 +269,7 @@ const AchatFormDialog: React.FC<AchatFormDialogProps> = ({
                       )
                     }
                     placeholder="0.00"
-                    className="
-            h-14 pl-10 text-xl font-bold
-            rounded-2xl
-            border-2 border-emerald-200
-            focus:border-emerald-500
-            bg-white dark:bg-slate-900
-            shadow-sm
-          "
+                    className="h-14 pl-10 text-xl font-bold rounded-2xl border-2 border-emerald-200 focus:border-emerald-500 bg-white dark:bg-slate-900 shadow-sm"
                   />
                 </div>
 
@@ -321,7 +314,7 @@ const AchatFormDialog: React.FC<AchatFormDialogProps> = ({
             </Card>
 
             {/* Quantité */}
-            <Card className="overflow-hidden border-0 shadow-lg bg-white/70 dark:bg-slate-900/60 backdrop-blur-xl">
+            <Card className="overflow-hidden border-0 shadow-lg bg-white/70 dark:bg-slate-900/60">
               <CardContent className="p-5">
 
                 <div className="flex items-center justify-between mb-4">
@@ -350,16 +343,7 @@ const AchatFormDialog: React.FC<AchatFormDialogProps> = ({
                     )
                   }
                   placeholder="0"
-                  className="
-          h-14
-          text-center
-          text-2xl
-          font-black
-          rounded-2xl
-          border-2 border-blue-200
-          focus:border-blue-500
-          bg-white dark:bg-slate-900
-        "
+                  className="h-14 text-center text-2xl font-black rounded-2xl border-2 border-blue-200 focus:border-blue-500 bg-white dark:bg-slate-900"
                 />
 
                 {/* Disponibilité moderne */}
@@ -484,7 +468,7 @@ const AchatFormDialog: React.FC<AchatFormDialogProps> = ({
                 }
                 className={cn(
                   "h-12 w-full pl-11 pr-4 rounded-2xl",
-                  "bg-white/80 dark:bg-gray-900/70 backdrop-blur-md",
+                  "bg-white/80 dark:bg-gray-900/70 ",
                   "border border-gray-200/60 dark:border-gray-700/60",
                   "text-gray-900 dark:text-gray-100 font-medium",
                   "shadow-sm hover:shadow-md transition-all duration-200",

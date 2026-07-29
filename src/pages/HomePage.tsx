@@ -36,19 +36,19 @@ const HomePage: React.FC = () => {
           <motion.div
             animate={{ x: [0, 40, 0], y: [0, -30, 0], scale: [1, 1.15, 1] }}
             transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut' }}
-            className="absolute top-0 -left-32 w-[300px] h-[300px] bg-purple-500/20 rounded-full blur-[120px]"
+            className="absolute top-0 -left-32 w-[300px] h-[300px] bg-purple-500/20 rounded-full"
           />
 
           <motion.div
             animate={{ x: [0, -50, 0], y: [0, 40, 0], scale: [1, 1.2, 1] }}
             transition={{ duration: 22, repeat: Infinity, ease: 'easeInOut' }}
-            className="absolute top-1/3 -right-32 w-[350px] h-[350px] bg-pink-500/15 rounded-full blur-[120px]"
+            className="absolute top-1/3 -right-32 w-[350px] h-[350px] bg-pink-500/15 rounded-full"
           />
 
           <motion.div
             animate={{ y: [0, 60, 0] }}
             transition={{ duration: 20, repeat: Infinity, ease: 'easeInOut' }}
-            className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[420px] h-[420px] bg-gradient-to-r from-violet-500/10 to-fuchsia-500/10 rounded-full blur-[120px]"
+            className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[420px] h-[420px] bg-gradient-to-r from-violet-500/10 to-fuchsia-500/10 rounded-full"
           />
 
           {[...Array(10)].map((_, i) => (
@@ -83,7 +83,7 @@ const HomePage: React.FC = () => {
               <motion.div
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="inline-flex items-center gap-2 px-4 py-1.5 mb-5 bg-white/[0.05] backdrop-blur-xl rounded-full border border-white/[0.08] shadow-lg"
+                className="inline-flex items-center gap-2 px-4 py-1.5 mb-5 bg-white/[0.05] rounded-full border border-white/[0.08] shadow-lg"
               >
                 <Crown className="h-3 w-3 text-amber-400" />
 
@@ -128,7 +128,7 @@ const HomePage: React.FC = () => {
                 >
                   <div className="relative group">
 
-                    <div className="absolute -inset-1 bg-gradient-to-r from-purple-600 via-pink-600 to-fuchsia-600 rounded-xl blur-lg opacity-70 group-hover:opacity-100 transition-opacity duration-500" />
+                    <div className="absolute -inset-1 bg-gradient-to-r from-purple-600 via-pink-600 to-fuchsia-600 rounded-xl opacity-70 group-hover:opacity-100 transition-opacity duration-500" />
 
                     <button
                       onClick={() => navigate('/register')}
@@ -143,7 +143,7 @@ const HomePage: React.FC = () => {
                   <Button
                     variant="outline"
                     onClick={() => navigate('/login')}
-                    className="px-6 py-2.5 h-auto text-sm rounded-xl font-semibold border-white/20 text-white bg-white/[0.04] backdrop-blur-xl hover:bg-white/[0.08] hover:scale-105 transition-all duration-300"
+                    className="px-6 py-2.5 h-auto text-sm rounded-xl font-semibold border-white/20 text-white bg-white/[0.04] hover:bg-white/[0.08] hover:scale-105 transition-all duration-300"
                   >
                     Se connecter
                   </Button>
@@ -188,7 +188,7 @@ const HomePage: React.FC = () => {
               viewport={{ once: true }}
               className="text-center mb-10"
             >
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 mb-4 bg-white/[0.05] backdrop-blur-xl rounded-full border border-white/[0.08]">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 mb-4 bg-white/[0.05] rounded-full border border-white/[0.08]">
                 <Sparkles className="h-3 w-3 text-purple-400" />
 
                 <span className="text-xs font-medium text-purple-300/80">
@@ -242,9 +242,9 @@ const HomePage: React.FC = () => {
                   whileHover={{ y: -5 }}
                   className="group relative"
                 >
-                  <div className={`absolute -inset-0.5 bg-gradient-to-r ${item.gradient} opacity-0 group-hover:opacity-25 rounded-2xl blur-xl transition-opacity duration-500`} />
+                  <div className={`absolute -inset-0.5 bg-gradient-to-r ${item.gradient} opacity-0 group-hover:opacity-25 rounded-2xl  transition-opacity duration-500`} />
 
-                  <div className="relative h-full bg-white/[0.04] backdrop-blur-2xl border border-white/[0.08] rounded-2xl p-5 shadow-[0_15px_40px_rgba(0,0,0,0.25)] overflow-hidden">
+                  <div className="relative h-full bg-white/[0.04] border border-white/[0.08] rounded-2xl p-5 shadow-[0_15px_40px_rgba(0,0,0,0.25)] overflow-hidden">
 
                     <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
 
@@ -274,9 +274,9 @@ const HomePage: React.FC = () => {
               viewport={{ once: true }}
               className="relative max-w-3xl mx-auto"
             >
-              <div className="absolute -inset-4 bg-gradient-to-r from-purple-600/25 via-pink-600/25 to-fuchsia-600/25 rounded-[2rem] blur-3xl" />
+              <div className="absolute -inset-4 bg-gradient-to-r from-purple-600/25 via-pink-600/25 to-fuchsia-600/25 rounded-[2rem]" />
 
-              <div className="relative bg-gradient-to-br from-purple-600/25 via-pink-600/15 to-fuchsia-600/25 backdrop-blur-2xl border border-white/[0.12] rounded-[1.5rem] p-6 sm:p-10 text-center shadow-[0_25px_50px_rgba(168,85,247,0.25)] overflow-hidden">
+              <div className="relative bg-gradient-to-br from-purple-600/25 via-pink-600/15 to-fuchsia-600/25 border border-white/[0.12] rounded-[1.5rem] p-6 sm:p-10 text-center shadow-[0_25px_50px_rgba(168,85,247,0.25)] overflow-hidden">
 
                 <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent" />
 
@@ -291,7 +291,7 @@ const HomePage: React.FC = () => {
                 {!isAuthenticated && (
                   <div className="relative inline-block group">
 
-                    <div className="absolute -inset-1 bg-white/30 rounded-xl blur-lg opacity-50 group-hover:opacity-80 transition-opacity duration-500" />
+                    <div className="absolute -inset-1 bg-white/30 rounded-xl opacity-50 group-hover:opacity-80 transition-opacity duration-500" />
 
                     <button
                       onClick={() => navigate('/register')}

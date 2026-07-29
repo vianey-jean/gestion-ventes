@@ -103,7 +103,7 @@ const OverdueReservationModal: React.FC<OverdueReservationModalProps> = ({
 
   return (
     <div className="fixed bottom-4 left-4 z-50 w-[380px] max-w-[calc(100vw-2rem)] animate-in slide-in-from-bottom-5 duration-300">
-      <div className="rounded-xl border-2 border-amber-400 dark:border-amber-600 bg-gradient-to-br from-amber-50 via-orange-50 to-red-50 dark:from-amber-900/90 dark:via-orange-900/90 dark:to-red-900/90 shadow-2xl backdrop-blur-sm overflow-hidden">
+      <div className="rounded-xl border-2 border-amber-400 dark:border-amber-600 bg-gradient-to-br from-amber-50 via-orange-50 to-red-50 dark:from-amber-900/90 dark:via-orange-900/90 dark:to-red-900/90 shadow-2xl overflow-hidden">
         {/* Header */}
         <div className="px-4 pt-3 pb-2 flex items-center gap-2">
           <AlertTriangle className="h-6 w-6 text-amber-500 animate-pulse flex-shrink-0" />

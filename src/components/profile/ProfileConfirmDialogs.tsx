@@ -36,7 +36,7 @@ const ProfileConfirmDialogs: React.FC<Props> = ({
 }) => (
   <>
     <AlertDialog open={confirmProfile} onOpenChange={setConfirmProfile}>
-      <AlertDialogContent className="rounded-3xl backdrop-blur-2xl bg-white/95 dark:bg-[#0a0020]/95 border border-violet-200/30">
+      <AlertDialogContent className="rounded-3xl bg-white/95 dark:bg-[#0a0020]/95 border border-violet-200/30">
         <AlertDialogHeader>
           <AlertDialogTitle className="flex items-center gap-2"><Shield className="w-5 h-5 text-violet-500" /> Confirmer la modification</AlertDialogTitle>
           <AlertDialogDescription>Voulez-vous enregistrer les modifications de votre profil ?</AlertDialogDescription>
@@ -51,7 +51,7 @@ const ProfileConfirmDialogs: React.FC<Props> = ({
     </AlertDialog>
 
     <AlertDialog open={confirmPassword} onOpenChange={setConfirmPassword}>
-      <AlertDialogContent className="rounded-3xl backdrop-blur-2xl bg-white/95 dark:bg-[#0a0020]/95 border border-violet-200/30">
+      <AlertDialogContent className="rounded-3xl bg-white/95 dark:bg-[#0a0020]/95 border border-violet-200/30">
         <AlertDialogHeader>
           <AlertDialogTitle className="flex items-center gap-2"><Lock className="w-5 h-5 text-rose-500" /> Confirmer le changement de mot de passe</AlertDialogTitle>
           <AlertDialogDescription>Voulez-vous vraiment changer votre mot de passe ? Cette action est irréversible.</AlertDialogDescription>
@@ -66,7 +66,7 @@ const ProfileConfirmDialogs: React.FC<Props> = ({
     </AlertDialog>
 
     <AlertDialog open={confirmPhoto} onOpenChange={(v) => { setConfirmPhoto(v); if (!v) onPhotoDialogClose(); }}>
-      <AlertDialogContent className="rounded-3xl backdrop-blur-2xl bg-white/95 dark:bg-[#0a0020]/95 border border-violet-200/30">
+      <AlertDialogContent className="rounded-3xl bg-white/95 dark:bg-[#0a0020]/95 border border-violet-200/30">
         <AlertDialogHeader>
           <AlertDialogTitle className="flex items-center gap-2"><Camera className="w-5 h-5 text-violet-500" /> Confirmer la photo</AlertDialogTitle>
           <AlertDialogDescription>Voulez-vous utiliser cette photo comme photo de profil ?</AlertDialogDescription>

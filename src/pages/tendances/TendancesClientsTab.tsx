@@ -110,7 +110,7 @@ const TendancesClientsTab: React.FC<TendancesClientsTabProps> = ({ clientsData }
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Top 10 clients - Bar chart */}
-        <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl border border-white/20 shadow-2xl">
+        <Card className="bg-white/90 dark:bg-gray-800/90 border border-white/20 shadow-2xl">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <TrendingUp className="h-5 w-5 text-purple-600" />
@@ -156,7 +156,7 @@ const TendancesClientsTab: React.FC<TendancesClientsTabProps> = ({ clientsData }
         </Card>
 
         {/* Répartition CA par client - Pie chart */}
-        <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl border border-white/20 shadow-2xl">
+        <Card className="bg-white/90 dark:bg-gray-800/90 border border-white/20 shadow-2xl">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Users className="h-5 w-5 text-indigo-600" />
@@ -197,7 +197,7 @@ const TendancesClientsTab: React.FC<TendancesClientsTabProps> = ({ clientsData }
       </div>
 
       {/* Tableau détaillé des clients */}
-      <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl border border-white/20 shadow-2xl">
+      <Card className="bg-white/90 dark:bg-gray-800/90 border border-white/20 shadow-2xl">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Crown className="h-5 w-5 text-amber-500" />
@@ -264,7 +264,7 @@ const TendancesClientsTab: React.FC<TendancesClientsTabProps> = ({ clientsData }
 
       {/* Client Detail Modal */}
       <Dialog open={!!selectedClient} onOpenChange={() => setSelectedClient(null)}>
-        <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto bg-gradient-to-br from-white to-purple-50/30 dark:from-gray-900 dark:to-purple-950/20 backdrop-blur-xl border border-purple-100/50 dark:border-purple-800/30 shadow-2xl rounded-2xl">
+        <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto bg-gradient-to-br from-white to-purple-50/30 dark:from-gray-900 dark:to-purple-950/20 border border-purple-100/50 dark:border-purple-800/30 shadow-2xl rounded-2xl">
           {selectedClient && (
             <>
               <DialogHeader>

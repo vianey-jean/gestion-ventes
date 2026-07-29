@@ -33,14 +33,14 @@ const TendancesTabNavigation: React.FC<TendancesTabNavigationProps> = ({ activeT
 
   return (
     <div className={cn(
-      "relative bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl rounded-3xl shadow-2xl p-6 border border-white/20",
+      "relative bg-white/70 dark:bg-gray-800/70  rounded-3xl shadow-2xl p-6 border border-white/20",
       isMobile && "pt-8 pb-12"
     )}>
       {/* Background gradient */}
       <div className="absolute inset-0 bg-gradient-to-r from-emerald-600/10 via-blue-600/10 to-purple-600/10 rounded-3xl"></div>
       
       <TabsList className={cn(
-        "relative grid w-full h-auto p-2 bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm rounded-2xl border border-white/20",
+        "relative grid w-full h-auto p-2 bg-white/50 dark:bg-gray-900/50  rounded-2xl border border-white/20",
         isMobile ? 'grid-cols-2 gap-2' : 'grid-cols-6 gap-2'
       )}>
         {tabs.map((tab) => (

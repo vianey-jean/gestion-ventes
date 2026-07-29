@@ -28,7 +28,7 @@ interface SecuriteSectionProps {
   userRole?: string;
 }
 
-const cardClass = "relative rounded-2xl backdrop-blur-2xl bg-white/80 dark:bg-white/[0.03] border border-white/20 dark:border-white/10 shadow-xl overflow-hidden";
+const cardClass = "relative rounded-2xl  bg-white/80 dark:bg-white/[0.03] border border-white/20 dark:border-white/10 shadow-xl overflow-hidden";
 const cardHeaderClass = "flex items-center gap-3 mb-5";
 const iconBoxClass = "w-10 h-10 rounded-xl flex items-center justify-center shadow-lg";
 const sectionLabelClass = "text-xs font-bold uppercase tracking-wider";
@@ -660,7 +660,7 @@ const SecuriteSection: React.FC<SecuriteSectionProps> = ({ userRole }) => {
 
       {/* DELETE USER DIALOG */}
       <AlertDialog open={showDeleteUserDialog} onOpenChange={v => { setShowDeleteUserDialog(v); if (!v) setDeleteTargetUser(null); }}>
-        <AlertDialogContent className="rounded-3xl backdrop-blur-2xl bg-white/95 dark:bg-[#0a0020]/95 border border-red-200/30 max-w-md">
+        <AlertDialogContent className="rounded-3xl bg-white/95 dark:bg-[#0a0020]/95 border border-red-200/30 max-w-md">
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2 text-red-600">
               <Trash2 className="w-5 h-5" /> Supprimer le compte
@@ -686,7 +686,7 @@ const SecuriteSection: React.FC<SecuriteSectionProps> = ({ userRole }) => {
 
       {/* ROLE CHANGE DIALOG */}
       <AlertDialog open={showRoleDialog} onOpenChange={v => { setShowRoleDialog(v); if (!v) setRoleChangeUser(null); }}>
-        <AlertDialogContent className="rounded-3xl backdrop-blur-2xl bg-white/95 dark:bg-[#0a0020]/95 border border-violet-200/30 max-w-md">
+        <AlertDialogContent className="rounded-3xl bg-white/95 dark:bg-[#0a0020]/95 border border-violet-200/30 max-w-md">
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2 text-violet-600">
               <UserCog className="w-5 h-5" /> Modifier le rôle
@@ -712,7 +712,7 @@ const SecuriteSection: React.FC<SecuriteSectionProps> = ({ userRole }) => {
 
       {/* SPECIFICATION DIALOG */}
       <AlertDialog open={showSpecDialog} onOpenChange={v => { setShowSpecDialog(v); if (!v) setSpecChangeUser(null); }}>
-        <AlertDialogContent className="rounded-3xl backdrop-blur-2xl bg-white/95 dark:bg-[#0a0020]/95 border border-emerald-200/30 max-w-md">
+        <AlertDialogContent className="rounded-3xl bg-white/95 dark:bg-[#0a0020]/95 border border-emerald-200/30 max-w-md">
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2 text-emerald-600">
               <Radio className="w-5 h-5" /> Modifier la spécification
@@ -740,7 +740,7 @@ const SecuriteSection: React.FC<SecuriteSectionProps> = ({ userRole }) => {
 
       {/* DEACTIVATE ENCRYPTION DIALOG */}
       <AlertDialog open={showDeactivateDialog} onOpenChange={v => { setShowDeactivateDialog(v); if (!v) { setDeactivateKey(''); } }}>
-        <AlertDialogContent className="rounded-3xl backdrop-blur-2xl bg-white/95 dark:bg-[#0a0020]/95 border border-red-200/30 max-w-md">
+        <AlertDialogContent className="rounded-3xl bg-white/95 dark:bg-[#0a0020]/95 border border-red-200/30 max-w-md">
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2 text-red-600">
               <Lock className="w-5 h-5" /> Désactiver le cryptage

@@ -72,13 +72,13 @@ const RdvConfirmationModal: React.FC<RdvConfirmationModalProps> = ({
               initial={{ opacity: 0 }}
               animate={{ opacity: 0.5 }}
               transition={{ delay: 0.2 }}
-              className="absolute -top-24 -right-24 w-48 h-48 bg-gradient-to-br from-primary/30 to-transparent rounded-full blur-3xl"
+              className="absolute -top-24 -right-24 w-48 h-48 bg-gradient-to-br from-primary/30 to-transparent rounded-full"
             />
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 0.3 }}
               transition={{ delay: 0.3 }}
-              className="absolute -bottom-16 -left-16 w-32 h-32 bg-gradient-to-tr from-amber-500/20 to-transparent rounded-full blur-2xl"
+              className="absolute -bottom-16 -left-16 w-32 h-32 bg-gradient-to-tr from-amber-500/20 to-transparent rounded-full"
             />
           </div>
 
@@ -139,7 +139,7 @@ const RdvConfirmationModal: React.FC<RdvConfirmationModalProps> = ({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="mx-6 mb-6 p-5 bg-gradient-to-br from-muted/50 to-muted/30 rounded-2xl border border-border/50 backdrop-blur-sm"
+            className="mx-6 mb-6 p-5 bg-gradient-to-br from-muted/50 to-muted/30 rounded-2xl border border-border/50"
           >
             <div className="space-y-3">
               {/* Client */}

@@ -36,7 +36,7 @@ const SoldeNetModal: React.FC<SoldeNetModalProps> = ({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className={`max-w-2xl max-h-[80vh] overflow-y-auto
         bg-gradient-to-br ${isPositive ? 'from-white to-cyan-50/50 dark:from-gray-900 dark:to-cyan-950/30' : 'from-white to-red-50/50 dark:from-gray-900 dark:to-red-950/30'}
-        backdrop-blur-xl border ${isPositive ? 'border-cyan-100/50 dark:border-cyan-800/30' : 'border-red-100/50 dark:border-red-800/30'}
+         border ${isPositive ? 'border-cyan-100/50 dark:border-cyan-800/30' : 'border-red-100/50 dark:border-red-800/30'}
         shadow-[0_40px_120px_rgba(0,0,0,0.15)] dark:shadow-[0_40px_120px_rgba(0,0,0,0.5)]
         rounded-2xl sm:rounded-3xl`}>
 
@@ -57,7 +57,7 @@ const SoldeNetModal: React.FC<SoldeNetModalProps> = ({
         <div className="space-y-4 mt-4">
           {/* Comparaison visuelle Crédit vs Débit */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="p-5 bg-green-50/80 dark:bg-green-500/[0.06] border border-green-200/60 dark:border-green-500/20 rounded-xl backdrop-blur-sm shadow-sm">
+            <div className="p-5 bg-green-50/80 dark:bg-green-500/[0.06] border border-green-200/60 dark:border-green-500/20 rounded-xl shadow-sm">
               <div className="flex items-center gap-3">
                 <div className="p-2.5 rounded-xl bg-green-100 dark:bg-green-500/20 border border-green-200 dark:border-green-500/20">
                   <ArrowUpCircle className="h-6 w-6 text-green-600 dark:text-green-400" />
@@ -69,7 +69,7 @@ const SoldeNetModal: React.FC<SoldeNetModalProps> = ({
               </div>
             </div>
 
-            <div className="p-5 bg-red-50/80 dark:bg-red-500/[0.06] border border-red-200/60 dark:border-red-500/20 rounded-xl backdrop-blur-sm shadow-sm">
+            <div className="p-5 bg-red-50/80 dark:bg-red-500/[0.06] border border-red-200/60 dark:border-red-500/20 rounded-xl shadow-sm">
               <div className="flex items-center gap-3">
                 <div className="p-2.5 rounded-xl bg-red-100 dark:bg-red-500/20 border border-red-200 dark:border-red-500/20">
                   <ArrowDownCircle className="h-6 w-6 text-red-600 dark:text-red-400" />
@@ -83,7 +83,7 @@ const SoldeNetModal: React.FC<SoldeNetModalProps> = ({
           </div>
 
           {/* Solde final */}
-          <div className={`p-5 rounded-xl backdrop-blur-sm border shadow-sm ${isPositive
+          <div className={`p-5 rounded-xl  border shadow-sm ${isPositive
             ? 'bg-cyan-50/80 dark:bg-cyan-500/[0.06] border-cyan-200/60 dark:border-cyan-500/20'
             : 'bg-red-50/80 dark:bg-red-500/[0.06] border-red-200/60 dark:border-red-500/20'
           }`}>

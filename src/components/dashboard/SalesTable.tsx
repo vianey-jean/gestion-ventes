@@ -446,7 +446,7 @@ const SalesTable: React.FC<SalesTableProps> = ({
   // =========================================================
 
   return (
-    <div className="overflow-hidden rounded-[32px] border border-white/60 bg-gradient-to-br from-white via-slate-50 to-blue-50/40 shadow-[0_20px_80px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+    <div className="overflow-hidden rounded-[32px] border border-white/60 bg-gradient-to-br from-white via-slate-50 to-blue-50/40 shadow-[0_20px_80px_rgba(15,23,42,0.08)]">
       <style>{`
         @keyframes rizikySaleBlink {
           0%, 100% { background-color: rgba(16, 185, 129, 0.35); box-shadow: 0 0 0 3px rgba(16,185,129,0.6), 0 0 40px rgba(16,185,129,0.55) inset; }
@@ -549,88 +549,52 @@ const SalesTable: React.FC<SalesTableProps> = ({
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
             {/* Chiffre A */}
-            <div className="rounded-3xl bg-white/15 p-4 sm:p-5 lg:p-6 backdrop-blur">
+            <div className="rounded-3xl bg-white/15 p-4 sm:p-5 lg:p-6">
               <p className="text-[10px] sm:text-xs uppercase tracking-[0.18em] text-white/70">
                 Chiffre A
               </p>
 
               <h3
-                className="
-        mt-2
-        break-words
-        text-xl
-        font-black
-        leading-tight
-        text-white
-        sm:text-2xl
-        lg:text-3xl
-      "
+                className="mt-2 break-words text-xl font-black leading-tight text-white sm:text-2xl lg:text-3xl"
               >
                 {formatCurrency(globalTotals.sales)}
               </h3>
             </div>
 
             {/* Bénéfice */}
-            <div className="rounded-3xl bg-white/15 p-4 sm:p-5 lg:p-6 backdrop-blur">
+            <div className="rounded-3xl bg-white/15 p-4 sm:p-5 lg:p-6">
               <p className="text-[10px] sm:text-xs uppercase tracking-[0.18em] text-white/70">
                 Bénéfice
               </p>
 
               <h3
-                className="
-        mt-2
-        break-words
-        text-xl
-        font-black
-        leading-tight
-        text-white
-        sm:text-2xl
-        lg:text-3xl
-      "
+                className="mt-2 break-words text-xl font-black leading-tight text-white sm:text-2xl lg:text-3xl"
               >
                 {formatCurrency(globalTotals.profit)}
               </h3>
             </div>
 
             {/* Prix Achat */}
-            <div className="rounded-3xl bg-white/15 p-4 sm:p-5 lg:p-6 backdrop-blur">
+            <div className="rounded-3xl bg-white/15 p-4 sm:p-5 lg:p-6">
               <p className="text-[10px] sm:text-xs uppercase tracking-[0.18em] text-white/70">
                 Prix Achat
               </p>
 
               <h3
-                className="
-        mt-2
-        break-words
-        text-xl
-        font-black
-        leading-tight
-        text-white
-        sm:text-2xl
-        lg:text-3xl
-      "
+                className="mt-2 break-words text-xl font-black leading-tight text-white sm:text-2xl lg:text-3xl"
               >
                 {formatCurrency(globalTotals.purchase)}
               </h3>
             </div>
 
             {/* Quantité */}
-            <div className="rounded-3xl bg-white/15 p-4 sm:p-5 lg:p-6 backdrop-blur">
+            <div className="rounded-3xl bg-white/15 p-4 sm:p-5 lg:p-6">
               <p className="text-[10px] sm:text-xs uppercase tracking-[0.18em] text-white/70">
                 Quantité
               </p>
 
               <h3
-                className="
-        mt-2
-        break-words
-        text-xl
-        font-black
-        leading-tight
-        text-white
-        sm:text-2xl
-        lg:text-3xl
-      "
+                className="mt-2 break-words text-xl font-black leading-tight text-white sm:text-2xl lg:text-3xl"
               >
                 {globalTotals.quantity}
               </h3>
@@ -651,7 +615,7 @@ const SalesTable: React.FC<SalesTableProps> = ({
 
           <ModernTableHeader className="sticky top-0 z-20">
 
-            <TableRow className="border-b border-slate-200/70 bg-white/90 backdrop-blur-xl">
+            <TableRow className="border-b border-slate-200/70 bg-white/90">
 
               <ModernTableHead>
                 <div className="flex items-center gap-3">

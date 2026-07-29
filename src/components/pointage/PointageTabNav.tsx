@@ -10,7 +10,7 @@ interface PointageTabNavProps {
 const PointageTabNav: React.FC<PointageTabNavProps> = ({ activeTab, onTabChange }) => {
   return (
     <div className="max-w-7xl mx-auto px-2 sm:px-4 pt-6">
-      <div className="flex gap-1 sm:gap-2 p-1 sm:p-1.5 rounded-2xl bg-white/60 dark:bg-white/5 backdrop-blur-2xl border border-white/20 dark:border-white/10 shadow-xl w-full max-w-2xl mx-auto overflow-hidden">
+      <div className="flex gap-1 sm:gap-2 p-1 sm:p-1.5 rounded-2xl bg-white/60 dark:bg-white/5 border border-white/20 dark:border-white/10 shadow-xl w-full max-w-2xl mx-auto overflow-hidden">
         <button
           onClick={() => onTabChange('pointage')}
           className={cn(

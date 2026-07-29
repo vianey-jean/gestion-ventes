@@ -181,17 +181,17 @@ const MaintenancePage: React.FC<MaintenancePageProps> = ({ message, onAuthentica
         <motion.div
           animate={{ x: [0, 30, 0], y: [0, -20, 0], scale: [1, 1.1, 1] }}
           transition={{ duration: 15, repeat: Infinity, ease: 'easeInOut' }}
-          className="absolute top-1/4 left-1/4 w-96 h-96 bg-amber-500/20 rounded-full blur-[100px]"
+          className="absolute top-1/4 left-1/4 w-96 h-96 bg-amber-500/20 rounded-full"
         />
         <motion.div
           animate={{ x: [0, -40, 0], y: [0, 30, 0], scale: [1, 1.2, 1] }}
           transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut' }}
-          className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-purple-500/15 rounded-full blur-[120px]"
+          className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-purple-500/15 rounded-full"
         />
         <motion.div
           animate={{ x: [0, 20, 0], y: [0, 40, 0] }}
           transition={{ duration: 20, repeat: Infinity, ease: 'easeInOut' }}
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-r from-pink-500/10 to-amber-500/10 rounded-full blur-[100px]"
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-r from-pink-500/10 to-amber-500/10 rounded-full"
         />
         {[...Array(8)].map((_, i) => (
           <motion.div
@@ -216,8 +216,8 @@ const MaintenancePage: React.FC<MaintenancePageProps> = ({ message, onAuthentica
             transition={{ duration: 0.6, ease: 'easeOut' }}
             className="relative w-full max-w-2xl z-10"
           >
-            <div className="absolute -inset-6 bg-gradient-to-r from-amber-600/20 via-orange-600/20 to-yellow-600/20 rounded-[2.5rem] blur-2xl" />
-            <Card className="relative bg-white/[0.06] backdrop-blur-2xl border border-white/[0.12] shadow-[0_32px_64px_rgba(0,0,0,0.5)] rounded-3xl overflow-hidden">
+            <div className="absolute -inset-6 bg-gradient-to-r from-amber-600/20 via-orange-600/20 to-yellow-600/20 rounded-[2.5rem]" />
+            <Card className="relative bg-white/[0.06] border border-white/[0.12] shadow-[0_32px_64px_rgba(0,0,0,0.5)] rounded-3xl overflow-hidden">
               <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-amber-400/60 to-transparent" />
               <CardHeader className="text-center pt-12 pb-6">
                 <motion.div
@@ -227,7 +227,7 @@ const MaintenancePage: React.FC<MaintenancePageProps> = ({ message, onAuthentica
                   className="flex justify-center mb-6"
                 >
                   <div className="relative">
-                    <div className="absolute inset-0 bg-gradient-to-r from-amber-500 to-orange-500 rounded-3xl blur-2xl opacity-60" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-amber-500 to-orange-500 rounded-3xl opacity-60" />
                     <div className="relative w-24 h-24 bg-gradient-to-br from-amber-500 via-orange-500 to-yellow-500 rounded-3xl flex items-center justify-center shadow-2xl border border-white/20">
                       <Wrench className="h-12 w-12 text-white drop-shadow-lg" />
                     </div>
@@ -256,7 +256,7 @@ const MaintenancePage: React.FC<MaintenancePageProps> = ({ message, onAuthentica
               </CardHeader>
 
               <CardContent className="px-8 pb-2">
-                <div className="rounded-2xl bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-400/20 p-5 backdrop-blur-sm">
+                <div className="rounded-2xl bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-400/20 p-5">
                   <div className="flex items-start gap-3">
                     <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-400/30 flex items-center justify-center flex-shrink-0">
                       <Crown className="w-5 h-5 text-amber-300" />
@@ -297,8 +297,8 @@ const MaintenancePage: React.FC<MaintenancePageProps> = ({ message, onAuthentica
             transition={{ duration: 0.6, ease: 'easeOut' }}
             className="relative w-full max-w-md z-10"
           >
-            <div className="absolute -inset-4 bg-gradient-to-r from-amber-600/20 via-orange-600/20 to-purple-600/20 rounded-[2rem] blur-2xl" />
-            <Card className="relative bg-white/[0.08] backdrop-blur-2xl border border-white/[0.12] shadow-[0_32px_64px_rgba(0,0,0,0.4)] rounded-3xl overflow-hidden">
+            <div className="absolute -inset-4 bg-gradient-to-r from-amber-600/20 via-orange-600/20 to-purple-600/20 rounded-[2rem]" />
+            <Card className="relative bg-white/[0.08] border border-white/[0.12] shadow-[0_32px_64px_rgba(0,0,0,0.4)] rounded-3xl overflow-hidden">
               <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-amber-400/50 to-transparent" />
 
               <CardHeader className="text-center pb-6 pt-10">
@@ -309,7 +309,7 @@ const MaintenancePage: React.FC<MaintenancePageProps> = ({ message, onAuthentica
                   className="flex justify-center mb-6"
                 >
                   <div className="relative">
-                    <div className="absolute inset-0 bg-gradient-to-r from-amber-500 to-orange-500 rounded-2xl blur-xl opacity-50" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-amber-500 to-orange-500 rounded-2xl opacity-50" />
                     <div className="relative w-20 h-20 bg-gradient-to-br from-amber-500 via-orange-500 to-yellow-500 rounded-2xl flex items-center justify-center shadow-2xl border border-white/20">
                       <Fingerprint className="h-10 w-10 text-white drop-shadow-lg" />
                     </div>
@@ -351,7 +351,7 @@ const MaintenancePage: React.FC<MaintenancePageProps> = ({ message, onAuthentica
 </span>
                     </Label>
                     <div className="relative group">
-                      <div className="absolute -inset-0.5 bg-gradient-to-r from-amber-500/30 to-orange-500/30 rounded-xl blur opacity-0 group-focus-within:opacity-100 transition-opacity duration-300" />
+                      <div className="absolute -inset-0.5 bg-gradient-to-r from-amber-500/30 to-orange-500/30 rounded-xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-300" />
                       <Input
                         id="email"
                         type="email"
@@ -389,7 +389,7 @@ const MaintenancePage: React.FC<MaintenancePageProps> = ({ message, onAuthentica
                           Mot de passe
                         </Label>
                         {failedAttempts > 0 && (
-                          <div className={`flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full border backdrop-blur-sm ${
+                          <div className={`flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full border  ${
                             isLocked ? 'bg-red-500/20 border-red-400/30 text-red-300'
                               : remainingAttempts <= 2 ? 'bg-orange-500/20 border-orange-400/30 text-orange-300'
                               : 'bg-yellow-500/20 border-yellow-400/30 text-yellow-300'
@@ -402,7 +402,7 @@ const MaintenancePage: React.FC<MaintenancePageProps> = ({ message, onAuthentica
                       {isLocked && lockCountdown > 0 && (
                         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
                           className="relative rounded-xl overflow-hidden">
-                          <div className="absolute inset-0 bg-gradient-to-r from-red-600/30 via-rose-600/30 to-red-600/30 backdrop-blur-xl" />
+                          <div className="absolute inset-0 bg-gradient-to-r from-red-600/30 via-rose-600/30 to-red-600/30" />
                           <div className="relative p-4 border border-red-400/30 rounded-xl">
                             <div className="flex items-center gap-3 mb-3">
                               <Lock className="w-5 h-5 text-red-300" />
@@ -448,7 +448,7 @@ const MaintenancePage: React.FC<MaintenancePageProps> = ({ message, onAuthentica
                   <Button
                     type="button"
                     onClick={() => { setShowLogin(false); setShowPasswordField(false); setEmail(''); setPassword(''); setErrors({}); }}
-                    className="w-full h-12 bg-white/[0.05] hover:bg-white/[0.1] text-red rounded-xl border border-red backdrop-blur-sm"
+                    className="w-full h-12 bg-white/[0.05] hover:bg-white/[0.1] text-red rounded-xl border border-red"
                   >
                     Retour
                   </Button>

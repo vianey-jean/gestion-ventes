@@ -31,7 +31,7 @@ const TacheNotificationBar: React.FC<TacheNotificationBarProps> = ({
             transition={{ type: 'spring', damping: 20 }}
             onClick={() => onClickNotification(notif)}
             className={cn(
-              'pointer-events-auto cursor-pointer relative flex items-center gap-3 px-4 py-3 rounded-2xl border backdrop-blur-2xl shadow-2xl',
+              'pointer-events-auto cursor-pointer relative flex items-center gap-3 px-4 py-3 rounded-2xl border  shadow-2xl',
               notif.tache.importance === 'pertinent'
                 ? 'bg-red-500/90 border-red-300/40 text-white shadow-red-500/40'
                 : 'bg-emerald-500/90 border-emerald-300/40 text-white shadow-emerald-500/40'

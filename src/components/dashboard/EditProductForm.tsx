@@ -234,14 +234,12 @@ const EditProductForm: React.FC<EditProductFormProps> = ({ isOpen, onClose }) =>
     <>
       <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
         <DialogContent
-          className="sm:max-w-2xl bg-gradient-to-br from-white via-blue-50/30 to-indigo-50/50
-          backdrop-blur-xl border-0 shadow-2xl rounded-3xl
-          max-h-[90vh] overflow-y-auto"
+          className="sm:max-w-2xl bg-gradient-to-br from-white via-blue-50/30 to-indigo-50/50 border-0 shadow-2xl rounded-3xl max-h-[90vh] overflow-y-auto"
         >
           {/* Decorative background */}
           <div className="absolute inset-0 pointer-events-none">
-            <div className="absolute -top-24 -right-24 w-48 h-48 bg-blue-200/20 rounded-full blur-3xl" />
-            <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-indigo-200/20 rounded-full blur-3xl" />
+            <div className="absolute -top-24 -right-24 w-48 h-48 bg-blue-200/20 rounded-full" />
+            <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-indigo-200/20 rounded-full" />
           </div>
 
           <DialogHeader className="relative text-center space-y-4 pb-2">
@@ -382,7 +380,7 @@ const EditProductForm: React.FC<EditProductFormProps> = ({ isOpen, onClose }) =>
 
       {/* Confirmation dialog modification */}
       <AlertDialog open={openConfirm} onOpenChange={setOpenConfirm}>
-        <AlertDialogContent className="bg-gradient-to-br from-white via-blue-50/30 to-indigo-50/50 backdrop-blur-xl border-0 shadow-2xl rounded-3xl">
+        <AlertDialogContent className="bg-gradient-to-br from-white via-blue-50/30 to-indigo-50/50 border-0 shadow-2xl rounded-3xl">
           <AlertDialogHeader className="text-center space-y-4">
             <div className="mx-auto w-14 h-14 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-xl">
               <CheckCircle2 className="h-7 w-7 text-white" />
@@ -411,7 +409,7 @@ const EditProductForm: React.FC<EditProductFormProps> = ({ isOpen, onClose }) =>
 
       {/* Confirmation dialog suppression PREMIUM */}
       <AlertDialog open={openDeleteConfirm} onOpenChange={setOpenDeleteConfirm}>
-        <AlertDialogContent className="bg-gradient-to-br from-white via-red-50/30 to-rose-50/50 backdrop-blur-xl border-0 shadow-2xl rounded-3xl">
+        <AlertDialogContent className="bg-gradient-to-br from-white via-red-50/30 to-rose-50/50 border-0 shadow-2xl rounded-3xl">
           <AlertDialogHeader className="text-center space-y-4">
             <div className="mx-auto w-16 h-16 bg-gradient-to-br from-red-500 via-red-600 to-rose-600 rounded-2xl flex items-center justify-center shadow-xl shadow-red-500/30 animate-pulse">
               <AlertTriangle className="h-8 w-8 text-white" />

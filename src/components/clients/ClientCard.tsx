@@ -23,7 +23,7 @@ const ClientCard: React.FC<ClientCardProps> = ({
 }) => {
   return (
     <Card 
-      className="group hover:shadow-2xl transition-all duration-700 transform hover:-translate-y-4 hover:rotate-1 bg-gradient-to-br from-white via-gray-50 to-purple-50/30 dark:from-gray-800 dark:via-gray-900 dark:to-purple-900/30 backdrop-blur-sm border-0 shadow-xl hover:shadow-purple-500/25 relative overflow-hidden"
+      className="group hover:shadow-2xl transition-all duration-700 transform hover:-translate-y-4 hover:rotate-1 bg-gradient-to-br from-white via-gray-50 to-purple-50/30 dark:from-gray-800 dark:via-gray-900 dark:to-purple-900/30 border-0 shadow-xl hover:shadow-purple-500/25 relative overflow-hidden"
       style={{
         animationDelay: `${index * 150}ms`
       }}
@@ -38,7 +38,7 @@ const ClientCard: React.FC<ClientCardProps> = ({
       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
       
       {/* Halo lumineux */}
-      <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-500 via-pink-500 to-yellow-500 rounded-xl opacity-0 group-hover:opacity-20 blur transition-opacity duration-500"></div>
+      <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-500 via-pink-500 to-yellow-500 rounded-xl opacity-0 group-hover:opacity-20 transition-opacity duration-500"></div>
       
       <CardHeader className="pb-4 relative z-10">
         <div className="flex justify-between items-start">

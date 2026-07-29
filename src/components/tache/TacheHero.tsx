@@ -128,12 +128,12 @@ const TacheHero: React.FC<TacheHeroProps> = ({
         <motion.div
           animate={{ x: [0, 40, 0], y: [0, -30, 0], scale: [1, 1.15, 1] }}
           transition={{ duration: 16, repeat: Infinity, ease: 'easeInOut' }}
-          className="absolute -top-10 left-1/4 w-[26rem] h-[26rem] bg-violet-500/25 rounded-full blur-[110px] pointer-events-none"
+          className="absolute -top-10 left-1/4 w-[26rem] h-[26rem] bg-violet-500/25 rounded-full pointer-events-none"
         />
         <motion.div
           animate={{ x: [0, -30, 0], y: [0, 30, 0], scale: [1, 1.1, 1] }}
           transition={{ duration: 19, repeat: Infinity, ease: 'easeInOut' }}
-          className="absolute -bottom-10 right-1/4 w-[28rem] h-[28rem] bg-fuchsia-500/20 rounded-full blur-[120px] pointer-events-none"
+          className="absolute -bottom-10 right-1/4 w-[28rem] h-[28rem] bg-fuchsia-500/20 rounded-full pointer-events-none"
         />
         {/* Grid mask */}
         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.025)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.025)_1px,transparent_1px)] bg-[size:44px_44px] [mask-image:radial-gradient(ellipse_at_center,black_30%,transparent_75%)]" />
@@ -149,7 +149,7 @@ const TacheHero: React.FC<TacheHeroProps> = ({
           >
             <motion.div
               whileHover={{ scale: 1.05, y: -2 }}
-              className="inline-flex items-center gap-3 mb-5 px-6 py-3 rounded-full bg-white/[0.07] border border-white/[0.12] backdrop-blur-2xl shadow-[0_10px_40px_rgba(168,85,247,0.3)]"
+              className="inline-flex items-center gap-3 mb-5 px-6 py-3 rounded-full bg-white/[0.07] border border-white/[0.12] shadow-[0_10px_40px_rgba(168,85,247,0.3)]"
             >
               <motion.div
                 animate={{ rotate: 360 }}
@@ -212,7 +212,7 @@ const TacheHero: React.FC<TacheHeroProps> = ({
                   whileHover={{ y: -4, scale: 1.03 }}
                   onClick={s.onClick}
                   className={cn(
-                    'px-5 py-3 rounded-2xl bg-white/[0.06] backdrop-blur-2xl border border-white/[0.12] shadow-[0_10px_40px_rgba(0,0,0,0.3)]',
+                    'px-5 py-3 rounded-2xl bg-white/[0.06]  border border-white/[0.12] shadow-[0_10px_40px_rgba(0,0,0,0.3)]',
                     s.interactive && 'cursor-pointer',
                   )}
                 >
@@ -229,7 +229,7 @@ const TacheHero: React.FC<TacheHeroProps> = ({
               ))}
             </div>
 
-            <div className="relative overflow-hidden bg-gradient-to-br from-violet-800/70 via-purple-800/70 to-fuchsia-900/70 backdrop-blur-xl rounded-2xl sm:rounded-3xl shadow-[0_40px_120px_rgba(0,0,0,0.45)] p-5 sm:p-7 border border-white/25 mt-6">
+            <div className="relative overflow-hidden bg-gradient-to-br from-violet-800/70 via-purple-800/70 to-fuchsia-900/70 rounded-2xl sm:rounded-3xl shadow-[0_40px_120px_rgba(0,0,0,0.45)] p-5 sm:p-7 border border-white/25 mt-6">
               <div className="absolute inset-0 bg-gradient-to-tr from-white/10 via-transparent to-transparent pointer-events-none" />
               <div className="relative flex flex-wrap justify-center gap-3 sm:gap-4">
                 <Button
@@ -337,7 +337,7 @@ const TacheHero: React.FC<TacheHeroProps> = ({
 
       {/* Modal Total Tâches */}
       <Dialog open={showTotalModal} onOpenChange={setShowTotalModal}>
-        <DialogContent className="bg-gradient-to-br from-slate-900 via-violet-900/30 to-purple-900/20 backdrop-blur-2xl border border-white/10 shadow-2xl rounded-3xl max-w-lg">
+        <DialogContent className="bg-gradient-to-br from-slate-900 via-violet-900/30 to-purple-900/20 border border-white/10 shadow-2xl rounded-3xl max-w-lg">
           <DialogHeader className="text-center space-y-2 pb-3">
             <DialogTitle className="text-lg font-black bg-gradient-to-r from-violet-400 to-purple-400 bg-clip-text text-transparent">
               📋 Toutes les tâches non terminées ({uncompletedTaches.length})
@@ -352,7 +352,7 @@ const TacheHero: React.FC<TacheHeroProps> = ({
 
       {/* Modal Aujourd'hui */}
       <Dialog open={showTodayModal} onOpenChange={setShowTodayModal}>
-        <DialogContent className="bg-gradient-to-br from-slate-900 via-violet-900/30 to-purple-900/20 backdrop-blur-2xl border border-white/10 shadow-2xl rounded-3xl max-w-lg">
+        <DialogContent className="bg-gradient-to-br from-slate-900 via-violet-900/30 to-purple-900/20 border border-white/10 shadow-2xl rounded-3xl max-w-lg">
           <DialogHeader className="text-center space-y-2 pb-3">
             <DialogTitle className="text-lg font-black bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
               📅 Tâches d'aujourd'hui ({todayTaches.length})

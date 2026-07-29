@@ -257,7 +257,7 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, onEdit, onDelete, onDragStart
         draggable
         onDragStart={onDragStart}
         onClick={handleOpenDetail}
-        className="group relative rounded-2xl border border-white/30 dark:border-white/10 backdrop-blur-2xl shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer hover:scale-[1.02]"
+        className="group relative rounded-2xl border border-white/30 dark:border-white/10 shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer hover:scale-[1.02]"
         style={{ backgroundColor: note.color === '#ffffff' ? 'rgba(255,255,255,0.9)' : note.color + 'e6' }}
       >
         <div className="absolute top-0 left-0 right-0 h-1 rounded-t-2xl bg-gradient-to-r from-cyan-400 via-blue-500 to-violet-500 opacity-70" />
@@ -326,7 +326,7 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, onEdit, onDelete, onDragStart
 
       {/* Detail Modal */}
       <Dialog open={showDetail} onOpenChange={(open) => { if (!open) { setIsEditing(false); setConfirmAction(null); } setShowDetail(open); }}>
-        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto p-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-2xl border-white/20 dark:border-white/10 rounded-3xl">
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto p-0 bg-white/95 dark:bg-gray-900/95 border-white/20 dark:border-white/10 rounded-3xl">
           <div className="p-5 sm:p-6 space-y-4">
             {/* Title */}
             <div className="flex items-start justify-between">

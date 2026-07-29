@@ -305,7 +305,7 @@ const StockListModal: React.FC<Props> = ({ open, onClose, products }) => {
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-5xl max-h-[92vh] overflow-hidden p-0 rounded-2xl border-violet-200/60 dark:border-violet-800/60 shadow-2xl bg-white/95 dark:bg-gray-950/95 backdrop-blur-sm flex flex-col">
+      <DialogContent className="max-w-5xl max-h-[92vh] overflow-hidden p-0 rounded-2xl border-violet-200/60 dark:border-violet-800/60 shadow-2xl bg-white/95 dark:bg-gray-950/95 flex flex-col">
         <DialogHeader className="p-5 pb-3 bg-gradient-to-br from-violet-600 via-purple-600 to-fuchsia-600 text-white shrink-0">
           <DialogTitle className="flex items-center gap-3 text-white text-lg font-black">
             <Package className="h-5 w-5" /> Liste du Stock
@@ -314,7 +314,7 @@ const StockListModal: React.FC<Props> = ({ open, onClose, products }) => {
               onClick={exportPdf}
               size="sm"
               disabled={results.length === 0}
-              className="ml-auto bg-white/90 text-violet-700 hover:bg-white rounded-xl font-bold shadow-lg backdrop-blur-md transition-all"
+              className="ml-auto bg-white/90 text-violet-700 hover:bg-white rounded-xl font-bold shadow-lg transition-all"
             >
               <Printer className="h-4 w-4 mr-1.5" /> PDF
             </Button>
@@ -344,8 +344,8 @@ const StockListModal: React.FC<Props> = ({ open, onClose, products }) => {
             </div>
           </div>
 
-          <div className="flex-1 min-h-0 mx-5 mb-5 rounded-2xl border border-violet-200/50 dark:border-violet-800/50 overflow-hidden flex flex-col bg-white/60 dark:bg-gray-900/60 backdrop-blur-sm shadow-inner">
-            <div className="shrink-0 grid grid-cols-12 gap-2 px-4 py-2.5 bg-gradient-to-r from-violet-50/80 to-fuchsia-50/80 dark:from-violet-900/40 dark:to-fuchsia-900/40 text-[11px] font-black text-violet-800 dark:text-violet-200 uppercase tracking-wide backdrop-blur-sm border-b border-violet-100 dark:border-violet-900/40">
+          <div className="flex-1 min-h-0 mx-5 mb-5 rounded-2xl border border-violet-200/50 dark:border-violet-800/50 overflow-hidden flex flex-col bg-white/60 dark:bg-gray-900/60 shadow-inner">
+            <div className="shrink-0 grid grid-cols-12 gap-2 px-4 py-2.5 bg-gradient-to-r from-violet-50/80 to-fuchsia-50/80 dark:from-violet-900/40 dark:to-fuchsia-900/40 text-[11px] font-black text-violet-800 dark:text-violet-200 uppercase tracking-wide border-b border-violet-100 dark:border-violet-900/40">
               <div className="col-span-3">Code</div>
               <div className="col-span-5 flex items-center gap-2">
                 <span>Description</span>

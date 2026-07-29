@@ -125,7 +125,7 @@ const CommandesStatsButtons: React.FC<CommandesStatsButtonsProps> = ({
         >
           <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
           <div className="relative flex items-center gap-2">
-            <div className="flex items-center justify-center h-7 w-7 rounded-lg bg-white/20 backdrop-blur-sm">
+            <div className="flex items-center justify-center h-7 w-7 rounded-lg bg-white/20">
               <Users className="h-4 w-4" />
             </div>
             <div className="flex flex-col items-start">
@@ -145,7 +145,7 @@ const CommandesStatsButtons: React.FC<CommandesStatsButtonsProps> = ({
         >
           <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
           <div className="relative flex items-center gap-2">
-            <div className="flex items-center justify-center h-7 w-7 rounded-lg bg-white/20 backdrop-blur-sm">
+            <div className="flex items-center justify-center h-7 w-7 rounded-lg bg-white/20">
               <Package className="h-4 w-4" />
             </div>
             <div className="flex flex-col items-start">
@@ -165,7 +165,7 @@ const CommandesStatsButtons: React.FC<CommandesStatsButtonsProps> = ({
         >
           <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
           <div className="relative flex items-center gap-2">
-            <div className="flex items-center justify-center h-7 w-7 rounded-lg bg-white/20 backdrop-blur-sm">
+            <div className="flex items-center justify-center h-7 w-7 rounded-lg bg-white/20">
               <Coins className="h-4 w-4" />
             </div>
             <div className="flex flex-col items-start">

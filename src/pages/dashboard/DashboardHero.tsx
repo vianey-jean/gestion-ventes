@@ -29,7 +29,7 @@ const DashboardHero: React.FC = () => {
       <div className="absolute inset-0">
 
         <motion.div
-          className="absolute top-[-15%] left-[10%] h-[500px] w-[500px] rounded-full bg-purple-600/25 blur-[140px]"
+          className="absolute top-[-15%] left-[10%] h-[500px] w-[500px] rounded-full bg-purple-600/25"
           animate={{
             x: [0, 80, -40, 0],
             y: [0, -40, 50, 0],
@@ -43,7 +43,7 @@ const DashboardHero: React.FC = () => {
         />
 
         <motion.div
-          className="absolute top-[0%] right-[5%] h-[450px] w-[450px] rounded-full bg-pink-500/20 blur-[140px]"
+          className="absolute top-[0%] right-[5%] h-[450px] w-[450px] rounded-full bg-pink-500/20"
           animate={{
             x: [0, -80, 50, 0],
             y: [0, 50, -40, 0],
@@ -57,7 +57,7 @@ const DashboardHero: React.FC = () => {
         />
 
         <motion.div
-          className="absolute bottom-[-20%] left-1/2 h-[700px] w-[700px] -translate-x-1/2 rounded-full bg-indigo-600/20 blur-[170px]"
+          className="absolute bottom-[-20%] left-1/2 h-[700px] w-[700px] -translate-x-1/2 rounded-full bg-indigo-600/20"
           animate={{
             scale: [1, 1.25, 1],
             opacity: [0.4, 0.9, 0.4],
@@ -74,11 +74,7 @@ const DashboardHero: React.FC = () => {
       {/* ========================= */}
 
       <div
-        className="
-          absolute inset-0 opacity-[0.035]
-          bg-[url('https://grainy-gradients.vercel.app/noise.svg')]
-          mix-blend-soft-light
-        "
+        className="absolute inset-0 opacity-[0.035] bg-[url('https://grainy-gradients.vercel.app/noise.svg')] mix-blend-soft-light"
       />
 
       {/* ========================= */}
@@ -92,7 +88,7 @@ const DashboardHero: React.FC = () => {
       {/* ========================= */}
 
       <motion.div
-        className="absolute left-1/2 top-0 h-full w-[350px] -translate-x-1/2 bg-gradient-to-b from-purple-400/15 via-transparent to-transparent blur-3xl"
+        className="absolute left-1/2 top-0 h-full w-[350px] -translate-x-1/2 bg-gradient-to-b from-purple-400/15 via-transparent to-transparent"
         animate={{
           opacity: [0.2, 0.8, 0.2],
         }}
@@ -158,7 +154,7 @@ const DashboardHero: React.FC = () => {
       <motion.div
         initial={{ opacity: 0, y: -30 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative z-20 inline-flex items-center gap-3 rounded-full border border-white/10 bg-white/5 px-7 py-3 backdrop-blur-3xl"
+        className="relative z-20 inline-flex items-center gap-3 rounded-full border border-white/10 bg-white/5 px-7 py-3"
       >
         <motion.div
           animate={{
@@ -196,16 +192,7 @@ const DashboardHero: React.FC = () => {
         initial={{ opacity: 0, y: 80 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 1 }}
-        className="
-          relative z-20
-          mt-10
-          text-5xl
-          sm:text-6xl
-          md:text-7xl
-          lg:text-8xl
-          font-black
-          tracking-tight
-        "
+        className="relative z-20 mt-10 text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black tracking-tight"
       >
         <div className="flex items-center justify-center gap-4">
 
@@ -223,15 +210,7 @@ const DashboardHero: React.FC = () => {
           </motion.div>
 
           <span
-            className="
-              bg-gradient-to-r
-              from-white
-              via-purple-200
-              to-pink-200
-              bg-clip-text
-              text-transparent
-              drop-shadow-[0_0_50px_rgba(168,85,247,0.8)]
-            "
+            className="bg-gradient-to-r from-white via-purple-200 to-pink-200 bg-clip-text text-transparent drop-shadow-[0_0_50px_rgba(168,85,247,0.8)]"
           >
             Tableau de Bord
           </span>
@@ -262,16 +241,7 @@ const DashboardHero: React.FC = () => {
         transition={{
           delay: 0.5,
         }}
-        className="
-          relative z-20
-          mx-auto
-          mt-8
-          max-w-3xl
-          px-6
-          text-lg
-          md:text-xl
-          text-purple-100/70
-        "
+        className="relative z-20 mx-auto mt-8 max-w-3xl px-6 text-lg md:text-xl text-purple-100/70"
       >
         Gérez vos ventes, stocks, finances et performances avec une
         expérience de nouvelle génération alimentée par des analyses
@@ -283,20 +253,7 @@ const DashboardHero: React.FC = () => {
       {/* ========================= */}
 
       <motion.div
-        className="
-          relative z-20
-          mt-10
-          inline-flex
-          items-center
-          gap-3
-          rounded-full
-          border
-          border-emerald-500/20
-          bg-emerald-500/10
-          px-5
-          py-2
-          backdrop-blur-xl
-        "
+        className="relative z-20 mt-10 inline-flex items-center gap-3 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-5 py-2"
         animate={{
           boxShadow: [
             "0 0 10px rgba(16,185,129,.2)",

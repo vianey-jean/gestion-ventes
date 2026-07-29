@@ -19,7 +19,7 @@ import RdvRescheduleModal from './RdvRescheduleModal';
 import RdvTachesHero from './RdvTachesHero';
 import TravailleurModal from '@/components/pointage/modals/TravailleurModal';
 
-const premiumBtnClass = "group relative overflow-hidden rounded-xl sm:rounded-2xl backdrop-blur-xl border transition-all duration-300 hover:scale-105 px-4 py-2 sm:px-5 sm:py-3 text-xs sm:text-sm font-semibold";
+const premiumBtnClass = "group relative overflow-hidden rounded-xl sm:rounded-2xl  border transition-all duration-300 hover:scale-105 px-4 py-2 sm:px-5 sm:py-3 text-xs sm:text-sm font-semibold";
 const mirrorShine = "absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500";
 
 const todayStr = () => new Date().toISOString().split('T')[0];
@@ -216,7 +216,7 @@ const RdvTacheView: React.FC = () => {
 
         {/* Liste catalogue compacte */}
         {catalog.length > 0 && (
-          <div className="rounded-3xl bg-white/60 dark:bg-white/5 backdrop-blur-xl border border-white/10 p-4">
+          <div className="rounded-3xl bg-white/60 dark:bg-white/5 border border-white/10 p-4">
             <p className="text-xs font-bold text-muted-foreground mb-2 flex items-center gap-2">
               <Scissors className="h-3.5 w-3.5 text-fuchsia-400" /> Catalogue des tâches
             </p>
@@ -318,7 +318,7 @@ const RdvTacheView: React.FC = () => {
 
       {/* Modale Liste catalogue tâches */}
       <Dialog open={showCatalogListModal} onOpenChange={setShowCatalogListModal}>
-        <DialogContent className="bg-gradient-to-br from-slate-900 via-rose-900/30 to-pink-900/20 backdrop-blur-2xl border border-white/10 shadow-2xl rounded-3xl max-w-lg max-h-[80vh] overflow-hidden">
+        <DialogContent className="bg-gradient-to-br from-slate-900 via-rose-900/30 to-pink-900/20 border border-white/10 shadow-2xl rounded-3xl max-w-lg max-h-[80vh] overflow-hidden">
           <DialogHeader className="text-center space-y-2 pb-3">
             <div className="mx-auto w-12 h-12 bg-gradient-to-br from-rose-500 via-pink-500 to-fuchsia-500 rounded-2xl flex items-center justify-center shadow-xl shadow-rose-500/30">
               <Scissors className="h-6 w-6 text-white" />

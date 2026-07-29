@@ -60,7 +60,7 @@ const ObjectifChangesModal: React.FC<ObjectifChangesModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-lg bg-gradient-to-br from-violet-50 via-white to-purple-50 dark:from-slate-950 dark:via-violet-950/30 dark:to-slate-900 border-violet-200/50 dark:border-violet-800/50 backdrop-blur-xl">
+      <DialogContent className="sm:max-w-lg bg-gradient-to-br from-violet-50 via-white to-purple-50 dark:from-slate-950 dark:via-violet-950/30 dark:to-slate-900 border-violet-200/50 dark:border-violet-800/50">
         <DialogHeader className="pb-2">
           <DialogTitle className="flex items-center gap-3 text-xl font-bold">
             <div className="p-2.5 rounded-xl bg-gradient-to-br from-violet-500 to-purple-500 shadow-lg shadow-violet-500/30">
@@ -75,7 +75,7 @@ const ObjectifChangesModal: React.FC<ObjectifChangesModalProps> = ({
 
         <div className="space-y-4 pt-2">
           {/* Current Objectif Card */}
-          <div className="p-4 rounded-2xl bg-gradient-to-r from-violet-500/20 to-purple-500/20 border border-violet-300/50 dark:border-violet-700/50 backdrop-blur-sm">
+          <div className="p-4 rounded-2xl bg-gradient-to-r from-violet-500/20 to-purple-500/20 border border-violet-300/50 dark:border-violet-700/50">
             <div className="flex items-center gap-3">
               <div className="p-3 rounded-xl bg-gradient-to-br from-violet-500 to-purple-500 shadow-lg">
                 <Target className="h-6 w-6 text-white" />
@@ -114,7 +114,7 @@ const ObjectifChangesModal: React.FC<ObjectifChangesModalProps> = ({
                         <div className="w-2 h-2 rounded-full bg-white" />
                       </div>
                       
-                      <div className="p-3 rounded-xl bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50 transition-all duration-300 hover:shadow-lg">
+                      <div className="p-3 rounded-xl bg-white/80 dark:bg-slate-800/80 border border-slate-200/50 dark:border-slate-700/50 transition-all duration-300 hover:shadow-lg">
                         <div className="flex items-center justify-between mb-2">
                           <span className="text-xs text-muted-foreground">
                             {formatDate(change.date)}

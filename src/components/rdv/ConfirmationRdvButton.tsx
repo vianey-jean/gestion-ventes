@@ -233,7 +233,7 @@ const ConfirmationRdvButton: React.FC<Props> = ({ rdvs, onAfterUpdate }) => {
           </>
         )}
         <div className="relative flex items-center gap-2">
-          <div className={`flex items-center justify-center h-7 w-7 rounded-lg bg-white/20 backdrop-blur-sm ${hasPending ? 'animate-bounce' : ''}`}>
+          <div className={`flex items-center justify-center h-7 w-7 rounded-lg bg-white/20  ${hasPending ? 'animate-bounce' : ''}`}>
             <Sparkles className="h-4 w-4" />
           </div>
           <div className="flex flex-col items-start leading-tight">

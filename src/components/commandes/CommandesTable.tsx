@@ -132,7 +132,7 @@ const CommandesTable: React.FC<CommandesTableProps> = ({
 
   return (
     <>
-      <Card className="border-2 border-purple-200/50 dark:border-purple-700/50 shadow-[0_20px_70px_rgba(168,85,247,0.3)] bg-gradient-to-br from-white via-purple-50/20 to-pink-50/20 dark:from-gray-900 dark:via-purple-900/10 dark:to-pink-900/10 rounded-2xl sm:rounded-3xl overflow-hidden backdrop-blur-sm">
+      <Card className="border-2 border-purple-200/50 dark:border-purple-700/50 shadow-[0_20px_70px_rgba(168,85,247,0.3)] bg-gradient-to-br from-white via-purple-50/20 to-pink-50/20 dark:from-gray-900 dark:via-purple-900/10 dark:to-pink-900/10 rounded-2xl sm:rounded-3xl overflow-hidden">
         <CardHeader className="border-b-2 border-gradient-to-r from-purple-300 via-pink-300 to-indigo-300 dark:from-purple-700 dark:via-pink-700 dark:to-indigo-700 bg-gradient-to-r from-purple-50/50 via-pink-50/50 to-indigo-50/50 dark:from-purple-900/20 dark:via-pink-900/20 dark:to-indigo-900/20 pb-4 sm:pb-6 px-3 sm:px-6">
           <CardTitle className="flex items-center gap-2 sm:gap-4 text-base sm:text-xl md:text-2xl font-black tracking-tight">
             <span className="flex h-10 w-10 sm:h-14 sm:w-14 items-center justify-center rounded-xl sm:rounded-2xl bg-gradient-to-br from-purple-500 via-pink-500 to-indigo-500 text-white shadow-2xl">
@@ -171,9 +171,9 @@ const CommandesTable: React.FC<CommandesTableProps> = ({
                 {/* Background Luxury Glow */}
                 <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
 
-                  <div className="absolute h-96 w-96 rounded-full bg-fuchsia-500/10 blur-[140px] animate-pulse" />
+                  <div className="absolute h-96 w-96 rounded-full bg-fuchsia-500/10 animate-pulse" />
 
-                  <div className="absolute h-[450px] w-[450px] rounded-full bg-violet-500/10 blur-[180px]" />
+                  <div className="absolute h-[450px] w-[450px] rounded-full bg-violet-500/10" />
 
                   <div className="absolute h-[520px] w-[520px] rounded-full border border-purple-400/10" />
 
@@ -181,13 +181,13 @@ const CommandesTable: React.FC<CommandesTableProps> = ({
 
 
                 {/* Premium Glass Card */}
-                <div className="relative w-full max-w-3xl rounded-[40px] border border-white/30 dark:border-white/10 bg-white/60 dark:bg-slate-900/50 backdrop-blur-3xl px-10 py-14 shadow-[0_40px_140px_rgba(168,85,247,.20)]">
+                <div className="relative w-full max-w-3xl rounded-[40px] border border-white/30 dark:border-white/10 bg-white/60 dark:bg-slate-900/50 px-10 py-14 shadow-[0_40px_140px_rgba(168,85,247,.20)]">
 
 
                   {/* Icon Luxury */}
                   <div className="relative mx-auto mb-8 flex h-36 w-36 items-center justify-center">
 
-                    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-fuchsia-500 via-purple-500 to-indigo-500 blur-3xl opacity-40 animate-pulse" />
+                    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-fuchsia-500 via-purple-500 to-indigo-500 opacity-40 animate-pulse" />
 
 
                     <div className="relative flex h-32 w-32 items-center justify-center rounded-full border border-white/40 dark:border-purple-500/20 bg-gradient-to-br from-white via-purple-50 to-pink-50 dark:from-slate-900 dark:via-purple-950/40 dark:to-slate-900 shadow-[0_30px_90px_rgba(168,85,247,.35)]">
@@ -202,7 +202,7 @@ const CommandesTable: React.FC<CommandesTableProps> = ({
                   {/* Badge */}
                   <div className="mb-6 flex justify-center">
 
-                    <div className="inline-flex items-center gap-2 rounded-full border border-fuchsia-300/40 bg-gradient-to-r from-fuchsia-500/10 via-purple-500/10 to-indigo-500/10 px-5 py-2 backdrop-blur-xl">
+                    <div className="inline-flex items-center gap-2 rounded-full border border-fuchsia-300/40 bg-gradient-to-r from-fuchsia-500/10 via-purple-500/10 to-indigo-500/10 px-5 py-2">
 
                       <Sparkles className="h-4 w-4 text-fuchsia-500" />
 
@@ -244,7 +244,7 @@ const CommandesTable: React.FC<CommandesTableProps> = ({
 
 
                     {/* Card 1 */}
-                    <div className="rounded-3xl border border-white/30 dark:border-white/10 bg-white/50 dark:bg-slate-900/40 p-6 backdrop-blur-xl">
+                    <div className="rounded-3xl border border-white/30 dark:border-white/10 bg-white/50 dark:bg-slate-900/40 p-6">
 
                       <div className="text-3xl font-black text-purple-600">
                         0
@@ -258,7 +258,7 @@ const CommandesTable: React.FC<CommandesTableProps> = ({
 
 
                     {/* Card 2 */}
-                    <div className="rounded-3xl border border-white/30 dark:border-white/10 bg-white/50 dark:bg-slate-900/40 p-6 backdrop-blur-xl">
+                    <div className="rounded-3xl border border-white/30 dark:border-white/10 bg-white/50 dark:bg-slate-900/40 p-6">
 
                       <div className="text-2xl sm:text-3xl font-black text-fuchsia-600 break-words">
                         {lastActivityLabel}
@@ -272,7 +272,7 @@ const CommandesTable: React.FC<CommandesTableProps> = ({
 
 
                     {/* Card 3 */}
-                    <div className="rounded-3xl border border-white/30 dark:border-white/10 bg-white/50 dark:bg-slate-900/40 p-6 backdrop-blur-xl">
+                    <div className="rounded-3xl border border-white/30 dark:border-white/10 bg-white/50 dark:bg-slate-900/40 p-6">
 
                       <div className="text-3xl font-black text-indigo-600">
                         ✓
@@ -346,21 +346,21 @@ const CommandesTable: React.FC<CommandesTableProps> = ({
                         {/* Halo Background */}
                         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
 
-                          <div className="absolute h-96 w-96 rounded-full bg-fuchsia-500/10 blur-[140px] animate-pulse" />
+                          <div className="absolute h-96 w-96 rounded-full bg-fuchsia-500/10 animate-pulse" />
 
-                          <div className="absolute h-[420px] w-[420px] rounded-full bg-violet-500/10 blur-[180px]" />
+                          <div className="absolute h-[420px] w-[420px] rounded-full bg-violet-500/10" />
 
                           <div className="absolute h-[520px] w-[520px] rounded-full border border-purple-400/10" />
 
                         </div>
 
                         {/* Floating Card */}
-                        <div className="relative rounded-[36px] border border-white/30 dark:border-white/10 bg-white/60 dark:bg-slate-900/50 backdrop-blur-3xl shadow-[0_30px_120px_rgba(168,85,247,.18)] px-14 py-14">
+                        <div className="relative rounded-[36px] border border-white/30 dark:border-white/10 bg-white/60 dark:bg-slate-900/50 shadow-[0_30px_120px_rgba(168,85,247,.18)] px-14 py-14">
 
                           {/* Icon */}
                           <div className="relative mx-auto mb-8 flex h-36 w-36 items-center justify-center">
 
-                            <div className="absolute inset-0 rounded-full bg-gradient-to-r from-fuchsia-500 via-violet-500 to-indigo-500 blur-3xl opacity-40 animate-pulse" />
+                            <div className="absolute inset-0 rounded-full bg-gradient-to-r from-fuchsia-500 via-violet-500 to-indigo-500 opacity-40 animate-pulse" />
 
                             <div className="relative flex h-32 w-32 items-center justify-center rounded-full border border-white/40 dark:border-purple-500/20 bg-gradient-to-br from-white via-purple-50 to-pink-50 dark:from-slate-900 dark:via-violet-900/30 dark:to-slate-900 shadow-[0_25px_80px_rgba(168,85,247,.35)]">
 
@@ -373,7 +373,7 @@ const CommandesTable: React.FC<CommandesTableProps> = ({
                           {/* Badge */}
                           <div className="mb-6 flex justify-center">
 
-                            <div className="inline-flex items-center gap-2 rounded-full border border-fuchsia-300/40 bg-gradient-to-r from-fuchsia-500/10 via-violet-500/10 to-indigo-500/10 px-5 py-2 backdrop-blur-xl">
+                            <div className="inline-flex items-center gap-2 rounded-full border border-fuchsia-300/40 bg-gradient-to-r from-fuchsia-500/10 via-violet-500/10 to-indigo-500/10 px-5 py-2">
 
                               <Sparkles className="h-4 w-4 text-fuchsia-500" />
 
@@ -408,7 +408,7 @@ const CommandesTable: React.FC<CommandesTableProps> = ({
                           {/* Premium Stats */}
                           <div className="mt-12 grid grid-cols-3 gap-5">
 
-                            <div className="rounded-2xl border border-white/30 dark:border-white/10 bg-white/60 dark:bg-slate-900/40 p-6 backdrop-blur-xl">
+                            <div className="rounded-2xl border border-white/30 dark:border-white/10 bg-white/60 dark:bg-slate-900/40 p-6">
 
                               <div className="text-3xl font-black text-violet-600">
                                 0
@@ -420,7 +420,7 @@ const CommandesTable: React.FC<CommandesTableProps> = ({
 
                             </div>
 
-                            <div className="rounded-2xl border border-white/30 dark:border-white/10 bg-white/60 dark:bg-slate-900/40 p-6 backdrop-blur-xl">
+                            <div className="rounded-2xl border border-white/30 dark:border-white/10 bg-white/60 dark:bg-slate-900/40 p-6">
 
                               <div className="text-2xl sm:text-3xl font-black text-fuchsia-600 break-words">
                                 {lastActivityLabel}
@@ -432,7 +432,7 @@ const CommandesTable: React.FC<CommandesTableProps> = ({
 
                             </div>
 
-                            <div className="rounded-2xl border border-white/30 dark:border-white/10 bg-white/60 dark:bg-slate-900/40 p-6 backdrop-blur-xl">
+                            <div className="rounded-2xl border border-white/30 dark:border-white/10 bg-white/60 dark:bg-slate-900/40 p-6">
 
                               <div className="text-3xl font-black text-indigo-600">
                                 ✓
@@ -559,7 +559,7 @@ const CommandeTableRow: React.FC<CommandeRowProps> = ({
   };
 
   return (
-    <ModernTableRow className={`bg-gradient-to-r from-purple-50/30 via-pink-50/20 to-indigo-50/30 dark:from-gray-900/20 dark:via-purple-900/10 dark:to-indigo-900/10 hover:shadow-lg hover:bg-gradient-to-r hover:from-purple-100/40 hover:via-pink-100/30 hover:to-indigo-100/30 transition-all duration-500 rounded-xl backdrop-blur-sm ${locked ? 'opacity-50 pointer-events-none grayscale' : ''}`}>
+    <ModernTableRow className={`bg-gradient-to-r from-purple-50/30 via-pink-50/20 to-indigo-50/30 dark:from-gray-900/20 dark:via-purple-900/10 dark:to-indigo-900/10 hover:shadow-lg hover:bg-gradient-to-r hover:from-purple-100/40 hover:via-pink-100/30 hover:to-indigo-100/30 transition-all duration-500 rounded-xl  ${locked ? 'opacity-50 pointer-events-none grayscale' : ''}`}>
       <ModernTableCell className="align-top w-52">
         <button
           type="button"
@@ -723,7 +723,7 @@ const CommandeMobileCard: React.FC<CommandeRowProps> = ({
   const dateInfo = getDateInfo();
 
   return (
-    <div className={`p-4 border-b border-purple-100 dark:border-purple-800/30 hover:bg-gradient-to-r hover:from-purple-50/30 hover:via-pink-50/20 hover:to-indigo-50/30 dark:hover:from-purple-900/10 dark:hover:via-pink-900/10 dark:hover:to-indigo-900/10 transition-all duration-500 shadow-lg backdrop-blur-md rounded-2xl ${locked ? 'opacity-50 pointer-events-none grayscale' : ''}`}>
+    <div className={`p-4 border-b border-purple-100 dark:border-purple-800/30 hover:bg-gradient-to-r hover:from-purple-50/30 hover:via-pink-50/20 hover:to-indigo-50/30 dark:hover:from-purple-900/10 dark:hover:via-pink-900/10 dark:hover:to-indigo-900/10 transition-all duration-500 shadow-lg  rounded-2xl ${locked ? 'opacity-50 pointer-events-none grayscale' : ''}`}>
       {/* En-tête: Client + Type */}
       <div className="flex justify-between items-start mb-3">
         <button

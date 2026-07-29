@@ -259,25 +259,14 @@ const VersementEspece: React.FC = () => {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="group relative w-full text-left overflow-hidden
-                   rounded-[2rem]
-                   bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50
-                   dark:from-amber-900/30 dark:via-yellow-900/20 dark:to-orange-900/30
-                   border border-amber-200/60 dark:border-amber-700/40
-                   shadow-[0_30px_80px_rgba(245,158,11,0.25)]
-                   hover:shadow-[0_40px_120px_rgba(245,158,11,0.4)]
-                   transition-all duration-500 hover:-translate-y-1
-                   p-6 sm:p-8"
+        className="group relative w-full text-left overflow-hidden rounded-[2rem] bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50 dark:from-amber-900/30 dark:via-yellow-900/20 dark:to-orange-900/30 border border-amber-200/60 dark:border-amber-700/40 shadow-[0_30px_80px_rgba(245,158,11,0.25)] hover:shadow-[0_40px_120px_rgba(245,158,11,0.4)] transition-all duration-500 hover:-translate-y-1 p-6 sm:p-8"
       >
         <div className="absolute inset-0 bg-gradient-to-tr from-amber-300/10 via-transparent to-yellow-300/20 pointer-events-none" />
-        <div className="absolute -top-10 -right-10 w-40 h-40 bg-amber-300/20 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -top-10 -right-10 w-40 h-40 bg-amber-300/20 rounded-full pointer-events-none" />
 
         <div className="relative flex items-center justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-4">
-            <div className="relative rounded-2xl p-4
-                            bg-gradient-to-br from-amber-400 via-yellow-500 to-orange-500
-                            shadow-[0_15px_40px_rgba(245,158,11,0.5)]
-                            border border-amber-300/40">
+            <div className="relative rounded-2xl p-4 bg-gradient-to-br from-amber-400 via-yellow-500 to-orange-500 shadow-[0_15px_40px_rgba(245,158,11,0.5)] border border-amber-300/40">
               <Banknote className="h-7 w-7 text-white drop-shadow-lg" />
               <Sparkles className="absolute -top-1 -right-1 h-4 w-4 text-yellow-200 animate-pulse" />
             </div>

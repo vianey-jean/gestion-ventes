@@ -162,7 +162,7 @@ const ObjectifIndicator: React.FC = () => {
   const percentage = Math.round((data.totalVentesMois / data.objectif) * 100);
 
   return (
-    <div className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-gradient-to-r from-slate-50 via-white to-violet-50 dark:from-slate-900 dark:via-slate-800 dark:to-violet-950 border border-slate-200/50 dark:border-slate-700/50 shadow-lg shadow-violet-500/5 backdrop-blur-xl">
+    <div className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-gradient-to-r from-slate-50 via-white to-violet-50 dark:from-slate-900 dark:via-slate-800 dark:to-violet-950 border border-slate-200/50 dark:border-slate-700/50 shadow-lg shadow-violet-500/5">
       {/* Icon */}
      
       {/* Total Ventes */}
@@ -242,84 +242,25 @@ const ObjectifIndicator: React.FC = () => {
     <Button
       variant="ghost"
       size="icon"
-      className="
-        h-8 w-8
-        sm:h-9 sm:w-9
-        rounded-full
-        bg-gradient-to-br
-        from-emerald-500/20
-        to-teal-500/20
-        hover:from-emerald-500/30
-        hover:to-teal-500/30
-        border border-emerald-500/30
-        shadow-lg shadow-emerald-500/10
-        transition-all duration-300
-        hover:scale-110
-      "
+      className="h-8 w-8 sm:h-9 sm:w-9 rounded-full bg-gradient-to-br from-emerald-500/20 to-teal-500/20 hover:from-emerald-500/30 hover:to-teal-500/30 border border-emerald-500/30 shadow-lg shadow-emerald-500/10 transition-all duration-300 hover:scale-110"
     >
       <Plus className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
     </Button>
   </DialogTrigger>
 
   <DialogContent
-    className="
-      w-[95vw]
-      max-w-[95vw]
-      sm:max-w-md
-      md:max-w-lg
-      lg:max-w-xl
-      max-h-[90vh]
-      overflow-y-auto
-
-      p-4
-      sm:p-6
-
-      bg-gradient-to-br
-      from-white
-      via-slate-50
-      to-violet-50/50
-
-      dark:from-[#030014]
-      dark:via-[#0a0020]
-      dark:to-[#0e0030]
-
-      border border-violet-200/20
-      dark:border-violet-800/20
-
-      rounded-2xl
-      shadow-[0_30px_80px_-20px_rgba(139,92,246,0.2)]
-    "
+    className="w-[95vw] max-w-[95vw] sm:max-w-md md:max-w-lg lg:max-w-xl max-h-[90vh] overflow-y-auto p-4 sm:p-6 bg-gradient-to-br from-white via-slate-50 to-violet-50/50 dark:from-[#030014] dark:via-[#0a0020] dark:to-[#0e0030] border border-violet-200/20 dark:border-violet-800/20 rounded-2xl shadow-[0_30px_80px_-20px_rgba(139,92,246,0.2)]"
   >
     <DialogHeader>
       <DialogTitle className="flex items-center gap-2 sm:gap-3">
         <div
-          className="
-            p-1.5
-            sm:p-2
-            rounded-xl
-            bg-gradient-to-br
-            from-violet-500
-            to-fuchsia-500
-            shadow-lg
-            shadow-violet-500/30
-          "
+          className="p-1.5 sm:p-2 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500 shadow-lg shadow-violet-500/30"
         >
           <Target className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
         </div>
 
         <span
-          className="
-            text-base
-            sm:text-lg
-            md:text-xl
-            font-bold
-            bg-gradient-to-r
-            from-violet-600
-            to-fuchsia-600
-            bg-clip-text
-            text-transparent
-            leading-tight
-          "
+          className="text-base sm:text-lg md:text-xl font-bold bg-gradient-to-r from-violet-600 to-fuchsia-600 bg-clip-text text-transparent leading-tight"
         >
           Nouvel Objectif du Mois
         </span>
@@ -340,30 +281,13 @@ const ObjectifIndicator: React.FC = () => {
           placeholder="Ex : 2000"
           value={newObjectif}
           onChange={(e) => setNewObjectif(e.target.value)}
-          className="
-            h-11
-            sm:h-12
-            text-base
-            sm:text-lg
-            rounded-xl
-            border-slate-200/50
-            dark:border-slate-700/50
-            focus:ring-2
-            focus:ring-violet-500/30
-          "
+          className="h-11 sm:h-12 text-base sm:text-lg rounded-xl border-slate-200/50 dark:border-slate-700/50 focus:ring-2 focus:ring-violet-500/30"
         />
       </div>
 
       {/* Infos */}
       <div
-        className="
-          p-3
-          sm:p-4
-          rounded-xl
-          bg-slate-100/50
-          dark:bg-slate-800/50
-          space-y-2
-        "
+        className="p-3 sm:p-4 rounded-xl bg-slate-100/50 dark:bg-slate-800/50 space-y-2"
       >
         <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">
           Objectif actuel :
@@ -383,33 +307,7 @@ const ObjectifIndicator: React.FC = () => {
       {/* Bouton */}
       <Button
         onClick={handleAddObjectif}
-        className="
-          w-full
-          h-11
-          sm:h-12
-
-          text-sm
-          sm:text-base
-          font-medium
-
-          rounded-xl
-
-          bg-gradient-to-r
-          from-violet-500
-          to-fuchsia-500
-
-          hover:from-violet-600
-          hover:to-fuchsia-600
-
-          shadow-lg
-          shadow-violet-500/30
-
-          transition-all
-          duration-300
-
-          hover:scale-[1.02]
-          active:scale-[0.98]
-        "
+        className="w-full h-11 sm:h-12 text-sm sm:text-base font-medium rounded-xl bg-gradient-to-r from-violet-500 to-fuchsia-500 hover:from-violet-600 hover:to-fuchsia-600 shadow-lg shadow-violet-500/30 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
       >
         <Target className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
         Définir l'objectif

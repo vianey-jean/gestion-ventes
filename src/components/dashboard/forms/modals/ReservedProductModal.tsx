@@ -29,7 +29,7 @@ const ReservedProductModal: React.FC<ReservedProductModalProps> = ({
 }) => {
   return (
     <AlertDialog open={isOpen} onOpenChange={onOpenChange}>
-      <AlertDialogContent className="bg-card/95 backdrop-blur-xl border-0 shadow-2xl max-w-md">
+      <AlertDialogContent className="bg-card/95 border-0 shadow-2xl max-w-md">
         <AlertDialogHeader>
           <div className="flex items-center gap-3 mb-2">
             <div className="p-2 rounded-full bg-amber-500/10">

@@ -163,7 +163,7 @@ const UnifiedSearchBar: React.FC<UnifiedSearchBarProps> = memo(({
 
   return (
     <Card className={cn(
-      "bg-card/80 backdrop-blur-sm border-2 border-border shadow-xl hover:shadow-2xl transition-all duration-300",
+      "bg-card/80  border-2 border-border shadow-xl hover:shadow-2xl transition-all duration-300",
       className
     )}>
       <CardContent className={variantStyles[variant]}>

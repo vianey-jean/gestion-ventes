@@ -55,7 +55,7 @@ const ClientFideliteBadge: React.FC<Props> = ({ clientName, className = '' }) =>
     <div className={`relative z-10 ${className}`}>
       <div className={`group/fid flex items-center justify-between gap-2 p-2.5 rounded-2xl bg-gradient-to-r ${grad} ${textCls} shadow-lg ring-2 ${ringCls} transition-all duration-500 hover:shadow-2xl hover:scale-[1.02]`}>
         <div className="flex items-center gap-2 min-w-0">
-          <span className="w-7 h-7 rounded-full bg-white/25 backdrop-blur flex items-center justify-center shrink-0 group-hover/fid:rotate-12 transition-transform duration-500">
+          <span className="w-7 h-7 rounded-full bg-white/25 flex items-center justify-center shrink-0 group-hover/fid:rotate-12 transition-transform duration-500">
             {icon}
           </span>
           <div className="min-w-0">
@@ -71,7 +71,7 @@ const ClientFideliteBadge: React.FC<Props> = ({ clientName, className = '' }) =>
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); setShowFid(true); }}
-          className="w-8 h-8 rounded-full bg-white/25 hover:bg-white/40 backdrop-blur flex items-center justify-center transition-all hover:scale-110 shrink-0"
+          className="w-8 h-8 rounded-full bg-white/25 hover:bg-white/40 flex items-center justify-center transition-all hover:scale-110 shrink-0"
           title="Voir le détail des achats"
           aria-label="Voir le détail des achats"
         >

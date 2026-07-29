@@ -51,7 +51,7 @@ const AddProductModal: React.FC<Props> = ({
 }) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg bg-gradient-to-br from-slate-900 via-green-900/30 to-emerald-900/20 backdrop-blur-2xl border border-white/10 shadow-2xl rounded-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-lg bg-gradient-to-br from-slate-900 via-green-900/30 to-emerald-900/20 border border-white/10 shadow-2xl rounded-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader className="text-center space-y-4 pb-4">
           <div className="mx-auto w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center shadow-xl shadow-green-500/30">
             <Plus className="h-8 w-8 text-white" />

@@ -200,7 +200,7 @@ const RdvFormModal: React.FC<Props> = ({ open, onOpenChange, catalog, editing, d
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-gradient-to-br from-slate-900 via-pink-900/30 to-fuchsia-900/20 backdrop-blur-2xl border border-white/10 shadow-2xl rounded-3xl max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="bg-gradient-to-br from-slate-900 via-pink-900/30 to-fuchsia-900/20 border border-white/10 shadow-2xl rounded-3xl max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader className="text-center space-y-3 pb-3">
           <div className="mx-auto w-14 h-14 bg-gradient-to-br from-pink-500 via-fuchsia-500 to-rose-500 rounded-2xl flex items-center justify-center shadow-xl shadow-pink-500/30">
             <CalendarHeart className="h-7 w-7 text-white" />
@@ -222,7 +222,7 @@ const RdvFormModal: React.FC<Props> = ({ open, onOpenChange, catalog, editing, d
                 className="pl-9 bg-white/10 border border-white/20 focus:border-pink-400 rounded-xl text-white placeholder:text-white/40" />
             </div>
             {personneResults.length > 0 && !personne && (
-              <div className="absolute z-10 left-0 right-0 mt-1 bg-slate-900/95 border border-white/20 rounded-xl shadow-2xl max-h-44 overflow-y-auto backdrop-blur-xl">
+              <div className="absolute z-10 left-0 right-0 mt-1 bg-slate-900/95 border border-white/20 rounded-xl shadow-2xl max-h-44 overflow-y-auto">
                 {personneResults.map(t => (
                   <button key={t.id} type="button"
                     onClick={() => handleSelectPersonne(t)}
@@ -246,7 +246,7 @@ const RdvFormModal: React.FC<Props> = ({ open, onOpenChange, catalog, editing, d
                 className="pl-9 bg-white/10 border border-white/20 focus:border-rose-400 rounded-xl text-white placeholder:text-white/40" />
             </div>
             {clientResults.length > 0 && !client && (
-              <div className="absolute z-10 left-0 right-0 mt-1 bg-slate-900/95 border border-white/20 rounded-xl shadow-2xl max-h-44 overflow-y-auto backdrop-blur-xl">
+              <div className="absolute z-10 left-0 right-0 mt-1 bg-slate-900/95 border border-white/20 rounded-xl shadow-2xl max-h-44 overflow-y-auto">
                 {clientResults.map(c => (
                   <button key={c.id} type="button"
                     onClick={() => handleSelectClient(c)}
@@ -361,7 +361,7 @@ const RdvFormModal: React.FC<Props> = ({ open, onOpenChange, catalog, editing, d
 
         {/* Confirmation création */}
         {confirmCreate && (
-          <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm rounded-3xl">
+          <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 rounded-3xl">
             <div className="bg-gradient-to-br from-slate-900 to-pink-900/40 border border-pink-400/40 rounded-2xl p-6 max-w-sm w-[90%] shadow-2xl">
               <h3 className="text-base font-black text-white mb-2">✨ Confirmer la création</h3>
               <p className="text-xs text-white/70 mb-5">Voulez-vous vraiment enregistrer ce rendez-vous dans la base de données ?</p>

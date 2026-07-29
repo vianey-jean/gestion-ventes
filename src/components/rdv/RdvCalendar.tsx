@@ -1054,7 +1054,7 @@ const RdvCalendar: React.FC<RdvCalendarProps> = ({
 
       {/* Phone Action Modal */}
       <Dialog open={showPhoneModal} onOpenChange={setShowPhoneModal}>
-        <DialogContent className="sm:max-w-md bg-gradient-to-br from-background via-background to-primary/5 backdrop-blur-2xl border border-primary/20 shadow-2xl">
+        <DialogContent className="sm:max-w-md bg-gradient-to-br from-background via-background to-primary/5 border border-primary/20 shadow-2xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-3 text-xl">
               <div className="p-2 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 shadow-lg">
@@ -1092,7 +1092,7 @@ const RdvCalendar: React.FC<RdvCalendarProps> = ({
 
       {/* Location Action Modal */}
       <Dialog open={showLocationModal} onOpenChange={setShowLocationModal}>
-        <DialogContent className="sm:max-w-md bg-gradient-to-br from-background via-background to-primary/5 backdrop-blur-2xl border border-primary/20 shadow-2xl">
+        <DialogContent className="sm:max-w-md bg-gradient-to-br from-background via-background to-primary/5 border border-primary/20 shadow-2xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-3 text-xl">
               <div className="p-2 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 shadow-lg">

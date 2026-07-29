@@ -34,11 +34,11 @@ const ConfirmDeleteDialog: React.FC<ConfirmDeleteDialogProps> = ({
 }) => {
   return (
     <AlertDialog open={isOpen} onOpenChange={onClose}>
-      <AlertDialogContent className="bg-gradient-to-br from-white via-red-50/30 to-pink-50/50 backdrop-blur-xl border-0 shadow-2xl rounded-3xl overflow-hidden">
+      <AlertDialogContent className="bg-gradient-to-br from-white via-red-50/30 to-pink-50/50 border-0 shadow-2xl rounded-3xl overflow-hidden">
         {/* Decorative background elements */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-24 -right-24 w-48 h-48 bg-gradient-to-br from-red-200/20 to-pink-200/20 rounded-full blur-3xl" />
-          <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-gradient-to-br from-red-200/20 to-rose-200/20 rounded-full blur-3xl" />
+          <div className="absolute -top-24 -right-24 w-48 h-48 bg-gradient-to-br from-red-200/20 to-pink-200/20 rounded-full" />
+          <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-gradient-to-br from-red-200/20 to-rose-200/20 rounded-full" />
         </div>
 
         <AlertDialogHeader className="relative text-center space-y-4 pb-2">
@@ -48,7 +48,7 @@ const ConfirmDeleteDialog: React.FC<ConfirmDeleteDialogProps> = ({
               <ShieldAlert className="h-10 w-10 text-white drop-shadow-lg" />
             </div>
             {/* Glow effect */}
-            <div className="absolute inset-0 bg-gradient-to-br from-red-400 to-rose-500 rounded-2xl blur-xl opacity-40 -z-10 scale-110" />
+            <div className="absolute inset-0 bg-gradient-to-br from-red-400 to-rose-500 rounded-2xl opacity-40 -z-10 scale-110" />
           </div>
 
           <AlertDialogTitle className="text-2xl font-black bg-gradient-to-r from-red-600 via-red-700 to-rose-700 bg-clip-text text-transparent">

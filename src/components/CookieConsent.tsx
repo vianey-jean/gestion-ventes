@@ -251,32 +251,14 @@ const CookieConsent: React.FC = () => {
             damping: 22,
             stiffness: 220,
           }}
-          className="
-            fixed
-            bottom-4
-            left-4
-            right-4
-            md:left-6
-            md:right-auto
-            z-[99999]
-            md:max-w-[680px]
-          "
+          className="fixed bottom-4 left-4 right-4 md:left-6 md:right-auto z-[99999] md:max-w-[680px]"
         >
           {/* GLOW */}
-          <div className="absolute -inset-[1px] rounded-[32px] bg-gradient-to-r from-violet-600 via-fuchsia-600 to-amber-400 opacity-40 blur-2xl animate-pulse" />
+          <div className="absolute -inset-[1px] rounded-[32px] bg-gradient-to-r from-violet-600 via-fuchsia-600 to-amber-400 opacity-40 animate-pulse" />
 
           {/* CARD */}
           <div
-            className="
-              relative
-              overflow-hidden
-              rounded-[32px]
-              border
-              border-white/10
-              bg-[rgba(9,9,15,0.75)]
-              backdrop-blur-3xl
-              shadow-[0_25px_80px_rgba(0,0,0,0.65)]
-            "
+            className="relative overflow-hidden rounded-[32px] border border-white/10 bg-[rgba(9,9,15,0.75)] shadow-[0_25px_80px_rgba(0,0,0,0.65)]"
           >
             {/* BACKGROUND FX */}
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(168,85,247,0.22),transparent_35%),radial-gradient(circle_at_bottom_left,rgba(217,70,239,0.18),transparent_35%)]" />
@@ -295,22 +277,10 @@ const CookieConsent: React.FC = () => {
                     {/* HEADER */}
                     <div className="flex gap-4">
                       <div className="relative shrink-0">
-                        <div className="absolute inset-0 rounded-2xl bg-violet-500 blur-xl opacity-60" />
+                        <div className="absolute inset-0 rounded-2xl bg-violet-500 opacity-60" />
 
                         <div
-                          className="
-                            relative
-                            flex
-                            items-center
-                            justify-center
-                            w-14
-                            h-14
-                            rounded-2xl
-                            bg-gradient-to-br
-                            from-violet-500
-                            to-fuchsia-500
-                            shadow-2xl
-                          "
+                          className="relative flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-500 to-fuchsia-500 shadow-2xl"
                         >
                           <Cookie className="w-7 h-7 text-white" />
                         </div>
@@ -357,16 +327,7 @@ const CookieConsent: React.FC = () => {
                     <div className="flex flex-wrap items-center justify-between gap-3 mt-7">
                       <button
                         onClick={() => setSettingsOpen(true)}
-                        className="
-                          group
-                          inline-flex
-                          items-center
-                          gap-2
-                          text-sm
-                          text-zinc-300
-                          hover:text-white
-                          transition
-                        "
+                        className="group inline-flex items-center gap-2 text-sm text-zinc-300 hover:text-white transition"
                       >
                         <Settings2 className="w-4 h-4" />
 
@@ -378,40 +339,14 @@ const CookieConsent: React.FC = () => {
                       <div className="flex flex-wrap gap-2">
                         <button
                           onClick={rejectAll}
-                          className="
-                            h-11
-                            px-5
-                            rounded-2xl
-                            border
-                            border-white/10
-                            bg-white/[0.04]
-                            hover:bg-white/[0.08]
-                            text-white
-                            text-sm
-                            font-medium
-                            transition-all
-                          "
+                          className="h-11 px-5 rounded-2xl border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] text-white text-sm font-medium transition-all"
                         >
                           Tout refuser
                         </button>
 
                         <button
                           onClick={acceptAll}
-                          className="
-                            h-11
-                            px-5
-                            rounded-2xl
-                            bg-gradient-to-r
-                            from-violet-500
-                            to-fuchsia-500
-                            hover:scale-[1.03]
-                            active:scale-[0.98]
-                            text-white
-                            text-sm
-                            font-semibold
-                            transition-all
-                            shadow-[0_12px_30px_rgba(168,85,247,0.45)]
-                          "
+                          className="h-11 px-5 rounded-2xl bg-gradient-to-r from-violet-500 to-fuchsia-500 hover:scale-[1.03] active:scale-[0.98] text-white text-sm font-semibold transition-all shadow-[0_12px_30px_rgba(168,85,247,0.45)]"
                         >
                           <span className="flex items-center gap-2">
                             <Check className="w-4 h-4" />
@@ -448,21 +383,7 @@ const CookieConsent: React.FC = () => {
 
                       <button
                         onClick={() => setSettingsOpen(false)}
-                        className="
-                          w-10
-                          h-10
-                          rounded-xl
-                          border
-                          border-white/10
-                          bg-white/[0.04]
-                          hover:bg-white/[0.08]
-                          flex
-                          items-center
-                          justify-center
-                          text-zinc-300
-                          hover:text-white
-                          transition
-                        "
+                        className="w-10 h-10 rounded-xl border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] flex items-center justify-center text-zinc-300 hover:text-white transition"
                       >
                         <X className="w-4 h-4" />
                       </button>
@@ -476,15 +397,7 @@ const CookieConsent: React.FC = () => {
                         return (
                           <div
                             key={index}
-                            className="
-                              rounded-2xl
-                              border
-                              border-white/8
-                              bg-white/[0.03]
-                              p-4
-                              hover:border-violet-400/20
-                              transition-all
-                            "
+                            className="rounded-2xl border border-white/8 bg-white/[0.03] p-4 hover:border-violet-400/20 transition-all"
                           >
                             <div className="flex items-start justify-between gap-4">
                               <div className="flex gap-3">
@@ -526,41 +439,14 @@ const CookieConsent: React.FC = () => {
                     <div className="flex flex-wrap justify-end gap-2 mt-6">
                       <button
                         onClick={rejectAll}
-                        className="
-                          h-11
-                          px-5
-                          rounded-2xl
-                          border
-                          border-white/10
-                          bg-white/[0.04]
-                          hover:bg-white/[0.08]
-                          text-white
-                          text-sm
-                          font-medium
-                          transition-all
-                        "
+                        className="h-11 px-5 rounded-2xl border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] text-white text-sm font-medium transition-all"
                       >
                         Refuser
                       </button>
 
                       <button
                         onClick={saveCustom}
-                        className="
-                          h-11
-                          px-5
-                          rounded-2xl
-                          bg-gradient-to-r
-                          from-violet-500
-                          via-fuchsia-500
-                          to-pink-500
-                          hover:scale-[1.03]
-                          active:scale-[0.98]
-                          text-white
-                          text-sm
-                          font-semibold
-                          transition-all
-                          shadow-[0_12px_30px_rgba(192,38,211,0.45)]
-                        "
+                        className="h-11 px-5 rounded-2xl bg-gradient-to-r from-violet-500 via-fuchsia-500 to-pink-500 hover:scale-[1.03] active:scale-[0.98] text-white text-sm font-semibold transition-all shadow-[0_12px_30px_rgba(192,38,211,0.45)]"
                       >
                         <span className="flex items-center gap-2">
                           <Check className="w-4 h-4" />

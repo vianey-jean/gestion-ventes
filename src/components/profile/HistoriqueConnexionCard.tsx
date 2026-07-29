@@ -32,7 +32,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue
 } from '@/components/ui/select';
 
-const cardClass = "relative rounded-2xl backdrop-blur-2xl bg-white/80 dark:bg-white/[0.03] border border-white/20 dark:border-white/10 shadow-xl overflow-hidden";
+const cardClass = "relative rounded-2xl  bg-white/80 dark:bg-white/[0.03] border border-white/20 dark:border-white/10 shadow-xl overflow-hidden";
 
 const typeColor = (t: string) => {
   switch (t) {
@@ -401,7 +401,7 @@ const HistoriqueConnexionCard: React.FC = () => {
 
       {/* Modal liste complète des sessions */}
       <Dialog open={showAll} onOpenChange={setShowAll}>
-        <DialogContent className="max-w-2xl max-h-[85vh] overflow-hidden rounded-3xl backdrop-blur-2xl bg-white/95 dark:bg-[#0a0020]/95 border border-sky-300/30">
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-hidden rounded-3xl bg-white/95 dark:bg-[#0a0020]/95 border border-sky-300/30">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Activity className="w-5 h-5 text-sky-500" /> Toutes les sessions ({filteredGroups.length})
@@ -415,7 +415,7 @@ const HistoriqueConnexionCard: React.FC = () => {
 
       {/* Modal détail d'une session */}
       <Dialog open={!!selectedGroup} onOpenChange={(o) => !o && setSelectedGroup(null)}>
-        <DialogContent className="max-w-2xl max-h-[88vh] overflow-hidden rounded-3xl backdrop-blur-2xl bg-white/95 dark:bg-[#0a0020]/95 border border-sky-300/30">
+        <DialogContent className="max-w-2xl max-h-[88vh] overflow-hidden rounded-3xl bg-white/95 dark:bg-[#0a0020]/95 border border-sky-300/30">
           {selectedGroup && (
             <>
               <DialogHeader>
@@ -514,7 +514,7 @@ const HistoriqueConnexionCard: React.FC = () => {
 
       {/* Confirm reset */}
       <AlertDialog open={confirmReset} onOpenChange={setConfirmReset}>
-        <AlertDialogContent className="rounded-3xl backdrop-blur-2xl bg-white/95 dark:bg-[#0a0020]/95 border border-red-200/30">
+        <AlertDialogContent className="rounded-3xl bg-white/95 dark:bg-[#0a0020]/95 border border-red-200/30">
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2 text-red-600">
               <Trash2 className="w-5 h-5" /> Réinitialiser l'historique

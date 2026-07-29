@@ -71,17 +71,17 @@ const LuxeHero: React.FC<LuxeHeroProps> = ({
       {/* GLOWS */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <motion.div
-          className={`absolute -top-28 -right-28 h-[420px] w-[420px] rounded-full bg-${accentFrom}-500/20 blur-[140px]`}
+          className={`absolute -top-28 -right-28 h-[420px] w-[420px] rounded-full bg-${accentFrom}-500/20 `}
           animate={{ x: [0, 40, -20, 0], y: [0, -30, 20, 0] }}
           transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
         />
         <motion.div
-          className={`absolute -bottom-40 -left-24 h-[480px] w-[480px] rounded-full bg-${accentVia}-600/20 blur-[160px]`}
+          className={`absolute -bottom-40 -left-24 h-[480px] w-[480px] rounded-full bg-${accentVia}-600/20 `}
           animate={{ x: [0, -30, 40, 0], y: [0, 40, -20, 0] }}
           transition={{ duration: 24, repeat: Infinity, ease: "easeInOut" }}
         />
         <motion.div
-          className={`absolute left-1/2 bottom-[-300px] h-[720px] w-[720px] -translate-x-1/2 rounded-full bg-${accentTo}-500/10 blur-[200px]`}
+          className={`absolute left-1/2 bottom-[-300px] h-[720px] w-[720px] -translate-x-1/2 rounded-full bg-${accentTo}-500/10 `}
           animate={{ scale: [1, 1.25, 1], opacity: [0.2, 0.6, 0.2] }}
           transition={{ duration: 16, repeat: Infinity }}
         />
@@ -92,7 +92,7 @@ const LuxeHero: React.FC<LuxeHeroProps> = ({
 
       {/* SCAN LINE */}
       <motion.div
-        className={`absolute inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-${accentFrom}-400 to-transparent blur-sm`}
+        className={`absolute inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-${accentFrom}-400 to-transparent `}
         animate={{ top: ["0%", "100%", "0%"] }}
         transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
       />
@@ -132,7 +132,7 @@ const LuxeHero: React.FC<LuxeHeroProps> = ({
           <div>
             <motion.div
               whileHover={{ scale: 1.04 }}
-              className="inline-flex items-center gap-3 rounded-full border border-white/10 bg-white/5 px-5 py-2.5 backdrop-blur-xl mb-6"
+              className="inline-flex items-center gap-3 rounded-full border border-white/10 bg-white/5 px-5 py-2.5 mb-6"
             >
               <BadgeIcon className={`h-5 w-5 text-${accentFrom}-400`} />
               <span className={`font-semibold text-${accentFrom}-100`}>{badge}</span>

@@ -31,7 +31,7 @@ const TendancesRecommendationsTab: React.FC<TendancesRecommendationsTabProps> = 
       <CardContent>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {buyingRecommendations.map((product, index) => (
-            <div key={index} className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl p-4 border border-white/20 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
+            <div key={index} className="bg-white/70 dark:bg-gray-800/70 rounded-xl p-4 border border-white/20 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
                   <div className={cn(

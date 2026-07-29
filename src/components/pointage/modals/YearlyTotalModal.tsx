@@ -53,7 +53,7 @@ const YearlyTotalModal: React.FC<YearlyTotalModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-gradient-to-br from-slate-900 via-amber-900/30 to-orange-900/20 backdrop-blur-2xl border border-white/10 shadow-2xl rounded-3xl max-w-lg max-h-[90vh] overflow-y-auto">
+      <DialogContent className="bg-gradient-to-br from-slate-900 via-amber-900/30 to-orange-900/20 border border-white/10 shadow-2xl rounded-3xl max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader className="text-center space-y-3 pb-4">
           <div className="mx-auto w-14 h-14 bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl flex items-center justify-center shadow-xl shadow-amber-500/30">
             <BarChart3 className="h-7 w-7 text-white" />

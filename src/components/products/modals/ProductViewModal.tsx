@@ -35,7 +35,7 @@ const ProductViewModal: React.FC<Props> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl bg-gradient-to-br from-slate-900 via-violet-900/30 to-purple-900/20 backdrop-blur-2xl border border-white/10 shadow-2xl rounded-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-2xl bg-gradient-to-br from-slate-900 via-violet-900/30 to-purple-900/20 border border-white/10 shadow-2xl rounded-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader className="text-center space-y-4 pb-2">
           <div className="mx-auto flex items-center gap-3 px-4 py-3 bg-gradient-to-br from-violet-500 to-purple-600 rounded-2xl shadow-xl shadow-violet-500/30">
             <Eye className="h-8 w-8 text-white" />
@@ -64,12 +64,12 @@ const ProductViewModal: React.FC<Props> = ({
               {selectedProduct.photos.length > 1 && (
                 <>
                   <button onClick={() => setCurrentPhotoIndex(prev => prev === 0 ? selectedProduct.photos!.length - 1 : prev - 1)}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/50 hover:bg-black/70 text-white backdrop-blur-xl border border-white/10 transition-all"
+                    className="absolute left-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/50 hover:bg-black/70 text-white border border-white/10 transition-all"
                   >
                     <ChevronLeft className="h-6 w-6" />
                   </button>
                   <button onClick={() => setCurrentPhotoIndex(prev => (prev + 1) % selectedProduct.photos!.length)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/50 hover:bg-black/70 text-white backdrop-blur-xl border border-white/10 transition-all"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/50 hover:bg-black/70 text-white border border-white/10 transition-all"
                   >
                     <ChevronRight className="h-6 w-6" />
                   </button>
@@ -87,7 +87,7 @@ const ProductViewModal: React.FC<Props> = ({
                   ))}
                 </div>
               )}
-              <div className="absolute top-3 right-3 px-3 py-1 rounded-full bg-black/50 backdrop-blur-xl text-white text-xs font-bold border border-white/10">
+              <div className="absolute top-3 right-3 px-3 py-1 rounded-full bg-black/50 text-white text-xs font-bold border border-white/10">
                 {currentPhotoIndex + 1}/{selectedProduct.photos.length}
               </div>
             </div>

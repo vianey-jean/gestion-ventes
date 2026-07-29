@@ -257,7 +257,7 @@ const ProductsVenduModal: React.FC<Props> = ({ open, onClose }) => {
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
       <DialogContent className="max-w-6xl w-[96vw] max-h-[92vh] overflow-hidden p-0 bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50 dark:from-zinc-950 dark:via-amber-950/30 dark:to-orange-950/30 border-2 border-amber-300/60 dark:border-amber-500/30 shadow-2xl">
-        <DialogHeader className="px-6 pt-6 pb-4 border-b border-amber-200/60 dark:border-amber-700/30 bg-gradient-to-r from-amber-100/70 via-yellow-100/60 to-orange-100/70 dark:from-amber-900/30 dark:via-yellow-900/20 dark:to-orange-900/30 backdrop-blur-xl">
+        <DialogHeader className="px-6 pt-6 pb-4 border-b border-amber-200/60 dark:border-amber-700/30 bg-gradient-to-r from-amber-100/70 via-yellow-100/60 to-orange-100/70 dark:from-amber-900/30 dark:via-yellow-900/20 dark:to-orange-900/30">
           <DialogTitle className="flex items-center gap-3 text-2xl font-black tracking-tight bg-gradient-to-r from-amber-700 via-orange-600 to-yellow-700 dark:from-amber-300 dark:via-orange-300 dark:to-yellow-200 bg-clip-text text-transparent">
             <div className="p-2.5 rounded-2xl bg-gradient-to-br from-amber-500 via-orange-500 to-yellow-500 shadow-lg shadow-amber-500/40">
               <Crown className="h-6 w-6 text-white" />
@@ -276,7 +276,7 @@ const ProductsVenduModal: React.FC<Props> = ({ open, onClose }) => {
                 className={`rounded-xl h-10 px-4 font-semibold transition-all border-0 ${
                   filter === f.key
                     ? 'bg-gradient-to-r from-amber-500 via-orange-500 to-yellow-500 text-white shadow-lg shadow-amber-500/40 scale-[1.02]'
-                    : 'bg-white/70 dark:bg-zinc-900/60 text-amber-800 dark:text-amber-200 hover:bg-amber-100 dark:hover:bg-amber-900/40 backdrop-blur'
+                    : 'bg-white/70 dark:bg-zinc-900/60 text-amber-800 dark:text-amber-200 hover:bg-amber-100 dark:hover:bg-amber-900/40 '
                 }`}
               >
                 {f.label}
@@ -303,7 +303,7 @@ const ProductsVenduModal: React.FC<Props> = ({ open, onClose }) => {
           ) : (
             <>
               {/* Desktop table */}
-              <div className="hidden md:block rounded-2xl overflow-hidden border border-amber-200/60 dark:border-amber-700/30 bg-white/60 dark:bg-zinc-950/40 backdrop-blur shadow-lg">
+              <div className="hidden md:block rounded-2xl overflow-hidden border border-amber-200/60 dark:border-amber-700/30 bg-white/60 dark:bg-zinc-950/40 shadow-lg">
                 <table className="w-full text-sm">
                   <thead className="bg-gradient-to-r from-amber-100 via-yellow-100 to-orange-100 dark:from-amber-900/40 dark:via-yellow-900/30 dark:to-orange-900/40 text-amber-900 dark:text-amber-100">
                     <tr>

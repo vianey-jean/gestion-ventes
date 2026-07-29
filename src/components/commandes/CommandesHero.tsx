@@ -15,17 +15,7 @@ const particles = Array.from({ length: 10 });
 const CommandesHero: React.FC = () => {
   return (
     <section
-      className="
-        relative
-        overflow-hidden
-        rounded-[36px]
-        border border-white/10
-        bg-black
-        py-14 sm:py-20
-        mb-8 md:mb-12
-        text-center
-        shadow-[0_40px_120px_-20px_rgba(168,85,247,.45)]
-      "
+      className="relative overflow-hidden rounded-[36px] border border-white/10 bg-black py-14 sm:py-20 mb-8 md:mb-12 text-center shadow-[0_40px_120px_-20px_rgba(168,85,247,.45)]"
     >
       {/* ================================================= */}
       {/* AURORA BACKGROUND */}
@@ -34,11 +24,7 @@ const CommandesHero: React.FC = () => {
       <div className="absolute inset-0 overflow-hidden">
 
         <motion.div
-          className="absolute top-[-10%] left-[10%]
-          h-[420px] w-[420px]
-          rounded-full
-          bg-purple-600/25
-          blur-[140px]"
+          className="absolute top-[-10%] left-[10%] h-[420px] w-[420px] rounded-full bg-purple-600/25"
           animate={{
             x: [0, 60, -30, 0],
             y: [0, -40, 30, 0],
@@ -52,11 +38,7 @@ const CommandesHero: React.FC = () => {
         />
 
         <motion.div
-          className="absolute top-[0%] right-[5%]
-          h-[380px] w-[380px]
-          rounded-full
-          bg-pink-500/20
-          blur-[140px]"
+          className="absolute top-[0%] right-[5%] h-[380px] w-[380px] rounded-full bg-pink-500/20"
           animate={{
             x: [0, -70, 40, 0],
             y: [0, 50, -40, 0],
@@ -70,12 +52,7 @@ const CommandesHero: React.FC = () => {
         />
 
         <motion.div
-          className="absolute bottom-[-25%] left-1/2
-          h-[650px] w-[650px]
-          -translate-x-1/2
-          rounded-full
-          bg-indigo-600/15
-          blur-[180px]"
+          className="absolute bottom-[-25%] left-1/2 h-[650px] w-[650px] -translate-x-1/2 rounded-full bg-indigo-600/15"
           animate={{
             scale: [1, 1.3, 1],
             opacity: [0.3, 0.8, 0.3],
@@ -98,16 +75,7 @@ const CommandesHero: React.FC = () => {
       {/* ================================================= */}
 
       <motion.div
-        className="
-          absolute
-          inset-x-0
-          h-[2px]
-          bg-gradient-to-r
-          from-transparent
-          via-purple-400
-          to-transparent
-          blur-sm
-        "
+        className="absolute inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-purple-400 to-transparent"
         animate={{
           top: ["0%", "100%", "0%"],
         }}
@@ -123,18 +91,7 @@ const CommandesHero: React.FC = () => {
       {/* ================================================= */}
 
       <motion.div
-        className="
-          absolute
-          left-1/2
-          top-1/2
-          h-[500px]
-          w-[500px]
-          -translate-x-1/2
-          -translate-y-1/2
-          rounded-full
-          border
-          border-purple-500/10
-        "
+        className="absolute left-1/2 top-1/2 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-purple-500/10"
         animate={{ rotate: 360 }}
         transition={{
           duration: 60,
@@ -144,18 +101,7 @@ const CommandesHero: React.FC = () => {
       />
 
       <motion.div
-        className="
-          absolute
-          left-1/2
-          top-1/2
-          h-[650px]
-          w-[650px]
-          -translate-x-1/2
-          -translate-y-1/2
-          rounded-full
-          border
-          border-pink-500/10
-        "
+        className="absolute left-1/2 top-1/2 h-[650px] w-[650px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-pink-500/10"
         animate={{ rotate: -360 }}
         transition={{
           duration: 80,
@@ -205,20 +151,7 @@ const CommandesHero: React.FC = () => {
           scale: 1.04,
           y: -2,
         }}
-        className="
-          relative z-20
-          inline-flex
-          items-center
-          gap-3
-          rounded-full
-          border
-          border-white/10
-          bg-white/5
-          px-6
-          py-3
-          backdrop-blur-3xl
-          shadow-[0_0_30px_rgba(168,85,247,.25)]
-        "
+        className="relative z-20 inline-flex items-center gap-3 rounded-full border border-white/10 bg-white/5 px-6 py-3 shadow-[0_0_30px_rgba(168,85,247,.25)]"
       >
         <motion.div
           animate={{
@@ -268,17 +201,7 @@ const CommandesHero: React.FC = () => {
         transition={{
           duration: 1,
         }}
-        className="
-          relative z-20
-          mt-8
-          px-4
-          text-4xl
-          sm:text-5xl
-          md:text-6xl
-          lg:text-7xl
-          font-black
-          tracking-tight
-        "
+        className="relative z-20 mt-8 px-4 text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tight"
       >
         <div className="flex flex-wrap justify-center items-center gap-3">
 
@@ -296,15 +219,7 @@ const CommandesHero: React.FC = () => {
           </motion.div>
 
           <span
-            className="
-              bg-gradient-to-r
-              from-white
-              via-purple-200
-              to-pink-200
-              bg-clip-text
-              text-transparent
-              drop-shadow-[0_0_50px_rgba(168,85,247,.8)]
-            "
+            className="bg-gradient-to-r from-white via-purple-200 to-pink-200 bg-clip-text text-transparent drop-shadow-[0_0_50px_rgba(168,85,247,.8)]"
           >
             Commandes & Réservations
           </span>
@@ -340,16 +255,7 @@ const CommandesHero: React.FC = () => {
         transition={{
           delay: 0.3,
         }}
-        className="
-          relative z-20
-          mx-auto
-          mt-6
-          max-w-3xl
-          px-6
-          text-base
-          md:text-xl
-          text-purple-100/70
-        "
+        className="relative z-20 mx-auto mt-6 max-w-3xl px-6 text-base md:text-xl text-purple-100/70"
       >
         Centralisez les commandes, réservations et opérations
         quotidiennes dans une expérience premium conçue pour
@@ -361,20 +267,7 @@ const CommandesHero: React.FC = () => {
       {/* ================================================= */}
 
       <motion.div
-        className="
-          relative z-20
-          mt-10
-          inline-flex
-          items-center
-          gap-3
-          rounded-full
-          border
-          border-emerald-500/20
-          bg-emerald-500/10
-          px-5
-          py-2
-          backdrop-blur-xl
-        "
+        className="relative z-20 mt-10 inline-flex items-center gap-3 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-5 py-2"
         animate={{
           boxShadow: [
             "0 0 10px rgba(16,185,129,.2)",

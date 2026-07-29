@@ -57,24 +57,19 @@ const AdvancedDashboard: React.FC<AdvancedDashboardProps> = ({ className }) => {
         initial={{ opacity: 0, y: -20, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.7, ease: "easeOut" }}
-        className="
-          relative overflow-hidden rounded-[36px]
-          border border-white/10 bg-black
-          px-6 py-10 md:px-10 md:py-14
-          shadow-[0_40px_140px_-30px_rgba(168,85,247,.5)]
-        "
+        className="relative overflow-hidden rounded-[36px] border border-white/10 bg-black px-6 py-10 md:px-10 md:py-14 shadow-[0_40px_140px_-30px_rgba(168,85,247,.5)]"
       >
         {/* BACKGROUND GLOWS */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
 
           <motion.div
-            className="absolute -top-32 -right-32 h-[420px] w-[420px] rounded-full bg-purple-600/20 blur-[140px]"
+            className="absolute -top-32 -right-32 h-[420px] w-[420px] rounded-full bg-purple-600/20"
             animate={{ x: [0, 40, -20, 0], y: [0, -30, 20, 0] }}
             transition={{ duration: 20, repeat: Infinity }}
           />
 
           <motion.div
-            className="absolute -bottom-40 -left-24 h-[480px] w-[480px] rounded-full bg-indigo-500/20 blur-[160px]"
+            className="absolute -bottom-40 -left-24 h-[480px] w-[480px] rounded-full bg-indigo-500/20"
             animate={{ x: [0, -30, 40, 0], y: [0, 40, -20, 0] }}
             transition={{ duration: 24, repeat: Infinity }}
           />
@@ -85,7 +80,7 @@ const AdvancedDashboard: React.FC<AdvancedDashboardProps> = ({ className }) => {
 
         {/* SCAN LINE */}
         <motion.div
-          className="absolute inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-purple-400 to-transparent blur-sm"
+          className="absolute inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-purple-400 to-transparent"
           animate={{ top: ["0%", "100%", "0%"] }}
           transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
         />
@@ -122,7 +117,7 @@ const AdvancedDashboard: React.FC<AdvancedDashboardProps> = ({ className }) => {
           {/* BADGE */}
           <motion.div
             whileHover={{ scale: 1.05 }}
-            className="inline-flex items-center gap-3 rounded-full border border-white/10 bg-white/5 px-5 py-2 mb-6 backdrop-blur-xl"
+            className="inline-flex items-center gap-3 rounded-full border border-white/10 bg-white/5 px-5 py-2 mb-6"
           >
             <Crown className="h-5 w-5 text-purple-300" />
             <span className="font-semibold text-purple-100">
@@ -174,7 +169,7 @@ const AdvancedDashboard: React.FC<AdvancedDashboardProps> = ({ className }) => {
       {/* ================= TABS ================= */}
      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
   {/* Navigation ultra-moderne */}
-  <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-2 h-auto bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-xl rounded-xl sm:rounded-2xl border border-gray-200/50 dark:border-gray-700/50 p-1.5 sm:p-2">
+  <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-2 h-auto bg-white/90 dark:bg-gray-800/90 shadow-xl rounded-xl sm:rounded-2xl border border-gray-200/50 dark:border-gray-700/50 p-1.5 sm:p-2">
     
     <TabsTrigger
       value="inventory"

@@ -18,7 +18,6 @@
      iconBg: 'from-blue-500 to-blue-700',
      shadow: 'rgba(59,130,246,0.6)',
      iconShadow: 'rgba(59,130,246,0.7)',
-     blur: 'bg-blue-400/30',
      labelColor: 'text-blue-500',
      Icon: Clock,
      delay: 0.1,
@@ -30,7 +29,6 @@
      iconBg: 'from-emerald-500 to-emerald-700',
      shadow: 'rgba(16,185,129,0.6)',
      iconShadow: 'rgba(16,185,129,0.7)',
-     blur: 'bg-emerald-400/30',
      labelColor: 'text-emerald-500',
      Icon: TrendingUp,
      delay: 0.2,
@@ -42,7 +40,6 @@
      iconBg: 'from-amber-500 to-orange-600',
      shadow: 'rgba(245,158,11,0.6)',
      iconShadow: 'rgba(245,158,11,0.7)',
-     blur: 'bg-amber-400/30',
      labelColor: 'text-amber-500',
      Icon: CalendarCheck,
      delay: 0.3,
@@ -54,7 +51,6 @@
      iconBg: 'from-purple-500 to-purple-700',
      shadow: 'rgba(168,85,247,0.7)',
      iconShadow: 'rgba(168,85,247,0.8)',
-     blur: 'bg-purple-400/30',
      labelColor: 'text-purple-500',
      Icon: Crown,
      delay: 0.4,
@@ -78,14 +74,13 @@
          className={cn(
            "relative overflow-hidden rounded-3xl",
            `bg-gradient-to-br ${config.gradient}`,
-           "backdrop-blur-xl",
+           "",
            "border border-white/30 dark:border-white/10",
            "transition-all duration-500 cursor-pointer",
          )}
          style={{ boxShadow: `0 25px 60px -15px ${config.shadow}` }}
        >
          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.25),transparent_60%)]" />
-         <div className={cn("absolute -top-12 -right-12 w-40 h-40 rounded-full blur-3xl", config.blur)} />
  
          <CardContent className="relative p-6">
            <div className="flex items-center justify-between">

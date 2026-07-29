@@ -231,7 +231,7 @@ const totalAnnuel = historiqueUnique.reduce(
           <DialogHeader className="pb-4 pt-2">
             <DialogTitle className="flex items-center gap-4 text-2xl font-bold">
               <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-violet-400 to-fuchsia-400 rounded-2xl blur-lg opacity-50 animate-pulse" />
+                <div className="absolute inset-0 bg-gradient-to-r from-violet-400 to-fuchsia-400 rounded-2xl opacity-50 animate-pulse" />
                 <div className="relative p-3 rounded-2xl bg-gradient-to-br from-violet-500 via-purple-500 to-fuchsia-500 shadow-xl shadow-violet-500/40">
                   <BarChart3 className="h-7 w-7 text-white" />
                 </div>
@@ -317,7 +317,7 @@ const totalAnnuel = historiqueUnique.reduce(
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="relative p-6 rounded-3xl bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl border-2 border-violet-200/50 dark:border-violet-700/50 shadow-2xl overflow-hidden"
+                className="relative p-6 rounded-3xl bg-white/90 dark:bg-slate-800/90 border-2 border-violet-200/50 dark:border-violet-700/50 shadow-2xl overflow-hidden"
               >
                 <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-violet-500/10 to-transparent rounded-full" />
                 <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-fuchsia-500/10 to-transparent rounded-full" />
@@ -363,7 +363,7 @@ const totalAnnuel = historiqueUnique.reduce(
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.3 }}
-                  className="relative p-6 rounded-3xl bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl border-2 border-emerald-200/50 dark:border-emerald-700/50 shadow-2xl overflow-hidden"
+                  className="relative p-6 rounded-3xl bg-white/90 dark:bg-slate-800/90 border-2 border-emerald-200/50 dark:border-emerald-700/50 shadow-2xl overflow-hidden"
                 >
                   <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500" />
                   <h3 className="text-lg font-black mb-4 flex items-center gap-3">
@@ -436,7 +436,7 @@ const totalAnnuel = historiqueUnique.reduce(
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.4 }}
-                  className="relative p-6 rounded-3xl bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl border-2 border-violet-200/50 dark:border-violet-700/50 shadow-2xl overflow-hidden"
+                  className="relative p-6 rounded-3xl bg-white/90 dark:bg-slate-800/90 border-2 border-violet-200/50 dark:border-violet-700/50 shadow-2xl overflow-hidden"
                 >
                   <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-violet-500 via-purple-500 to-fuchsia-500" />
                   <h3 className="text-lg font-black mb-4 flex items-center gap-3">
@@ -518,19 +518,19 @@ const totalAnnuel = historiqueUnique.reduce(
                 <div className="absolute bottom-0 right-0 w-40 h-40 bg-gradient-to-tl from-violet-500/10 to-transparent rounded-full" />
                 
                 <div className="relative flex flex-wrap justify-center gap-8 text-center">
-                  <div className="p-4 rounded-2xl bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm shadow-lg border border-violet-200/30 dark:border-violet-700/30">
+                  <div className="p-4 rounded-2xl bg-white/50 dark:bg-slate-800/50 shadow-lg border border-violet-200/30 dark:border-violet-700/30">
                     <p className="text-sm text-muted-foreground">Moyenne mensuelle</p>
                     <p className="text-2xl font-black text-violet-600 dark:text-violet-400">
                       {formatCurrency(moyenneMensuelle)}
                     </p>
                   </div>
-                  <div className="p-4 rounded-2xl bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm shadow-lg border border-fuchsia-200/30 dark:border-fuchsia-700/30">
+                  <div className="p-4 rounded-2xl bg-white/50 dark:bg-slate-800/50 shadow-lg border border-fuchsia-200/30 dark:border-fuchsia-700/30">
                     <p className="text-sm text-muted-foreground">Mois en cours</p>
                     <p className="text-2xl font-black text-fuchsia-600 dark:text-fuchsia-400">
                       {MOIS_NOMS[data.currentData.mois - 1]} {data.annee}
                     </p>
                   </div>
-                  <div className="p-4 rounded-2xl bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm shadow-lg border border-pink-200/30 dark:border-pink-700/30">
+                  <div className="p-4 rounded-2xl bg-white/50 dark:bg-slate-800/50 shadow-lg border border-pink-200/30 dark:border-pink-700/30">
                     <p className="text-sm text-muted-foreground">Mois enregistrés</p>
                     <p className="text-2xl font-black text-pink-600 dark:text-pink-400">
                       {data.historique?.length || 0}
@@ -540,7 +540,7 @@ const totalAnnuel = historiqueUnique.reduce(
                   <motion.div 
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    className="cursor-pointer group transition-all duration-300 p-4 rounded-2xl bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm shadow-lg border border-emerald-200/30 dark:border-emerald-700/30 hover:shadow-xl hover:border-emerald-400/50"
+                    className="cursor-pointer group transition-all duration-300 p-4 rounded-2xl bg-white/50 dark:bg-slate-800/50 shadow-lg border border-emerald-200/30 dark:border-emerald-700/30 hover:shadow-xl hover:border-emerald-400/50"
                     onClick={() => setShowBeneficesModal(true)}
                   >
                     <p className="text-sm text-muted-foreground flex items-center gap-1 justify-center">
@@ -853,14 +853,14 @@ const StatCard: React.FC<StatCardProps> = ({
     whileHover={clickable ? { scale: 1.05, y: -5 } : undefined}
     whileTap={clickable ? { scale: 0.95 } : undefined}
     className={cn(
-      "relative p-5 rounded-3xl card-mirror-light dark:card-mirror backdrop-blur-xl shadow-xl transition-all duration-300 overflow-hidden",
+      "relative p-5 rounded-3xl card-mirror-light dark:card-mirror  shadow-xl transition-all duration-300 overflow-hidden",
       clickable && "cursor-pointer hover:shadow-2xl group",
       `hover:shadow-${shadowColor}-500/30 hover:border-${shadowColor}-300/50`
     )}
     onClick={clickable ? onClick : undefined}
   >
     <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r opacity-80" style={{backgroundImage: `linear-gradient(to right, var(--tw-gradient-stops))`}} />
-    <div className={cn("absolute top-0 right-0 w-20 h-20 rounded-full blur-2xl opacity-20", `bg-${shadowColor}-500`)} />
+    <div className={cn("absolute top-0 right-0 w-20 h-20 rounded-full  opacity-20", `bg-${shadowColor}-500`)} />
     
     <div className={cn(
       "relative w-12 h-12 rounded-2xl flex items-center justify-center mb-4 bg-gradient-to-br text-white transition-transform shadow-xl",

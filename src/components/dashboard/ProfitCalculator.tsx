@@ -267,9 +267,9 @@ const ProfitCalculator: React.FC<ProfitCalculatorProps> = ({
     <div className="space-y-8 relative">
       {/* Decorative Background Elements */}
       <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-10 w-72 h-72 bg-gradient-to-br from-purple-500/10 via-violet-500/10 to-fuchsia-500/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-20 right-10 w-96 h-96 bg-gradient-to-br from-amber-500/10 via-orange-500/10 to-rose-500/10 rounded-full blur-3xl" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-gradient-to-br from-emerald-500/5 via-teal-500/5 to-cyan-500/5 rounded-full blur-3xl" />
+        <div className="absolute top-20 left-10 w-72 h-72 bg-gradient-to-br from-purple-500/10 via-violet-500/10 to-fuchsia-500/10 rounded-full" />
+        <div className="absolute bottom-20 right-10 w-96 h-96 bg-gradient-to-br from-amber-500/10 via-orange-500/10 to-rose-500/10 rounded-full" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-gradient-to-br from-emerald-500/5 via-teal-500/5 to-cyan-500/5 rounded-full" />
       </div>
 
       {/* Ultra Luxe Header */}
@@ -283,7 +283,7 @@ const ProfitCalculator: React.FC<ProfitCalculatorProps> = ({
         <div className="relative flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-4">
             <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-amber-400 via-yellow-500 to-amber-400 rounded-2xl blur-lg opacity-50 animate-pulse" />
+              <div className="absolute inset-0 bg-gradient-to-r from-amber-400 via-yellow-500 to-amber-400 rounded-2xl opacity-50 animate-pulse" />
               <div className="relative p-4 bg-gradient-to-br from-amber-400 via-yellow-500 to-orange-500 rounded-2xl shadow-xl">
                 <Diamond className="h-10 w-10 text-white drop-shadow-lg" />
               </div>
@@ -322,10 +322,10 @@ const ProfitCalculator: React.FC<ProfitCalculatorProps> = ({
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className={cn("relative overflow-hidden rounded-3xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-2 border-purple-200/50 dark:border-purple-800/50 shadow-2xl", className)}
+        className={cn("relative overflow-hidden rounded-3xl bg-white/80 dark:bg-slate-900/80  border-2 border-purple-200/50 dark:border-purple-800/50 shadow-2xl", className)}
       >
-        <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-purple-500/10 to-transparent rounded-full blur-3xl" />
-        <div className="absolute bottom-0 left-0 w-72 h-72 bg-gradient-to-tr from-amber-500/10 to-transparent rounded-full blur-3xl" />
+        <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-purple-500/10 to-transparent rounded-full" />
+        <div className="absolute bottom-0 left-0 w-72 h-72 bg-gradient-to-tr from-amber-500/10 to-transparent rounded-full" />
         
         <div className="relative p-6 md:p-8">
         <div className="space-y-8">
@@ -338,7 +338,7 @@ const ProfitCalculator: React.FC<ProfitCalculatorProps> = ({
           >
             <div className="flex items-center gap-3 mb-6">
               <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-emerald-400 to-cyan-400 rounded-xl blur-md opacity-50" />
+                <div className="absolute inset-0 bg-gradient-to-r from-emerald-400 to-cyan-400 rounded-xl opacity-50" />
                 <div className="relative p-3 bg-gradient-to-r from-emerald-500 to-cyan-500 rounded-xl text-white shadow-xl">
                   <Search className="h-6 w-6" />
                 </div>
@@ -637,7 +637,7 @@ const ProfitCalculator: React.FC<ProfitCalculatorProps> = ({
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
-        className="relative overflow-hidden rounded-3xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-2 border-indigo-200/50 dark:border-indigo-800/50 shadow-2xl"
+        className="relative overflow-hidden rounded-3xl bg-white/80 dark:bg-slate-900/80 border-2 border-indigo-200/50 dark:border-indigo-800/50 shadow-2xl"
       >
         <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500" />
         
@@ -645,7 +645,7 @@ const ProfitCalculator: React.FC<ProfitCalculatorProps> = ({
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
             <div className="flex items-center gap-4">
               <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-indigo-400 to-purple-400 rounded-xl blur-md opacity-50" />
+                <div className="absolute inset-0 bg-gradient-to-r from-indigo-400 to-purple-400 rounded-xl opacity-50" />
                 <div className="relative p-3 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-xl text-white shadow-xl">
                   <Eye className="h-7 w-7" />
                 </div>
@@ -791,7 +791,7 @@ const ProfitCalculator: React.FC<ProfitCalculatorProps> = ({
               <div className="text-center py-20">
                 <div className="flex flex-col items-center gap-6">
                   <div className="relative">
-                    <div className="absolute inset-0 bg-gradient-to-r from-purple-400 to-indigo-400 rounded-full blur-xl opacity-30 animate-pulse" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-purple-400 to-indigo-400 rounded-full opacity-30 animate-pulse" />
                     <div className="relative p-8 bg-gradient-to-r from-purple-100 to-indigo-100 dark:from-purple-900/30 dark:to-indigo-900/30 rounded-full">
                       <Calculator className="h-16 w-16 text-purple-600" />
                     </div>

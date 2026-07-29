@@ -35,9 +35,9 @@ const PointageHero: React.FC<PointageHeroProps> = ({
     <div className="relative overflow-hidden py-10 sm:py-14 rounded-3xl bg-gradient-to-br from-slate-950 via-cyan-950/70 to-indigo-950 border border-white/10 shadow-[0_30px_80px_-20px_rgba(6,182,212,0.35)]">
       {/* Aurora glass orbs */}
       <motion.div animate={{ x: [0, 40, 0], y: [0, -30, 0], scale: [1, 1.15, 1] }} transition={{ duration: 16, repeat: Infinity, ease: 'easeInOut' }}
-        className="absolute -top-10 left-1/4 w-[26rem] h-[26rem] bg-cyan-500/25 rounded-full blur-[110px] pointer-events-none" />
+        className="absolute -top-10 left-1/4 w-[26rem] h-[26rem] bg-cyan-500/25 rounded-full pointer-events-none" />
       <motion.div animate={{ x: [0, -30, 0], y: [0, 30, 0], scale: [1, 1.1, 1] }} transition={{ duration: 19, repeat: Infinity, ease: 'easeInOut' }}
-        className="absolute -bottom-10 right-1/4 w-[28rem] h-[28rem] bg-blue-500/20 rounded-full blur-[120px] pointer-events-none" />
+        className="absolute -bottom-10 right-1/4 w-[28rem] h-[28rem] bg-blue-500/20 rounded-full pointer-events-none" />
 
       {/* Grid mask */}
       <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.025)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.025)_1px,transparent_1px)] bg-[size:44px_44px] [mask-image:radial-gradient(ellipse_at_center,black_30%,transparent_75%)]" />
@@ -48,7 +48,7 @@ const PointageHero: React.FC<PointageHeroProps> = ({
 
       <div className="max-w-7xl mx-auto px-4 relative z-10">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center">
-          <motion.div whileHover={{ scale: 1.05, y: -2 }} className="inline-flex items-center gap-3 mb-5 px-6 py-3 rounded-full bg-white/[0.07] border border-white/[0.12] backdrop-blur-2xl shadow-[0_10px_40px_rgba(6,182,212,0.3)]">
+          <motion.div whileHover={{ scale: 1.05, y: -2 }} className="inline-flex items-center gap-3 mb-5 px-6 py-3 rounded-full bg-white/[0.07] border border-white/[0.12] shadow-[0_10px_40px_rgba(6,182,212,0.3)]">
             <motion.div animate={{ rotate: 360 }} transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}>
               <Clock className="h-5 w-5 text-cyan-300 drop-shadow-[0_0_10px_rgba(34,211,238,0.7)]" />
             </motion.div>
@@ -73,25 +73,25 @@ const PointageHero: React.FC<PointageHeroProps> = ({
             ].map((s, i) => (
               <motion.div key={s.label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 + i * 0.08 }}
                 whileHover={{ y: -4, scale: 1.03 }}
-                className="px-5 py-3 rounded-2xl bg-white/[0.06] backdrop-blur-2xl border border-white/[0.12] shadow-[0_10px_40px_rgba(0,0,0,0.3)]">
+                className="px-5 py-3 rounded-2xl bg-white/[0.06] border border-white/[0.12] shadow-[0_10px_40px_rgba(0,0,0,0.3)]">
                 <p className="text-[11px] text-white/50 uppercase tracking-wider font-semibold">{s.label}</p>
                 <p className={`text-xl font-black ${s.color}`} style={{ textShadow: `0 0 20px ${s.glow}` }}>{s.value}</p>
               </motion.div>
             ))}
             <motion.div whileHover={{ y: -4, scale: 1.03 }} onClick={onShowMonthDetail}
-              className="px-5 py-3 rounded-2xl bg-white/[0.06] backdrop-blur-2xl border border-emerald-300/20 shadow-[0_10px_40px_rgba(16,185,129,0.25)] cursor-pointer hover:border-emerald-300/40 transition-colors">
+              className="px-5 py-3 rounded-2xl bg-white/[0.06] border border-emerald-300/20 shadow-[0_10px_40px_rgba(16,185,129,0.25)] cursor-pointer hover:border-emerald-300/40 transition-colors">
               <p className="text-[11px] text-white/50 uppercase tracking-wider font-semibold">Total du mois</p>
               <p className="text-xl font-black text-emerald-300" style={{ textShadow: '0 0 20px rgba(16,185,129,0.5)' }}>{monthTotal.toFixed(2)}€</p>
               <p className="text-[10px] text-emerald-300/70 font-semibold">Cliquer pour détails</p>
             </motion.div>
             <motion.div whileHover={{ y: -4, scale: 1.03 }} onClick={onShowYearlyTotal}
-              className="px-5 py-3 rounded-2xl bg-white/[0.06] backdrop-blur-2xl border border-amber-300/20 shadow-[0_10px_40px_rgba(245,158,11,0.25)] cursor-pointer hover:border-amber-300/40 transition-colors">
+              className="px-5 py-3 rounded-2xl bg-white/[0.06] border border-amber-300/20 shadow-[0_10px_40px_rgba(245,158,11,0.25)] cursor-pointer hover:border-amber-300/40 transition-colors">
               <p className="text-[11px] text-white/50 uppercase tracking-wider font-semibold">Total de l'année {year}</p>
               <p className="text-xl font-black text-amber-300" style={{ textShadow: '0 0 20px rgba(245,158,11,0.5)' }}>📊 Voir</p>
             </motion.div>
           </div>
 
-          <div className="relative overflow-hidden bg-gradient-to-br from-cyan-800/70 via-blue-800/70 to-purple-900/70 backdrop-blur-xl rounded-2xl sm:rounded-3xl shadow-[0_40px_120px_rgba(0,0,0,0.45)] p-5 sm:p-7 border border-white/25 mt-6">
+          <div className="relative overflow-hidden bg-gradient-to-br from-cyan-800/70 via-blue-800/70 to-purple-900/70 rounded-2xl sm:rounded-3xl shadow-[0_40px_120px_rgba(0,0,0,0.45)] p-5 sm:p-7 border border-white/25 mt-6">
             <div className="absolute inset-0 bg-gradient-to-tr from-white/10 via-transparent to-transparent pointer-events-none" />
             <div className="relative flex flex-wrap justify-center gap-3 sm:gap-4">
               <Button onClick={onAddEntreprise}

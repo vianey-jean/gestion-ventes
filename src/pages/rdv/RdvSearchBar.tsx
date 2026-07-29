@@ -72,7 +72,7 @@ const RdvSearchBar: React.FC<RdvSearchBarProps> = ({
             if (searchQuery.length >= 3) setShowSearchSuggestions(true);
           }}
           placeholder="Rechercher un rendez-vous (min. 3 caractères)..."
-          className="pl-12 h-14 text-lg rounded-xl border-2 border-primary/20 focus:border-primary bg-background/80 backdrop-blur-sm shadow-lg"
+          className="pl-12 h-14 text-lg rounded-xl border-2 border-primary/20 focus:border-primary bg-background/80 shadow-lg"
         />
       </div>
 

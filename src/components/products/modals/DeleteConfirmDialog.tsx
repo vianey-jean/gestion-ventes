@@ -16,7 +16,7 @@ interface Props {
 
 const DeleteConfirmDialog: React.FC<Props> = ({ open, onOpenChange, selectedProduct, isSubmitting, onConfirm }) => (
   <AlertDialog open={open} onOpenChange={onOpenChange}>
-    <AlertDialogContent className="bg-gradient-to-br from-white via-red-50/30 to-rose-50/50 backdrop-blur-xl border-0 shadow-2xl rounded-3xl">
+    <AlertDialogContent className="bg-gradient-to-br from-white via-red-50/30 to-rose-50/50 border-0 shadow-2xl rounded-3xl">
       <AlertDialogHeader className="text-center space-y-4">
         <div className="mx-auto w-16 h-16 bg-gradient-to-br from-red-500 via-red-600 to-rose-600 rounded-2xl flex items-center justify-center shadow-xl shadow-red-500/30 animate-pulse">
           <AlertTriangle className="h-8 w-8 text-white" />

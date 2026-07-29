@@ -21,7 +21,7 @@ import ModuleSettingsSection from './ModuleSettingsSection';
 import BulkDeleteModal from './BulkDeleteModal';
 import PremiumLoading from '@/components/ui/premium-loading';
 
-const premiumBtnClass = "group relative overflow-hidden rounded-xl sm:rounded-2xl backdrop-blur-xl border transition-all duration-300 hover:scale-105 px-4 py-2 sm:px-5 sm:py-3 text-xs sm:text-sm font-semibold";
+const premiumBtnClass = "group relative overflow-hidden rounded-xl sm:rounded-2xl  border transition-all duration-300 hover:scale-105 px-4 py-2 sm:px-5 sm:py-3 text-xs sm:text-sm font-semibold";
 
 interface ParametresSectionProps {
   userRole?: string;
@@ -457,7 +457,7 @@ const ParametresSection: React.FC<ParametresSectionProps> = ({ userRole }) => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="relative rounded-3xl backdrop-blur-2xl bg-white/70 dark:bg-white/5 border border-violet-200/30 dark:border-violet-800/20 shadow-2xl shadow-violet-500/5 overflow-hidden"
+        className="relative rounded-3xl bg-white/70 dark:bg-white/5 border border-violet-200/30 dark:border-violet-800/20 shadow-2xl shadow-violet-500/5 overflow-hidden"
       >
         <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-amber-500 via-orange-500 to-red-500" />
 
@@ -493,7 +493,7 @@ const ParametresSection: React.FC<ParametresSectionProps> = ({ userRole }) => {
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }} className="mt-6">
               <Button
                 onClick={() => setShowBulkDelete(true)}
-                className="w-full group relative overflow-hidden rounded-2xl backdrop-blur-xl border border-red-300/30 bg-gradient-to-r from-red-500/10 via-rose-500/10 to-pink-500/10 text-red-600 dark:text-red-400 hover:from-red-500/20 hover:to-rose-500/20 hover:scale-[1.02] transition-all duration-300 px-5 py-3 text-sm font-bold shadow-lg shadow-red-500/5 hover:shadow-red-500/15"
+                className="w-full group relative overflow-hidden rounded-2xl border border-red-300/30 bg-gradient-to-r from-red-500/10 via-rose-500/10 to-pink-500/10 text-red-600 dark:text-red-400 hover:from-red-500/20 hover:to-rose-500/20 hover:scale-[1.02] transition-all duration-300 px-5 py-3 text-sm font-bold shadow-lg shadow-red-500/5 hover:shadow-red-500/15"
               >
                 <Trash2 className="w-4 h-4 mr-2" />
                 Suppression des données
@@ -620,7 +620,7 @@ const ParametresSection: React.FC<ParametresSectionProps> = ({ userRole }) => {
 
       {/* ========== DELETE ALL DIALOG ========== */}
       <AlertDialog open={showDeleteDialog} onOpenChange={v => { setShowDeleteDialog(v); if (!v) { setDeletePassword(''); setConfirmDeleteStep(false); } }}>
-        <AlertDialogContent className="rounded-3xl backdrop-blur-2xl bg-white/95 dark:bg-[#0a0020]/95 border border-red-200/30 max-w-md">
+        <AlertDialogContent className="rounded-3xl bg-white/95 dark:bg-[#0a0020]/95 border border-red-200/30 max-w-md">
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2 text-red-600">
               <Trash2 className="w-5 h-5" /> Supprimer toutes les données
@@ -719,7 +719,7 @@ const ParametresSection: React.FC<ParametresSectionProps> = ({ userRole }) => {
 
       {/* ========== BACKUP DIALOG ========== */}
       <AlertDialog open={showBackupDialog} onOpenChange={v => { setShowBackupDialog(v); if (!v) { setBackupCode(''); setIsBackupCodeValid(false); } }}>
-        <AlertDialogContent className="rounded-3xl backdrop-blur-2xl bg-white/95 dark:bg-[#0a0020]/95 border border-emerald-200/30 max-w-md">
+        <AlertDialogContent className="rounded-3xl bg-white/95 dark:bg-[#0a0020]/95 border border-emerald-200/30 max-w-md">
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2 text-emerald-600">
               <Download className="w-5 h-5" /> Sauvegarder les données
@@ -773,7 +773,7 @@ const ParametresSection: React.FC<ParametresSectionProps> = ({ userRole }) => {
 
       {/* ========== RESTORE DIALOG ========== */}
       <AlertDialog open={showRestoreDialog} onOpenChange={v => { setShowRestoreDialog(v); if (!v) { setRestoreCode(''); setRestoreFile(null); setIsRestoreCodeValid(false); } }}>
-        <AlertDialogContent className="rounded-3xl backdrop-blur-2xl bg-white/95 dark:bg-[#0a0020]/95 border border-blue-200/30 max-w-md">
+        <AlertDialogContent className="rounded-3xl bg-white/95 dark:bg-[#0a0020]/95 border border-blue-200/30 max-w-md">
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2 text-blue-600">
               <Upload className="w-5 h-5" /> Restaurer les données

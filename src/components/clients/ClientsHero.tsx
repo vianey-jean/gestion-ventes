@@ -16,8 +16,8 @@ const ClientsHero: React.FC<ClientsHeroProps> = ({ clientsCount, onAddClient }) 
     <div
   className="relative overflow-hidden bg-gradient-to-r from-purple-700 via-pink-700 to-indigo-700 dark:from-purple-900 dark:via-pink-900 dark:to-indigo-900 shadow-[0_25px_50px_rgba(255,255,255,0.1)] border border-white/10"
   style={{ borderRadius: "30px" }}
->   {/* Overlay sombre avec blur */}
-      <div className="absolute inset-0 bg-black/25 backdrop-blur-md rounded-3xl" />
+>   {/* Overlay sombre avec  */}
+      <div className="absolute inset-0 bg-black/25 rounded-3xl" />
 
       {/* Particules flottantes ultra luxe */}
       <div className="absolute inset-0 overflow-hidden">
@@ -61,7 +61,7 @@ const ClientsHero: React.FC<ClientsHeroProps> = ({ clientsCount, onAddClient }) 
             {/* Icône Diamant */}
             <div className="relative">
               <Diamond className="w-12 h-12 md:w-16 md:h-16 text-purple-200 drop-shadow-[0_0_20px_rgba(255,255,255,0.5)]" />
-              <div className="absolute inset-0 bg-gradient-to-r from-purple-400/30 to-pink-400/30 rounded-full blur-2xl animate-pulse" />
+              <div className="absolute inset-0 bg-gradient-to-r from-purple-400/30 to-pink-400/30 rounded-full animate-pulse" />
             </div>
           </motion.div>
 
@@ -83,7 +83,7 @@ const ClientsHero: React.FC<ClientsHeroProps> = ({ clientsCount, onAddClient }) 
             className="flex flex-col sm:flex-row gap-4 justify-center items-center px-4"
           >
             {/* Statistiques clients */}
-            <div className="bg-white/10 backdrop-blur-lg rounded-2xl px-6 py-4 border border-white/20 shadow-[0_10px_25px_rgba(255,255,255,0.15)] hover:scale-105 transition-transform duration-500">
+            <div className="bg-white/10 rounded-2xl px-6 py-4 border border-white/20 shadow-[0_10px_25px_rgba(255,255,255,0.15)] hover:scale-105 transition-transform duration-500">
               <div className="flex items-center gap-3">
                 <Users className="w-6 h-6 md:w-7 md:h-7 text-emerald-300 shrink-0 animate-pulse" />
                 <span className="text-white font-extrabold text-lg md:text-xl drop-shadow-md">

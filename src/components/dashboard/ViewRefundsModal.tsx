@@ -41,11 +41,7 @@ const ViewRefundsModal: React.FC<ViewRefundsModalProps> = ({ isOpen, onClose }) 
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto
-        bg-gradient-to-br from-white to-amber-50/50 dark:from-gray-900 dark:to-amber-950/30
-        backdrop-blur-xl border border-amber-100/50 dark:border-amber-800/30
-        shadow-[0_40px_120px_rgba(0,0,0,0.15)] dark:shadow-[0_40px_120px_rgba(0,0,0,0.5)]
-        rounded-2xl sm:rounded-3xl">
+      <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto bg-gradient-to-br from-white to-amber-50/50 dark:from-gray-900 dark:to-amber-950/30 border border-amber-100/50 dark:border-amber-800/30 shadow-[0_40px_120px_rgba(0,0,0,0.15)] dark:shadow-[0_40px_120px_rgba(0,0,0,0.5)] rounded-2xl sm:rounded-3xl">
 
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3 text-xl">
@@ -71,7 +67,7 @@ const ViewRefundsModal: React.FC<ViewRefundsModalProps> = ({ isOpen, onClose }) 
         ) : (
           <div className="space-y-3">
             {/* Total */}
-            <div className="p-4 bg-amber-50/80 dark:bg-amber-500/[0.06] border border-amber-200/60 dark:border-amber-500/20 rounded-xl backdrop-blur-sm flex justify-between items-center shadow-sm">
+            <div className="p-4 bg-amber-50/80 dark:bg-amber-500/[0.06] border border-amber-200/60 dark:border-amber-500/20 rounded-xl flex justify-between items-center shadow-sm">
               <span className="font-bold text-amber-700 dark:text-amber-400">
                 Total: {refunds.length} remboursement(s)
               </span>
@@ -83,12 +79,7 @@ const ViewRefundsModal: React.FC<ViewRefundsModalProps> = ({ isOpen, onClose }) 
             {refunds.map((refund) => (
               <div
                 key={refund.id}
-                className="p-4
-                  bg-gray-50/80 dark:bg-white/[0.04]
-                  border border-gray-200/60 dark:border-white/[0.08]
-                  rounded-xl backdrop-blur-sm space-y-2 transition-all duration-300
-                  hover:border-amber-300 dark:hover:border-amber-500/20
-                  shadow-sm hover:shadow-md"
+                className="p-4 bg-gray-50/80 dark:bg-white/[0.04] border border-gray-200/60 dark:border-white/[0.08] rounded-xl space-y-2 transition-all duration-300 hover:border-amber-300 dark:hover:border-amber-500/20 shadow-sm hover:shadow-md"
               >
                 <div className="flex justify-between items-center">
                   <span className="font-bold text-sm text-gray-800 dark:text-white/90">{refund.clientName || 'Client inconnu'}</span>

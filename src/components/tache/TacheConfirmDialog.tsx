@@ -21,7 +21,7 @@ const TacheConfirmDialog: React.FC<TacheConfirmDialogProps> = ({
   return (
     <>
       <AlertDialog open={!!deleteConfirm} onOpenChange={() => setDeleteConfirm(null)}>
-        <AlertDialogContent className="bg-gradient-to-br from-slate-900 via-red-900/20 to-rose-900/10 backdrop-blur-2xl border border-white/10 rounded-3xl">
+        <AlertDialogContent className="bg-gradient-to-br from-slate-900 via-red-900/20 to-rose-900/10 border border-white/10 rounded-3xl">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-white font-black">⚠️ Supprimer cette tâche ?</AlertDialogTitle>
             <AlertDialogDescription className="text-white/60">
@@ -44,7 +44,7 @@ const TacheConfirmDialog: React.FC<TacheConfirmDialogProps> = ({
       </AlertDialog>
 
       <AlertDialog open={!!moveConfirm} onOpenChange={() => setMoveConfirm(null)}>
-        <AlertDialogContent className="bg-gradient-to-br from-slate-900 via-violet-900/20 to-purple-900/10 backdrop-blur-2xl border border-white/10 rounded-3xl">
+        <AlertDialogContent className="bg-gradient-to-br from-slate-900 via-violet-900/20 to-purple-900/10 border border-white/10 rounded-3xl">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-white font-black">📋 Confirmer le déplacement ?</AlertDialogTitle>
             <AlertDialogDescription className="text-white/60">

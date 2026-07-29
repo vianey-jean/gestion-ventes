@@ -45,7 +45,7 @@ const PretGroupCard: React.FC<PretGroupCardProps> = ({
   onTransfer
 }) => {
   return (
-    <Card className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl border border-white/20 shadow-xl overflow-hidden">
+    <Card className="bg-white/80 dark:bg-gray-800/80 border border-white/20 shadow-xl overflow-hidden">
       {/* Header du groupe - cliquable */}
       <div 
         className="p-3 sm:p-4 md:p-6 cursor-pointer hover:bg-purple-50/50 dark:hover:bg-purple-900/20 transition-all"

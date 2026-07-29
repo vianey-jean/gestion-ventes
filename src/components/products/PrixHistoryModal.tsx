@@ -141,8 +141,8 @@ const PrixHistoryModal: React.FC<Props> = ({ isOpen, onClose, product }) => {
         <div className="relative">
           {/* Glow background */}
           <div className="absolute inset-0 overflow-hidden rounded-3xl pointer-events-none">
-            <div className="absolute -top-32 -left-32 w-96 h-96 rounded-full bg-indigo-500/20 blur-3xl" />
-            <div className="absolute -bottom-32 -right-32 w-96 h-96 rounded-full bg-fuchsia-500/20 blur-3xl" />
+            <div className="absolute -top-32 -left-32 w-96 h-96 rounded-full bg-indigo-500/20" />
+            <div className="absolute -bottom-32 -right-32 w-96 h-96 rounded-full bg-fuchsia-500/20" />
           </div>
 
           <div className="relative p-6 md:p-8 space-y-6">
@@ -245,7 +245,7 @@ const PrixHistoryModal: React.FC<Props> = ({ isOpen, onClose, product }) => {
                 </div>
 
                 {/* Line chart */}
-                <div className="p-5 rounded-3xl bg-white/5 border border-white/10 backdrop-blur-xl">
+                <div className="p-5 rounded-3xl bg-white/5 border border-white/10">
                   <div className="mb-3 flex items-center gap-2">
                     <Sparkles className="h-4 w-4 text-indigo-300" />
                     <span className="font-bold">Évolution du prix d'achat — {selectedYear}</span>
@@ -275,7 +275,7 @@ const PrixHistoryModal: React.FC<Props> = ({ isOpen, onClose, product }) => {
                 </div>
 
                 {/* Monthly bar chart */}
-                <div className="p-5 rounded-3xl bg-white/5 border border-white/10 backdrop-blur-xl">
+                <div className="p-5 rounded-3xl bg-white/5 border border-white/10">
                   <div className="mb-3 flex items-center gap-2">
                     <Calendar className="h-4 w-4 text-fuchsia-300" />
                     <span className="font-bold">Variations par mois — {selectedYear}</span>
@@ -297,7 +297,7 @@ const PrixHistoryModal: React.FC<Props> = ({ isOpen, onClose, product }) => {
                 </div>
 
                 {/* Timeline détaillée */}
-                <div className="p-5 rounded-3xl bg-white/5 border border-white/10 backdrop-blur-xl">
+                <div className="p-5 rounded-3xl bg-white/5 border border-white/10">
                   <div className="mb-4 flex items-center gap-2">
                     <Calendar className="h-4 w-4 text-emerald-300" />
                     <span className="font-bold">Détail des achats — {selectedYear}</span>

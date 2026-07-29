@@ -16,7 +16,7 @@ interface Props {
 
 const ConfirmDialog: React.FC<Props> = ({ open, onOpenChange, title, description, confirmLabel, destructive, onConfirm }) => (
   <AlertDialog open={open} onOpenChange={onOpenChange}>
-    <AlertDialogContent className="bg-slate-900/95 border border-white/10 backdrop-blur-2xl rounded-3xl">
+    <AlertDialogContent className="bg-slate-900/95 border border-white/10 rounded-3xl">
       <AlertDialogHeader>
         <AlertDialogTitle className="text-white">{title}</AlertDialogTitle>
         <AlertDialogDescription className="text-white/70">{description}</AlertDialogDescription>

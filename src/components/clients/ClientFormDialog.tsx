@@ -78,7 +78,7 @@ const ClientFormDialog: React.FC<Props> = ({
   return (
   <>
   <Dialog open={open} onOpenChange={onOpenChange}>
-    <DialogContent className="sm:max-w-md bg-white/70 dark:bg-[#0a0020]/60 backdrop-blur-3xl border border-violet-200/20 dark:border-violet-800/20 shadow-[0_0_80px_-20px_rgba(139,92,246,0.4)] rounded-3xl animate-in fade-in zoom-in-95 duration-300">
+    <DialogContent className="sm:max-w-md bg-white/70 dark:bg-[#0a0020]/60 border border-violet-200/20 dark:border-violet-800/20 shadow-[0_0_80px_-20px_rgba(139,92,246,0.4)] rounded-3xl animate-in fade-in zoom-in-95 duration-300">
       <DialogHeader className="space-y-2">
         <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-blue-500 via-purple-500 to-fuchsia-500 bg-clip-text text-transparent animate-pulse">
           {editing ? 'Modifier le client' : 'Nouveau client'}
@@ -104,7 +104,7 @@ const ClientFormDialog: React.FC<Props> = ({
                   <Camera className="w-10 h-10 text-purple-400 dark:text-purple-500 group-hover/upload:rotate-12 transition-transform duration-300" />
                 </div>
               )}
-              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/upload:opacity-100 transition-all duration-300 flex items-center justify-center rounded-full backdrop-blur-sm">
+              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/upload:opacity-100 transition-all duration-300 flex items-center justify-center rounded-full">
                 <Camera className="w-6 h-6 text-white animate-bounce" />
               </div>
             </div>
@@ -210,7 +210,7 @@ const ClientFormDialog: React.FC<Props> = ({
                 const villeVal = formData.villes[index] || '';
                 const isCustomVille = villeVal && !availableVilles.some(v => v.toLowerCase() === villeVal.toLowerCase());
                 return (
-                  <div key={index} className="space-y-2 p-3 rounded-2xl border border-blue-100 dark:border-blue-900/40 bg-blue-50/30 dark:bg-blue-900/10 backdrop-blur-md hover:shadow-lg transition-all duration-300 animate-in fade-in slide-in-from-bottom-2">
+                  <div key={index} className="space-y-2 p-3 rounded-2xl border border-blue-100 dark:border-blue-900/40 bg-blue-50/30 dark:bg-blue-900/10 hover:shadow-lg transition-all duration-300 animate-in fade-in slide-in-from-bottom-2">
                     <div className="flex items-center gap-2">
                       <div className="flex-1 relative">
                         <Input
@@ -302,7 +302,7 @@ const ClientFormDialog: React.FC<Props> = ({
   </Dialog>
 
   <AlertDialog open={!!pendingDelete} onOpenChange={(o) => !o && setPendingDelete(null)}>
-    <AlertDialogContent className="bg-white/80 dark:bg-[#0a0020]/80 backdrop-blur-3xl border border-red-200/30 dark:border-red-800/30 rounded-3xl">
+    <AlertDialogContent className="bg-white/80 dark:bg-[#0a0020]/80 border border-red-200/30 dark:border-red-800/30 rounded-3xl">
       <AlertDialogHeader>
         <AlertDialogTitle className="text-xl font-bold bg-gradient-to-r from-red-500 to-rose-600 bg-clip-text text-transparent">
           Confirmer la suppression

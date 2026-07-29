@@ -152,31 +152,18 @@ const AchatsHistoriqueList: React.FC<AchatsHistoriqueListProps> = ({
 
   return (
     <>
-      <Card className="bg-white/5 backdrop-blur-sm border-white/10">
+      <Card className="bg-white/5 border-white/10">
         {/* En-tête avec titre animé */}
         <CardHeader className="flex items-center justify-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: "easeOut" }}
-            className="
-              flex items-center gap-3 px-6 py-4
-              rounded-2xl
-              bg-white/70 dark:bg-white/10
-              backdrop-blur-xl
-              shadow-[0_20px_50px_rgba(0,0,0,0.15)]
-              border border-white/30
-            "
+            className="flex items-center gap-3 px-6 py-4 rounded-2xl bg-white/70 dark:bg-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.15)] border border-white/30"
           >
             <Sparkles className="w-6 h-6 text-yellow-500 animate-pulse" />
             <CardTitle
-              className="
-                text-xl font-semibold tracking-wide
-                bg-gradient-to-r from-gray-900 via-gray-700 to-gray-900
-                dark:from-white dark:via-gray-300 dark:to-white
-                bg-clip-text text-transparent
-                text-center
-              "
+              className="text-xl font-semibold tracking-wide bg-gradient-to-r from-gray-900 via-gray-700 to-gray-900 dark:from-white dark:via-gray-300 dark:to-white bg-clip-text text-transparent text-center"
             >
               Historique des Achats & Dépenses
               <span className="block text-sm text-green-600 font-bold mt-1 opacity-80">
@@ -197,14 +184,7 @@ const AchatsHistoriqueList: React.FC<AchatsHistoriqueListProps> = ({
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.05 }}
                   onClick={() => handleItemClick(achat)}
-                  className="
-                    flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 sm:p-4
-                    bg-white/50 dark:bg-gray-800/50 
-                    rounded-xl border border-gray-200 dark:border-gray-700 
-                    hover:shadow-lg hover:scale-[1.01] hover:border-primary/50
-                    transition-all duration-200 cursor-pointer
-                    group gap-2 sm:gap-0
-                  "
+                  className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 sm:p-4 bg-white/50 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700 hover:shadow-lg hover:scale-[1.01] hover:border-primary/50 transition-all duration-200 cursor-pointer group gap-2 sm:gap-0"
                 >
                   {/* Partie haute/gauche: Icône et informations */}
                   <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
@@ -247,12 +227,7 @@ const AchatsHistoriqueList: React.FC<AchatsHistoriqueListProps> = ({
                         size="icon"
                         variant="ghost"
                         onClick={(e) => handleEditClick(e, achat)}
-                        className="
-                          h-8 w-8 sm:h-9 sm:w-9 rounded-lg
-                          text-emerald-600 hover:text-emerald-700
-                          hover:bg-emerald-500/15
-                          transition-all hover:scale-110
-                        "
+                        className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg text-emerald-600 hover:text-emerald-700 hover:bg-emerald-500/15 transition-all hover:scale-110"
                         title="Modifier"
                       >
                         <Edit className="h-4 w-4" />
@@ -265,12 +240,7 @@ const AchatsHistoriqueList: React.FC<AchatsHistoriqueListProps> = ({
                           setSelectedAchat(achat);
                           setIsDetailModalOpen(true);
                         }}
-                        className="
-                          h-8 w-8 sm:h-9 sm:w-9 rounded-lg
-                          text-red-600 hover:text-red-700
-                          hover:bg-red-500/15
-                          transition-all hover:scale-110
-                        "
+                        className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg text-red-600 hover:text-red-700 hover:bg-red-500/15 transition-all hover:scale-110"
                         title="Supprimer"
                       >
                         <Trash2 className="h-4 w-4" />

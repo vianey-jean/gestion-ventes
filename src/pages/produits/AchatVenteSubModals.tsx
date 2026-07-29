@@ -251,7 +251,7 @@ const AchatVenteSubModals: React.FC<Props> = ({
 
       {/* ========== MODALE HISTORIQUE FOURNISSEURS ========== */}
       <Dialog open={isFournHistoryOpen} onOpenChange={setIsFournHistoryOpen}>
-        <DialogContent className="sm:max-w-lg bg-gradient-to-br from-slate-900 via-cyan-900/30 to-blue-900/20 backdrop-blur-2xl border border-white/10 shadow-2xl rounded-3xl max-h-[85vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-lg bg-gradient-to-br from-slate-900 via-cyan-900/30 to-blue-900/20 border border-white/10 shadow-2xl rounded-3xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-xl font-black bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent flex items-center gap-2">
               <Eye className="h-5 w-5 text-cyan-400" />

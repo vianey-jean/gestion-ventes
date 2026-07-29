@@ -175,7 +175,7 @@ const DashboardTabNavigation: React.FC<
             // Style original conservé
             'bg-gradient-to-br from-white/60 to-gray-50/60',
             'dark:from-gray-900/60 dark:to-gray-800/60',
-            'backdrop-blur-xl',
+            '',
 
             // Radius responsive
             'rounded-xl sm:rounded-2xl',

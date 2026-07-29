@@ -36,7 +36,7 @@ export const PremiumInput = React.forwardRef<HTMLInputElement, PremiumInputProps
             {...props}
           />
           {/* Focus glow effect */}
-          <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-primary/10 to-primary/5 opacity-0 group-focus-within:opacity-100 transition-opacity duration-300 pointer-events-none -z-10 blur-sm scale-105" />
+          <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-primary/10 to-primary/5 opacity-0 group-focus-within:opacity-100 transition-opacity duration-300 pointer-events-none -z-10 scale-105" />
         </div>
         {error && (
           <p className="text-sm font-medium text-red-500 flex items-center gap-1">
@@ -80,7 +80,7 @@ export const PremiumDialogHeader: React.FC<PremiumDialogHeaderProps> = ({
         </div>
         {/* Glow effect */}
         <div className={cn(
-          "absolute inset-0 rounded-2xl blur-xl opacity-40 -z-10 scale-110",
+          "absolute inset-0 rounded-2xl  opacity-40 -z-10 scale-110",
           "bg-gradient-to-br", iconGradient
         )} />
       </div>
@@ -154,14 +154,14 @@ export const PremiumFormContainer: React.FC<PremiumFormContainerProps> = ({
 }) => {
   return (
     <div className={cn(
-      "relative bg-gradient-to-br backdrop-blur-xl border-0 shadow-2xl rounded-3xl overflow-hidden",
+      "relative bg-gradient-to-br  border-0 shadow-2xl rounded-3xl overflow-hidden",
       gradient,
       className
     )}>
       {/* Decorative elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-24 -right-24 w-48 h-48 bg-gradient-to-br from-primary/10 to-blue-200/10 rounded-full blur-3xl" />
-        <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-gradient-to-br from-indigo-200/10 to-purple-200/10 rounded-full blur-3xl" />
+        <div className="absolute -top-24 -right-24 w-48 h-48 bg-gradient-to-br from-primary/10 to-blue-200/10 rounded-full" />
+        <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-gradient-to-br from-indigo-200/10 to-purple-200/10 rounded-full" />
       </div>
       
       <div className="relative">

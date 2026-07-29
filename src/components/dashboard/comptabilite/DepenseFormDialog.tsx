@@ -101,7 +101,7 @@ const DepenseFormDialog: React.FC<DepenseFormDialogProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto bg-gradient-to-br from-white via-orange-50/30 to-red-50/50 dark:from-gray-900 dark:via-orange-900/20 dark:to-red-900/20 backdrop-blur-xl border-0 shadow-2xl rounded-3xl">
+      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto bg-gradient-to-br from-white via-orange-50/30 to-red-50/50 dark:from-gray-900 dark:via-orange-900/20 dark:to-red-900/20 border-0 shadow-2xl rounded-3xl">
         {/* En-tête de la modale */}
         <DialogHeader>
           <DialogTitle className="text-2xl font-black bg-gradient-to-r from-orange-600 via-red-600 to-pink-600 bg-clip-text text-transparent flex items-center gap-3">
@@ -209,7 +209,7 @@ const DepenseFormDialog: React.FC<DepenseFormDialogProps> = ({
               }
               className={cn(
                 "h-12 w-full pl-11 pr-4 rounded-2xl",
-                "bg-white/80 dark:bg-gray-900/70 backdrop-blur-md",
+                "bg-white/80 dark:bg-gray-900/70 ",
                 "border border-gray-200/60 dark:border-gray-700/60",
                 "text-gray-900 dark:text-gray-100 font-medium",
                 "shadow-sm hover:shadow-md transition-all duration-200",

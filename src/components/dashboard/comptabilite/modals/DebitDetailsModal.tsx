@@ -47,11 +47,7 @@ const DebitDetailsModal: React.FC<DebitDetailsModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto
-        bg-gradient-to-br from-white to-red-50/50 dark:from-gray-900 dark:to-red-950/30
-        backdrop-blur-xl border border-red-100/50 dark:border-red-800/30
-        shadow-[0_40px_120px_rgba(0,0,0,0.15)] dark:shadow-[0_40px_120px_rgba(0,0,0,0.5)]
-        rounded-2xl sm:rounded-3xl">
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto bg-gradient-to-br from-white to-red-50/50 dark:from-gray-900 dark:to-red-950/30 border border-red-100/50 dark:border-red-800/30 shadow-[0_40px_120px_rgba(0,0,0,0.15)] dark:shadow-[0_40px_120px_rgba(0,0,0,0.5)] rounded-2xl sm:rounded-3xl">
 
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3">
@@ -72,10 +68,7 @@ const DebitDetailsModal: React.FC<DebitDetailsModalProps> = ({
             achats.map((achat) => (
               <div
                 key={achat.id}
-                className="flex items-center justify-between p-4
-                  rounded-xl bg-gradient-to-r from-red-50/80 to-orange-50/80 dark:from-red-900/20 dark:to-orange-900/20
-                  border border-red-100 dark:border-red-800/50
-                  transition-all hover:scale-[1.01]"
+                className="flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-red-50/80 to-orange-50/80 dark:from-red-900/20 dark:to-orange-900/20 border border-red-100 dark:border-red-800/50 transition-all hover:scale-[1.01]"
               >
                 <div className="flex items-center gap-3">
                   <div className={`p-2.5 rounded-xl border ${getTypeClass(achat.type)}`}>

@@ -68,7 +68,7 @@ const ClientSection: React.FC<ClientSectionProps> = ({
       {clientPhotoUrl && (
         <div className="flex justify-center">
           <div className="relative group">
-            <div className="absolute -inset-1 bg-gradient-to-br from-blue-400 via-indigo-500 to-purple-500 rounded-full blur-md opacity-70" />
+            <div className="absolute -inset-1 bg-gradient-to-br from-blue-400 via-indigo-500 to-purple-500 rounded-full opacity-70" />
             <img
               src={clientPhotoUrl}
               alt={clientNom || 'Client'}

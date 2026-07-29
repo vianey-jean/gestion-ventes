@@ -85,9 +85,7 @@ const PageHero: React.FC<PageHeroProps> = memo(({
               initial={{ opacity: 0, y: 60, scale: 0.9 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               transition={{ duration: 0.9, ease: "easeOut" }}
-              className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold 
-                        bg-gradient-to-r from-white via-yellow-100 to-white 
-                        bg-clip-text text-transparent"
+              className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold bg-gradient-to-r from-white via-yellow-100 to-white bg-clip-text text-transparent"
             >
               {title}
             </motion.h1>
@@ -95,7 +93,7 @@ const PageHero: React.FC<PageHeroProps> = memo(({
             {IconRight && (
               <div className="relative">
                 <IconRight className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 text-purple-200" />
-                <div className="absolute inset-0 bg-gradient-to-r from-purple-400/20 to-pink-400/20 rounded-full blur-xl" />
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-400/20 to-pink-400/20 rounded-full" />
               </div>
             )}
           </div>

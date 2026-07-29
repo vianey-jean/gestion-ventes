@@ -401,7 +401,7 @@ const PointageAutoWatcher: React.FC = () => {
         animate={{ opacity: 1, x: 0, y: 0 }}
         exit={{ opacity: 0, x: 50 }}
         transition={{ type: 'spring', damping: 22 }}
-        className="fixed top-4 right-4 z-[200] w-[360px] max-w-[calc(100vw-2rem)] rounded-3xl bg-gradient-to-br from-emerald-900/95 via-teal-900/95 to-green-900/95 border-2 border-emerald-500/40 shadow-2xl shadow-emerald-500/40 backdrop-blur-2xl overflow-hidden"
+        className="fixed top-4 right-4 z-[200] w-[360px] max-w-[calc(100vw-2rem)] rounded-3xl bg-gradient-to-br from-emerald-900/95 via-teal-900/95 to-green-900/95 border-2 border-emerald-500/40 shadow-2xl shadow-emerald-500/40 overflow-hidden"
       >
         <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-emerald-400/20 to-transparent rounded-bl-full pointer-events-none" />
         <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-teal-400/20 to-transparent rounded-tr-full pointer-events-none" />

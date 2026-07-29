@@ -29,7 +29,7 @@ const AchatVenteHistoryModal: React.FC<Props> = ({
   onViewVente, onEditVente, onDeleteVente,
 }) => (
   <Dialog open={open} onOpenChange={onOpenChange}>
-    <DialogContent className="sm:max-w-xl bg-gradient-to-br from-slate-900 via-emerald-900/30 to-teal-900/20 backdrop-blur-2xl border border-white/10 shadow-2xl rounded-3xl max-h-[85vh] overflow-y-auto">
+    <DialogContent className="sm:max-w-xl bg-gradient-to-br from-slate-900 via-emerald-900/30 to-teal-900/20 border border-white/10 shadow-2xl rounded-3xl max-h-[85vh] overflow-y-auto">
       <DialogHeader>
         <DialogTitle className="text-xl font-black bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent flex items-center gap-2">
           <Eye className="h-5 w-5 text-emerald-400" />

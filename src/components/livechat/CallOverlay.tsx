@@ -52,7 +52,7 @@ const CallOverlay: React.FC<CallOverlayProps> = ({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="absolute inset-0 z-50 flex flex-col bg-slate-950/95 backdrop-blur-md rounded-3xl overflow-hidden"
+        className="absolute inset-0 z-50 flex flex-col bg-slate-950/95 rounded-3xl overflow-hidden"
       >
         {/* Hidden audio element - always present for audio playback */}
         <audio ref={remoteAudioRef} autoPlay playsInline className="hidden" />

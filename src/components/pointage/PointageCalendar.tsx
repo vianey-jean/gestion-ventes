@@ -37,7 +37,7 @@ const PointageCalendar: React.FC<PointageCalendarProps> = ({
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-      className="rounded-3xl bg-white/70 dark:bg-white/5 backdrop-blur-2xl border border-white/20 dark:border-white/10 shadow-2xl p-4 sm:p-6">
+      className="rounded-3xl bg-white/70 dark:bg-white/5 border border-white/20 dark:border-white/10 shadow-2xl p-4 sm:p-6">
       <div className="flex items-center justify-between mb-6">
         <Button variant="ghost" onClick={onPrevMonth} className="rounded-2xl hover:bg-cyan-500/10">
           <ChevronLeft className="h-5 w-5" />

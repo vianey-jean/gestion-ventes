@@ -87,15 +87,15 @@ const ContactPage: React.FC = () => {
         <div className="min-h-screen bg-gradient-to-br from-slate-900 via-emerald-950/50 to-teal-950 flex items-center justify-center p-4">
           {/* Glass orbs */}
           <div className="fixed inset-0 overflow-hidden pointer-events-none">
-            <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 12, repeat: Infinity }} className="absolute top-1/3 left-1/3 w-96 h-96 bg-emerald-500/10 rounded-full blur-[120px]" />
+            <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 12, repeat: Infinity }} className="absolute top-1/3 left-1/3 w-96 h-96 bg-emerald-500/10 rounded-full" />
           </div>
 
           <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.5 }}>
-            <Card className="w-full max-w-lg text-center border-0 bg-white/[0.06] backdrop-blur-2xl border border-white/[0.1] shadow-[0_32px_64px_rgba(0,0,0,0.4)] rounded-3xl overflow-hidden">
+            <Card className="w-full max-w-lg text-center border-0 bg-white/[0.06] border border-white/[0.1] shadow-[0_32px_64px_rgba(0,0,0,0.4)] rounded-3xl overflow-hidden">
               <div className="h-px bg-gradient-to-r from-transparent via-emerald-400/40 to-transparent" />
               <CardContent className="pt-12 pb-10">
                 <div className="relative mb-8">
-                  <div className="absolute inset-0 bg-emerald-500/20 rounded-full blur-2xl" />
+                  <div className="absolute inset-0 bg-emerald-500/20 rounded-full" />
                   <CheckCircle className="relative h-24 w-24 text-emerald-400 mx-auto drop-shadow-[0_0_20px_rgba(52,211,153,0.5)]" />
                 </div>
                 <h2 className="text-4xl font-extrabold text-white mb-4">Message Envoyé !</h2>
@@ -165,8 +165,8 @@ const ContactPage: React.FC = () => {
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-950/50 to-indigo-950 relative">
         {/* Background effects */}
         <div className="fixed inset-0 overflow-hidden pointer-events-none">
-          <motion.div animate={{ x: [0, 30, 0], y: [0, -20, 0] }} transition={{ duration: 16, repeat: Infinity, ease: "easeInOut" }} className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-[120px]" />
-          <motion.div animate={{ x: [0, -30, 0], y: [0, 20, 0] }} transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }} className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-blue-500/8 rounded-full blur-[120px]" />
+          <motion.div animate={{ x: [0, 30, 0], y: [0, -20, 0] }} transition={{ duration: 16, repeat: Infinity, ease: "easeInOut" }} className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/10 rounded-full" />
+          <motion.div animate={{ x: [0, -30, 0], y: [0, 20, 0] }} transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }} className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-blue-500/8 rounded-full" />
         </div>
 
         {/* Grid */}
@@ -175,7 +175,7 @@ const ContactPage: React.FC = () => {
         <div className="relative container mx-auto px-3 sm:px-4 md:px-6 py-8 sm:py-12 md:py-16">
           {/* Header */}
           <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-8 sm:mb-12 md:mb-16">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/[0.05] backdrop-blur-xl rounded-full border border-white/[0.08] mb-6">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/[0.05] rounded-full border border-white/[0.08] mb-6">
               <Crown className="h-4 w-4 text-amber-400" />
               <span className="text-sm font-medium text-purple-300/80">Contact Premium</span>
             </div>
@@ -215,7 +215,7 @@ const ContactPage: React.FC = () => {
           <div className="grid lg:grid-cols-3 gap-6 sm:gap-8 md:gap-10 max-w-7xl mx-auto">
             {/* Formulaire */}
             <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }} className="lg:col-span-2">
-              <Card className="border-0 bg-white/[0.04] backdrop-blur-2xl border border-white/[0.08] rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] overflow-hidden">
+              <Card className="border-0 bg-white/[0.04] border border-white/[0.08] rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] overflow-hidden">
                 <div className="h-px bg-gradient-to-r from-transparent via-purple-400/30 to-transparent" />
                 <CardHeader className="pb-4 sm:pb-6 md:pb-8 p-4 sm:p-6">
                   <CardTitle className="flex items-center gap-3 text-lg sm:text-xl text-white">
@@ -252,7 +252,7 @@ const ContactPage: React.FC = () => {
                         <SelectTrigger className="h-12 bg-white/[0.04] border-white/[0.08] text-white rounded-xl focus:bg-white/[0.08] focus:border-purple-400/30">
                           <SelectValue placeholder="Choisissez le sujet" />
                         </SelectTrigger>
-                        <SelectContent className="bg-white/10 backdrop-blur-2xl border border-white/20 shadow-[0_20px_40px_rgba(0,0,0,0.25)]">
+                        <SelectContent className="bg-white/10 border border-white/20 shadow-[0_20px_40px_rgba(0,0,0,0.25)]">
                           <SelectItem value="Demande d'information">💡 Information</SelectItem>
                           <SelectItem value="Support technique">🔧 Support technique</SelectItem>
                           <SelectItem value="Partenariat">🤝 Partenariat</SelectItem>
@@ -285,7 +285,7 @@ const ContactPage: React.FC = () => {
 
             {/* Infos contact */}
             <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4 }} className="space-y-6">
-              <Card className="border-0 bg-white/[0.04] backdrop-blur-2xl border border-white/[0.08] rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] overflow-hidden">
+              <Card className="border-0 bg-white/[0.04] border border-white/[0.08] rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] overflow-hidden">
                 <div className="h-px bg-gradient-to-r from-transparent via-emerald-400/30 to-transparent" />
                 <CardHeader>
                   <CardTitle className="flex items-center gap-3 text-lg text-white">

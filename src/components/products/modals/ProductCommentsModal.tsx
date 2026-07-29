@@ -37,7 +37,7 @@ interface Props {
 
 const ProductCommentsModal: React.FC<Props> = (p) => (
   <Dialog open={p.open} onOpenChange={p.onOpenChange}>
-    <DialogContent className="w-[95vw] sm:max-w-xl bg-gradient-to-br from-slate-900 via-purple-900/30 to-indigo-900/20 backdrop-blur-2xl border border-white/10 shadow-2xl rounded-3xl max-h-[85vh] overflow-y-auto">
+    <DialogContent className="w-[95vw] sm:max-w-xl bg-gradient-to-br from-slate-900 via-purple-900/30 to-indigo-900/20 border border-white/10 shadow-2xl rounded-3xl max-h-[85vh] overflow-y-auto">
       <DialogHeader>
         <DialogTitle className="text-xl font-black text-white flex items-center gap-2">
           <MessageSquare className="h-5 w-5 text-purple-400" /> Commentaires{p.selectedProduct ? ` — ${p.selectedProduct.description}` : ''}

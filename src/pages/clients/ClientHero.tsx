@@ -45,17 +45,7 @@ const ClientHero: React.FC<ClientHeroProps> = ({
 
   return (
     <section
-      className="
-      relative
-      overflow-hidden
-      rounded-[36px]
-      border
-      border-white/10
-      bg-black
-      py-14
-      md:py-20
-      shadow-[0_40px_120px_-20px_rgba(168,85,247,.45)]
-    "
+      className="relative overflow-hidden rounded-[36px] border border-white/10 bg-black py-14 md:py-20 shadow-[0_40px_120px_-20px_rgba(168,85,247,.45)]"
     >
       {/* ================================================= */}
       {/* AURORA BACKGROUND */}
@@ -64,16 +54,7 @@ const ClientHero: React.FC<ClientHeroProps> = ({
       <div className="absolute inset-0 overflow-hidden">
 
         <motion.div
-          className="
-          absolute
-          top-[-10%]
-          left-[10%]
-          h-[420px]
-          w-[420px]
-          rounded-full
-          bg-purple-600/25
-          blur-[140px]
-        "
+          className="absolute top-[-10%] left-[10%] h-[420px] w-[420px] rounded-full bg-purple-600/25"
           animate={{
             x: [0, 60, -30, 0],
             y: [0, -40, 30, 0],
@@ -87,16 +68,7 @@ const ClientHero: React.FC<ClientHeroProps> = ({
         />
 
         <motion.div
-          className="
-          absolute
-          top-[0%]
-          right-[5%]
-          h-[380px]
-          w-[380px]
-          rounded-full
-          bg-pink-500/20
-          blur-[140px]
-        "
+          className="absolute top-[0%] right-[5%] h-[380px] w-[380px] rounded-full bg-pink-500/20"
           animate={{
             x: [0, -70, 40, 0],
             y: [0, 50, -40, 0],
@@ -110,17 +82,7 @@ const ClientHero: React.FC<ClientHeroProps> = ({
         />
 
         <motion.div
-          className="
-          absolute
-          bottom-[-25%]
-          left-1/2
-          h-[650px]
-          w-[650px]
-          -translate-x-1/2
-          rounded-full
-          bg-indigo-600/15
-          blur-[180px]
-        "
+          className="absolute bottom-[-25%] left-1/2 h-[650px] w-[650px] -translate-x-1/2 rounded-full bg-indigo-600/15"
           animate={{
             scale: [1, 1.3, 1],
             opacity: [0.3, 0.8, 0.3],
@@ -143,16 +105,7 @@ const ClientHero: React.FC<ClientHeroProps> = ({
       {/* ================================================= */}
 
       <motion.div
-        className="
-        absolute
-        inset-x-0
-        h-[2px]
-        bg-gradient-to-r
-        from-transparent
-        via-purple-400
-        to-transparent
-        blur-sm
-      "
+        className="absolute inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-purple-400 to-transparent"
         animate={{
           top: ["0%", "100%", "0%"],
         }}
@@ -168,18 +121,7 @@ const ClientHero: React.FC<ClientHeroProps> = ({
       {/* ================================================= */}
 
       <motion.div
-        className="
-        absolute
-        left-1/2
-        top-1/2
-        h-[500px]
-        w-[500px]
-        -translate-x-1/2
-        -translate-y-1/2
-        rounded-full
-        border
-        border-purple-500/10
-      "
+        className="absolute left-1/2 top-1/2 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-purple-500/10"
         animate={{ rotate: 360 }}
         transition={{
           duration: 60,
@@ -189,18 +131,7 @@ const ClientHero: React.FC<ClientHeroProps> = ({
       />
 
       <motion.div
-        className="
-        absolute
-        left-1/2
-        top-1/2
-        h-[650px]
-        w-[650px]
-        -translate-x-1/2
-        -translate-y-1/2
-        rounded-full
-        border
-        border-pink-500/10
-      "
+        className="absolute left-1/2 top-1/2 h-[650px] w-[650px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-pink-500/10"
         animate={{ rotate: -360 }}
         transition={{
           duration: 80,
@@ -253,19 +184,7 @@ const ClientHero: React.FC<ClientHeroProps> = ({
             scale: 1.04,
             y: -2,
           }}
-          className="
-          inline-flex
-          items-center
-          gap-3
-          rounded-full
-          border
-          border-white/10
-          bg-white/5
-          px-6
-          py-3
-          backdrop-blur-3xl
-          shadow-[0_0_30px_rgba(168,85,247,.25)]
-        "
+          className="inline-flex items-center gap-3 rounded-full border border-white/10 bg-white/5 px-6 py-3 shadow-[0_0_30px_rgba(168,85,247,.25)]"
         >
           <motion.div
             animate={{
@@ -309,15 +228,7 @@ const ClientHero: React.FC<ClientHeroProps> = ({
             scale: 1,
           }}
           transition={{ duration: 1 }}
-          className="
-          mt-8
-          text-4xl
-          sm:text-5xl
-          md:text-6xl
-          lg:text-7xl
-          font-black
-          tracking-tight
-        "
+          className="mt-8 text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tight"
         >
           <div className="flex flex-wrap justify-center items-center gap-3">
 
@@ -335,15 +246,7 @@ const ClientHero: React.FC<ClientHeroProps> = ({
             </motion.div>
 
             <span
-              className="
-              bg-gradient-to-r
-              from-white
-              via-purple-200
-              to-pink-200
-              bg-clip-text
-              text-transparent
-              drop-shadow-[0_0_50px_rgba(168,85,247,.8)]
-            "
+              className="bg-gradient-to-r from-white via-purple-200 to-pink-200 bg-clip-text text-transparent drop-shadow-[0_0_50px_rgba(168,85,247,.8)]"
             >
               Clients Élite
             </span>
@@ -366,14 +269,7 @@ const ClientHero: React.FC<ClientHeroProps> = ({
         {/* SUBTITLE */}
 
         <p
-          className="
-          mx-auto
-          mt-6
-          max-w-3xl
-          text-base
-          md:text-xl
-          text-purple-100/70
-        "
+          className="mx-auto mt-6 max-w-3xl text-base md:text-xl text-purple-100/70"
         >
           Centralisez et gérez votre portefeuille client dans
           une expérience premium conçue pour la performance,
@@ -383,19 +279,7 @@ const ClientHero: React.FC<ClientHeroProps> = ({
         {/* LIVE STATUS */}
 
         <motion.div
-          className="
-          mt-10
-          inline-flex
-          items-center
-          gap-3
-          rounded-full
-          border
-          border-emerald-500/20
-          bg-emerald-500/10
-          px-5
-          py-2
-          backdrop-blur-xl
-        "
+          className="mt-10 inline-flex items-center gap-3 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-5 py-2"
           animate={{
             boxShadow: [
               "0 0 10px rgba(16,185,129,.2)",
@@ -432,7 +316,7 @@ const ClientHero: React.FC<ClientHeroProps> = ({
 
         <div className="mt-12 flex flex-wrap justify-center gap-5">
 
-          <div className="bg-white/5 backdrop-blur-2xl rounded-2xl px-6 py-4 border border-white/10">
+          <div className="bg-white/5 rounded-2xl px-6 py-4 border border-white/10">
             <div className="flex items-center gap-3">
               <Users className="w-6 h-6 text-emerald-400" />
               <span className="text-white font-bold text-lg">
@@ -443,18 +327,7 @@ const ClientHero: React.FC<ClientHeroProps> = ({
 
           <Button
             onClick={onAddClient}
-            className="
-            h-14
-            px-8
-            rounded-2xl
-            font-bold
-            text-white
-            bg-gradient-to-r
-            from-purple-500
-            via-pink-500
-            to-blue-500
-            shadow-[0_25px_80px_rgba(139,92,246,.4)]
-          "
+            className="h-14 px-8 rounded-2xl font-bold text-white bg-gradient-to-r from-purple-500 via-pink-500 to-blue-500 shadow-[0_25px_80px_rgba(139,92,246,.4)]"
           >
             <Plus className="w-5 h-5 mr-2" />
             Nouveau Client
@@ -464,18 +337,7 @@ const ClientHero: React.FC<ClientHeroProps> = ({
           {onMergeClient && (
             <Button
               onClick={onMergeClient}
-              className="
-              h-14
-              px-8
-              rounded-2xl
-              font-bold
-              text-white
-              bg-gradient-to-r
-              from-orange-500
-              via-amber-500
-              to-red-500
-              shadow-[0_25px_80px_rgba(249,115,22,.3)]
-            "
+              className="h-14 px-8 rounded-2xl font-bold text-white bg-gradient-to-r from-orange-500 via-amber-500 to-red-500 shadow-[0_25px_80px_rgba(249,115,22,.3)]"
             >
               <Merge className="w-5 h-5 mr-2" />
               Fusionner Clients

@@ -77,20 +77,7 @@ const ClientFideliteModal: React.FC<Props> = ({ open, onOpenChange, clientName }
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="
-    p-0
-    gap-0
-    w-[calc(100vw-1rem)]
-    sm:w-[min(96vw,760px)]
-    max-w-[760px]
-    h-[92vh]
-    max-h-[92vh]
-    rounded-3xl
-    border-0
-    shadow-2xl
-    overflow-hidden
-    bg-gradient-to-br from-slate-950 via-slate-900 to-purple-950/60
-  "
+        className="p-0 gap-0 w-[calc(100vw-1rem)] sm:w-[min(96vw,760px)] max-w-[760px] h-[92vh] max-h-[92vh] rounded-3xl border-0 shadow-2xl overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-purple-950/60"
       >
         <DialogHeader className="px-5 sm:px-8 pt-6 pb-5 bg-gradient-to-r from-purple-600/20 via-fuchsia-600/20 to-pink-600/20 border-b border-white/10">
           <DialogTitle className="flex flex-col sm:flex-row sm:items-center gap-3 text-white">
@@ -110,37 +97,26 @@ const ClientFideliteModal: React.FC<Props> = ({ open, onOpenChange, clientName }
         </DialogHeader>
 
         <ScrollArea
-          className="
-    h-[calc(92vh-100px)]
-    sm:h-[calc(92vh-110px)]
-    overflow-y-auto
-    overscroll-contain
-  "
+          className="h-[calc(92vh-100px)] sm:h-[calc(92vh-110px)] overflow-y-auto overscroll-contain"
         >
           <div
-            className="
-      p-5
-      sm:p-8
-      pb-32
-      sm:pb-16
-      space-y-6
-    "
+            className="p-5 sm:p-8 pb-32 sm:pb-16 space-y-6"
           >
             {/* KPIs */}
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
-              <div className="rounded-2xl p-4 bg-gradient-to-br from-indigo-500/20 to-purple-600/20 border border-indigo-400/20 backdrop-blur">
+              <div className="rounded-2xl p-4 bg-gradient-to-br from-indigo-500/20 to-purple-600/20 border border-indigo-400/20">
                 <div className="flex items-center gap-2 text-indigo-200 text-xs font-semibold uppercase tracking-wider">
                   <ShoppingBag className="w-3.5 h-3.5" /> Achats
                 </div>
                 <p className="mt-2 text-3xl font-black text-white">{data?.count ?? 0}</p>
               </div>
-              <div className="rounded-2xl p-4 bg-gradient-to-br from-emerald-500/20 to-teal-600/20 border border-emerald-400/20 backdrop-blur">
+              <div className="rounded-2xl p-4 bg-gradient-to-br from-emerald-500/20 to-teal-600/20 border border-emerald-400/20">
                 <div className="flex items-center gap-2 text-emerald-200 text-xs font-semibold uppercase tracking-wider">
                   <Receipt className="w-3.5 h-3.5" /> Total dépensé
                 </div>
-                <p className="mt-2 text-2xl sm:text-3xl font-black text-emerald-200/80">{fmt(data?.totalAmount ?? 0)} <span className="mt-2 text-2xl sm:text-3xl  text-emerald-200/80">€</span></p>
+                <p className="mt-2 text-2xl sm:text-3xl font-black text-emerald-200/80">{fmt(data?.totalAmount ?? 0)} <span className="mt-2 text-2xl sm:text-3xl text-emerald-200/80">€</span></p>
               </div>
-              <div className="rounded-2xl p-4 bg-gradient-to-br from-amber-500/20 to-orange-600/20 border border-amber-400/20 backdrop-blur col-span-2 sm:col-span-1">
+              <div className="rounded-2xl p-4 bg-gradient-to-br from-amber-500/20 to-orange-600/20 border border-amber-400/20 col-span-2 sm:col-span-1">
                 <div className="flex items-center gap-2 text-amber-200 text-xs font-semibold uppercase tracking-wider">
                   <TrendingUp className="w-3.5 h-3.5" /> Panier moyen
                 </div>
@@ -158,7 +134,7 @@ const ClientFideliteModal: React.FC<Props> = ({ open, onOpenChange, clientName }
                 </h4>
                 <div className="flex flex-wrap gap-2">
                   {byMonth.map((m, i) => (
-                    <div key={i} className="px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-white/90 text-xs font-semibold backdrop-blur">
+                    <div key={i} className="px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-white/90 text-xs font-semibold">
                       <span className="capitalize">{m.label}</span>
                       <span className="ml-2 text-emerald-300">{fmt(m.total)} €</span>
                       <span className="ml-1.5 text-white/50">· {m.count} achat{m.count > 1 ? 's' : ''}</span>
@@ -207,7 +183,7 @@ const ClientFideliteModal: React.FC<Props> = ({ open, onOpenChange, clientName }
                       key={s.id}
                       onClick={handleNavigate}
                       title="Voir cette vente dans la page Ventes"
-                      className={`w-full text-left rounded-2xl p-4 border ${s.isRefund ? 'border-red-500/30 bg-red-500/5' : 'border-white/10 bg-white/5'} backdrop-blur hover:bg-emerald-500/10 hover:border-emerald-400/40 hover:shadow-[0_0_25px_rgba(16,185,129,0.35)] hover:scale-[1.01] transition-all duration-300 group cursor-pointer`}
+                      className={`w-full text-left rounded-2xl p-4 border ${s.isRefund ? 'border-red-500/30 bg-red-500/5' : 'border-white/10 bg-white/5'}  hover:bg-emerald-500/10 hover:border-emerald-400/40 hover:shadow-[0_0_25px_rgba(16,185,129,0.35)] hover:scale-[1.01] transition-all duration-300 group cursor-pointer`}
                     >
                     <div className="flex items-start justify-between gap-3 flex-wrap">
                       <div>

@@ -8,7 +8,7 @@
  * 
  * 1️⃣ Effet miroir / glassmorphism :
  *      - Cartes (Card), Modals (Dialog) et sections utilisent :
- *          * backdrop-blur-xl pour effet vitre transparente
+ *          *  pour effet vitre transparente
  *          * bg-white/80 ou dark:bg-gray-900/30 pour contraste doux
  *          * Bordures arrondies très larges : rounded-3xl / rounded-[32px]
  *      - Ombres profondes et dynamiques : shadow-2xl, hover:shadow-3xl
@@ -103,13 +103,7 @@ import useCurrencyFormatter from '@/hooks/use-currency-formatter';
 ========================= */
 const BrandLogo: React.FC = () => (
   <div className="flex items-center gap-3">
-    <div className="
-      w-12 h-12 rounded-3xl
-      bg-gradient-to-tr from-pink-400 via-purple-500 to-indigo-500
-      shadow-2xl shadow-purple-400/30
-      flex items-center justify-center
-      transform hover:scale-105 transition-transform duration-300
-    ">
+    <div className="w-12 h-12 rounded-3xl bg-gradient-to-tr from-pink-400 via-purple-500 to-indigo-500 shadow-2xl shadow-purple-400/30 flex items-center justify-center transform hover:scale-105 transition-transform duration-300">
       <Crown className="h-6 w-6 text-white" />
     </div>
     <span className="font-extrabold tracking-wide text-xl text-gray-900 dark:text-white">
@@ -297,25 +291,12 @@ const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ isOpen, onClose }) 
       {/* ================= MODAL PRINCIPAL ================= */}
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent
-          className="
-    sm:max-w-5xl p-0 overflow-hidden
-    rounded-[32px]
-    bg-gray-500/30 dark:bg-gray-900/40
-    backdrop-blur-md
-    border border-white/20 dark:border-white/10
-    shadow-[0_35px_140px_-25px_rgba(0,0,0,0.5)]
-    animate-in fade-in zoom-in-95 slide-in-from-bottom-6 duration-500
-  "
+          className="sm:max-w-5xl p-0 overflow-hidden rounded-[32px] bg-gray-500/30 dark:bg-gray-900/40 border border-white/20 dark:border-white/10 shadow-[0_35px_140px_-25px_rgba(0,0,0,0.5)] animate-in fade-in zoom-in-95 slide-in-from-bottom-6 duration-500"
         >
 
           {/* ===== Header ===== */}
           <DialogHeader
-            className="
-              px-8 py-6
-              bg-gradient-to-r from-purple-600 via-pink-500 to-indigo-500
-              text-white
-              shadow-lg
-            "
+            className="px-8 py-6 bg-gradient-to-r from-purple-600 via-pink-500 to-indigo-500 text-white shadow-lg"
           >
             <DialogTitle className="flex items-center justify-between">
               <BrandLogo />
@@ -333,12 +314,7 @@ const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ isOpen, onClose }) 
 
               {/* ===== Sélection Année ===== */}
               <Card
-                className="
-    rounded-3xl
-    bg-gray-500/30 dark:bg-gray-900/40
-    backdrop-blur-md
-    shadow-2xl hover:shadow-3xl
-  "
+                className="rounded-3xl bg-gray-500/30 dark:bg-gray-900/40 shadow-2xl hover:shadow-3xl"
               >
 
                 <CardHeader>
@@ -355,12 +331,7 @@ const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ isOpen, onClose }) 
                       setSearchYear(e.target.value);
                       setSearchName('');
                     }}
-                    className="
-                      w-32 text-center font-bold
-                      rounded-xl
-                      border-indigo-300 dark:border-indigo-600
-                      bg-white/80 dark:bg-black/30
-                    "
+                    className="w-32 text-center font-bold rounded-xl border-indigo-300 dark:border-indigo-600 bg-white/80 dark:bg-black/30"
                   />
                   <Badge className="bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300">
                     {filteredSalesByYear.length} ventes
@@ -370,13 +341,7 @@ const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ isOpen, onClose }) 
 
               {/* ===== Recherche Client ===== */}
               <Card
-                className="
-    rounded-3xl
-    bg-gray-500/30 dark:bg-gray-900/40
-    backdrop-blur-md
-    shadow-2xl
-    transition-all duration-300
-  "
+                className="rounded-3xl bg-gray-500/30 dark:bg-gray-900/40 shadow-2xl transition-all duration-300"
               >
 
                 <CardHeader>
@@ -390,11 +355,7 @@ const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ isOpen, onClose }) 
                     value={searchName}
                     onChange={(e) => setSearchName(e.target.value)}
                     placeholder="Nom du client"
-                    className="
-                      flex-1 rounded-xl
-                      bg-white/80 dark:bg-black/30
-                      border-emerald-300 dark:border-emerald-600
-                    "
+                    className="flex-1 rounded-xl bg-white/80 dark:bg-black/30 border-emerald-300 dark:border-emerald-600"
                   />
                   {searchName.length >= 3 && (
                     <Badge className="bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300">
@@ -407,23 +368,12 @@ const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ isOpen, onClose }) 
               {/* ===== Résultats Ventes ===== */}
               {searchName.length >= 3 && (
                 <Card
-                  className="
-    border-2 border-gray-300/40 dark:border-gray-700/40
-    bg-gray-500/30 dark:bg-gray-900/40
-    backdrop-blur-md
-    shadow-2xl
-    rounded-2xl
-  "
+                  className="border-2 border-gray-300/40 dark:border-gray-700/40 bg-gray-500/30 dark:bg-gray-900/40 shadow-2xl rounded-2xl"
                 >
 
                   <CardHeader className="pb-3">
                     <CardTitle
-                      className="
-    text-lg
-    flex items-center gap-2
-    font-bold
-    text-gray-800 dark:text-gray-100
-  "
+                      className="text-lg flex items-center gap-2 font-bold text-gray-800 dark:text-gray-100"
                     >
 
                       <User className="h-5 w-5" />
@@ -436,7 +386,7 @@ const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ isOpen, onClose }) 
                         {filteredSalesByName.map((sale) => (
                           <Card
                             key={sale.id}
-                            className="cursor-pointer hover:shadow-3xl transition-all duration-300 border-l-4 border-l-purple-500 hover:border-l-pink-500 rounded-xl bg-white/80 dark:bg-gray-900/30 backdrop-blur-md"
+                            className="cursor-pointer hover:shadow-3xl transition-all duration-300 border-l-4 border-l-purple-500 hover:border-l-pink-500 rounded-xl bg-white/80 dark:bg-gray-900/30"
                             onClick={() => handleSaleSelect(sale)}
                           >
                             <CardContent className="p-4">
@@ -501,18 +451,7 @@ const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ isOpen, onClose }) 
       {/* ================= MODAL DÉTAIL VENTE ================= */}
       <Dialog open={showSaleDetails} onOpenChange={setShowSaleDetails}>
         <DialogContent
-          className="
-    sm:max-w-3xl
-    rounded-[32px]
-
-    bg-white/20 dark:bg-white/10
-    backdrop-blur-2xl
-    border border-white/30 dark:border-white/10
-
-    shadow-2xl
-    animate-in fade-in zoom-in-95 slide-in-from-bottom-6 duration-500
-    p-0
-  "
+          className="sm:max-w-3xl rounded-[32px] bg-white/20 dark:bg-white/10 border border-white/30 dark:border-white/10 shadow-2xl animate-in fade-in zoom-in-95 slide-in-from-bottom-6 duration-500 p-0"
         >
 
           <DialogHeader className="pb-4 pt-6 px-6 text-center">
@@ -529,7 +468,7 @@ const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ isOpen, onClose }) 
               <div className="space-y-6">
 
                 {/* Informations Client */}
-                <Card className="border-2 border-gradient-to-r from-blue-200 to-indigo-200 rounded-xl bg-white/80 dark:bg-gray-900/30 backdrop-blur-md shadow-md">
+                <Card className="border-2 border-gradient-to-r from-blue-200 to-indigo-200 rounded-xl bg-white/80 dark:bg-gray-900/30 shadow-md">
                   <CardHeader className="pb-3">
                     <CardTitle className="text-lg flex items-center gap-2 text-blue-700 dark:text-blue-400">
                       <User className="h-5 w-5" />
@@ -557,7 +496,7 @@ const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ isOpen, onClose }) 
                 </Card>
 
                 {/* Détails de la Vente */}
-                <Card className="border-2 border-gradient-to-r from-emerald-200 to-teal-200 rounded-xl bg-white/80 dark:bg-gray-900/30 backdrop-blur-md shadow-md">
+                <Card className="border-2 border-gradient-to-r from-emerald-200 to-teal-200 rounded-xl bg-white/80 dark:bg-gray-900/30 shadow-md">
                   <CardHeader className="pb-3">
                     <CardTitle className="text-lg flex items-center gap-2 text-emerald-700 dark:text-emerald-400">
                       <CreditCard className="h-5 w-5" />
@@ -630,14 +569,7 @@ const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ isOpen, onClose }) 
                 <div className="flex justify-center pt-4">
                   <Button
                     onClick={() => generateInvoicePDF(selectedSale)}
-                    className="
-                      w-full sm:w-auto py-4 px-6 rounded-3xl font-black tracking-wide
-                      bg-gradient-to-r from-pink-500 via-purple-600 to-indigo-600
-                      shadow-2xl hover:shadow-3xl
-                      hover:scale-105
-                      transition-all duration-300
-                      flex items-center gap-3 justify-center
-                    "
+                    className="w-full sm:w-auto py-4 px-6 rounded-3xl font-black tracking-wide bg-gradient-to-r from-pink-500 via-purple-600 to-indigo-600 shadow-2xl hover:shadow-3xl hover:scale-105 transition-all duration-300 flex items-center gap-3 justify-center"
                   >
                     <Download className="h-5 w-5 text-white" />
                     Générer Facture PDF

@@ -111,7 +111,7 @@ const SalesReport: React.FC = () => {
       {/* Modales de détails */}
       {/* Modal Chiffre d'Affaires */}
       <Dialog open={activeModal === 'revenue'} onOpenChange={(open) => !open && setActiveModal(null)}>
-        <DialogContent className="sm:max-w-xl bg-gradient-to-br from-white to-emerald-50/50 dark:from-gray-900 dark:to-emerald-950/30 backdrop-blur-xl">
+        <DialogContent className="sm:max-w-xl bg-gradient-to-br from-white to-emerald-50/50 dark:from-gray-900 dark:to-emerald-950/30">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-3">
               <div className="p-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg">
@@ -163,7 +163,7 @@ const SalesReport: React.FC = () => {
 
       {/* Modal Ventes */}
       <Dialog open={activeModal === 'sales'} onOpenChange={(open) => !open && setActiveModal(null)}>
-        <DialogContent className="sm:max-w-xl bg-gradient-to-br from-white to-blue-50/50 dark:from-gray-900 dark:to-blue-950/30 backdrop-blur-xl">
+        <DialogContent className="sm:max-w-xl bg-gradient-to-br from-white to-blue-50/50 dark:from-gray-900 dark:to-blue-950/30">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-3">
               <div className="p-2 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg">
@@ -215,7 +215,7 @@ const SalesReport: React.FC = () => {
 
       {/* Modal Quantité */}
       <Dialog open={activeModal === 'quantity'} onOpenChange={(open) => !open && setActiveModal(null)}>
-        <DialogContent className="sm:max-w-xl bg-gradient-to-br from-white to-purple-50/50 dark:from-gray-900 dark:to-purple-950/30 backdrop-blur-xl">
+        <DialogContent className="sm:max-w-xl bg-gradient-to-br from-white to-purple-50/50 dark:from-gray-900 dark:to-purple-950/30">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-3">
               <div className="p-2 rounded-xl bg-gradient-to-r from-purple-500 to-pink-600 text-white shadow-lg">

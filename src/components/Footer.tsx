@@ -37,8 +37,7 @@ const Footer: React.FC = () => {
 
   return (
     <footer
-      className="relative mt-auto overflow-hidden text-white transition-all duration-500
-      bg-[#050012] border-t border-white/[0.06]"
+      className="relative mt-auto overflow-hidden text-white transition-all duration-500 bg-[#050012] border-t border-white/[0.06]"
       style={{ marginLeft: `${sidebarWidth}px` }}
     >
       <style>{`
@@ -60,8 +59,8 @@ const Footer: React.FC = () => {
 
       {/* ================= GLOBAL GLOW ================= */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-fuchsia-600/10 blur-[160px] rounded-full" style={{ animation: 'footerOrbit 12s ease-in-out infinite' }} />
-        <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-cyan-500/10 blur-[160px] rounded-full" style={{ animation: 'footerOrbit 14s ease-in-out infinite reverse' }} />
+        <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-fuchsia-600/10 rounded-full" style={{ animation: 'footerOrbit 12s ease-in-out infinite' }} />
+        <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-cyan-500/10 rounded-full" style={{ animation: 'footerOrbit 14s ease-in-out infinite reverse' }} />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.04)_0%,transparent_70%)]" />
       </div>
 

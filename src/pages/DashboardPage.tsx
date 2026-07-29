@@ -358,11 +358,11 @@ const DashboardPage = () => {
         {!isMobile && (
           <div className="pointer-events-none absolute inset-0 overflow-hidden">
 
-            <div className="absolute -top-40 -left-40 h-[500px] w-[500px] rounded-full bg-violet-500/10 blur-[140px]" />
+            <div className="absolute -top-40 -left-40 h-[500px] w-[500px] rounded-full bg-violet-500/10" />
 
-            <div className="absolute top-1/2 -right-40 h-[450px] w-[450px] rounded-full bg-fuchsia-500/10 blur-[140px]" />
+            <div className="absolute top-1/2 -right-40 h-[450px] w-[450px] rounded-full bg-fuchsia-500/10" />
 
-            <div className="absolute bottom-0 left-1/3 h-[350px] w-[350px] rounded-full bg-cyan-500/10 blur-[120px]" />
+            <div className="absolute bottom-0 left-1/3 h-[350px] w-[350px] rounded-full bg-cyan-500/10" />
 
             <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05] bg-[radial-gradient(circle_at_center,white_1px,transparent_1px)] [background-size:24px_24px]" />
           </div>
@@ -466,7 +466,7 @@ const DashboardPage = () => {
                     y: -10,
                     scale: 0.98,
                   }}
-                  className="mt-3 overflow-hidden rounded-3xl border border-white/20 bg-white/70 dark:bg-white/[0.04] backdrop-blur* shadow-[0_20px_80px_rgba(0,0,0,0.35)]"
+                  className="mt-3 overflow-hidden rounded-3xl border border-white/20 bg-white/70 dark:bg-white/[0.04] * shadow-[0_20px_80px_rgba(0,0,0,0.35)]"
                 >
                   <div className="grid grid-cols-2 gap-2 p-3">
                     {SIDEBAR_ITEMS.map((item) => {
@@ -542,7 +542,7 @@ const DashboardPage = () => {
             >
               <div className="h-full p-4">
 
-                <div className="relative flex h-full flex-col overflow-hidden rounded-[32px] border border-white/15 bg-white/60 dark:bg-white/[0.045] backdrop-blur*-[30px] shadow-[0_20px_80px_rgba(0,0,0,0.35)]">
+                <div className="relative flex h-full flex-col overflow-hidden rounded-[32px] border border-white/15 bg-white/60 dark:bg-white/[0.045] *-[30px] shadow-[0_20px_80px_rgba(0,0,0,0.35)]">
 
                   <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(255,255,255,0.15),transparent_40%,transparent_60%,rgba(255,255,255,0.08))]" />
 
@@ -560,7 +560,7 @@ const DashboardPage = () => {
                         >
                           <div className="relative">
 
-                            <div className="absolute inset-0 rounded-2xl bg-violet-500 blur-xl opacity-60" />
+                            <div className="absolute inset-0 rounded-2xl bg-violet-500 opacity-60" />
 
                             <div className="relative flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 via-purple-500 to-fuchsia-500 shadow-2xl shadow-violet-500/40">
                               <Crown className="h-5 w-5 text-white" />
@@ -589,7 +589,7 @@ const DashboardPage = () => {
                             !sidebarCollapsed
                           )
                         }
-                        className="group relative overflow-hidden rounded-2xl border border-white/15 bg-white/40 dark:bg-white/[0.04] p-3 backdrop-blur* transition-all duration-300 hover:scale-105 hover:bg-violet-500/10"
+                        className="group relative overflow-hidden rounded-2xl border border-white/15 bg-white/40 dark:bg-white/[0.04] p-3 * transition-all duration-300 hover:scale-105 hover:bg-violet-500/10"
                       >
                         <div className="absolute inset-0 bg-gradient-to-r from-violet-500/0 via-violet-500/10 to-violet-500/0 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
 
@@ -652,7 +652,7 @@ const DashboardPage = () => {
                                   ? 'h-12 w-12'
                                   : 'h-11 w-11',
                                 isActive
-                                  ? 'bg-white/20 backdrop-blur*'
+                                  ? 'bg-white/20 *'
                                   : `${item.iconBg} shadow-xl`
                               )}
                             >
@@ -715,13 +715,13 @@ const DashboardPage = () => {
                   {!sidebarCollapsed && (
                     <div className="relative border-t border-white/10 p-5">
 
-                      <div className="overflow-hidden rounded-3xl border border-violet-500/10 bg-gradient-to-br from-violet-500/10 via-fuchsia-500/5 to-cyan-500/10 p-4 backdrop-blur*">
+                      <div className="overflow-hidden rounded-3xl border border-violet-500/10 bg-gradient-to-br from-violet-500/10 via-fuchsia-500/5 to-cyan-500/10 p-4 *">
 
                         <div className="flex items-center gap-3">
 
                           <div className="relative">
 
-                            <div className="absolute inset-0 rounded-2xl bg-fuchsia-500 blur-lg opacity-60" />
+                            <div className="absolute inset-0 rounded-2xl bg-fuchsia-500 opacity-60" />
 
                             <div className="relative flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-fuchsia-500 to-violet-600">
                               <Gem className="h-5 w-5 text-white" />
@@ -809,7 +809,7 @@ const DashboardPage = () => {
                     'relative',
                     // IMPORTANT MOBILE CARD EFFECT
                     isMobile &&
-                      'rounded-[28px] border border-white/10 bg-white/20 dark:bg-white/[0.02] backdrop-blur* overflow-hidden'
+                      'rounded-[28px] border border-white/10 bg-white/20 dark:bg-white/[0.02] * overflow-hidden'
                   )}
                 >
                   {renderContent()}

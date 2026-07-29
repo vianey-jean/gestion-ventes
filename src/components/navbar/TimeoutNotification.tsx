@@ -29,7 +29,7 @@ const TimeoutNotification: React.FC<TimeoutNotificationProps> = ({
           className="fixed top-[60px] left-1/2 -translate-x-1/2 z-[100] w-[95%] max-w-lg"
         >
           {inactivityWarningVisible && (
-            <div className="mb-2 rounded-2xl backdrop-blur-2xl bg-gradient-to-r from-orange-500/90 to-red-500/90 text-white shadow-2xl shadow-red-500/30 border border-white/20 p-4">
+            <div className="mb-2 rounded-2xl bg-gradient-to-r from-orange-500/90 to-red-500/90 text-white shadow-2xl shadow-red-500/30 border border-white/20 p-4">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
                   <AlertTriangle className="w-5 h-5 text-white animate-pulse" />
@@ -45,7 +45,7 @@ const TimeoutNotification: React.FC<TimeoutNotificationProps> = ({
           )}
 
           {sessionWarningVisible && (
-            <div className="rounded-2xl backdrop-blur-2xl bg-gradient-to-r from-violet-600/90 to-fuchsia-600/90 text-white shadow-2xl shadow-violet-500/30 border border-white/20 p-4">
+            <div className="rounded-2xl bg-gradient-to-r from-violet-600/90 to-fuchsia-600/90 text-white shadow-2xl shadow-violet-500/30 border border-white/20 p-4">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
                   <Clock className="w-5 h-5 text-white animate-pulse" />

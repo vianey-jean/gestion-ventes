@@ -33,7 +33,7 @@ const TendancesCategoriesTab: React.FC<TendancesCategoriesTabProps> = ({ salesBy
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* Pie Chart */}
-      <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl border border-white/20 shadow-2xl">
+      <Card className="bg-white/90 dark:bg-gray-800/90 border border-white/20 shadow-2xl">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Target className="h-5 w-5 text-orange-600" />
@@ -71,7 +71,7 @@ const TendancesCategoriesTab: React.FC<TendancesCategoriesTabProps> = ({ salesBy
       </Card>
 
       {/* Bar Chart bénéfices */}
-      <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl border border-white/20 shadow-2xl">
+      <Card className="bg-white/90 dark:bg-gray-800/90 border border-white/20 shadow-2xl">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Award className="h-5 w-5 text-emerald-600" />

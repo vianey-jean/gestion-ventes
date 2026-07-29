@@ -25,7 +25,7 @@ const ColumnFormModal: React.FC<ColumnFormModalProps> = ({ open, onOpenChange, c
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-sm p-5 bg-white/95 dark:bg-gray-900/95 backdrop-blur-2xl border-white/20 dark:border-white/10 rounded-3xl">
+      <DialogContent className="max-w-sm p-5 bg-white/95 dark:bg-gray-900/95 border-white/20 dark:border-white/10 rounded-3xl">
         <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
           <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center shadow-lg">
             <Columns3 className="h-4 w-4 text-white" />

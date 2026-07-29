@@ -252,7 +252,7 @@ const FacturationModal: React.FC<FacturationModalProps> = ({ isOpen, onClose }) 
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-white via-amber-50/40 to-yellow-50/40 dark:from-gray-900 dark:via-amber-950/30 dark:to-yellow-950/30 backdrop-blur-xl border-0 shadow-2xl rounded-3xl">
+      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-white via-amber-50/40 to-yellow-50/40 dark:from-gray-900 dark:via-amber-950/30 dark:to-yellow-950/30 border-0 shadow-2xl rounded-3xl">
         <DialogHeader>
           <DialogTitle className="text-2xl font-black bg-gradient-to-r from-amber-600 via-yellow-600 to-orange-600 bg-clip-text text-transparent flex items-center gap-3">
             <div className="p-2 rounded-xl bg-gradient-to-r from-amber-600 to-orange-600 shadow-lg">

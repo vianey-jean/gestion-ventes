@@ -66,7 +66,7 @@ const TravailleurSearchInput: React.FC<TravailleurSearchInputProps> = ({
           />
         </div>
         {showDropdown && results.length > 0 && (
-          <div className="absolute z-50 w-full mt-1 max-h-48 overflow-y-auto rounded-xl bg-slate-800/95 backdrop-blur-2xl border border-white/20 shadow-2xl">
+          <div className="absolute z-50 w-full mt-1 max-h-48 overflow-y-auto rounded-xl bg-slate-800/95 border border-white/20 shadow-2xl">
             {results.map(t => (
               <button key={t.id} type="button"
                 onClick={() => {
@@ -88,7 +88,7 @@ const TravailleurSearchInput: React.FC<TravailleurSearchInputProps> = ({
           </div>
         )}
         {showDropdown && search.length >= minChars && results.length === 0 && (
-          <div className="absolute z-50 w-full mt-1 rounded-xl bg-slate-800/95 backdrop-blur-2xl border border-white/20 shadow-2xl p-4 text-center">
+          <div className="absolute z-50 w-full mt-1 rounded-xl bg-slate-800/95 border border-white/20 shadow-2xl p-4 text-center">
             <p className="text-sm text-white/50">Aucun travailleur trouvé</p>
           </div>
         )}

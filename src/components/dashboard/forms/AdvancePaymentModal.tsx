@@ -193,7 +193,7 @@ const AdvancePaymentModal: React.FC<AdvancePaymentModalProps> = ({ isOpen, onClo
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-5xl border-0 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-2xl shadow-2xl rounded-3xl max-h-[92vh] overflow-y-auto p-0">
+      <DialogContent className="max-w-5xl border-0 bg-white/80 dark:bg-zinc-950/80 shadow-2xl rounded-3xl max-h-[92vh] overflow-y-auto p-0">
         
         {/* HEADER */}
         <DialogHeader className="border-b border-border/50 px-8 py-6 bg-gradient-to-r from-primary/10 via-background to-primary/5">
@@ -226,13 +226,7 @@ const AdvancePaymentModal: React.FC<AdvancePaymentModalProps> = ({ isOpen, onClo
                 placeholder="Tapez le nom du client..."
                 value={searchName}
                 onChange={(e) => setSearchName(e.target.value)}
-                className="
-                  pl-12 h-14 rounded-2xl border-border/50
-                  bg-background/70 backdrop-blur-xl
-                  shadow-sm hover:shadow-md
-                  focus-visible:ring-2 focus-visible:ring-primary/40
-                  transition-all duration-300 text-base
-                "
+                className="pl-12 h-14 rounded-2xl border-border/50 bg-background/70 shadow-sm hover:shadow-md focus-visible:ring-2 focus-visible:ring-primary/40 transition-all duration-300 text-base"
               />
             </div>
           </div>
@@ -270,7 +264,7 @@ const AdvancePaymentModal: React.FC<AdvancePaymentModalProps> = ({ isOpen, onClo
                         className={`
                           group cursor-pointer rounded-3xl border transition-all duration-300
                           hover:shadow-2xl hover:-translate-y-1
-                          bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl
+                          bg-white/70 dark:bg-zinc-900/70 
                           ${isSelected
                             ? 'border-primary shadow-lg ring-2 ring-primary/20'
                             : 'border-border/50 hover:border-primary/40'}
@@ -351,12 +345,7 @@ const AdvancePaymentModal: React.FC<AdvancePaymentModalProps> = ({ isOpen, onClo
                   return (
                     <Card
                       key={sp.pret.id}
-                      className="
-                        rounded-3xl overflow-hidden border-0
-                        bg-gradient-to-br from-white to-zinc-50
-                        dark:from-zinc-900 dark:to-zinc-950
-                        shadow-xl
-                      "
+                      className="rounded-3xl overflow-hidden border-0 bg-gradient-to-br from-white to-zinc-50 dark:from-zinc-900 dark:to-zinc-950 shadow-xl"
                     >
                       <CardHeader className="pb-4 border-b bg-muted/20">
                         <div className="flex justify-between items-start gap-4">
@@ -375,10 +364,7 @@ const AdvancePaymentModal: React.FC<AdvancePaymentModalProps> = ({ isOpen, onClo
                             variant="ghost"
                             size="sm"
                             onClick={() => handleRemovePret(sp.pret.id)}
-                            className="
-                              rounded-xl hover:bg-destructive/10
-                              hover:text-destructive text-xl
-                            "
+                            className="rounded-xl hover:bg-destructive/10 hover:text-destructive text-xl"
                           >
                             ×
                           </Button>
@@ -450,11 +436,7 @@ const AdvancePaymentModal: React.FC<AdvancePaymentModalProps> = ({ isOpen, onClo
 
                         {/* ALERTS */}
                         {isPaymentExceeded && (
-                          <div className="
-                            flex items-center gap-3 rounded-2xl
-                            border border-destructive/20
-                            bg-destructive/5 p-4 text-destructive
-                          ">
+                          <div className="flex items-center gap-3 rounded-2xl border border-destructive/20 bg-destructive/5 p-4 text-destructive">
                             <AlertCircle className="h-5 w-5" />
 
                             <span className="font-medium">
@@ -464,11 +446,7 @@ const AdvancePaymentModal: React.FC<AdvancePaymentModalProps> = ({ isOpen, onClo
                         )}
 
                         {isPaymentValid && (
-                          <div className="
-                            flex items-center gap-3 rounded-2xl
-                            border border-emerald-500/20
-                            bg-emerald-500/5 p-4 text-emerald-600
-                          ">
+                          <div className="flex items-center gap-3 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-4 text-emerald-600">
                             <CheckCircle className="h-5 w-5" />
 
                             <span className="font-semibold">
@@ -486,11 +464,7 @@ const AdvancePaymentModal: React.FC<AdvancePaymentModalProps> = ({ isOpen, onClo
               </div>
 
               {/* TOTAL */}
-              <Card className="
-                rounded-3xl border-0 overflow-hidden
-                bg-gradient-to-r from-primary to-violet-600
-                text-white shadow-2xl
-              ">
+              <Card className="rounded-3xl border-0 overflow-hidden bg-gradient-to-r from-primary to-violet-600 text-white shadow-2xl">
                 <CardContent className="p-8">
                   <div className="flex justify-between items-center">
 
@@ -504,7 +478,7 @@ const AdvancePaymentModal: React.FC<AdvancePaymentModalProps> = ({ isOpen, onClo
                       </h2>
                     </div>
 
-                    <div className="h-20 w-20 rounded-3xl bg-white/10 backdrop-blur-xl flex items-center justify-center text-3xl">
+                    <div className="h-20 w-20 rounded-3xl bg-white/10 flex items-center justify-center text-3xl">
                       💰
                     </div>
 
@@ -517,18 +491,11 @@ const AdvancePaymentModal: React.FC<AdvancePaymentModalProps> = ({ isOpen, onClo
         </div>
 
         {/* FOOTER */}
-        <DialogFooter className="
-          border-t border-border/50
-          px-8 py-6 bg-muted/20
-          flex-row gap-3
-        ">
+        <DialogFooter className="border-t border-border/50 px-8 py-6 bg-muted/20 flex-row gap-3">
           <Button
             variant="outline"
             onClick={handleClose}
-            className="
-              h-12 px-8 rounded-2xl
-              border-border/50
-            "
+            className="h-12 px-8 rounded-2xl border-border/50"
           >
             Annuler
           </Button>
@@ -536,13 +503,7 @@ const AdvancePaymentModal: React.FC<AdvancePaymentModalProps> = ({ isOpen, onClo
           <Button
             onClick={handleValidate}
             disabled={isValidateDisabled()}
-            className="
-              h-12 px-8 rounded-2xl
-              bg-gradient-to-r from-primary to-violet-600
-              hover:opacity-90 transition-all
-              shadow-lg shadow-primary/30
-              text-white font-semibold
-            "
+            className="h-12 px-8 rounded-2xl bg-gradient-to-r from-primary to-violet-600 hover:opacity-90 transition-all shadow-lg shadow-primary/30 text-white font-semibold"
           >
             Valider les Avances
           </Button>

@@ -47,14 +47,11 @@ const ComptabiliteTabs: React.FC<ComptabiliteTabsProps> = ({
 }) => {
   return (
     <Tabs defaultValue="historique" className="w-full">
-      <TabsList className="grid w-full grid-cols-3 bg-gradient-to-r from-emerald-900/50 via-teal-900/50 to-green-900/50 backdrop-blur-xl rounded-xl sm:rounded-2xl p-1 sm:p-2 border-2 border-emerald-500/30 shadow-xl gap-1 sm:gap-2 h-auto">
+      <TabsList className="grid w-full grid-cols-3 bg-gradient-to-r from-emerald-900/50 via-teal-900/50 to-green-900/50 rounded-xl sm:rounded-2xl p-1 sm:p-2 border-2 border-emerald-500/30 shadow-xl gap-1 sm:gap-2 h-auto">
         {/* Historique */}
         <TabsTrigger
           value="historique"
-          className="group relative flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 rounded-lg sm:rounded-xl py-2 sm:py-3 px-2 sm:px-4 
-                     data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-600 data-[state=active]:to-teal-600 
-                     data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-emerald-500/30
-                     text-emerald-200 hover:text-white hover:bg-white/10 transition-all duration-300"
+          className="group relative flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 rounded-lg sm:rounded-xl py-2 sm:py-3 px-2 sm:px-4 data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-600 data-[state=active]:to-teal-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-emerald-500/30 text-emerald-200 hover:text-white hover:bg-white/10 transition-all duration-300"
         >
           <div className="p-1 sm:p-1.5 rounded-md sm:rounded-lg bg-emerald-500/20 group-data-[state=active]:bg-white/20">
             <Clock className="h-3 w-3 sm:h-4 sm:w-4" />
@@ -69,10 +66,7 @@ const ComptabiliteTabs: React.FC<ComptabiliteTabsProps> = ({
         {/* Répartition */}
         <TabsTrigger
           value="repartition"
-          className="group relative flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 rounded-lg sm:rounded-xl py-2 sm:py-3 px-2 sm:px-4 
-                     data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-pink-600 
-                     data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-purple-500/30
-                     text-purple-200 hover:text-white hover:bg-white/10 transition-all duration-300"
+          className="group relative flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 rounded-lg sm:rounded-xl py-2 sm:py-3 px-2 sm:px-4 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-pink-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-purple-500/30 text-purple-200 hover:text-white hover:bg-white/10 transition-all duration-300"
         >
           <div className="p-1 sm:p-1.5 rounded-md sm:rounded-lg bg-purple-500/20 group-data-[state=active]:bg-white/20">
             <PieChart className="h-3 w-3 sm:h-4 sm:w-4" />
@@ -87,10 +81,7 @@ const ComptabiliteTabs: React.FC<ComptabiliteTabsProps> = ({
         {/* Évolution */}
         <TabsTrigger
           value="evolution"
-          className="group relative flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 rounded-lg sm:rounded-xl py-2 sm:py-3 px-2 sm:px-4 
-                     data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-indigo-600 
-                     data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-blue-500/30
-                     text-blue-200 hover:text-white hover:bg-white/10 transition-all duration-300"
+          className="group relative flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 rounded-lg sm:rounded-xl py-2 sm:py-3 px-2 sm:px-4 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-blue-500/30 text-blue-200 hover:text-white hover:bg-white/10 transition-all duration-300"
         >
           <div className="p-1 sm:p-1.5 rounded-md sm:rounded-lg bg-blue-500/20 group-data-[state=active]:bg-white/20">
             <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4" />

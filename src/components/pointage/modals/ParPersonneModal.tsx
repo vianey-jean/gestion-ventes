@@ -163,7 +163,7 @@ const ParPersonneModal: React.FC<ParPersonneModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-gradient-to-br from-slate-900 via-[#800020]/30 to-[#6b001a]/20 backdrop-blur-2xl border border-white/10 shadow-2xl rounded-3xl max-w-lg max-h-[90vh] overflow-y-auto">
+      <DialogContent className="bg-gradient-to-br from-slate-900 via-[#800020]/30 to-[#6b001a]/20 border border-white/10 shadow-2xl rounded-3xl max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader className="text-center space-y-3 pb-4">
           <div className="mx-auto w-14 h-14 bg-gradient-to-br from-[#800020] to-[#6b001a] rounded-2xl flex items-center justify-center shadow-xl shadow-[#800020]/30">
             <BarChart3 className="h-7 w-7 text-white" />
@@ -208,7 +208,7 @@ const ParPersonneModal: React.FC<ParPersonneModalProps> = ({
                 className="bg-white/10 border border-white/20 focus:border-purple-400 rounded-xl text-white placeholder:text-white/40 pl-10"
               />
               {ppShowDropdown && ppFilteredTravailleurs.length > 0 && (
-                <div className="absolute z-50 w-full mt-1 max-h-48 overflow-y-auto rounded-xl bg-slate-800/95 backdrop-blur-2xl border border-white/20 shadow-2xl">
+                <div className="absolute z-50 w-full mt-1 max-h-48 overflow-y-auto rounded-xl bg-slate-800/95 border border-white/20 shadow-2xl">
                   {ppFilteredTravailleurs.map(t => (
                     <button key={t.id} type="button"
                       onClick={() => {
@@ -266,7 +266,7 @@ const ParPersonneModal: React.FC<ParPersonneModalProps> = ({
                     const totalJours = pts.filter(p => p.typePaiement === 'journalier').length;
 
                     return (
-                      <div key={entName} className="p-4 rounded-2xl bg-white/10 border border-white/10 backdrop-blur-xl">
+                      <div key={entName} className="p-4 rounded-2xl bg-white/10 border border-white/10">
                         <div className="flex items-center justify-between mb-3">
                           <h4 className="font-black text-white text-sm flex items-center gap-2">
                             <Building2 className="h-4 w-4 text-cyan-400" /> {entName}

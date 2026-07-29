@@ -34,7 +34,7 @@ const ComptabiliteHeader: React.FC<ComptabiliteHeaderProps> = ({
   onOpenFacturation
 }) => {
   return (
-    <Card className="relative overflow-hidden bg-gradient-to-br from-emerald-900/40 via-teal-900/30 to-green-900/40 border-2 border-emerald-500/30 shadow-2xl backdrop-blur-xl rounded-2xl sm:rounded-3xl">
+    <Card className="relative overflow-hidden bg-gradient-to-br from-emerald-900/40 via-teal-900/30 to-green-900/40 border-2 border-emerald-500/30 shadow-2xl rounded-2xl sm:rounded-3xl">
       {/* Decorative Elements */}
       <div className="absolute top-0 right-0 w-32 h-32 sm:w-48 sm:h-48 bg-gradient-to-br from-emerald-400/10 to-transparent rounded-bl-full" />
       <div className="absolute bottom-0 left-0 w-24 h-24 sm:w-32 sm:h-32 bg-gradient-to-tr from-teal-400/10 to-transparent rounded-tr-full" />
@@ -67,13 +67,13 @@ const ComptabiliteHeader: React.FC<ComptabiliteHeaderProps> = ({
         <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 md:gap-4">
           {/* Sélecteur de mois */}
           <Select value={selectedMonth.toString()} onValueChange={onMonthChange}>
-            <SelectTrigger className="w-32 sm:w-40 bg-white/10 backdrop-blur-sm border-2 border-emerald-400/30 text-emerald-100 rounded-xl hover:bg-white/20 transition-all text-xs sm:text-sm">
+            <SelectTrigger className="w-32 sm:w-40 bg-white/10 border-2 border-emerald-400/30 text-emerald-100 rounded-xl hover:bg-white/20 transition-all text-xs sm:text-sm">
               <div className="flex items-center gap-2">
                 <Gem className="h-3 w-3 sm:h-4 sm:w-4 text-emerald-400" />
                 <SelectValue />
               </div>
             </SelectTrigger>
-            <SelectContent className="bg-emerald-900/95 backdrop-blur-xl border-emerald-600/50 text-emerald-100 rounded-xl">
+            <SelectContent className="bg-emerald-900/95 border-emerald-600/50 text-emerald-100 rounded-xl">
               {MONTHS.map((month, index) => (
                 <SelectItem key={index} value={(index + 1).toString()} className="hover:bg-emerald-700/50 rounded-lg">
                   {month}
@@ -84,13 +84,13 @@ const ComptabiliteHeader: React.FC<ComptabiliteHeaderProps> = ({
           
           {/* Sélecteur d'année */}
           <Select value={selectedYear.toString()} onValueChange={onYearChange}>
-            <SelectTrigger className="w-24 sm:w-32 bg-white/10 backdrop-blur-sm border-2 border-emerald-400/30 text-emerald-100 rounded-xl hover:bg-white/20 transition-all text-xs sm:text-sm">
+            <SelectTrigger className="w-24 sm:w-32 bg-white/10 border-2 border-emerald-400/30 text-emerald-100 rounded-xl hover:bg-white/20 transition-all text-xs sm:text-sm">
               <div className="flex items-center gap-2">
                 <Zap className="h-3 w-3 sm:h-4 sm:w-4 text-yellow-400" />
                 <SelectValue />
               </div>
             </SelectTrigger>
-            <SelectContent className="bg-emerald-900/95 backdrop-blur-xl border-emerald-600/50 text-emerald-100 rounded-xl">
+            <SelectContent className="bg-emerald-900/95 border-emerald-600/50 text-emerald-100 rounded-xl">
               {[2023, 2024, 2025, 2026].map(year => (
                 <SelectItem key={year} value={year.toString()} className="hover:bg-emerald-700/50 rounded-lg">
                   {year}

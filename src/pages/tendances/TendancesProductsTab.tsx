@@ -20,7 +20,7 @@ interface TendancesProductsTabProps {
 
 const TendancesProductsTab: React.FC<TendancesProductsTabProps> = ({ salesByProduct }) => {
   return (
-    <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl border border-white/20 shadow-2xl">
+    <Card className="bg-white/90 dark:bg-gray-800/90 border border-white/20 shadow-2xl">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <ShoppingCart className="h-5 w-5 text-purple-600" />

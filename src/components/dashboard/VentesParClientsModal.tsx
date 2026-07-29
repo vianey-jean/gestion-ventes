@@ -259,7 +259,7 @@ const VentesParClientsModal: React.FC<VentesParClientsModalProps> = ({ isOpen, o
                 className="space-y-6"
               >
                 {/* Month/Year Picker */}
-                <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-6 space-y-5">
+                <div className="bg-white/5 rounded-2xl border border-white/10 p-6 space-y-5">
                   <div className="flex items-center gap-2 mb-2">
                     <Calendar className="h-5 w-5 text-purple-400" />
                     <h3 className="text-white font-semibold">Sélectionnez la période</h3>
@@ -357,13 +357,13 @@ const VentesParClientsModal: React.FC<VentesParClientsModalProps> = ({ isOpen, o
 
                 {/* Stats bar */}
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-white/5 backdrop-blur rounded-xl border border-white/10 p-3">
+                  <div className="bg-white/5 rounded-xl border border-white/10 p-3">
                     <p className="text-[10px] text-purple-300 uppercase tracking-wider">Total Ventes</p>
                     <p className="text-base font-bold text-amber-400 mt-0.5">
                       {formatCurrency(clientGroups.reduce((s, g) => s + g.totalSellingPrice, 0))}
                     </p>
                   </div>
-                  <div className="bg-white/5 backdrop-blur rounded-xl border border-white/10 p-3">
+                  <div className="bg-white/5 rounded-xl border border-white/10 p-3">
                     <p className="text-[10px] text-purple-300 uppercase tracking-wider">Total Bénéfices</p>
                     <p className="text-base font-bold text-emerald-400 mt-0.5">
                       {formatCurrency(clientGroups.reduce((s, g) => s + g.totalProfit, 0))}
@@ -385,7 +385,7 @@ const VentesParClientsModal: React.FC<VentesParClientsModalProps> = ({ isOpen, o
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: idx * 0.03 }}
-                        className="bg-white/5 backdrop-blur rounded-xl border border-white/10 overflow-hidden"
+                        className="bg-white/5 rounded-xl border border-white/10 overflow-hidden"
                       >
                         {/* Client Header */}
                         <div className="flex items-center justify-between p-3.5 hover:bg-white/5 transition-all">

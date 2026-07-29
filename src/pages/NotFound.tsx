@@ -20,9 +20,9 @@ const NotFound = () => {
 
       {/* Glow orbs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-violet-600/20 rounded-full blur-[180px] animate-pulseGlow" />
-        <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-fuchsia-600/15 rounded-full blur-[160px] animate-pulseGlow" style={{ animationDelay: '3s' }} />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-indigo-500/10 rounded-full blur-[200px]" />
+        <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-violet-600/20 rounded-full animate-pulseGlow" />
+        <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-fuchsia-600/15 rounded-full animate-pulseGlow" style={{ animationDelay: '3s' }} />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-indigo-500/10 rounded-full" />
       </div>
 
       {/* Particles */}
@@ -30,7 +30,7 @@ const NotFound = () => {
         {[...Array(40)].map((_, i) => (
           <span
             key={i}
-            className="absolute block rounded-full bg-gradient-to-br from-violet-400/50 to-fuchsia-500/40 blur-[1px] animate-particle"
+            className="absolute block rounded-full bg-gradient-to-br from-violet-400/50 to-fuchsia-500/40 animate-particle"
             style={{
               top: `${Math.random() * 100}%`,
               left: `${Math.random() * 100}%`,
@@ -45,7 +45,7 @@ const NotFound = () => {
 
       <div className="relative z-10 text-center px-6">
         {/* Glass mirror card */}
-        <div className="relative p-12 sm:p-16 rounded-3xl bg-white/[0.04] backdrop-blur-2xl border border-white/[0.08] shadow-[0_30px_100px_-20px_rgba(139,92,246,0.3)]">
+        <div className="relative p-12 sm:p-16 rounded-3xl bg-white/[0.04] border border-white/[0.08] shadow-[0_30px_100px_-20px_rgba(139,92,246,0.3)]">
           {/* Top mirror shine line */}
           <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent" />
           {/* Mirror glass reflection */}

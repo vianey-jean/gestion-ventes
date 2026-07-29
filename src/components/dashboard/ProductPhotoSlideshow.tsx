@@ -59,7 +59,7 @@ const ProductPhotoSlideshow: React.FC<ProductPhotoSlideshowProps> = ({
   if (allPhotos.length === 0) {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="bg-gradient-to-br from-slate-900 via-purple-900/50 to-slate-900 border border-white/10 backdrop-blur-2xl rounded-3xl shadow-2xl max-w-lg">
+        <DialogContent className="bg-gradient-to-br from-slate-900 via-purple-900/50 to-slate-900 border border-white/10 rounded-3xl shadow-2xl max-w-lg">
           <DialogHeader>
             <DialogTitle className="text-white font-black text-center">{productName}</DialogTitle>
           </DialogHeader>
@@ -76,7 +76,7 @@ const ProductPhotoSlideshow: React.FC<ProductPhotoSlideshowProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-gradient-to-br from-slate-900 via-purple-900/30 to-slate-900 border border-white/10 backdrop-blur-2xl rounded-3xl shadow-2xl max-w-2xl p-0 overflow-hidden">
+      <DialogContent className="bg-gradient-to-br from-slate-900 via-purple-900/30 to-slate-900 border border-white/10 rounded-3xl shadow-2xl max-w-2xl p-0 overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
           <div className="flex items-center gap-3">
@@ -111,13 +111,13 @@ const ProductPhotoSlideshow: React.FC<ProductPhotoSlideshowProps> = ({
             <>
               <button
                 onClick={(e) => { e.stopPropagation(); setIsAutoPlaying(false); goPrev(); }}
-                className="absolute left-3 z-10 p-3 rounded-full bg-black/50 hover:bg-black/80 border border-white/20 text-white hover:scale-110 transition-all duration-200 backdrop-blur-sm"
+                className="absolute left-3 z-10 p-3 rounded-full bg-black/50 hover:bg-black/80 border border-white/20 text-white hover:scale-110 transition-all duration-200"
               >
                 <ChevronLeft className="h-5 w-5" />
               </button>
               <button
                 onClick={(e) => { e.stopPropagation(); setIsAutoPlaying(false); goNext(); }}
-                className="absolute right-3 z-10 p-3 rounded-full bg-black/50 hover:bg-black/80 border border-white/20 text-white hover:scale-110 transition-all duration-200 backdrop-blur-sm"
+                className="absolute right-3 z-10 p-3 rounded-full bg-black/50 hover:bg-black/80 border border-white/20 text-white hover:scale-110 transition-all duration-200"
               >
                 <ChevronRight className="h-5 w-5" />
               </button>

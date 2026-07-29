@@ -37,8 +37,8 @@ const SaleTotalsSection: React.FC<SaleTotalsSectionProps> = ({
     <>
       <Card className="relative overflow-hidden bg-gradient-to-br from-green-50 via-emerald-50/50 to-teal-50/30 dark:from-green-900/30 dark:via-emerald-900/20 dark:to-teal-900/10 border-0 shadow-xl shadow-green-500/10 rounded-2xl">
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute -top-16 -right-16 w-32 h-32 bg-green-300/20 rounded-full blur-2xl" />
-          <div className="absolute -bottom-8 -left-8 w-24 h-24 bg-emerald-300/20 rounded-full blur-2xl" />
+          <div className="absolute -top-16 -right-16 w-32 h-32 bg-green-300/20 rounded-full" />
+          <div className="absolute -bottom-8 -left-8 w-24 h-24 bg-emerald-300/20 rounded-full" />
         </div>
         <CardHeader className="relative pb-2">
           <CardTitle className="text-base font-bold bg-gradient-to-r from-green-600 to-emerald-700 bg-clip-text text-transparent flex items-center gap-2">

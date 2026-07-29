@@ -185,7 +185,7 @@ const ProfitLossStatement: React.FC = () => {
     <Card className="w-full border-0 shadow-xl bg-gradient-to-br from-white to-gray-50/50 dark:from-gray-900 dark:to-gray-800/50">
       {/* Modal Chiffre d'Affaires */}
       <Dialog open={activeModal === 'revenue'} onOpenChange={(open) => !open && setActiveModal(null)}>
-        <DialogContent className="sm:max-w-2xl bg-gradient-to-br from-white to-blue-50/50 dark:from-gray-900 dark:to-blue-950/30 backdrop-blur-xl">
+        <DialogContent className="sm:max-w-2xl bg-gradient-to-br from-white to-blue-50/50 dark:from-gray-900 dark:to-blue-950/30">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-3">
               <div className="p-2 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg">
@@ -243,7 +243,7 @@ const ProfitLossStatement: React.FC = () => {
 
       {/* Modal Coûts d'Achat */}
       <Dialog open={activeModal === 'cost'} onOpenChange={(open) => !open && setActiveModal(null)}>
-        <DialogContent className="sm:max-w-2xl bg-gradient-to-br from-white to-red-50/50 dark:from-gray-900 dark:to-red-950/30 backdrop-blur-xl">
+        <DialogContent className="sm:max-w-2xl bg-gradient-to-br from-white to-red-50/50 dark:from-gray-900 dark:to-red-950/30">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-3">
               <div className="p-2 rounded-xl bg-gradient-to-r from-red-500 to-orange-600 text-white shadow-lg">
@@ -304,7 +304,7 @@ const ProfitLossStatement: React.FC = () => {
 
       {/* Modal Bénéfice Net */}
       <Dialog open={activeModal === 'profit'} onOpenChange={(open) => !open && setActiveModal(null)}>
-        <DialogContent className="sm:max-w-2xl bg-gradient-to-br from-white to-emerald-50/50 dark:from-gray-900 dark:to-emerald-950/30 backdrop-blur-xl">
+        <DialogContent className="sm:max-w-2xl bg-gradient-to-br from-white to-emerald-50/50 dark:from-gray-900 dark:to-emerald-950/30">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-3">
               <div className="p-2 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 text-white shadow-lg">
@@ -363,7 +363,7 @@ const ProfitLossStatement: React.FC = () => {
 
       {/* Modal Panier Moyen */}
       <Dialog open={activeModal === 'avgOrder'} onOpenChange={(open) => !open && setActiveModal(null)}>
-        <DialogContent className="sm:max-w-2xl bg-gradient-to-br from-white via-purple-50/30 to-fuchsia-50/50 dark:from-gray-900 dark:via-purple-950/30 dark:to-fuchsia-950/20 backdrop-blur-xl border-purple-200/50 dark:border-purple-800/50">
+        <DialogContent className="sm:max-w-2xl bg-gradient-to-br from-white via-purple-50/30 to-fuchsia-50/50 dark:from-gray-900 dark:via-purple-950/30 dark:to-fuchsia-950/20 border-purple-200/50 dark:border-purple-800/50">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-3">
               <div className="p-3 rounded-2xl bg-gradient-to-r from-purple-500 via-fuchsia-500 to-pink-500 text-white shadow-xl shadow-purple-500/30">
@@ -416,7 +416,7 @@ const ProfitLossStatement: React.FC = () => {
 
       {/* Modal Marge Brute */}
       <Dialog open={activeModal === 'margin'} onOpenChange={(open) => !open && setActiveModal(null)}>
-        <DialogContent className="sm:max-w-2xl bg-gradient-to-br from-white via-amber-50/30 to-yellow-50/50 dark:from-gray-900 dark:via-amber-950/30 dark:to-yellow-950/20 backdrop-blur-xl border-amber-200/50 dark:border-amber-800/50">
+        <DialogContent className="sm:max-w-2xl bg-gradient-to-br from-white via-amber-50/30 to-yellow-50/50 dark:from-gray-900 dark:via-amber-950/30 dark:to-yellow-950/20 border-amber-200/50 dark:border-amber-800/50">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-3">
               <div className="p-3 rounded-2xl bg-gradient-to-r from-amber-500 via-yellow-500 to-orange-500 text-white shadow-xl shadow-amber-500/30">
@@ -478,7 +478,7 @@ const ProfitLossStatement: React.FC = () => {
 
       {/* Modal Nombre de Ventes */}
       <Dialog open={activeModal === 'salesCount'} onOpenChange={(open) => !open && setActiveModal(null)}>
-        <DialogContent className="sm:max-w-2xl bg-gradient-to-br from-white via-cyan-50/30 to-teal-50/50 dark:from-gray-900 dark:via-cyan-950/30 dark:to-teal-950/20 backdrop-blur-xl border-cyan-200/50 dark:border-cyan-800/50">
+        <DialogContent className="sm:max-w-2xl bg-gradient-to-br from-white via-cyan-50/30 to-teal-50/50 dark:from-gray-900 dark:via-cyan-950/30 dark:to-teal-950/20 border-cyan-200/50 dark:border-cyan-800/50">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-3">
               <div className="p-3 rounded-2xl bg-gradient-to-r from-cyan-500 via-sky-500 to-teal-500 text-white shadow-xl shadow-cyan-500/30">
@@ -536,7 +536,7 @@ const ProfitLossStatement: React.FC = () => {
         open={activeModal === 'profitPerSale'}
         onOpenChange={(open) => !open && setActiveModal(null)}
       >
-        <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-hidden flex flex-col bg-gradient-to-br from-white via-rose-50/30 to-pink-50/50 dark:from-gray-900 dark:via-rose-950/30 dark:to-pink-950/20 backdrop-blur-xl border-rose-200/50 dark:border-rose-800/50">
+        <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-hidden flex flex-col bg-gradient-to-br from-white via-rose-50/30 to-pink-50/50 dark:from-gray-900 dark:via-rose-950/30 dark:to-pink-950/20 border-rose-200/50 dark:border-rose-800/50">
 
           <DialogHeader>
             <DialogTitle className="flex items-center gap-3">

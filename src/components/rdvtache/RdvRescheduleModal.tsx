@@ -72,7 +72,7 @@ const RdvRescheduleModal: React.FC<Props> = ({ open, onOpenChange, rdv, newDate,
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md rounded-3xl bg-gradient-to-br from-slate-900 via-pink-900/30 to-fuchsia-900/20 backdrop-blur-2xl border border-white/10">
+      <DialogContent className="max-w-md rounded-3xl bg-gradient-to-br from-slate-900 via-pink-900/30 to-fuchsia-900/20 border border-white/10">
         <DialogHeader>
           <DialogTitle className="text-base font-black bg-gradient-to-r from-pink-400 via-fuchsia-400 to-rose-400 bg-clip-text text-transparent flex items-center gap-2">
             <CalendarHeart className="w-5 h-5" /> {title}

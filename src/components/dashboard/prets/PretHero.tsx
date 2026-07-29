@@ -12,7 +12,7 @@ const PretHero: React.FC = () => {
         initial={{ scale: 0.9 }}
         animate={{ scale: 1 }}
         transition={{ duration: 0.5 }}
-        className="inline-flex items-center px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-purple-500/10 to-indigo-500/10 backdrop-blur-sm rounded-full text-purple-600 dark:text-purple-400 text-xs sm:text-sm font-semibold mb-4 sm:mb-6 border border-purple-200/50 dark:border-purple-800/50"
+        className="inline-flex items-center px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-purple-500/10 to-indigo-500/10 rounded-full text-purple-600 dark:text-purple-400 text-xs sm:text-sm font-semibold mb-4 sm:mb-6 border border-purple-200/50 dark:border-purple-800/50"
       >
         <CreditCard className="h-4 w-4 sm:h-5 sm:w-5 mr-2 animate-pulse" />
         Gestion Premium des Prêts

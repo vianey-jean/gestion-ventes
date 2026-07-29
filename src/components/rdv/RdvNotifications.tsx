@@ -161,7 +161,7 @@ const RdvNotifications: React.FC<RdvNotificationsProps> = ({ onCheckNotification
             )}
           </Button>
         </SheetTrigger>
-        <SheetContent className="w-full sm:max-w-md bg-gradient-to-b from-orange-50/50 via-white/50 to-orange-100/30 dark:from-orange-900/20 dark:via-gray-900/20 dark:to-orange-950/30 backdrop-blur-lg shadow-2xl rounded-2xl p-6">
+        <SheetContent className="w-full sm:max-w-md bg-gradient-to-b from-orange-50/50 via-white/50 to-orange-100/30 dark:from-orange-900/20 dark:via-gray-900/20 dark:to-orange-950/30 shadow-2xl rounded-2xl p-6">
           {/* Bouton de fermeture ultra visible (mobile + desktop) */}
           <SheetClose
             aria-label="Fermer les notifications"
@@ -293,7 +293,7 @@ const RdvNotifications: React.FC<RdvNotificationsProps> = ({ onCheckNotification
       </Sheet>
 
       <Dialog open={showDetailModal} onOpenChange={setShowDetailModal}>
-        <DialogContent className="sm:max-w-lg bg-gradient-to-br from-background via-background to-orange-50/10 backdrop-blur-lg rounded-2xl shadow-2xl p-6">
+        <DialogContent className="sm:max-w-lg bg-gradient-to-br from-background via-background to-orange-50/10 rounded-2xl shadow-2xl p-6">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-3 text-2xl font-bold">
               <div className="p-2 rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 shadow-lg">

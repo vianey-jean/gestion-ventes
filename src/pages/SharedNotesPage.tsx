@@ -88,7 +88,7 @@ const SharedNotesPage: React.FC = () => {
     >
       <SEOHead title="Notes partagées" description="Consultation des notes partagées" noindex />
       {/* Header */}
-      <div className="sticky top-0 z-50 backdrop-blur-xl bg-white/70 dark:bg-gray-900/70 border-b border-gray-200/50 dark:border-gray-700/50">
+      <div className="sticky top-0 z-50 bg-white/70 dark:bg-gray-900/70 border-b border-gray-200/50 dark:border-gray-700/50">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-lg">
@@ -114,7 +114,7 @@ const SharedNotesPage: React.FC = () => {
             {sortedColumns.map((col) => {
               const colNotes = notes.filter(n => n.columnId === col.id).sort((a, b) => a.order - b.order);
               return (
-                <div key={col.id} className="flex-shrink-0 w-[300px] rounded-2xl border border-gray-200/60 dark:border-gray-700/40 bg-white/50 dark:bg-white/5 backdrop-blur-xl shadow-lg">
+                <div key={col.id} className="flex-shrink-0 w-[300px] rounded-2xl border border-gray-200/60 dark:border-gray-700/40 bg-white/50 dark:bg-white/5 shadow-lg">
                   {/* Column header */}
                   <div className="p-4 border-b border-gray-200/40 dark:border-gray-700/30">
                     <div className="flex items-center gap-2">

@@ -58,7 +58,7 @@ const ProduitsFiltersStats: React.FC<Props> = ({ products, filters, activeFilter
             variant="outline"
             onClick={() => setActiveFilter(f.key)}
             className={cn(
-              'rounded-2xl font-bold transition-all duration-300 border-2 backdrop-blur-xl',
+              'rounded-2xl font-bold transition-all duration-300 border-2 ',
               activeFilter === f.key
                 ? 'bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white border-transparent shadow-lg shadow-violet-500/25'
                 : 'border-violet-200/30 dark:border-violet-800/30 hover:border-violet-400 bg-white/50 dark:bg-white/5'
@@ -84,7 +84,7 @@ const ProduitsFiltersStats: React.FC<Props> = ({ products, filters, activeFilter
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 * i }}
             className={cn(
-              'relative rounded-2xl p-4 overflow-hidden backdrop-blur-xl border border-white/10',
+              'relative rounded-2xl p-4 overflow-hidden  border border-white/10',
               'bg-gradient-to-br', stat.gradient,
               `shadow-xl shadow-${stat.shadow}-500/20`
             )}

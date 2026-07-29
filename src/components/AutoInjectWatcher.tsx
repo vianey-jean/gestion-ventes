@@ -109,7 +109,7 @@ const AutoInjectWatcher: React.FC = () => {
             {/* Overlay bloquant : aucune interaction possible ailleurs */}
             <motion.div
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[9997] bg-black/60 backdrop-blur-sm"
+              className="fixed inset-0 z-[9997] bg-black/60"
             />
             <motion.div
               initial={{ opacity: 0, x: -50, y: 20 }}
@@ -117,7 +117,7 @@ const AutoInjectWatcher: React.FC = () => {
               exit={{ opacity: 0, x: -50, y: 20 }}
               className="fixed bottom-4 left-4 z-[9998] max-w-sm"
             >
-              <div className="relative overflow-hidden rounded-2xl backdrop-blur-2xl bg-gradient-to-br from-slate-900/95 via-violet-950/90 to-indigo-950/95 border border-violet-400/30 shadow-2xl shadow-violet-500/30 p-5">
+              <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900/95 via-violet-950/90 to-indigo-950/95 border border-violet-400/30 shadow-2xl shadow-violet-500/30 p-5">
                 <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-violet-500 via-fuchsia-500 to-amber-500 animate-pulse" />
                 <div className="flex items-start gap-3 mb-4">
                   <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center shadow-lg shadow-violet-500/50 shrink-0">
@@ -147,9 +147,9 @@ const AutoInjectWatcher: React.FC = () => {
       <AnimatePresence>
         {showRestore && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+            className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 p-4">
             <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
-              className="relative w-full max-w-md rounded-3xl backdrop-blur-2xl bg-gradient-to-br from-slate-900/95 via-violet-950/90 to-indigo-950/95 border border-violet-400/30 shadow-2xl p-6">
+              className="relative w-full max-w-md rounded-3xl bg-gradient-to-br from-slate-900/95 via-violet-950/90 to-indigo-950/95 border border-violet-400/30 shadow-2xl p-6">
               <h3 className="text-lg font-bold text-white mb-2 flex items-center gap-2">
                 <Upload className="w-5 h-5 text-violet-400" /> Restaurer les données
               </h3>

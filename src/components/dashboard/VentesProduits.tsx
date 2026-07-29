@@ -234,7 +234,7 @@ const VentesProduits: React.FC = React.memo(() => {
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35 }}
-          className="flex items-center justify-between gap-3 rounded-xl sm:rounded-2xl border border-emerald-200/60 dark:border-emerald-800/40 bg-white/70 dark:bg-gray-800/60 backdrop-blur-xl px-3 sm:px-4 py-2 sm:py-3 shadow-sm"
+          className="flex items-center justify-between gap-3 rounded-xl sm:rounded-2xl border border-emerald-200/60 dark:border-emerald-800/40 bg-white/70 dark:bg-gray-800/60 px-3 sm:px-4 py-2 sm:py-3 shadow-sm"
         >
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <div className="p-1.5 sm:p-2 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-500 shadow-md shadow-emerald-500/30">

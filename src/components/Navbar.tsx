@@ -78,7 +78,7 @@ import { Link as RouterLink } from 'react-router-dom';
           100% { background-position: 200% 50%; }
         }
       `}</style>
-     <header className="sticky top-0 z-50 backdrop-blur-2xl bg-gradient-to-r from-white/90 via-slate-50/90 to-violet-50/90 dark:from-[#030014]/95 dark:via-[#0a0020]/95 dark:to-[#0e0030]/95 border-b border-violet-200/20 dark:border-violet-800/20 shadow-2xl shadow-violet-500/5">
+     <header className="sticky top-0 z-50 bg-gradient-to-r from-white/90 via-slate-50/90 to-violet-50/90 dark:from-[#030014]/95 dark:via-[#0a0020]/95 dark:to-[#0e0030]/95 border-b border-violet-200/20 dark:border-violet-800/20 shadow-2xl shadow-violet-500/5">
        {/* Mirror top reflection */}
        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/40 dark:via-white/10 to-transparent" />
        {/* Ultra Premium Top Gradient Bar */}
@@ -90,8 +90,8 @@ import { Link as RouterLink } from 'react-router-dom';
        <nav className="max-w-7xl mx-auto px-4 relative">
          {/* Decorative Background Elements */}
          <div className="absolute inset-0 overflow-hidden pointer-events-none">
-           <div className="absolute top-0 left-1/4 w-32 h-32 bg-violet-500/5 rounded-full blur-3xl" />
-           <div className="absolute top-0 right-1/4 w-40 h-40 bg-fuchsia-500/5 rounded-full blur-3xl" />
+           <div className="absolute top-0 left-1/4 w-32 h-32 bg-violet-500/5 rounded-full" />
+           <div className="absolute top-0 right-1/4 w-40 h-40 bg-fuchsia-500/5 rounded-full" />
          </div>
          
          <div className="flex justify-between h-16 items-center">
@@ -105,7 +105,7 @@ import { Link as RouterLink } from 'react-router-dom';
                  transition={{ type: 'spring', stiffness: 300, damping: 15 }}
                  className="relative"
                >
-                 <div className="absolute -inset-2 bg-gradient-to-r from-violet-500/20 to-fuchsia-500/20 rounded-2xl blur-lg opacity-0 group-hover:opacity-100 transition-all duration-500" />
+                 <div className="absolute -inset-2 bg-gradient-to-r from-violet-500/20 to-fuchsia-500/20 rounded-2xl opacity-0 group-hover:opacity-100 transition-all duration-500" />
                   <img
                     src="/images/logo.ico"
                     alt="Gestion Vente - Logo de l'application de gestion commerciale"

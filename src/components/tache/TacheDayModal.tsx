@@ -219,7 +219,7 @@ const TacheDayModal: React.FC<TacheDayModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-gradient-to-br from-slate-900 via-violet-900/30 to-purple-900/20 backdrop-blur-2xl border border-white/10 shadow-2xl rounded-3xl max-w-2xl max-h-[85vh] overflow-hidden">
+      <DialogContent className="bg-gradient-to-br from-slate-900 via-violet-900/30 to-purple-900/20 border border-white/10 shadow-2xl rounded-3xl max-w-2xl max-h-[85vh] overflow-hidden">
         <DialogHeader className="text-center space-y-2 pb-3">
           <DialogTitle className="text-lg font-black bg-gradient-to-r from-violet-400 to-purple-400 bg-clip-text text-transparent">
             📋 {formatDate(selectedDay)}

@@ -35,7 +35,7 @@ interface ScheduledMaintenance {
   triggered?: boolean;
 }
 
-const cardClass = "relative rounded-2xl backdrop-blur-2xl bg-white/80 dark:bg-white/[0.03] border border-white/20 dark:border-white/10 shadow-xl overflow-hidden";
+const cardClass = "relative rounded-2xl  bg-white/80 dark:bg-white/[0.03] border border-white/20 dark:border-white/10 shadow-xl overflow-hidden";
 
 const toLocalInput = (iso?: string) => {
   if (!iso) {
@@ -311,7 +311,7 @@ const MaintenanceSection: React.FC<MaintenanceSectionProps> = ({ userRole }) => 
 
       {/* Toggle confirm */}
       <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-        <AlertDialogContent className="rounded-3xl backdrop-blur-2xl bg-white/95 dark:bg-[#0a0020]/95 border border-amber-200/30 max-w-md">
+        <AlertDialogContent className="rounded-3xl bg-white/95 dark:bg-[#0a0020]/95 border border-amber-200/30 max-w-md">
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2 text-amber-600">
               <Wrench className="w-5 h-5" /> {pendingValue ? 'Activer la maintenance ?' : 'Désactiver la maintenance ?'}
@@ -333,7 +333,7 @@ const MaintenanceSection: React.FC<MaintenanceSectionProps> = ({ userRole }) => 
 
       {/* Add/Edit scheduled modal */}
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-        <DialogContent className="rounded-3xl backdrop-blur-2xl bg-white/95 dark:bg-[#0a0020]/95 border border-amber-200/30 max-w-md">
+        <DialogContent className="rounded-3xl bg-white/95 dark:bg-[#0a0020]/95 border border-amber-200/30 max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-amber-600">
               <CalendarClock className="w-5 h-5" />

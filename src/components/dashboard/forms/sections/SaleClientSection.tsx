@@ -67,8 +67,8 @@ const SaleClientSection: React.FC<SaleClientSectionProps> = ({
   return (
     <Card className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-indigo-50/50 to-purple-50/30 dark:from-blue-900/30 dark:via-indigo-900/20 dark:to-purple-900/10 border-0 shadow-xl shadow-blue-500/10 rounded-2xl">
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute -top-16 -right-16 w-32 h-32 bg-blue-300/20 rounded-full blur-2xl" />
-        <div className="absolute -bottom-8 -left-8 w-24 h-24 bg-indigo-300/20 rounded-full blur-2xl" />
+        <div className="absolute -top-16 -right-16 w-32 h-32 bg-blue-300/20 rounded-full" />
+        <div className="absolute -bottom-8 -left-8 w-24 h-24 bg-indigo-300/20 rounded-full" />
       </div>
 
       <CardHeader className="relative pb-2">
@@ -85,7 +85,7 @@ const SaleClientSection: React.FC<SaleClientSectionProps> = ({
         {photoUrl && (
           <div className="flex justify-center">
             <div className="relative group">
-              <div className="absolute -inset-1 bg-gradient-to-br from-blue-400 via-indigo-500 to-purple-500 rounded-full blur-md opacity-70 group-hover:opacity-100 transition-opacity" />
+              <div className="absolute -inset-1 bg-gradient-to-br from-blue-400 via-indigo-500 to-purple-500 rounded-full opacity-70 group-hover:opacity-100 transition-opacity" />
               <img
                 src={photoUrl}
                 alt={clientName || 'Client'}

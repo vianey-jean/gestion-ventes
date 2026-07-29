@@ -380,7 +380,7 @@ const LoginPage: React.FC = () => {
               repeat: Infinity,
               ease: 'easeInOut'
             }}
-            className="absolute top-0 left-0 w-[700px] h-[700px] rounded-full bg-fuchsia-500/20 blur-[160px]"
+            className="absolute top-0 left-0 w-[700px] h-[700px] rounded-full bg-fuchsia-500/20"
           />
 
           <motion.div
@@ -394,7 +394,7 @@ const LoginPage: React.FC = () => {
               repeat: Infinity,
               ease: 'easeInOut'
             }}
-            className="absolute bottom-0 right-0 w-[800px] h-[800px] rounded-full bg-cyan-500/20 blur-[180px]"
+            className="absolute bottom-0 right-0 w-[800px] h-[800px] rounded-full bg-cyan-500/20"
           />
 
           <motion.div
@@ -490,7 +490,7 @@ const LoginPage: React.FC = () => {
               whileHover={{
                 scale: 1.04
               }}
-              className="inline-flex items-center gap-3 px-5 py-2 rounded-full border border-white/10 bg-white/[0.05] backdrop-blur-xl mb-8"
+              className="inline-flex items-center gap-3 px-5 py-2 rounded-full border border-white/10 bg-white/[0.05] mb-8"
             >
               <Gem className="w-4 h-4 text-fuchsia-400" />
 
@@ -565,7 +565,7 @@ const LoginPage: React.FC = () => {
                     y: -6,
                     scale: 1.02
                   }}
-                  className="group relative overflow-hidden rounded-3xl border border-white/[0.08] bg-white/[0.04] p-5 backdrop-blur-xl"
+                  className="group relative overflow-hidden rounded-3xl border border-white/[0.08] bg-white/[0.04] p-5"
                 >
 
                   <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition duration-500 bg-gradient-to-br from-fuchsia-500/10 to-cyan-500/10" />
@@ -615,9 +615,9 @@ const LoginPage: React.FC = () => {
 
             {/* OUTER GLOW */}
 
-            <div className="absolute -inset-6 rounded-[40px] bg-gradient-to-r from-fuchsia-500/20 via-cyan-500/20 to-blue-500/20 blur-3xl" />
+            <div className="absolute -inset-6 rounded-[40px] bg-gradient-to-r from-fuchsia-500/20 via-cyan-500/20 to-blue-500/20" />
 
-            <Card className="relative overflow-hidden rounded-[36px] border border-white/[0.08] bg-white/[0.06] backdrop-blur-[40px] shadow-[0_20px_80px_rgba(0,0,0,0.65)]">
+            <Card className="relative overflow-hidden rounded-[36px] border border-white/[0.08] bg-white/[0.06] shadow-[0_20px_80px_rgba(0,0,0,0.65)]">
 
               {/* TOP BORDER */}
 
@@ -650,7 +650,7 @@ const LoginPage: React.FC = () => {
 
                   <div className="relative">
 
-                    <div className="absolute inset-0 rounded-[30px] bg-gradient-to-r from-fuchsia-500 to-cyan-500 blur-2xl opacity-50" />
+                    <div className="absolute inset-0 rounded-[30px] bg-gradient-to-r from-fuchsia-500 to-cyan-500 opacity-50" />
 
                     <div className="relative w-24 h-24 rounded-[28px] bg-gradient-to-br from-fuchsia-500 via-violet-500 to-cyan-500 flex items-center justify-center border border-white/20 shadow-[0_10px_40px_rgba(217,70,239,0.5)]">
 
@@ -737,7 +737,7 @@ const LoginPage: React.FC = () => {
 
                     <div className="relative group">
 
-                      <div className="absolute -inset-[1px] rounded-2xl bg-gradient-to-r from-fuchsia-500/40 to-cyan-500/40 opacity-0 blur transition duration-500 group-focus-within:opacity-100" />
+                      <div className="absolute -inset-[1px] rounded-2xl bg-gradient-to-r from-fuchsia-500/40 to-cyan-500/40 opacity-0 transition duration-500 group-focus-within:opacity-100" />
 
                       <Input
                         id="email"
@@ -768,7 +768,7 @@ const LoginPage: React.FC = () => {
                             });
                           }
                         }}
-                        className={`relative h-16 rounded-2xl border border-white/[0.08] bg-white/[0.05] text-white placeholder:text-white/25 backdrop-blur-xl focus:border-fuchsia-400/50 focus:bg-white/[0.08] transition-all duration-300 ${
+                        className={`relative h-16 rounded-2xl border border-white/[0.08] bg-white/[0.05] text-white placeholder:text-white/25  focus:border-fuchsia-400/50 focus:bg-white/[0.08] transition-all duration-300 ${
                           errors.email
                             ? 'border-red-400/50'
                             : ''
@@ -879,7 +879,7 @@ const LoginPage: React.FC = () => {
                             opacity: 1,
                             scale: 1
                           }}
-                          className="relative overflow-hidden rounded-3xl border border-red-400/25 bg-red-500/10 p-5 backdrop-blur-2xl"
+                          className="relative overflow-hidden rounded-3xl border border-red-400/25 bg-red-500/10 p-5"
                         >
 
                           <div className="absolute inset-0 bg-gradient-to-r from-red-500/10 to-rose-500/10" />
@@ -932,7 +932,7 @@ const LoginPage: React.FC = () => {
                         onChange={(e) =>
                           setPassword(e.target.value)
                         }
-                        className="h-16 rounded-2xl border border-white/[0.08] bg-white/[0.05] text-white backdrop-blur-xl"
+                        className="h-16 rounded-2xl border border-white/[0.08] bg-white/[0.05] text-white"
                       />
 
                       {/* PASSWORD CHECKER */}
@@ -1013,7 +1013,7 @@ const LoginPage: React.FC = () => {
 
                     <Button
                       type="button"
-                      className="w-full h-16 rounded-2xl border border-white/[0.08] bg-white/[0.05] text-white hover:bg-white/[0.08] backdrop-blur-xl transition-all duration-300 hover:scale-[1.02]"
+                      className="w-full h-16 rounded-2xl border border-white/[0.08] bg-white/[0.05] text-white hover:bg-white/[0.08] transition-all duration-300 hover:scale-[1.02]"
                     >
 
                       <Rocket className="w-5 h-5 mr-3 text-cyan-300" />

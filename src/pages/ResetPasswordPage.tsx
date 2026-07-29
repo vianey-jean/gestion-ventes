@@ -88,17 +88,17 @@ const ResetPasswordPage: React.FC = () => {
           <motion.div
             animate={{ x: [0, 30, 0], y: [0, -20, 0], scale: [1, 1.1, 1] }}
             transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/20 rounded-full blur-[100px]"
+            className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/20 rounded-full"
           />
           <motion.div
             animate={{ x: [0, -40, 0], y: [0, 30, 0], scale: [1, 1.2, 1] }}
             transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-purple-500/15 rounded-full blur-[120px]"
+            className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-purple-500/15 rounded-full"
           />
           <motion.div
             animate={{ x: [0, 20, 0], y: [0, 40, 0] }}
             transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-full blur-[100px]"
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-full"
           />
           
           {[...Array(6)].map((_, i) => (
@@ -138,9 +138,9 @@ const ResetPasswordPage: React.FC = () => {
 
           {/* RIGHT SIDE — Reset form */}
           <div className="relative w-full max-w-md">
-            <div className="absolute -inset-4 bg-gradient-to-r from-blue-600/20 via-purple-600/20 to-cyan-600/20 rounded-[2rem] blur-2xl" />
+            <div className="absolute -inset-4 bg-gradient-to-r from-blue-600/20 via-purple-600/20 to-cyan-600/20 rounded-[2rem]" />
             
-            <Card className="relative bg-white/[0.08] backdrop-blur-2xl border border-white/[0.12] shadow-[0_32px_64px_rgba(0,0,0,0.4)] rounded-3xl overflow-hidden">
+            <Card className="relative bg-white/[0.08] border border-white/[0.12] shadow-[0_32px_64px_rgba(0,0,0,0.4)] rounded-3xl overflow-hidden">
               <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-blue-400/50 to-transparent" />
               <div className="absolute inset-0 bg-gradient-to-b from-white/[0.08] via-transparent to-white/[0.02] pointer-events-none" />
               
@@ -152,7 +152,7 @@ const ResetPasswordPage: React.FC = () => {
                   className="flex justify-center mb-6"
                 >
                   <div className="relative">
-                    <div className={`absolute inset-0 rounded-2xl blur-xl opacity-50 ${emailVerified ? 'bg-gradient-to-r from-emerald-500 to-teal-500' : 'bg-gradient-to-r from-blue-500 to-purple-500'}`} />
+                    <div className={`absolute inset-0 rounded-2xl  opacity-50 ${emailVerified ? 'bg-gradient-to-r from-emerald-500 to-teal-500' : 'bg-gradient-to-r from-blue-500 to-purple-500'}`} />
                     <div className={`relative w-20 h-20 rounded-2xl flex items-center justify-center shadow-2xl border border-white/20 ${
                       emailVerified 
                         ? 'bg-gradient-to-br from-emerald-500 via-teal-500 to-green-500' 

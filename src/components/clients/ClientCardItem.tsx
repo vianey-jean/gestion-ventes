@@ -34,7 +34,7 @@ const ClientCardItem: React.FC<Props> = ({
   client, index, photoUrl, onOpenPhotoZoom, onPhoneClick, onAddressClick, onDetail, onEdit, onDelete,
 }) => (
   <Card
-    className="group hover:shadow-2xl transition-all duration-700 transform hover:-translate-y-4 card-mirror-light dark:card-mirror mirror-shine backdrop-blur-sm shadow-xl hover:shadow-purple-500/25 relative"
+    className="group hover:shadow-2xl transition-all duration-700 transform hover:-translate-y-4 card-mirror-light dark:card-mirror mirror-shine shadow-xl hover:shadow-purple-500/25 relative"
     style={{ animationDelay: `${index * 150}ms` }}
   >
     <div className="absolute top-4 right-4 bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400 text-black text-xs font-bold px-3 py-1 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-x-4 group-hover:translate-x-0 animate-bounce z-30">
@@ -42,7 +42,7 @@ const ClientCardItem: React.FC<Props> = ({
     </div>
 
     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 z-20 pointer-events-none"></div>
-    <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-500 via-pink-500 to-violet-500 rounded-3xl opacity-0 group-hover:opacity-15 blur transition-opacity duration-500 pointer-events-none"></div>
+    <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-500 via-pink-500 to-violet-500 rounded-3xl opacity-0 group-hover:opacity-15 transition-opacity duration-500 pointer-events-none"></div>
 
     <CardHeader className="pb-4 relative z-10">
       <div className="flex justify-between items-start">
@@ -104,7 +104,7 @@ const ClientCardItem: React.FC<Props> = ({
       <div className="space-y-4">
         <div className="space-y-2">
           {(client.phones && client.phones.length > 0 ? client.phones : [client.phone]).map((phone, phoneIndex) => (
-            <div key={phoneIndex} onClick={() => onPhoneClick(phone)} className="flex items-center gap-4 p-4 bg-gradient-to-r from-green-50 via-emerald-50 to-teal-50 dark:from-green-900/30 dark:via-emerald-900/30 dark:to-teal-900/30 rounded-xl border border-green-200/50 dark:border-green-800/50 backdrop-blur-sm cursor-pointer hover:scale-[1.02] transition-transform duration-200">
+            <div key={phoneIndex} onClick={() => onPhoneClick(phone)} className="flex items-center gap-4 p-4 bg-gradient-to-r from-green-50 via-emerald-50 to-teal-50 dark:from-green-900/30 dark:via-emerald-900/30 dark:to-teal-900/30 rounded-xl border border-green-200/50 dark:border-green-800/50 cursor-pointer hover:scale-[1.02] transition-transform duration-200">
               <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full shadow-lg">
                 <Phone className="w-5 h-5 text-white" />
               </div>
@@ -118,7 +118,7 @@ const ClientCardItem: React.FC<Props> = ({
           ))}
         </div>
 
-        <div onClick={() => onAddressClick(client.adresse)} className="flex items-start gap-4 p-4 bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 dark:from-blue-900/30 dark:via-indigo-900/30 dark:to-purple-900/30 rounded-xl border border-blue-200/50 dark:border-blue-800/50 backdrop-blur-sm cursor-pointer hover:scale-[1.02] transition-transform duration-200">
+        <div onClick={() => onAddressClick(client.adresse)} className="flex items-start gap-4 p-4 bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 dark:from-blue-900/30 dark:via-indigo-900/30 dark:to-purple-900/30 rounded-xl border border-blue-200/50 dark:border-blue-800/50 cursor-pointer hover:scale-[1.02] transition-transform duration-200">
           <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-r from-blue-400 to-indigo-500 rounded-full shadow-lg mt-0.5">
             <MapPin className="w-5 h-5 text-white" />
           </div>

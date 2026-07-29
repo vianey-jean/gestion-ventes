@@ -227,7 +227,7 @@ const BulkDeleteModal: React.FC<BulkDeleteModalProps> = ({ open, onOpenChange })
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent className="rounded-3xl backdrop-blur-2xl bg-white/95 dark:bg-[#0a0020]/95 border border-red-200/30 max-w-lg max-h-[85vh] flex flex-col">
+      <AlertDialogContent className="rounded-3xl bg-white/95 dark:bg-[#0a0020]/95 border border-red-200/30 max-w-lg max-h-[85vh] flex flex-col">
         <AlertDialogHeader className="flex-shrink-0">
           <AlertDialogTitle className="flex items-center gap-2 text-red-600">
             <div className="p-2 rounded-xl bg-gradient-to-br from-red-500/20 to-rose-500/20">

@@ -88,8 +88,8 @@ const FournisseurAutocomplete: React.FC<FournisseurAutocompleteProps> = ({
         <div className={cn(
           "absolute z-50 left-0 right-0 top-full mt-1 rounded-xl border shadow-2xl overflow-hidden max-h-48 overflow-y-auto",
           isDark
-            ? "bg-slate-800/95 border-white/10 backdrop-blur-2xl"
-            : "bg-white/95 border-orange-200/30 backdrop-blur-2xl"
+            ? "bg-slate-800/95 border-white/10 "
+            : "bg-white/95 border-orange-200/30 "
         )}>
           {suggestions.map((f) => (
             <button

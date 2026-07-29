@@ -153,7 +153,7 @@ const DashboardTabContent: React.FC = () => {
             </p>
           </div>
         </div>
-        <div className="bg-gradient-to-br from-white/90 to-gray-50/90 dark:from-gray-900/90 dark:to-gray-800/90 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-6 sm:p-8">
+        <div className="bg-gradient-to-br from-white/90 to-gray-50/90 dark:from-gray-900/90 dark:to-gray-800/90 rounded-3xl shadow-2xl border border-white/20 p-6 sm:p-8">
           <ProfitCalculator />
         </div>
       </TabsContent>

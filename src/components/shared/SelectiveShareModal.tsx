@@ -235,7 +235,7 @@ const SelectiveShareModal: React.FC<SelectiveShareModalProps> = ({ open, onClose
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={onClose}>
       <div
         className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-2xl shadow-2xl border border-white/10 p-5 max-w-xl w-full mx-4 max-h-[85vh] overflow-hidden flex flex-col"
         onClick={e => e.stopPropagation()}

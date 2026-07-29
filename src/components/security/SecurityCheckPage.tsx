@@ -132,14 +132,14 @@ const Star = ({
       {glow && (
         <>
           <div
-            className={`absolute inset-0 rounded-full blur-2xl ${moving
+            className={`absolute inset-0 rounded-full  ${moving
               ? 'bg-rose-500/50'
               : 'bg-white/40'
               }`}
           />
 
           <div
-            className={`absolute inset-0 rounded-full blur-md ${moving
+            className={`absolute inset-0 rounded-full  ${moving
               ? 'bg-red-500/30'
               : 'bg-slate-200/20'
               }`}
@@ -223,7 +223,7 @@ const Metric = ({
   label: string;
   value: string;
 }) => (
-  <div className="rounded-2xl border border-white/10 bg-white/[0.05] backdrop-blur-xl p-3">
+  <div className="rounded-2xl border border-white/10 bg-white/[0.05] p-3">
     <div className="flex items-center gap-2 text-white/50 text-[10px] uppercase tracking-[0.22em]">
       {icon}
       {label}
@@ -992,15 +992,15 @@ const SecurityCheckPage: React.FC<
         }}
         className="relative w-full max-w-2xl"
       >
-        <div className="absolute -inset-[1px] rounded-[36px] bg-gradient-to-br from-white/20 via-violet-500/20 to-fuchsia-500/20 blur-sm" />
+        <div className="absolute -inset-[1px] rounded-[36px] bg-gradient-to-br from-white/20 via-violet-500/20 to-fuchsia-500/20" />
 
-        <div className="relative overflow-hidden rounded-[36px] border border-white/10 bg-white/[0.06] backdrop-blur-3xl shadow-[0_40px_120px_-20px_rgba(0,0,0,0.95)]">
+        <div className="relative overflow-hidden rounded-[36px] border border-white/10 bg-white/[0.06] shadow-[0_40px_120px_-20px_rgba(0,0,0,0.95)]">
           {/* HEADER */}
           <div className="relative px-8 pt-7 pb-6 border-b border-white/10">
             <div className="flex items-center justify-between gap-5">
               <div className="flex items-center gap-4">
                 <div className="relative">
-                  <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-violet-500 to-fuchsia-500 blur-2xl opacity-80" />
+                  <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-violet-500 to-fuchsia-500 opacity-80" />
 
                   <div className="relative w-16 h-16 rounded-3xl bg-gradient-to-br from-violet-500 via-purple-500 to-fuchsia-500 flex items-center justify-center">
                     <ShieldCheck className="w-8 h-8 text-white" />
@@ -1184,7 +1184,7 @@ const SecurityCheckPage: React.FC<
 
                   {/* CHALLENGE */}
                   <div className="relative">
-                    <div className="absolute -inset-[1px] rounded-[30px] bg-gradient-to-r from-violet-500/30 via-fuchsia-500/30 to-rose-500/30 blur-md" />
+                    <div className="absolute -inset-[1px] rounded-[30px] bg-gradient-to-r from-violet-500/30 via-fuchsia-500/30 to-rose-500/30" />
 
                     <div
                       ref={containerRef}
@@ -1262,7 +1262,7 @@ const SecurityCheckPage: React.FC<
                           transition={{
                             duration: 0.6,
                           }}
-                          className="absolute w-5 h-5 rounded-full bg-rose-400/30 blur-sm"
+                          className="absolute w-5 h-5 rounded-full bg-rose-400/30"
                           style={{
                             left: p.x + 18,
                             top: p.y + 18,
@@ -1324,7 +1324,7 @@ const SecurityCheckPage: React.FC<
                       </div>
 
                       {/* HUD */}
-                      <div className="absolute top-4 left-4 flex items-center gap-2 rounded-full border border-white/10 bg-black/40 px-3 py-2 backdrop-blur-xl">
+                      <div className="absolute top-4 left-4 flex items-center gap-2 rounded-full border border-white/10 bg-black/40 px-3 py-2">
                         <Globe className="w-3 h-3 text-cyan-300" />
 
                         <span className="text-[11px] text-white/70 uppercase tracking-[0.2em]">
@@ -1343,7 +1343,7 @@ const SecurityCheckPage: React.FC<
                             scale: [0, 1.4, 1],
                             opacity: [0, 1, 0.7],
                           }}
-                          className="absolute inset-0 flex items-center justify-center bg-emerald-500/10 backdrop-blur-sm"
+                          className="absolute inset-0 flex items-center justify-center bg-emerald-500/10"
                         >
                           <div className="text-center">
                             <CheckCircle2 className="w-16 h-16 text-emerald-400 mx-auto" />
@@ -1416,7 +1416,7 @@ const SecurityCheckPage: React.FC<
                           className="relative"
                         >
                           {/* Aura gradient border */}
-                          <div className="absolute -inset-[1.5px] rounded-[28px] bg-gradient-to-br from-violet-500/50 via-fuchsia-500/40 to-amber-400/40 blur-md opacity-80" />
+                          <div className="absolute -inset-[1.5px] rounded-[28px] bg-gradient-to-br from-violet-500/50 via-fuchsia-500/40 to-amber-400/40 opacity-80" />
                           <motion.div
                             animate={{ backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'] }}
                             transition={{ duration: 8, repeat: Infinity }}
@@ -1428,24 +1428,24 @@ const SecurityCheckPage: React.FC<
                             }}
                           />
 
-                          <div className="relative rounded-[28px] border border-white/10 bg-gradient-to-br from-white/[0.07] via-white/[0.04] to-white/[0.02] backdrop-blur-2xl p-4 sm:p-6 overflow-hidden">
+                          <div className="relative rounded-[28px] border border-white/10 bg-gradient-to-br from-white/[0.07] via-white/[0.04] to-white/[0.02] p-4 sm:p-6 overflow-hidden">
                             {/* Decorative floating orbs */}
                             <motion.div
                               animate={{ x: [0, 30, 0], y: [0, -20, 0], scale: [1, 1.15, 1] }}
                               transition={{ duration: 9, repeat: Infinity }}
-                              className="pointer-events-none absolute -top-10 -right-10 w-40 h-40 rounded-full bg-fuchsia-500/20 blur-3xl"
+                              className="pointer-events-none absolute -top-10 -right-10 w-40 h-40 rounded-full bg-fuchsia-500/20"
                             />
                             <motion.div
                               animate={{ x: [0, -25, 0], y: [0, 25, 0], scale: [1, 1.1, 1] }}
                               transition={{ duration: 11, repeat: Infinity }}
-                              className="pointer-events-none absolute -bottom-12 -left-12 w-44 h-44 rounded-full bg-violet-500/20 blur-3xl"
+                              className="pointer-events-none absolute -bottom-12 -left-12 w-44 h-44 rounded-full bg-violet-500/20"
                             />
 
                             {/* Header */}
                             <div className="relative flex items-start sm:items-center justify-between gap-3 mb-5">
                               <div className="flex items-center gap-3">
                                 <div className="relative shrink-0">
-                                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-amber-400 to-fuchsia-500 blur-lg opacity-70" />
+                                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-amber-400 to-fuchsia-500 opacity-70" />
                                   <div className="relative w-11 h-11 rounded-2xl bg-gradient-to-br from-amber-400 via-rose-400 to-fuchsia-500 flex items-center justify-center shadow-lg">
                                     <KeyRound className="w-5 h-5 text-white" />
                                   </div>
@@ -1710,7 +1710,7 @@ const SecurityCheckPage: React.FC<
                               <motion.div
                                 animate={{ x: ['-120%', '220%'] }}
                                 transition={{ duration: 2.2, repeat: Infinity }}
-                                className="absolute inset-y-0 w-24 bg-white/25 blur-2xl rotate-12"
+                                className="absolute inset-y-0 w-24 bg-white/25 rotate-12"
                               />
                               <span className="relative flex items-center justify-center gap-2">
                                 <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -1783,7 +1783,7 @@ const SecurityCheckPage: React.FC<
                               duration: 2,
                               repeat: Infinity,
                             }}
-                            className="absolute inset-y-0 w-24 bg-white/20 blur-2xl rotate-12"
+                            className="absolute inset-y-0 w-24 bg-white/20 rotate-12"
                           />
                         </>
                       )}
@@ -1807,7 +1807,7 @@ const SecurityCheckPage: React.FC<
                 >
                   <div className="relative w-40 h-40 mx-auto flex items-center justify-center">
                     {/* Glow background */}
-                    <div className="absolute inset-0 rounded-full bg-gradient-to-br from-violet-500/10 via-fuchsia-500/5 to-transparent blur-2xl" />
+                    <div className="absolute inset-0 rounded-full bg-gradient-to-br from-violet-500/10 via-fuchsia-500/5 to-transparent" />
 
                     {/* Outer ring */}
                     <motion.div
@@ -1828,7 +1828,7 @@ const SecurityCheckPage: React.FC<
                         repeat: Infinity,
                         ease: "linear",
                       }}
-                      className="absolute inset-6 rounded-full border border-fuchsia-400/30 backdrop-blur-md bg-white/5"
+                      className="absolute inset-6 rounded-full border border-fuchsia-400/30 bg-white/5"
                     />
 
                     {/* Accent rotating arc */}
@@ -1855,7 +1855,7 @@ const SecurityCheckPage: React.FC<
                         repeat: Infinity,
                         ease: "easeInOut",
                       }}
-                      className="absolute inset-10 rounded-full bg-gradient-to-br from-violet-500/10 to-fuchsia-500/10 blur-sm"
+                      className="absolute inset-10 rounded-full bg-gradient-to-br from-violet-500/10 to-fuchsia-500/10"
                     />
 
                     {/* Center ultra modern AI core */}
@@ -1869,7 +1869,7 @@ const SecurityCheckPage: React.FC<
                         repeat: Infinity,
                         ease: "easeInOut",
                       }}
-                      className="relative z-10 flex items-center justify-center w-16 h-16 rounded-full bg-black/30 border border-white/10 backdrop-blur-xl overflow-hidden"
+                      className="relative z-10 flex items-center justify-center w-16 h-16 rounded-full bg-black/30 border border-white/10 overflow-hidden"
                     >
                       {/* Pulsing core orb */}
                       <motion.div
@@ -1882,7 +1882,7 @@ const SecurityCheckPage: React.FC<
                           repeat: Infinity,
                           ease: "easeInOut",
                         }}
-                        className="absolute w-6 h-6 rounded-full bg-gradient-to-r from-violet-400 via-fuchsia-400 to-cyan-300 blur-md"
+                        className="absolute w-6 h-6 rounded-full bg-gradient-to-r from-violet-400 via-fuchsia-400 to-cyan-300"
                       />
 
                       {/* Scanning line */}
@@ -1953,7 +1953,7 @@ const SecurityCheckPage: React.FC<
                     }}
                     className="relative w-32 h-32 mx-auto"
                   >
-                    <div className="absolute inset-0 rounded-full bg-emerald-400/40 blur-3xl animate-pulse" />
+                    <div className="absolute inset-0 rounded-full bg-emerald-400/40 animate-pulse" />
 
                     <div className="relative w-full h-full rounded-full bg-gradient-to-br from-emerald-400 to-green-600 flex items-center justify-center shadow-[0_25px_70px_-10px_rgba(16,185,129,0.8)]">
                       <CheckCircle2 className="w-16 h-16 text-white" />
@@ -1991,7 +1991,7 @@ const SecurityCheckPage: React.FC<
                   className="py-16 text-center"
                 >
                   <div className="relative w-32 h-32 mx-auto">
-                    <div className="absolute inset-0 rounded-full bg-red-500/40 blur-3xl" />
+                    <div className="absolute inset-0 rounded-full bg-red-500/40" />
 
                     <div className="relative w-full h-full rounded-full bg-gradient-to-br from-red-500 to-rose-700 flex items-center justify-center">
                       <AlertTriangle className="w-16 h-16 text-white" />

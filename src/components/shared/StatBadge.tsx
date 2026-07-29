@@ -48,7 +48,7 @@ const StatBadge: React.FC<StatBadgeProps> = memo(({
 }) => {
   return (
     <div className={cn(
-      "backdrop-blur-md rounded-xl sm:rounded-2xl border shadow-2xl",
+      " rounded-xl sm:rounded-2xl border shadow-2xl",
       variantStyles[variant],
       sizeStyles[size],
       className

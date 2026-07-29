@@ -146,7 +146,7 @@ const NoteFormModal: React.FC<NoteFormModalProps> = ({ open, onOpenChange, note,
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-2xl border-white/20 dark:border-white/10 rounded-3xl">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0 bg-white/95 dark:bg-gray-900/95 border-white/20 dark:border-white/10 rounded-3xl">
         <div className="p-5 sm:p-6 space-y-4">
           <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
             <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-lg">

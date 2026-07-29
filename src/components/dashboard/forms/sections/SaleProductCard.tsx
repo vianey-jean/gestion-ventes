@@ -104,8 +104,8 @@ const SaleProductCard: React.FC<SaleProductCardProps> = ({
   return (
     <Card className="relative overflow-hidden bg-gradient-to-br from-purple-50 via-fuchsia-50/50 to-pink-50/30 dark:from-purple-900/30 dark:via-fuchsia-900/20 dark:to-pink-900/10 border-0 shadow-xl shadow-purple-500/10 rounded-2xl transition-all duration-300 hover:shadow-2xl hover:shadow-purple-500/15">
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute -top-16 -right-16 w-32 h-32 bg-purple-300/20 rounded-full blur-2xl" />
-        <div className="absolute -bottom-8 -left-8 w-24 h-24 bg-fuchsia-300/20 rounded-full blur-2xl" />
+        <div className="absolute -top-16 -right-16 w-32 h-32 bg-purple-300/20 rounded-full" />
+        <div className="absolute -bottom-8 -left-8 w-24 h-24 bg-fuchsia-300/20 rounded-full" />
       </div>
       <CardHeader className="relative flex flex-row items-center justify-between pb-3">
         <CardTitle className="text-sm font-bold bg-gradient-to-r from-purple-600 to-fuchsia-700 bg-clip-text text-transparent flex items-center gap-2">

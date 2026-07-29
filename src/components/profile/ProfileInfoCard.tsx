@@ -22,7 +22,7 @@ import { Input } from '@/components/ui/input';
 
 /** Classe CSS des boutons premium avec glassmorphism */
 const premiumBtnClass =
-  "group relative overflow-hidden rounded-2xl backdrop-blur-xl border transition-all duration-300 hover:scale-[1.04] active:scale-[0.98] px-5 py-3 text-sm font-semibold shadow-lg";
+  "group relative overflow-hidden rounded-2xl  border transition-all duration-300 hover:scale-[1.04] active:scale-[0.98] px-5 py-3 text-sm font-semibold shadow-lg";
 
 interface ProfileInfoCardProps {
   profile: any;
@@ -52,15 +52,12 @@ const ProfileInfoCard: React.FC<ProfileInfoCardProps> = ({
       initial={{ opacity: 0, y: 30, scale: 0.98 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.5, ease: "easeOut" }}
-      className="relative rounded-[28px] backdrop-blur-2xl bg-white/60 dark:bg-white/[0.03]
-                 border border-white/20 dark:border-white/10
-                 shadow-[0_10px_40px_rgba(0,0,0,0.08)]
-                 overflow-hidden p-8"
+      className="relative rounded-[28px] bg-white/60 dark:bg-white/[0.03] border border-white/20 dark:border-white/10 shadow-[0_10px_40px_rgba(0,0,0,0.08)] overflow-hidden p-8"
     >
 
       {/* Effets de glow décoratifs (coins opposés) */}
-      <div className="absolute -top-20 -right-20 w-72 h-72 bg-violet-500/20 blur-[120px] rounded-full" />
-      <div className="absolute -bottom-20 -left-20 w-72 h-72 bg-fuchsia-500/20 blur-[120px] rounded-full" />
+      <div className="absolute -top-20 -right-20 w-72 h-72 bg-violet-500/20 rounded-full" />
+      <div className="absolute -bottom-20 -left-20 w-72 h-72 bg-fuchsia-500/20 rounded-full" />
 
       {/* Ligne gradient décorative en haut */}
       <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-violet-500 to-transparent opacity-70" />
@@ -68,7 +65,7 @@ const ProfileInfoCard: React.FC<ProfileInfoCardProps> = ({
       {/* En-tête avec titre et boutons Modifier/Enregistrer/Annuler */}
       <div className="flex items-center justify-between mb-8 relative z-10">
         <h3 className="text-xl font-semibold text-foreground flex items-center gap-3 tracking-tight">
-          <div className="p-2 rounded-xl bg-gradient-to-br from-violet-500/20 to-fuchsia-500/20 backdrop-blur-md">
+          <div className="p-2 rounded-xl bg-gradient-to-br from-violet-500/20 to-fuchsia-500/20">
             <Shield className="w-5 h-5 text-violet-500" />
           </div>
           Informations Personnelles
@@ -120,15 +117,11 @@ const ProfileInfoCard: React.FC<ProfileInfoCardProps> = ({
             whileHover={{ y: -4 }}
             className="group rounded-2xl p-[1px] bg-gradient-to-br from-white/40 to-white/5 dark:from-white/10 dark:to-transparent"
           >
-            <div className="rounded-2xl h-full bg-white/70 dark:bg-white/[0.03]
-                            backdrop-blur-xl border border-white/20 dark:border-white/10
-                            p-5 transition-all duration-300
-                            group-hover:border-violet-400/40">
+            <div className="rounded-2xl h-full bg-white/70 dark:bg-white/[0.03] border border-white/20 dark:border-white/10 p-5 transition-all duration-300 group-hover:border-violet-400/40">
 
               {/* Icône + label du champ */}
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500/20 to-fuchsia-500/20
-                                flex items-center justify-center shadow-inner">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500/20 to-fuchsia-500/20 flex items-center justify-center shadow-inner">
                   <Icon className="w-4 h-4 text-violet-500" />
                 </div>
 
@@ -143,10 +136,7 @@ const ProfileInfoCard: React.FC<ProfileInfoCardProps> = ({
                   <select
                     value={editForm.gender}
                     onChange={e => setEditForm(p => ({ ...p, gender: e.target.value }))}
-                    className="w-full rounded-xl border border-white/20
-                               bg-white/80 dark:bg-white/5
-                               px-3 py-2 text-sm backdrop-blur-md
-                               focus:ring-2 focus:ring-violet-500/40 outline-none"
+                    className="w-full rounded-xl border border-white/20 bg-white/80 dark:bg-white/5 px-3 py-2 text-sm focus:ring-2 focus:ring-violet-500/40 outline-none"
                   >
                     <option value="male">Homme</option>
                     <option value="female">Femme</option>
@@ -156,8 +146,7 @@ const ProfileInfoCard: React.FC<ProfileInfoCardProps> = ({
                   <Input
                     value={editForm[key as keyof typeof editForm] || ''}
                     onChange={e => setEditForm(p => ({ ...p, [key]: e.target.value }))}
-                    className="rounded-xl border-white/20 bg-white/80 dark:bg-white/5 backdrop-blur-md
-                               focus:ring-2 focus:ring-violet-500/40"
+                    className="rounded-xl border-white/20 bg-white/80 dark:bg-white/5 focus:ring-2 focus:ring-violet-500/40"
                   />
                 )
               ) : (

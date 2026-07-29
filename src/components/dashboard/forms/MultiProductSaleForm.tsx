@@ -1065,12 +1065,12 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
 
 
   <Dialog open={isOpen} onOpenChange={onClose}>
-    <DialogContent className="sm:max-w-5xl max-h-[92vh] overflow-y-auto border border-white/20 bg-[#F4F7FB]/95 backdrop-blur* shadow-[0_20px_80px_rgba(15,23,42,0.18)] rounded-[2rem] text-slate-900">
+    <DialogContent className="sm:max-w-5xl max-h-[92vh] overflow-y-auto border border-white/20 bg-[#F4F7FB]/95 * shadow-[0_20px_80px_rgba(15,23,42,0.18)] rounded-[2rem] text-slate-900">
 
       {/* Glow effects */}
       <div className="absolute inset-0 overflow-hidden rounded-[2rem] pointer-events-none">
-        <div className="absolute -top-24 -right-24 h-64 w-64 rounded-full bg-fuchsia-400/20 blur-3xl" />
-        <div className="absolute bottom-0 -left-20 h-72 w-72 rounded-full bg-cyan-400/20 blur-3xl" />
+        <div className="absolute -top-24 -right-24 h-64 w-64 rounded-full bg-fuchsia-400/20" />
+        <div className="absolute bottom-0 -left-20 h-72 w-72 rounded-full bg-cyan-400/20" />
       </div>
 
       <DialogHeader className="relative z-10 border-b border-slate-200 pb-6">
@@ -1091,7 +1091,7 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
 
         {/* Date */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-3 rounded-2xl border border-white/40 bg-white/80 p-5 shadow-[0_8px_30px_rgba(15,23,42,0.06)] backdrop-blur*">
+          <div className="space-y-3 rounded-2xl border border-white/40 bg-white/80 p-5 shadow-[0_8px_30px_rgba(15,23,42,0.06)] *">
 
             <Label
               htmlFor="date"
@@ -1111,7 +1111,7 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
         </div>
 
         {/* Client Section */}
-        <div className="rounded-[1.8rem] border border-white/40 bg-white/75 p-6 shadow-[0_10px_40px_rgba(15,23,42,0.06)] backdrop-blur*">
+        <div className="rounded-[1.8rem] border border-white/40 bg-white/75 p-6 shadow-[0_10px_40px_rgba(15,23,42,0.06)] *">
 
           <div className="mb-6 flex items-center justify-between">
             <div>
@@ -1176,7 +1176,7 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
 
                 <div className="absolute inset-0 bg-gradient-to-r from-fuchsia-500/0 via-fuchsia-500/5 to-cyan-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
-                <div className="relative rounded-[1.7rem] bg-white/90 p-5 backdrop-blur*">
+                <div className="relative rounded-[1.7rem] bg-white/90 p-5 *">
 
                   <SaleProductCard
                     product={product}
@@ -1217,7 +1217,7 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
 
         {/* Totals & Advance */}
         {formProducts.some(p => p.selectedProduct) && (
-          <div className="rounded-[2rem] border border-white/50 bg-gradient-to-br from-white to-slate-100 p-6 shadow-[0_15px_60px_rgba(15,23,42,0.08)] backdrop-blur*">
+          <div className="rounded-[2rem] border border-white/50 bg-gradient-to-br from-white to-slate-100 p-6 shadow-[0_15px_60px_rgba(15,23,42,0.08)] *">
 
             <div className="mb-6 flex items-center justify-between">
 
@@ -1253,7 +1253,7 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
         )}
 
         {/* Footer Actions */}
-        <div className="rounded-[1.8rem] border border-white/40 bg-white/75 p-5 shadow-[0_10px_40px_rgba(15,23,42,0.06)] backdrop-blur*">
+        <div className="rounded-[1.8rem] border border-white/40 bg-white/75 p-5 shadow-[0_10px_40px_rgba(15,23,42,0.06)] *">
 
           <SaleFormActions
             editSale={editSale}
@@ -1319,7 +1319,7 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
       open={reservationConflictModalOpen}
       onOpenChange={setReservationConflictModalOpen}
     >
-      <AlertDialogContent className="border border-white/40 bg-white/95 backdrop-blur* rounded-[2rem] shadow-[0_20px_80px_rgba(15,23,42,0.12)] max-w-md text-slate-900">
+      <AlertDialogContent className="border border-white/40 bg-white/95 * rounded-[2rem] shadow-[0_20px_80px_rgba(15,23,42,0.12)] max-w-md text-slate-900">
 
         <AlertDialogHeader>
 

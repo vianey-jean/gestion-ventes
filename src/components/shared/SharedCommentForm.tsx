@@ -174,7 +174,7 @@ const SharedCommentForm: React.FC<SharedCommentFormProps> = ({ token, dataType, 
 
       {/* Inline comment popup */}
       {mode === 'commenting' && activeIndex !== null && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/30 backdrop-blur-sm" onClick={() => { setActiveIndex(null); setActiveText(''); }}>
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/30" onClick={() => { setActiveIndex(null); setActiveText(''); }}>
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-5 max-w-md w-full mx-4 border border-gray-200 dark:border-gray-700" onClick={e => e.stopPropagation()}>
             <h4 className="font-bold text-sm text-gray-800 dark:text-white mb-1 flex items-center gap-2">
               <MessageCircle className="h-4 w-4 text-blue-500" />

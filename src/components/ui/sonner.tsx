@@ -22,7 +22,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
             "dark:!from-[#0b0420]/95 dark:!via-[#0a0030]/90 dark:!to-[#1a0040]/90",
             "!text-foreground !border-violet-200/40 dark:!border-violet-700/40",
             "!shadow-[0_20px_60px_-15px_rgba(139,92,246,0.35)] dark:!shadow-[0_20px_60px_-15px_rgba(139,92,246,0.5)]",
-            "backdrop-blur-2xl",
+            "",
             "before:absolute before:inset-x-0 before:top-0 before:h-[2px]",
             "before:bg-gradient-to-r before:from-violet-500 before:via-fuchsia-500 before:to-cyan-400",
             "after:absolute after:inset-0 after:rounded-2xl after:pointer-events-none",

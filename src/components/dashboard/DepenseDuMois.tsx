@@ -365,12 +365,7 @@ const DepenseDuMois = () => {
       <MonthlyResetHandler />
       
       {/* Header luxueux avec gradient */}
-      <div className="relative overflow-hidden 
-                bg-gradient-to-br from-cyan-700 via-blue-700 to-purple-800
-                rounded-2xl sm:rounded-3xl lg:rounded-[2.5rem]
-                shadow-[0_40px_120px_rgba(0,0,0,0.45)]
-                p-5 sm:p-7 md:p-9
-                border border-white/25">
+      <div className="relative overflow-hidden bg-gradient-to-br from-cyan-700 via-blue-700 to-purple-800 rounded-2xl sm:rounded-3xl lg:rounded-[2.5rem] shadow-[0_40px_120px_rgba(0,0,0,0.45)] p-5 sm:p-7 md:p-9 border border-white/25">
 
   {/* Glow luxe */}
   <div className="absolute inset-0 bg-gradient-to-tr from-white/10 via-transparent to-transparent pointer-events-none" />
@@ -379,17 +374,12 @@ const DepenseDuMois = () => {
 
     {/* Titre */}
     <div className="flex items-center gap-3 sm:gap-4 md:gap-5">
-      <div className="relative rounded-full p-3 sm:p-4 md:p-5
-                      bg-gradient-to-br from-white/30 to-white/10
-                      backdrop-blur-xl
-                      border border-white/30
-                      shadow-[0_10px_40px_rgba(255,255,255,0.25)]">
+      <div className="relative rounded-full p-3 sm:p-4 md:p-5 bg-gradient-to-br from-white/30 to-white/10 border border-white/30 shadow-[0_10px_40px_rgba(255,255,255,0.25)]">
         <Wallet className="h-6 w-6 sm:h-7 sm:w-7 md:h-9 md:w-9 text-white drop-shadow-lg" />
       </div>
 
       <div>
-        <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl 
-                       font-extrabold text-white tracking-wide mb-1">
+        <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold text-white tracking-wide mb-1">
           Dépenses du mois
         </h2>
 
@@ -401,8 +391,7 @@ const DepenseDuMois = () => {
         </div>
       </div>
 
-      <Sparkles className="h-5 w-5 sm:h-6 sm:w-6 md:h-7 md:w-7 
-                           text-amber-300 animate-pulse drop-shadow-lg" />
+      <Sparkles className="h-5 w-5 sm:h-6 sm:w-6 md:h-7 md:w-7 text-amber-300 animate-pulse drop-shadow-lg" />
     </div>
 
     {/* Boutons ultra-luxe */}
@@ -411,15 +400,7 @@ const DepenseDuMois = () => {
       {/* RSA */}
       <Button
         onClick={() => setIsRsaDialogOpen(true)}
-        className="group relative flex-1 sm:flex-none overflow-hidden
-                   rounded-xl sm:rounded-2xl
-                   bg-gradient-to-br from-amber-500/90 to-orange-600/90
-                   border border-amber-300/40
-                   text-white font-medium
-                   shadow-[0_20px_60px_rgba(245,158,11,0.5)]
-                   transition-all duration-300
-                   hover:scale-105 hover:shadow-[0_30px_90px_rgba(245,158,11,0.7)]
-                   px-4 py-2 sm:px-5 sm:py-3 text-xs sm:text-sm"
+        className="group relative flex-1 sm:flex-none overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-br from-amber-500/90 to-orange-600/90 border border-amber-300/40 text-white font-medium shadow-[0_20px_60px_rgba(245,158,11,0.5)] transition-all duration-300 hover:scale-105 hover:shadow-[0_30px_90px_rgba(245,158,11,0.7)] px-4 py-2 sm:px-5 sm:py-3 text-xs sm:text-sm"
       >
         <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
         <span className="relative flex items-center justify-center">
@@ -432,16 +413,7 @@ const DepenseDuMois = () => {
       {/* Dépenses fixes */}
       <Button
         onClick={() => setIsFixeDialogOpen(true)}
-        className="group relative flex-1 sm:flex-none overflow-hidden
-                   rounded-xl sm:rounded-2xl
-                   bg-gradient-to-br from-white/35 to-white/10
-                   backdrop-blur-xl
-                   border border-white/30
-                   text-white font-medium
-                   shadow-[0_20px_60px_rgba(255,255,255,0.25)]
-                   transition-all duration-300
-                   hover:scale-105 hover:shadow-[0_30px_90px_rgba(255,255,255,0.35)]
-                   px-4 py-2 sm:px-5 sm:py-3 text-xs sm:text-sm"
+        className="group relative flex-1 sm:flex-none overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-br from-white/35 to-white/10 border border-white/30 text-white font-medium shadow-[0_20px_60px_rgba(255,255,255,0.25)] transition-all duration-300 hover:scale-105 hover:shadow-[0_30px_90px_rgba(255,255,255,0.35)] px-4 py-2 sm:px-5 sm:py-3 text-xs sm:text-sm"
       >
         <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
         <span className="relative flex items-center justify-center">
@@ -464,15 +436,7 @@ const DepenseDuMois = () => {
           });
           setIsDialogOpen(true);
         }}
-        className="group relative flex-1 sm:flex-none overflow-hidden
-                   rounded-xl sm:rounded-2xl
-                   bg-gradient-to-br from-emerald-500 via-emerald-600 to-emerald-700
-                   border border-emerald-300/40
-                   text-white font-semibold
-                   shadow-[0_20px_70px_rgba(16,185,129,0.6)]
-                   transition-all duration-300
-                   hover:scale-105 hover:shadow-[0_35px_100px_rgba(16,185,129,0.75)]
-                   px-4 py-2 sm:px-5 sm:py-3 text-xs sm:text-sm"
+        className="group relative flex-1 sm:flex-none overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-br from-emerald-500 via-emerald-600 to-emerald-700 border border-emerald-300/40 text-white font-semibold shadow-[0_20px_70px_rgba(16,185,129,0.6)] transition-all duration-300 hover:scale-105 hover:shadow-[0_35px_100px_rgba(16,185,129,0.75)] px-4 py-2 sm:px-5 sm:py-3 text-xs sm:text-sm"
       >
         <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
         <span className="relative flex items-center justify-center">
@@ -485,15 +449,7 @@ const DepenseDuMois = () => {
       {/* Reset */}
       <Button
         onClick={handleReset}
-        className="group relative flex-1 sm:flex-none overflow-hidden
-                   rounded-xl sm:rounded-2xl
-                   bg-gradient-to-br from-red-500/90 to-red-700/90
-                   border border-red-300/40
-                   text-white font-medium
-                   shadow-[0_20px_70px_rgba(239,68,68,0.5)]
-                   transition-all duration-300
-                   hover:scale-105 hover:shadow-[0_35px_100px_rgba(239,68,68,0.7)]
-                   px-4 py-2 sm:px-5 sm:py-3 text-xs sm:text-sm"
+        className="group relative flex-1 sm:flex-none overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-br from-red-500/90 to-red-700/90 border border-red-300/40 text-white font-medium shadow-[0_20px_70px_rgba(239,68,68,0.5)] transition-all duration-300 hover:scale-105 hover:shadow-[0_35px_100px_rgba(239,68,68,0.7)] px-4 py-2 sm:px-5 sm:py-3 text-xs sm:text-sm"
       >
         <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
         <span className="relative flex items-center justify-center">
@@ -508,14 +464,7 @@ const DepenseDuMois = () => {
 </div>
 
       {/* Affichage du solde modernisé */}
-      <div className="relative overflow-hidden
-                bg-gradient-to-br from-white/95 via-gray-50/95 to-gray-100/95
-                dark:from-gray-900/95 dark:via-gray-800/95 dark:to-gray-900/95
-                backdrop-blur-2xl
-                rounded-[2.5rem]
-                shadow-[0_40px_120px_rgba(0,0,0,0.25)]
-                border border-white/30
-                p-8">
+      <div className="relative overflow-hidden bg-gradient-to-br from-white/95 via-gray-50/95 to-gray-100/95 dark:from-gray-900/95 dark:via-gray-800/95 dark:to-gray-900/95 rounded-[2.5rem] shadow-[0_40px_120px_rgba(0,0,0,0.25)] border border-white/30 p-8">
 
   {/* Halo luxe */}
   <div className="absolute inset-0 bg-gradient-to-tr from-white/20 via-transparent to-transparent pointer-events-none" />
@@ -526,12 +475,7 @@ const DepenseDuMois = () => {
     <div className="flex items-center gap-6">
 
       {/* Icône principale luxe */}
-      <div className="relative rounded-full p-5
-                      bg-gradient-to-br from-emerald-200/70 via-teal-100/60 to-white/40
-                      dark:from-emerald-900/40 dark:via-teal-900/30 dark:to-gray-800/30
-                      backdrop-blur-xl
-                      border border-white/40
-                      shadow-[0_20px_60px_rgba(16,185,129,0.35)]">
+      <div className="relative rounded-full p-5 bg-gradient-to-br from-emerald-200/70 via-teal-100/60 to-white/40 dark:from-emerald-900/40 dark:via-teal-900/30 dark:to-gray-800/30 border border-white/40 shadow-[0_20px_60px_rgba(16,185,129,0.35)]">
         <DollarSign className="h-9 w-9 text-emerald-700 dark:text-emerald-400 drop-shadow-lg" />
       </div>
 
@@ -556,7 +500,7 @@ const DepenseDuMois = () => {
             className={`group relative overflow-hidden
                         flex items-center gap-3
                         px-5 py-2.5 rounded-full
-                        border backdrop-blur-xl
+                        border 
                         shadow-[0_15px_40px_rgba(0,0,0,0.15)]
                         ${
                           estPositif
@@ -584,11 +528,7 @@ const DepenseDuMois = () => {
           </div>
 
           {/* Charge fixe (toujours visible) */}
-          <div className="flex items-center gap-2 px-4 py-2 rounded-full
-                          bg-gradient-to-r from-purple-100 via-fuchsia-100 to-pink-100
-                          dark:from-purple-900/40 dark:via-fuchsia-900/30 dark:to-pink-900/30
-                          border border-purple-300/40 backdrop-blur-xl
-                          shadow-[0_10px_30px_rgba(168,85,247,0.25)]">
+          <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-purple-100 via-fuchsia-100 to-pink-100 dark:from-purple-900/40 dark:via-fuchsia-900/30 dark:to-pink-900/30 border border-purple-300/40 shadow-[0_10px_30px_rgba(168,85,247,0.25)]">
             <CreditCard className="h-4 w-4 text-purple-600 dark:text-purple-300" />
             <span className="text-xs sm:text-sm font-bold text-purple-700 dark:text-purple-300">
               Charge fixe : {formatAmount(fixeTotal)}
@@ -600,12 +540,7 @@ const DepenseDuMois = () => {
 
     {/* Icône prestige */}
     <div className="hidden lg:block">
-      <div className="relative rounded-full p-4
-                      bg-gradient-to-br from-gray-200/60 to-white/40
-                      dark:from-gray-700/40 dark:to-gray-800/40
-                      backdrop-blur-xl
-                      border border-white/30
-                      shadow-[0_15px_50px_rgba(0,0,0,0.2)]">
+      <div className="relative rounded-full p-4 bg-gradient-to-br from-gray-200/60 to-white/40 dark:from-gray-700/40 dark:to-gray-800/40 border border-white/30 shadow-[0_15px_50px_rgba(0,0,0,0.2)]">
         <Award className="h-12 w-12 text-amber-400 drop-shadow-lg" />
       </div>
     </div>
@@ -620,25 +555,12 @@ const DepenseDuMois = () => {
 
       
       {/* Tableau des mouvements modernisé */}
-      <div className="relative overflow-hidden
-                bg-gradient-to-br from-white/95 via-gray-50/95 to-gray-100/95
-                dark:from-gray-900/95 dark:via-gray-800/95 dark:to-gray-900/95
-                backdrop-blur-2xl
-                rounded-2xl sm:rounded-3xl
-                shadow-[0_40px_120px_rgba(0,0,0,0.25)]
-                border border-white/30
-                overflow-hidden -mx-3 sm:mx-0">
+      <div className="relative overflow-hidden bg-gradient-to-br from-white/95 via-gray-50/95 to-gray-100/95 dark:from-gray-900/95 dark:via-gray-800/95 dark:to-gray-900/95 rounded-2xl sm:rounded-3xl shadow-[0_40px_120px_rgba(0,0,0,0.25)] border border-white/30 overflow-hidden -mx-3 sm:mx-0">
 
   {/* Header luxe */}
-  <div className="relative bg-gradient-to-r from-white/80 via-gray-50/80 to-white/80
-                  dark:from-gray-800/80 dark:via-gray-700/80 dark:to-gray-800/80
-                  backdrop-blur-xl
-                  p-4 sm:p-6
-                  border-b border-white/30">
+  <div className="relative bg-gradient-to-r from-white/80 via-gray-50/80 to-white/80 dark:from-gray-800/80 dark:via-gray-700/80 dark:to-gray-800/80 p-4 sm:p-6 border-b border-white/30">
     <div className="flex items-center gap-4">
-      <div className="relative rounded-full p-3
-                      bg-gradient-to-br from-indigo-500 via-purple-600 to-fuchsia-600
-                      shadow-[0_15px_40px_rgba(99,102,241,0.5)]">
+      <div className="relative rounded-full p-3 bg-gradient-to-br from-indigo-500 via-purple-600 to-fuchsia-600 shadow-[0_15px_40px_rgba(99,102,241,0.5)]">
         <Wallet className="h-5 w-5 sm:h-6 sm:w-6 text-white drop-shadow-lg" />
       </div>
       <h3 className="text-lg sm:text-xl md:text-2xl font-extrabold tracking-wide text-gray-800 dark:text-gray-200">
@@ -652,8 +574,7 @@ const DepenseDuMois = () => {
 
       {/* En-têtes */}
       <TableHeader>
-        <TableRow className="border-none bg-gradient-to-r from-gray-50/70 to-white/70
-                             dark:from-gray-800/70 dark:to-gray-700/70">
+        <TableRow className="border-none bg-gradient-to-r from-gray-50/70 to-white/70 dark:from-gray-800/70 dark:to-gray-700/70">
           {[
             { icon: Calendar, label: 'Date' },
             { icon: Edit, label: 'Description' },
@@ -698,10 +619,7 @@ const DepenseDuMois = () => {
           <TableRow>
             <TableCell colSpan={6} className="py-16 text-center">
               <div className="flex flex-col items-center gap-4">
-                <div className="rounded-full p-6
-                                bg-gradient-to-br from-indigo-200/60 via-purple-200/60 to-white/40
-                                dark:from-indigo-900/40 dark:via-purple-900/30 dark:to-gray-800/40
-                                shadow-[0_20px_60px_rgba(99,102,241,0.35)]">
+                <div className="rounded-full p-6 bg-gradient-to-br from-indigo-200/60 via-purple-200/60 to-white/40 dark:from-indigo-900/40 dark:via-purple-900/30 dark:to-gray-800/40 shadow-[0_20px_60px_rgba(99,102,241,0.35)]">
                   <Wallet className="h-12 w-12 text-indigo-600 dark:text-indigo-400" />
                 </div>
                 <div>
@@ -719,16 +637,11 @@ const DepenseDuMois = () => {
           mouvements.map((mouvement, index) => (
             <TableRow
               key={mouvement.id}
-              className="group border-b border-gray-100/50 dark:border-gray-700/50
-                         hover:bg-gradient-to-r hover:from-indigo-50/50 hover:to-purple-50/50
-                         dark:hover:from-indigo-900/20 dark:hover:to-purple-900/20
-                         transition-all duration-300"
+              className="group border-b border-gray-100/50 dark:border-gray-700/50 hover:bg-gradient-to-r hover:from-indigo-50/50 hover:to-purple-50/50 dark:hover:from-indigo-900/20 dark:hover:to-purple-900/20 transition-all duration-300"
             >
               <TableCell>
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full flex items-center justify-center
-                                  bg-gradient-to-br from-indigo-500 to-purple-600
-                                  shadow-md">
+                  <div className="w-9 h-9 rounded-full flex items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-600 shadow-md">
                     <span className="text-xs font-bold text-white">
                       {index + 1}
                     </span>
@@ -744,21 +657,14 @@ const DepenseDuMois = () => {
               </TableCell>
 
               <TableCell>
-                <span className="inline-block px-4 py-1 rounded-full
-                                 bg-gradient-to-r from-purple-100 to-pink-100
-                                 dark:from-purple-900/40 dark:to-pink-900/40
-                                 text-purple-700 dark:text-purple-300
-                                 font-bold text-sm">
+                <span className="inline-block px-4 py-1 rounded-full bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900/40 dark:to-pink-900/40 text-purple-700 dark:text-purple-300 font-bold text-sm">
                   {mouvement.categorie}
                 </span>
               </TableCell>
 
               <TableCell className="text-right">
                 {mouvement.debit ? (
-                  <span className="inline-flex items-center gap-1 px-4 py-1 rounded-full
-                                   bg-gradient-to-r from-red-100 to-orange-100
-                                   dark:from-red-900/40 dark:to-orange-900/40
-                                   text-red-700 dark:text-red-300 font-bold">
+                  <span className="inline-flex items-center gap-1 px-4 py-1 rounded-full bg-gradient-to-r from-red-100 to-orange-100 dark:from-red-900/40 dark:to-orange-900/40 text-red-700 dark:text-red-300 font-bold">
                     <ArrowDown className="h-4 w-4" />
                     {formatAmount(mouvement.debit)}
                   </span>
@@ -767,10 +673,7 @@ const DepenseDuMois = () => {
 
               <TableCell className="text-right">
                 {mouvement.credit ? (
-                  <span className="inline-flex items-center gap-1 px-4 py-1 rounded-full
-                                   bg-gradient-to-r from-emerald-100 to-teal-100
-                                   dark:from-emerald-900/40 dark:to-teal-900/40
-                                   text-emerald-700 dark:text-emerald-300 font-bold">
+                  <span className="inline-flex items-center gap-1 px-4 py-1 rounded-full bg-gradient-to-r from-emerald-100 to-teal-100 dark:from-emerald-900/40 dark:to-teal-900/40 text-emerald-700 dark:text-emerald-300 font-bold">
                     <ArrowUp className="h-4 w-4" />
                     {formatAmount(mouvement.credit)}
                   </span>
@@ -783,11 +686,7 @@ const DepenseDuMois = () => {
                   variant="ghost"
                   size="sm"
                   onClick={() => handleEdit(mouvement)}
-                  className="rounded-full p-2
-                             bg-gradient-to-br from-blue-100/70 to-white/40
-                             dark:from-blue-900/30 dark:to-gray-800/40
-                             hover:scale-110 transition-all
-                             shadow-[0_10px_30px_rgba(59,130,246,0.35)]"
+                  className="rounded-full p-2 bg-gradient-to-br from-blue-100/70 to-white/40 dark:from-blue-900/30 dark:to-gray-800/40 hover:scale-110 transition-all shadow-[0_10px_30px_rgba(59,130,246,0.35)]"
                 >
                   <Edit className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                 </Button>
@@ -799,11 +698,7 @@ const DepenseDuMois = () => {
                     setDeleteId(mouvement.id);
                     setIsDeleteDialogOpen(true);
                   }}
-                  className="rounded-full p-2
-                             bg-gradient-to-br from-red-100/70 to-white/40
-                             dark:from-red-900/30 dark:to-gray-800/40
-                             hover:scale-110 transition-all
-                             shadow-[0_10px_30px_rgba(239,68,68,0.35)]"
+                  className="rounded-full p-2 bg-gradient-to-br from-red-100/70 to-white/40 dark:from-red-900/30 dark:to-gray-800/40 hover:scale-110 transition-all shadow-[0_10px_30px_rgba(239,68,68,0.35)]"
                 >
                   <Trash2 className="h-4 w-4 text-red-600 dark:text-red-400" />
                 </Button>
@@ -818,8 +713,7 @@ const DepenseDuMois = () => {
 
       {/* Dialogue d'ajout/modification de mouvement */}
      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-  <DialogContent className="sm:max-w-md bg-gradient-to-br from-white/95 to-gray-50/95 dark:from-gray-900/95 dark:to-gray-800/95
-                             backdrop-blur-2xl border border-white/30 shadow-[0_40px_120px_rgba(0,0,0,0.25)] rounded-2xl sm:rounded-3xl">
+  <DialogContent className="sm:max-w-md bg-gradient-to-br from-white/95 to-gray-50/95 dark:from-gray-900/95 dark:to-gray-800/95 border border-white/30 shadow-[0_40px_120px_rgba(0,0,0,0.25)] rounded-2xl sm:rounded-3xl">
     
     <DialogHeader>
       <DialogTitle className="flex items-center gap-3 text-xl font-extrabold text-gray-800 dark:text-gray-200">
@@ -841,7 +735,7 @@ const DepenseDuMois = () => {
             onValueChange={handleCategorieChange}
             required
           >
-            <SelectTrigger id="categorie" className="bg-white/50 backdrop-blur-xl border border-gray-200/40 rounded-2xl shadow-inner">
+            <SelectTrigger id="categorie" className="bg-white/50 border border-gray-200/40 rounded-2xl shadow-inner">
               <SelectValue placeholder="Sélectionner une catégorie" />
             </SelectTrigger>
             <SelectContent>
@@ -865,7 +759,7 @@ const DepenseDuMois = () => {
             onChange={(e) => setNewMouvement({...newMouvement, description: e.target.value})}
             required
             disabled={newMouvement.categorie === "chargeFixe" || newMouvement.categorie === "RSA"}
-            className="px-4 py-3 bg-white/50 backdrop-blur-xl border border-gray-200/40 rounded-2xl shadow-inner"
+            className="px-4 py-3 bg-white/50 border border-gray-200/40 rounded-2xl shadow-inner"
           />
         </div>
 
@@ -878,7 +772,7 @@ const DepenseDuMois = () => {
             value={newMouvement.date}
             onChange={(e) => setNewMouvement({...newMouvement, date: e.target.value})}
             required
-            className="px-4 py-3 bg-white/50 backdrop-blur-xl border border-gray-200/40 rounded-2xl shadow-inner"
+            className="px-4 py-3 bg-white/50 border border-gray-200/40 rounded-2xl shadow-inner"
           />
         </div>
 
@@ -900,7 +794,7 @@ const DepenseDuMois = () => {
                   value={value}
                   onChange={(e) => onChange(e.target.value)}
                   disabled={disabled}
-                  className="pl-10 px-4 py-3 bg-white/50 backdrop-blur-xl border border-gray-200/40 rounded-2xl shadow-inner"
+                  className="pl-10 px-4 py-3 bg-white/50 border border-gray-200/40 rounded-2xl shadow-inner"
                 />
               </div>
             </div>
@@ -914,7 +808,7 @@ const DepenseDuMois = () => {
           type="button"
           variant="outline"
           onClick={() => setIsDialogOpen(false)}
-          className="bg-white/50 backdrop-blur-xl border border-gray-200/40 rounded-2xl shadow-inner"
+          className="bg-white/50 border border-gray-200/40 rounded-2xl shadow-inner"
         >
           Annuler
         </Button>
@@ -932,8 +826,7 @@ const DepenseDuMois = () => {
 
 {/* Dialogue suppression */}
 <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-  <DialogContent className="sm:max-w-md bg-gradient-to-br from-white/95 to-gray-50/95 dark:from-gray-900/95 dark:to-gray-800/95
-                             backdrop-blur-2xl border border-white/30 shadow-[0_40px_120px_rgba(0,0,0,0.25)] rounded-2xl sm:rounded-3xl">
+  <DialogContent className="sm:max-w-md bg-gradient-to-br from-white/95 to-gray-50/95 dark:from-gray-900/95 dark:to-gray-800/95 border border-white/30 shadow-[0_40px_120px_rgba(0,0,0,0.25)] rounded-2xl sm:rounded-3xl">
     <DialogHeader>
       <DialogTitle className="flex items-center gap-3 text-xl font-extrabold text-gray-800 dark:text-gray-200">
         <div className="rounded-full p-3 bg-gradient-to-br from-red-500 via-orange-500 to-red-600 shadow-lg">
@@ -948,7 +841,7 @@ const DepenseDuMois = () => {
         type="button"
         variant="outline"
         onClick={() => setIsDeleteDialogOpen(false)}
-        className="bg-white/50 backdrop-blur-xl border border-gray-200/40 rounded-2xl shadow-inner"
+        className="bg-white/50 border border-gray-200/40 rounded-2xl shadow-inner"
       >
         Annuler
       </Button>
@@ -965,8 +858,7 @@ const DepenseDuMois = () => {
 
 {/* Dialogue dépenses fixes */}
 <Dialog open={isFixeDialogOpen} onOpenChange={setIsFixeDialogOpen}>
-  <DialogContent className="sm:max-w-md bg-gradient-to-br from-white/95 to-gray-50/95 dark:from-gray-900/95 dark:to-gray-800/95
-                             backdrop-blur-* border border-white/30 shadow-[0_40px_120px_rgba(0,0,0,0.25)] rounded-2xl sm:rounded-3xl">
+  <DialogContent className="sm:max-w-md bg-gradient-to-br from-white/95 to-gray-50/95 dark:from-gray-900/95 dark:to-gray-800/95 border border-white/30 shadow-[0_40px_120px_rgba(0,0,0,0.25)] rounded-2xl sm:rounded-3xl">
     <DialogHeader>
       <DialogTitle className="flex items-center justify-between gap-3 text-xl font-extrabold text-gray-800 dark:text-gray-200">
         <div className="flex items-center gap-3">
@@ -994,7 +886,7 @@ const DepenseDuMois = () => {
         </p>
       )}
       {depensesFixe.map((item, index) => (
-        <div key={index} className="flex items-end gap-2 p-3 rounded-2xl bg-white/40 dark:bg-gray-800/40 border border-gray-200/40 backdrop-blur-xl">
+        <div key={index} className="flex items-end gap-2 p-3 rounded-2xl bg-white/40 dark:bg-gray-800/40 border border-gray-200/40">
           <div className="flex-1 space-y-1">
             <Label className="text-xs font-semibold text-black-800 dark:text-gray-400">Libellé</Label>
             <Input
@@ -1045,7 +937,7 @@ const DepenseDuMois = () => {
         type="button"
         variant="outline"
         onClick={() => setIsFixeDialogOpen(false)}
-        className="bg-white/50 backdrop-blur-xl border border-gray-200/40 rounded-2xl shadow-inner"
+        className="bg-white/50 border border-gray-200/40 rounded-2xl shadow-inner"
       >
         Annuler
       </Button>
@@ -1062,8 +954,7 @@ const DepenseDuMois = () => {
 
 {/* Dialogue RSA */}
 <Dialog open={isRsaDialogOpen} onOpenChange={setIsRsaDialogOpen}>
-  <DialogContent className="sm:max-w-md bg-gradient-to-br from-white/95 to-gray-50/95 dark:from-gray-900/95 dark:to-gray-800/95
-                             backdrop-blur-2xl border border-white/30 shadow-[0_40px_120px_rgba(0,0,0,0.25)] rounded-2xl sm:rounded-3xl">
+  <DialogContent className="sm:max-w-md bg-gradient-to-br from-white/95 to-gray-50/95 dark:from-gray-900/95 dark:to-gray-800/95 border border-white/30 shadow-[0_40px_120px_rgba(0,0,0,0.25)] rounded-2xl sm:rounded-3xl">
     <DialogHeader>
       <DialogTitle className="flex items-center gap-3 text-xl font-extrabold text-gray-800 dark:text-gray-200">
         <div className="rounded-full p-3 bg-gradient-to-br from-amber-500 via-orange-500 to-yellow-500 shadow-lg">
@@ -1088,7 +979,7 @@ const DepenseDuMois = () => {
             step="0.01"
             value={rsaMontant}
             onChange={(e) => setRsaMontant(e.target.value)}
-            className="pl-10 px-4 py-3 bg-white/50 backdrop-blur-xl border border-gray-200/40 rounded-2xl shadow-inner"
+            className="pl-10 px-4 py-3 bg-white/50 border border-gray-200/40 rounded-2xl shadow-inner"
           />
         </div>
       </div>
@@ -1099,7 +990,7 @@ const DepenseDuMois = () => {
         type="button"
         variant="outline"
         onClick={() => setIsRsaDialogOpen(false)}
-        className="bg-white/50 backdrop-blur-xl border border-gray-200/40 rounded-2xl shadow-inner"
+        className="bg-white/50 border border-gray-200/40 rounded-2xl shadow-inner"
       >
         Annuler
       </Button>

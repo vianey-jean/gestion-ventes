@@ -304,11 +304,7 @@ const RefundForm: React.FC<RefundFormProps> = ({ isOpen, onClose, editSale }) =>
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto
-          bg-gradient-to-br from-white to-amber-50/50 dark:from-gray-900 dark:to-amber-950/30
-          backdrop-blur-xl border border-amber-100/50 dark:border-amber-800/30
-          shadow-[0_40px_120px_rgba(0,0,0,0.15)] dark:shadow-[0_40px_120px_rgba(0,0,0,0.5)]
-          rounded-2xl sm:rounded-3xl">
+        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-white to-amber-50/50 dark:from-gray-900 dark:to-amber-950/30 border border-amber-100/50 dark:border-amber-800/30 shadow-[0_40px_120px_rgba(0,0,0,0.15)] dark:shadow-[0_40px_120px_rgba(0,0,0,0.5)] rounded-2xl sm:rounded-3xl">
 
           <DialogHeader>
             <DialogTitle className="flex items-center gap-3 text-xl">
@@ -375,7 +371,7 @@ const RefundForm: React.FC<RefundFormProps> = ({ isOpen, onClose, editSale }) =>
                 {isSearching && <p className="text-sm text-gray-400 dark:text-white/40">Recherche en cours...</p>}
 
                 {searchResults.length > 0 && (
-                  <div className="max-h-60 overflow-y-auto border border-gray-200/60 dark:border-white/[0.08] rounded-xl divide-y divide-gray-100 dark:divide-white/[0.06] bg-white/80 dark:bg-white/[0.02] backdrop-blur-sm shadow-lg">
+                  <div className="max-h-60 overflow-y-auto border border-gray-200/60 dark:border-white/[0.08] rounded-xl divide-y divide-gray-100 dark:divide-white/[0.06] bg-white/80 dark:bg-white/[0.02] shadow-lg">
                     {searchResults.map((sale) => (
                       <div
                         key={sale.id}
@@ -412,7 +408,7 @@ const RefundForm: React.FC<RefundFormProps> = ({ isOpen, onClose, editSale }) =>
             {/* Selected sale info */}
             {selectedSale && (
               <>
-                <div className="p-4 bg-amber-50/80 dark:bg-amber-500/[0.06] border border-amber-200/60 dark:border-amber-500/20 rounded-xl backdrop-blur-sm shadow-sm">
+                <div className="p-4 bg-amber-50/80 dark:bg-amber-500/[0.06] border border-amber-200/60 dark:border-amber-500/20 rounded-xl shadow-sm">
                   <div className="flex justify-between items-center">
                     <div>
                       <p className="text-sm font-bold text-amber-700 dark:text-amber-400">
@@ -433,7 +429,7 @@ const RefundForm: React.FC<RefundFormProps> = ({ isOpen, onClose, editSale }) =>
 
                 {/* Linked Pret Produit Warning */}
                 {linkedPrets.length > 0 && (
-                  <div className="p-4 bg-yellow-50/80 dark:bg-yellow-500/[0.06] border border-yellow-200/60 dark:border-yellow-500/20 rounded-xl backdrop-blur-sm shadow-sm">
+                  <div className="p-4 bg-yellow-50/80 dark:bg-yellow-500/[0.06] border border-yellow-200/60 dark:border-yellow-500/20 rounded-xl shadow-sm">
                     <div className="flex items-center gap-2 mb-3">
                       <AlertTriangle className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
                       <p className="font-bold text-sm text-yellow-700 dark:text-yellow-400">
@@ -478,12 +474,7 @@ const RefundForm: React.FC<RefundFormProps> = ({ isOpen, onClose, editSale }) =>
                   {refundProducts.map((product, index) => (
                     <div
                       key={index}
-                      className="p-4
-                        bg-gray-50/80 dark:bg-white/[0.04]
-                        border border-gray-200/60 dark:border-white/[0.08]
-                        rounded-xl backdrop-blur-sm space-y-3 transition-all duration-300
-                        hover:border-amber-300 dark:hover:border-amber-500/20
-                        shadow-sm hover:shadow-md"
+                      className="p-4 bg-gray-50/80 dark:bg-white/[0.04] border border-gray-200/60 dark:border-white/[0.08] rounded-xl space-y-3 transition-all duration-300 hover:border-amber-300 dark:hover:border-amber-500/20 shadow-sm hover:shadow-md"
                     >
                       <div className="flex justify-between items-start">
                         <div className="flex items-center gap-2">
@@ -541,7 +532,7 @@ const RefundForm: React.FC<RefundFormProps> = ({ isOpen, onClose, editSale }) =>
                 </div>
 
                 {/* Totals */}
-                <div className="p-4 bg-gradient-to-r from-amber-50/80 to-orange-50/80 dark:from-amber-500/[0.06] dark:to-orange-500/[0.06] border border-amber-200/60 dark:border-amber-500/20 rounded-xl backdrop-blur-sm shadow-sm">
+                <div className="p-4 bg-gradient-to-r from-amber-50/80 to-orange-50/80 dark:from-amber-500/[0.06] dark:to-orange-500/[0.06] border border-amber-200/60 dark:border-amber-500/20 rounded-xl shadow-sm">
                   <div className="grid grid-cols-3 gap-4 text-center">
                     <div>
                       <p className="text-xs text-gray-500 dark:text-white/40">Total remboursement</p>
@@ -589,7 +580,7 @@ const RefundForm: React.FC<RefundFormProps> = ({ isOpen, onClose, editSale }) =>
 
       {/* Stock restore confirmation modal */}
       <Dialog open={showStockConfirm} onOpenChange={setShowStockConfirm}>
-        <DialogContent className="sm:max-w-md bg-gradient-to-br from-white to-emerald-50/50 dark:from-gray-900 dark:to-emerald-950/30 backdrop-blur-xl border border-emerald-100/50 dark:border-emerald-800/30 shadow-2xl rounded-2xl">
+        <DialogContent className="sm:max-w-md bg-gradient-to-br from-white to-emerald-50/50 dark:from-gray-900 dark:to-emerald-950/30 border border-emerald-100/50 dark:border-emerald-800/30 shadow-2xl rounded-2xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-3 text-lg">
               <div className="p-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg">

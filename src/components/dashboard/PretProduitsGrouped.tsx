@@ -661,7 +661,7 @@ const PretProduitsGrouped: React.FC = () => {
             initial={{ scale: 0.9 }}
             animate={{ scale: 1 }}
             transition={{ duration: 0.5 }}
-            className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-purple-500/10 to-indigo-500/10 backdrop-blur-sm rounded-full text-purple-600 dark:text-purple-400 text-sm font-semibold mb-6 border border-purple-200/50 dark:border-purple-800/50"
+            className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-purple-500/10 to-indigo-500/10 rounded-full text-purple-600 dark:text-purple-400 text-sm font-semibold mb-6 border border-purple-200/50 dark:border-purple-800/50"
           >
             <CreditCard className="h-5 w-5 mr-2 animate-pulse" />
             Gestion Premium des Prêts
@@ -1130,7 +1130,7 @@ const PretProduitsGrouped: React.FC = () => {
           className="space-y-4"
         >
           {/* Section "Tous payés" */}
-          <Card className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl border border-white/20 shadow-xl overflow-hidden">
+          <Card className="bg-white/80 dark:bg-gray-800/80 border border-white/20 shadow-xl overflow-hidden">
             <div 
               className="p-6 cursor-pointer hover:bg-emerald-50/50 dark:hover:bg-emerald-900/20 transition-all"
               onClick={() => toggleSection('paid')}
@@ -1325,7 +1325,7 @@ const PretProduitsGrouped: React.FC = () => {
           </Card>
 
           {/* Section "En cours" */}
-          <Card className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl border border-white/20 shadow-xl overflow-hidden">
+          <Card className="bg-white/80 dark:bg-gray-800/80 border border-white/20 shadow-xl overflow-hidden">
             <div 
               className="p-6 cursor-pointer hover:bg-orange-50/50 dark:hover:bg-orange-900/20 transition-all"
               onClick={() => toggleSection('pending')}
@@ -1594,7 +1594,7 @@ const PretProduitsGrouped: React.FC = () => {
       
       {/* Dialog Nouveau Prêt */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-[600px] bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border border-white/20 max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-[600px] bg-white/95 dark:bg-gray-900/95 border border-white/20 max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
               Ajouter un prêt de produit
@@ -1653,7 +1653,7 @@ const PretProduitsGrouped: React.FC = () => {
                   value={clientSearchQuery}
                   onChange={(e) => handleClientSearch(e.target.value)}
                   placeholder="Tapez le nom du client..."
-                  className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm border-gray-300 dark:border-gray-600"
+                  className="bg-white/50 dark:bg-gray-800/50 border-gray-300 dark:border-gray-600"
                 />
                 {clientSearchQuery.length >= 3 && (
                   <>
@@ -1699,7 +1699,7 @@ const PretProduitsGrouped: React.FC = () => {
                     <Button
                       variant={"outline"}
                       className={cn(
-                        "w-full justify-start text-left font-normal bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm border-gray-300 dark:border-gray-600",
+                        "w-full justify-start text-left font-normal bg-white/50 dark:bg-gray-800/50  border-gray-300 dark:border-gray-600",
                         !datePret && "text-muted-foreground"
                       )}
                     >
@@ -1729,7 +1729,7 @@ const PretProduitsGrouped: React.FC = () => {
                     <Button
                       variant={"outline"}
                       className={cn(
-                        "w-full justify-start text-left font-normal bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm border-gray-300 dark:border-gray-600",
+                        "w-full justify-start text-left font-normal bg-white/50 dark:bg-gray-800/50  border-gray-300 dark:border-gray-600",
                         !datePaiement && "text-muted-foreground"
                       )}
                     >
@@ -1770,7 +1770,7 @@ const PretProduitsGrouped: React.FC = () => {
                 value={description}
                 onChange={(e) => handleSearch(e.target.value)}
                 placeholder="Tapez pour rechercher un produit..."
-                className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm border-gray-300 dark:border-gray-600"
+                className="bg-white/50 dark:bg-gray-800/50 border-gray-300 dark:border-gray-600"
               />
               {searchResults.length > 0 && (
                 <div className="border rounded-md max-h-40 overflow-y-auto bg-white dark:bg-gray-800">
@@ -1797,7 +1797,7 @@ const PretProduitsGrouped: React.FC = () => {
                   onChange={(e) => setNom(e.target.value)}
                   placeholder="Nom du client"
                   disabled={!isNewClient && nom !== ''}
-                  className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm border-gray-300 dark:border-gray-600 disabled:opacity-70"
+                  className="bg-white/50 dark:bg-gray-800/50 border-gray-300 dark:border-gray-600 disabled:opacity-70"
                 />
               </div>
 
@@ -1809,7 +1809,7 @@ const PretProduitsGrouped: React.FC = () => {
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder="+262 692 123 456"
                   disabled={!isNewClient && phone !== ''}
-                  className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm border-gray-300 dark:border-gray-600 disabled:opacity-70"
+                  className="bg-white/50 dark:bg-gray-800/50 border-gray-300 dark:border-gray-600 disabled:opacity-70"
                 />
               </div>
             </div>
@@ -1823,7 +1823,7 @@ const PretProduitsGrouped: React.FC = () => {
                   step="0.01"
                   value={prixVente}
                   onChange={(e) => setPrixVente(e.target.value)}
-                  className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm border-gray-300 dark:border-gray-600"
+                  className="bg-white/50 dark:bg-gray-800/50 border-gray-300 dark:border-gray-600"
                 />
               </div>
               
@@ -1835,7 +1835,7 @@ const PretProduitsGrouped: React.FC = () => {
                   step="0.01"
                   value={avanceRecue}
                   onChange={(e) => setAvanceRecue(e.target.value)}
-                  className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm border-gray-300 dark:border-gray-600"
+                  className="bg-white/50 dark:bg-gray-800/50 border-gray-300 dark:border-gray-600"
                 />
               </div>
             </div>
@@ -1876,7 +1876,7 @@ const PretProduitsGrouped: React.FC = () => {
 
       {/* Dialog Modifier Prêt */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent className="sm:max-w-[600px] bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl">
+        <DialogContent className="sm:max-w-[600px] bg-white/95 dark:bg-gray-900/95">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
               Modifier un prêt
@@ -2062,7 +2062,7 @@ const PretProduitsGrouped: React.FC = () => {
 
       {/* Dialog Détails du prêt */}
       <Dialog open={detailDialogOpen} onOpenChange={setDetailDialogOpen}>
-        <DialogContent className="sm:max-w-[600px] bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border border-white/20">
+        <DialogContent className="sm:max-w-[600px] bg-white/95 dark:bg-gray-900/95 border border-white/20">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
               <div className="flex items-center gap-2">
@@ -2275,7 +2275,7 @@ const PretProduitsGrouped: React.FC = () => {
 
       {/* Dialog Transfert */}
       <Dialog open={transferDialogOpen} onOpenChange={setTransferDialogOpen}>
-        <DialogContent className="sm:max-w-[700px] bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border border-white/20">
+        <DialogContent className="sm:max-w-[700px] bg-white/95 dark:bg-gray-900/95 border border-white/20">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
               <div className="flex items-center gap-2">
@@ -2353,7 +2353,7 @@ const PretProduitsGrouped: React.FC = () => {
                     value={transferTargetName}
                     onChange={(e) => setTransferTargetName(e.target.value)}
                     placeholder="Saisissez le nom de la personne..."
-                    className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm border-gray-300 dark:border-gray-600"
+                    className="bg-white/50 dark:bg-gray-800/50 border-gray-300 dark:border-gray-600"
                   />
                   
                   {groupedPrets.length > 0 && transferTargetName === '' && (

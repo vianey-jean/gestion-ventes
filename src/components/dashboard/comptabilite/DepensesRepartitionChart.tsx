@@ -36,17 +36,17 @@ const DepensesRepartitionChart: React.FC<DepensesRepartitionChartProps> = ({
   const hasData = sorted.length > 0;
 
   return (
-    <Card className="relative overflow-hidden border-white/10 bg-gradient-to-br from-white/5 via-white/[0.02] to-transparent backdrop-blur-xl shadow-[0_20px_60px_-20px_rgba(0,0,0,0.3)]">
+    <Card className="relative overflow-hidden border-white/10 bg-gradient-to-br from-white/5 via-white/[0.02] to-transparent shadow-[0_20px_60px_-20px_rgba(0,0,0,0.3)]">
       {/* Glow effects */}
-      <div className="pointer-events-none absolute -top-24 -right-24 h-64 w-64 rounded-full bg-rose-500/10 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-emerald-500/10 blur-3xl" />
+      <div className="pointer-events-none absolute -top-24 -right-24 h-64 w-64 rounded-full bg-rose-500/10" />
+      <div className="pointer-events-none absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-emerald-500/10" />
 
       <CardHeader className="relative flex items-center justify-center pb-2">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, ease: 'easeOut' }}
-          className="flex items-center gap-3 px-6 py-4 rounded-2xl bg-white/70 dark:bg-white/10 backdrop-blur-xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] border border-white/30"
+          className="flex items-center gap-3 px-6 py-4 rounded-2xl bg-white/70 dark:bg-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.15)] border border-white/30"
         >
           <Sparkles className="w-6 h-6 text-yellow-500 animate-pulse" />
           <CardTitle className="text-xl font-semibold tracking-wide bg-gradient-to-r from-gray-900 via-gray-700 to-gray-900 dark:from-white dark:via-gray-300 dark:to-white bg-clip-text text-transparent text-center">
@@ -106,7 +106,7 @@ const DepensesRepartitionChart: React.FC<DepensesRepartitionChartProps> = ({
                       initial={{ opacity: 0, x: 10 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: i * 0.04 }}
-                      className="rounded-xl border border-white/10 bg-white/60 dark:bg-white/[0.04] p-3 backdrop-blur-sm"
+                      className="rounded-xl border border-white/10 bg-white/60 dark:bg-white/[0.04] p-3"
                     >
                       <div className="flex items-center justify-between gap-3 mb-2">
                         <div className="flex items-center gap-2 min-w-0">
@@ -159,7 +159,7 @@ const StatMini: React.FC<{
   value: string;
   gradient: string;
 }> = ({ icon, label, value, gradient }) => (
-  <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/60 dark:bg-white/[0.04] p-3 backdrop-blur-sm">
+  <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/60 dark:bg-white/[0.04] p-3">
     <div className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-gradient-to-r ${gradient} text-white text-[10px] font-black shadow`}>
       {icon}
       <span className="uppercase tracking-wide">{label}</span>

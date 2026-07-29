@@ -468,7 +468,7 @@ const SalesOverviewSection: React.FC<SalesOverviewSectionProps> = ({
         initial={{ opacity: 0, y: 18 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
-        className="flex flex-col gap-4 rounded-3xl border border-white/20 bg-white/70 p-4 shadow-xl backdrop-blur-md dark:border-gray-800 dark:bg-gray-900/70 sm:p-6 lg:flex-row lg:items-center lg:justify-between"
+        className="flex flex-col gap-4 rounded-3xl border border-white/20 bg-white/70 p-4 shadow-xl dark:border-gray-800 dark:bg-gray-900/70 sm:p-6 lg:flex-row lg:items-center lg:justify-between"
       >
         <div className="flex items-center gap-3">
           <div className="rounded-2xl bg-gradient-to-br from-purple-600 to-indigo-600 p-3 shadow-lg">
@@ -530,7 +530,7 @@ const SalesOverviewSection: React.FC<SalesOverviewSectionProps> = ({
               `}
             >
               {/* Glow */}
-              <div className="absolute right-0 top-0 h-28 w-28 rounded-full bg-white/20 blur-2xl" />
+              <div className="absolute right-0 top-0 h-28 w-28 rounded-full bg-white/20" />
 
               {/* TOP */}
               <div className="relative z-10 flex items-start justify-between">
@@ -594,18 +594,7 @@ const SalesOverviewSection: React.FC<SalesOverviewSectionProps> = ({
             onOpenChange={() => setSelectedStat(null)}
           >
             <DialogContent
-              className="
-                max-h-[90vh]
-                w-[95vw]
-                overflow-y-auto
-                rounded-3xl
-                border-0
-                bg-white
-                p-0
-                shadow-2xl
-                dark:bg-gray-900
-                sm:max-w-lg
-              "
+              className="max-h-[90vh] w-[95vw] overflow-y-auto rounded-3xl border-0 bg-white p-0 shadow-2xl dark:bg-gray-900 sm:max-w-lg"
             >
               <motion.div
                 initial={{
@@ -638,7 +627,7 @@ const SalesOverviewSection: React.FC<SalesOverviewSectionProps> = ({
                   <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10" />
 
                   <div className="relative z-10 flex items-center gap-4">
-                    <div className="rounded-2xl bg-white/20 p-4 backdrop-blur-sm">
+                    <div className="rounded-2xl bg-white/20 p-4">
                       <selectedStatDetails.icon className="h-8 w-8 text-white" />
                     </div>
 
