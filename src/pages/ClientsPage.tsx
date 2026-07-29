@@ -36,7 +36,7 @@ import ClientPhoneActionModal from '@/components/clients/ClientPhoneActionModal'
 import ClientAddressActionModal from '@/components/clients/ClientAddressActionModal';
 import ClientConfirmDialogs from '@/components/clients/ClientConfirmDialogs';
 import ClientFormDialog, { ClientFormData } from '@/components/clients/ClientFormDialog';
-import ClientPagination from '@/components/clients/ClientPagination';
+import SharedPagination from '@/components/shared/Pagination';
 import ClientCardItem from '@/components/clients/ClientCardItem';
 import FideliteListModal from '@/components/clients/FideliteListModal';
 
@@ -106,6 +106,7 @@ const ClientsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => 
   const [fideliteMap, setFideliteMap] = useState<Record<string, FideliteEntry>>({});
 
   const photoInputRef = useRef<HTMLInputElement>(null);
+  const clientsGridRef = useRef<HTMLDivElement>(null);
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:10000';
 
   // Charger villes disponibles pour le formulaire
@@ -354,7 +355,7 @@ const ClientsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => 
           />
 
           {/* Grille des clients */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 md:gap-8">
+          <div ref={clientsGridRef} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 md:gap-8">
             {paginatedClients.map((client, index) => (
               <ClientCardItem
                 key={client.id}
@@ -384,10 +385,16 @@ const ClientsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => 
           )}
 
           {/* Pagination */}
-          <ClientPagination
+          <SharedPagination
             currentPage={currentPage}
             totalPages={totalPages}
-            onChange={setCurrentPage}
+            onPageChange={setCurrentPage}
+            totalItems={filteredClients.length}
+            itemsPerPage={itemsPerPage}
+            showFirstLast={true}
+            showItemCount={true}
+            siblingCount={1}
+            scrollTargetRef={clientsGridRef}
           />
 
           {/* Empty state global */}
