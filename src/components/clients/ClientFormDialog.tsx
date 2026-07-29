@@ -7,7 +7,11 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Camera, Plus } from 'lucide-react';
+import { Camera, Plus, Trash2, Star } from 'lucide-react';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 export interface ClientFormData {
   nom: string;
@@ -35,7 +39,44 @@ interface Props {
 const ClientFormDialog: React.FC<Props> = ({
   open, onOpenChange, editing, formData, setFormData, availableVilles,
   photoInputRef, photoPreview, isSubmitting, onSubmit, onPhotoSelect, onRemovePhoto,
-}) => (
+}) => {
+  // Confirmation de suppression (téléphone ou adresse)
+  const [pendingDelete, setPendingDelete] = React.useState<{ type: 'phone' | 'address'; index: number } | null>(null);
+
+  const confirmDelete = () => {
+    if (!pendingDelete) return;
+    const { type, index } = pendingDelete;
+    setFormData(prev => {
+      if (type === 'phone') {
+        return { ...prev, phones: prev.phones.filter((_, i) => i !== index) };
+      }
+      const villesArr = [...(prev.villes || [])];
+      while (villesArr.length < prev.addresses.length) villesArr.push('');
+      return {
+        ...prev,
+        addresses: prev.addresses.filter((_, i) => i !== index),
+        villes: villesArr.filter((_, i) => i !== index),
+      };
+    });
+    setPendingDelete(null);
+  };
+
+  // Rendre une adresse principale (déplace adresse + ville en première position)
+  const makeAddressPrimary = (index: number) => {
+    setFormData(prev => {
+      const addrs = [...prev.addresses];
+      const villesArr = [...(prev.villes || [])];
+      while (villesArr.length < addrs.length) villesArr.push('');
+      const [a] = addrs.splice(index, 1);
+      const [v] = villesArr.splice(index, 1);
+      addrs.unshift(a);
+      villesArr.unshift(v || '');
+      return { ...prev, addresses: addrs, villes: villesArr, ville: villesArr[0] || '' };
+    });
+  };
+
+  return (
+  <>
   <Dialog open={open} onOpenChange={onOpenChange}>
     <DialogContent className="sm:max-w-md bg-white/70 dark:bg-[#0a0020]/60 backdrop-blur-3xl border border-violet-200/20 dark:border-violet-800/20 shadow-[0_0_80px_-20px_rgba(139,92,246,0.4)] rounded-3xl animate-in fade-in zoom-in-95 duration-300">
       <DialogHeader className="space-y-2">
@@ -133,6 +174,16 @@ const ClientFormDialog: React.FC<Props> = ({
                       </button>
                     )}
                   </div>
+                  {index !== 0 && (
+                    <button
+                      type="button"
+                      title="Supprimer ce numéro"
+                      onClick={() => setPendingDelete({ type: 'phone', index })}
+                      className="shrink-0 h-9 w-9 flex items-center justify-center rounded-full text-red-500 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 border border-red-200/50 dark:border-red-800/40 transition-all duration-300 hover:scale-110 active:scale-95"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
@@ -172,7 +223,30 @@ const ClientFormDialog: React.FC<Props> = ({
                           placeholder={index === 0 ? 'Adresse principale' : `Adresse ${index + 1}`}
                           required={index === 0}
                         />
+                        {index === 0 ? (
+                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/30 px-2 py-0.5 rounded-full animate-pulse">
+                            Principale
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => makeAddressPrimary(index)}
+                            className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/20 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 px-2 py-0.5 rounded-full border border-emerald-300/40 transition-all duration-300 hover:scale-105 flex items-center gap-1"
+                          >
+                            <Star className="w-3 h-3" /> Principale
+                          </button>
+                        )}
                       </div>
+                      {index !== 0 && (
+                        <button
+                          type="button"
+                          title="Supprimer cette adresse"
+                          onClick={() => setPendingDelete({ type: 'address', index })}
+                          className="shrink-0 h-9 w-9 flex items-center justify-center rounded-full text-red-500 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 border border-red-200/50 dark:border-red-800/40 transition-all duration-300 hover:scale-110 active:scale-95"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -226,6 +300,29 @@ const ClientFormDialog: React.FC<Props> = ({
       </form>
     </DialogContent>
   </Dialog>
-);
+
+  <AlertDialog open={!!pendingDelete} onOpenChange={(o) => !o && setPendingDelete(null)}>
+    <AlertDialogContent className="bg-white/80 dark:bg-[#0a0020]/80 backdrop-blur-3xl border border-red-200/30 dark:border-red-800/30 rounded-3xl">
+      <AlertDialogHeader>
+        <AlertDialogTitle className="text-xl font-bold bg-gradient-to-r from-red-500 to-rose-600 bg-clip-text text-transparent">
+          Confirmer la suppression
+        </AlertDialogTitle>
+        <AlertDialogDescription className="text-gray-600 dark:text-gray-400">
+          {pendingDelete?.type === 'phone'
+            ? 'Ce numéro de téléphone sera définitivement supprimé de ce client après enregistrement. Continuer ?'
+            : 'Cette adresse (et sa ville) sera définitivement supprimée de ce client après enregistrement. Continuer ?'}
+        </AlertDialogDescription>
+      </AlertDialogHeader>
+      <AlertDialogFooter>
+        <AlertDialogCancel>Annuler</AlertDialogCancel>
+        <AlertDialogAction onClick={confirmDelete} className="bg-gradient-to-r from-red-500 to-rose-600 text-white hover:from-red-600 hover:to-rose-700">
+          Oui, supprimer
+        </AlertDialogAction>
+      </AlertDialogFooter>
+    </AlertDialogContent>
+  </AlertDialog>
+  </>
+  );
+};
 
 export default ClientFormDialog;
