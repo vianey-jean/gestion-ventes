@@ -1,221 +1,101 @@
+# 🏗️ Architecture
 
-# 🏗️ Architecture du Système — Documentation Complète
+## 1. Vue d'ensemble
 
-> **Version** : 6.0.0 — Architecture MVC  
-> **Dernière mise à jour** : Avril 2026
+VentePro est une application **full-stack MVC** :
 
----
+| Couche | Technologie | Emplacement |
+|---|---|---|
+| Vue | React 18 + TypeScript + Tailwind + shadcn/ui | `src/pages`, `src/components` |
+| Contrôleur front | Contextes React, stores Zustand, hooks | `src/contexts`, `src/store`, `src/hooks` |
+| Modèle front | Services API Axios, types | `src/services`, `src/types` |
+| Routes back | Express Router | `server/routes` (56 fichiers) |
+| Contrôleurs back | Logique métier | `server/controllers` (18 fichiers) |
+| Modèles back | Accès fichiers JSON | `server/models` (27 fichiers) |
+| Base de données | Fichiers JSON | `server/db` (66 fichiers) |
 
-## 📌 1. Vue d'ensemble
+## 2. Schéma de flux
 
-Application web **full-stack** de gestion commerciale suivant le pattern **MVC** (Model-View-Controller) :
-
-- **Frontend** : React SPA avec architecture MVC
-- **Backend** : Express.js REST API avec controllers séparés
-- **Base de données** : Fichiers JSON (stockage fichier plat)
-- **State Management** : Zustand (store centralisé)
-- **Communication temps réel** : Server-Sent Events (SSE)
-
----
-
-## 📌 2. Architecture MVC
-
-### Frontend (React)
-
-```
-┌─────────────────────────────────────────────────────────┐
-│                    FRONTEND (React SPA)                  │
-│                                                          │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐              │
-│  │  VIEWS   │  │CONTROLLERS│  │  MODELS  │              │
-│  │          │  │          │  │          │              │
-│  │ pages/   │◄►│ store/   │◄►│ types/   │              │
-│  │ compo-   │  │ hooks/   │  │ services/│              │
-│  │ nents/   │  │ contexts/│  │ api/     │              │
-│  └──────────┘  └──────────┘  └──────────┘              │
-└─────────────────────────────────────────────────────────┘
-```
-
-### Backend (Express.js)
-
-```
-┌─────────────────────────────────────────────────────────┐
-│                   BACKEND (Express.js)                   │
-│                                                          │
-│  ┌──────────┐  ┌──────────────┐  ┌──────────┐          │
-│  │  ROUTES  │─►│ CONTROLLERS  │─►│  MODELS  │          │
-│  │ routes/  │  │ controllers/ │  │ models/  │          │
-│  │          │  │              │  │ db/*.json│          │
-│  └──────────┘  └──────────────┘  └──────────┘          │
-│        ▲                                                 │
-│  ┌─────┴────┐                                           │
-│  │MIDDLEWARE │                                           │
-│  │ auth,cors │                                           │
-│  │ security  │                                           │
-│  └──────────┘                                           │
-└─────────────────────────────────────────────────────────┘
+```text
+Utilisateur
+   │  interaction
+   ▼
+Page (src/pages/XxxPage.tsx)
+   │  props / callbacks
+   ▼
+Composants (src/components/xxx/*)
+   │  appel
+   ▼
+Hook métier (src/hooks/useXxx.ts)
+   │  appel
+   ▼
+Service API (src/services/api/xxxApi.ts)  ──HTTP──►  server/routes/xxx.js
+                                                        │
+                                                        ▼
+                                                  controllers/xxxController.js
+                                                        │
+                                                        ▼
+                                                  models/Xxx.js  ──►  server/db/xxx.json
+                                                        │
+                                       broadcast SSE ◄──┘ (middleware/sync.js)
+   ◄────────────────────── EventSource /api/sync/events ──────────────────────
 ```
 
----
+## 3. Arborescence réelle
 
-## 📌 3. Structure des dossiers
-
-### Frontend (`src/`)
-
-```
+```text
 src/
-├── assets/               # Images et ressources statiques
-├── components/           # 🖼️ VIEWS — Composants UI réutilisables
-│   ├── ui/              #   Composants de base shadcn/ui
-│   ├── auth/            #   Authentification
-│   ├── dashboard/       #   Tableau de bord
-│   ├── clients/         #   Gestion des clients
-│   ├── commandes/       #   Commandes
-│   ├── pointage/        #   Pointage
-│   ├── rdv/             #   Rendez-vous
-│   ├── notes/           #   Kanban board
-│   ├── tache/           #   Tâches
-│   ├── navbar/          #   Navigation
-│   ├── common/          #   Composants partagés
-│   └── ...
-├── pages/               # 🖼️ VIEWS — Pages (une par route)
-├── store/               # 🎮 CONTROLLERS — State management (Zustand)
-│   ├── index.ts         #   Export centralisé
-│   ├── appStore.ts      #   État app (produits, ventes)
-│   └── authStore.ts     #   État authentification
-├── hooks/               # 🎮 CONTROLLERS — Logique réutilisable
-├── contexts/            # 🎮 CONTROLLERS — Contextes React
-├── services/            # 📡 MODELS — Appels API centralisés
-│   ├── api/             #   Services HTTP (1 par ressource)
-│   │   ├── api.ts       #   Instance Axios configurée
-│   │   ├── index.ts     #   Export centralisé
-│   │   ├── productApi.ts
-│   │   ├── saleApi.ts
-│   │   └── ...          #   (30+ services)
-│   └── realtime/        #   SSE et synchronisation
-├── types/               # 📐 MODELS — Interfaces TypeScript
-├── utils/               # 🔧 Fonctions utilitaires
-│   ├── index.ts         #   Export centralisé
-│   ├── helpers.ts       #   Formatage, debounce, etc.
-│   └── validators.ts   #   Validation des entrées
-├── lib/                 # 🔧 Utilitaires shadcn (cn)
-├── styles/              # 🎨 CSS personnalisé
-└── tests/               # 🧪 Tests
-```
+├── pages/            55 fichiers — écrans routés + sous-vues
+├── components/       342 fichiers — briques UI et métier
+├── contexts/         4 contextes globaux
+├── store/            stores Zustand (appStore, authStore)
+├── hooks/            28 hooks
+├── services/         services API (48 fichiers) + temps réel
+├── types/            contrats TypeScript
+├── utils/ lib/       helpers, validation, sécurité, codec code-barres
+└── styles/           surcouches CSS accessibilité / typographie
 
-### Backend (`server/`)
-
-```
 server/
-├── server.js            # Point d'entrée Express
-├── controllers/         # 🎮 CONTROLLERS — Logique métier
-│   ├── index.js         #   Export centralisé
-│   ├── authController.js
-│   ├── productController.js
-│   ├── saleController.js
-│   ├── clientController.js
-│   ├── commandeController.js
-│   ├── depenseController.js
-│   ├── beneficeController.js
-│   ├── pointageController.js
-│   ├── rdvController.js
-│   ├── tacheController.js
-│   ├── messageController.js
-│   ├── objectifController.js
-│   └── crudControllers.js
-├── routes/              # 📡 ROUTES — Endpoints API
-│   └── (33 fichiers)
-├── models/              # 📐 MODELS — Accès données
-│   └── (23 fichiers)
-├── middleware/           # 🔒 Middleware (auth, cors, sécurité)
-├── db/                  # 💾 Base de données JSON
-├── config/              # ⚙️ Configuration
-├── services/            # 🔧 Services backend
-└── uploads/             # 📁 Fichiers uploadés
+├── server.js         point d'entrée Express, montage de 60 préfixes /api
+├── routes/           56 routeurs
+├── controllers/      18 contrôleurs
+├── models/           27 modèles d'accès JSON
+├── middleware/       auth.js, dbHelper.js, encryption.js, patchDbIO.js, security.js, sync.js, upload.js, uploadAchat.js, uploadDepense.js, validation.js
+├── services/         availabilityService.js, fileService.js, reservationCleanupService.js
+├── db/               66 fichiers JSON
+└── uploads/          fichiers déposés (photos clients/produits, justificatifs)
 ```
 
----
+## 4. Routage applicatif (`src/App.tsx`)
 
-## 📌 4. Stack Technologique
+| Route | Page | Accès |
+|---|---|---|
+| `/` | `HomePage` | public |
+| `/about` | `AboutPage` | public |
+| `/contact` | `ContactPage` | public |
+| `/login` | `LoginPage` | public |
+| `/register` | `RegisterPage` | public |
+| `/reset-password` | `ResetPasswordPage` | public |
+| `/shared/notes/:token` | `SharedNotesPage` | public via token |
+| `/shared/:token` | `SharedViewPage` | public via token |
+| `/dashboard` | `DashboardPage` | protégé |
+| `/clients` | `ClientsPage` | protégé |
+| `/messages` | `MessagesPage` | protégé |
+| `/commandes` | `CommandesPage` | protégé |
+| `/rdv` | `RdvPage` | protégé |
+| `/produits` | `ProduitsPage` | protégé |
+| `/pointage` | `PointagePage` | protégé |
+| `/profile` | `ProfilePage` | protégé |
+| `*` | `NotFound` | — |
 
-### Frontend
-| Technologie | Rôle |
-|-------------|------|
-| React 19 | Framework UI |
-| TypeScript | Typage statique |
-| Vite | Build tool |
-| Tailwind CSS | Styles utilitaires |
-| shadcn/ui | Composants UI |
-| **Zustand** | **State management global** |
-| React Router 7 | Navigation SPA |
-| Axios | Requêtes HTTP |
-| Recharts | Graphiques |
-| Framer Motion | Animations |
+Enveloppes globales : `ErrorBoundary` → `ThemeProvider` → `AccessibilityProvider` → `AuthProvider` → `AppProvider` → `Router` → `MaintenanceGate` → `Suspense`.
+Watchers globaux montés hors des routes : `VisitTracker`, `PointageAutoWatcher`, `AutoInjectWatcher`, `GlobalRdvTodayNotifier`, `Toaster`, `CookieConsent`.
+Avant tout rendu, `SecurityCheckPage` verrouille l'accès tant que le navigateur n'est pas vérifié.
 
-### Backend
-| Technologie | Rôle |
-|-------------|------|
-| Node.js 18+ | Runtime |
-| Express.js 4 | Framework HTTP |
-| JWT | Authentification |
-| bcryptjs | Hash mots de passe |
+## 5. Principes non négociables
 
----
+1. Un composant ne fait **jamais** d'appel HTTP direct : il passe par un service `src/services/api`.
+2. Une route Express ne lit **jamais** un fichier directement : elle passe par un modèle `server/models`.
+3. Toute écriture serveur déclenche un événement SSE pour la synchronisation temps réel.
+4. Les couleurs et styles viennent des tokens du design system (`index.css` / `tailwind.config.ts`).
 
-## 📌 5. Flux de données MVC
-
-```
-Utilisateur → View (Page/Component)
-                ↓ action
-             Controller (Store/Hook)
-                ↓ appel
-             Model (Service API → Axios)
-                ↓ HTTP
-             Backend Route → Controller → Model → DB
-                ↓ réponse
-             Model (Service) → Controller (Store) → View (mise à jour)
-                ↓ SSE
-             Synchronisation temps réel vers tous les clients
-```
-
----
-
-## 📌 6. Modules fonctionnels
-
-| Module | Controller Backend | Service Frontend | Store |
-|--------|-------------------|-----------------|-------|
-| Auth | authController | authApi | authStore |
-| Produits | productController | productApi | appStore |
-| Ventes | saleController | saleApi | appStore |
-| Clients | clientController | clientApi | — |
-| Commandes | commandeController | commandeApi | — |
-| Dépenses | depenseController | depenseApi | — |
-| Bénéfices | beneficeController | beneficeApi | — |
-| Pointage | pointageController | pointageApi | — |
-| RDV | rdvController | rdvApi | — |
-| Tâches | tacheController | tacheApi | — |
-| Messages | messageController | — | — |
-| Objectifs | objectifController | objectifApi | — |
-
----
-
-## 📌 7. Sécurité
-
-| Couche | Protection |
-|--------|-----------|
-| Auth | JWT (8h expiration) |
-| Mots de passe | bcrypt (10 rounds) |
-| CORS | Origins whitelist |
-| Rate Limiting | 100 req/min/IP |
-| Sanitization | Inputs nettoyés |
-| Headers | CSP, X-Frame-Options |
-
----
-
-## 📌 8. Déploiement
-
-| Composant | Plateforme |
-|-----------|-----------|
-| Frontend | Vercel |
-| Backend | Render |
-| Base de données | JSON sur Render |
