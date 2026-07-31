@@ -7,7 +7,7 @@ import React, { useMemo, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Printer, Package, Hash, ArrowDown, ArrowUp, X } from 'lucide-react';
+import { Printer, Package, Hash, ArrowDown, ArrowUp, X, Table } from 'lucide-react';
 import { Product } from '@/types';
 import useProductAttributes from '@/hooks/useProductAttributes';
 import ProductClassificationSelector, { ClassificationValue, splitValues } from './attributes/ProductClassificationSelector';
@@ -230,6 +230,131 @@ const StockListModal: React.FC<Props> = ({ open, onClose, products }) => {
     }
   };
 
+  /**
+   * Export PDF "Tableau" : une colonne par combinaison
+   * (catégorie + modèle + couleur), lignes triées par pouces croissants.
+   */
+  const exportTableau = () => {
+    try {
+      const findAttr = (desc: string, list: { nom: string }[]) => {
+        const d = desc.toLowerCase();
+        const found = list
+          .slice()
+          .sort((a, b) => b.nom.length - a.nom.length)
+          .find(item => d.includes(item.nom.toLowerCase()));
+        return found?.nom ?? '';
+      };
+      const getCategory = (desc: string) => {
+        const d = desc.toLowerCase();
+        if (d.includes('perruque')) return 'Perruque';
+        if (d.includes('tissage')) return 'Tissages';
+        if (d.includes('extension')) return 'Extension';
+        return 'Autres';
+      };
+      const getSize = (desc: string) => {
+        const t = findAttr(desc, tailles);
+        const n = Number((t.match(/\d+/) || [])[0]);
+        if (!isNaN(n) && n > 0) return n;
+        const m = (desc.match(/\b(\d{1,2})\s*(pouce|po|")?/i) || [])[1];
+        const n2 = Number(m);
+        return isNaN(n2) ? 9999 : n2;
+      };
+
+      // Regroupement par colonne
+      const groups = new Map<string, { title: string; rows: { size: number; label: string; qty: number }[] }>();
+      results.forEach(p => {
+        const desc = p.description || '';
+        const parts = [getCategory(desc), findAttr(desc, modeles), findAttr(desc, couleurs)].filter(Boolean);
+        const title = parts.join(', ');
+        const key = title.toLowerCase();
+        if (!groups.has(key)) groups.set(key, { title, rows: [] });
+        const size = getSize(desc);
+        groups.get(key)!.rows.push({
+          size,
+          label: size === 9999 ? (p.code || desc) : `${size} pouces`,
+          qty: p.quantity || 0,
+        });
+      });
+
+      const cols = Array.from(groups.values())
+        .map(g => ({ ...g, rows: g.rows.sort((a, b) => a.size - b.size) }))
+        .sort((a, b) => a.title.localeCompare(b.title, 'fr'));
+
+      if (cols.length === 0) {
+        toast({ variant: 'destructive', title: 'Aucune donnée', description: 'Aucun produit à mettre en tableau' });
+        return;
+      }
+
+      const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+      const w = doc.internal.pageSize.getWidth();
+      const ph = doc.internal.pageSize.getHeight();
+
+      const perPage = 4;
+      const marginX = 10;
+      const usable = w - marginX * 2;
+
+      for (let page = 0; page * perPage < cols.length; page++) {
+        if (page > 0) doc.addPage();
+        const pageCols = cols.slice(page * perPage, page * perPage + perPage);
+        const colW = usable / perPage;
+
+        doc.setFillColor(124, 58, 237);
+        doc.rect(0, 0, w, 18, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(14);
+        doc.text('Tableau du stock', marginX, 12);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(9);
+        doc.text(new Date().toLocaleString('fr-FR'), w - marginX, 12, { align: 'right' });
+
+        const top = 26;
+        pageCols.forEach((col, i) => {
+          const x = marginX + i * colW;
+
+          // Titre de colonne
+          doc.setFillColor(243, 232, 255);
+          doc.rect(x + 1, top, colW - 2, 10, 'F');
+          doc.setTextColor(88, 28, 135);
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(8);
+          const titleLines = doc.splitTextToSize(col.title, colW - 6).slice(0, 2);
+          doc.text(titleLines, x + 3, top + (titleLines.length > 1 ? 4 : 6.5));
+
+          // Lignes
+          let y = top + 15;
+          doc.setFont('helvetica', 'normal');
+          doc.setTextColor(30, 30, 30);
+          doc.setFontSize(8);
+          col.rows.forEach((r, ri) => {
+            if (y > ph - 12) return;
+            if (ri % 2 === 0) {
+              doc.setFillColor(250, 245, 255);
+              doc.rect(x + 1, y - 4, colW - 2, 6, 'F');
+            }
+            doc.text(doc.splitTextToSize(r.label, colW - 22)[0], x + 3, y);
+            doc.text(`x${r.qty}`, x + colW - 4, y, { align: 'right' });
+            y += 6;
+          });
+
+          // Total colonne
+          if (y < ph - 8) {
+            doc.setDrawColor(168, 85, 247);
+            doc.line(x + 1, y - 3, x + colW - 1, y - 3);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(88, 28, 135);
+            doc.text(`Total: ${col.rows.reduce((s, r) => s + r.qty, 0)}`, x + 3, y + 2);
+          }
+        });
+      }
+
+      doc.save(`tableau_stock_${new Date().toISOString().slice(0, 10)}.pdf`);
+      toast({ title: 'Tableau généré', description: `${cols.length} colonne(s) exportée(s)` });
+    } catch (e) {
+      toast({ variant: 'destructive', title: 'Erreur PDF', description: 'Impossible de générer le tableau' });
+    }
+  };
+
   const [descriptionOrder, setDescriptionOrder] = useState<"asc" | "desc">("asc");
 
   const sortedResults = useMemo(() => {
@@ -311,10 +436,19 @@ const StockListModal: React.FC<Props> = ({ open, onClose, products }) => {
             <Package className="h-5 w-5" /> Liste du Stock
             <Button
               type="button"
+              onClick={exportTableau}
+              size="sm"
+              disabled={results.length === 0}
+              className="ml-auto bg-white/20 text-white border border-white/40 hover:bg-white/30 rounded-xl font-bold shadow-lg transition-all"
+            >
+              <Table className="h-4 w-4 mr-1.5" /> Tableau
+            </Button>
+            <Button
+              type="button"
               onClick={exportPdf}
               size="sm"
               disabled={results.length === 0}
-              className="ml-auto bg-white/90 text-violet-700 hover:bg-white rounded-xl font-bold shadow-lg transition-all"
+              className="bg-white/90 text-violet-700 hover:bg-white rounded-xl font-bold shadow-lg transition-all"
             >
               <Printer className="h-4 w-4 mr-1.5" /> PDF
             </Button>
