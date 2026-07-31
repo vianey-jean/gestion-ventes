@@ -7,6 +7,8 @@ import React, { useMemo, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Printer, Package, Hash, ArrowDown, ArrowUp, X, Table } from 'lucide-react';
 import { Product } from '@/types';
 import useProductAttributes from '@/hooks/useProductAttributes';
@@ -15,6 +17,21 @@ import jsPDF from 'jspdf';
 import { useToast } from '@/hooks/use-toast';
 
 type Category = '' | 'perruque' | 'tissage' | 'extension' | 'autres';
+
+/** Formats papier proposés au téléchargement du tableau. */
+type PaperFormat = 'a2' | 'a3' | 'a4' | 'a5' | 'a6' | 'a7' | 'a8' | 'a9' | 'a10';
+
+const PAPER_FORMATS: { value: PaperFormat; label: string; desc: string }[] = [
+  { value: 'a2', label: 'A2 — 42,0 × 59,4 cm', desc: 'Grandes affiches, croquis' },
+  { value: 'a3', label: 'A3 — 29,7 × 42,0 cm', desc: 'Dessins, tableaux, menus dépliants' },
+  { value: 'a4', label: 'A4 — 21,0 × 29,7 cm', desc: 'Format standard : documents, courriers' },
+  { value: 'a5', label: 'A5 — 14,8 × 21,0 cm', desc: 'Blocs-notes, flyers, petits livrets' },
+  { value: 'a6', label: 'A6 — 10,5 × 14,8 cm', desc: 'Cartes postales, photos, flyers compacts' },
+  { value: 'a7', label: 'A7 — 7,4 × 10,5 cm', desc: 'Petits tickets, menus, étiquettes' },
+  { value: 'a8', label: 'A8 — 5,2 × 7,4 cm', desc: 'Cartes de visite, cartes à jouer' },
+  { value: 'a9', label: 'A9 — 3,7 × 5,2 cm', desc: 'Petites étiquettes' },
+  { value: 'a10', label: 'A10 — 2,6 × 3,7 cm', desc: 'Micro-étiquettes' },
+];
 
 interface Props {
   open: boolean;
@@ -38,6 +55,11 @@ const StockListModal: React.FC<Props> = ({ open, onClose, products }) => {
 
   /** Sélection complète (catégorie + tous les attributs, choix multiple). */
   const [classification, setClassification] = useState<ClassificationValue>({});
+
+  /** Modale de sélection des tableaux + format papier. */
+  const [tableauOpen, setTableauOpen] = useState(false);
+  const [selectedTitles, setSelectedTitles] = useState<string[]>([]);
+  const [paperFormat, setPaperFormat] = useState<PaperFormat>('a4');
 
   const categorie: Category = CATEGORY_MAP[classification.categorie || ''] || '';
   const devant = classification.devant || '';
@@ -231,67 +253,74 @@ const StockListModal: React.FC<Props> = ({ open, onClose, products }) => {
   };
 
   /**
-   * Export PDF "Tableau" : une colonne par combinaison
+   * Colonnes du tableau : une colonne par combinaison
    * (catégorie + modèle + couleur), lignes triées par pouces croissants.
    */
-  const exportTableau = () => {
-    try {
-      const findAttr = (desc: string, list: { nom: string }[]) => {
-        const d = desc.toLowerCase();
-        const found = list
-          .slice()
-          .sort((a, b) => b.nom.length - a.nom.length)
-          .find(item => d.includes(item.nom.toLowerCase()));
-        return found?.nom ?? '';
-      };
-      const getCategory = (desc: string) => {
-        const d = desc.toLowerCase();
-        if (d.includes('perruque')) return 'Perruque';
-        if (d.includes('tissage')) return 'Tissages';
-        if (d.includes('extension')) return 'Extension';
-        return 'Autres';
-      };
-      const getSize = (desc: string) => {
-        const t = findAttr(desc, tailles);
-        const n = Number((t.match(/\d+/) || [])[0]);
-        if (!isNaN(n) && n > 0) return n;
-        const m = (desc.match(/\b(\d{1,2})\s*(pouce|po|")?/i) || [])[1];
-        const n2 = Number(m);
-        return isNaN(n2) ? 9999 : n2;
-      };
+  const tableauColumns = useMemo(() => {
+    const findAttr = (desc: string, list: { nom: string }[]) => {
+      const d = desc.toLowerCase();
+      const found = list
+        .slice()
+        .sort((a, b) => b.nom.length - a.nom.length)
+        .find(item => d.includes(item.nom.toLowerCase()));
+      return found?.nom ?? '';
+    };
+    const getCategory = (desc: string) => {
+      const d = desc.toLowerCase();
+      if (d.includes('perruque')) return 'Perruque';
+      if (d.includes('tissage')) return 'Tissages';
+      if (d.includes('extension')) return 'Extension';
+      return 'Autres';
+    };
+    const getSize = (desc: string) => {
+      const t = findAttr(desc, tailles);
+      const n = Number((t.match(/\d+/) || [])[0]);
+      if (!isNaN(n) && n > 0) return n;
+      const m = (desc.match(/\b(\d{1,2})\s*(pouce|po|")?/i) || [])[1];
+      const n2 = Number(m);
+      return isNaN(n2) ? 9999 : n2;
+    };
 
-      // Regroupement par colonne
-      const groups = new Map<string, { title: string; rows: { size: number; label: string; qty: number }[] }>();
-      results.forEach(p => {
-        const desc = p.description || '';
-        const parts = [getCategory(desc), findAttr(desc, modeles), findAttr(desc, couleurs)].filter(Boolean);
-        const title = parts.join(', ');
-        const key = title.toLowerCase();
-        if (!groups.has(key)) groups.set(key, { title, rows: [] });
-        const size = getSize(desc);
-        groups.get(key)!.rows.push({
-          size,
-          label: size === 9999 ? (p.code || desc) : `${size} pouces`,
-          qty: p.quantity || 0,
-        });
+    const groups = new Map<string, { title: string; rows: { size: number; label: string; qty: number }[] }>();
+    results.forEach(p => {
+      const desc = p.description || '';
+      const parts = [getCategory(desc), findAttr(desc, modeles), findAttr(desc, couleurs)].filter(Boolean);
+      const title = parts.join(', ');
+      const key = title.toLowerCase();
+      if (!groups.has(key)) groups.set(key, { title, rows: [] });
+      const size = getSize(desc);
+      groups.get(key)!.rows.push({
+        size,
+        label: size === 9999 ? (p.code || desc) : `${size} pouces`,
+        qty: p.quantity || 0,
       });
+    });
 
-      const cols = Array.from(groups.values())
-        .map(g => ({ ...g, rows: g.rows.sort((a, b) => a.size - b.size) }))
-        .sort((a, b) => a.title.localeCompare(b.title, 'fr'));
+    return Array.from(groups.values())
+      .map(g => ({ ...g, rows: g.rows.sort((a, b) => a.size - b.size) }))
+      .sort((a, b) => a.title.localeCompare(b.title, 'fr'));
+  }, [results, modeles, couleurs, tailles]);
+
+  /** Génération du PDF "Tableau" pour les colonnes et le format choisis. */
+  const generateTableauPdf = (selectedTitles: string[], format: PaperFormat) => {
+    try {
+      const cols = tableauColumns.filter(c => selectedTitles.includes(c.title));
 
       if (cols.length === 0) {
-        toast({ variant: 'destructive', title: 'Aucune donnée', description: 'Aucun produit à mettre en tableau' });
+        toast({ variant: 'destructive', title: 'Aucune donnée', description: 'Sélectionnez au moins un tableau' });
         return;
       }
 
-      const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+      const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format });
       const w = doc.internal.pageSize.getWidth();
       const ph = doc.internal.pageSize.getHeight();
 
-      const perPage = 4;
-      const marginX = 10;
+      const marginX = w < 120 ? 4 : 10;
       const usable = w - marginX * 2;
+      const scale = Math.min(1.6, Math.max(0.5, w / 297));
+      const perPage = Math.max(1, Math.min(cols.length, Math.round(usable / 65)));
+      const headerH = 18 * scale;
+      const rowH = 6 * scale;
 
       for (let page = 0; page * perPage < cols.length; page++) {
         if (page > 0) doc.addPage();
@@ -299,61 +328,63 @@ const StockListModal: React.FC<Props> = ({ open, onClose, products }) => {
         const colW = usable / perPage;
 
         doc.setFillColor(124, 58, 237);
-        doc.rect(0, 0, w, 18, 'F');
+        doc.rect(0, 0, w, headerH, 'F');
         doc.setTextColor(255, 255, 255);
         doc.setFont('helvetica', 'bold');
-        doc.setFontSize(14);
-        doc.text('Tableau du stock', marginX, 12);
+        doc.setFontSize(14 * scale);
+        doc.text('Tableau du stock', marginX, headerH * 0.68);
         doc.setFont('helvetica', 'normal');
-        doc.setFontSize(9);
-        doc.text(new Date().toLocaleString('fr-FR'), w - marginX, 12, { align: 'right' });
+        doc.setFontSize(9 * scale);
+        doc.text(new Date().toLocaleString('fr-FR'), w - marginX, headerH * 0.68, { align: 'right' });
 
-        const top = 26;
+        const top = headerH + 8 * scale;
         pageCols.forEach((col, i) => {
           const x = marginX + i * colW;
 
           // Titre de colonne
           doc.setFillColor(243, 232, 255);
-          doc.rect(x + 1, top, colW - 2, 10, 'F');
+          doc.rect(x + 1, top, colW - 2, 10 * scale, 'F');
           doc.setTextColor(88, 28, 135);
           doc.setFont('helvetica', 'bold');
-          doc.setFontSize(8);
+          doc.setFontSize(8 * scale);
           const titleLines = doc.splitTextToSize(col.title, colW - 6).slice(0, 2);
-          doc.text(titleLines, x + 3, top + (titleLines.length > 1 ? 4 : 6.5));
+          doc.text(titleLines, x + 3, top + (titleLines.length > 1 ? 4 * scale : 6.5 * scale));
 
           // Lignes
-          let y = top + 15;
+          let y = top + 15 * scale;
           doc.setFont('helvetica', 'normal');
           doc.setTextColor(30, 30, 30);
-          doc.setFontSize(8);
+          doc.setFontSize(8 * scale);
           col.rows.forEach((r, ri) => {
-            if (y > ph - 12) return;
+            if (y > ph - 12 * scale) return;
             if (ri % 2 === 0) {
               doc.setFillColor(250, 245, 255);
-              doc.rect(x + 1, y - 4, colW - 2, 6, 'F');
+              doc.rect(x + 1, y - 4 * scale, colW - 2, rowH, 'F');
             }
-            doc.text(doc.splitTextToSize(r.label, colW - 22)[0], x + 3, y);
+            doc.text(doc.splitTextToSize(r.label, colW - 22)[0] || '', x + 3, y);
             doc.text(`x${r.qty}`, x + colW - 4, y, { align: 'right' });
-            y += 6;
+            y += rowH;
           });
 
           // Total colonne
-          if (y < ph - 8) {
+          if (y < ph - 8 * scale) {
             doc.setDrawColor(168, 85, 247);
-            doc.line(x + 1, y - 3, x + colW - 1, y - 3);
+            doc.line(x + 1, y - 3 * scale, x + colW - 1, y - 3 * scale);
             doc.setFont('helvetica', 'bold');
             doc.setTextColor(88, 28, 135);
-            doc.text(`Total: ${col.rows.reduce((s, r) => s + r.qty, 0)}`, x + 3, y + 2);
+            doc.text(`Total: ${col.rows.reduce((s, r) => s + r.qty, 0)}`, x + 3, y + 2 * scale);
           }
         });
       }
 
-      doc.save(`tableau_stock_${new Date().toISOString().slice(0, 10)}.pdf`);
-      toast({ title: 'Tableau généré', description: `${cols.length} colonne(s) exportée(s)` });
+      doc.save(`tableau_stock_${format}_${new Date().toISOString().slice(0, 10)}.pdf`);
+      toast({ title: 'Tableau généré', description: `${cols.length} tableau(x) exporté(s) en ${format.toUpperCase()}` });
+      setTableauOpen(false);
     } catch (e) {
       toast({ variant: 'destructive', title: 'Erreur PDF', description: 'Impossible de générer le tableau' });
     }
   };
+
 
   const [descriptionOrder, setDescriptionOrder] = useState<"asc" | "desc">("asc");
 
@@ -436,7 +467,7 @@ const StockListModal: React.FC<Props> = ({ open, onClose, products }) => {
             <Package className="h-5 w-5" /> Liste du Stock
             <Button
               type="button"
-              onClick={exportTableau}
+              onClick={() => { setSelectedTitles(tableauColumns.map(c => c.title)); setTableauOpen(true); }}
               size="sm"
               disabled={results.length === 0}
               className="ml-auto bg-white/20 text-white border border-white/40 hover:bg-white/30 rounded-xl font-bold shadow-lg transition-all"
@@ -532,6 +563,88 @@ const StockListModal: React.FC<Props> = ({ open, onClose, products }) => {
           </div>
         </div>
       </DialogContent>
+
+      {/* Sélection des tableaux à télécharger + format papier */}
+      <Dialog open={tableauOpen} onOpenChange={(v) => !v && setTableauOpen(false)}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-hidden p-0 rounded-2xl border-violet-200/60 dark:border-violet-800/60 shadow-2xl bg-white/95 dark:bg-gray-950/95 flex flex-col">
+          <DialogHeader className="p-5 pb-3 bg-gradient-to-br from-violet-600 via-purple-600 to-fuchsia-600 text-white shrink-0">
+            <DialogTitle className="flex items-center gap-2 text-white text-base font-black">
+              <Table className="h-5 w-5" /> Tableaux à télécharger
+            </DialogTitle>
+            <p className="text-xs text-white/80">Sélectionnez au moins un tableau et un format de papier</p>
+          </DialogHeader>
+
+          <div className="flex-1 min-h-0 overflow-y-auto p-5 space-y-5">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-black uppercase tracking-wide text-violet-700 dark:text-violet-300">
+                  Tableaux ({selectedTitles.length}/{tableauColumns.length})
+                </span>
+                <div className="flex gap-2">
+                  <Button type="button" size="sm" variant="outline" className="rounded-xl h-7 text-[11px]"
+                    onClick={() => setSelectedTitles(tableauColumns.map(c => c.title))}>Tout</Button>
+                  <Button type="button" size="sm" variant="outline" className="rounded-xl h-7 text-[11px]"
+                    onClick={() => setSelectedTitles([])}>Aucun</Button>
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-violet-200/60 dark:border-violet-800/60 divide-y divide-violet-100/60 dark:divide-violet-900/40 max-h-[38vh] overflow-y-auto">
+                {tableauColumns.length === 0 ? (
+                  <div className="p-6 text-center text-sm text-muted-foreground">Aucun tableau disponible</div>
+                ) : tableauColumns.map(col => {
+                  const checked = selectedTitles.includes(col.title);
+                  return (
+                    <label key={col.title} className="flex items-start gap-3 p-3 cursor-pointer hover:bg-violet-50/50 dark:hover:bg-violet-900/20 transition">
+                      <Checkbox
+                        checked={checked}
+                        onCheckedChange={(v) =>
+                          setSelectedTitles(prev => v ? [...prev, col.title] : prev.filter(t => t !== col.title))
+                        }
+                        className="mt-0.5"
+                      />
+                      <span className="flex-1 min-w-0">
+                        <span className="block text-sm font-semibold break-words">{col.title || '—'}</span>
+                        <span className="block text-[11px] text-muted-foreground">
+                          {col.rows.length} ligne(s) · Qté {col.rows.reduce((s, r) => s + r.qty, 0)}
+                        </span>
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <span className="text-xs font-black uppercase tracking-wide text-violet-700 dark:text-violet-300">Format du papier</span>
+              <Select value={paperFormat} onValueChange={(v) => setPaperFormat(v as PaperFormat)}>
+                <SelectTrigger className="rounded-xl">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-white dark:bg-gray-950 z-50 max-h-72">
+                  {PAPER_FORMATS.map(f => (
+                    <SelectItem key={f.value} value={f.value}>
+                      <span className="font-semibold">{f.label}</span>
+                      <span className="text-[11px] text-muted-foreground"> — {f.desc}</span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="shrink-0 flex justify-end gap-2 p-4 border-t border-violet-200/50 dark:border-violet-800/50">
+            <Button type="button" variant="outline" className="rounded-xl" onClick={() => setTableauOpen(false)}>Annuler</Button>
+            <Button
+              type="button"
+              disabled={selectedTitles.length === 0}
+              onClick={() => generateTableauPdf(selectedTitles, paperFormat)}
+              className="rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white font-bold shadow-lg"
+            >
+              <Printer className="h-4 w-4 mr-1.5" /> Télécharger
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 };
