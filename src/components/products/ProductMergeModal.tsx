@@ -20,6 +20,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { Merge, Search, X, Star, ImageOff } from 'lucide-react';
+import ProductClassificationSelector, { ClassificationValue, splitValues } from '@/components/products/attributes/ProductClassificationSelector';
 import { Product } from '@/types';
 
 interface ProductMergeModalProps {
@@ -42,6 +43,7 @@ const ProductMergeModal: React.FC<ProductMergeModalProps> = ({ open, onClose, pr
 
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [search, setSearch] = useState('');
+  const [classification, setClassification] = useState<ClassificationValue>({});
   const [description, setDescription] = useState('');
   const [purchasePrice, setPurchasePrice] = useState('');
   const [quantity, setQuantity] = useState('');
@@ -55,6 +57,7 @@ const ProductMergeModal: React.FC<ProductMergeModalProps> = ({ open, onClose, pr
     if (open) {
       setSelectedIds([]);
       setSearch('');
+      setClassification({});
       setDescription('');
       setPurchasePrice('');
       setQuantity('');
@@ -83,14 +86,42 @@ const ProductMergeModal: React.FC<ProductMergeModalProps> = ({ open, onClose, pr
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedIds.length]);
 
+  // Filtre par attributs (classification) — même logique que StockListModal
+  const CATEGORY_MAP: Record<string, string> = {
+    Perruque: 'perruque', Tissages: 'tissage', Extension: 'extension', Autres: 'autres',
+  };
+
   const filteredProducts = useMemo(() => {
-    if (!search.trim()) return products;
-    const q = search.toLowerCase();
-    return products.filter(p =>
-      p.description.toLowerCase().includes(q) ||
-      (p.code && p.code.toLowerCase().includes(q))
-    );
-  }, [products, search]);
+    const cat = CATEGORY_MAP[classification.categorie || ''] || '';
+    const selModeles = splitValues(classification.modele);
+    const selCouleurs = splitValues(classification.couleur);
+    const selTailles = splitValues(classification.taille);
+    const selDevants = splitValues(classification.devant);
+    const selAutres = splitValues(classification.autres);
+    const selExtras = Object.values(classification.extras || {}).map(v => splitValues(v as string)).filter(g => g.length > 0);
+    const has = (desc: string, needles: string[]) =>
+      needles.length === 0 || needles.some(n => desc.includes(n.toLowerCase()));
+    const q = search.trim().toLowerCase();
+
+    return products.filter(p => {
+      const d = (p.description || '').toLowerCase();
+      if (q && !(d.includes(q) || (p.code && p.code.toLowerCase().includes(q)))) return false;
+      if (cat) {
+        if (cat === 'autres') {
+          if (['perruque', 'tissage', 'extension'].some(k => d.includes(k))) return false;
+        } else if (!d.includes(cat)) return false;
+      }
+      if (cat === 'perruque' && !has(d, selDevants)) return false;
+      if (!has(d, selModeles)) return false;
+      if (!has(d, selCouleurs)) return false;
+      if (!has(d, selTailles)) return false;
+      if (!has(d, selAutres)) return false;
+      for (const group of selExtras) if (!has(d, group)) return false;
+      return true;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [products, search, classification]);
+
 
   const toggleSelect = (id: string) => {
     setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
@@ -193,6 +224,20 @@ const ProductMergeModal: React.FC<ProductMergeModalProps> = ({ open, onClose, pr
             <div className="relative mb-2">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input placeholder="Rechercher..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
+            </div>
+            <div className="mb-2 space-y-2">
+              <ProductClassificationSelector
+                value={classification}
+                onChange={setClassification}
+                mode="filter"
+                multiple
+              />
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <span className="text-xs text-muted-foreground">{filteredProducts.length} produit(s) après filtre attributs</span>
+                <Button type="button" variant="outline" size="sm" onClick={() => setClassification({})}>
+                  <X className="w-3.5 h-3.5 mr-1" /> Réinitialiser le filtre
+                </Button>
+              </div>
             </div>
             <div className="max-h-48 overflow-y-auto border rounded-lg divide-y">
               {filteredProducts.length === 0 && (
