@@ -15,8 +15,10 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Crown, FileDown, Loader2, Sparkles, TrendingUp, AlertTriangle } from 'lucide-react';
+import { Crown, FileDown, Sparkles, TrendingUp, AlertTriangle, SlidersHorizontal } from 'lucide-react';
 import api from '@/services/api/api';
+import PremiumLoading from '@/components/ui/premium-loading';
+import ProductClassificationSelector, { ClassificationValue, splitValues } from './attributes/ProductClassificationSelector';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { useToast } from '@/hooks/use-toast';
@@ -53,6 +55,37 @@ const ProductsVenduModal: React.FC<Props> = ({ open, onClose }) => {
   const [items, setItems] = useState<VenduItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [filter, setFilter] = useState<CatFilter>('tous');
+  /** Filtre par attributs produits (multi-sélection). */
+  const [classification, setClassification] = useState<ClassificationValue>({});
+  const [showAttrFilter, setShowAttrFilter] = useState(false);
+
+  /** Toutes les valeurs d'attributs sélectionnées, groupées par attribut. */
+  const attrGroups = useMemo(() => {
+    const groups: string[][] = [];
+    const push = (v?: string) => {
+      const list = splitValues(v);
+      if (list.length) groups.push(list);
+    };
+    push(classification.modele);
+    push(classification.couleur);
+    push(classification.taille);
+    push(classification.devant);
+    push(classification.autres);
+    Object.values(classification.extras || {}).forEach(push);
+    return groups;
+  }, [classification]);
+
+  const activeAttrCount = useMemo(
+    () => attrGroups.reduce((n, g) => n + g.length, 0) + (classification.categorie ? 1 : 0),
+    [attrGroups, classification.categorie]
+  );
+
+  /** Un produit correspond si sa description contient au moins une valeur de chaque attribut choisi. */
+  const matchClassification = (it: VenduItem) => {
+    const desc = (it.description || '').toLowerCase();
+    if (classification.categorie && !desc.includes(String(classification.categorie).toLowerCase())) return false;
+    return attrGroups.every(g => g.some(v => desc.includes(v.toLowerCase())));
+  };
 
   useEffect(() => {
     if (!open) return;
@@ -74,8 +107,8 @@ const ProductsVenduModal: React.FC<Props> = ({ open, onClose }) => {
   const filtered = useMemo(() => {
   const list =
     filter === 'tous'
-      ? [...items]
-      : items.filter((it) => it.category === filter);
+      ? items.filter(matchClassification)
+      : items.filter((it) => it.category === filter && matchClassification(it));
 
   // Classement des ventes
   const soldOnly = [...list]
@@ -121,7 +154,7 @@ const ProductsVenduModal: React.FC<Props> = ({ open, onClose }) => {
 
     return a.description.localeCompare(b.description);
   });
-}, [items, filter]);
+}, [items, filter, classification]);
 
   // Compute sales tier based on rank within current filtered list
   const tierMap = useMemo(() => {
@@ -283,6 +316,18 @@ const ProductsVenduModal: React.FC<Props> = ({ open, onClose }) => {
               </Button>
             ))}
           </div>
+          <div className="flex flex-wrap gap-2">
+          <Button
+            onClick={() => setShowAttrFilter(v => !v)}
+            className={`rounded-xl h-10 px-4 font-semibold border-0 ${
+              showAttrFilter || activeAttrCount > 0
+                ? 'bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white shadow-lg shadow-violet-500/40'
+                : 'bg-white/70 dark:bg-zinc-900/60 text-amber-800 dark:text-amber-200 hover:bg-amber-100'
+            }`}
+          >
+            <SlidersHorizontal className="h-4 w-4 mr-2" />
+            Filtre attributs produit{activeAttrCount > 0 ? ` (${activeAttrCount})` : ''}
+          </Button>
           <Button
             onClick={generatePdf}
             disabled={loading || filtered.length === 0}
@@ -291,12 +336,30 @@ const ProductsVenduModal: React.FC<Props> = ({ open, onClose }) => {
             <FileDown className="h-4 w-4 mr-2" />
             Générer PDF
           </Button>
+          </div>
         </div>
+
+        {showAttrFilter && (
+          <div className="px-6 py-3 border-b border-amber-200/40 dark:border-amber-700/20">
+            <ProductClassificationSelector
+              value={classification}
+              onChange={setClassification}
+              mode="filter"
+              multiple
+              defaultOpen
+            />
+            {activeAttrCount > 0 && (
+              <Button variant="outline" className="mt-2 rounded-xl h-9" onClick={() => setClassification({})}>
+                Réinitialiser les attributs
+              </Button>
+            )}
+          </div>
+        )}
 
         <div className="overflow-auto max-h-[calc(92vh-200px)] px-3 sm:px-6 py-4">
           {loading ? (
-            <div className="flex items-center justify-center py-20 text-amber-700 dark:text-amber-300">
-              <Loader2 className="h-8 w-8 animate-spin mr-3" /> Chargement…
+            <div className="flex items-center justify-center py-20">
+              <PremiumLoading text="Chargement des produits vendus…" size="lg" variant="ventes" />
             </div>
           ) : filtered.length === 0 ? (
             <div className="text-center py-20 text-amber-700/80 dark:text-amber-300/70">Aucun produit.</div>

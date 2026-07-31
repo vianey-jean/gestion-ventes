@@ -18,6 +18,7 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { Users, Plus, Trash2, Merge, Search } from 'lucide-react';
+import PremiumLoading from '@/components/ui/premium-loading';
 
 interface Client {
   id: string;
@@ -46,6 +47,15 @@ const ClientMergeModal: React.FC<ClientMergeModalProps> = ({ open, onClose, clie
   const [adresse, setAdresse] = useState('');
   const [keepPhotoFromId, setKeepPhotoFromId] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  /** Affiche PremiumLoading le temps que les données clients soient prêtes. */
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    if (!open) { setReady(false); return; }
+    setReady(false);
+    const t = setTimeout(() => setReady(true), 450);
+    return () => clearTimeout(t);
+  }, [open, clients.length]);
 
   // Reset à l'ouverture
   useEffect(() => {
@@ -155,7 +165,13 @@ const ClientMergeModal: React.FC<ClientMergeModalProps> = ({ open, onClose, clie
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-5 py-2">
+        {!ready && (
+          <div className="flex items-center justify-center py-16">
+            <PremiumLoading text="Chargement des clients…" size="lg" />
+          </div>
+        )}
+
+        <div className="space-y-5 py-2" hidden={!ready}>
           {/* Étape 1: Sélection */}
           <div>
             <Label className="text-sm font-semibold mb-2 block">1. Clients à fusionner ({selectedIds.length} sélectionné{selectedIds.length > 1 ? 's' : ''})</Label>
@@ -263,7 +279,7 @@ const ClientMergeModal: React.FC<ClientMergeModalProps> = ({ open, onClose, clie
           )}
         </div>
 
-        <DialogFooter>
+        <DialogFooter className={ready ? undefined : "hidden"}>
           <Button variant="outline" onClick={onClose} disabled={isSubmitting}>Annuler</Button>
           <Button
             onClick={handleMerge}

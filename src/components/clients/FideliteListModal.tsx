@@ -18,6 +18,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Crown, Pencil, Plus, Trash2, Sparkles, Save, X } from 'lucide-react';
 import listesFideliteApi, { FideliteTierConfig } from '@/services/api/listesFideliteApi';
+import PremiumLoading from '@/components/ui/premium-loading';
 
 interface Props {
   open: boolean;
@@ -192,7 +193,11 @@ const FideliteListModal: React.FC<Props> = ({ open, onOpenChange }) => {
           </DialogHeader>
 
           <div className="p-5 sm:p-6 max-h-[70vh] overflow-y-auto space-y-3">
-            {loading && <p className="text-white/60 text-sm">Chargement…</p>}
+            {loading && (
+              <div className="flex items-center justify-center py-14">
+                <PremiumLoading text="Chargement des paliers fidélité…" size="lg" />
+              </div>
+            )}
             {!loading && list.map((t) => (
               <div key={t.id} className={`rounded-2xl p-4 border border-white/10 bg-gradient-to-r ${t.grad} shadow-lg flex items-center justify-between gap-3`}>
                 <div className="min-w-0 text-white">

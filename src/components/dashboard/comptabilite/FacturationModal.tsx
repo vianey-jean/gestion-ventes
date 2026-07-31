@@ -48,6 +48,7 @@ import nouvelleAchatApiService from '@/services/api/nouvelleAchatApi';
 import { NouvelleAchat } from '@/types/comptabilite';
 import { getBaseURL } from '@/services/api/api';
 import jsPDF from 'jspdf';
+import PremiumLoading from '@/components/ui/premium-loading';
 
 interface FacturationModalProps {
   isOpen: boolean;
@@ -345,8 +346,8 @@ const FacturationModal: React.FC<FacturationModalProps> = ({ isOpen, onClose }) 
             </div>
 
             {loading && (
-              <div className="flex items-center justify-center py-6 text-gray-500">
-                <Loader2 className="h-5 w-5 animate-spin mr-2" /> Chargement...
+              <div className="flex items-center justify-center py-8">
+                <PremiumLoading text="Chargement…" size="md" />
               </div>
             )}
 

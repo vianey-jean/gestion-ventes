@@ -22,6 +22,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Merge, Search, X, Star, ImageOff } from 'lucide-react';
 import ProductClassificationSelector, { ClassificationValue, splitValues } from '@/components/products/attributes/ProductClassificationSelector';
 import { Product } from '@/types';
+import PremiumLoading from '@/components/ui/premium-loading';
 
 interface ProductMergeModalProps {
   open: boolean;
@@ -52,6 +53,15 @@ const ProductMergeModal: React.FC<ProductMergeModalProps> = ({ open, onClose, pr
   const [newFiles, setNewFiles] = useState<File[]>([]);
   const [mainPhotoIndex, setMainPhotoIndex] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  /** Affiche PremiumLoading le temps que les produits soient prêts. */
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    if (!open) { setReady(false); return; }
+    setReady(false);
+    const t = setTimeout(() => setReady(true), 450);
+    return () => clearTimeout(t);
+  }, [open, products.length]);
 
   useEffect(() => {
     if (open) {
@@ -217,7 +227,13 @@ const ProductMergeModal: React.FC<ProductMergeModalProps> = ({ open, onClose, pr
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-5 py-2">
+        {!ready && (
+          <div className="flex items-center justify-center py-16">
+            <PremiumLoading text="Chargement des produits…" size="lg" />
+          </div>
+        )}
+
+        <div className="space-y-5 py-2" hidden={!ready}>
           {/* 1. Sélection */}
           <div>
             <Label className="text-sm font-semibold mb-2 block">1. Produits à fusionner ({selectedIds.length} sélectionné{selectedIds.length > 1 ? 's' : ''})</Label>
@@ -363,7 +379,7 @@ const ProductMergeModal: React.FC<ProductMergeModalProps> = ({ open, onClose, pr
           )}
         </div>
 
-        <DialogFooter>
+        <DialogFooter className={ready ? undefined : "hidden"}>
           <Button variant="outline" onClick={onClose} disabled={isSubmitting}>Annuler</Button>
           <Button
             onClick={handleMerge}

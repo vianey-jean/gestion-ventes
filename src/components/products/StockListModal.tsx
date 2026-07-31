@@ -3,7 +3,7 @@
  * catégorie/devant simples, puis affichage de la liste des produits
  * correspondants avec option d'export PDF.
  */
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -15,6 +15,7 @@ import useProductAttributes from '@/hooks/useProductAttributes';
 import ProductClassificationSelector, { ClassificationValue, splitValues } from './attributes/ProductClassificationSelector';
 import jsPDF from 'jspdf';
 import { useToast } from '@/hooks/use-toast';
+import PremiumLoading from '@/components/ui/premium-loading';
 
 type Category = '' | 'perruque' | 'tissage' | 'extension' | 'autres';
 
@@ -55,6 +56,15 @@ const StockListModal: React.FC<Props> = ({ open, onClose, products }) => {
 
   /** Sélection complète (catégorie + tous les attributs, choix multiple). */
   const [classification, setClassification] = useState<ClassificationValue>({});
+
+  /** Affiche PremiumLoading le temps que les produits/attributs soient prêts. */
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    if (!open) { setReady(false); return; }
+    setReady(false);
+    const t = setTimeout(() => setReady(true), 450);
+    return () => clearTimeout(t);
+  }, [open, products.length]);
 
   /** Modale de sélection des tableaux + format papier. */
   const [tableauOpen, setTableauOpen] = useState(false);
@@ -487,7 +497,13 @@ const StockListModal: React.FC<Props> = ({ open, onClose, products }) => {
           <p className="text-xs text-white/80">Sélectionnez les attributs (choix multiple sur chaque attribut)</p>
         </DialogHeader>
 
-        <div className="flex flex-col flex-1 min-h-0">
+        {!ready && (
+          <div className="flex items-center justify-center py-20">
+            <PremiumLoading text="Chargement du stock…" size="lg" />
+          </div>
+        )}
+
+        <div className={`${ready ? 'flex' : 'hidden'} flex-col flex-1 min-h-0`}>
           <div className="shrink-0 p-5 space-y-4 overflow-y-auto max-h-[38vh] scrollbar-thin">
             <ProductClassificationSelector
               value={classification}

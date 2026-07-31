@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import useAttributeKinds from '@/hooks/useAttributeKinds';
 import ProductAttributeManagerButton from './ProductAttributeManagerButton';
+import PremiumLoading from '@/components/ui/premium-loading';
 
 const STORAGE_KEY = 'produits.attributesToolbar.visible';
 
@@ -93,8 +94,8 @@ const ProductAttributesToolbar: React.FC = () => {
       {visible && (
         <div className="flex flex-wrap items-center gap-2">
           {loading && kinds.length === 0 ? (
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <Loader2 className="h-4 w-4 animate-spin" /> Chargement…
+            <div className="flex items-center gap-2">
+              <PremiumLoading text="Chargement…" size="sm" />
             </div>
           ) : (
             kinds.map(k => <ProductAttributeManagerButton key={k.id} kind={k} />)

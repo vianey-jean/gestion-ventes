@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { clientsVillesApi } from '@/services/api/villesApi';
 import CityFormModal from './CityFormModal';
 import ConfirmModal from '@/components/notes/ConfirmModal';
+import PremiumLoading from '@/components/ui/premium-loading';
 
 export interface CitiesManagerModalProps {
   open: boolean;
@@ -112,8 +113,8 @@ const CitiesManagerModal: React.FC<CitiesManagerModalProps> = ({ open, onOpenCha
 
           <div className="overflow-y-auto pr-1 -mr-1 space-y-2 mt-2">
             {loading && (
-              <div className="flex items-center justify-center py-10 text-muted-foreground">
-                <Loader2 className="h-5 w-5 animate-spin mr-2" /> Chargement...
+              <div className="flex items-center justify-center py-12">
+                <PremiumLoading text="Chargement des villes…" size="lg" />
               </div>
             )}
             {!loading && villes.length === 0 && (
