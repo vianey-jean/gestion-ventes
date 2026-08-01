@@ -8,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { livraisonVilleApi, LivraisonVille } from '@/services/api/villesApi';
 import { Pencil, Trash2, Check, X, MapPin, Plus } from 'lucide-react';
 import AddLivraisonVilleModal from './AddLivraisonVilleModal';
+import PremiumLoading from '@/components/ui/premium-loading';
 
 interface Props {
   isOpen: boolean;
@@ -84,7 +85,7 @@ const LivraisonVilleListModal: React.FC<Props> = ({ isOpen, onClose }) => {
           </DialogHeader>
           <ScrollArea className="max-h-[60vh] pr-2">
             <div className="space-y-2">
-              {loading && <p className="text-sm text-muted-foreground p-3">Chargement…</p>}
+              {loading && <PremiumLoading text="Chargement des villes…" size="md" variant="ventes" />}
               {!loading && villes.length === 0 && <p className="text-sm text-muted-foreground p-3">Aucune ville enregistrée.</p>}
               {villes.map((v, idx) => (
                 <div key={v.ville} className="flex items-center gap-2 p-3 rounded-lg border bg-gradient-to-r from-slate-50 to-white">

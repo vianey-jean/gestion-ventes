@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { cn } from '@/lib/utils';
 import { CalendarDays, AlertTriangle, CheckCircle } from 'lucide-react';
 import { Tache } from '@/services/api/tacheApi';
+import PremiumLoading from '@/components/ui/premium-loading';
 
 interface TacheWeekModalProps {
   open: boolean;
@@ -59,9 +60,7 @@ const TacheWeekModal: React.FC<TacheWeekModalProps> = ({
 
         <div className="overflow-y-auto max-h-[60vh] space-y-3 pr-2">
           {loading ? (
-            <div className="text-center py-8">
-              <div className="animate-spin w-8 h-8 border-2 border-amber-500 border-t-transparent rounded-full mx-auto" />
-            </div>
+            <PremiumLoading text="Chargement des tâches…" size="md" variant="dashboard" />
           ) : (
             weekDays.map((dateStr, idx) => {
               const dayTaches = weekTaches.filter(t => t.date === dateStr);
