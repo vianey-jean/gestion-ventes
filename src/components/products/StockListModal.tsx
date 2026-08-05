@@ -90,8 +90,31 @@ const StockListModal: React.FC<Props> = ({ open, onClose, products }) => {
       if (cat === 'autres') return !['perruque', 'tissage', 'extension'].some(k => d.includes(k));
       return d.includes(cat);
     };
+    /**
+     * Un produit est affiché uniquement s'il est encore disponible :
+     * - stock > 0
+     * - non réservé (dès qu'une réservation est annulée, reserver n'est plus "oui"
+     *   et le produit réapparaît automatiquement)
+     * - au moins un achat disponible (les achats marqués indisponibles sont exclus ;
+     *   dès qu'ils redeviennent disponibles, le produit réapparaît)
+     */
+    const isAvailable = (p: Product) => {
+      if ((Number(p.quantity) || 0) <= 0) return false;
+      const reserve = String(p.reserver ?? '').trim().toLowerCase();
+      if (reserve === 'oui' || reserve === 'true' || reserve === 'reserve' || reserve === 'réservé') return false;
+      const achats = Array.isArray(p.achats) ? p.achats : [];
+      if (achats.length > 0) {
+        const dispoQty = achats.reduce(
+          (s, a) => s + (a && a.disponible !== false ? (Number(a.quantity) || 0) : 0),
+          0
+        );
+        if (dispoQty <= 0) return false;
+      }
+      return true;
+    };
     return products.filter(p => {
       const d = (p.description || '').toLowerCase();
+      if (!isAvailable(p)) return false;
       if (!catMatch(p)) return false;
       if (cat === 'perruque' && !has(d, selDevants)) return false;
       if (!has(d, selModeles)) return false;
