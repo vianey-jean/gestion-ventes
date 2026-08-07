@@ -67,6 +67,9 @@ import { motion } from 'framer-motion';
 
 import axios from 'axios';
 import SEOHead from '@/components/SEOHead';
+import connecteProfilUniqueApi from '@/services/api/connecteProfilUniqueApi';
+import { savePendingLogin } from '@/pages/SessionConflictPage';
+
 
 const AUTH_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ||
@@ -280,15 +283,51 @@ const LoginPage: React.FC = () => {
       if (response.data && response.data.token) {
         setFailedAttempts(0);
 
+        // --- Session unique par profil : vérifier si déjà connecté ailleurs ---
+        const loggedUser = response.data.user || {};
+        try {
+          const check = await connecteProfilUniqueApi.check({
+            userId: String(loggedUser.id || ''),
+            role: loggedUser.role,
+          });
+
+          if (!check.allowed && check.conflict) {
+            savePendingLogin({
+              email,
+              password,
+              userId: String(loggedUser.id || ''),
+              role: loggedUser.role,
+              nom: `${loggedUser.firstName || ''} ${loggedUser.lastName || ''}`.trim(),
+              conflict: check.conflict,
+            });
+            setIsLoggingIn(false);
+            navigate('/session-conflict');
+            return;
+          }
+        } catch {
+          // en cas d'indisponibilité du service, on n'empêche pas la connexion
+        }
+
         const success = await login({
           email,
           password
         });
 
         if (success) {
+          try {
+            const reg = await connecteProfilUniqueApi.registerLogin({
+              userId: String(loggedUser.id || ''),
+              email,
+              nom: `${loggedUser.firstName || ''} ${loggedUser.lastName || ''}`.trim(),
+              role: loggedUser.role,
+            });
+            connecteProfilUniqueApi.setSessionId(reg.sessionId);
+          } catch { /* non bloquant */ }
+
           navigate('/dashboard');
         }
       }
+
     } catch (error: any) {
       const status = error?.response?.status;
       const data = error?.response?.data;

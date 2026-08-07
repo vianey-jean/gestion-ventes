@@ -10,6 +10,8 @@ import { LoginCredentials, PasswordResetData, PasswordResetRequest, Registration
 import { authService } from '../service/api';
 import { useToast } from '@/hooks/use-toast';
 import { realtimeService } from '@/services/realtimeService';
+import connecteProfilUniqueApi from '@/services/api/connecteProfilUniqueApi';
+
 
 interface AuthContextType {
   user: User | null;
@@ -119,10 +121,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [verifySession, toast]);
 
   const logout = useCallback(() => {
+    // Enregistrer l'heure de déconnexion dans connecte-profil-unique.json
+    try {
+      const sessionId = connecteProfilUniqueApi.getSessionId();
+      if (sessionId) {
+        connecteProfilUniqueApi.logout(sessionId, 'deconnexion_manuelle').catch(() => {});
+        connecteProfilUniqueApi.setSessionId(null);
+      }
+    } catch {}
+
     // Disconnect SSE before clearing auth state
     try {
       realtimeService.disconnect();
     } catch {}
+
 
     localStorage.removeItem('token');
     localStorage.removeItem('user');

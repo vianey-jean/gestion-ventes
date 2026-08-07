@@ -28,6 +28,10 @@ import PointageAutoWatcher from '@/components/pointage/PointageAutoWatcher';
 import AutoInjectWatcher from '@/components/AutoInjectWatcher';
 import GlobalRdvTodayNotifier from '@/components/rdv/GlobalRdvTodayNotifier';
 import VisitTracker from '@/components/VisitTracker';
+import SessionUniqueWatcher from '@/components/auth/SessionUniqueWatcher';
+import SessionConflictPage from '@/pages/SessionConflictPage';
+
+
 
 // ==================
 // Lazy loading pages
@@ -106,6 +110,8 @@ function App() {
                     <Route path="login" element={<LoginPage />} />
                     <Route path="register" element={<RegisterPage />} />
                     <Route path="reset-password" element={<ResetPasswordPage />} />
+                    <Route path="session-conflict" element={<SessionConflictPage />} />
+
                     <Route path="contact" element={<ContactPage />} />
                     <Route path="shared/notes/:token" element={<SharedNotesPage />} />
                     <Route path="shared/:token" element={<SharedViewPage />} />
@@ -184,6 +190,9 @@ function App() {
                 </Suspense>
                 </MaintenanceGate>
                 <VisitTracker />
+                {/* Session unique par profil : notifications + déconnexion forcée */}
+                <SessionUniqueWatcher />
+
               </Router>
               <Toaster />
               <CookieConsent />
