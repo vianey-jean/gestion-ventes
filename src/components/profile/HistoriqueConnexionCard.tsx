@@ -17,7 +17,7 @@ import { motion } from 'framer-motion';
 import {
   Activity, RotateCcw, Smartphone, Monitor, Tablet, CheckCircle, XCircle, Lock,
   Globe, Eye, Trash2, Calendar, CalendarDays, CalendarRange, CalendarCheck,
-  Crown, ShieldCheck, User as UserIcon, MapPin
+  Crown, ShieldCheck, User as UserIcon, MapPin, Printer, LogIn, LogOut
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -28,6 +28,8 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import historiqueConnexionApi, { HistoriqueEntry } from '@/services/api/historiqueConnexionApi';
 import { realtimeService } from '@/services/realtimeService';
+import connecteProfilUniqueApi from '@/services/api/connecteProfilUniqueApi';
+import { exportSessionsHistoryPdf, SessionPdfRow } from '@/utils/sessionsHistoryPdf';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue
 } from '@/components/ui/select';
@@ -40,6 +42,8 @@ const typeColor = (t: string) => {
     case 'login_failed': return 'text-orange-600 bg-orange-500/15 border-orange-500/30';
     case 'login_locked': return 'text-red-600 bg-red-500/15 border-red-500/30';
     case 'visit': return 'text-sky-600 bg-sky-500/15 border-sky-500/30';
+    case 'session_login': return 'text-emerald-600 bg-emerald-500/15 border-emerald-500/30';
+    case 'session_logout': return 'text-rose-600 bg-rose-500/15 border-rose-500/30';
     default: return 'text-gray-600 bg-gray-500/15 border-gray-500/30';
   }
 };
@@ -49,6 +53,8 @@ const typeIcon = (t: string) => {
     case 'login_failed': return <XCircle className="w-3 h-3" />;
     case 'login_locked': return <Lock className="w-3 h-3" />;
     case 'visit': return <Eye className="w-3 h-3" />;
+    case 'session_login': return <LogIn className="w-3 h-3" />;
+    case 'session_logout': return <LogOut className="w-3 h-3" />;
     default: return <Activity className="w-3 h-3" />;
   }
 };
@@ -57,6 +63,8 @@ const typeLabel = (t: string) => ({
   login_failed: 'Échec',
   login_locked: 'Bloqué',
   visit: 'Visite',
+  session_login: 'Connexion',
+  session_logout: 'Déconnexion',
 } as Record<string, string>)[t] || t;
 
 const deviceIcon = (d?: string) => {
@@ -165,11 +173,65 @@ const HistoriqueConnexionCard: React.FC = () => {
   const [period, setPeriod] = useState<'day' | 'week' | 'month' | 'year'>('day');
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
 
+  /**
+   * Convertit les entrées de connecte-profil-unique.json en évènements
+   * "connexion" / "déconnexion" affichables dans l'historique.
+   */
+  const buildSessionEvents = (profils: any[]): HistoriqueEntry[] => {
+    const out: HistoriqueEntry[] = [];
+    (Array.isArray(profils) ? profils : []).forEach((p) => {
+      (Array.isArray(p.historique) ? p.historique : []).forEach((h: any) => {
+        const base = {
+          userId: p.userId || '',
+          userEmail: p.email || '',
+          userName: p.nom || p.email || 'Profil',
+          userRole: p.role || '',
+          ip: h.ip || p.ip || '',
+          browser: h.browser || p.browser || '',
+          os: h.os || p.os || '',
+          device: h.device || p.device || '',
+          userAgent: p.userAgent || '',
+        };
+        if (h.connecteAt) {
+          out.push({
+            ...base,
+            id: `${h.sessionId}_in`,
+            type: 'session_login',
+            statut: 'connexion',
+            message: 'Connexion au compte',
+            page: '',
+            date: h.connecteAt,
+          } as HistoriqueEntry);
+        }
+        if (h.deconnecteAt) {
+          out.push({
+            ...base,
+            id: `${h.sessionId}_out`,
+            type: 'session_logout',
+            statut: 'déconnexion',
+            message: h.motif || 'Déconnexion du compte',
+            page: '',
+            date: h.deconnecteAt,
+          } as HistoriqueEntry);
+        }
+      });
+    });
+    return out;
+  };
+
   const fetchEntries = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await historiqueConnexionApi.getAll();
-      setEntries(Array.isArray(res.data) ? res.data : []);
+      const [res, profils] = await Promise.all([
+        historiqueConnexionApi.getAll(),
+        connecteProfilUniqueApi.list().catch(() => [] as any[]),
+      ]);
+      const base = Array.isArray(res.data) ? res.data : [];
+      const sessions = buildSessionEvents(profils);
+      const all = [...base, ...sessions].sort(
+        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+      );
+      setEntries(all);
     } catch (e) {
       console.error('historique fetch error:', e);
     } finally { setLoading(false); }
@@ -177,12 +239,21 @@ const HistoriqueConnexionCard: React.FC = () => {
 
   useEffect(() => { fetchEntries(); }, [fetchEntries]);
 
+  // Rafraîchissement léger : les connexions/déconnexions issues de
+  // connecte-profil-unique.json ne passent pas par le flux SSE
+  // (le heartbeat écrit le fichier toutes les 2 s).
+  useEffect(() => {
+    const id = window.setInterval(() => { fetchEntries(); }, 15000);
+    return () => window.clearInterval(id);
+  }, [fetchEntries]);
+
   // Synchronisation temps réel via SSE — refetch uniquement quand
   // le fichier historique-connexion.json change sur le serveur.
   useEffect(() => {
     realtimeService.connect();
     const unsubscribe = realtimeService.addSyncListener((event) => {
-      if (event?.type === 'data-changed' && event?.data?.type === 'historique-connexion') {
+      if (event?.type === 'data-changed' &&
+          (event?.data?.type === 'historique-connexion' || event?.data?.type === 'connecte-profil-unique')) {
         fetchEntries();
       }
       if (event?.type === 'force-sync') {
@@ -199,6 +270,7 @@ const HistoriqueConnexionCard: React.FC = () => {
     try {
       setResetting(true);
       await historiqueConnexionApi.reset();
+      await connecteProfilUniqueApi.reset().catch(() => null);
       setEntries([]);
       toast({ title: '✅ Historique réinitialisé', description: 'Le comptage repart de 0', className: 'bg-green-600 text-white border-green-600' });
       setConfirmReset(false);
@@ -261,6 +333,44 @@ const HistoriqueConnexionCard: React.FC = () => {
 
   const filteredGroups = useMemo(() => groupEntries(filteredEntries), [filteredEntries]);
   const previewGroups = filteredGroups.slice(0, 4);
+
+  const periodLabel = useMemo(() => {
+    if (period === 'day') return "Sessions d'aujourd'hui";
+    if (period === 'week') return 'Sessions de la semaine';
+    if (period === 'month') return 'Sessions du mois';
+    return `Sessions de ${selectedYear}`;
+  }, [period, selectedYear]);
+
+  /** Impression PDF des connexions / déconnexions de la période choisie */
+  const handlePrintPeriod = useCallback(() => {
+    const events = filteredEntries
+      .filter(e => e.type === 'session_login' || e.type === 'session_logout')
+      .slice()
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+    if (events.length === 0) {
+      toast({ title: 'Aucune donnée', description: 'Aucune connexion/déconnexion pour cette période', variant: 'destructive' });
+      return;
+    }
+
+    const rows: SessionPdfRow[] = events.map((e) => {
+      const d = new Date(e.date);
+      return {
+        date: isNaN(d.getTime()) ? '' : d.toLocaleDateString('fr-FR'),
+        heure: isNaN(d.getTime()) ? '' : d.toLocaleTimeString('fr-FR'),
+        evenement: e.type === 'session_login' ? 'Connexion' : 'Déconnexion',
+        profil: e.userName || e.userEmail || 'Profil',
+        role: roleLabel(e),
+        ip: e.ip || '',
+        navigateur: e.browser || '',
+        os: e.os || '',
+        appareil: e.device || '',
+      };
+    });
+
+    exportSessionsHistoryPdf(periodLabel, rows);
+    toast({ title: '🖨️ PDF généré', description: `${rows.length} évènement(s) exporté(s)`, className: 'bg-sky-600 text-white border-sky-600' });
+  }, [filteredEntries, periodLabel, toast]);
 
   const periodCardBase = "rounded-xl border p-2 text-center transition-all cursor-pointer hover:scale-[1.03]";
   const isActive = (p: string) => period === p ? 'ring-2 ring-offset-1 ring-offset-background scale-[1.02]' : 'opacity-70 hover:opacity-100';
@@ -371,12 +481,19 @@ const HistoriqueConnexionCard: React.FC = () => {
             </div>
           )}
 
-          <div className="text-[10px] uppercase font-bold text-muted-foreground mb-2 px-1">
-            {period === 'day' && "Sessions d'aujourd'hui"}
-            {period === 'week' && 'Sessions de la semaine'}
-            {period === 'month' && 'Sessions du mois'}
-            {period === 'year' && `Sessions de ${selectedYear}`}
-            <span className="ml-1 text-muted-foreground/60">({filteredGroups.length})</span>
+          <div className="flex items-center justify-between gap-2 mb-2 px-1">
+            <div className="text-[10px] uppercase font-bold text-muted-foreground">
+              {periodLabel}
+              <span className="ml-1 text-muted-foreground/60">({filteredGroups.length})</span>
+            </div>
+            <button
+              type="button"
+              onClick={handlePrintPeriod}
+              title={`Imprimer / télécharger le PDF — ${periodLabel}`}
+              className="p-1.5 rounded-lg bg-sky-500/10 hover:bg-sky-500/20 border border-sky-500/30 text-sky-600 transition-all hover:scale-110"
+            >
+              <Printer className="w-3.5 h-3.5" />
+            </button>
           </div>
 
           <div className="space-y-2 max-h-[280px] overflow-y-auto pr-1">

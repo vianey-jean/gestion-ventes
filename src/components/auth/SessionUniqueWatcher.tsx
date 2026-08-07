@@ -61,27 +61,39 @@ const SessionUniqueWatcher: React.FC = () => {
 
       const d = notif.details || {};
 
+      const isLogin = notif.type === 'user_login';
+      const isLogout = notif.type === 'user_logout';
+
+      const title = isLogin
+        ? `🟢 Connexion : ${d.nom || 'Profil'}`
+        : isLogout
+          ? `🔴 Déconnexion : ${d.nom || 'Profil'}`
+          : 'Nouvelle connexion de votre profil';
+
+      const heure = d.heure || d.heureConnexion || '';
+      const date = d.date || d.dateConnexion || '';
+
       toast({
-        title: 'Nouvelle connexion de votre profil',
+        title,
 
         description:
           `${d.browser || ''} ${
             d.os ? `· ${d.os}` : ''
-          } · IP ${d.ip || ''} · ${
-            d.dateConnexion || ''
-          } ${
-            d.heureConnexion || ''
-          }${
+          } · IP ${d.ip || ''} · ${date} ${heure}${
             d.timezone ? ` (${d.timezone})` : ''
           }`,
 
-        className:
-          'bg-blue-600 text-white border-blue-600',
+        className: isLogout
+          ? 'bg-red-600 text-white border-red-600'
+          : isLogin
+            ? 'bg-emerald-600 text-white border-emerald-600'
+            : 'bg-blue-600 text-white border-blue-600',
       });
 
     },
     [toast]
   );
+
 
 
 

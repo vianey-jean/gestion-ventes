@@ -6,7 +6,7 @@ import api from './api';
 export interface HistoriqueEntry {
 
   id: string;
-  type: 'login_success' | 'login_failed' | 'login_locked' | 'visit';
+  type: 'login_success' | 'login_failed' | 'login_locked' | 'visit' | 'session_login' | 'session_logout';
   userId?: string;
   userEmail?: string;
   userName?: string;

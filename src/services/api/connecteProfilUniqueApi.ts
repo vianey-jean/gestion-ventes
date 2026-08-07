@@ -150,6 +150,16 @@ export const connecteProfilUniqueApi = {
     return res.data;
   },
 
+  list: async (): Promise<any[]> => {
+    const res = await api.get<any[]>(`${BASE}`);
+    return Array.isArray(res.data) ? res.data : [];
+  },
+
+  reset: async () => {
+    const res = await api.delete(`${BASE}`);
+    return res.data;
+  },
+
   actives: async () => {
     const res = await api.get(`${BASE}/actives`);
     return res.data;
