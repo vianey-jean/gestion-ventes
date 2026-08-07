@@ -653,7 +653,10 @@ const SecuriteSection: React.FC<SecuriteSectionProps> = ({ userRole }) => {
 
       {/* ===== HISTORIQUE DES CONNEXIONS ===== */}
       <div className="mt-5">
-        <HistoriqueConnexionCard />
+        <div id="historique-connexions">
+          <HistoriqueConnexionCard />
+        </div>
+
       </div>
 
       {/* ========== DIALOGS ========== */}

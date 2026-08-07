@@ -7,8 +7,9 @@
  * - Affiche les notifications de connexion multiple (administrateur principal).
  */
 
-import React, { useCallback, useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -24,6 +25,8 @@ import {
   XCircle,
   AlertTriangle,
   Clock3,
+  History,
+  ArrowRight,
 } from 'lucide-react';
 
 import type { SessionNotification } from '@/services/api/connecteProfilUniqueApi';
@@ -33,8 +36,12 @@ const SessionUniqueWatcher: React.FC = () => {
 
   const { isAuthenticated, logout } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const [blink, setBlink] = useState(0);
+  const [summary, setSummary] = useState<SessionNotification | null>(null);
+  const summaryTimer = useRef<number | undefined>(undefined);
+
 
 
   const handleForceLogout = useCallback(
@@ -56,10 +63,24 @@ const SessionUniqueWatcher: React.FC = () => {
 
 
 
+  const goToHistorique = useCallback(() => {
+    setSummary(null);
+    navigate('/profile?tab=securite#historique-connexions');
+  }, [navigate]);
+
+
   const handleNotification = useCallback(
     (notif: SessionNotification) => {
 
       const d = notif.details || {};
+
+      // Résumé du jour (avant la connexion de l'admin principal) : bandeau 1 min
+      if (notif.type === 'daily_summary') {
+        setSummary(notif);
+        if (summaryTimer.current) window.clearTimeout(summaryTimer.current);
+        summaryTimer.current = window.setTimeout(() => setSummary(null), 60000);
+        return;
+      }
 
       const isLogin = notif.type === 'user_login';
       const isLogout = notif.type === 'user_logout';
@@ -83,16 +104,21 @@ const SessionUniqueWatcher: React.FC = () => {
             d.timezone ? ` (${d.timezone})` : ''
           }`,
 
-        className: isLogout
-          ? 'bg-red-600 text-white border-red-600'
-          : isLogin
-            ? 'bg-emerald-600 text-white border-emerald-600'
-            : 'bg-blue-600 text-white border-blue-600',
-      });
+        onClick: goToHistorique,
+
+        className: `cursor-pointer ${
+          isLogout
+            ? 'bg-red-600 text-white border-red-600'
+            : isLogin
+              ? 'bg-emerald-600 text-white border-emerald-600'
+              : 'bg-blue-600 text-white border-blue-600'
+        }`,
+      } as any);
 
     },
-    [toast]
+    [toast, goToHistorique]
   );
+
 
 
 
@@ -129,11 +155,64 @@ const SessionUniqueWatcher: React.FC = () => {
 
 
 
-  if (!isAuthenticated || !logoutRequest) return null;
+  if (!isAuthenticated) return null;
 
+
+  const summaryBanner = (
+    <AnimatePresence>
+      {summary && (
+        <motion.button
+          key={summary.id}
+          type="button"
+          onClick={goToHistorique}
+          initial={{ opacity: 0, y: -20, scale: 0.96 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: -20 }}
+          transition={{ duration: 0.3 }}
+          className="
+            fixed top-4 left-1/2 z-[9998] -translate-x-1/2
+            w-[92vw] max-w-md text-left
+            overflow-hidden rounded-2xl
+            border border-white/25
+            bg-gradient-to-r from-slate-900 via-emerald-900 to-slate-900
+            px-4 py-3 shadow-[0_20px_50px_rgba(16,185,129,.35)]
+            backdrop-blur-xl hover:scale-[1.01] transition-transform
+          "
+        >
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/20">
+              <History className="h-5 w-5 text-emerald-300" />
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-bold text-white">
+                Activité du jour avant votre connexion
+              </p>
+              <p className="text-[12px] text-emerald-100">
+                <span className="font-semibold text-emerald-300">
+                  {summary.details?.connexions || 0}
+                </span>{' '}
+                connexion(s) ·{' '}
+                <span className="font-semibold text-rose-300">
+                  {summary.details?.deconnexions || 0}
+                </span>{' '}
+                déconnexion(s)
+              </p>
+            </div>
+            <ArrowRight className="h-5 w-5 text-white/70" />
+          </div>
+        </motion.button>
+      )}
+    </AnimatePresence>
+  );
+
+
+  if (!logoutRequest) return summaryBanner;
 
 
   return (
+   <>
+    {summaryBanner}
+
 
     <motion.div
 
@@ -467,8 +546,10 @@ const SessionUniqueWatcher: React.FC = () => {
 
 
     </motion.div>
+   </>
 
   );
+
 
 };
 

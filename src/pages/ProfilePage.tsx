@@ -60,6 +60,20 @@ const ProfilePage: React.FC = () => {
 
   useEffect(() => { fetchProfile(); }, []);
 
+  // Ouverture directe d'un onglet via ?tab=securite (notifications de connexion)
+  useEffect(() => {
+    const tab = new URLSearchParams(window.location.search).get('tab');
+    if (tab === 'securite' || tab === 'parametres' || tab === 'profil') {
+      setActiveTab(tab as ProfileTab);
+      if (window.location.hash) {
+        setTimeout(() => {
+          document.getElementById(window.location.hash.slice(1))?.scrollIntoView({ behavior: 'smooth' });
+        }, 600);
+      }
+    }
+  }, []);
+
+
   const fetchProfile = async () => {
     try {
       setLoading(true);
