@@ -119,9 +119,37 @@ const CaracteristiqueModal: React.FC<Props> = ({ open, onOpenChange, product }) 
 
       let cursorY = margin;
 
-      // === Description (auto-fit) ===
+      // === Bloc haut : logo à gauche, description + taille à droite ===
+      const topH = descH + sizeH + gap;
+      const logoW = Math.min(contentW * 0.28, topH);
+      const textX = margin + logoW + gap;
+      const textW = contentW - logoW - gap;
+
+      // Logo (chargé depuis /images/Riziky.png)
+      try {
+        const logoData = await new Promise<string>((resolve, reject) => {
+          const img = new Image();
+          img.crossOrigin = 'anonymous';
+          img.onload = () => {
+            const c = document.createElement('canvas');
+            c.width = img.naturalWidth;
+            c.height = img.naturalHeight;
+            const ctx = c.getContext('2d');
+            if (!ctx) return reject(new Error('no ctx'));
+            ctx.drawImage(img, 0, 0);
+            resolve(c.toDataURL('image/png'));
+          };
+          img.onerror = () => reject(new Error('logo load failed'));
+          img.src = '/images/Riziky.png';
+        });
+        pdf.addImage(logoData, 'PNG', margin, cursorY + (topH - logoW) / 2, logoW, logoW);
+      } catch (e) {
+        console.warn('Logo non chargé pour le PDF', e);
+      }
+
+      // Description (auto-fit) à droite du logo
       const { fontSize: descPt, lines: descLines } = fitFontSize(
-        displayName, contentW, descH, 'helvetica', 'bold', 40, 4,
+        displayName, textW, descH, 'helvetica', 'bold', 40, 4,
       );
       pdf.setFont('helvetica', 'bold');
       pdf.setFontSize(descPt);
@@ -130,23 +158,23 @@ const CaracteristiqueModal: React.FC<Props> = ({ open, onOpenChange, product }) 
       const descTotalH = descLines.length * descLineH;
       const descStartY = cursorY + (descH - descTotalH) / 2 + descPt * PT_TO_MM * 0.85;
       descLines.forEach((ln, i) => {
-        pdf.text(ln, pageW / 2, descStartY + i * descLineH, { align: 'center' });
+        pdf.text(ln, textX + textW / 2, descStartY + i * descLineH, { align: 'center' });
       });
-      cursorY += descH + gap;
 
-      // === Taille (gros chiffre, auto-fit) ===
+      // Taille (gros chiffre) sous la description, toujours à droite
       if (size) {
         const { fontSize: sizePt } = fitFontSize(
-          size, contentW, sizeH, 'helvetica', 'bold', 400, 8,
+          size, textW, sizeH, 'helvetica', 'bold', 400, 8,
         );
         pdf.setFont('helvetica', 'bold');
         pdf.setFontSize(sizePt);
         pdf.setTextColor(255, 0, 0);
-        // Centre vertical du bloc
-        const sizeY = cursorY + sizeH / 2 + sizePt * PT_TO_MM * 0.35;
-        pdf.text(size, pageW / 2, sizeY, { align: 'center' });
+        const sizeY = cursorY + descH + gap + sizeH / 2 + sizePt * PT_TO_MM * 0.35;
+        pdf.text(size, textX + textW / 2, sizeY, { align: 'center' });
       }
-      cursorY += sizeH + gap;
+
+      cursorY += topH + gap;
+
 
       // === Code-barre (proportionnel à la zone) ===
       try {

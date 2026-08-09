@@ -76,28 +76,46 @@ const ProductCharacteristicCard: React.FC<Props> = ({ product, variant = 'compac
         className
       )}
     >
-      {/* Description (au-dessus) */}
-      <p
-        className={cn(
-          'text-center font-bold text-violet-900 dark:text-violet-100 leading-tight break-words',
-          variant === 'full' ? 'text-base' : 'text-[10px] line-clamp-2'
-        )}
-        title={displayName}
-      >
-        {displayName}
-      </p>
+      {/* Ligne haute : Description + Taille à gauche, logo à droite */}
+      <div className={cn('flex items-center w-full', variant === 'full' ? 'gap-4' : 'gap-2')}>
+        <div className="flex-1 min-w-0 flex flex-col items-center justify-center gap-1">
+          <p
+            className={cn(
+              'text-center font-bold text-violet-900 dark:text-violet-100 leading-tight break-words',
+              variant === 'full' ? 'text-base' : 'text-[10px] line-clamp-2'
+            )}
+            title={displayName}
+          >
+            {displayName}
+          </p>
 
-      {/* Taille (juste en-dessous) */}
-      {size && (
+          {size && (
+            <div
+              className={cn(
+                'font-black bg-gradient-to-br from-violet-600 to-fuchsia-600 bg-clip-text text-transparent leading-none',
+                variant === 'full' ? 'text-6xl' : 'text-2xl'
+              )}
+            >
+              {size}''
+            </div>
+          )}
+        </div>
+
         <div
           className={cn(
-            'font-black bg-gradient-to-br from-violet-600 to-fuchsia-600 bg-clip-text text-transparent leading-none',
-            variant === 'full' ? 'text-6xl' : 'text-2xl'
+            'shrink-0 rounded-xl overflow-hidden bg-black/95 ring-1 ring-violet-300/40 dark:ring-violet-700/40 shadow-md flex items-center justify-center',
+            variant === 'full' ? 'w-28 h-28 p-1.5' : 'w-12 h-12 p-1'
           )}
         >
-          {size}''
+          <img
+            src="/images/Riziky.png"
+            alt="Logo Riziky Beauté"
+            className="w-full h-full object-contain"
+            loading="lazy"
+          />
         </div>
-      )}
+      </div>
+
 
       {/* Code-barres */}
       <div className={cn('flex items-center justify-center gap-3 w-full', variant === 'full' ? 'gap-4' : 'gap-2')}>
