@@ -90,16 +90,23 @@ const ConfirmationRdvButton: React.FC<Props> = ({ rdvs, onAfterUpdate }) => {
   }, [entries, upcoming]);
 
   // Pulse si au moins un RDV de la fenêtre est encore "en_attente"
-  const hasPending = useMemo(
-    () => visibleEntries.some(e => e.confirmationStatut === 'en_attente'),
+  // Les réservations créées à moins de 24h de leur échéance sont maintenues
+  // automatiquement : elles n'ont plus besoin de confirmation → exclues de la liste.
+  const displayEntries = useMemo(
+    () => visibleEntries.filter(e => !e.confirmationAuto),
     [visibleEntries]
   );
 
-  const isVisible = upcoming.length > 0;
+  const hasPending = useMemo(
+    () => displayEntries.some(e => e.confirmationStatut === 'en_attente'),
+    [displayEntries]
+  );
+
+  const isVisible = displayEntries.length > 0;
 
   const selected = useMemo(
-    () => visibleEntries.find(e => e.id === selectedId) || null,
-    [visibleEntries, selectedId]
+    () => displayEntries.find(e => e.id === selectedId) || null,
+    [displayEntries, selectedId]
   );
 
   const handleOpen = async () => {
@@ -259,10 +266,10 @@ const ConfirmationRdvButton: React.FC<Props> = ({ rdvs, onAfterUpdate }) => {
 
           <ScrollArea className="max-h-[60vh] pr-3">
             <div className="space-y-3">
-              {visibleEntries.length === 0 && (
+              {displayEntries.length === 0 && (
                 <div className="text-center py-8 text-muted-foreground">Aucun rendez-vous dans les prochaines 24h</div>
               )}
-              {visibleEntries.map((e) => {
+              {displayEntries.map((e) => {
                 const isSel = selectedId === e.id;
                 const statutColor =
                   e.confirmationStatut === 'maintenu' ? 'bg-emerald-600' :

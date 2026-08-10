@@ -39,6 +39,8 @@ export function computeLockStateForCommande(
   if (!commande?.id || !dateRef || !commande.horaire) return 'normal';
   const entry = confirmationEntries.find(e => e.commandeId === commande.id);
   if (!entry) return 'normal';
+  // Maintien automatique (réservation créée à < 24h de l'échéance) : jamais verrouillé
+  if (entry.confirmationAuto) return 'normal';
   if (entry.confirmationStatut !== 'en_attente') return 'normal';
 
   const hDebut = (commande.horaire || '').split('-')[0]?.trim() || '00:00';
@@ -61,6 +63,7 @@ export function computeLockStateForTache(
   if (!tache?.commandeId) return 'normal';
   const entry = confirmationEntries.find(e => e.commandeId === tache.commandeId);
   if (!entry) return 'normal';
+  if (entry.confirmationAuto) return 'normal';
   if (entry.confirmationStatut !== 'en_attente') return 'normal';
 
   const date = tache.date || entry.date;

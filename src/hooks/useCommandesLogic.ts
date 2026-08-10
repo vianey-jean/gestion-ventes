@@ -814,11 +814,42 @@ export const useCommandesLogic = () => {
     // Calcul de la caractéristique du client (avant éventuelle création)
     const caracBefore = computeClientCaracteristique(clientNom, clients, sales, commandes);
     const caracLabel = caracBefore?.label || 'Nouveau client';
-    const commandeData: Partial<Commande> = { clientNom, clientPhone, clientAddress, type, produits: produitsListe, dateCommande: new Date().toISOString(), statut: type === 'commande' ? 'en_route' : 'en_attente', clientCaracteristique: caracLabel };
+    const nowIso = new Date().toISOString();
+    let currentUserName = '';
+    let currentUserId = '';
+    try {
+      const raw = localStorage.getItem('user') || localStorage.getItem('currentUser') || '';
+      if (raw) {
+        const u = JSON.parse(raw);
+        currentUserName = u?.name || [u?.firstName, u?.lastName].filter(Boolean).join(' ') || u?.email || '';
+        currentUserId = u?.id || '';
+      }
+      if (!currentUserName) currentUserName = localStorage.getItem('user_name') || '';
+    } catch { /* pas de profil en cache */ }
+
+    const commandeData: Partial<Commande> = { clientNom, clientPhone, clientAddress, type, produits: produitsListe, dateCommande: nowIso, statut: type === 'commande' ? 'en_route' : 'en_attente', clientCaracteristique: caracLabel };
+    if (!editingCommande) {
+      commandeData.enregistreLe = nowIso;
+      if (currentUserName) commandeData.createdByName = currentUserName;
+      if (currentUserId) commandeData.createdById = currentUserId;
+    }
     if (type === 'commande') commandeData.dateArrivagePrevue = dateArrivagePrevue;
     else commandeData.dateEcheance = dateEcheance;
     if (horaire) commandeData.horaire = horaire;
     if (horaireFin) commandeData.horaireFin = horaireFin;
+
+    // ✅ Réservation créée à moins de 24h de son échéance → maintien automatique
+    if (type === 'reservation' && dateEcheance) {
+      const hDebut = (horaire || '00:00').split('-')[0]?.trim() || '00:00';
+      const echeanceDate = new Date(`${dateEcheance}T${hDebut}:00`);
+      if (!isNaN(echeanceDate.getTime())) {
+        const diff = echeanceDate.getTime() - new Date(nowIso).getTime();
+        if (diff >= 0 && diff <= 24 * 60 * 60 * 1000) {
+          commandeData.confirmationAuto = true;
+        }
+      }
+    }
+
 
     // ✅ Réservation ultérieure : override
     if (type === 'reservation' && ulterieurConfig) {
@@ -1325,18 +1356,21 @@ export const useCommandesLogic = () => {
         const endHours = (hours + 1) % 24;
         heureFin = `${endHours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
       }
+      // Réservation créée à < 24h de l'échéance : RDV maintenu automatiquement (confirmé)
+      const autoMaintenu = !!(pendingReservationForRdv as any).confirmationAuto;
       const rdvData = {
         titre: titre || `Réservation pour ${pendingReservationForRdv.clientNom}`,
         description: description || '', clientNom: pendingReservationForRdv.clientNom,
         clientTelephone: pendingReservationForRdv.clientPhone, clientAdresse: pendingReservationForRdv.clientAddress,
         date: pendingReservationForRdv.dateEcheance, heureDebut, heureFin,
-        lieu: pendingReservationForRdv.clientAddress, statut: 'planifie',
-        notes: `Créé depuis une réservation`,
+        lieu: pendingReservationForRdv.clientAddress, statut: autoMaintenu ? 'confirme' : 'planifie',
+        notes: autoMaintenu ? `Créé depuis une réservation — maintenu automatiquement (< 24h)` : `Créé depuis une réservation`,
         produits: pendingReservationForRdv.produits.map(p => ({ nom: p.nom, quantite: p.quantite, prixUnitaire: p.prixUnitaire, prixVente: p.prixVente })),
         commandeId: pendingReservationForRdv.id,
       };
       await api.post('/api/rdv', rdvData);
-      toast({ title: '📅 Rendez-vous créé', description: `Le RDV a été créé pour le ${pendingReservationForRdv.dateEcheance}`, className: "bg-app-green text-white" });
+      toast({ title: '📅 Rendez-vous créé', description: autoMaintenu ? `RDV maintenu automatiquement pour le ${pendingReservationForRdv.dateEcheance} (créé à moins de 24h)` : `Le RDV a été créé pour le ${pendingReservationForRdv.dateEcheance}`, className: "bg-app-green text-white" });
+
 
       // Also create as tache - check for time conflicts first
       const tacheData = {

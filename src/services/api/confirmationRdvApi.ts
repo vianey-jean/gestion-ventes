@@ -16,7 +16,10 @@ export interface ConfirmationRdvEntry {
   commandeId?: string | null;
   statutRdv: string;
   confirmationStatut: 'en_attente' | 'maintenu' | 'annule' | 'reporter';
+  /** Maintien automatique : réservation créée à moins de 24h de son échéance */
+  confirmationAuto?: boolean;
   confirmedAt?: string | null;
+
   createdAt: string;
   updatedAt: string;
 }

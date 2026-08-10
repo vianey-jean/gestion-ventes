@@ -49,7 +49,14 @@ export interface Commande {
   ulterieurDate?: string;
   /** Dernière notification 24h envoyée */
   ulterieurLastNotifiedAt?: string;
+  /** Traçabilité de l'enregistrement */
+  enregistreLe?: string;
+  createdByName?: string;
+  createdById?: string;
+  /** Réservation créée à moins de 24h de l'échéance : RDV maintenu automatiquement */
+  confirmationAuto?: boolean;
 }
+
 
 export interface CommandeFormData {
   clientNom: string;
