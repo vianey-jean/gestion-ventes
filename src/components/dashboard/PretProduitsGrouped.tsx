@@ -1695,48 +1695,15 @@ const PretProduitsGrouped: React.FC = () => {
               <div className="grid gap-2">
                 <Label htmlFor="datePret" className="text-sm font-semibold text-gray-700 dark:text-gray-300">Date de prêt</Label>
                 <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant={"outline"}
-                      className={cn(
-                        "w-full justify-start text-left font-normal bg-white/50 dark:bg-gray-800/50  border-gray-300 dark:border-gray-600",
-                        !datePret && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {datePret ? format(datePret, "PPP", { locale: fr }) : "Sélectionner une date"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={datePret}
-                      onSelect={(newDate) => setDatePret(newDate || new Date())}
-                      disabled={(date) =>
-                        date > new Date() || date < new Date("1900-01-01")
-                      }
-                      initialFocus
-                      className="p-3 pointer-events-auto"
-                    />
-                  </PopoverContent>
+                
+                  <div className="relative w-full"> <CalendarIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-purple-500 pointer-events-none" /> <input type="date" value={datePret ? format(datePret, "yyyy-MM-dd") : ""} onChange={(e) => { const value = e.target.value; setDatePret(value ? new Date(`${value}T00:00:00`) : new Date()); }} max={format(new Date(), "yyyy-MM-dd")} min="1900-01-01" className="w-full bg-white/50 border border-gray-200/50 rounded-xl px-4 py-3 pl-12 text-left font-normal hover:bg-white/70 transition-all duration-200" /> </div>
                 </Popover>
               </div>
 
               <div className="grid gap-2">
                 <Label htmlFor="datePaiement" className="text-sm font-semibold text-gray-700 dark:text-gray-300">Date de paiement prévue</Label>
                 <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant={"outline"}
-                      className={cn(
-                        "w-full justify-start text-left font-normal bg-white/50 dark:bg-gray-800/50  border-gray-300 dark:border-gray-600",
-                        !datePaiement && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {datePaiement ? format(datePaiement, "PPP", { locale: fr }) : "Sélectionner une date"}
-                    </Button>
-                  </PopoverTrigger>
+                 <div className="relative w-full"> <CalendarIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-purple-500 pointer-events-none" /> <input type="date" value={datePaiement ? format(datePaiement, "yyyy-MM-dd") : ""} onChange={(e) => { const value = e.target.value; setDatePaiement( value ? new Date(`${value}T00:00:00`) : undefined ); }} className={cn( "w-full bg-white/50 dark:bg-gray-800/50 border border-gray-300 dark:border-gray-600 rounded-md px-4 py-3 pl-10 text-left font-normal hover:bg-white/70 dark:hover:bg-gray-800/70 transition-all duration-200", !datePaiement && "text-muted-foreground" )} /> </div>
                   <PopoverContent className="w-auto p-0" align="start">
                     <Calendar
                       mode="single"

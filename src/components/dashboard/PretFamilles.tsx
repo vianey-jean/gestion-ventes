@@ -1162,7 +1162,7 @@ const PretFamilles: React.FC = () => {
             <div className="grid gap-3">
               <Label htmlFor="montant" className="text-sm font-semibold text-gray-700 dark:text-gray-300">Montant du remboursement</Label>
               <div className="relative">
-                <ArrowUp className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-emerald-500" />
+                
                 <Input 
                   id="montant" 
                   type="number" 
@@ -1542,7 +1542,7 @@ const PretFamilles: React.FC = () => {
             <div className="grid gap-3">
               <Label htmlFor="nouvPretTotal" className="text-sm font-semibold text-gray-700 dark:text-gray-300">Montant du prêt</Label>
               <div className="relative">
-                <CreditCard className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-blue-500" />
+                
                 <Input 
                   id="nouvPretTotal" 
                   type="number" 
@@ -1559,18 +1559,7 @@ const PretFamilles: React.FC = () => {
             <div className="grid gap-3">
               <Label htmlFor="nouvDate" className="text-sm font-semibold text-gray-700 dark:text-gray-300">Date</Label>
               <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant={"outline"}
-                    className={cn(
-                      "w-full justify-start text-left font-normal bg-white/50  border border-gray-200/50 rounded-xl px-4 py-3 hover:bg-white/70 transition-all duration-200",
-                      !nouvDate && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-3 h-5 w-5 text-purple-500" />
-                    {nouvDate ? format(nouvDate, 'PP', { locale: fr }) : <span>Sélectionner une date</span>}
-                  </Button>
-                </PopoverTrigger>
+               <div className="relative w-full"> <CalendarIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-purple-500 pointer-events-none" /> <input type="date" value={nouvDate ? format(nouvDate, "yyyy-MM-dd") : ""} onChange={(e) => { const value = e.target.value; setNouvDate(value ? new Date(`${value}T00:00:00`) : undefined); }} className={cn( "w-full justify-start text-left font-normal bg-white/50 border border-gray-200/50 rounded-xl px-4 py-3 pl-12 hover:bg-white/70 transition-all duration-200", !nouvDate && "text-muted-foreground" )} /> </div>
                 <PopoverContent className="w-auto p-0 bg-white/95 border border-gray-200/50 shadow-2xl" align="start">
                   <Calendar
                     mode="single"
