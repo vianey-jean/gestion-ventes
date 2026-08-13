@@ -5,7 +5,7 @@
 // - Utilise ErrorBoundary pour isoler les erreurs critiques
 // - Améliore les performances en chargeant les pages "à la demande"
 
-import React, { Suspense, lazy, useState, useEffect } from 'react';
+import React, { Suspense, lazy, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import SecurityCheckPage from '@/components/security/SecurityCheckPage';
 
@@ -31,8 +31,6 @@ import VisitTracker from '@/components/VisitTracker';
 import SessionUniqueWatcher from '@/components/auth/SessionUniqueWatcher';
 import SessionConflictPage from '@/pages/SessionConflictPage';
 
-
-
 // ==================
 // Lazy loading pages
 // ==================
@@ -43,7 +41,6 @@ const LoginPage = lazy(() => import('@/pages/LoginPage'));
 const RegisterPage = lazy(() => import('@/pages/RegisterPage'));
 const ResetPasswordPage = lazy(() => import('@/pages/ResetPasswordPage'));
 const DashboardPage = lazy(() => import('@/pages/DashboardPage'));
-// TendancesPage removed - content moved to Comptabilité & Finances in Dashboard
 const ClientsPage = lazy(() => import('@/pages/ClientsPage'));
 const MessagesPage = lazy(() => import('@/pages/MessagesPage'));
 const CommandesPage = lazy(() => import('@/pages/CommandesPage'));
@@ -59,11 +56,14 @@ function App() {
   const [securityVerified, setSecurityVerified] = useState(() => {
     try {
       const data = sessionStorage.getItem('security_verified');
+
       if (data) {
         const parsed = JSON.parse(data);
-        // Vérifier que la session est encore valide (même session navigateur)
+
+        // Vérifier que la session est encore valide
         if (parsed.verified && parsed.timestamp) {
           const elapsed = Date.now() - parsed.timestamp;
+
           // Valide pendant 24h max
           if (elapsed < 24 * 60 * 60 * 1000) {
             return true;
@@ -73,138 +73,160 @@ function App() {
     } catch {
       // ignore
     }
+
     return false;
   });
 
   if (!securityVerified) {
     return (
       <ThemeProvider>
-        <SecurityCheckPage onVerified={() => setSecurityVerified(true)} />
+        <SecurityCheckPage
+          onVerified={() => setSecurityVerified(true)}
+        />
       </ThemeProvider>
     );
   }
 
   return (
-    <ErrorBoundary>
-      <ThemeProvider>
-        <AccessibilityProvider>
-          <AuthProvider>
-            <AppProvider>
-              <Router>
+    <Router>
+      <ErrorBoundary>
+        <ThemeProvider>
+          <AccessibilityProvider>
+            <AuthProvider>
+              <AppProvider>
                 <MaintenanceGate>
-                {/* Suspense : gestion du chargement asynchrone */}
-                <Suspense
-                  fallback={
-                    <PremiumLoading
-                      text="Chargement des données en cours..."
-                      size="xl"
-                      overlay={true}
-                      variant="default"
-                    />
-                  }
-                >
-                  <Routes>
-                    {/* Routes publiques */}
-                    <Route index element={<HomePage />} />
-                    <Route path="about" element={<AboutPage />} />
-                    <Route path="login" element={<LoginPage />} />
-                    <Route path="register" element={<RegisterPage />} />
-                    <Route path="reset-password" element={<ResetPasswordPage />} />
-                    <Route path="session-conflict" element={<SessionConflictPage />} />
+                  {/* Suspense : gestion du chargement asynchrone */}
+                  <Suspense
+                    fallback={
+                      <PremiumLoading
+                        text="Chargement des données en cours..."
+                        size="xl"
+                        overlay={true}
+                        variant="default"
+                      />
+                    }
+                  >
+                    <Routes>
+                      {/* Routes publiques */}
+                      <Route index element={<HomePage />} />
+                      <Route path="about" element={<AboutPage />} />
+                      <Route path="login" element={<LoginPage />} />
+                      <Route path="register" element={<RegisterPage />} />
+                      <Route
+                        path="reset-password"
+                        element={<ResetPasswordPage />}
+                      />
+                      <Route
+                        path="session-conflict"
+                        element={<SessionConflictPage />}
+                      />
+                      <Route path="contact" element={<ContactPage />} />
+                      <Route
+                        path="shared/notes/:token"
+                        element={<SharedNotesPage />}
+                      />
+                      <Route
+                        path="shared/:token"
+                        element={<SharedViewPage />}
+                      />
 
-                    <Route path="contact" element={<ContactPage />} />
-                    <Route path="shared/notes/:token" element={<SharedNotesPage />} />
-                    <Route path="shared/:token" element={<SharedViewPage />} />
+                      {/* Routes protégées */}
+                      <Route
+                        path="/dashboard"
+                        element={
+                          <ProtectedRoute>
+                            <DashboardPage />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                    {/* Routes protégées */}
-                    <Route
-                      path="/dashboard"
-                      element={
-                        <ProtectedRoute>
-                          <DashboardPage />
-                        </ProtectedRoute>
-                      }
-                    />
-                    {/* Route Tendances supprimée - contenu dans Dashboard > Comptabilité & Finances */}
-                    <Route
-                      path="/clients"
-                      element={
-                        <ProtectedRoute>
-                          <ClientsPage />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="/messages"
-                      element={
-                        <ProtectedRoute>
-                          <MessagesPage />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="/commandes"
-                      element={
-                        <ProtectedRoute>
-                          <CommandesPage />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="/rdv"
-                      element={
-                        <ProtectedRoute>
-                          <RdvPage />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="/produits"
-                      element={
-                        <ProtectedRoute>
-                          <ProduitsPage />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="/pointage"
-                      element={
-                        <ProtectedRoute>
-                          <PointagePage />
-                        </ProtectedRoute>
-                      }
-                    />
+                      <Route
+                        path="/clients"
+                        element={
+                          <ProtectedRoute>
+                            <ClientsPage />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                    <Route
-                      path="/profile"
-                      element={
-                        <ProtectedRoute>
-                          <ProfilePage />
-                        </ProtectedRoute>
-                      }
-                    />
+                      <Route
+                        path="/messages"
+                        element={
+                          <ProtectedRoute>
+                            <MessagesPage />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                    {/* Page 404 */}
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                </Suspense>
+                      <Route
+                        path="/commandes"
+                        element={
+                          <ProtectedRoute>
+                            <CommandesPage />
+                          </ProtectedRoute>
+                        }
+                      />
+
+                      <Route
+                        path="/rdv"
+                        element={
+                          <ProtectedRoute>
+                            <RdvPage />
+                          </ProtectedRoute>
+                        }
+                      />
+
+                      <Route
+                        path="/produits"
+                        element={
+                          <ProtectedRoute>
+                            <ProduitsPage />
+                          </ProtectedRoute>
+                        }
+                      />
+
+                      <Route
+                        path="/pointage"
+                        element={
+                          <ProtectedRoute>
+                            <PointagePage />
+                          </ProtectedRoute>
+                        }
+                      />
+
+                      <Route
+                        path="/profile"
+                        element={
+                          <ProtectedRoute>
+                            <ProfilePage />
+                          </ProtectedRoute>
+                        }
+                      />
+
+                      {/* Page 404 */}
+                      <Route
+                        path="*"
+                        element={<NotFound />}
+                      />
+                    </Routes>
+                  </Suspense>
                 </MaintenanceGate>
-                <VisitTracker />
-                {/* Session unique par profil : notifications + déconnexion forcée */}
-                <SessionUniqueWatcher />
 
-              </Router>
-              <Toaster />
-              <CookieConsent />
-              {/* Watcher global pour les pointages automatiques (modal top-right) */}
-              <PointageAutoWatcher />
-              <AutoInjectWatcher />
-              <GlobalRdvTodayNotifier />
-            </AppProvider>
-          </AuthProvider>
-        </AccessibilityProvider>
-      </ThemeProvider>
-    </ErrorBoundary>
+                {/* Composants qui utilisent potentiellement React Router */}
+                <VisitTracker />
+                <SessionUniqueWatcher />
+                <PointageAutoWatcher />
+                <AutoInjectWatcher />
+                <GlobalRdvTodayNotifier />
+
+                <Toaster />
+                <CookieConsent />
+              </AppProvider>
+            </AuthProvider>
+          </AccessibilityProvider>
+        </ThemeProvider>
+      </ErrorBoundary>
+    </Router>
   );
 }
 

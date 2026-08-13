@@ -204,19 +204,14 @@ const RdvCalendar: React.FC<RdvCalendarProps> = ({
     }
   }, [highlightRdvId]);
 
-  // Effet pour gérer le clignotement 4 fois
+  // Clignotement violet en continu jusqu'au clic sur le RDV
   React.useEffect(() => {
-    if (blinkingRdvId && blinkCount < 8) { // 8 = 4 cycles (on/off)
-      const timer = setTimeout(() => {
-        setBlinkCount(prev => prev + 1);
-      }, 300);
-      return () => clearTimeout(timer);
-    } else if (blinkCount >= 8) {
-      // Après 4 clignotements, garder stable (pas rouge)
-      setBlinkingRdvId(null);
-      onHighlightComplete?.();
-    }
-  }, [blinkingRdvId, blinkCount, onHighlightComplete]);
+    if (!blinkingRdvId) return;
+    const timer = setInterval(() => {
+      setBlinkCount(prev => prev + 1);
+    }, 500);
+    return () => clearInterval(timer);
+  }, [blinkingRdvId]);
 
   // Check for drop conflicts when newDate, newTime or newEndTime changes in dialog
   useEffect(() => {
@@ -393,6 +388,12 @@ const RdvCalendar: React.FC<RdvCalendarProps> = ({
 
   const handleRdvClick = (e: React.MouseEvent, rdv: RDV) => {
     e.stopPropagation();
+    // Le clic sur le RDV mis en avant arrête définitivement le clignotement
+    if (blinkingRdvId === rdv.id) {
+      setBlinkingRdvId(null);
+      setBlinkCount(0);
+      onHighlightComplete?.();
+    }
     setSelectedRdvDetail(rdv);
     setShowDetailModal(true);
   };
@@ -635,7 +636,7 @@ const RdvCalendar: React.FC<RdvCalendarProps> = ({
                 const colors = statusColors[rdv.statut] || statusColors.planifie;
                 const isExceptionRdv = isRdvException(rdv);
                 
-                // Vérifier si ce RDV doit clignoter
+                // Vérifier si ce RDV doit clignoter (violet)
                 const isBlinking = blinkingRdvId === rdv.id;
                 const showRedBlink = isBlinking && blinkCount % 2 === 0;
                 
@@ -656,12 +657,12 @@ const RdvCalendar: React.FC<RdvCalendarProps> = ({
                       "text-white text-xs overflow-hidden shadow-lg",
                       "transition-all duration-200 hover:shadow-xl hover:z-20 hover:scale-[1.02]",
                       showRedBlink
-                        ? "bg-gradient-to-r from-red-600 to-red-700 border-red-400"
+                        ? "bg-gradient-to-r from-violet-600 to-fuchsia-600 border-violet-300 ring-2 ring-violet-400 shadow-[0_0_25px_rgba(139,92,246,0.85)]"
                         : isExceptionRdv
                           ? "bg-gradient-to-r from-purple-500 to-fuchsia-600"
                           : colors.bg,
                       showRedBlink
-                        ? "border-red-400"
+                        ? "border-violet-300"
                         : isExceptionRdv
                           ? "border-purple-400"
                           : colors.border,

@@ -19,6 +19,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import {
   CalendarClock,
   X,
@@ -29,6 +30,13 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import rdvApiService from '@/services/api/rdvApi';
 import type { RDV } from '@/types/rdv';
+
+const toMinutes = (h?: string) => {
+  if (!h) return 24 * 60;
+  const [hh, mm] = h.split(':').map(Number);
+  if (isNaN(hh)) return 24 * 60;
+  return hh * 60 + (isNaN(mm) ? 0 : mm);
+};
 
 const todayISO = () => {
   const d = new Date();
@@ -42,6 +50,7 @@ const todayISO = () => {
 
 const GlobalRdvTodayNotifier: React.FC = () => {
   const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
 
   const [todayRdvs, setTodayRdvs] = useState<RDV[]>([]);
   const [index, setIndex] = useState(0);
@@ -98,27 +107,40 @@ const GlobalRdvTodayNotifier: React.FC = () => {
   }, [isAuthenticated]);
 
   /**
-   * RDV visibles
+   * RDV visibles — triés du plus proche au plus lointain
+   * (les RDV déjà passés dans la journée arrivent en dernier)
    */
-  const visibleRdvs = useMemo(
-    () => todayRdvs.filter((r) => !dismissed.has(r.id)),
-    [todayRdvs, dismissed]
-  );
+  const visibleRdvs = useMemo(() => {
+    const now = new Date();
+    const nowMin = now.getHours() * 60 + now.getMinutes();
+
+    return todayRdvs
+      .filter((r) => !dismissed.has(r.id))
+      .slice()
+      .sort((a, b) => {
+        const aM = toMinutes(a.heureDebut);
+        const bM = toMinutes(b.heureDebut);
+        const aPast = aM < nowMin ? 1 : 0;
+        const bPast = bM < nowMin ? 1 : 0;
+        if (aPast !== bPast) return aPast - bPast;
+        return aM - bM;
+      });
+  }, [todayRdvs, dismissed]);
 
   /**
-   * Rotation auto
+   * Rotation auto : toutes les 5 minutes
    */
   useEffect(() => {
-    if (expanded || hiddenLeft) return;
+    if (expanded) return;
 
     if (visibleRdvs.length <= 1) return;
 
     const itv = setInterval(() => {
       setIndex((prev) => (prev + 1) % visibleRdvs.length);
-    }, 6000);
+    }, 5 * 60 * 1000);
 
     return () => clearInterval(itv);
-  }, [visibleRdvs.length, expanded, hiddenLeft]);
+  }, [visibleRdvs.length, expanded]);
 
   /**
    * Auto hide cycle
@@ -262,9 +284,11 @@ const GlobalRdvTodayNotifier: React.FC = () => {
               setExpanded(false);
             }}
             onClick={() => {
-              if (window.innerWidth < 1024) {
-                setExpanded((prev) => !prev);
-              }
+              // Redirection vers la page Rendez-vous avec clignotement violet
+              navigate(
+                `/rdv?highlightRdv=${encodeURIComponent(current.id)}&date=${encodeURIComponent(current.date)}&t=${Date.now()}`
+              );
+              setExpanded(false);
             }}
             className={`
               relative

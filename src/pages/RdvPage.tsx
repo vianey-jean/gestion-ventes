@@ -71,6 +71,7 @@ const RdvPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => {
     setHighlightDate(null);
     searchParams.delete('highlightRdv');
     searchParams.delete('date');
+    searchParams.delete('t');
     setSearchParams(searchParams, { replace: true });
   }, [searchParams, setSearchParams]);
 

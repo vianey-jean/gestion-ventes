@@ -120,6 +120,9 @@ const TacheFormModal: React.FC<TacheFormModalProps> = ({
         const tacheSlots: OccupiedSlot[] = tacheRes.data
           .filter(t => {
             if (t.id === excludedTacheId) return false;
+            // ✅ Une tâche terminée/annulée libère son créneau
+            if ((t as any).completed === true) return false;
+            if ((t as any).statut === 'annule' || (t as any).statut === 'termine') return false;
             const tName = (t.travailleurNom || '').trim().toLowerCase();
             return tName === personName;
           })
