@@ -1,5 +1,6 @@
 import { SyncEvent, ConnectionConfig } from './types';
 import { getBaseURL } from '@/services/api/api';
+import { isApiReachable } from '@/services/apiReachability';
 
 /**
  * EventSourceManager - SSE Push Mode
@@ -39,7 +40,17 @@ export class EventSourceManager {
     }
   }
 
-  private _doConnect() {
+  private async _doConnect() {
+    if (this.intentionalDisconnect) return;
+
+    // Ne pas ouvrir de SSE si l'API est injoignable (évite les erreurs CORS/réseau)
+    const reachable = await isApiReachable();
+    if (!reachable) {
+      this.isConnected = false;
+      this.onConnectionChange(false);
+      if (!this.intentionalDisconnect) this.scheduleReconnect();
+      return;
+    }
     if (this.intentionalDisconnect) return;
 
     const baseURL = getBaseURL();

@@ -202,7 +202,9 @@ const LiveChatVisitor: React.FC<LiveChatVisitorProps> = ({ visitorNom, adminId, 
     let sseTimeout: ReturnType<typeof setTimeout> | null = null;
     let pollInterval: ReturnType<typeof setInterval> | null = null;
 
-    const connectSSE = () => {
+    const connectSSE = async () => {
+      const { isApiReachable } = await import('@/services/apiReachability');
+      if (!(await isApiReachable())) return;
       try {
         es = new EventSource(`${API_BASE}/api/messagerie/events?visitorId=${visitorId.current}`);
       } catch {

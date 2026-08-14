@@ -379,7 +379,9 @@ const LiveChatAdmin: React.FC = () => {
     let sseTimeout: ReturnType<typeof setTimeout> | null = null;
 
     // Delay SSE connection until page is fully loaded
-    const connectSSE = () => {
+    const connectSSE = async () => {
+      const { isApiReachable } = await import('@/services/apiReachability');
+      if (!(await isApiReachable())) return;
       try {
         es = new EventSource(`${API_BASE}/api/messagerie/events?adminId=${user.id}`);
       } catch {
