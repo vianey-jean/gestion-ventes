@@ -2,6 +2,19 @@ import api from './api';
 
 export type RdvTacheStatut = 'planifie' | 'confirme' | 'annule' | 'reporte' | 'termine';
 
+/** Produit rattaché à un RDV-tâche (panier enregistré dans rdv-taches.json) */
+export interface RdvProduit {
+  productId: string;
+  nom: string;
+  quantite: number;
+  prixUnitaire: number;
+  prixVente: number;
+  deliveryLocation?: string;
+  deliveryFee?: number;
+}
+
+
+
 export interface RdvTache {
   id: string;
   personneId?: string;
@@ -21,6 +34,11 @@ export interface RdvTache {
   createdAt?: string;
   updatedAt?: string;
   commandeId?: string;
+  /** Panier produits associé au RDV */
+  produits?: RdvProduit[];
+  /** Id de la vente générée quand le RDV passe en "terminé" */
+  saleId?: string;
+  clientAdresse?: string;
 }
 
 export interface FreeSlot { start: string; end: string; }

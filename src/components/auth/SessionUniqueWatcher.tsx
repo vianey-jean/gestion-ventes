@@ -214,6 +214,7 @@ const SessionUniqueWatcher: React.FC = () => {
     {summaryBanner}
 
 
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 pointer-events-none">
     <motion.div
 
       key={`${logoutRequest.requestId}-${blink}`}
@@ -240,8 +241,9 @@ const SessionUniqueWatcher: React.FC = () => {
       }}
 
       className="
-        fixed top-4 right-4 z-[9999]
-        w-[260px]
+        pointer-events-auto
+        w-[92vw] max-w-md
+        max-h-[85vh] overflow-y-auto
         overflow-hidden
         rounded-2xl
         border border-orange-300/50
@@ -546,6 +548,7 @@ const SessionUniqueWatcher: React.FC = () => {
 
 
     </motion.div>
+   </div>
    </>
 
   );

@@ -15,8 +15,9 @@ import { cn } from '@/lib/utils';
 import travailleurApi, { Travailleur } from '@/services/api/travailleurApi';
 import clientApiService from '@/services/api/clientApi';
 import { Client } from '@/types/client';
-import rdvTachesApi, { RdvTache, RdvTacheStatut, FreeSlot } from '@/services/api/rdvTachesApi';
+import rdvTachesApi, { RdvTache, RdvTacheStatut, FreeSlot, RdvProduit } from '@/services/api/rdvTachesApi';
 import { TacheRdvCatalog } from '@/services/api/tachesRdvApi';
+import RdvProductSection from './RdvProductSection';
 
 interface Props {
   open: boolean;
@@ -59,6 +60,12 @@ const RdvFormModal: React.FC<Props> = ({ open, onOpenChange, catalog, editing, d
   const [error, setError] = useState<string | null>(null);
   const [confirmCreate, setConfirmCreate] = useState(false);
 
+  // Produits liés au RDV
+  const [produits, setProduits] = useState<RdvProduit[]>([]);
+  const [askProduct, setAskProduct] = useState(false);      // demande "voulez-vous ajouter un produit ?"
+  const [showProducts, setShowProducts] = useState(false);  // affichage de la section produits
+  const [productPromptDone, setProductPromptDone] = useState(false);
+
   // Reset form when (re)open
   useEffect(() => {
     if (!open) return;
@@ -76,12 +83,17 @@ const RdvFormModal: React.FC<Props> = ({ open, onOpenChange, catalog, editing, d
       setHeureFin(editing.heureFin);
       setCommentaires(editing.commentaires || '');
       setStatut(editing.statut);
+      setProduits(Array.isArray(editing.produits) ? editing.produits : []);
+      setShowProducts((editing.produits || []).length > 0);
+      setProductPromptDone(true);
+      setAskProduct(false);
     } else {
       setPersonne(null); setPersonneSearch(''); setPersonneResults([]);
       setClient(null); setClientSearch(''); setClientResults([]);
       setTacheId(''); setLieu(''); setTelephone('');
       setDate(defaultDate || today());
       setHeureDebut(''); setHeureFin(''); setCommentaires(''); setStatut('planifie');
+      setProduits([]); setShowProducts(false); setAskProduct(false); setProductPromptDone(false);
     }
   }, [open, editing, defaultDate]);
 
@@ -178,6 +190,8 @@ const RdvFormModal: React.FC<Props> = ({ open, onOpenChange, catalog, editing, d
         heureFin,
         commentaires: commentaires.trim(),
         statut: finalStatut,
+        produits,
+        clientAdresse: client?.adresse || lieu.trim(),
       };
       await onSubmit(payload, editing?.id);
     } catch (err: any) {
@@ -262,7 +276,13 @@ const RdvFormModal: React.FC<Props> = ({ open, onOpenChange, catalog, editing, d
           {/* Tâche */}
           <div className="space-y-1.5">
             <Label className="text-xs font-bold text-white/80 flex items-center gap-2"><Scissors className="h-3.5 w-3.5 text-fuchsia-400" /> Tâche *</Label>
-            <Select value={tacheId} onValueChange={setTacheId}>
+            <Select
+              value={tacheId}
+              onValueChange={(v) => {
+                setTacheId(v);
+                if (!productPromptDone && !showProducts) setAskProduct(true);
+              }}
+            >
               <SelectTrigger className="bg-white/10 border border-white/20 rounded-xl text-white">
                 <SelectValue placeholder={catalog.length === 0 ? 'Aucune tâche — utilisez "Ajouter tâche"' : 'Sélectionner une tâche'} />
               </SelectTrigger>
@@ -273,6 +293,39 @@ const RdvFormModal: React.FC<Props> = ({ open, onOpenChange, catalog, editing, d
               </SelectContent>
             </Select>
           </div>
+
+          {/* Demande d'ajout de produit */}
+          {askProduct && (
+            <div className="p-3 rounded-2xl bg-gradient-to-r from-purple-500/15 to-pink-500/15 border border-pink-400/30 space-y-2 animate-fade-in">
+              <p className="text-xs font-bold text-white">🛍️ Voulez-vous ajouter un produit à ce rendez-vous ?</p>
+              <div className="flex gap-2">
+                <Button type="button" size="sm"
+                  onClick={() => { setShowProducts(true); setAskProduct(false); setProductPromptDone(true); }}
+                  className="flex-1 bg-gradient-to-br from-emerald-500 to-teal-500 text-white rounded-xl">
+                  ✅ Oui
+                </Button>
+                <Button type="button" size="sm" variant="outline"
+                  onClick={() => { setAskProduct(false); setProductPromptDone(true); }}
+                  className="flex-1 bg-white/10 border-white/20 text-white hover:bg-white/20 rounded-xl">
+                  ❌ Non
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Section produits */}
+          {showProducts && (
+            <RdvProductSection produits={produits} onChange={setProduits} />
+          )}
+          {!showProducts && !askProduct && (
+            <Button type="button" variant="outline" size="sm"
+              onClick={() => { setShowProducts(true); setProductPromptDone(true); }}
+              className="w-full bg-white/5 border-white/20 text-white hover:bg-white/15 rounded-xl text-xs">
+              🛍️ Ajouter des produits
+            </Button>
+          )}
+
+
 
           {/* Lieu + Téléphone */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

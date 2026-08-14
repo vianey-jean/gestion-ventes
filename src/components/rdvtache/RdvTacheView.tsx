@@ -7,7 +7,10 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Scissors, X } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import rdvTachesApi, { RdvTache } from '@/services/api/rdvTachesApi';
+import rdvTachesApi, { RdvTache, RdvTacheStatut } from '@/services/api/rdvTachesApi';
+import { getRdvsToConfirm } from '@/utils/rdvConfirmation';
+
+import saleApiService from '@/services/api/saleApi';
 import tachesRdvApi, { TacheRdvCatalog } from '@/services/api/tachesRdvApi';
 import travailleurApi from '@/services/api/travailleurApi';
 import RdvTacheCalendar from './RdvTacheCalendar';
@@ -47,6 +50,16 @@ const RdvTacheView: React.FC = () => {
   // Drag-drop reschedule
   const [rescheduleTarget, setRescheduleTarget] = useState<{ rdv: RdvTache; newDate?: string; suggestedStart?: string } | null>(null);
   const [pickDateMode, setPickDateMode] = useState<{ rdv: RdvTache } | null>(null);
+
+  // Mode "confirmation" : fait clignoter les RDV à confirmer dans le calendrier
+  const [confirmMode, setConfirmMode] = useState(false);
+  const [nowTick, setNowTick] = useState(() => Date.now());
+  useEffect(() => {
+    const t = setInterval(() => setNowTick(Date.now()), 60000);
+    return () => clearInterval(t);
+  }, []);
+
+
 
 
   const [travForm, setTravForm] = useState({ nom: '', prenom: '', adresse: '', phone: '', genre: 'femme' as 'homme' | 'femme', role: 'autre' as 'administrateur' | 'autre' });
@@ -99,14 +112,63 @@ const RdvTacheView: React.FC = () => {
       const updated = await rdvTachesApi.update(id, data);
       setRdvs(prev => prev.map(r => r.id === id ? updated.data : r));
       toast({ title: '✅ RDV modifié' });
+      // Statut "terminé" → enregistrer les produits comme vente
+      if (data.statut === 'termine' && existing?.statut !== 'termine') {
+        await createSaleFromRdv(updated.data);
+      }
     } else {
       const created = await rdvTachesApi.create(data);
       setRdvs(prev => [...prev, created.data]);
       toast({ title: '✅ RDV créé', description: `${created.data.tacheNom} • ${created.data.date}` });
+      if (created.data.statut === 'termine') {
+        await createSaleFromRdv(created.data);
+      }
     }
     setShowFormModal(false);
     setEditing(null);
     fetchData();
+  };
+
+  /** Convertit les produits d'un RDV terminé en vente (sales.json) */
+  const createSaleFromRdv = async (rdv: RdvTache) => {
+    const produits = Array.isArray(rdv.produits) ? rdv.produits : [];
+    if (produits.length === 0 || rdv.saleId) return;
+    if (rdv.statut === 'annule') return;
+    try {
+      const saleProducts = produits.map(p => {
+        const sellingPrice = (Number(p.prixVente) || 0) * (Number(p.quantite) || 0);
+        const purchasePrice = (Number(p.prixUnitaire) || 0) * (Number(p.quantite) || 0);
+        return {
+          productId: p.productId,
+          description: p.nom,
+          quantitySold: Number(p.quantite) || 0,
+          purchasePrice,
+          sellingPrice,
+          profit: sellingPrice - purchasePrice,
+          deliveryFee: Number(p.deliveryFee) || 0,
+          deliveryLocation: p.deliveryLocation || '',
+        };
+      });
+      const totalSellingPrice = saleProducts.reduce((s, p) => s + p.sellingPrice, 0);
+      const totalPurchasePrice = saleProducts.reduce((s, p) => s + p.purchasePrice, 0);
+      const created = await saleApiService.create({
+        date: rdv.date || todayStr(),
+        products: saleProducts,
+        totalPurchasePrice,
+        totalSellingPrice,
+        totalProfit: totalSellingPrice - totalPurchasePrice,
+        totalDeliveryFee: saleProducts.reduce((s, p) => s + (p.deliveryFee || 0), 0),
+        clientName: rdv.clientNom,
+        clientAddress: rdv.clientAdresse || rdv.lieu || '',
+        clientPhone: rdv.clientTelephone || rdv.telephone || '',
+        reste: 0,
+      } as any);
+      await rdvTachesApi.update(rdv.id, { saleId: created.id });
+      toast({ title: '💰 Vente enregistrée', description: `${rdv.clientNom} • ${totalSellingPrice.toFixed(2)} €` });
+    } catch (err) {
+      console.error('Erreur création vente depuis RDV:', err);
+      toast({ title: 'Erreur', description: "La vente n'a pas pu être enregistrée", variant: 'destructive' });
+    }
   };
 
   const handleDelete = async () => {
@@ -178,9 +240,43 @@ const RdvTacheView: React.FC = () => {
     }
   };
 
+  /** Changement de statut depuis la modale du jour (toujours persisté en base) */
+  const handleChangeStatut = async (r: RdvTache, statut: RdvTacheStatut) => {
+    if (r.statut === statut) return;
+    try {
+      const updated = await rdvTachesApi.update(r.id, { statut });
+      setRdvs(prev => prev.map(x => (x.id === r.id ? updated.data : x)));
+      const labels: Record<string, string> = {
+        confirme: '✅ RDV confirmé', annule: '❌ RDV annulé', termine: '🏁 RDV terminé',
+        planifie: '📅 RDV planifié', reporte: '🔄 RDV reporté',
+      };
+      toast({ title: labels[statut] || 'Statut mis à jour' });
+      if (statut === 'termine' && r.statut !== 'termine') {
+        await createSaleFromRdv({ ...updated.data, statut: 'termine' });
+      }
+      fetchData();
+    } catch (err: any) {
+      toast({
+        title: 'Erreur',
+        description: err?.response?.data?.error || "Le statut n'a pas pu être enregistré",
+        variant: 'destructive',
+      });
+    }
+  };
+
   const today = todayStr();
   const todayRdvs = rdvs.filter(r => r.date === today);
   const totalActifs = rdvs.filter(r => r.statut !== 'annule' && r.statut !== 'termine').length;
+
+  const rdvsToConfirm = React.useMemo(
+    () => getRdvsToConfirm(rdvs, new Date(nowTick)),
+    [rdvs, nowTick]
+  );
+  const confirmIds = rdvsToConfirm.map(r => r.id);
+  useEffect(() => {
+    if (confirmIds.length === 0 && confirmMode) setConfirmMode(false);
+  }, [confirmIds.length, confirmMode]);
+
 
   return (
     <>
@@ -193,6 +289,9 @@ const RdvTacheView: React.FC = () => {
         onAddCatalog={() => setShowAddCatalog(true)}
         onAddTravailleur={() => setShowTravailleurModal(true)}
         onShowCatalogList={() => setShowCatalogListModal(true)}
+        confirmCount={confirmIds.length}
+        confirmMode={confirmMode}
+        onConfirmRdv={() => setConfirmMode(true)}
       />
 
       <div className="max-w-7xl mx-auto px-4 pb-12 pt-6 space-y-6">
@@ -212,6 +311,7 @@ const RdvTacheView: React.FC = () => {
             setRescheduleTarget({ rdv: r, newDate: dateStr });
           }}
           onCancelPick={() => setPickDateMode(null)}
+          blinkIds={confirmMode ? confirmIds : []}
         />
 
         {/* Liste catalogue compacte */}
@@ -248,6 +348,7 @@ const RdvTacheView: React.FC = () => {
           setShowDayModal(false);
           setPickDateMode({ rdv: r });
         }}
+        onChangeStatut={handleChangeStatut}
       />
 
       <RdvRescheduleModal

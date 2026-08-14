@@ -9,7 +9,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Plus, Pencil, Trash2, Phone, MapPin, User, Sparkles, CalendarDays, GripVertical, Lock } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { RdvTache } from '@/services/api/rdvTachesApi';
+import { RdvTache, RdvTacheStatut } from '@/services/api/rdvTachesApi';
+import { allowedStatuts, needsConfirmation } from '@/utils/rdvConfirmation';
 
 interface Props {
   open: boolean;
@@ -21,7 +22,10 @@ interface Props {
   onDelete: (id: string) => void;
   onMoveRdvSameDay?: (rdv: RdvTache, newStartHour: string) => void;
   onRequestOtherDate?: (rdv: RdvTache) => void;
+  /** Changement de statut (confirmé / annulé / terminé) — persisté en base */
+  onChangeStatut?: (rdv: RdvTache, statut: RdvTacheStatut) => void;
 }
+
 
 const HOURS = Array.from({ length: 20 }, (_, i) => i + 4); // 4..23
 
@@ -48,7 +52,7 @@ const toMin = (t: string) => {
 
 const RdvDayModal: React.FC<Props> = ({
   open, onOpenChange, selectedDay, rdvs, onAdd, onEdit, onDelete,
-  onMoveRdvSameDay, onRequestOtherDate,
+  onMoveRdvSameDay, onRequestOtherDate, onChangeStatut,
 }) => {
   const dayRdvs = rdvs
     .filter(r => r.date === selectedDay && r.statut !== 'annule')
@@ -151,16 +155,21 @@ const RdvDayModal: React.FC<Props> = ({
                   {hourRdvs.map(r => {
                     const isTermine = r.statut === 'termine';
                     const isLockedByCommande = Boolean(r.commandeId);
+                    const aConfirmer = needsConfirmation(r);
+                    const statutOptions = allowedStatuts(r);
+
                     return (
                       <div key={r.id}
                         draggable={!isLockedByCommande && !isTermine}
                         onDragStart={(e) => handleDragStart(e, r)}
                         onDragEnd={handleDragEnd}
-                        className={cn('flex items-center gap-2 px-3 py-2 rounded-xl border group transition-all',
+                        className={cn('flex items-center gap-2 px-3 py-2 rounded-xl border group transition-all flex-wrap sm:flex-nowrap',
                           STATUT_COLORS[r.statut] || STATUT_COLORS.planifie,
                           !isLockedByCommande && !isTermine && 'cursor-grab active:cursor-grabbing',
-                          draggingId === r.id && 'opacity-40'
+                          draggingId === r.id && 'opacity-40',
+                          aConfirmer && 'ring-2 ring-emerald-400 animate-pulse'
                         )}>
+
                         {!isLockedByCommande && !isTermine && (
                           <GripVertical className="h-3.5 w-3.5 shrink-0 opacity-50" />
                         )}
@@ -176,7 +185,13 @@ const RdvDayModal: React.FC<Props> = ({
                                 <Lock className="w-2.5 h-2.5" /> Commande
                               </span>
                             )}
+                            {aConfirmer && (
+                              <span className="px-1.5 py-0.5 rounded-md bg-emerald-500/30 text-emerald-100 text-[9px] font-black uppercase tracking-wide animate-pulse">
+                                ⏰ À confirmer
+                              </span>
+                            )}
                           </p>
+
                           <p className="text-[10px] opacity-80 truncate flex items-center gap-1">
                             {r.heureDebut} - {r.heureFin} • <User className="h-3 w-3" /> {r.clientNom}
                             {r.personneNom && ` • 👤 ${r.personneNom}`}
@@ -188,6 +203,30 @@ const RdvDayModal: React.FC<Props> = ({
                             </p>
                           )}
                         </div>
+                        {!isTermine && onChangeStatut && (
+                          <select
+                            value=""
+                            onClick={(e) => e.stopPropagation()}
+                            onChange={(e) => {
+                              const v = e.target.value as RdvTacheStatut;
+                              e.target.value = '';
+                              if (v) onChangeStatut(r, v);
+                            }}
+                            className={cn(
+                              'shrink-0 rounded-lg border bg-black/25 text-white text-[10px] font-bold px-2 py-1 outline-none cursor-pointer',
+                              aConfirmer ? 'border-emerald-400 ring-1 ring-emerald-400 animate-pulse' : 'border-white/30'
+                            )}
+                            title="Changer le statut du rendez-vous"
+                          >
+                            <option value="">Statut…</option>
+                            {statutOptions.map(s => (
+                              <option key={s} value={s} className="text-black">
+                                {STATUT_EMOJI[s]} {STATUT_LABEL[s]}
+                              </option>
+                            ))}
+                          </select>
+                        )}
+
                         {!isTermine && !isLockedByCommande && (
                           <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
                             <button onClick={() => onEdit(r)} className="p-1.5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/40 border border-emerald-500/30">

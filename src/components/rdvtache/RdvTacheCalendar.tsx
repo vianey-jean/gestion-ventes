@@ -21,6 +21,9 @@ interface Props {
   pickMode?: { rdv: RdvTache } | null;
   onDayPicked?: (rdv: RdvTache, dateStr: string) => void;
   onCancelPick?: () => void;
+  /** Ids des RDV à faire clignoter (attente de confirmation) */
+  blinkIds?: string[];
+
 }
 
 const JOURS = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
@@ -28,8 +31,10 @@ const MOIS = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 
 
 const RdvTacheCalendar: React.FC<Props> = ({
   currentDate, rdvs, onPrevMonth, onNextMonth, onDayClick,
-  onRdvDropOnDay, pickMode, onDayPicked, onCancelPick,
+  onRdvDropOnDay, pickMode, onDayPicked, onCancelPick, blinkIds = [],
 }) => {
+  const blinkSet = React.useMemo(() => new Set(blinkIds), [blinkIds]);
+
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
   const firstDay = new Date(year, month, 1);
@@ -114,6 +119,8 @@ const RdvTacheCalendar: React.FC<Props> = ({
           const count = dayRdvs.length;
           const isDragOver = dragOverDate === dateStr;
           const isPick = !!pickMode;
+          const hasBlink = dayRdvs.some(r => blinkSet.has(r.id));
+
           return (
             <div key={day}
               onClick={() => {
@@ -129,8 +136,10 @@ const RdvTacheCalendar: React.FC<Props> = ({
                   ? 'bg-gradient-to-br from-pink-500/20 to-fuchsia-500/20 border-2 border-pink-500/40 shadow-lg shadow-pink-500/20'
                   : 'bg-white/40 dark:bg-white/5 border border-white/10 hover:bg-white/60 dark:hover:bg-white/10',
                 isDragOver && 'ring-2 ring-pink-500 scale-105 bg-pink-500/30',
-                isPick && 'ring-2 ring-fuchsia-400/60 animate-pulse'
+                isPick && 'ring-2 ring-fuchsia-400/60 animate-pulse',
+                hasBlink && 'ring-2 ring-emerald-400 shadow-lg shadow-emerald-500/30 animate-pulse'
               )}
+
             >
               <div className="flex items-center justify-between px-0.5">
                 <span className={cn('text-xs sm:text-sm font-bold', isToday ? 'text-pink-600 dark:text-pink-400' : '')}>{day}</span>
@@ -144,6 +153,8 @@ const RdvTacheCalendar: React.FC<Props> = ({
               <div className="mt-1 space-y-0.5 flex flex-col">
                 {dayRdvs.slice(0, 3).map(r => {
                   const locked = !!r.commandeId;
+                  const blink = blinkSet.has(r.id);
+
                   return (
                     <div
                       key={r.id}
@@ -157,8 +168,10 @@ const RdvTacheCalendar: React.FC<Props> = ({
                         locked
                           ? 'bg-amber-500/20 border-amber-500/30 text-amber-700 dark:text-amber-300 cursor-not-allowed'
                           : 'bg-pink-500/15 border-pink-500/30 text-pink-700 dark:text-pink-300 hover:bg-pink-500/25 cursor-grab active:cursor-grabbing',
-                        draggingRdvId === r.id && 'opacity-40'
+                        draggingRdvId === r.id && 'opacity-40',
+                        blink && '!bg-emerald-500/25 !border-emerald-400 !text-emerald-700 dark:!text-emerald-200 animate-pulse ring-1 ring-emerald-400'
                       )}
+
                     >
                       {locked && <Lock className="inline w-2.5 h-2.5 mr-0.5 -mt-0.5" />}
                       {r.heureDebut} · {r.tacheNom}

@@ -4,7 +4,7 @@
  */
 import React from 'react';
 import { motion } from 'framer-motion';
-import { CalendarHeart, Eye, Scissors, UserPlus, Sparkles } from 'lucide-react';
+import { CalendarHeart, Eye, Scissors, UserPlus, Sparkles, BellRing } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export interface RdvTachesHeroProps {
@@ -16,7 +16,13 @@ export interface RdvTachesHeroProps {
   onAddCatalog: () => void;
   onAddTravailleur: () => void;
   onShowCatalogList: () => void;
+  /** Nombre de RDV en attente de confirmation (début dans moins de 24h) */
+  confirmCount?: number;
+  /** Mode "confirmation" actif : les RDV concernés clignotent dans le calendrier */
+  confirmMode?: boolean;
+  onConfirmRdv?: () => void;
 }
+
 
 const premiumBtnClass =
   'group relative overflow-hidden rounded-xl sm:rounded-2xl  border transition-all duration-300 hover:scale-105 px-4 py-2 sm:px-5 sm:py-3 text-xs sm:text-sm font-semibold';
@@ -32,6 +38,10 @@ const RdvTachesHero: React.FC<RdvTachesHeroProps> = ({
   onAddCatalog,
   onAddTravailleur,
   onShowCatalogList,
+  confirmCount = 0,
+  confirmMode = false,
+  onConfirmRdv,
+
 }) => {
   return (
     <motion.div
@@ -106,6 +116,29 @@ const RdvTachesHero: React.FC<RdvTachesHeroProps> = ({
                 <CalendarHeart className="h-4 w-4" /> Ajouter RDV
               </span>
             </button>
+            {confirmCount > 0 && (
+              <motion.button
+                type="button"
+                onClick={onConfirmRdv}
+                animate={{ opacity: [1, 0.45, 1], scale: [1, 1.04, 1] }}
+                transition={{ duration: 1.1, repeat: Infinity, ease: 'easeInOut' }}
+                className={cn(
+                  premiumBtnClass,
+                  'bg-gradient-to-br from-emerald-500 to-teal-600 border-emerald-300/60 text-white shadow-lg shadow-emerald-500/40',
+                  confirmMode && 'ring-2 ring-emerald-300',
+                )}
+                title="Des rendez-vous démarrent dans moins de 24h : confirmez-les"
+              >
+                <span className={mirrorShine} />
+                <span className="relative flex items-center gap-1.5">
+                  <BellRing className="h-4 w-4" /> Confirmer un RDV
+                  <span className="ml-1 px-1.5 py-0.5 rounded-full bg-white/25 text-[10px] font-black">
+                    {confirmCount}
+                  </span>
+                </span>
+              </motion.button>
+            )}
+
             <button
               onClick={onShowDay}
               className={cn(
