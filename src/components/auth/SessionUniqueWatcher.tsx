@@ -98,21 +98,18 @@ const SessionUniqueWatcher: React.FC = () => {
         title,
 
         description:
-          `${d.browser || ''} ${
-            d.os ? `· ${d.os}` : ''
-          } · IP ${d.ip || ''} · ${date} ${heure}${
-            d.timezone ? ` (${d.timezone})` : ''
+          `${d.browser || ''} ${d.os ? `· ${d.os}` : ''
+          } · IP ${d.ip || ''} · ${date} ${heure}${d.timezone ? ` (${d.timezone})` : ''
           }`,
 
         onClick: goToHistorique,
 
-        className: `cursor-pointer ${
-          isLogout
+        className: `cursor-pointer ${isLogout
             ? 'bg-red-600 text-white border-red-600'
             : isLogin
               ? 'bg-emerald-600 text-white border-emerald-600'
               : 'bg-blue-600 text-white border-blue-600'
-        }`,
+          }`,
       } as any);
 
     },
@@ -210,37 +207,37 @@ const SessionUniqueWatcher: React.FC = () => {
 
 
   return (
-   <>
-    {summaryBanner}
+    <>
+      {summaryBanner}
 
 
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 pointer-events-none">
-    <motion.div
+      <div className="fixed inset-0 z-[9999] flex items-start justify-center p-4 pt-4 sm:pt-6 pointer-events-none">
+        <motion.div
 
-      key={`${logoutRequest.requestId}-${blink}`}
+          key={`${logoutRequest.requestId}-${blink}`}
 
-      initial={{
-        opacity: 0,
-        y: -20,
-        scale: 0.95
-      }}
+          initial={{
+            opacity: 0,
+            y: -20,
+            scale: 0.95
+          }}
 
-      animate={{
-        opacity: 1,
-        y: 0,
-        scale: 1
-      }}
+          animate={{
+            opacity: 1,
+            y: 0,
+            scale: 1
+          }}
 
-      exit={{
-        opacity: 0,
-        y: -20
-      }}
+          exit={{
+            opacity: 0,
+            y: -20
+          }}
 
-      transition={{
-        duration: 0.3
-      }}
+          transition={{
+            duration: 0.3
+          }}
 
-      className="
+          className="
         pointer-events-auto
         w-[92vw] max-w-md
         max-h-[85vh] overflow-y-auto
@@ -255,185 +252,185 @@ const SessionUniqueWatcher: React.FC = () => {
         backdrop-blur-xl
       "
 
-    >
+        >
 
 
-      {/* HEADER */}
+          {/* HEADER */}
 
-      <div
-        className="
+          <div
+            className="
           flex items-center gap-2
           border-b border-white/20
           bg-white/10
           px-3 py-3
         "
-      >
+          >
 
-        <div
-          className="
+            <div
+              className="
             flex h-9 w-9
             items-center justify-center
             rounded-xl
             bg-white/20
           "
-        >
+            >
 
-          <ShieldQuestion
-            className="h-5 w-5 text-white"
-          />
+              <ShieldQuestion
+                className="h-5 w-5 text-white"
+              />
 
-        </div>
-
-
-
-        <div className="flex-1">
-
-          <h2 className="text-sm font-bold text-white">
-
-            Déconnexion demandée
-
-          </h2>
-
-
-          <p className="text-[11px] text-orange-100">
-
-            Connexion détectée
-
-          </p>
-
-
-        </div>
+            </div>
 
 
 
-        <AlertTriangle
-          className="
+            <div className="flex-1">
+
+              <h2 className="text-sm font-bold text-white">
+
+                Déconnexion demandée
+
+              </h2>
+
+
+              <p className="text-[11px] text-orange-100">
+
+                Connexion détectée
+
+              </p>
+
+
+            </div>
+
+
+
+            <AlertTriangle
+              className="
             h-5 w-5
             animate-pulse
             text-yellow-200
           "
-        />
+            />
 
 
-      </div>
+          </div>
 
 
 
 
 
-      {/* CONTENU */}
+          {/* CONTENU */}
 
-      <div className="space-y-3 p-3">
+          <div className="space-y-3 p-3">
 
 
-        <div
-          className="
+            <div
+              className="
             rounded-xl
             bg-white/15
             p-3
             backdrop-blur
           "
-        >
+            >
 
-          <p className="text-xs leading-relaxed text-white">
+              <p className="text-xs leading-relaxed text-white">
 
-            Votre profil tente de se connecter ailleurs.
+                Votre profil tente de se connecter ailleurs.
 
-            <br />
+                <br />
 
-            <span className="font-semibold">
+                <span className="font-semibold">
 
-              Confirmer la déconnexion ?
+                  Confirmer la déconnexion ?
 
-            </span>
+                </span>
 
-          </p>
-
-
-        </div>
+              </p>
 
 
+            </div>
 
 
 
-        {/* INFOS SESSION */}
 
-        <div
-          className="
+
+            {/* INFOS SESSION */}
+
+            <div
+              className="
             space-y-2
             rounded-xl
             bg-white/10
             p-3
             backdrop-blur
           "
-        >
+            >
 
 
-          <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2">
 
-            <Monitor
-              className="h-4 w-4 text-orange-100"
-            />
+                <Monitor
+                  className="h-4 w-4 text-orange-100"
+                />
 
 
-            <span
-              className="
+                <span
+                  className="
                 truncate
                 text-xs
                 text-white
               "
-            >
+                >
 
-              {logoutRequest.fromBrowser}
+                  {logoutRequest.fromBrowser}
 
-            </span>
-
-
-          </div>
+                </span>
 
 
+              </div>
 
 
-          <div className="flex items-center gap-2">
-
-            <LogOut
-              className="h-4 w-4 text-orange-100"
-            />
 
 
-            <span
-              className="
+              <div className="flex items-center gap-2">
+
+                <LogOut
+                  className="h-4 w-4 text-orange-100"
+                />
+
+
+                <span
+                  className="
                 text-xs
                 text-white
               "
-            >
+                >
 
-              IP : {logoutRequest.fromIp}
+                  IP : {logoutRequest.fromIp}
 
-            </span>
-
-
-          </div>
+                </span>
 
 
-        </div>
+              </div>
 
 
+            </div>
 
 
 
-        {/* BOUTONS */}
-
-        <div className="flex gap-2">
 
 
-          <Button
+            {/* BOUTONS */}
 
-            size="sm"
+            <div className="flex gap-2">
 
-            onClick={() => respond(true)}
 
-            className="
+              <Button
+
+                size="sm"
+
+                onClick={() => respond(true)}
+
+                className="
               h-8
               flex-1
               rounded-lg
@@ -446,29 +443,29 @@ const SessionUniqueWatcher: React.FC = () => {
               hover:bg-emerald-700
             "
 
-          >
+              >
 
-            <CheckCircle2
-              className="mr-1 h-4 w-4"
-            />
+                <CheckCircle2
+                  className="mr-1 h-4 w-4"
+                />
 
-            Confirmer
-
-
-          </Button>
+                Confirmer
 
 
+              </Button>
 
 
-          <Button
 
-            size="sm"
 
-            variant="destructive"
+              <Button
 
-            onClick={() => respond(false)}
+                size="sm"
 
-            className="
+                variant="destructive"
+
+                onClick={() => respond(false)}
+
+                className="
               h-8
               flex-1
               rounded-lg
@@ -480,76 +477,76 @@ const SessionUniqueWatcher: React.FC = () => {
               hover:bg-red-700
             "
 
-          >
+              >
 
-            <XCircle
-              className="mr-1 h-4 w-4"
-            />
+                <XCircle
+                  className="mr-1 h-4 w-4"
+                />
 
-            Refuser
-
-
-          </Button>
+                Refuser
 
 
-        </div>
+              </Button>
 
 
+            </div>
 
 
 
-        {/* MESSAGE AUTO */}
 
-        <div
-          className="
+
+            {/* MESSAGE AUTO */}
+
+            <div
+              className="
             flex gap-2
             rounded-xl
             border border-white/20
             bg-white/10
             p-2
           "
-        >
+            >
 
-          <Clock3
-            className="
+              <Clock3
+                className="
               h-4 w-4
               flex-shrink-0
               text-yellow-200
             "
-          />
+              />
 
 
-          <p
-            className="
+              <p
+                className="
               text-[11px]
               leading-relaxed
               text-orange-50
             "
-          >
+              >
 
-            Sans réponse,
-            déconnexion automatique après
+                Sans réponse,
+                déconnexion automatique après
 
-            <span className="font-bold text-white">
+                <span className="font-bold text-white">
 
-              {' '}5 minutes
+                  {' '}5 minutes
 
-            </span>.
+                </span>.
 
-          </p>
-
-
-        </div>
+              </p>
 
 
+            </div>
 
+
+
+          </div>
+
+
+
+        </motion.div>
       </div>
-
-
-
-    </motion.div>
-   </div>
-   </>
+    </>
 
   );
 
