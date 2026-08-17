@@ -1591,3 +1591,67 @@ html.maintenance-mode.dark span {
   0%, 85%, 100% { transform: scale(1); filter: brightness(1); }
   92% { transform: scale(1.08); filter: brightness(1.25); }
 }
+
+
+/* =========================================================
+   PREMIUM SCROLLBARS
+   ========================================================= */
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(249, 115, 22, 0.45) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: linear-gradient(
+    180deg,
+    rgba(249, 115, 22, 0.65),
+    rgba(239, 68, 68, 0.65)
+  );
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(
+    180deg,
+    rgba(249, 115, 22, 0.9),
+    rgba(239, 68, 68, 0.9)
+  );
+  border: 1px solid transparent;
+}
+
+/* Dark mode */
+.dark * {
+  scrollbar-color: rgba(249, 115, 22, 0.55) transparent;
+}
+
+.dark *::-webkit-scrollbar-thumb {
+  background: linear-gradient(
+    180deg,
+    rgba(249, 115, 22, 0.7),
+    rgba(239, 68, 68, 0.7)
+  );
+}
+
+.dark *::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(
+    180deg,
+    rgba(251, 146, 60, 0.95),
+    rgba(248, 113, 113, 0.95)
+  );
+}
+
+@theme {
+  --ease-smooth: cubic-bezier(0.22, 1, 0.36, 1);
+}
