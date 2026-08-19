@@ -252,7 +252,7 @@ const sidebarItemVariants = {
     opacity: 0,
     x: -25,
     scale: 0.96,
-    filter: 'blur(5px)',
+    filter: 'blur(0px)',
   },
 
   visible: {
@@ -275,7 +275,7 @@ const contentVariants = {
     opacity: 0,
     y: 20,
     scale: 0.985,
-    filter: 'blur(5px)',
+    filter: 'blur(0px)',
   },
 
   animate: {
@@ -294,7 +294,7 @@ const contentVariants = {
     opacity: 0,
     y: -15,
     scale: 0.99,
-    filter: 'blur(4px)',
+    filter: 'blur(0px)',
 
     transition: {
       duration: 0.25,
@@ -667,7 +667,7 @@ const DashboardPage = () => {  // ==============================================
                 w-[600px]
                 rounded-full
                 bg-violet-500/10
-                blur-[110px]
+                
               "
               animate={{
                 x: [
@@ -715,7 +715,7 @@ const DashboardPage = () => {  // ==============================================
                 w-[550px]
                 rounded-full
                 bg-fuchsia-500/10
-                blur-[120px]
+                
               "
               animate={{
                 x: [
@@ -763,7 +763,7 @@ const DashboardPage = () => {  // ==============================================
                 w-[500px]
                 rounded-full
                 bg-cyan-500/10
-                blur-[120px]
+                
               "
               animate={{
                 x: [
@@ -852,7 +852,7 @@ const DashboardPage = () => {  // ==============================================
                 border-white/20
                 bg-white/80
                 shadow-[0_15px_70px_rgba(0,0,0,0.18)]
-                backdrop-blur-2xl
+                
                 dark:bg-white/[0.045]
                 dark:shadow-[0_15px_70px_rgba(0,0,0,0.45)]
               "
@@ -907,7 +907,7 @@ const DashboardPage = () => {  // ==============================================
                     px-4
                     py-2.5
                     shadow-lg
-                    backdrop-blur-xl
+                    
                     dark:bg-white/[0.06]
                   "
                 >
@@ -993,7 +993,7 @@ const DashboardPage = () => {  // ==============================================
                                   -inset-1
                                   rounded-2xl
                                   bg-white/20
-                                  blur-md
+                                  
                                 "
                               />
                             )}
@@ -1056,7 +1056,7 @@ const DashboardPage = () => {  // ==============================================
                     opacity: 0,
                     y: -12,
                     scale: 0.96,
-                    filter: 'blur(6px)',
+                    filter: 'blur(0px)',
                   }}
                   animate={{
                     opacity: 1,
@@ -1068,7 +1068,7 @@ const DashboardPage = () => {  // ==============================================
                     opacity: 0,
                     y: -10,
                     scale: 0.97,
-                    filter: 'blur(4px)',
+                    filter: 'blur(0px)',
                   }}
                   transition={{
                     duration: 0.3,
@@ -1081,7 +1081,7 @@ const DashboardPage = () => {  // ==============================================
                     border-white/20
                     bg-white/75
                     shadow-[0_25px_90px_rgba(0,0,0,0.25)]
-                    backdrop-blur-2xl
+                    
                     dark:bg-white/[0.045]
                   "
                 >
@@ -1210,7 +1210,7 @@ const DashboardPage = () => {  // ==============================================
               initial={{
                 x: -80,
                 opacity: 0,
-                filter: 'blur(8px)',
+                filter: 'blur(0px)',
               }}
               animate={{
                 x: 0,
@@ -1255,7 +1255,7 @@ const DashboardPage = () => {  // ==============================================
                     border-white/15
                     bg-white/60
                     shadow-[0_20px_80px_rgba(0,0,0,0.22)]
-                    backdrop-blur-2xl
+                    
                     dark:bg-white/[0.045]
                     dark:shadow-[0_20px_80px_rgba(0,0,0,0.45)]
                   "
@@ -1454,7 +1454,7 @@ const DashboardPage = () => {  // ==============================================
                           bg-white/40
                           p-3
                           shadow-lg
-                          backdrop-blur-xl
+                          
                           transition-all
                           duration-300
                           hover:bg-violet-500/10
@@ -1594,7 +1594,7 @@ const DashboardPage = () => {  // ==============================================
                                       border
                                       border-white/10
                                       bg-white/25
-                                      backdrop-blur-xl
+                                      
                                       hover:border-white/20
                                       hover:bg-white/50
                                       hover:shadow-[0_15px_45px_rgba(139,92,246,0.12)]
@@ -1616,7 +1616,7 @@ const DashboardPage = () => {  // ==============================================
                                       rounded-3xl
                                       bg-white/30
                                       opacity-50
-                                      blur-xl
+                                      
                                     "
                                     transition={{
                                       type: 'spring',
@@ -1864,7 +1864,7 @@ const DashboardPage = () => {  // ==============================================
                             from-transparent
                             via-white/10
                             to-transparent
-                            blur-2xl
+                            
                           "
                           animate={{
                             rotate: [
@@ -2098,7 +2098,7 @@ const DashboardPage = () => {  // ==============================================
                     -translate-x-1/2
                     rounded-full
                     bg-violet-500/[0.035]
-                    blur-[100px]
+                    
                   "
                 />
               )}
@@ -2130,7 +2130,7 @@ const DashboardPage = () => {  // ==============================================
                         border-white/10
                         bg-white/20
                         shadow-[0_15px_50px_rgba(0,0,0,0.06)]
-                        backdrop-blur-xl
+                        
                         dark:bg-white/[0.02]
                       `
                   )}
@@ -2162,7 +2162,7 @@ const DashboardPage = () => {  // ==============================================
                 w-2
                 rounded-full
                 bg-violet-400/40
-                blur-[2px]
+                
               "
               animate={{
                 y: [
@@ -2192,7 +2192,7 @@ const DashboardPage = () => {  // ==============================================
                 w-1.5
                 rounded-full
                 bg-cyan-400/40
-                blur-[2px]
+                
               "
               animate={{
                 y: [
@@ -2223,7 +2223,7 @@ const DashboardPage = () => {  // ==============================================
                 w-1.5
                 rounded-full
                 bg-fuchsia-400/40
-                blur-[2px]
+                
               "
               animate={{
                 y: [

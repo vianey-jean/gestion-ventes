@@ -7,7 +7,7 @@ import { ShieldCheck } from 'lucide-react';
 
 const SessionShellFooter: React.FC = () => (
   <footer className="relative mt-auto">
-    <div className="absolute inset-0 bg-black/40 backdrop-blur-xl border-t border-white/10" />
+    <div className="absolute inset-0 bg-black/40  border-t border-white/10" />
     <div className="relative mx-auto max-w-6xl px-5 py-6 flex flex-col sm:flex-row items-center justify-between gap-3">
       <div className="flex items-center gap-2 text-xs text-white/50">
         <ShieldCheck className="h-4 w-4 text-violet-300" />

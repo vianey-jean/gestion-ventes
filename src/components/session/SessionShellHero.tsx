@@ -8,8 +8,8 @@ import { Fingerprint, Radar, Lock } from 'lucide-react';
 const SessionShellHero: React.FC = () => (
   <section className="relative overflow-hidden">
     <div className="absolute inset-0 pointer-events-none">
-      <div className="absolute -top-24 left-1/4 h-72 w-72 rounded-full bg-violet-600/20 blur-[100px]" />
-      <div className="absolute -top-10 right-1/4 h-72 w-72 rounded-full bg-fuchsia-600/20 blur-[110px]" />
+      <div className="absolute -top-24 left-1/4 h-72 w-72 rounded-full bg-violet-600/20 " />
+      <div className="absolute -top-10 right-1/4 h-72 w-72 rounded-full bg-fuchsia-600/20 " />
     </div>
 
     <div className="relative mx-auto max-w-4xl px-5 pt-12 pb-8 text-center">

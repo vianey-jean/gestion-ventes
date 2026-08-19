@@ -579,10 +579,12 @@ export const useCommandesLogic = () => {
       const pendingQty = Array.isArray(product.achats)
         ? product.achats.reduce((sum: number, a: any) => (a && a.disponible === false ? sum + (Number(a.quantity) || 0) : sum), 0)
         : 0;
-      // Visible si dispo >= 1 OU indisponible (en attente) >= 1
+      // Type "commande" : seuls les produits ayant une quantité INDISPONIBLE > 0
+      if (type === 'commande') return pendingQty >= 1;
+      // Réservation : visible si dispo >= 1 OU indisponible (en attente) >= 1
       return availableQty >= 1 || pendingQty >= 1;
     });
-  }, [productSearch, products, commandes, editingCommande]);
+  }, [productSearch, products, commandes, editingCommande, type]);
 
   const commandesForExportDate = useMemo(() => {
     if (!exportDate) return [];
@@ -675,9 +677,10 @@ export const useCommandesLogic = () => {
     setSelectedProduct(product);
     const availQty = getAvailableQuantityForProduct(product.description);
     const pendingQty = getPendingQuantityForProduct(product.description);
-    // On autorise à commander jusqu'à dispo + en attente d'arrivage
-    setAvailableQuantityForSelected(availQty + pendingQty);
-  }, [getAvailableQuantityForProduct, getPendingQuantityForProduct]);
+    // Type "commande" : plafond = quantité indisponible uniquement
+    // Réservation : dispo + en attente d'arrivage
+    setAvailableQuantityForSelected(type === 'commande' ? pendingQty : availQty + pendingQty);
+  }, [getAvailableQuantityForProduct, getPendingQuantityForProduct, type]);
 
   // =========================================================================
   // Validation et reset
@@ -724,6 +727,16 @@ export const useCommandesLogic = () => {
     if (existingProduct) {
       const availableQty = getAvailableQuantityForProduct(produitNom);
       const pendingQty = getPendingQuantityForProduct(produitNom);
+      if (type === 'commande') {
+        if (pendingQty <= 0) {
+          toast({ title: 'Produit disponible', description: `${produitNom} n'a aucune quantité indisponible. Une "commande" nécessite un produit indisponible (en attente d'arrivage).`, className: "bg-app-red text-white", variant: 'destructive' });
+          return;
+        }
+        if (quantiteInt > pendingQty) {
+          toast({ title: 'Quantité trop élevée', description: `Quantité indisponible de ${produitNom} : ${pendingQty}. La commande ne peut pas dépasser cette quantité.`, className: "bg-app-red text-white", variant: 'destructive' });
+          return;
+        }
+      } else {
       const totalPossible = availableQty + pendingQty;
       if (totalPossible <= 0) {
         toast({ title: 'Stock insuffisant', description: `${produitNom} n'a plus de stock disponible ni de nouvel achat en cours`, className: "bg-app-red text-white", variant: 'destructive' });
@@ -736,6 +749,7 @@ export const useCommandesLogic = () => {
       if (quantiteInt > availableQty && pendingQty > 0) {
         const usePending = quantiteInt - availableQty;
         toast({ title: 'ℹ️ Utilise un nouvel achat en attente', description: `Disponible immédiat: ${availableQty} · À réceptionner: ${usePending}. Il faudra marquer ce nouvel achat comme "disponible" avant de pouvoir cliquer "Arrivé".` });
+      }
       }
     }
 
@@ -763,7 +777,7 @@ export const useCommandesLogic = () => {
       toast({ title: 'Produit ajouté', description: `${nouveauProduit.nom} ajouté au panier` });
     }
     resetProductFields();
-  }, [produitNom, prixUnitaire, quantite, prixVente, products, editingProductIndex, produitsListe, resetProductFields, getAvailableQuantityForProduct, getPendingQuantityForProduct, productReduction, productReductionType, productDeliveryLocation, productDeliveryFee, productBaseDeliveryFee]);
+  }, [produitNom, prixUnitaire, quantite, prixVente, products, editingProductIndex, produitsListe, resetProductFields, getAvailableQuantityForProduct, getPendingQuantityForProduct, productReduction, productReductionType, productDeliveryLocation, productDeliveryFee, productBaseDeliveryFee, type]);
 
   const handleEditProduit = useCallback((index: number) => {
     const produit = produitsListe[index];

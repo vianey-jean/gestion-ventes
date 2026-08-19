@@ -49,12 +49,12 @@ const CommandesSearchBar: React.FC<CommandesSearchBarProps> = ({
   onNewCommande,
 }) => {
   return (
-    <div className="relative w-full overflow-hidden rounded-3xl border border-white/20 bg-white/70 p-4 shadow-[0_20px_70px_-25px_rgba(88,28,135,0.35)] backdrop-blur-xl transition-all duration-500 sm:p-5 lg:p-6 dark:border-white/10 dark:bg-gray-950/70">
+    <div className="relative w-full overflow-hidden rounded-3xl border border-white/20 bg-white/70 p-4 shadow-[0_20px_70px_-25px_rgba(88,28,135,0.35)]  transition-all duration-500 sm:p-5 lg:p-6 dark:border-white/10 dark:bg-gray-950/70">
       
       {/* Background decorative effects */}
-      <div className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-purple-500/10 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-32 left-1/4 h-64 w-64 rounded-full bg-pink-500/10 blur-3xl" />
-      <div className="pointer-events-none absolute right-1/3 top-1/2 h-40 w-40 rounded-full bg-indigo-500/5 blur-3xl" />
+      <div className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-purple-500/10 " />
+      <div className="pointer-events-none absolute -bottom-32 left-1/4 h-64 w-64 rounded-full bg-pink-500/10 " />
+      <div className="pointer-events-none absolute right-1/3 top-1/2 h-40 w-40 rounded-full bg-indigo-500/5 " />
 
       <div className="relative flex w-full flex-col gap-6 xl:flex-row xl:items-center xl:justify-between">
         
@@ -66,7 +66,7 @@ const CommandesSearchBar: React.FC<CommandesSearchBarProps> = ({
             
             {/* Premium Icon */}
             <div className="group relative shrink-0">
-              <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-purple-500 via-pink-500 to-indigo-500 opacity-60 blur-md transition-all duration-500 group-hover:opacity-90 group-hover:blur-lg" />
+              <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-purple-500 via-pink-500 to-indigo-500 opacity-60  transition-all duration-500 group-hover:opacity-90 group-hover:" />
 
               <div className="relative flex h-11 w-11 items-center justify-center rounded-2xl border border-white/30 bg-gradient-to-br from-purple-500 via-pink-500 to-indigo-500 shadow-[0_12px_35px_-8px_rgba(139,92,246,0.8)] transition-all duration-500 group-hover:scale-110 group-hover:rotate-3 sm:h-14 sm:w-14">
                 <Award className="h-5 w-5 text-white drop-shadow-lg transition-transform duration-500 group-hover:scale-110 sm:h-7 sm:w-7" />
@@ -111,7 +111,7 @@ const CommandesSearchBar: React.FC<CommandesSearchBarProps> = ({
           <div className="group relative w-full xl:w-80">
             
             {/* Glow */}
-            <div className="pointer-events-none absolute -inset-0.5 rounded-2xl bg-gradient-to-r from-purple-500/20 via-pink-500/20 to-indigo-500/20 opacity-0 blur transition duration-500 group-focus-within:opacity-100" />
+            <div className="pointer-events-none absolute -inset-0.5 rounded-2xl bg-gradient-to-r from-purple-500/20 via-pink-500/20 to-indigo-500/20 opacity-0 transition duration-500 group-focus-within:opacity-100" />
 
             <div className="relative">
               <Search className="pointer-events-none absolute left-3.5 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-purple-500 transition-all duration-300 group-focus-within:scale-110 group-focus-within:text-purple-600" />
@@ -120,7 +120,7 @@ const CommandesSearchBar: React.FC<CommandesSearchBarProps> = ({
                 value={commandeSearch}
                 onChange={(e) => setCommandeSearch(e.target.value)}
                 placeholder="Rechercher une commande..."
-                className="h-11 w-full rounded-2xl border border-purple-200/80 bg-white/80 pl-10 pr-16 text-sm shadow-[0_8px_25px_-12px_rgba(139,92,246,0.5)] backdrop-blur-md transition-all duration-300 placeholder:text-muted-foreground/60 hover:border-purple-300 hover:shadow-[0_10px_30px_-10px_rgba(139,92,246,0.45)] focus:border-purple-500 focus:bg-white focus:ring-4 focus:ring-purple-500/10 dark:border-purple-800/70 dark:bg-gray-900/80 dark:focus:bg-gray-900"
+                className="h-11 w-full rounded-2xl border border-purple-200/80 bg-white/80 pl-10 pr-16 text-sm shadow-[0_8px_25px_-12px_rgba(139,92,246,0.5)]  transition-all duration-300 placeholder:text-muted-foreground/60 hover:border-purple-300 hover:shadow-[0_10px_30px_-10px_rgba(139,92,246,0.45)] focus:border-purple-500 focus:bg-white focus:ring-4 focus:ring-purple-500/10 dark:border-purple-800/70 dark:bg-gray-900/80 dark:focus:bg-gray-900"
               />
 
               {/* Character counter */}
@@ -171,11 +171,11 @@ const CommandesSearchBar: React.FC<CommandesSearchBarProps> = ({
                 </Button>
               </DialogTrigger>
 
-              <DialogContent className="w-[calc(100%-2rem)] max-w-md overflow-hidden rounded-3xl border border-blue-200/60 bg-white/95 p-5 shadow-[0_30px_100px_-25px_rgba(37,99,235,0.45)] backdrop-blur-2xl animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-4 duration-300 sm:p-6 dark:border-blue-800/50 dark:bg-gray-950/95">
+              <DialogContent className="w-[calc(100%-2rem)] max-w-md overflow-hidden rounded-3xl border border-blue-200/60 bg-white/95 p-5 shadow-[0_30px_100px_-25px_rgba(37,99,235,0.45)]  animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-4 duration-300 sm:p-6 dark:border-blue-800/50 dark:bg-gray-950/95">
                 
                 {/* Dialog decorative background */}
-                <div className="pointer-events-none absolute -right-20 -top-20 h-40 w-40 rounded-full bg-blue-500/10 blur-3xl" />
-                <div className="pointer-events-none absolute -bottom-20 -left-20 h-40 w-40 rounded-full bg-indigo-500/10 blur-3xl" />
+                <div className="pointer-events-none absolute -right-20 -top-20 h-40 w-40 rounded-full bg-blue-500/10 " />
+                <div className="pointer-events-none absolute -bottom-20 -left-20 h-40 w-40 rounded-full bg-indigo-500/10 " />
 
                 <div className="relative">
                   <DialogHeader>
@@ -220,7 +220,7 @@ const CommandesSearchBar: React.FC<CommandesSearchBarProps> = ({
                       <div className="animate-in fade-in-0 slide-in-from-top-2 duration-300">
                         <div className="relative overflow-hidden rounded-2xl border border-blue-200/70 bg-gradient-to-br from-blue-50 via-indigo-50/60 to-purple-50/50 p-4 shadow-inner dark:border-blue-800 dark:from-blue-950/40 dark:via-indigo-950/30 dark:to-purple-950/30">
                           
-                          <div className="absolute -right-8 -top-8 h-20 w-20 rounded-full bg-blue-400/10 blur-xl" />
+                          <div className="absolute -right-8 -top-8 h-20 w-20 rounded-full bg-blue-400/10 " />
 
                           <div className="relative space-y-3">
                             

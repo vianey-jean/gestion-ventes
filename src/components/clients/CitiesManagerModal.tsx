@@ -8,7 +8,7 @@
  * - Mode sombre 🌙
  * - Animations premium
  * - Responsive
- * - Sans backdrop-blur
+ * - Sans 
  * - Icônes Lucide modernes
  * - Compatible avec le thème Tailwind dark:
  */
@@ -321,7 +321,7 @@ const CitiesManagerModal: React.FC<CitiesManagerModalProps> = ({
                 bg-violet-500/10
                 dark:bg-violet-500/10
 
-                blur-3xl
+                
 
                 animate-pulse
               "

@@ -200,7 +200,7 @@ const DashboardTabNavigation: React.FC<
           bg-white/60
           p-2
           shadow-[0_20px_60px_-25px_rgba(88,28,135,0.25)]
-          backdrop-blur-2xl
+          
 
           sm:rounded-3xl
           sm:p-3
@@ -224,7 +224,7 @@ const DashboardTabNavigation: React.FC<
             w-48
             rounded-full
             bg-purple-500/10
-            blur-3xl
+            
           "
         />
 
@@ -238,7 +238,7 @@ const DashboardTabNavigation: React.FC<
             w-56
             rounded-full
             bg-indigo-500/10
-            blur-3xl
+            
           "
         />
 
@@ -254,7 +254,7 @@ const DashboardTabNavigation: React.FC<
             -translate-y-1/2
             rounded-full
             bg-pink-500/5
-            blur-3xl
+            
           "
         />
 
@@ -524,7 +524,7 @@ const DashboardTabNavigation: React.FC<
                     rounded-2xl
                     bg-white/10
                     opacity-0
-                    blur-xl
+                    
                     transition-all
                     duration-500
                     group-hover:opacity-100
@@ -643,7 +643,7 @@ const DashboardTabNavigation: React.FC<
                       rounded-xl
                       bg-white/20
                       opacity-0
-                      blur-md
+                      
                       transition-opacity
                       duration-300
                       group-hover:opacity-100

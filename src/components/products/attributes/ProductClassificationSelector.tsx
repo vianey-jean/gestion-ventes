@@ -55,6 +55,24 @@ const CATEGORIES: { key: ProductCategory; label: string }[] = [
 const LEGACY_KEYS = ['modele', 'autres', 'devant', 'couleur', 'taille'] as const;
 type LegacyKey = typeof LEGACY_KEYS[number];
 
+/** Vrai si le kind correspond à une taille (legacy "taille" ou nom/slug contenant taille). */
+function isTailleKind(kind: AttributeKindDef): boolean {
+  if (kind.legacy === 'taille') return true;
+  const label = `${kind.slug || ''} ${kind.nom || ''}`.toLowerCase();
+  return label.includes('taille');
+}
+
+/**
+ * Formate une valeur de taille : "12" -> "12 Pouces".
+ * Idempotent : si « pouce » est déjà présent, la valeur est conservée.
+ */
+export function formatTailleValue(nom: string): string {
+  const v = (nom || '').trim();
+  if (!v) return v;
+  if (/pouce/i.test(v)) return v;
+  return `${v} Pouces`;
+}
+
 function getKindValue(value: ClassificationValue, kind: AttributeKindDef): string {
   if (kind.legacy && (LEGACY_KEYS as readonly string[]).includes(kind.legacy)) {
     return (value[kind.legacy as LegacyKey] || '') as string;
@@ -84,7 +102,7 @@ export function buildProductName(v: ClassificationValue): string {
     }
   }
   if (v.couleur) parts.push(v.couleur);
-  if (v.taille) parts.push(`${v.taille} pouces`);
+  if (v.taille) parts.push(formatTailleValue(v.taille));
   return parts.join(' ').replace(/\s+/g, ' ').trim();
 }
 
@@ -117,6 +135,7 @@ const KindSection: React.FC<{
   const selected = getKindValue(value, kind);
   const selectedList = splitValues(selected);
   const isDevant = kind.legacy === 'devant';
+  const isTaille = isTailleKind(kind);
   // "devant" n'apparaît que pour la catégorie Perruque
   if (isDevant && value.categorie !== 'Perruque') return null;
   return (
@@ -127,17 +146,18 @@ const KindSection: React.FC<{
       ) : (
         <div className="flex flex-wrap gap-2">
           {items.map(it => {
-            const active = multiple ? selectedList.includes(it.nom) : selected === it.nom;
+            const label = isTaille ? formatTailleValue(it.nom) : it.nom;
+            const active = multiple ? selectedList.includes(label) : selected === label;
             const next = multiple
-              ? (active ? selectedList.filter(x => x !== it.nom) : [...selectedList, it.nom]).join(' | ')
-              : (active ? '' : it.nom);
+              ? (active ? selectedList.filter(x => x !== label) : [...selectedList, label]).join(' | ')
+              : (active ? '' : label);
             return (
               <button
                 key={it.id}
                 type="button"
                 onClick={() => onChange(setKindValue(value, kind, next))}
                 className={`${chipBase} ${active ? chipActive : chipInactive}`}
-              >{it.nom}</button>
+              >{label}</button>
             );
           })}
         </div>

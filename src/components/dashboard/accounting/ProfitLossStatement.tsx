@@ -127,7 +127,7 @@ const itemVariants = {
     scale: 1,
     transition: {
       duration: 0.55,
-      ease: [0.22, 1, 0.36, 1],
+      ease: [0.22, 1, 0.36, 1] as [number, number, number, number],
     },
   },
 };
@@ -144,7 +144,7 @@ const modalVariants = {
     scale: 1,
     transition: {
       duration: 0.45,
-      ease: [0.22, 1, 0.36, 1],
+      ease: [0.22, 1, 0.36, 1] as [number, number, number, number],
     },
   },
 };
@@ -571,7 +571,7 @@ const ProfitLossStatement: React.FC = () => {
         p-5
         text-left
         shadow-[0_15px_45px_-20px_rgba(0,0,0,.25)]
-        backdrop-blur-xl
+        
         transition-all duration-500
 
         dark:border-white/[0.08]
@@ -586,7 +586,7 @@ const ProfitLossStatement: React.FC = () => {
           absolute -right-16 -top-16
           h-40 w-40
           rounded-full
-          blur-3xl
+          
           ${glow}
         `}
         animate={{
@@ -754,7 +754,7 @@ const ProfitLossStatement: React.FC = () => {
       }}
       transition={{
         duration: 0.7,
-        ease: [0.22, 1, 0.36, 1],
+        ease: [0.22, 1, 0.36, 1] as [number, number, number, number],
       }}
       className="w-full"
     >
@@ -765,7 +765,7 @@ const ProfitLossStatement: React.FC = () => {
           border-0
           bg-white/90
           shadow-[0_30px_100px_-35px_rgba(0,0,0,.3)]
-          backdrop-blur-2xl
+          
 
           dark:bg-[#08080d]/90
           dark:shadow-[0_30px_100px_-35px_rgba(0,0,0,.8)]
@@ -789,7 +789,7 @@ const ProfitLossStatement: React.FC = () => {
               w-[450px]
               rounded-full
               bg-violet-500/10
-              blur-[110px]
+              
             "
             animate={{
               x: [0, 40, -20, 0],
@@ -812,7 +812,7 @@ const ProfitLossStatement: React.FC = () => {
               w-[400px]
               rounded-full
               bg-blue-500/10
-              blur-[110px]
+              
             "
             animate={{
               x: [0, -30, 40, 0],
@@ -1094,7 +1094,7 @@ const ProfitLossStatement: React.FC = () => {
               bg-white/70
               p-4
               shadow-sm
-              backdrop-blur-xl
+              
               dark:border-white/[0.07]
               dark:bg-white/[0.025]
               sm:flex-row
@@ -1545,7 +1545,7 @@ const ProfitLossStatement: React.FC = () => {
                     transition={{
                       duration: 1.4,
                       delay: 0.4,
-                      ease: [0.22, 1, 0.36, 1],
+                      ease: [0.22, 1, 0.36, 1] as [number, number, number, number],
                     }}
                     className="
                       relative
@@ -1566,7 +1566,7 @@ const ProfitLossStatement: React.FC = () => {
                         left-0
                         w-1/3
                         bg-white/30
-                        blur-sm
+                        
                       "
                       animate={{
                         x: [
@@ -1610,7 +1610,7 @@ const ProfitLossStatement: React.FC = () => {
                 }}
                 transition={{
                   duration: 0.5,
-                  ease: [0.22, 1, 0.36, 1],
+                  ease: [0.22, 1, 0.36, 1] as [number, number, number, number],
                 }}
                 className="overflow-hidden"
               >
@@ -1756,7 +1756,7 @@ const ProfitLossStatement: React.FC = () => {
                       border-black/[0.06]
                       bg-white/70
                       p-5
-                      backdrop-blur-xl
+                      
                       dark:border-white/[0.07]
                       dark:bg-white/[0.025]
                     "
@@ -1958,7 +1958,7 @@ const ProfitLossStatement: React.FC = () => {
                 bg-white/95
                 p-0
                 shadow-[0_40px_120px_-30px_rgba(0,0,0,.45)]
-                backdrop-blur-2xl
+                
                 dark:border-white/[0.08]
                 dark:bg-[#0b0b10]/95
                 sm:max-w-2xl
@@ -2128,7 +2128,7 @@ const DetailMetric = ({
         p-4
         text-center
         shadow-sm
-        backdrop-blur-xl
+        
         dark:border-white/[0.07]
         dark:bg-white/[0.025]
       "
@@ -2141,7 +2141,7 @@ const DetailMetric = ({
           h-20
           w-20
           rounded-full
-          blur-2xl
+          
           ${glow}
         `}
         animate={{
@@ -2304,7 +2304,7 @@ const PerformanceRow = ({
           }}
           transition={{
             duration: 1,
-            ease: [0.22, 1, 0.36, 1],
+            ease: [0.22, 1, 0.36, 1] as [number, number, number, number],
           }}
           className={`
             h-full
@@ -2410,7 +2410,7 @@ const PremiumModalHeader = ({
       w-48
       rounded-full
       bg-violet-500/10
-      blur-3xl
+      
     " />
 
     <div className="
@@ -3109,9 +3109,7 @@ const SalesCountModal = ({
       <SummaryBox
         label="Produits / transaction"
         value={currentData.salesCount > 0
-          ? currentData.totalProductsSold /
-              currentData.salesCount
-              .toFixed(1)
+          ? (currentData.totalProductsSold / currentData.salesCount).toFixed(1)
           : "0"}
         subtitle="Moyenne"
         gradient="from-cyan-400 via-sky-500 to-teal-500"
@@ -3363,7 +3361,7 @@ const SummaryBox = ({
         w-40
         rounded-full
         bg-white/15
-        blur-2xl
+        
       "
       animate={{
         scale: [1, 1.25, 1],
@@ -3389,7 +3387,7 @@ const SummaryBox = ({
           items-center justify-center
           rounded-xl
           bg-white/15
-          backdrop-blur-xl
+          
         ">
           <Icon className="h-5 w-5" />
         </div>

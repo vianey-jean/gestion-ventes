@@ -295,7 +295,7 @@ const ClientMergeModal: React.FC<ClientMergeModalProps> = ({
     dark:border-white/10
     bg-white/95
     dark:bg-slate-950/95
-    backdrop-blur-2xl
+    
     shadow-[0_25px_80px_-20px_rgba(0,0,0,0.45)]
     dark:shadow-[0_30px_100px_-20px_rgba(0,0,0,0.8)]
     rounded-[28px]
@@ -318,7 +318,7 @@ const ClientMergeModal: React.FC<ClientMergeModalProps> = ({
               rounded-full
               bg-orange-500/10
               dark:bg-orange-500/10
-              blur-3xl
+              
               animate-pulse
             "
           />
@@ -333,7 +333,7 @@ const ClientMergeModal: React.FC<ClientMergeModalProps> = ({
               rounded-full
               bg-red-500/10
               dark:bg-red-500/10
-              blur-3xl
+              
               animate-pulse
             "
             style={{ animationDelay: '700ms' }}
@@ -348,7 +348,7 @@ const ClientMergeModal: React.FC<ClientMergeModalProps> = ({
               w-32
               rounded-full
               bg-amber-400/5
-              blur-3xl
+              
             "
           />
         </div>
@@ -1712,7 +1712,7 @@ const ClientMergeModal: React.FC<ClientMergeModalProps> = ({
                         w-32
                         rounded-full
                         bg-orange-400/10
-                        blur-2xl
+                        
                       "
                     />
 
@@ -1779,7 +1779,7 @@ const ClientMergeModal: React.FC<ClientMergeModalProps> = ({
               sm:px-7
               dark:border-white/10
               dark:bg-slate-950/90
-              backdrop-blur-xl
+              
             "
           >
             <div className="flex items-center gap-2">

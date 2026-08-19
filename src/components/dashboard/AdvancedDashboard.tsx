@@ -124,7 +124,7 @@ const contentVariants = {
     opacity: 0,
     y: 30,
     scale: 0.985,
-    filter: "blur(8px)",
+    filter: "blur(0px)",
   },
   animate: {
     opacity: 1,
@@ -136,7 +136,7 @@ const contentVariants = {
     opacity: 0,
     y: -20,
     scale: 0.985,
-    filter: "blur(8px)",
+    filter: "blur(0px)",
   },
 };
 
@@ -159,7 +159,7 @@ const staggerItem = {
     y: 0,
     transition: {
       duration: 0.5,
-      ease: [0.22, 1, 0.36, 1],
+      ease: [0.22, 1, 0.36, 1] as [number, number, number, number],
     },
   },
 };
@@ -197,7 +197,7 @@ const AdvancedDashboard: React.FC<AdvancedDashboardProps> = ({
             h-[500px] w-[500px]
             rounded-full
             bg-indigo-600/10
-            blur-[140px]
+            
           "
           animate={{
             x: [0, 80, -40, 0],
@@ -217,7 +217,7 @@ const AdvancedDashboard: React.FC<AdvancedDashboardProps> = ({
             h-[450px] w-[450px]
             rounded-full
             bg-fuchsia-600/10
-            blur-[150px]
+            
           "
           animate={{
             x: [0, -60, 30, 0],
@@ -237,7 +237,7 @@ const AdvancedDashboard: React.FC<AdvancedDashboardProps> = ({
             h-[400px] w-[400px]
             rounded-full
             bg-cyan-500/5
-            blur-[130px]
+            
           "
           animate={{
             x: [0, 50, -50, 0],
@@ -268,7 +268,7 @@ const AdvancedDashboard: React.FC<AdvancedDashboardProps> = ({
         }}
         transition={{
           duration: 0.9,
-          ease: [0.22, 1, 0.36, 1],
+          ease: [0.22, 1, 0.36, 1] as [number, number, number, number],
         }}
         className="
           group relative overflow-hidden
@@ -288,7 +288,7 @@ const AdvancedDashboard: React.FC<AdvancedDashboardProps> = ({
             h-[520px] w-[520px]
             rounded-full
             bg-violet-600/20
-            blur-[100px]
+            
           "
           animate={{
             x: [0, 50, -20, 0],
@@ -308,7 +308,7 @@ const AdvancedDashboard: React.FC<AdvancedDashboardProps> = ({
             h-[500px] w-[500px]
             rounded-full
             bg-blue-600/20
-            blur-[110px]
+            
           "
           animate={{
             x: [0, -30, 40, 0],
@@ -456,7 +456,7 @@ const AdvancedDashboard: React.FC<AdvancedDashboardProps> = ({
                 bg-white/[0.05]
                 px-5 py-2.5
                 shadow-[0_0_30px_rgba(139,92,246,.15)]
-                backdrop-blur-xl
+                
               "
             >
               <motion.div
@@ -568,7 +568,7 @@ const AdvancedDashboard: React.FC<AdvancedDashboardProps> = ({
                   border border-emerald-400/20
                   bg-emerald-400/[0.08]
                   px-4 py-2
-                  backdrop-blur-xl
+                  
                 "
               >
                 <motion.span
@@ -601,7 +601,7 @@ const AdvancedDashboard: React.FC<AdvancedDashboardProps> = ({
                   border border-white/10
                   bg-white/[0.04]
                   px-4 py-2
-                  backdrop-blur-xl
+                  
                 "
               >
                 <ShieldCheck className="h-4 w-4 text-blue-300" />
@@ -620,7 +620,7 @@ const AdvancedDashboard: React.FC<AdvancedDashboardProps> = ({
                   border border-white/10
                   bg-white/[0.04]
                   px-4 py-2
-                  backdrop-blur-xl
+                  
                 "
               >
                 <Gem className="h-4 w-4 text-fuchsia-300" />
@@ -643,7 +643,7 @@ const AdvancedDashboard: React.FC<AdvancedDashboardProps> = ({
                 rounded-2xl
                 border border-white/[0.08]
                 bg-white/[0.025]
-                backdrop-blur-xl
+                
               "
             >
               <div className="border-r border-white/[0.08] px-3 py-4">
@@ -731,7 +731,7 @@ const AdvancedDashboard: React.FC<AdvancedDashboardProps> = ({
           {/* Ambient glow */}
 
           <motion.div
-            className="pointer-events-none absolute inset-0 -z-10 rounded-[30px] blur-3xl"
+            className="pointer-events-none absolute inset-0 -z-10 rounded-[30px] "
             animate={{
               background: [
                 "radial-gradient(circle at 10% 50%, rgba(59,130,246,.12), transparent 35%)",
@@ -756,7 +756,7 @@ const AdvancedDashboard: React.FC<AdvancedDashboardProps> = ({
               bg-white/80
               p-2
               shadow-[0_20px_70px_-20px_rgba(0,0,0,.25)]
-              backdrop-blur-2xl
+              
 
               dark:border-white/[0.08]
               dark:bg-white/[0.035]
@@ -810,7 +810,7 @@ const AdvancedDashboard: React.FC<AdvancedDashboardProps> = ({
                         }}
                         transition={{
                           duration: 0.4,
-                          ease: [0.22, 1, 0.36, 1],
+                          ease: [0.22, 1, 0.36, 1] as [number, number, number, number],
                         }}
                         className={`
                           absolute inset-0
@@ -1004,7 +1004,7 @@ const AdvancedDashboard: React.FC<AdvancedDashboardProps> = ({
             animate="animate"
             transition={{
               duration: 0.65,
-              ease: [0.22, 1, 0.36, 1],
+              ease: [0.22, 1, 0.36, 1] as [number, number, number, number],
             }}
           >
             <ComptabiliteModule />
@@ -1021,7 +1021,7 @@ const AdvancedDashboard: React.FC<AdvancedDashboardProps> = ({
             animate="animate"
             transition={{
               duration: 0.65,
-              ease: [0.22, 1, 0.36, 1],
+              ease: [0.22, 1, 0.36, 1] as [number, number, number, number],
             }}
           >
             <ProfitLossStatement />
@@ -1038,7 +1038,7 @@ const AdvancedDashboard: React.FC<AdvancedDashboardProps> = ({
             animate="animate"
             transition={{
               duration: 0.65,
-              ease: [0.22, 1, 0.36, 1],
+              ease: [0.22, 1, 0.36, 1] as [number, number, number, number],
             }}
             className="space-y-8"
           >
@@ -1058,7 +1058,7 @@ const AdvancedDashboard: React.FC<AdvancedDashboardProps> = ({
             animate="animate"
             transition={{
               duration: 0.65,
-              ease: [0.22, 1, 0.36, 1],
+              ease: [0.22, 1, 0.36, 1] as [number, number, number, number],
             }}
           >
             <YearlyComparison />

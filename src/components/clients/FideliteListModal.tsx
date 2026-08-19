@@ -4,7 +4,7 @@
  * Design :
  * - Mode clair : interface lumineuse, blanche et élégante
  * - Mode sombre : interface sombre, premium et contrastée
- * - Aucun backdrop-blur / aucun effet de flou
+ * - Aucun  / aucun effet de flou
  * - Animations modernes et fluides
  * - Responsive mobile / tablette / desktop
  */
@@ -563,7 +563,7 @@ const FideliteListModal: React.FC<Props> = ({
     const occupied = list.find((tier) => {
       const tierMax =
         tier.max === null
-          ? Infinity
+          ? Number.POSITIVE_INFINITY
           : Number(tier.max);
 
       return (

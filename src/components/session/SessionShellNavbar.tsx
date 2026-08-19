@@ -25,11 +25,11 @@ const SessionShellNavbar: React.FC = () => {
 
   return (
     <header className="sticky top-0 z-50">
-      <div className="absolute inset-0 backdrop-blur-2xl bg-black/40 border-b border-white/10" />
+      <div className="absolute inset-0  bg-black/40 border-b border-white/10" />
       <nav className="relative mx-auto max-w-6xl px-4 sm:px-6 h-16 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-3 group">
           <div className="relative">
-            <div className="absolute -inset-1 rounded-2xl bg-gradient-to-br from-violet-500 to-fuchsia-500 opacity-60 blur-md group-hover:opacity-90 transition-opacity" />
+            <div className="absolute -inset-1 rounded-2xl bg-gradient-to-br from-violet-500 to-fuchsia-500 opacity-60  group-hover:opacity-90 transition-opacity" />
             <div className="relative h-10 w-10 rounded-2xl bg-gradient-to-br from-violet-500 via-purple-500 to-fuchsia-500 flex items-center justify-center overflow-hidden shadow-lg">
               <img
                 src="/images/logo.ico"

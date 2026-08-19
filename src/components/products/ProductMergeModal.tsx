@@ -449,7 +449,7 @@ flex-col
     dark:border-white/[0.08]
     bg-white/95
     dark:bg-[#08050d]/95
-    backdrop-blur-2xl
+    
     shadow-[0_35px_120px_-30px_rgba(249,115,22,0.35)]
     dark:shadow-[0_35px_130px_-30px_rgba(168,85,247,0.35)]
   "
@@ -469,7 +469,7 @@ flex-col
               rounded-full
               bg-orange-500/[0.09]
               dark:bg-orange-500/[0.08]
-              blur-3xl
+              
               motion-safe:animate-pulse
             "
           />
@@ -484,7 +484,7 @@ flex-col
               rounded-full
               bg-red-500/[0.08]
               dark:bg-fuchsia-500/[0.08]
-              blur-3xl
+              
               motion-safe:animate-pulse
             "
             style={{
@@ -503,7 +503,7 @@ flex-col
               -translate-y-1/2
               rounded-full
               bg-amber-500/[0.035]
-              blur-3xl
+              
             "
           />
 
@@ -694,7 +694,7 @@ flex-col
                 w-48
                 rounded-full
                 bg-orange-500/10
-                blur-3xl
+                
                 motion-safe:animate-pulse
               "
             />
@@ -708,7 +708,7 @@ flex-col
                 bg-white/60
                 p-8
                 shadow-[0_20px_60px_-25px_rgba(249,115,22,0.4)]
-                backdrop-blur-xl
+                
                 dark:border-orange-500/[0.12]
                 dark:bg-white/[0.025]
               "
@@ -759,7 +759,7 @@ flex-col
                 bg-white/65
                 p-4
                 shadow-[0_10px_35px_-25px_rgba(15,23,42,0.3)]
-                backdrop-blur-xl
+                
                 transition-all
                 duration-500
                 hover:border-orange-200
@@ -784,7 +784,7 @@ flex-col
                   w-32
                   rounded-full
                   bg-orange-500/10
-                  blur-3xl
+                  
                 "
               />
 
@@ -1131,7 +1131,7 @@ flex-col
                               items-center
                               justify-center
                               bg-orange-500/20
-                              backdrop-blur-[1px]
+                              
                             "
                           >
                             <Check className="h-4 w-4 text-white drop-shadow-md" />
@@ -1227,7 +1227,7 @@ flex-col
                     w-20
                     rounded-full
                     bg-orange-400/15
-                    blur-2xl
+                    
                   "
                 />
 
@@ -1388,7 +1388,7 @@ flex-col
                       border-slate-200/80
                       bg-white/60
                       p-4
-                      backdrop-blur-xl
+                      
                       transition-all
                       duration-500
                       hover:-translate-y-0.5
@@ -1408,7 +1408,7 @@ flex-col
                         w-20
                         rounded-full
                         bg-emerald-500/10
-                        blur-2xl
+                        
                       "
                     />
 
@@ -1496,7 +1496,7 @@ flex-col
                       border-slate-200/80
                       bg-white/60
                       p-4
-                      backdrop-blur-xl
+                      
                       transition-all
                       duration-500
                       hover:-translate-y-0.5
@@ -1516,7 +1516,7 @@ flex-col
                         w-20
                         rounded-full
                         bg-blue-500/10
-                        blur-2xl
+                        
                       "
                     />
 
@@ -1866,7 +1866,7 @@ flex-col
                                     rounded-full
                                     border
                                     shadow-lg
-                                    backdrop-blur-md
+                                    
                                     transition-all
                                     duration-300
                                     hover:scale-110
@@ -2042,7 +2042,7 @@ flex-col
             bg-slate-50/75
             px-6
             py-4
-            backdrop-blur-xl
+            
             dark:border-white/[0.06]
             dark:bg-white/[0.015]
             ${

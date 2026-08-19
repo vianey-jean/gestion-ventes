@@ -208,7 +208,7 @@ const ClientFormDialog: React.FC<Props> = ({
             shadow-[0_30px_100px_-20px_rgba(0,0,0,0.35)]
             dark:shadow-[0_30px_100px_-15px_rgba(0,0,0,0.8)]
 
-            backdrop-blur-2xl
+            
 
             animate-in
             fade-in
@@ -231,7 +231,7 @@ const ClientFormDialog: React.FC<Props> = ({
                 w-72
                 rounded-full
                 bg-violet-500/15
-                blur-3xl
+                
                 dark:bg-violet-500/20
                 animate-pulse
               "
@@ -246,7 +246,7 @@ const ClientFormDialog: React.FC<Props> = ({
                 w-80
                 rounded-full
                 bg-blue-500/10
-                blur-3xl
+                
                 dark:bg-blue-500/15
                 animate-pulse
               "
@@ -263,7 +263,7 @@ const ClientFormDialog: React.FC<Props> = ({
                 translate-x-1/2
                 rounded-full
                 bg-fuchsia-500/5
-                blur-3xl
+                
                 dark:bg-fuchsia-500/10
                 animate-pulse
               "
@@ -305,7 +305,7 @@ const ClientFormDialog: React.FC<Props> = ({
               pb-5
               pt-6
 
-              backdrop-blur-xl
+              
 
               sm:px-7
               sm:pt-7
@@ -548,7 +548,7 @@ const ClientFormDialog: React.FC<Props> = ({
                           from-blue-500/20
                           via-violet-500/30
                           to-fuchsia-500/20
-                          blur-md
+                          
                           opacity-70
                           transition-all
                           duration-700
@@ -635,7 +635,7 @@ const ClientFormDialog: React.FC<Props> = ({
                             justify-center
                             bg-black/50
                             opacity-0
-                            backdrop-blur-[2px]
+                            
                             transition-all
                             duration-300
                             group-hover/avatar:opacity-100
@@ -1741,7 +1741,7 @@ const ClientFormDialog: React.FC<Props> = ({
 
                 shadow-[0_-10px_30px_-20px_rgba(0,0,0,0.25)]
 
-                backdrop-blur-xl
+                
 
                 sm:flex-row
                 sm:items-center
@@ -1905,7 +1905,7 @@ const ClientFormDialog: React.FC<Props> = ({
 
             shadow-[0_30px_80px_-20px_rgba(239,68,68,0.25)]
 
-            backdrop-blur-2xl
+            
 
             animate-in
             fade-in

@@ -189,8 +189,8 @@ const SessionConflictPage: React.FC = () => {
     <div className="min-h-screen flex flex-col bg-[#020207] text-white relative overflow-hidden">
       {/* Fond luxe */}
       <div className="pointer-events-none absolute inset-0">
-        <div className="absolute top-1/3 -left-20 h-96 w-96 rounded-full bg-violet-700/20 blur-[120px]" />
-        <div className="absolute bottom-0 -right-20 h-96 w-96 rounded-full bg-fuchsia-700/20 blur-[130px]" />
+        <div className="absolute top-1/3 -left-20 h-96 w-96 rounded-full bg-violet-700/20 " />
+        <div className="absolute bottom-0 -right-20 h-96 w-96 rounded-full bg-fuchsia-700/20 " />
         <div className="absolute inset-0 opacity-[0.05] bg-[radial-gradient(circle_at_1px_1px,white_1px,transparent_0)] [background-size:28px_28px]" />
       </div>
 
@@ -201,10 +201,10 @@ const SessionConflictPage: React.FC = () => {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-2xl">
           <div className="relative">
             <div className="absolute -inset-[1px] rounded-[32px] bg-gradient-to-br from-white/20 via-violet-500/25 to-fuchsia-500/25" />
-            <div className="relative rounded-[32px] border border-white/10 bg-gradient-to-br from-white/[0.07] via-white/[0.04] to-white/[0.02] backdrop-blur-2xl p-6 sm:p-8 space-y-6 shadow-[0_40px_120px_-30px_rgba(139,92,246,0.45)]">
+            <div className="relative rounded-[32px] border border-white/10 bg-gradient-to-br from-white/[0.07] via-white/[0.04] to-white/[0.02]  p-6 sm:p-8 space-y-6 shadow-[0_40px_120px_-30px_rgba(139,92,246,0.45)]">
               <div className="flex items-center gap-4">
                 <div className="relative">
-                  <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-rose-500 to-fuchsia-500 opacity-70 blur-md" />
+                  <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-rose-500 to-fuchsia-500 opacity-70 " />
                   <div className="relative h-14 w-14 rounded-3xl bg-gradient-to-br from-rose-500 via-fuchsia-500 to-violet-500 flex items-center justify-center shadow-lg">
                     <ShieldAlert className="h-7 w-7 text-white" />
                   </div>

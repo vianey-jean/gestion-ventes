@@ -176,7 +176,7 @@ const SessionUniqueWatcher: React.FC = () => {
             border border-white/25
             bg-gradient-to-r from-slate-900 via-emerald-900 to-slate-900
             px-4 py-3 shadow-[0_20px_50px_rgba(16,185,129,.35)]
-            backdrop-blur-xl hover:scale-[1.01] transition-transform
+             hover:scale-[1.01] transition-transform
           "
         >
           <div className="flex items-center gap-3">
@@ -252,7 +252,7 @@ const SessionUniqueWatcher: React.FC = () => {
         via-orange-400
         to-amber-500
         shadow-[0_15px_40px_rgba(249,115,22,.4)]
-        backdrop-blur-xl
+        
       "
 
     >
@@ -331,7 +331,7 @@ const SessionUniqueWatcher: React.FC = () => {
             rounded-xl
             bg-white/15
             p-3
-            backdrop-blur
+            
           "
         >
 
@@ -364,7 +364,7 @@ const SessionUniqueWatcher: React.FC = () => {
             rounded-xl
             bg-white/10
             p-3
-            backdrop-blur
+            
           "
         >
 
