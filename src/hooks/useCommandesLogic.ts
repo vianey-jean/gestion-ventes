@@ -25,6 +25,7 @@ import rdvApiService from '@/services/api/rdvApi';
 import type { Sale } from '@/types/sale';
 import { computeClientCaracteristique } from '@/utils/clientCharacteristic';
 import { confirmationRdvApi, type ConfirmationRdvEntry } from '@/services/api/confirmationRdvApi';
+import productApiService from '@/services/api/productApi';
 import { computeLockStateForCommande, autoCancelCommandeIfNeeded } from '@/utils/rdvConfirmationLock';
 
 // ============================================================================
@@ -44,6 +45,7 @@ interface Product {
   description: string;
   purchasePrice: number;
   quantity: number;
+  sellingPrice?: number;
 }
 
 // ============================================================================
@@ -89,6 +91,8 @@ export const useCommandesLogic = () => {
   const [prixUnitaire, setPrixUnitaire] = useState('');
   const [quantite, setQuantite] = useState('1');
   const [prixVente, setPrixVente] = useState('');
+  /** Nouveau prix de vente saisi via le bouton « + » (à persister dans products.json) */
+  const [prixVenteOverride, setPrixVenteOverride] = useState<number | null>(null);
   const [productSearch, setProductSearch] = useState('');
   const [showProductSuggestions, setShowProductSuggestions] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -670,6 +674,13 @@ export const useCommandesLogic = () => {
   const handleProductSelect = useCallback((product: Product) => {
     setProduitNom(product.description);
     setPrixUnitaire(product.purchasePrice.toString());
+    // Auto-remplissage du prix de vente depuis products.json
+    setPrixVente(
+      product.sellingPrice !== undefined && product.sellingPrice !== null && Number(product.sellingPrice) > 0
+        ? String(product.sellingPrice)
+        : ''
+    );
+    setPrixVenteOverride(null);
     setProductSearch(product.description);
     setShowProductSuggestions(false);
     setSelectedProduct(product);
@@ -704,7 +715,7 @@ export const useCommandesLogic = () => {
   }, []);
 
   const resetProductFields = useCallback(() => {
-    setProduitNom(''); setPrixUnitaire(''); setQuantite('1'); setPrixVente('');
+    setProduitNom(''); setPrixUnitaire(''); setQuantite('1'); setPrixVente(''); setPrixVenteOverride(null);
     setProductSearch(''); setEditingProductIndex(null); setSelectedProduct(null); setAvailableQuantityForSelected(null);
     setProductReduction(''); setProductReductionType('');
     setProductDeliveryLocation(''); setProductDeliveryFee('0'); setProductBaseDeliveryFee(null);
@@ -753,6 +764,13 @@ export const useCommandesLogic = () => {
       ...(delFee || delLoc ? { deliveryFee: delFee } : {}),
       ...(productBaseDeliveryFee !== null ? { baseDeliveryFee: productBaseDeliveryFee } : {}),
     };
+
+    // Nouveau prix de vente saisi via « + » : il remplace l'ancien dans products.json
+    const target = existingProduct || products.find(p => p.description.toLowerCase() === produitNom.toLowerCase());
+    if (target && prixVenteOverride !== null && prixVenteOverride !== Number(target.sellingPrice ?? NaN)) {
+      productApiService.updateSellingPrice(target.id, prixVenteOverride).catch(() => {});
+    }
+
     if (editingProductIndex !== null) {
       const nouveauxProduits = [...produitsListe];
       nouveauxProduits[editingProductIndex] = nouveauProduit;
@@ -763,7 +781,7 @@ export const useCommandesLogic = () => {
       toast({ title: 'Produit ajouté', description: `${nouveauProduit.nom} ajouté au panier` });
     }
     resetProductFields();
-  }, [produitNom, prixUnitaire, quantite, prixVente, products, editingProductIndex, produitsListe, resetProductFields, getAvailableQuantityForProduct, getPendingQuantityForProduct, productReduction, productReductionType, productDeliveryLocation, productDeliveryFee, productBaseDeliveryFee]);
+  }, [produitNom, prixUnitaire, quantite, prixVente, prixVenteOverride, products, editingProductIndex, produitsListe, resetProductFields, getAvailableQuantityForProduct, getPendingQuantityForProduct, productReduction, productReductionType, productDeliveryLocation, productDeliveryFee, productBaseDeliveryFee]);
 
   const handleEditProduit = useCallback((index: number) => {
     const produit = produitsListe[index];
@@ -1554,6 +1572,7 @@ export const useCommandesLogic = () => {
     clientSearch, setClientSearch, showClientSuggestions, setShowClientSuggestions,
     type, setType, dateArrivagePrevue, setDateArrivagePrevue, dateEcheance, setDateEcheance, horaire, setHoraire, horaireFin, setHoraireFin,
     produitNom, setProduitNom, prixUnitaire, setPrixUnitaire, quantite, setQuantite, prixVente, setPrixVente,
+    prixVenteOverride, setPrixVenteOverride,
     productSearch, setProductSearch, showProductSuggestions, setShowProductSuggestions,
     selectedProduct, produitsListe, editingProductIndex, availableQuantityForSelected,
     // Nouveaux champs produit

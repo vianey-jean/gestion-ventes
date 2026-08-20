@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Plus, Trash2, Edit, ShoppingCart, Sparkles, X } from 'lucide-react';
 import ClassificationSearchPopover from '@/components/products/attributes/ClassificationSearchPopover';
 import SaleQuantityInput from '@/components/dashboard/forms/SaleQuantityInput';
+import SellingPriceOverrideButton from '@/components/products/SellingPriceOverrideButton';
 import type { CommandeProduit } from '@/types/commande';
 
 export type ProductCategory = 'all' | 'perruque' | 'tissage' | 'extension' | 'autres';
@@ -43,6 +44,8 @@ export interface ProductSectionProps {
   setQuantite: (v: string) => void;
   prixVente: string;
   setPrixVente: (v: string) => void;
+  /** Nouveau prix de vente saisi via « + » (persisté dans products.json) */
+  setPrixVenteOverride?: (p: number | null) => void;
   availableQuantityForSelected?: number | null;
 
   productReduction: string;
@@ -77,7 +80,7 @@ const ProductSection: React.FC<ProductSectionProps> = (props) => {
     productPhotoUrl, selectedProduct, productCategoryFilter, setProductCategoryFilter,
     productSearch, setProductSearch, setProduitNom, showProductSuggestions, setShowProductSuggestions,
     categoryFilteredProducts, handleProductSelect,
-    prixUnitaire, setPrixUnitaire, quantite, setQuantite, prixVente, setPrixVente,
+    prixUnitaire, setPrixUnitaire, quantite, setQuantite, prixVente, setPrixVente, setPrixVenteOverride,
     availableQuantityForSelected,
     productReduction, setProductReduction, productReductionType, setProductReductionType,
     productDeliveryLocation, setProductDeliveryLocation, productDeliveryFee, setProductDeliveryFee,
@@ -188,10 +191,17 @@ const ProductSection: React.FC<ProductSectionProps> = (props) => {
           <Label htmlFor="prixVente" className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">
             💎 Prix de Vente (€)
           </Label>
-          <Input id="prixVente" type="number" step="0.01" value={prixVente}
-            onChange={(e) => setPrixVente(e.target.value)}
-            placeholder="Prix de vente"
-            className="border-2 border-purple-300 dark:border-purple-700 focus:border-purple-500 dark:focus:border-purple-500 bg-white dark:bg-gray-900 shadow-sm" />
+          <div className="flex items-center gap-2">
+            <Input id="prixVente" type="number" step="0.01" value={prixVente}
+              onChange={(e) => setPrixVente(e.target.value)}
+              placeholder="Prix de vente"
+              className="border-2 border-purple-300 dark:border-purple-700 focus:border-purple-500 dark:focus:border-purple-500 bg-white dark:bg-gray-900 shadow-sm" />
+            <SellingPriceOverrideButton
+              currentPrice={prixVente}
+              disabled={!selectedProduct}
+              onApply={(price) => { setPrixVente(String(price)); setPrixVenteOverride?.(price); }}
+            />
+          </div>
         </div>
       </div>
 

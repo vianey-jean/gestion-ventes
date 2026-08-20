@@ -528,7 +528,7 @@ const StockListModal: React.FC<Props> = ({ open, onClose, products }) => {
           <div className="flex-1 min-h-0 mx-5 mb-5 rounded-2xl border border-violet-200/50 dark:border-violet-800/50 overflow-hidden flex flex-col bg-white/60 dark:bg-gray-900/60 shadow-inner">
             <div className="shrink-0 grid grid-cols-12 gap-2 px-4 py-2.5 bg-gradient-to-r from-violet-50/80 to-fuchsia-50/80 dark:from-violet-900/40 dark:to-fuchsia-900/40 text-[11px] font-black text-violet-800 dark:text-violet-200 uppercase tracking-wide border-b border-violet-100 dark:border-violet-900/40">
               <div className="col-span-3">Code</div>
-              <div className="col-span-5 flex items-center gap-2">
+              <div className="col-span-4 flex items-center gap-2">
                 <span>Description</span>
 
                 <button
@@ -556,7 +556,8 @@ const StockListModal: React.FC<Props> = ({ open, onClose, products }) => {
                 </button>
               </div>
               <div className="col-span-1 text-right">Qté</div>
-              <div className="col-span-3 text-right">Prix</div>
+              <div className="col-span-2 text-right">Prix</div>
+              <div className="col-span-2 text-right">Prix vente</div>
             </div>
             <div className="flex-1 overflow-y-auto divide-y divide-violet-100/60 dark:divide-violet-900/40">
               {results.length === 0 ? (
@@ -569,9 +570,12 @@ const StockListModal: React.FC<Props> = ({ open, onClose, products }) => {
                         <Hash className="h-2.5 w-2.5 mr-0.5 shrink-0" />{p.code || '—'}
                       </Badge>
                     </div>
-                    <div className="col-span-5 whitespace-normal break-words font-medium text-foreground leading-relaxed">{p.description}</div>
+                    <div className="col-span-4 whitespace-normal break-words font-medium text-foreground leading-relaxed">{p.description}</div>
                     <div className="col-span-1 text-right font-bold text-violet-700 dark:text-violet-300">{p.quantity ?? 0}</div>
-                    <div className="col-span-3 text-right font-semibold text-emerald-700 dark:text-emerald-300">{(p.purchasePrice ?? 0).toFixed(2)}€</div>
+                    <div className="col-span-2 text-right font-semibold text-amber-700 dark:text-amber-300">{(p.purchasePrice ?? 0).toFixed(2)}€</div>
+                    <div className="col-span-2 text-right font-semibold text-emerald-700 dark:text-emerald-300">
+                      {p.sellingPrice ? `${Number(p.sellingPrice).toFixed(2)}€` : ''}
+                    </div>
                   </div>
                 ))
               )}

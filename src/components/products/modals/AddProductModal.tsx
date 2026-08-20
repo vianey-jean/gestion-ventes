@@ -37,6 +37,7 @@ import {
   CalendarDays,
   ShieldCheck,
   ChevronRight,
+  Tag,
 } from 'lucide-react';
 
 import PhotoUploadSection from '@/components/dashboard/PhotoUploadSection';
@@ -53,6 +54,8 @@ export interface AddProductForm {
   quantity: string;
   fournisseur: string;
   dateAchat: string;
+  /** Prix de vente unitaire (optionnel) */
+  sellingPrice?: string;
 }
 
 interface AddPhotosState {
@@ -755,6 +758,71 @@ const AddProductModal: React.FC<Props> = ({
                       {addErrors.purchasePrice}
                     </p>
                   )}
+                </section>
+
+                {/* SELLING PRICE */}
+
+                <section
+                  className="
+                    rounded-2xl
+                    border
+                    border-white/10
+                    bg-white/[0.055]
+                    p-4
+                    shadow-sm
+                    transition-all
+                    duration-500
+                    hover:border-emerald-500/20
+                    hover:bg-white/[0.07]
+                  "
+                >
+                  <div className="mb-4 flex items-center gap-3">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-400">
+                      <Tag className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold text-white">
+                        Prix de ventes unitaire
+                      </h3>
+                      <p className="text-[11px] text-slate-400">Optionnel</p>
+                    </div>
+                  </div>
+
+                  <Label htmlFor="add-selling-price" className="sr-only">
+                    Prix de ventes unitaire
+                  </Label>
+
+                  <div className="relative">
+                    <Input
+                      id="add-selling-price"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={addForm.sellingPrice ?? ''}
+                      onChange={(e) => updateField('sellingPrice', e.target.value)}
+                      placeholder="0,00"
+                      className="
+                        h-11
+                        rounded-xl
+                        border-white/10
+                        bg-white/[0.06]
+                        pr-12
+                        text-white
+                        shadow-inner
+                        transition-all
+                        duration-300
+                        placeholder:text-slate-600
+                        hover:bg-white/[0.08]
+                        focus:border-emerald-500/50
+                        focus:bg-white/[0.09]
+                        focus:ring-4
+                        focus:ring-emerald-500/10
+                      "
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-bold text-emerald-400">
+                      €
+                    </span>
+                  </div>
                 </section>
 
                 {/* QUANTITY */}

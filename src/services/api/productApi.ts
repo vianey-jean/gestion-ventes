@@ -125,6 +125,23 @@ export const productApiService = {
     const response: AxiosResponse<Product> = await api.delete(`/api/products/${productId}/ventes/${venteIndex}`);
     return response.data;
   },
+
+  /**
+   * Met à jour le prix de vente unitaire d'un produit dans products.json.
+   * Le backend historise automatiquement le changement (sellingPriceHistory).
+   */
+  async updateSellingPrice(productId: string, sellingPrice: number, date?: string): Promise<Product | null> {
+    try {
+      const response: AxiosResponse<Product> = await api.put(`/api/products/${productId}`, {
+        sellingPrice: Number(sellingPrice) || 0,
+        ...(date ? { sellingPriceDate: date } : {}),
+      });
+      return response.data;
+    } catch (e) {
+      console.error('❌ Impossible de synchroniser le prix de vente:', e);
+      return null;
+    }
+  },
 };
 
 export default productApiService;

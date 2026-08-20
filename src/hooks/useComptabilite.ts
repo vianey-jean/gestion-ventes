@@ -89,6 +89,7 @@ export function useComptabilite() {
   const [achatForm, setAchatForm] = useState<NouvelleAchatFormData>({
     productDescription: '',
     purchasePrice: 0,
+    sellingPrice: 0,
     quantity: 0,
     fournisseur: '',
     caracteristiques: '',
@@ -369,6 +370,7 @@ export function useComptabilite() {
       productId: product.id,
       productDescription: product.description,
       purchasePrice: 0,
+      sellingPrice: Number(product.sellingPrice) || 0,
       quantity: 0,
       fournisseur: prev.fournisseur || '',
       caracteristiques: prev.caracteristiques || product.description
@@ -463,6 +465,25 @@ export function useComptabilite() {
         }
       }
 
+      // 2.bis) Prix de vente unitaire → products.json (historisé côté serveur)
+      const newSellingPrice = Number(achatForm.sellingPrice) || 0;
+      if (newSellingPrice > 0) {
+        try {
+          const targetProductId = selectedProduct?.id || createdAchat?.productId;
+          if (targetProductId) {
+            await productApiService.updateSellingPrice(
+              targetProductId,
+              newSellingPrice,
+              achatForm.date
+            );
+          }
+        } catch (sellErr) {
+          console.error('⚠️ Erreur mise à jour prix de vente:', sellErr);
+        }
+      }
+
+
+
       if (selectedProduct) {
         const nameChanged = achatForm.productDescription !== selectedProduct.description;
         toast({
@@ -486,6 +507,7 @@ export function useComptabilite() {
       setAchatForm({
         productDescription: '',
         purchasePrice: 0,
+        sellingPrice: 0,
         quantity: 0,
         fournisseur: '',
         caracteristiques: '',

@@ -65,6 +65,7 @@ const ProductsTable: React.FC<Props> = ({
               <TableHead className="font-black text-violet-700 dark:text-violet-300">Code</TableHead>
               <TableHead className="font-black text-violet-700 dark:text-violet-300"><SortBtn field="description" label="Description" /></TableHead>
               <TableHead className="font-black text-violet-700 dark:text-violet-300"><SortBtn field="purchasePrice" label="Prix" /></TableHead>
+              <TableHead className="font-black text-violet-700 dark:text-violet-300">Prix vente</TableHead>
               <TableHead className="font-black text-violet-700 dark:text-violet-300"><SortBtn field="quantity" label="Qté" /></TableHead>
               <TableHead className="font-black text-violet-700 dark:text-violet-300"><SortBtn field="notation" label="Notation" /></TableHead>
               <TableHead className="font-black text-violet-700 dark:text-violet-300 text-center">Actions</TableHead>
@@ -74,7 +75,7 @@ const ProductsTable: React.FC<Props> = ({
           <TableBody>
             {paginatedProducts.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-12">
+                <TableCell colSpan={9} className="text-center py-12">
                   <div className="flex flex-col items-center gap-3">
                     <div className="w-16 h-16 rounded-2xl bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center">
                       <Package className="h-8 w-8 text-violet-400" />
@@ -119,6 +120,13 @@ const ProductsTable: React.FC<Props> = ({
                   </TableCell>
                   <TableCell>
                     <span className="font-bold text-amber-600 dark:text-amber-400">{product.purchasePrice}€</span>
+                  </TableCell>
+                  <TableCell>
+                    {product.sellingPrice !== undefined && product.sellingPrice !== null && product.sellingPrice !== 0 ? (
+                      <span className="font-bold text-emerald-600 dark:text-emerald-400">{product.sellingPrice}€</span>
+                    ) : (
+                      <span className="text-muted-foreground/50">—</span>
+                    )}
                   </TableCell>
                   <TableCell>
                     {(() => {

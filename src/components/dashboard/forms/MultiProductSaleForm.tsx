@@ -14,6 +14,7 @@ import ConfirmDeleteDialog from './ConfirmDeleteDialog';
 import AdvancePaymentModal from './AdvancePaymentModal';
 import PretProduitFromSaleModal from './PretProduitFromSaleModal';
 import axios from 'axios';
+import productApiService from '@/services/api/productApi';
 import { setFormProtection } from '@/hooks/use-realtime-sync';
 
 // Sub-components
@@ -531,7 +532,13 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
     const isAdvance = product.description.toLowerCase().includes('avance');
     const productQuantity = product.quantity !== undefined ? product.quantity : 0;
     const purchasePriceUnit = product.purchasePrice;
-    const suggestedSellingPrice = isAdvance ? '' : (product.purchasePrice * 1.2).toFixed(2);
+    // Prix de vente unitaire de products.json en priorité, sinon suggestion (achat x1.2)
+    const dbSellingPrice = (product as any).sellingPrice;
+    const suggestedSellingPrice = isAdvance
+      ? ''
+      : (dbSellingPrice !== undefined && dbSellingPrice !== null && Number(dbSellingPrice) > 0
+          ? Number(dbSellingPrice).toFixed(2)
+          : (product.purchasePrice * 1.2).toFixed(2));
 
     const isPretProduit = product.description.toLowerCase().includes('prêt') || 
                           product.description.toLowerCase().includes('pret');
@@ -686,6 +693,14 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
   };
 
 
+  /** Nouveaux prix de vente saisis via « + » (persistés dans products.json au submit) */
+  const sellingPriceOverridesRef = useRef<Record<number, number>>({});
+
+  const handleSellingPriceOverride = (value: number, index: number) => {
+    sellingPriceOverridesRef.current[index] = value;
+    handleSellingPriceChange(String(value), index);
+  };
+
   const handleSellingPriceChange = (value: string, index: number) => {
     setFormProducts(prev => {
       const newProducts = [...prev];
@@ -838,6 +853,17 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
     setIsSubmitting(true);
 
     try {
+      // Persister les nouveaux prix de vente saisis via « + » dans products.json
+      await Promise.all(
+        Object.entries(sellingPriceOverridesRef.current).map(([idx, price]) => {
+          const fp = formProducts[Number(idx)];
+          if (!fp?.selectedProduct) return Promise.resolve(null);
+          const current = (fp.selectedProduct as any).sellingPrice;
+          if (Number(current) === Number(price)) return Promise.resolve(null);
+          return productApiService.updateSellingPrice(String(fp.selectedProduct.id), Number(price)).catch(() => null);
+        })
+      );
+
       if (clientName.trim()) {
         await handleClientData(clientName, clientPhone, clientAddress, clientVille);
       }
@@ -1184,6 +1210,7 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
                     canDelete={formProducts.length > 1}
                     isSubmitting={isSubmitting}
                     onProductSelect={handleProductSelect}
+                    onSellingPriceOverride={handleSellingPriceOverride}
                     onSellingPriceChange={handleSellingPriceChange}
                     onQuantityChange={handleQuantityChange}
                     onDeleteProduct={handleDeleteProduct}

@@ -15,6 +15,7 @@ import productApiService from '@/services/api/productApi';
 import { livraisonVilleApi, LivraisonVille } from '@/services/api/villesApi';
 import type { Product } from '@/types/product';
 import type { RdvProduit } from '@/services/api/rdvTachesApi';
+import SellingPriceOverrideButton from '@/components/products/SellingPriceOverrideButton';
 
 type Cat = 'all' | 'perruque' | 'tissage' | 'extension' | 'autres';
 
@@ -45,6 +46,8 @@ const RdvProductSection: React.FC<Props> = ({ produits, onChange }) => {
   const [ville, setVille] = useState('');
   const [fraisLivraison, setFraisLivraison] = useState('0');
   const [erreur, setErreur] = useState<string | null>(null);
+  /** Nouveau prix de vente saisi via le bouton « + » (remplace celui du produit) */
+  const [prixVenteOverride, setPrixVenteOverride] = useState<number | null>(null);
 
   useEffect(() => {
     productApiService.getAll().then(setAllProducts).catch(() => setAllProducts([]));
@@ -68,6 +71,7 @@ const RdvProductSection: React.FC<Props> = ({ produits, onChange }) => {
     setShowSuggestions(false);
     setPrixUnitaire(String(p.purchasePrice ?? ''));
     setPrixVente(String(p.sellingPrice ?? ''));
+    setPrixVenteOverride(null);
     setQuantite('1');
     setErreur(null);
   };
@@ -81,6 +85,7 @@ const RdvProductSection: React.FC<Props> = ({ produits, onChange }) => {
   const resetLine = () => {
     setSelected(null); setSearch(''); setQuantite('1');
     setPrixUnitaire(''); setPrixVente(''); setVille(''); setFraisLivraison('0');
+    setPrixVenteOverride(null);
   };
 
   const handleAdd = () => {
@@ -91,6 +96,12 @@ const RdvProductSection: React.FC<Props> = ({ produits, onChange }) => {
     const pv = parseFloat(prixVente);
     if (isNaN(pv) || pv < 0) { setErreur('Prix de vente requis'); return; }
     setErreur(null);
+    // Si un nouveau prix de vente a été saisi, il remplace l'ancien dans products.json
+    if (prixVenteOverride !== null && prixVenteOverride !== Number(selected.sellingPrice ?? NaN)) {
+      productApiService.updateSellingPrice(selected.id, prixVenteOverride).then(updated => {
+        if (updated) setAllProducts(prev => prev.map(x => (x.id === updated.id ? updated : x)));
+      }).catch(() => {});
+    }
     onChange([
       ...produits,
       {
@@ -170,8 +181,15 @@ const RdvProductSection: React.FC<Props> = ({ produits, onChange }) => {
         </div>
         <div className="space-y-1.5">
           <Label className="text-xs font-bold text-white/80">Prix vente (€)</Label>
-          <Input type="number" step="0.01" value={prixVente} onChange={e => setPrixVente(e.target.value)}
-            className="bg-white/10 border border-white/20 rounded-xl text-white" />
+          <div className="flex items-center gap-2">
+            <Input type="number" step="0.01" value={prixVente} onChange={e => setPrixVente(e.target.value)}
+              className="bg-white/10 border border-white/20 rounded-xl text-white" />
+            <SellingPriceOverrideButton
+              currentPrice={prixVente}
+              disabled={!selected}
+              onApply={(price) => { setPrixVente(String(price)); setPrixVenteOverride(price); }}
+            />
+          </div>
         </div>
       </div>
 

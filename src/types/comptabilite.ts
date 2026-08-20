@@ -25,6 +25,8 @@ export interface NouvelleAchatFormData {
   productId?: string;
   productDescription: string;
   purchasePrice: number;
+  /** Prix de vente unitaire (persisté dans products.json) — facultatif */
+  sellingPrice?: number;
   quantity: number;
   fournisseur?: string;
   caracteristiques?: string;

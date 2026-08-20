@@ -86,6 +86,7 @@ const ProductMergeModal: React.FC<ProductMergeModalProps> = ({
     useState<ClassificationValue>({});
   const [description, setDescription] = useState('');
   const [purchasePrice, setPurchasePrice] = useState('');
+  const [sellingPrice, setSellingPrice] = useState('');
   const [quantity, setQuantity] = useState('');
   const [fournisseur, setFournisseur] = useState('');
   const [keptPhotos, setKeptPhotos] = useState<string[]>([]);
@@ -136,6 +137,7 @@ const ProductMergeModal: React.FC<ProductMergeModalProps> = ({
 
       setDescription(first.description);
       setPurchasePrice(String(first.purchasePrice));
+      setSellingPrice(first.sellingPrice ? String(first.sellingPrice) : '');
       setFournisseur(first.fournisseur || '');
 
       const sumQty = selectedProducts.reduce(
@@ -257,6 +259,18 @@ const ProductMergeModal: React.FC<ProductMergeModalProps> = ({
     [selectedProducts]
   );
 
+  const candidateSellingPrices = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          selectedProducts
+            .map((p) => p.sellingPrice)
+            .filter((v) => v !== undefined && v !== null && v !== 0) as number[]
+        )
+      ),
+    [selectedProducts]
+  );
+
   const candidateFournisseurs = useMemo(
     () =>
       Array.from(
@@ -367,6 +381,13 @@ const ProductMergeModal: React.FC<ProductMergeModalProps> = ({
         'quantity',
         String(Number(quantity))
       );
+
+      if (sellingPrice !== '' && !isNaN(Number(sellingPrice))) {
+        fd.append(
+          'sellingPrice',
+          String(Number(sellingPrice))
+        );
+      }
 
       if (fournisseur.trim()) {
         fd.append(
@@ -1167,6 +1188,10 @@ flex-col
                           <span className="opacity-40">·</span>
                           <span>{p.purchasePrice}€</span>
                           <span className="opacity-40">·</span>
+                          <span className="text-emerald-600 dark:text-emerald-400">
+                            Vente: {p.sellingPrice ? `${p.sellingPrice}€` : '—'}
+                          </span>
+                          <span className="opacity-40">·</span>
                           <span>Qté: {p.quantity}</span>
                         </div>
                       </div>
@@ -1481,6 +1506,72 @@ flex-col
                         dark:text-white
                         dark:hover:border-emerald-400/20
                         dark:focus:border-emerald-400
+                      "
+                    />
+                  </section>
+
+                  {/* Prix de vente */}
+                  <section
+                    className="
+                      relative
+                      overflow-hidden
+                      space-y-3
+                      rounded-2xl
+                      border
+                      border-slate-200/80
+                      bg-white/60
+                      p-4
+                      transition-all
+                      duration-500
+                      hover:-translate-y-0.5
+                      hover:border-emerald-200
+                      dark:border-white/[0.07]
+                      dark:bg-white/[0.025]
+                      dark:hover:border-emerald-500/20
+                    "
+                  >
+                    <SectionTitle
+                      icon={<Euro className="h-4 w-4" />}
+                      number="3"
+                      title="Prix de vente unitaire (€)"
+                      color="emerald"
+                    />
+
+                    <div className="relative flex flex-wrap gap-1.5">
+                      {candidateSellingPrices.map((pr) => (
+                        <Button
+                          key={`sp-${pr}`}
+                          type="button"
+                          variant={Number(sellingPrice) === pr ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => setSellingPrice(String(pr))}
+                          className={`rounded-lg text-xs transition-all duration-300 ${
+                            Number(sellingPrice) === pr
+                              ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white'
+                              : 'border-slate-200 bg-white/70 hover:border-emerald-300 hover:text-emerald-600 dark:border-white/[0.08] dark:bg-white/[0.025]'
+                          }`}
+                        >
+                          {pr}€
+                        </Button>
+                      ))}
+                    </div>
+
+                    <Input
+                      type="number"
+                      min={0}
+                      step="0.01"
+                      placeholder="Saisir un prix de vente (optionnel)"
+                      value={sellingPrice}
+                      onChange={(e) => setSellingPrice(e.target.value)}
+                      className="
+                        h-11
+                        rounded-xl
+                        border-slate-200
+                        bg-white/80
+                        shadow-sm
+                        dark:border-white/[0.08]
+                        dark:bg-white/[0.025]
+                        dark:text-white
                       "
                     />
                   </section>

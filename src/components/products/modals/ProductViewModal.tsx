@@ -19,6 +19,7 @@ interface Props {
   getPhotoUrl: (url: string) => string;
   allRatings: Record<string, ProductRatingInfo>;
   onOpenPrixHistory: () => void;
+  onOpenSellingPriceHistory?: () => void;
   onOpenHistory: () => void;
   onOpenFournHistory: () => void;
   onOpenComments: () => void;
@@ -28,7 +29,7 @@ interface Props {
 
 const ProductViewModal: React.FC<Props> = ({
   open, onOpenChange, selectedProduct, currentPhotoIndex, setCurrentPhotoIndex,
-  getPhotoUrl, allRatings, onOpenPrixHistory, onOpenHistory, onOpenFournHistory,
+  getPhotoUrl, allRatings, onOpenPrixHistory, onOpenSellingPriceHistory, onOpenHistory, onOpenFournHistory,
   onOpenComments, onEdit, onDelete,
 }) => {
   if (!selectedProduct) return null;
@@ -111,6 +112,24 @@ const ProductViewModal: React.FC<Props> = ({
                 >
                   <LineChartIcon className="h-4 w-4" />
                 </button>
+              </div>
+            </div>
+            <div className="p-4 rounded-2xl bg-white/5 border border-white/10 relative">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-white/50 text-xs font-medium">Prix de vente</p>
+                  <p className="text-emerald-400 font-bold text-lg">
+                    {selectedProduct.sellingPrice !== undefined && selectedProduct.sellingPrice !== null && selectedProduct.sellingPrice !== 0
+                      ? `${selectedProduct.sellingPrice}€` : '—'}
+                  </p>
+                </div>
+                {onOpenSellingPriceHistory && (
+                  <button type="button" onClick={onOpenSellingPriceHistory} title="Voir l'évolution du prix de vente"
+                    className="p-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-400/20 text-emerald-300 transition-colors"
+                  >
+                    <Eye className="h-4 w-4" />
+                  </button>
+                )}
               </div>
             </div>
             <div className="p-4 rounded-2xl bg-white/5 border border-white/10 relative">

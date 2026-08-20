@@ -24,6 +24,8 @@ export interface EditForm {
   additionalQuantity: number;
   fournisseur: string;
   purchaseDate: string;
+  /** Prix de vente unitaire (vide = non défini) */
+  sellingPrice?: string;
 }
 
 interface EditPhotosState {
@@ -110,6 +112,16 @@ const EditProductModal: React.FC<Props> = (p) => {
             <Input type="number" step="0.01" value={p.editForm.purchasePrice}
               onChange={(e) => p.setEditForm({ ...p.editForm, purchasePrice: parseFloat(e.target.value) || 0 })}
               className="bg-white/10 border border-white/20 focus:border-yellow-400 rounded-xl text-white placeholder:text-white/40 hover:bg-white/15 transition-all"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label className="text-sm font-bold text-white/80 flex items-center gap-2">
+              <Star className="h-4 w-4 text-emerald-400" /> Prix de ventes unitaire (€)
+            </Label>
+            <Input type="number" step="0.01" value={p.editForm.sellingPrice ?? ''}
+              onChange={(e) => p.setEditForm({ ...p.editForm, sellingPrice: e.target.value })}
+              placeholder="Prix de vente unitaire..."
+              className="bg-white/10 border border-white/20 focus:border-emerald-400 rounded-xl text-white placeholder:text-white/40 hover:bg-white/15 transition-all"
             />
           </div>
           <div className="space-y-2">

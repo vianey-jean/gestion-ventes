@@ -25,6 +25,7 @@ import CaracteristiqueModal from '@/components/products/CaracteristiqueModal';
 import ProductMergeModal from '@/components/products/ProductMergeModal';
 import ProductsVenduModal from '@/components/products/ProductsVenduModal';
 import PrixHistoryModal from '@/components/products/PrixHistoryModal';
+import SellingPriceHistoryModal from '@/components/products/SellingPriceHistoryModal';
 import StockListModal from '@/components/products/StockListModal';
 import EditProductForm from '@/components/dashboard/EditProductForm';
 import ProduitsToolbar from '@/pages/produits/ProduitsToolbar';
@@ -221,14 +222,15 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
   }, [selectedProduct, fetchProducts, toast]);
 
   // Add form
-  const [addForm, setAddForm] = useState<AddProductForm>({ description: '', purchasePrice: '', quantity: '', fournisseur: '', dateAchat: todayISO() });
+  const [addForm, setAddForm] = useState<AddProductForm>({ description: '', purchasePrice: '', quantity: '', fournisseur: '', dateAchat: todayISO(), sellingPrice: '' });
   const [addPhotos, setAddPhotos] = useState<{ files: File[]; existingUrls: string[]; mainIndex: number }>({ files: [], existingUrls: [], mainIndex: 0 });
   const [addErrors, setAddErrors] = useState<Record<string, string>>({});
 
   // Edit form
-  const [editForm, setEditForm] = useState<EditForm>({ description: '', purchasePrice: 0, quantity: 0, additionalQuantity: 0, fournisseur: '', purchaseDate: todayISO() });
+  const [editForm, setEditForm] = useState<EditForm>({ description: '', purchasePrice: 0, quantity: 0, additionalQuantity: 0, fournisseur: '', purchaseDate: todayISO(), sellingPrice: '' });
   const [editPhotos, setEditPhotos] = useState<{ files: File[]; existingUrls: string[]; mainIndex: number }>({ files: [], existingUrls: [], mainIndex: 0 });
 
+  const [isSellingPriceHistoryOpen, setIsSellingPriceHistoryOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
 
@@ -394,6 +396,9 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
         quantity: Number(addForm.quantity),
         fournisseur: addForm.fournisseur.trim() || undefined,
         dateAchat: addForm.dateAchat || todayISO(),
+        ...(addForm.sellingPrice !== undefined && addForm.sellingPrice !== ''
+          ? { sellingPrice: Number(addForm.sellingPrice) || 0 }
+          : {}),
       });
       if (newProduct && addPhotos.files.length > 0) {
         await productService.uploadProductPhotos(newProduct.id, addPhotos.files, addPhotos.mainIndex);
@@ -401,7 +406,7 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
       toast({ title: 'Succès', description: 'Produit ajouté avec succès', className: 'notification-success' });
       setIsAddConfirmOpen(false);
       setIsAddOpen(false);
-      setAddForm({ description: '', purchasePrice: '', quantity: '', fournisseur: '', dateAchat: todayISO() });
+      setAddForm({ description: '', purchasePrice: '', quantity: '', fournisseur: '', dateAchat: todayISO(), sellingPrice: '' });
       setAddPhotos({ files: [], existingUrls: [], mainIndex: 0 });
       setAddClassification({});
       if (fetchProducts) await fetchProducts();
@@ -420,6 +425,7 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
       additionalQuantity: 0,
       fournisseur: product.fournisseur || '',
       purchaseDate: todayISO(),
+      sellingPrice: product.sellingPrice !== undefined && product.sellingPrice !== null ? String(product.sellingPrice) : '',
     });
     setEditPhotos({ files: [], existingUrls: product.photos || [], mainIndex: 0 });
     setIsEditOpen(true);
@@ -442,6 +448,9 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
         quantity: editForm.quantity + addQty,
         fournisseur: editForm.fournisseur.trim() || undefined,
       };
+      if (editForm.sellingPrice !== undefined && editForm.sellingPrice !== '') {
+        updatePayload.sellingPrice = Number(editForm.sellingPrice) || 0;
+      }
       if (addQty > 0) {
         updatePayload.newPurchase = {
           date: editForm.purchaseDate || todayISO(),
@@ -742,6 +751,7 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
           getPhotoUrl={getPhotoUrl}
           allRatings={allRatings}
           onOpenPrixHistory={() => setIsPrixHistoryOpen(true)}
+          onOpenSellingPriceHistory={() => setIsSellingPriceHistoryOpen(true)}
           onOpenHistory={() => setIsHistoryOpen(true)}
           onOpenFournHistory={() => setIsFournHistoryOpen(true)}
           onOpenComments={() => setIsCommentsModalOpen(true)}
@@ -800,6 +810,12 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
       <PrixHistoryModal
         isOpen={isPrixHistoryOpen}
         onClose={() => setIsPrixHistoryOpen(false)}
+        product={selectedProduct}
+      />
+
+      <SellingPriceHistoryModal
+        open={isSellingPriceHistoryOpen}
+        onOpenChange={setIsSellingPriceHistoryOpen}
         product={selectedProduct}
       />
 

@@ -310,6 +310,40 @@ const AchatFormDialog: React.FC<AchatFormDialogProps> = ({
                     </div>
                   );
                 })()}
+
+                {/* Prix de vente unitaire — persisté dans products.json */}
+                <div className="mt-5 pt-4 border-t border-slate-200 dark:border-slate-700">
+                  <div className="flex items-center justify-between mb-3">
+                    <Label className="flex items-center gap-2 text-sm font-bold">
+                      <div className="p-2 rounded-xl bg-indigo-500/10">
+                        <DollarSign className="h-4 w-4 text-indigo-600" />
+                      </div>
+                      Prix de vente unitaire
+                    </Label>
+                    {selectedProduct?.sellingPrice ? (
+                      <span className="px-3 py-1 rounded-full text-xs font-bold bg-indigo-500/10 text-indigo-600 border border-indigo-500/20">
+                        Actuel : {formatEuro(Number(selectedProduct.sellingPrice))}
+                      </span>
+                    ) : null}
+                  </div>
+                  <div className="relative">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-indigo-600 font-bold">€</span>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={achatForm.sellingPrice || ''}
+                      onChange={(e) =>
+                        onFormChange('sellingPrice', parseFloat(e.target.value) || 0)
+                      }
+                      placeholder="0.00"
+                      className="h-14 pl-10 text-xl font-bold rounded-2xl border-2 border-indigo-200 focus:border-indigo-500 bg-white dark:bg-slate-900 shadow-sm"
+                    />
+                  </div>
+                  <p className="mt-2 text-xs text-slate-500">
+                    Laissez vide pour conserver le prix de vente actuel du produit.
+                  </p>
+                </div>
               </CardContent>
             </Card>
 

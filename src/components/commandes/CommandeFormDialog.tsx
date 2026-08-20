@@ -82,6 +82,7 @@ interface CommandeFormDialogProps {
   setQuantite: (v: string) => void;
   prixVente: string;
   setPrixVente: (v: string) => void;
+  setPrixVenteOverride?: (p: number | null) => void;
   productSearch: string;
   setProductSearch: (v: string) => void;
   showProductSuggestions: boolean;
@@ -134,7 +135,7 @@ const CommandeFormDialog: React.FC<CommandeFormDialogProps> = ({
   filteredClients, handleClientSelect,
   type, setType,
   produitNom, setProduitNom, prixUnitaire, setPrixUnitaire, quantite, setQuantite,
-  prixVente, setPrixVente, productSearch, setProductSearch,
+  prixVente, setPrixVente, setPrixVenteOverride, productSearch, setProductSearch,
   showProductSuggestions, setShowProductSuggestions,
   filteredProducts, handleProductSelect, selectedProduct,
   produitsListe, editingProductIndex, handleAddProduit, handleEditProduit, handleRemoveProduit,
@@ -516,6 +517,7 @@ const CommandeFormDialog: React.FC<CommandeFormDialogProps> = ({
             setQuantite={setQuantite}
             prixVente={prixVente}
             setPrixVente={setPrixVente}
+            setPrixVenteOverride={setPrixVenteOverride}
             availableQuantityForSelected={availableQuantityForSelected}
             productReduction={productReduction}
             setProductReduction={setProductReduction}

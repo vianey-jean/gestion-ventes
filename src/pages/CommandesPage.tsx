@@ -97,6 +97,7 @@ const CommandesPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =
           setQuantite={logic.setQuantite}
           prixVente={logic.prixVente}
           setPrixVente={logic.setPrixVente}
+          setPrixVenteOverride={logic.setPrixVenteOverride}
           productSearch={logic.productSearch}
           setProductSearch={logic.setProductSearch}
           showProductSuggestions={logic.showProductSuggestions}

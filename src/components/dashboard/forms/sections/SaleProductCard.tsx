@@ -9,6 +9,7 @@ import ProductSearchInput from '../../ProductSearchInput';
 import SaleQuantityInput from '../SaleQuantityInput';
 import { FormProduct, ReductionType, computeReductionAmount } from '../types/saleFormTypes';
 import { livraisonVilleApi, LivraisonVille } from '@/services/api/villesApi';
+import SellingPriceOverrideButton from '@/components/products/SellingPriceOverrideButton';
 
 interface SaleProductCardProps {
   product: FormProduct;
@@ -17,6 +18,8 @@ interface SaleProductCardProps {
   isSubmitting: boolean;
   onProductSelect: (product: Product, index: number) => void;
   onSellingPriceChange: (value: string, index: number) => void;
+  /** Nouveau prix de vente saisi via « + » (persisté dans products.json) */
+  onSellingPriceOverride?: (value: number, index: number) => void;
   onQuantityChange: (value: string, index: number) => void;
   onDeleteProduct: (index: number) => void;
   onAvanceChange: (value: string, index: number) => void;
@@ -33,6 +36,7 @@ const SaleProductCard: React.FC<SaleProductCardProps> = ({
   isSubmitting,
   onProductSelect,
   onSellingPriceChange,
+  onSellingPriceOverride,
   onQuantityChange,
   onDeleteProduct,
   onAvanceChange,
@@ -197,15 +201,22 @@ const SaleProductCard: React.FC<SaleProductCardProps> = ({
             {/* Prix de vente unitaire */}
             <div className="space-y-2">
               <Label>Prix de vente unitaire (€)</Label>
-              <Input
-                type="number"
-                step="0.01"
-                min="0"
-                value={product.sellingPriceUnit}
-                onChange={(e) => onSellingPriceChange(e.target.value, index)}
-                disabled={isSubmitting}
-                className={Number(product.profit) < 0 ? 'border-red-500' : ''}
-              />
+              <div className="flex items-center gap-2">
+                <Input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={product.sellingPriceUnit}
+                  onChange={(e) => onSellingPriceChange(e.target.value, index)}
+                  disabled={isSubmitting}
+                  className={Number(product.profit) < 0 ? 'border-red-500' : ''}
+                />
+                <SellingPriceOverrideButton
+                  currentPrice={product.sellingPriceUnit}
+                  disabled={isSubmitting}
+                  onApply={(price) => onSellingPriceOverride?.(price, index)}
+                />
+              </div>
             </div>
 
             {/* Quantité */}

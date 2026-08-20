@@ -47,6 +47,12 @@ export interface ProductFournisseurHistory {
   dateDebut: string;
 }
 
+/** Point d'historique du prix de vente unitaire. */
+export interface SellingPricePoint {
+  price: number;
+  date: string;
+}
+
 
 export interface Product {
   id: string;
@@ -65,6 +71,7 @@ export interface Product {
   achats?: ProductAchat[]; // Historique des achats
   ventes?: ProductVente[]; // Historique des ventes
   fournisseursHistory?: ProductFournisseurHistory[]; // Chronologie des fournisseurs
+  sellingPriceHistory?: SellingPricePoint[]; // Évolution du prix de vente unitaire
 }
 
 
