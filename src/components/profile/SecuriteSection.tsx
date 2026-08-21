@@ -23,6 +23,7 @@ import api from '@/service/api';
 import PasswordStrengthChecker from '@/components/PasswordStrengthChecker';
 import PremiumLoading from '@/components/ui/premium-loading';
 import HistoriqueConnexionCard from './HistoriqueConnexionCard';
+import ShieldStatsCard from './ShieldStatsCard';
 
 interface SecuriteSectionProps {
   userRole?: string;
@@ -649,6 +650,11 @@ const SecuriteSection: React.FC<SecuriteSectionProps> = ({ userRole }) => {
             )}
           </div>
         </motion.div>
+      </div>
+
+      {/* ===== BOUCLIER ANTI-INTRUSION ===== */}
+      <div className="mt-5" id="bouclier-securite">
+        <ShieldStatsCard />
       </div>
 
       {/* ===== HISTORIQUE DES CONNEXIONS ===== */}

@@ -38,6 +38,7 @@ import {
   motion,
   AnimatePresence,
 } from 'framer-motion';
+import { solveProofOfWork, storeProof } from '@/lib/proofOfWork';
 
 interface SecurityCheckPageProps {
   onVerified: () => void;
@@ -438,6 +439,11 @@ const SecurityCheckPage: React.FC<
 
     const boot = setTimeout(() => {
       setPhase('checking');
+      // Preuve de travail : coût CPU négligeable pour un humain, dissuasif
+      // pour une automatisation massive (botnet, fuzzing de session).
+      void solveProofOfWork(undefined, 18).then((proof) => {
+        if (proof) storeProof(proof);
+      });
     }, 800);
 
     const challenge = setTimeout(() => {
@@ -953,6 +959,25 @@ const SecurityCheckPage: React.FC<
               'linear-gradient(rgba(255,255,255,0.4) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.4) 1px, transparent 1px)',
             backgroundSize: '50px 50px',
           }}
+        />
+
+        {/* Aurora sweeps — couche premium additive */}
+        <motion.div
+          animate={{ x: ['-30%', '30%', '-30%'], opacity: [0.25, 0.5, 0.25] }}
+          transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut' }}
+          className="absolute top-[-20%] left-[10%] w-[60%] h-[60%] rounded-full bg-[radial-gradient(circle,rgba(167,139,250,0.22),transparent_65%)]"
+        />
+        <motion.div
+          animate={{ x: ['20%', '-20%', '20%'], opacity: [0.2, 0.45, 0.2] }}
+          transition={{ duration: 24, repeat: Infinity, ease: 'easeInOut' }}
+          className="absolute bottom-[-25%] right-[5%] w-[65%] h-[65%] rounded-full bg-[radial-gradient(circle,rgba(232,121,249,0.18),transparent_65%)]"
+        />
+
+        {/* Ligne de scan sécurité */}
+        <motion.div
+          animate={{ top: ['-5%', '105%'] }}
+          transition={{ duration: 6, repeat: Infinity, ease: 'linear' }}
+          className="absolute left-0 right-0 h-px bg-gradient-to-r from-transparent via-violet-300/40 to-transparent"
         />
 
         {[...Array(30)].map((_, i) => (

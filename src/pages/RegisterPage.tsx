@@ -328,9 +328,10 @@ const RegisterPage: React.FC = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.4 + i * 0.1 }}
-                  className="p-3 bg-white/[0.04] border border-white/[0.08] rounded-xl"
+                  whileHover={{ y: -4, scale: 1.02 }}
+                  className="group p-3 bg-white/[0.04] border border-white/[0.08] rounded-xl transition-colors hover:border-violet-400/30 hover:bg-white/[0.07]"
                 >
-                  <item.icon className="h-5 w-5 text-purple-400 mb-1.5" />
+                  <item.icon className="h-5 w-5 text-purple-400 mb-1.5 transition-transform group-hover:scale-110" />
                   <p className="text-sm font-bold text-white/90">{item.label}</p>
                   <p className="text-xs text-white/40">{item.desc}</p>
                 </motion.div>
@@ -342,11 +343,18 @@ const RegisterPage: React.FC = () => {
           <div className="relative w-full max-w-2xl flex-1">
             {/* Glow behind card */}
             <div className="absolute -inset-4 bg-gradient-to-r from-purple-600/20 via-pink-600/20 to-blue-600/20 rounded-[2rem]" />
-            
+
+            {/* Halo animé premium */}
+            <motion.div
+              animate={{ opacity: [0.25, 0.6, 0.25], scale: [0.98, 1.02, 0.98] }}
+              transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
+              className="absolute -inset-6 rounded-[2.5rem] bg-[conic-gradient(from_0deg,rgba(167,139,250,0.25),rgba(236,72,153,0.2),rgba(59,130,246,0.22),rgba(167,139,250,0.25))] pointer-events-none"
+            />
+
             <Card className="relative bg-white/[0.08] border border-white/[0.12] shadow-[0_32px_64px_rgba(0,0,0,0.4)] rounded-3xl overflow-hidden">
               {/* Top shimmer line */}
               <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-purple-400/50 to-transparent" />
-              
+
               {/* Mirror reflection effect */}
               <div className="absolute inset-0 bg-gradient-to-b from-white/[0.08] via-transparent to-white/[0.02] pointer-events-none" />
               

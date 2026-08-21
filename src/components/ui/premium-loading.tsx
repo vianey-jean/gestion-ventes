@@ -74,7 +74,17 @@ const PremiumLoading = ({
   return (
     <div className={cn("flex flex-col justify-center items-center p-8", className)}>
       <div className="relative flex flex-col items-center space-y-6">
-        <LoadingSpinner size={spinnerSize} />
+        {/* Orbites premium autour du spinner */}
+        <div className="relative flex items-center justify-center">
+          <div className={cn(
+            "absolute w-24 h-24 rounded-full border border-transparent",
+            "bg-gradient-to-r bg-clip-border animate-[spin_3.5s_linear_infinite]",
+            variantGradients[variant]
+          )} style={{ mask: 'radial-gradient(circle, transparent 62%, black 64%)', WebkitMask: 'radial-gradient(circle, transparent 62%, black 64%)' }} />
+          <div className="absolute w-32 h-32 rounded-full border border-border/40 animate-[spin_9s_linear_infinite_reverse]" />
+          <LoadingSpinner size={spinnerSize} />
+        </div>
+        
         
         {/* Loading Text */}
         {showText && (
