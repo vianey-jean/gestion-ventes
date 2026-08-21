@@ -244,24 +244,49 @@ const SecurityCheckPage: React.FC<
     useState<Phase>('boot');
 
   const [ipBlocked, setIpBlocked] = useState(false);
+  const [ipChecked, setIpChecked] = useState(false);
   const [ipBlockedInfo, setIpBlockedInfo] = useState<{ ip: string; reason: string | null }>({ ip: '', reason: null });
+  const ipBlockedRef = useRef(false);
+
+  // Verrou absolu : impossible d'aller plus loin tant que l'IP est bloquée.
+  const safeVerified = useCallback(() => {
+    if (ipBlockedRef.current) return;
+    onVerified();
+  }, [onVerified]);
 
   useEffect(() => {
     let mounted = true;
-    blockageIpApi
-      .check()
-      .then((res) => {
-        if (!mounted) return;
-        if (res.blocked) {
-          setIpBlocked(true);
-          setIpBlockedInfo({ ip: res.ip, reason: res.reason });
-        }
-      })
-      .catch(() => {});
+    const run = () =>
+      blockageIpApi
+        .check()
+        .then((res) => {
+          if (!mounted) return;
+          ipBlockedRef.current = !!res.blocked;
+          setIpBlocked(!!res.blocked);
+          if (res.blocked) {
+            setIpBlockedInfo({ ip: res.ip, reason: res.reason });
+            try {
+              localStorage.removeItem('security_verified_v4');
+            } catch {
+              // ignore
+            }
+          }
+          setIpChecked(true);
+        })
+        .catch(() => {
+          if (mounted) setIpChecked(true);
+        });
+
+    run();
+    // Re-vérification périodique : déblocage automatique dès que
+    // l'administrateur retire l'IP de la base de données.
+    const timer = setInterval(run, 15000);
     return () => {
       mounted = false;
+      clearInterval(timer);
     };
   }, []);
+
 
   const [image, setImage] = useState('');
   const [targetX, setTargetX] = useState(0);
@@ -411,7 +436,11 @@ const SecurityCheckPage: React.FC<
   }, []);
 
   useEffect(() => {
+    // Tant que la vérification d'IP n'est pas terminée, ou si l'IP est
+    // bloquée, aucun processus de vérification ne démarre.
+    if (!ipChecked || ipBlocked) return;
     generateChallenge();
+
 
     // Si ce navigateur a déjà passé la vérification précédemment
     // (localStorage non vidé), on saute la captcha directement.
@@ -448,7 +477,7 @@ const SecurityCheckPage: React.FC<
       }, 900);
 
       const callVerified = setTimeout(() => {
-        onVerified();
+        safeVerified();
       }, 1600);
 
       return () => {
@@ -475,7 +504,7 @@ const SecurityCheckPage: React.FC<
       clearTimeout(boot);
       clearTimeout(challenge);
     };
-  }, [generateChallenge, challengeId, onVerified]);
+  }, [generateChallenge, challengeId, safeVerified, ipChecked, ipBlocked]);
 
   const getRelativePosition = (
     clientX: number,
@@ -928,7 +957,7 @@ const SecurityCheckPage: React.FC<
         }
 
         setTimeout(() => {
-          onVerified();
+          safeVerified();
         }, 1800);
       } else {
         setFailedAttempts((p) => p + 1);
