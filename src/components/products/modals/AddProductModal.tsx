@@ -15,6 +15,7 @@
  */
 
 import React from 'react';
+import { motion } from 'framer-motion';
 import {
   Dialog,
   DialogContent,
@@ -193,81 +194,38 @@ const AddProductModal: React.FC<Props> = ({
           sm:rounded-[32px]
           border
           border-white/10
-          bg-slate-950
+          bg-[#0b0b14]/90
+          backdrop-blur-2xl
           text-white
-          shadow-[0_30px_100px_-20px_rgba(0,0,0,0.9)]
+          shadow-[0_30px_100px_rgba(0,0,0,0.65)]
           animate-in
           fade-in-0
+          slide-in-from-bottom-6
           zoom-in-95
           duration-500
         "
       >
         {/* =========================================================
-            AMBIENT BACKGROUND
+            AMBIENT AURORA BACKGROUND (thème Login)
         ========================================================= */}
 
-        <div
-          className="
-            pointer-events-none
-            absolute
-            inset-0
-            z-0
-            overflow-hidden
-            rounded-[28px]
-            sm:rounded-[32px]
-          "
-        >
-          <div
-            className="
-              absolute
-              -top-32
-              -right-32
-              h-72
-              w-72
-              rounded-full
-              bg-green-500/10
-              blur-3xl
-              animate-pulse
-            "
+        <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden rounded-[28px] sm:rounded-[32px]">
+          <motion.div
+            animate={{ x: [0, 80, -40, 0], y: [0, -60, 40, 0], scale: [1, 1.15, 0.95, 1] }}
+            transition={{ duration: 20, repeat: Infinity, ease: 'easeInOut' }}
+            className="absolute -left-40 -top-40 h-[420px] w-[420px] rounded-full bg-fuchsia-600/20 blur-[100px]"
           />
-
-          <div
-            className="
-              absolute
-              -bottom-40
-              -left-32
-              h-80
-              w-80
-              rounded-full
-              bg-emerald-500/10
-              blur-3xl
-              animate-pulse
-            "
-            style={{
-              animationDelay: '700ms',
-            }}
+          <motion.div
+            animate={{ x: [0, -80, 50, 0], y: [0, 60, -30, 0], scale: [1, 1.2, 0.9, 1] }}
+            transition={{ duration: 24, repeat: Infinity, ease: 'easeInOut' }}
+            className="absolute -bottom-48 -right-40 h-[480px] w-[480px] rounded-full bg-cyan-600/15 blur-[110px]"
           />
-
-          <div
-            className="
-              absolute
-              top-1/3
-              right-1/3
-              h-40
-              w-40
-              rounded-full
-              bg-lime-400/5
-              blur-3xl
-            "
+          <motion.div
+            animate={{ x: [0, 40, -50, 0], scale: [1, 1.1, 0.95, 1] }}
+            transition={{ duration: 28, repeat: Infinity, ease: 'easeInOut' }}
+            className="absolute top-1/3 right-1/4 h-56 w-56 rounded-full bg-violet-500/15 blur-[90px]"
           />
-
-          <div
-            className="
-              absolute
-              inset-0
-              bg-[radial-gradient(circle_at_top_right,rgba(34,197,94,0.08),transparent_35%)]
-            "
-          />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(139,92,246,0.12),transparent_40%)]" />
         </div>
 
         {/* =========================================================
@@ -283,9 +241,9 @@ const AddProductModal: React.FC<Props> = ({
             border-b
             border-white/10
             bg-gradient-to-br
-            from-green-950
-            via-slate-950
-            to-emerald-950
+            from-violet-950
+            via-[#0b0b14]
+            to-cyan-950
             px-5
             pt-6
             pb-5
@@ -296,7 +254,7 @@ const AddProductModal: React.FC<Props> = ({
             className="
               absolute
               inset-0
-              bg-[radial-gradient(circle_at_top_right,rgba(34,197,94,0.15),transparent_40%)]
+              bg-[radial-gradient(circle_at_top_right,rgba(139,92,246,0.15),transparent_40%)]
             "
           />
 
@@ -314,11 +272,11 @@ const AddProductModal: React.FC<Props> = ({
                 justify-center
                 rounded-2xl
                 bg-gradient-to-br
-                from-green-500
-                via-emerald-500
-                to-green-700
+                from-violet-500
+                via-fuchsia-500
+                to-violet-700
                 text-white
-                shadow-[0_12px_30px_-8px_rgba(34,197,94,0.7)]
+                shadow-[0_12px_30px_-8px_rgba(139,92,246,0.7)]
                 ring-1
                 ring-white/20
                 transition-all
@@ -341,7 +299,7 @@ const AddProductModal: React.FC<Props> = ({
                   justify-center
                   rounded-full
                   bg-slate-950
-                  text-green-400
+                  text-violet-400
                   shadow-lg
                 "
               >
@@ -385,13 +343,13 @@ const AddProductModal: React.FC<Props> = ({
                     gap-1.5
                     rounded-full
                     border
-                    border-emerald-500/20
-                    bg-emerald-500/10
+                    border-fuchsia-500/20
+                    bg-fuchsia-500/10
                     px-3
                     py-1.5
                     text-[11px]
                     font-bold
-                    text-emerald-400
+                    text-fuchsia-400
                   "
                 >
                   <ShieldCheck className="h-3.5 w-3.5" />
@@ -405,13 +363,13 @@ const AddProductModal: React.FC<Props> = ({
                     gap-1.5
                     rounded-full
                     border
-                    border-green-500/20
-                    bg-green-500/10
+                    border-violet-500/20
+                    bg-violet-500/10
                     px-3
                     py-1.5
                     text-[11px]
                     font-bold
-                    text-green-400
+                    text-violet-400
                   "
                 >
                   <Sparkles className="h-3.5 w-3.5" />
@@ -451,7 +409,7 @@ const AddProductModal: React.FC<Props> = ({
               sm:pb-14
 
               scrollbar-thin
-              scrollbar-thumb-green-700
+              scrollbar-thumb-violet-700
               scrollbar-track-slate-900
 
               [scrollbar-width:thin]
@@ -474,9 +432,9 @@ const AddProductModal: React.FC<Props> = ({
                   shadow-sm
                   transition-all
                   duration-500
-                  hover:border-green-500/20
+                  hover:border-violet-500/20
                   hover:bg-white/[0.07]
-                  hover:shadow-[0_12px_35px_-20px_rgba(34,197,94,0.45)]
+                  hover:shadow-[0_12px_35px_-20px_rgba(139,92,246,0.45)]
                 "
               >
                 <div
@@ -502,13 +460,13 @@ const AddProductModal: React.FC<Props> = ({
                         justify-center
                         rounded-xl
                         bg-gradient-to-br
-                        from-green-500
-                        to-emerald-600
+                        from-violet-500
+                        to-fuchsia-600
                         text-sm
                         font-black
                         text-white
                         shadow-lg
-                        shadow-green-500/20
+                        shadow-violet-500/20
                       "
                     >
                       01
@@ -551,10 +509,10 @@ const AddProductModal: React.FC<Props> = ({
                   shadow-sm
                   transition-all
                   duration-500
-                  hover:border-green-500/20
+                  hover:border-violet-500/20
                   hover:bg-white/[0.07]
                   hover:shadow-lg
-                  hover:shadow-green-500/5
+                  hover:shadow-violet-500/5
                 "
               >
                 <div className="mb-4 flex items-center gap-3">
@@ -566,8 +524,8 @@ const AddProductModal: React.FC<Props> = ({
                       items-center
                       justify-center
                       rounded-xl
-                      bg-green-500/10
-                      text-green-400
+                      bg-violet-500/10
+                      text-violet-400
                     "
                   >
                     <Package className="h-4 w-4" />
@@ -606,16 +564,17 @@ const AddProductModal: React.FC<Props> = ({
                     rounded-xl
                     border-white/10
                     bg-white/[0.06]
+                    backdrop-blur-xl
                     text-white
                     shadow-inner
                     transition-all
                     duration-300
                     placeholder:text-slate-600
                     hover:bg-white/[0.08]
-                    focus:border-green-500/50
+                    focus:border-violet-500/50
                     focus:bg-white/[0.09]
                     focus:ring-4
-                    focus:ring-green-500/10
+                    focus:ring-violet-500/10
                   "
                 />
 
@@ -713,6 +672,7 @@ const AddProductModal: React.FC<Props> = ({
                         rounded-xl
                         border-white/10
                         bg-white/[0.06]
+                    backdrop-blur-xl
                         pr-12
                         text-white
                         shadow-inner
@@ -772,12 +732,12 @@ const AddProductModal: React.FC<Props> = ({
                     shadow-sm
                     transition-all
                     duration-500
-                    hover:border-emerald-500/20
+                    hover:border-fuchsia-500/20
                     hover:bg-white/[0.07]
                   "
                 >
                   <div className="mb-4 flex items-center gap-3">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-400">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-fuchsia-500/10 text-fuchsia-400">
                       <Tag className="h-4 w-4" />
                     </div>
                     <div>
@@ -806,6 +766,7 @@ const AddProductModal: React.FC<Props> = ({
                         rounded-xl
                         border-white/10
                         bg-white/[0.06]
+                    backdrop-blur-xl
                         pr-12
                         text-white
                         shadow-inner
@@ -813,13 +774,13 @@ const AddProductModal: React.FC<Props> = ({
                         duration-300
                         placeholder:text-slate-600
                         hover:bg-white/[0.08]
-                        focus:border-emerald-500/50
+                        focus:border-fuchsia-500/50
                         focus:bg-white/[0.09]
                         focus:ring-4
-                        focus:ring-emerald-500/10
+                        focus:ring-fuchsia-500/10
                       "
                     />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-bold text-emerald-400">
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-bold text-fuchsia-400">
                       €
                     </span>
                   </div>
@@ -893,6 +854,7 @@ const AddProductModal: React.FC<Props> = ({
                       rounded-xl
                       border-white/10
                       bg-white/[0.06]
+                    backdrop-blur-xl
                       text-white
                       shadow-inner
                       transition-all
@@ -1008,6 +970,7 @@ const AddProductModal: React.FC<Props> = ({
                         rounded-xl
                         border-white/10
                         bg-white/[0.06]
+                    backdrop-blur-xl
                         text-white
                         shadow-inner
                         transition-all
@@ -1100,11 +1063,11 @@ const AddProductModal: React.FC<Props> = ({
                   overflow-hidden
                   rounded-2xl
                   border
-                  border-green-500/15
+                  border-violet-500/15
                   bg-gradient-to-br
-                  from-green-500/15
+                  from-violet-500/15
                   via-white/[0.045]
-                  to-emerald-500/15
+                  to-fuchsia-500/15
                   p-4
                 "
               >
@@ -1116,7 +1079,7 @@ const AddProductModal: React.FC<Props> = ({
                     h-32
                     w-32
                     rounded-full
-                    bg-green-400/10
+                    bg-violet-400/10
                     blur-2xl
                   "
                 />
@@ -1132,11 +1095,11 @@ const AddProductModal: React.FC<Props> = ({
                       justify-center
                       rounded-xl
                       bg-gradient-to-br
-                      from-green-500
-                      to-emerald-600
+                      from-violet-500
+                      to-fuchsia-600
                       text-white
                       shadow-lg
-                      shadow-green-500/20
+                      shadow-violet-500/20
                     "
                   >
                     <Sparkles className="h-5 w-5" />
@@ -1149,7 +1112,7 @@ const AddProductModal: React.FC<Props> = ({
                         font-black
                         uppercase
                         tracking-wider
-                        text-green-400
+                        text-violet-400
                       "
                     >
                       Nouveau produit
@@ -1211,7 +1174,8 @@ const AddProductModal: React.FC<Props> = ({
             gap-2
             border-t
             border-white/10
-            bg-slate-950
+            bg-[#0b0b14]/80
+            backdrop-blur-xl
             px-4
             pt-4
             pb-5
@@ -1232,8 +1196,8 @@ const AddProductModal: React.FC<Props> = ({
                 items-center
                 justify-center
                 rounded-lg
-                bg-emerald-500/10
-                text-emerald-400
+                bg-fuchsia-500/10
+                text-fuchsia-400
                 sm:flex
               "
             >
@@ -1286,7 +1250,9 @@ const AddProductModal: React.FC<Props> = ({
                 text-slate-300
                 transition-all
                 duration-300
+                backdrop-blur-xl
                 hover:-translate-y-0.5
+                active:translate-y-0
                 hover:border-red-500/30
                 hover:bg-red-500/10
                 hover:text-red-400
@@ -1311,20 +1277,22 @@ const AddProductModal: React.FC<Props> = ({
                 rounded-xl
                 border-0
                 bg-gradient-to-r
-                from-green-500
-                via-emerald-500
-                to-green-600
+                from-violet-500
+                via-fuchsia-500
+                to-violet-600
                 px-5
                 font-bold
                 text-white
-                shadow-[0_10px_30px_-10px_rgba(34,197,94,0.7)]
+                shadow-[0_12px_30px_-8px_rgba(139,92,246,0.75),inset_0_1px_0_rgba(255,255,255,0.25)]
                 transition-all
                 duration-300
                 hover:-translate-y-0.5
-                hover:from-green-600
-                hover:via-emerald-600
-                hover:to-green-700
-                hover:shadow-[0_15px_35px_-10px_rgba(34,197,94,0.8)]
+                hover:from-violet-600
+                hover:via-fuchsia-600
+                hover:to-violet-700
+                hover:shadow-[0_18px_40px_-10px_rgba(139,92,246,0.85),inset_0_1px_0_rgba(255,255,255,0.3)]
+                active:translate-y-0
+                active:shadow-[0_6px_16px_-8px_rgba(139,92,246,0.8)]
                 disabled:cursor-not-allowed
                 disabled:opacity-50
                 disabled:hover:translate-y-0

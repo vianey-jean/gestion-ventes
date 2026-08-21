@@ -38,6 +38,7 @@ import PasswordStrengthChecker from '@/components/PasswordStrengthChecker';
 import Layout from '@/components/Layout';
 import PremiumLoading from '@/components/ui/premium-loading';
 import SEOHead from '@/components/SEOHead';
+import { useLightMotion } from '@/hooks/useLightMotion';
 
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -132,6 +133,7 @@ const securityFeatures = [
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
+  const { light, particleCount } = useLightMotion();
   const { login } = useAuth();
 
   // =========================================================
@@ -605,7 +607,7 @@ const LoginPage: React.FC = () => {
 
           {/* Aurora 3 */}
           <motion.div
-            animate={{
+            animate={light ? undefined : {
               x: [0, 50, -60, 0],
               scale: [1, 1.1, 0.95, 1],
             }}
@@ -644,7 +646,7 @@ const LoginPage: React.FC = () => {
 
           {/* Decorative rings */}
           <motion.div
-            animate={{
+            animate={light ? undefined : {
               rotate: 360,
             }}
             transition={{
@@ -668,7 +670,7 @@ const LoginPage: React.FC = () => {
           />
 
           <motion.div
-            animate={{
+            animate={light ? undefined : {
               rotate: -360,
             }}
             transition={{
@@ -692,10 +694,10 @@ const LoginPage: React.FC = () => {
           />
 
           {/* Floating particles */}
-          {[...Array(18)].map((_, index) => (
+          {[...Array(particleCount)].map((_, index) => (
             <motion.span
               key={index}
-              animate={{
+              animate={light ? undefined : {
                 y: [0, -80, 0],
                 x: [0, index % 2 === 0 ? 25 : -25, 0],
                 opacity: [0.15, 0.7, 0.15],

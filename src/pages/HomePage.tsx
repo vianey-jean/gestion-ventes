@@ -33,6 +33,7 @@ import {
   useTransform,
 } from 'framer-motion';
 import SEOHead from '@/components/SEOHead';
+import { useLightMotion } from '@/hooks/useLightMotion';
 
 const features = [
   {
@@ -125,6 +126,7 @@ const managementItems = [
 const HomePage: React.FC = () => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
+  const { light, particleCount } = useLightMotion();
 
   return (
     <Layout>
@@ -143,7 +145,7 @@ const HomePage: React.FC = () => {
         <div className="fixed inset-0 pointer-events-none overflow-hidden">
 
           <motion.div
-            animate={{
+            animate={light ? undefined : {
               x: [0, 80, -30, 0],
               y: [0, -50, 40, 0],
               scale: [1, 1.15, 0.95, 1],
@@ -157,7 +159,7 @@ const HomePage: React.FC = () => {
           />
 
           <motion.div
-            animate={{
+            animate={light ? undefined : {
               x: [0, -80, 30, 0],
               y: [0, 60, -30, 0],
               scale: [1, 1.2, 0.9, 1],
@@ -171,7 +173,7 @@ const HomePage: React.FC = () => {
           />
 
           <motion.div
-            animate={{
+            animate={light ? undefined : {
               y: [0, -80, 0],
               scale: [1, 1.15, 1],
             }}
@@ -185,7 +187,7 @@ const HomePage: React.FC = () => {
 
           <div className="absolute inset-0 bg-[linear-gradient(rgba(120,100,255,1)_1px,transparent_1px),linear-gradient(90deg,rgba(120,100,255,1)_1px,transparent_1px)] bg-[size:60px_60px] opacity-[0.04] dark:opacity-[0.035]" />
 
-          {[...Array(18)].map((_, i) => (
+          {[...Array(particleCount)].map((_, i) => (
             <motion.div
               key={i}
               animate={{

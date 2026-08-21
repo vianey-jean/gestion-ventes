@@ -40,6 +40,7 @@ import PasswordStrengthChecker from "@/components/PasswordStrengthChecker";
 import Layout from "@/components/Layout";
 import PremiumLoading from "@/components/ui/premium-loading";
 import SEOHead from "@/components/SEOHead";
+import { useLightMotion } from "@/hooks/useLightMotion";
 
 import {
   UserPlus,
@@ -71,6 +72,7 @@ import {
 
 const RegisterPage: React.FC = () => {
   const navigate = useNavigate();
+  const { light, particleCount } = useLightMotion();
 
   const {
     register,
@@ -822,7 +824,7 @@ const RegisterPage: React.FC = () => {
             initial={{
               opacity: 0,
             }}
-            animate={{
+            animate={light ? undefined : {
               opacity: 1,
             }}
             exit={{
@@ -855,7 +857,7 @@ const RegisterPage: React.FC = () => {
 
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
           <motion.div
-            animate={{
+            animate={light ? undefined : {
               x: [0, 80, 0],
               y: [0, -50, 0],
               scale: [
@@ -886,7 +888,7 @@ const RegisterPage: React.FC = () => {
           />
 
           <motion.div
-            animate={{
+            animate={light ? undefined : {
               x: [0, -100, 0],
               y: [0, 60, 0],
               scale: [
@@ -917,7 +919,7 @@ const RegisterPage: React.FC = () => {
           />
 
           <motion.div
-            animate={{
+            animate={light ? undefined : {
               x: [
                 0,
                 50,
@@ -956,7 +958,7 @@ const RegisterPage: React.FC = () => {
 
           {/* Particles */}
           {Array.from({
-            length: 20,
+            length: particleCount,
           }).map(
             (_, index) => (
               <motion.span

@@ -8,9 +8,6 @@ import { playNotificationSound } from '@/hooks/use-chat-notification';
 import ChatNotificationBanner, { ChatNotifItem } from '@/components/livechat/ChatNotificationBanner';
 
 const getLiveChatApiBase = () => {
-  const configuredBase = import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, '');
-  if (configuredBase) return configuredBase;
-
   if (typeof window === 'undefined') {
     return 'https://server-gestion-ventes.onrender.com';
   }
@@ -21,10 +18,11 @@ const getLiveChatApiBase = () => {
   const usesVercelRewrite = hostname.includes('vercel.app');
 
   if (usesLocalProxy || usesPreviewProxy || usesVercelRewrite) {
+    // Proxy same-origin disponible => URL relative, aucun CORS
     return '';
   }
 
-  return 'https://server-gestion-ventes.onrender.com';
+  return import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, '') || 'https://server-gestion-ventes.onrender.com';
 };
 
 const API_BASE = getLiveChatApiBase();

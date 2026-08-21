@@ -6,7 +6,7 @@
  * "Blocage d'une requête multiorigine ... Code d'état : (null)" répétées
  * dans la console du navigateur.
  */
-import { getBaseURL } from '@/services/api/api';
+import { getSseBaseURL } from '@/services/sseBase';
 
 const CACHE_MS = 30000;
 
@@ -25,7 +25,7 @@ export const isApiReachable = async (): Promise<boolean> => {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 8000);
     try {
-      const res = await fetch(`${getBaseURL()}/api/health`, {
+      const res = await fetch(`${getSseBaseURL()}/api/health`, {
         method: 'GET',
         cache: 'no-store',
         credentials: 'omit',

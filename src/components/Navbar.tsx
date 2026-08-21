@@ -119,7 +119,7 @@ import { Link as RouterLink } from 'react-router-dom';
 
            {/* ================= DESKTOP ================= */}
           <div className="hidden lg:flex items-center space-x-1">
-             {isAuthPage && (
+             {(isAuthPage || !isAuthenticated) && (
                <>
                  <Link to="/about">
                    <motion.div whileHover={{ scale: 1.06, y: -2 }} whileTap={{ scale: 0.95 }}>
@@ -275,19 +275,21 @@ import { Link as RouterLink } from 'react-router-dom';
                </Link>
              )}
 
-              {isAuthPage && (
+              {(isAuthPage || !isAuthenticated) && (
                 <>
                   <Link to="/about">
-                    <motion.div whileHover={{ scale: 1.1, rotate: 10 }} whileTap={{ scale: 0.9 }}>
-                      <Button variant="ghost" size="icon" className="rounded-2xl h-10 w-10 bg-gradient-to-br from-cyan-500/10 to-blue-500/10">
+                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.9 }}>
+                      <Button variant="ghost" className="rounded-2xl h-10 w-10 md:w-auto md:px-4 p-0 md:gap-2 bg-gradient-to-br from-cyan-500/10 to-blue-500/10">
                         <Info className="h-5 w-5 text-cyan-600 dark:text-cyan-400" />
+                        <span className="hidden md:inline font-bold">À propos</span>
                       </Button>
                     </motion.div>
                   </Link>
                   <Link to="/contact">
-                    <motion.div whileHover={{ scale: 1.1, rotate: -10 }} whileTap={{ scale: 0.9 }}>
-                      <Button variant="ghost" size="icon" className="rounded-2xl h-10 w-10 bg-gradient-to-br from-fuchsia-500/10 to-pink-500/10">
+                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.9 }}>
+                      <Button variant="ghost" className="rounded-2xl h-10 w-10 md:w-auto md:px-4 p-0 md:gap-2 bg-gradient-to-br from-fuchsia-500/10 to-pink-500/10">
                         <Mail className="h-5 w-5 text-fuchsia-600 dark:text-fuchsia-400" />
+                        <span className="hidden md:inline font-bold">Contact</span>
                       </Button>
                     </motion.div>
                   </Link>
@@ -308,7 +310,7 @@ import { Link as RouterLink } from 'react-router-dom';
               )}
 
 
-             {!isAuthPage && (
+             {!isAuthPage && isAuthenticated && (
              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                <Button
                  variant="ghost"

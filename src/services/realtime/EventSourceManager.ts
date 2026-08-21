@@ -1,5 +1,5 @@
 import { SyncEvent, ConnectionConfig } from './types';
-import { getBaseURL } from '@/services/api/api';
+import { getSseBaseURL } from '@/services/sseBase';
 import { isApiReachable } from '@/services/apiReachability';
 
 /**
@@ -53,7 +53,7 @@ export class EventSourceManager {
     }
     if (this.intentionalDisconnect) return;
 
-    const baseURL = getBaseURL();
+    const baseURL = getSseBaseURL();
     const sseUrl = `${baseURL}/api/sync/events`;
 
     try {
