@@ -39,6 +39,7 @@ import {
   AnimatePresence,
 } from 'framer-motion';
 import { solveProofOfWork, storeProof } from '@/lib/proofOfWork';
+import blockageIpApi from '@/services/api/blockageIpApi';
 
 interface SecurityCheckPageProps {
   onVerified: () => void;
@@ -241,6 +242,26 @@ const SecurityCheckPage: React.FC<
 > = ({ onVerified }) => {
   const [phase, setPhase] =
     useState<Phase>('boot');
+
+  const [ipBlocked, setIpBlocked] = useState(false);
+  const [ipBlockedInfo, setIpBlockedInfo] = useState<{ ip: string; reason: string | null }>({ ip: '', reason: null });
+
+  useEffect(() => {
+    let mounted = true;
+    blockageIpApi
+      .check()
+      .then((res) => {
+        if (!mounted) return;
+        if (res.blocked) {
+          setIpBlocked(true);
+          setIpBlockedInfo({ ip: res.ip, reason: res.reason });
+        }
+      })
+      .catch(() => {});
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const [image, setImage] = useState('');
   const [targetX, setTargetX] = useState(0);
@@ -921,6 +942,31 @@ const SecurityCheckPage: React.FC<
       }
     }, 2600);
   };
+
+  if (ipBlocked) {
+    return (
+      <div className="min-h-screen relative overflow-hidden bg-[#0a0203] flex items-center justify-center p-5">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(239,68,68,0.25),transparent_60%)]" />
+        <div className="relative z-10 w-full max-w-md rounded-3xl border border-red-500/30 bg-white/5 backdrop-blur-2xl p-8 text-center shadow-2xl">
+          <div className="w-16 h-16 mx-auto mb-5 rounded-2xl bg-gradient-to-br from-red-500 to-orange-600 flex items-center justify-center shadow-lg shadow-red-500/30">
+            <ShieldAlert className="w-8 h-8 text-white" />
+          </div>
+          <h1 className="text-2xl font-bold text-white mb-2">
+            Vous ne pouvez pas entrer dans ce site
+          </h1>
+          <p className="text-sm text-white/60">
+            Votre adresse IP a été bloquée par l'administrateur.
+          </p>
+          {ipBlockedInfo.ip && (
+            <p className="mt-4 text-xs font-mono text-red-300">{ipBlockedInfo.ip}</p>
+          )}
+          {ipBlockedInfo.reason && (
+            <p className="mt-2 text-xs text-white/50">Motif : {ipBlockedInfo.reason}</p>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen relative overflow-hidden bg-[#020207] flex items-center justify-center p-5">

@@ -24,6 +24,7 @@ import PasswordStrengthChecker from '@/components/PasswordStrengthChecker';
 import PremiumLoading from '@/components/ui/premium-loading';
 import HistoriqueConnexionCard from './HistoriqueConnexionCard';
 import ShieldStatsCard from './ShieldStatsCard';
+import BlockageIpCard from './BlockageIpCard';
 
 interface SecuriteSectionProps {
   userRole?: string;
@@ -655,6 +656,11 @@ const SecuriteSection: React.FC<SecuriteSectionProps> = ({ userRole }) => {
       {/* ===== BOUCLIER ANTI-INTRUSION ===== */}
       <div className="mt-5" id="bouclier-securite">
         <ShieldStatsCard />
+      </div>
+
+      {/* ===== BLOCAGE IP ===== */}
+      <div className="mt-5" id="blocage-ip">
+        <BlockageIpCard />
       </div>
 
       {/* ===== HISTORIQUE DES CONNEXIONS ===== */}
