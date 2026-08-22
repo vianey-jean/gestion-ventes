@@ -16,6 +16,7 @@
 
 import React from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import PremiumLoading from '@/components/ui/premium-loading';
 import { Crown, Sparkles, Edit, Gift } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -163,16 +164,20 @@ const CommandeFormDialog: React.FC<CommandeFormDialogProps> = ({
   const [selectedClientPhoto, setSelectedClientPhoto] = React.useState<string | null>(null);
   const [availableVilles, setAvailableVilles] = React.useState<string[]>([]);
   const [livraisonVilles, setLivraisonVilles] = React.useState<Array<{ ville: string; fee: number }>>([]);
+  const [villesLoading, setVillesLoading] = React.useState(false);
   const [showFeeOverride, setShowFeeOverride] = React.useState(false);
   const [showFeeIncrease, setShowFeeIncrease] = React.useState(false);
   const [feeIncreaseAmount, setFeeIncreaseAmount] = React.useState('');
 
   React.useEffect(() => {
     if (!isOpen) return;
+    setVillesLoading(true);
     import('@/services/api/villesApi').then(({ clientsVillesApi, livraisonVilleApi }) => {
-      clientsVillesApi.getAll().then(setAvailableVilles).catch(() => setAvailableVilles([]));
-      livraisonVilleApi.getAll().then(setLivraisonVilles).catch(() => setLivraisonVilles([]));
-    });
+      Promise.all([
+        clientsVillesApi.getAll().then(setAvailableVilles).catch(() => setAvailableVilles([])),
+        livraisonVilleApi.getAll().then(setLivraisonVilles).catch(() => setLivraisonVilles([])),
+      ]).finally(() => setVillesLoading(false));
+    }).catch(() => setVillesLoading(false));
   }, [isOpen]);
 
   const isCustomVille = !!clientVille && !availableVilles.some(v => v.toLowerCase() === clientVille.toLowerCase());
@@ -450,6 +455,11 @@ const CommandeFormDialog: React.FC<CommandeFormDialogProps> = ({
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { onOpenChange(open); if (!open) resetForm(); }}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-white via-purple-50/40 to-pink-50/40 dark:from-gray-900 dark:via-purple-900/30 dark:to-pink-900/30 border-2 border-purple-300/50 dark:border-purple-600/50 shadow-[0_20px_70px_rgba(168,85,247,0.4)]">
+        {villesLoading && (
+          <div className="absolute inset-0 z-50 flex items-center justify-center rounded-lg bg-white/70 dark:bg-gray-900/70 backdrop-blur-sm">
+            <PremiumLoading size="lg" text="Chargement des villes et frais de livraison..." />
+          </div>
+        )}
         <DialogHeader className="border-b-2 border-gradient-to-r from-purple-300 via-pink-300 to-indigo-300 dark:from-purple-700 dark:via-pink-700 dark:to-indigo-700 pb-6">
           <div className="flex items-center justify-center gap-3 mb-2">
             <Crown className="h-8 w-8 text-yellow-500 animate-pulse" />

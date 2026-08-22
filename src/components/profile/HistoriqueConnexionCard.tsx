@@ -30,6 +30,7 @@ import historiqueConnexionApi, { HistoriqueEntry } from '@/services/api/historiq
 import { realtimeService } from '@/services/realtimeService';
 import connecteProfilUniqueApi from '@/services/api/connecteProfilUniqueApi';
 import { exportSessionsHistoryPdf, SessionPdfRow } from '@/utils/sessionsHistoryPdf';
+import PremiumLoading from '@/components/ui/premium-loading';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue
 } from '@/components/ui/select';
@@ -497,7 +498,7 @@ const HistoriqueConnexionCard: React.FC = () => {
           </div>
 
           <div className="space-y-2 max-h-[280px] overflow-y-auto pr-1">
-            {loading && <p className="text-xs text-muted-foreground text-center py-4">Chargement…</p>}
+            {loading && <PremiumLoading text="Chargement de l'historique…" size="sm" variant="default" />}
             {!loading && filteredGroups.length === 0 && (
               <p className="text-xs text-muted-foreground text-center py-6">Aucune entrée pour cette période</p>
             )}

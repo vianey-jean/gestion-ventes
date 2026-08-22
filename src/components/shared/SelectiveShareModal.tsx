@@ -6,6 +6,7 @@ import travailleurApi, { Travailleur } from '@/services/api/travailleurApi';
 import entrepriseApi, { Entreprise } from '@/services/api/entrepriseApi';
 import shareLinksApi, { ShareLink } from '@/services/api/shareLinksApi';
 import noteApi, { Note, NoteColumn } from '@/services/api/noteApi';
+import PremiumLoading from '@/components/ui/premium-loading';
 
 type DateFilterMode = 'jours' | 'semaines' | 'mois' | 'annees';
 type ShareType = 'pointage' | 'taches' | 'notes';
@@ -62,6 +63,7 @@ const SelectiveShareModal: React.FC<SelectiveShareModalProps> = ({ open, onClose
   const [generating, setGenerating] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [step, setStep] = useState<'filters' | 'count' | 'result'>('filters');
+  const [dataLoading, setDataLoading] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -80,6 +82,7 @@ const SelectiveShareModal: React.FC<SelectiveShareModalProps> = ({ open, onClose
   }, [open]);
 
   const loadData = async () => {
+    setDataLoading(true);
     try {
       const [travRes, entRes] = await Promise.all([
         travailleurApi.getAll(),
@@ -97,6 +100,7 @@ const SelectiveShareModal: React.FC<SelectiveShareModalProps> = ({ open, onClose
         setNotesColumns(Array.isArray(c.data) ? c.data : []);
       } catch { /* ignore */ }
     }
+    setDataLoading(false);
   };
 
   const buildFilters = () => {
@@ -254,7 +258,10 @@ const SelectiveShareModal: React.FC<SelectiveShareModalProps> = ({ open, onClose
         </div>
 
         <div className="flex-1 overflow-y-auto space-y-4 pr-1">
-          {step === 'filters' && (
+          {dataLoading && (
+            <PremiumLoading text="Chargement des données…" size="md" variant="default" />
+          )}
+          {!dataLoading && step === 'filters' && (
             <>
               {/* Personne (not for notes) */}
               {type !== 'notes' && (

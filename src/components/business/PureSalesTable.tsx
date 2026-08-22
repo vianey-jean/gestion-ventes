@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Edit, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { FormatService } from '@/services/FormatService';
+import PremiumLoading from '@/components/ui/premium-loading';
 
 /**
  * Props pour le composant PureSalesTable (immuables)
@@ -59,11 +60,8 @@ const PureSalesTable: React.FC<PureSalesTableProps> = React.memo(({
 
   if (loading) {
     return (
-      <div className={cn("animate-pulse", className)}>
-        <div className="h-10 bg-gray-200 rounded mb-4"></div>
-        {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="h-12 bg-gray-100 rounded mb-2"></div>
-        ))}
+      <div className={cn("py-10", className)}>
+        <PremiumLoading text="Chargement des ventes…" size="md" variant="ventes" />
       </div>
     );
   }

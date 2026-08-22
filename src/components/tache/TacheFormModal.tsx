@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import PremiumLoading from '@/components/ui/premium-loading';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -344,7 +345,9 @@ const TacheFormModal: React.FC<TacheFormModalProps> = ({
               Créneaux libres pour {personLabel} le {form.date || 'jour choisi'}
             </p>
             {availabilityLoading ? (
-              <p className="text-xs text-white/50">Chargement des horaires...</p>
+              <div className="py-4 flex justify-center">
+                <PremiumLoading size="sm" text="Chargement des horaires..." />
+              </div>
             ) : availableRanges.length > 0 ? (
               <div className="flex flex-wrap gap-2">
                 {availableRanges.map(range => (

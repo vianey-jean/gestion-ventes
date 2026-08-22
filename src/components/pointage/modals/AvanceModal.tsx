@@ -11,6 +11,7 @@ import { Entreprise } from '@/services/api/entrepriseApi';
 import pointageApi, { PointageEntry } from '@/services/api/pointageApi';
 import avanceApi, { Avance } from '@/services/api/avanceApi';
 import { useToast } from '@/hooks/use-toast';
+import PremiumLoading from '@/components/ui/premium-loading';
 
 interface AvanceModalProps {
   open: boolean;
@@ -463,7 +464,7 @@ const AvanceModal: React.FC<AvanceModalProps> = ({
           {travId && (
             <div className="space-y-3">
               {loadingData ? (
-                <p className="text-white/50 text-sm text-center animate-pulse py-4">Chargement des pointages...</p>
+                <PremiumLoading text="Chargement des pointages…" size="sm" variant="dashboard" />
               ) : (
                 <>
                   {/* WEEK MODE */}

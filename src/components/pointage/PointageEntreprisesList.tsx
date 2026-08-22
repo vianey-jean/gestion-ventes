@@ -10,13 +10,16 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import EntrepriseEditModal from '@/components/pointage/modals/EntrepriseEditModal';
+import PremiumLoading from '@/components/ui/premium-loading';
 
 interface PointageEntreprisesListProps {
   entreprises: Entreprise[];
   onRefresh?: () => void;
+  /** Affiche un état de chargement dédié pendant la récupération des entreprises */
+  loading?: boolean;
 }
 
-const PointageEntreprisesList: React.FC<PointageEntreprisesListProps> = ({ entreprises: rawEntreprises, onRefresh }) => {
+const PointageEntreprisesList: React.FC<PointageEntreprisesListProps> = ({ entreprises: rawEntreprises, onRefresh, loading = false }) => {
   const entreprises = Array.isArray(rawEntreprises) ? rawEntreprises : [];
   const [show, setShow] = useState(true);
   const { toast } = useToast();
@@ -61,6 +64,14 @@ const PointageEntreprisesList: React.FC<PointageEntreprisesListProps> = ({ entre
       toast({ title: 'Erreur', description: 'Impossible de modifier l\'entreprise', variant: 'destructive' });
     }
   };
+
+  if (loading) {
+    return (
+      <div className="mt-6 rounded-3xl bg-white/70 dark:bg-white/5 border border-white/20 dark:border-white/10 shadow-2xl p-6">
+        <div className="py-10 flex justify-center"><PremiumLoading size="sm" text="Chargement..." /></div>
+      </div>
+    );
+  }
 
   if (entreprises.length === 0) return null;
 

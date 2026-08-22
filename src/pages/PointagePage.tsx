@@ -35,6 +35,7 @@ import ShareCommentsViewer from '@/components/shared/ShareCommentsViewer';
 import shareCommentsApi from '@/services/api/shareCommentsApi';
 import { useRealtimeCommentNotifications } from '@/hooks/useRealtimeCommentNotifications';
 import SEOHead from '@/components/SEOHead';
+import PremiumLoading from '@/components/ui/premium-loading';
 const premiumBtnClass = "group relative overflow-hidden rounded-xl sm:rounded-2xl  border transition-all duration-300 hover:scale-105 px-4 py-2 sm:px-5 sm:py-3 text-xs sm:text-sm font-semibold";
 const mirrorShine = "absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500";
 
@@ -227,7 +228,12 @@ const PointagePage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
     }
   };
 
-  const content = (
+  const content = loading ? (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20 dark:from-[#030014] dark:via-[#0a0025] dark:to-[#0e0035]">
+      <SEOHead title="Pointage" description="Gestion du pointage des travailleurs" />
+      <PremiumLoading text="Chargement du pointage…" size="xl" variant="dashboard" />
+    </div>
+  ) : (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20 dark:from-[#030014] dark:via-[#0a0025] dark:to-[#0e0035]">
       <SEOHead title="Pointage" description="Gestion du pointage des travailleurs" />
         <PointageTabNav activeTab={activeTab} onTabChange={setActiveTab} />

@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight, Ban } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Tache } from '@/services/api/tacheApi';
 import indisponibleApi, { Indisponibilite } from '@/services/api/indisponibleApi';
+import PremiumLoading from '@/components/ui/premium-loading';
 
 interface TacheCalendarProps {
   currentDate: Date;
@@ -22,11 +23,16 @@ const TacheCalendar: React.FC<TacheCalendarProps> = ({
 }) => {
   const [dragOverDate, setDragOverDate] = useState<string | null>(null);
   const [indisponibilites, setIndisponibilites] = useState<Indisponibilite[]>([]);
+  const [indispoLoading, setIndispoLoading] = useState(true);
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
 
   useEffect(() => {
-    indisponibleApi.getAll().then(setIndisponibilites).catch(() => {});
+    setIndispoLoading(true);
+    indisponibleApi.getAll()
+      .then(setIndisponibilites)
+      .catch(() => {})
+      .finally(() => setIndispoLoading(false));
   }, [year, month]);
 
   const firstDay = new Date(year, month, 1);
@@ -102,6 +108,16 @@ const TacheCalendar: React.FC<TacheCalendarProps> = ({
     }
     setDragOverDate(null);
   };
+
+  if (indispoLoading) {
+    return (
+      <div className="rounded-3xl bg-white/70 dark:bg-white/5 border border-white/20 dark:border-white/10 shadow-2xl p-4 sm:p-6">
+        <div className="py-20 flex justify-center">
+          <PremiumLoading size="lg" text="Chargement du calendrier..." />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}

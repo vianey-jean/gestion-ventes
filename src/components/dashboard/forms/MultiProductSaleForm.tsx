@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import PremiumLoading from '@/components/ui/premium-loading';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -99,6 +100,7 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
 
   // Villes de livraison (pour récupérer le tarif d'origine de la ville)
   const [villesLivraison, setVillesLivraison] = useState<LivraisonVille[]>([]);
+  const [initialDataLoading, setInitialDataLoading] = useState(false);
   useEffect(() => {
     if (!isOpen) return;
     livraisonVilleApi.getAll().then(setVillesLivraison).catch(() => setVillesLivraison([]));
@@ -107,6 +109,7 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
   // Charger clients + commandes à l'ouverture (pour matching et caractéristique)
   useEffect(() => {
     if (!isOpen) return;
+    setInitialDataLoading(true);
     const token = localStorage.getItem('token');
     Promise.all([
       axios.get(`${API_BASE_URL}/api/clients`, { headers: { Authorization: `Bearer ${token}` } }).then(r => r.data).catch(() => []),
@@ -114,7 +117,7 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
     ]).then(([cs, cmds]) => {
       setAllClients(Array.isArray(cs) ? cs : []);
       setAllCommandes(Array.isArray(cmds) ? cmds : []);
-    });
+    }).finally(() => setInitialDataLoading(false));
   }, [isOpen, API_BASE_URL]);
 
   const currentClientCaracteristique = React.useMemo(() => {
@@ -1092,6 +1095,12 @@ const MultiProductSaleForm: React.FC<MultiProductSaleFormProps> = ({ isOpen, onC
 
   <Dialog open={isOpen} onOpenChange={onClose}>
     <DialogContent className="sm:max-w-5xl max-h-[92vh] overflow-y-auto border border-white/20 bg-[#F4F7FB]/95 * shadow-[0_20px_80px_rgba(15,23,42,0.18)] rounded-[2rem] text-slate-900">
+
+      {initialDataLoading && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center rounded-[2rem] bg-white/70 backdrop-blur-sm">
+          <PremiumLoading size="lg" text="Chargement des clients et commandes..." />
+        </div>
+      )}
 
       {/* Glow effects */}
       <div className="absolute inset-0 overflow-hidden rounded-[2rem] pointer-events-none">

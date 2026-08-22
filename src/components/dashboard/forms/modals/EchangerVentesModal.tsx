@@ -12,6 +12,7 @@ import saleApiService from '@/services/api/saleApi';
 import api from '@/services/api/api';
 import SaleProductCard from '../sections/SaleProductCard';
 import { livraisonVilleApi, LivraisonVille } from '@/services/api/villesApi';
+import PremiumLoading from '@/components/ui/premium-loading';
 import {
   FormProduct,
   ReductionType,
@@ -52,6 +53,7 @@ const EchangerVentesModal: React.FC<EchangerVentesModalProps> = ({ isOpen, onClo
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [allSales, setAllSales] = useState<Sale[]>([]);
+  const [salesLoading, setSalesLoading] = useState(false);
   const [villesLivraison, setVillesLivraison] = useState<LivraisonVille[]>([]);
 
   useEffect(() => {
@@ -64,9 +66,11 @@ const EchangerVentesModal: React.FC<EchangerVentesModalProps> = ({ isOpen, onClo
       return;
     }
     // Charger TOUTES les ventes (toutes années/mois confondus) pour la recherche
+    setSalesLoading(true);
     saleApiService.getAll()
       .then((all) => setAllSales(Array.isArray(all) ? all : []))
-      .catch(() => setAllSales(Array.isArray(sales) ? sales : []));
+      .catch(() => setAllSales(Array.isArray(sales) ? sales : []))
+      .finally(() => setSalesLoading(false));
     // Charger les villes de livraison pour récupérer le tarif d'origine
     livraisonVilleApi.getAll().then(setVillesLivraison).catch(() => setVillesLivraison([]));
   }, [isOpen]);
@@ -330,10 +334,13 @@ const EchangerVentesModal: React.FC<EchangerVentesModalProps> = ({ isOpen, onClo
               </div>
 
               <div className="max-h-[60vh] overflow-y-auto space-y-2 pr-1">
-                {searchTerm.trim().length < 3 && (
+                {salesLoading && (
+                  <PremiumLoading text="Chargement des ventes…" size="md" variant="ventes" />
+                )}
+                {!salesLoading && searchTerm.trim().length < 3 && (
                   <p className="text-white/50 text-sm text-center py-8">Saisissez au moins 3 caractères pour rechercher.</p>
                 )}
-                {searchTerm.trim().length >= 3 && filteredSales.length === 0 && (
+                {!salesLoading && searchTerm.trim().length >= 3 && filteredSales.length === 0 && (
                   <p className="text-white/50 text-sm text-center py-8">Aucune vente trouvée.</p>
                 )}
                 {filteredSales.map((s: Sale) => {

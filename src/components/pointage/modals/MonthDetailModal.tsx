@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Building2, Banknote, TrendingDown, Wallet } from 'lucide-react';
 import { PointageEntry } from '@/services/api/pointageApi';
 import avanceApi, { Avance } from '@/services/api/avanceApi';
+import PremiumLoading from '@/components/ui/premium-loading';
 
 interface MonthDetailModalProps {
   open: boolean;
@@ -59,7 +60,7 @@ const MonthDetailModal: React.FC<MonthDetailModalProps> = ({
         </DialogHeader>
 
         {loading ? (
-          <div className="text-center py-6 text-white/50 animate-pulse font-bold">Chargement...</div>
+          <PremiumLoading text="Chargement du détail…" size="md" variant="dashboard" />
         ) : (
           <div className="space-y-4">
             {/* Par entreprise */}

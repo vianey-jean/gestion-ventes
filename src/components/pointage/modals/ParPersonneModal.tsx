@@ -11,6 +11,7 @@ import pointageApi from '@/services/api/pointageApi';
 import avanceApi, { Avance } from '@/services/api/avanceApi';
 import { Travailleur } from '@/services/api/travailleurApi';
 import { useToast } from '@/hooks/use-toast';
+import PremiumLoading from '@/components/ui/premium-loading';
 
 const monthNames = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
 
@@ -246,7 +247,9 @@ const ParPersonneModal: React.FC<ParPersonneModalProps> = ({
             </span>
           </Button>
 
-          {ppSearched && (
+          {ppLoading && <div className="py-10 flex justify-center"><PremiumLoading size="sm" text="Chargement..." /></div>}
+
+          {!ppLoading && ppSearched && (
             <div className="space-y-3 mt-4">
               {ppResults.length === 0 ? (
                 <div className="text-center py-6">

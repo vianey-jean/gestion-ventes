@@ -37,6 +37,7 @@ import {
 } from '@/components/products/attributes/ProductClassificationSelector';
 import ProductClassificationFilterModal from '@/components/products/attributes/ProductClassificationFilterModal';
 import ProductsTable, { SortField, SortDir } from '@/components/products/ProductsTable';
+import PremiumLoading from '@/components/ui/premium-loading';
 import {
   AddProductModal, AddConfirmDialog,
   EditProductModal, EditConfirmDialog,
@@ -53,7 +54,7 @@ type FilterType = 'tous' | 'perruque' | 'tissage' | 'extension' | 'autres' | 'in
 const todayISO = () => new Date().toISOString().slice(0, 10);
 
 const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => {
-  const { products, fetchProducts } = useApp();
+  const { products, fetchProducts, isLoading: appLoading } = useApp();
   const { toast } = useToast();
 
   // Search & filter
@@ -610,7 +611,12 @@ const ProduitsPage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) =>
     { key: 'indisponible', label: 'Indisponibles', icon: <Filter className="h-3.5 w-3.5" /> },
   ];
 
-  const content = (
+  const content = (appLoading && products.length === 0) ? (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-violet-50/30 to-fuchsia-50/20 dark:from-[#030014] dark:via-[#0a0025] dark:to-[#0e0030]">
+      <SEOHead title="Produits" description="Gestion des produits - Inventaire et catalogue" />
+      <PremiumLoading text="Chargement des produits…" size="xl" variant="default" />
+    </div>
+  ) : (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-violet-50/30 to-fuchsia-50/20 dark:from-[#030014] dark:via-[#0a0025] dark:to-[#0e0030]">
       <SEOHead title="Produits" description="Gestion des produits - Inventaire et catalogue" />
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-violet-50/30 to-fuchsia-50/20 dark:from-[#030014] dark:via-[#0a0025] dark:to-[#0e0030]">

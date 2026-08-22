@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { BarChart3, Building2, Users, User, Banknote, TrendingDown } from 'lucide-react';
 import { PointageEntry } from '@/services/api/pointageApi';
 import avanceApi, { Avance } from '@/services/api/avanceApi';
+import PremiumLoading from '@/components/ui/premium-loading';
 
 interface YearlyTotalModalProps {
   open: boolean;
@@ -64,7 +65,7 @@ const YearlyTotalModal: React.FC<YearlyTotalModalProps> = ({
         </DialogHeader>
 
         {loading || loadingAv ? (
-          <div className="text-center py-8"><p className="text-white/60 font-bold">⏳ Chargement...</p></div>
+          <PremiumLoading text="Chargement de l'année…" size="md" variant="tendances" />
         ) : safeYearlyPointages.length === 0 ? (
           <div className="text-center py-8"><p className="text-white/50 font-bold">Aucun pointage en {year}</p></div>
         ) : (

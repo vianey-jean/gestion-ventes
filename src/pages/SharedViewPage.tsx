@@ -19,6 +19,7 @@ import shareLinksApi from '@/services/api/shareLinksApi';
 import { getDrawingUrl, getFichierUrl } from '@/services/api/noteApi';
 import SEOHead from '@/components/SEOHead';
 import SharedCommentForm from '@/components/shared/SharedCommentForm';
+import PremiumLoading from '@/components/ui/premium-loading';
 
 const SharedViewPage: React.FC = () => {
   const { token } = useParams<{ token: string }>();
@@ -104,7 +105,7 @@ const SharedViewPage: React.FC = () => {
   if (step === 'loading') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-950 flex items-center justify-center">
-        <div className="w-10 h-10 border-4 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin" />
+        <PremiumLoading text="Chargement du contenu partagé…" size="lg" variant="default" />
       </div>
     );
   }

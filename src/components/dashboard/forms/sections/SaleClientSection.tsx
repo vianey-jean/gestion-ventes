@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Package } from 'lucide-react';
 import ClientSearchInput from '../../ClientSearchInput';
 import { clientsVillesApi } from '@/services/api/villesApi';
+import PremiumLoading from '@/components/ui/premium-loading';
 import type { ClientCaracteristique } from '@/utils/clientCharacteristic';
 
 interface SaleClientSectionProps {
@@ -45,8 +46,13 @@ const SaleClientSection: React.FC<SaleClientSectionProps> = ({
   const photoUrl = clientPhoto ? (clientPhoto.startsWith('http') ? clientPhoto : `${API_BASE_URL}${clientPhoto}`) : null;
 
   const [availableVilles, setAvailableVilles] = useState<string[]>([]);
+  const [villesLoading, setVillesLoading] = useState(true);
   useEffect(() => {
-    clientsVillesApi.getAll().then(setAvailableVilles).catch(() => setAvailableVilles([]));
+    setVillesLoading(true);
+    clientsVillesApi.getAll()
+      .then(setAvailableVilles)
+      .catch(() => setAvailableVilles([]))
+      .finally(() => setVillesLoading(false));
   }, []);
   const isCustomVille = !!clientVille && !availableVilles.some(v => v.toLowerCase() === clientVille.toLowerCase());
   const onVilleSelectChange = (val: string) => {
@@ -166,6 +172,11 @@ const SaleClientSection: React.FC<SaleClientSectionProps> = ({
           {/* Ville */}
           <div className="space-y-2">
             <Label>Ville</Label>
+            {villesLoading ? (
+              <div className="py-3 flex justify-center">
+                <PremiumLoading size="sm" text="Chargement des villes..." />
+              </div>
+            ) : (
             <select
               value={isCustomVille ? '__custom__' : (clientVille || '')}
               onChange={(e) => onVilleSelectChange(e.target.value)}
@@ -176,6 +187,7 @@ const SaleClientSection: React.FC<SaleClientSectionProps> = ({
               {availableVilles.map(v => <option key={v} value={v}>{v}</option>)}
               <option value="__custom__">+ Nouvelle ville…</option>
             </select>
+            )}
             {(isCustomVille || (!clientVille && setClientVille)) && (
               <Input
                 type="text"

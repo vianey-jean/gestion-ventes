@@ -10,6 +10,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Crown, Sparkles, TrendingUp, ShoppingBag, Calendar, Package, Receipt, Award, ExternalLink } from 'lucide-react';
 import fideliteApiService, { FideliteEntry } from '@/services/api/fideliteApi';
 import listesFideliteApi, { FideliteTierConfig, tierForCount } from '@/services/api/listesFideliteApi';
+import PremiumLoading from '@/components/ui/premium-loading';
 
 interface Props {
   open: boolean;
@@ -150,7 +151,7 @@ const ClientFideliteModal: React.FC<Props> = ({ open, onOpenChange, clientName }
                 <Package className="w-3.5 h-3.5" /> Historique des ventes ({data?.sales.length ?? 0})
               </h4>
 
-              {loading && <p className="text-white/50 text-sm">Chargement…</p>}
+              {loading && <PremiumLoading text="Chargement de l'historique…" size="sm" variant="ventes" />}
 
               {!loading && (!data || data.sales.length === 0) && (
                 <div className="rounded-2xl p-6 border border-dashed border-white/15 text-center text-white/60 text-sm">

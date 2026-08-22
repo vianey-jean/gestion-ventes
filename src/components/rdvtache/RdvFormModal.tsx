@@ -4,6 +4,7 @@
  * lieu / téléphone auto-remplis depuis le client, créneaux libres du jour, statut.
  */
 import React, { useState, useEffect, useMemo } from 'react';
+import PremiumLoading from '@/components/ui/premium-loading';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -56,6 +57,7 @@ const RdvFormModal: React.FC<Props> = ({ open, onOpenChange, catalog, editing, d
   const [commentaires, setCommentaires] = useState('');
   const [statut, setStatut] = useState<RdvTacheStatut>('planifie');
   const [freeSlots, setFreeSlots] = useState<FreeSlot[]>([]);
+  const [slotsLoading, setSlotsLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [confirmCreate, setConfirmCreate] = useState(false);
@@ -133,9 +135,11 @@ const RdvFormModal: React.FC<Props> = ({ open, onOpenChange, catalog, editing, d
   // Load free slots when date changes
   useEffect(() => {
     if (!open || !date) { setFreeSlots([]); return; }
+    setSlotsLoading(true);
     rdvTachesApi.getFreeSlots(date)
       .then(r => setFreeSlots(Array.isArray(r.data) ? r.data : []))
-      .catch(() => setFreeSlots([]));
+      .catch(() => setFreeSlots([]))
+      .finally(() => setSlotsLoading(false));
   }, [date, open]);
 
   const handleSelectClient = (c: Client) => {
@@ -364,8 +368,13 @@ const RdvFormModal: React.FC<Props> = ({ open, onOpenChange, catalog, editing, d
           <div className="space-y-1.5">
             <Label className="text-xs font-bold text-white/80 flex items-center gap-2">⏰ Créneaux libres du {date}</Label>
             <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto p-2 bg-white/5 border border-white/10 rounded-xl">
-              {freeSlots.length === 0 && <span className="text-[11px] text-white/40">Aucun créneau libre</span>}
-              {freeSlots.map((s, i) => (
+              {slotsLoading && (
+                <div className="w-full py-2 flex justify-center">
+                  <PremiumLoading size="sm" text="Chargement des créneaux..." />
+                </div>
+              )}
+              {!slotsLoading && freeSlots.length === 0 && <span className="text-[11px] text-white/40">Aucun créneau libre</span>}
+              {!slotsLoading && freeSlots.map((s, i) => (
                 <button key={i} type="button"
                   onClick={() => { setHeureDebut(s.start); setHeureFin(s.end); }}
                   className="px-2 py-1 text-[11px] font-bold rounded-lg bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 text-emerald-300 hover:scale-105 transition-all">

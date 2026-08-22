@@ -19,6 +19,7 @@ import { Truck, Eye, MapPin, Phone, Package, User, X } from 'lucide-react';
 import { Commande } from '@/types/commande';
 import { prepaLivraisonApi, PrepaLivraisonEntry } from '@/services/api/prepaLivraisonApi';
 import { toast } from 'sonner';
+import PremiumLoading from '@/components/ui/premium-loading';
 
 interface Props {
   filteredCommandes: Commande[];
@@ -165,7 +166,7 @@ const PreparationLivraisonButton: React.FC<Props> = ({ filteredCommandes }) => {
           </DialogHeader>
 
           {loading && (
-            <div className="text-center py-6 text-sm text-muted-foreground">Chargement...</div>
+            <PremiumLoading text="Chargement des livraisons…" size="md" variant="default" />
           )}
 
           <ScrollArea className="max-h-[60vh] pr-3">

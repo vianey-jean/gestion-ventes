@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { RDV } from '@/types/rdv';
+import PremiumLoading from '@/components/ui/premium-loading';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
@@ -103,9 +104,14 @@ const RdvCalendar: React.FC<RdvCalendarProps> = ({
   
   // Indisponibilités
   const [indisponibilites, setIndisponibilites] = useState<Indisponibilite[]>([]);
+  const [indispoLoading, setIndispoLoading] = useState(true);
   
   useEffect(() => {
-    indisponibleApi.getAll().then(setIndisponibilites).catch(() => {});
+    setIndispoLoading(true);
+    indisponibleApi.getAll()
+      .then(setIndisponibilites)
+      .catch(() => {})
+      .finally(() => setIndispoLoading(false));
   }, []);
   const [dropTarget, setDropTarget] = useState<{ date: string; hour: number } | null>(null);
   const [showTimeDialog, setShowTimeDialog] = useState(false);
@@ -491,6 +497,16 @@ const RdvCalendar: React.FC<RdvCalendarProps> = ({
     
     return { top: `${top}px`, height: `${Math.max(height, 30)}px` };
   };
+
+  if (indispoLoading) {
+    return (
+      <Card className="overflow-hidden border-primary/20 shadow-xl bg-gradient-to-br from-background via-background to-primary/5">
+        <div className="py-24 flex justify-center">
+          <PremiumLoading size="lg" text="Chargement du planning..." />
+        </div>
+      </Card>
+    );
+  }
 
   return (
     <Card className="overflow-hidden border-primary/20 shadow-xl bg-gradient-to-br from-background via-background to-primary/5">

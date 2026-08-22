@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { useAuth } from '@/contexts/AuthContext';
 import { playNotificationSound } from '@/hooks/use-chat-notification';
 import ChatNotificationBanner, { ChatNotifItem } from '@/components/livechat/ChatNotificationBanner';
+import PremiumLoading from '@/components/ui/premium-loading';
 
 const getLiveChatApiBase = () => {
   if (typeof window === 'undefined') {
@@ -179,6 +180,12 @@ const LiveChatAdmin: React.FC = () => {
     setTimeout(() => { setNotifications(prev => prev.filter(n => n.id !== notifId)); }, 5000);
   }, []);
 
+  // ── États de chargement dédiés (PremiumLoading) ──
+  const [conversationsLoading, setConversationsLoading] = useState(true);
+  const [adminUsersLoading, setAdminUsersLoading] = useState(true);
+  const [groupsLoading, setGroupsLoading] = useState(true);
+  const [threadLoading, setThreadLoading] = useState(false);
+
   const dismissNotification = useCallback((id: string) => {
     setNotifications(prev => prev.filter(n => n.id !== id));
   }, []);
@@ -206,11 +213,14 @@ const LiveChatAdmin: React.FC = () => {
       } else {
         console.error('Error loading conversations:', e);
       }
+    } finally {
+      setConversationsLoading(false);
     }
   }, [user, token]);
 
   const loadMessages = useCallback(async (visitorId: string) => {
     if (!user) return;
+    setThreadLoading(true);
     try {
       const res = await fetch(`${API_BASE}/api/messagerie/messages/${visitorId}/${user.id}`);
       if (res.ok) {
@@ -223,6 +233,8 @@ const LiveChatAdmin: React.FC = () => {
       }
     } catch (e) {
       console.error('Error loading messages:', e);
+    } finally {
+      setThreadLoading(false);
     }
   }, [user, loadConversations]);
 
@@ -243,6 +255,8 @@ const LiveChatAdmin: React.FC = () => {
       } else {
         console.error('Error loading admin users:', e);
       }
+    } finally {
+      setAdminUsersLoading(false);
     }
   }, [user, token]);
 
@@ -263,6 +277,7 @@ const LiveChatAdmin: React.FC = () => {
 
   const loadAdminMessages = useCallback(async (otherAdminId: string) => {
     if (!user) return;
+    setThreadLoading(true);
     try {
       const res = await fetch(`${API_BASE}/api/messagerie/admin-messages/${otherAdminId}`, { headers: authHeaders });
       if (res.ok) {
@@ -275,6 +290,8 @@ const LiveChatAdmin: React.FC = () => {
       }
     } catch (e) {
       console.error('Error loading admin messages:', e);
+    } finally {
+      setThreadLoading(false);
     }
   }, [user, token, loadAdminConversations]);
 
@@ -291,11 +308,14 @@ const LiveChatAdmin: React.FC = () => {
       }
     } catch (e) {
       console.error('Error loading groups:', e);
+    } finally {
+      setGroupsLoading(false);
     }
   }, [user, token]);
 
   const loadGroupMessages = useCallback(async (groupId: string) => {
     if (!user) return;
+    setThreadLoading(true);
     try {
       const res = await fetch(`${API_BASE}/api/messagerie/group-messages/${groupId}`, { headers: authHeaders });
       if (res.ok) {
@@ -307,6 +327,8 @@ const LiveChatAdmin: React.FC = () => {
       }
     } catch (e) {
       console.error('Error loading group messages:', e);
+    } finally {
+      setThreadLoading(false);
     }
   }, [user, token]);
 
@@ -888,7 +910,9 @@ const LiveChatAdmin: React.FC = () => {
         <div className="flex-1 overflow-y-auto bg-gradient-to-b from-slate-900 via-slate-900/95 to-slate-950">
           {activeTab === 'visitors' ? (
             /* Visitor conversations list */
-            conversations.length === 0 ? (
+            conversationsLoading ? (
+              <div className="py-10 flex justify-center"><PremiumLoading size="sm" text="Chargement..." /></div>
+            ) : conversations.length === 0 ? (
               <div className="text-center text-purple-300/40 text-sm mt-16">
                 <Users className="h-12 w-12 mx-auto mb-3 opacity-30" />
                 Aucune conversation en cours
@@ -942,7 +966,9 @@ const LiveChatAdmin: React.FC = () => {
             )
           ) : activeTab === 'admins' ? (
             /* Admin users list */
-            adminUsers.length === 0 ? (
+            adminUsersLoading ? (
+              <div className="py-10 flex justify-center"><PremiumLoading size="sm" text="Chargement..." /></div>
+            ) : adminUsers.length === 0 ? (
               <div className="text-center text-purple-300/40 text-sm mt-16">
                 <UserCheck className="h-12 w-12 mx-auto mb-3 opacity-30" />
                 Aucun autre administrateur
@@ -1021,7 +1047,9 @@ const LiveChatAdmin: React.FC = () => {
                   <span className="text-amber-400 font-semibold text-sm">Créer un groupe</span>
                 </button>
               )}
-              {groups.length === 0 ? (
+              {groupsLoading ? (
+                <div className="py-10 flex justify-center"><PremiumLoading size="sm" text="Chargement..." /></div>
+              ) : groups.length === 0 ? (
                 <div className="text-center text-purple-300/40 text-sm mt-12">
                   <UsersRound className="h-12 w-12 mx-auto mb-3 opacity-30" />
                   Aucun groupe
@@ -1146,7 +1174,8 @@ const LiveChatAdmin: React.FC = () => {
         /* Admin-to-admin chat */
         <>
           <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-gradient-to-b from-slate-900 via-slate-900/95 to-slate-950">
-            {adminMessages.length === 0 && (
+            {threadLoading && <div className="py-10 flex justify-center"><PremiumLoading size="sm" text="Chargement..." /></div>}
+            {!threadLoading && adminMessages.length === 0 && (
               <div className="text-center text-purple-300/40 text-sm mt-8">
                 <MessageCircle className="h-12 w-12 mx-auto mb-3 opacity-30" />
                 Commencer la conversation
@@ -1332,6 +1361,7 @@ const LiveChatAdmin: React.FC = () => {
                 Commencer la discussion de groupe
               </div>
             )}
+            {threadLoading && <div className="py-10 flex justify-center"><PremiumLoading size="sm" text="Chargement..." /></div>}
             {groupMessages.map((msg) => {
               const isOwn = msg.senderId === user?.id;
               return (
@@ -1417,6 +1447,7 @@ const LiveChatAdmin: React.FC = () => {
         /* Visitor chat messages */
         <>
           <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-gradient-to-b from-slate-900 via-slate-900/95 to-slate-950">
+            {threadLoading && <div className="py-10 flex justify-center"><PremiumLoading size="sm" text="Chargement..." /></div>}
             {messages.map((msg) => (
               <motion.div
                 key={msg.id}

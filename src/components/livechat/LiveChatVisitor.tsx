@@ -25,6 +25,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { playNotificationSound } from '@/hooks/use-chat-notification';
 import ChatNotificationBanner, { ChatNotifItem } from '@/components/livechat/ChatNotificationBanner';
+import PremiumLoading from '@/components/ui/premium-loading';
 
 // ─── API Base URL ───────────────────────────────────────────────────────────
 const getLiveChatApiBase = () => {
@@ -113,6 +114,10 @@ const LiveChatVisitor: React.FC<LiveChatVisitorProps> = ({ visitorNom, adminId, 
   const [editText, setEditText] = useState('');
   const [contextMenuId, setContextMenuId] = useState<string | null>(null);
   const [notifications, setNotifications] = useState<ChatNotifItem[]>([]);
+  // ── États de chargement dédiés (PremiumLoading) ──
+  const [messagesLoading, setMessagesLoading] = useState(true);
+  const [groupsLoading, setGroupsLoading] = useState(true);
+  const [groupMessagesLoading, setGroupMessagesLoading] = useState(false);
 
   // ── Groupes ──
   const [viewMode, setViewMode] = useState<ViewMode>('chat');
@@ -157,6 +162,8 @@ const LiveChatVisitor: React.FC<LiveChatVisitorProps> = ({ visitorNom, adminId, 
       }
     } catch (e) {
       console.error('Error loading messages:', e);
+    } finally {
+      setMessagesLoading(false);
     }
   }, [adminId]);
 
@@ -171,11 +178,14 @@ const LiveChatVisitor: React.FC<LiveChatVisitorProps> = ({ visitorNom, adminId, 
       }
     } catch (e) {
       console.error('Error loading groups:', e);
+    } finally {
+      setGroupsLoading(false);
     }
   }, []);
 
   // ─── Chargement des messages du groupe ────────────────────────────────────
   const loadGroupMessages = useCallback(async (groupId: string) => {
+    setGroupMessagesLoading(true);
     try {
       const res = await fetch(`${API_BASE}/api/messagerie/visitor-group-messages/${groupId}/${visitorId.current}`);
       if (res.ok) {
@@ -188,6 +198,8 @@ const LiveChatVisitor: React.FC<LiveChatVisitorProps> = ({ visitorNom, adminId, 
       }
     } catch (e) {
       console.error('Error loading group messages:', e);
+    } finally {
+      setGroupMessagesLoading(false);
     }
   }, [loadGroups]);
 
@@ -560,7 +572,9 @@ const LiveChatVisitor: React.FC<LiveChatVisitorProps> = ({ visitorNom, adminId, 
       {viewMode === 'groups' ? (
         /* ── Liste des groupes ── */
         <div className="flex-1 overflow-y-auto bg-gradient-to-b from-slate-900 via-slate-900/95 to-slate-950">
-          {groups.length === 0 ? (
+          {groupsLoading ? (
+            <div className="py-10 flex justify-center"><PremiumLoading size="sm" text="Chargement..." /></div>
+          ) : groups.length === 0 ? (
             <div className="text-center text-purple-300/40 text-sm mt-12">
               <UsersRound className="h-12 w-12 mx-auto mb-3 opacity-30" />
               Aucun groupe pour le moment
@@ -607,7 +621,8 @@ const LiveChatVisitor: React.FC<LiveChatVisitorProps> = ({ visitorNom, adminId, 
         /* ── Messages du groupe ── */
         <>
           <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-gradient-to-b from-slate-900 via-slate-900/95 to-slate-950">
-            {groupMessages.length === 0 && (
+            {groupMessagesLoading && <div className="py-10 flex justify-center"><PremiumLoading size="sm" text="Chargement..." /></div>}
+            {!groupMessagesLoading && groupMessages.length === 0 && (
               <div className="text-center text-purple-300/40 text-sm mt-8">
                 <UsersRound className="h-12 w-12 mx-auto mb-3 opacity-30" />
                 Aucun message dans ce groupe
@@ -698,7 +713,8 @@ const LiveChatVisitor: React.FC<LiveChatVisitorProps> = ({ visitorNom, adminId, 
         /* ── Chat privé (existant) ── */
         <>
           <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-gradient-to-b from-slate-900 via-slate-900/95 to-slate-950">
-            {messages.length === 0 && (
+            {messagesLoading && <div className="py-10 flex justify-center"><PremiumLoading size="sm" text="Chargement..." /></div>}
+            {!messagesLoading && messages.length === 0 && (
               <div className="text-center text-purple-300/40 text-sm mt-8">
                 <MessageCircle className="h-12 w-12 mx-auto mb-3 opacity-30" />
                 Envoyez votre premier message !

@@ -9,6 +9,7 @@ import ProductSearchInput from '../../ProductSearchInput';
 import SaleQuantityInput from '../SaleQuantityInput';
 import { FormProduct, ReductionType, computeReductionAmount } from '../types/saleFormTypes';
 import { livraisonVilleApi, LivraisonVille } from '@/services/api/villesApi';
+import PremiumLoading from '@/components/ui/premium-loading';
 import SellingPriceOverrideButton from '@/components/products/SellingPriceOverrideButton';
 
 interface SaleProductCardProps {
@@ -46,11 +47,16 @@ const SaleProductCard: React.FC<SaleProductCardProps> = ({
   clientVille,
 }) => {
   const [villes, setVilles] = useState<LivraisonVille[]>([]);
+  const [villesLoading, setVillesLoading] = useState(true);
   const [showFeeOverride, setShowFeeOverride] = useState(false);
   const [showFeeIncrease, setShowFeeIncrease] = useState(false);
   const [feeIncreaseAmount, setFeeIncreaseAmount] = useState('');
   useEffect(() => {
-    livraisonVilleApi.getAll().then(setVilles).catch(() => setVilles([]));
+    setVillesLoading(true);
+    livraisonVilleApi.getAll()
+      .then(setVilles)
+      .catch(() => setVilles([]))
+      .finally(() => setVillesLoading(false));
   }, []);
   const knownVilleNames = villes.map(v => v.ville);
   const isCustomLoc = !!product.deliveryLocation && !knownVilleNames.some(v => v.toLowerCase() === product.deliveryLocation.toLowerCase());
@@ -297,6 +303,11 @@ const SaleProductCard: React.FC<SaleProductCardProps> = ({
             {/* Frais de livraison */}
             <div className="space-y-2 col-span-2">
               <Label>Ville de livraison & Frais</Label>
+              {villesLoading ? (
+                <div className="py-3 flex justify-center">
+                  <PremiumLoading size="sm" text="Chargement des villes de livraison..." />
+                </div>
+              ) : (
               <select
                 value={isCustomLoc ? '__custom__' : (product.deliveryLocation || '')}
                 onChange={(e) => handleVilleSelect(e.target.value)}
@@ -311,6 +322,7 @@ const SaleProductCard: React.FC<SaleProductCardProps> = ({
                 ))}
                 <option value="__custom__">+ Nouvelle ville…</option>
               </select>
+              )}
 
               {isCustomLoc && (
                 <div className="grid grid-cols-2 gap-2 mt-2">

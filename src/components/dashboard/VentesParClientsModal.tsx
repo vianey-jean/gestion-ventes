@@ -9,6 +9,7 @@ import useCurrencyFormatter from '@/hooks/use-currency-formatter';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { toast } from '@/hooks/use-toast';
+import PremiumLoading from '@/components/ui/premium-loading';
 
 interface VentesParClientsModalProps {
   isOpen: boolean;
@@ -314,7 +315,7 @@ const VentesParClientsModal: React.FC<VentesParClientsModalProps> = ({ isOpen, o
                     className="w-full py-3.5 rounded-xl bg-gradient-to-r from-amber-400 via-orange-500 to-red-500 text-white font-bold text-sm shadow-xl shadow-orange-500/30 hover:shadow-orange-500/50 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                   >
                     {isLoading ? (
-                      <div className="h-5 w-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      <PremiumLoading text="" size="sm" showText={false} variant="ventes" />
                     ) : (
                       <>
                         <Sparkles className="h-4 w-4" />

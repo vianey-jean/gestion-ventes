@@ -19,6 +19,7 @@ import ShareLinkModal from '@/components/shared/ShareLinkModal';
 import SelectiveShareModal from '@/components/shared/SelectiveShareModal';
 import ShareCommentsViewer from '@/components/shared/ShareCommentsViewer';
 import { useRealtimeCommentNotifications } from '@/hooks/useRealtimeCommentNotifications';
+import PremiumLoading from '@/components/ui/premium-loading';
 const premiumBtnClass = "group relative overflow-hidden rounded-xl sm:rounded-2xl  border transition-all duration-300 hover:scale-105 px-4 py-2 sm:px-5 sm:py-3 text-xs sm:text-sm font-semibold";
 const mirrorShine = "absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500";
 
@@ -432,6 +433,14 @@ const TacheView: React.FC = () => {
     heureDebut: '',
     heureFin: '',
   } : null;
+
+  if (loading) {
+    return (
+      <div className="py-20">
+        <PremiumLoading text="Chargement des tâches…" size="lg" variant="default" />
+      </div>
+    );
+  }
 
   return (
     <>

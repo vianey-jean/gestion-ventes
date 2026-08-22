@@ -9,6 +9,7 @@ import rdvApiService from '@/services/api/rdvApi';
 import { Travailleur } from '@/services/api/travailleurApi';
 import { useToast } from '@/hooks/use-toast';
 import indisponibleApi, { Indisponibilite } from '@/services/api/indisponibleApi';
+import PremiumLoading from '@/components/ui/premium-loading';
 
 interface TacheDayModalProps {
   open: boolean;
@@ -97,12 +98,14 @@ const TacheDayModal: React.FC<TacheDayModalProps> = ({
   const dayTaches = taches.filter(t => t.date === selectedDay);
   const dragRef = useRef<{ tacheId: string; originHeure: string } | null>(null);
   const [indisponibilites, setIndisponibilites] = useState<Indisponibilite[]>([]);
+  const [indispoLoading, setIndispoLoading] = useState(false);
 
   useEffect(() => {
     if (!open || !selectedDay) return;
+    setIndispoLoading(true);
     indisponibleApi.getAll().then(data => {
       setIndisponibilites(data.filter(i => i.date === selectedDay && !i.exception));
-    }).catch(() => {});
+    }).catch(() => {}).finally(() => setIndispoLoading(false));
   }, [open, selectedDay]);
 
   const isDayFullyIndispo = indisponibilites.some(i => i.journeeComplete);

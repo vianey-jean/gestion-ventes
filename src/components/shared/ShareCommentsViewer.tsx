@@ -16,6 +16,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { X, User, Phone, Mail, MessageCircle, Eye, Clock, Download, FileText, ExternalLink, Trash2 } from 'lucide-react';
 import shareCommentsApi, { ShareComment } from '@/services/api/shareCommentsApi';
+import PremiumLoading from '@/components/ui/premium-loading';
 
 interface ShareCommentsViewerProps {
   open: boolean;
@@ -183,9 +184,7 @@ const ShareCommentsViewer: React.FC<ShareCommentsViewerProps> = ({ open, onClose
                   </button>
                 </div>
                 {snapshotLoading ? (
-                  <div className="flex justify-center py-12">
-                    <div className="w-6 h-6 border-2 border-blue-500/30 border-t-blue-500 rounded-full animate-spin" />
-                  </div>
+                  <PremiumLoading text="Chargement du document…" size="md" variant="default" />
                 ) : snapshotHtml ? (
                   <iframe
                     ref={iframeRef}
@@ -278,9 +277,7 @@ const ShareCommentsViewer: React.FC<ShareCommentsViewerProps> = ({ open, onClose
         ) : (
           <div className="flex-1 overflow-y-auto space-y-3">
             {loading ? (
-              <div className="flex justify-center py-8">
-                <div className="w-6 h-6 border-2 border-blue-500/30 border-t-blue-500 rounded-full animate-spin" />
-              </div>
+              <PremiumLoading text="Chargement des commentaires…" size="sm" variant="default" />
             ) : comments.length === 0 ? (
               <p className="text-center text-gray-400 text-sm py-8">Aucun commentaire reçu</p>
             ) : (

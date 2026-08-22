@@ -21,6 +21,7 @@ import ConfirmDialog from './ConfirmDialog';
 import RdvRescheduleModal from './RdvRescheduleModal';
 import RdvTachesHero from './RdvTachesHero';
 import TravailleurModal from '@/components/pointage/modals/TravailleurModal';
+import PremiumLoading from '@/components/ui/premium-loading';
 
 const premiumBtnClass = "group relative overflow-hidden rounded-xl sm:rounded-2xl  border transition-all duration-300 hover:scale-105 px-4 py-2 sm:px-5 sm:py-3 text-xs sm:text-sm font-semibold";
 const mirrorShine = "absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500";
@@ -277,6 +278,14 @@ const RdvTacheView: React.FC = () => {
     if (confirmIds.length === 0 && confirmMode) setConfirmMode(false);
   }, [confirmIds.length, confirmMode]);
 
+
+  if (loading) {
+    return (
+      <div className="py-20">
+        <PremiumLoading text="Chargement des rendez-vous…" size="lg" variant="dashboard" />
+      </div>
+    );
+  }
 
   return (
     <>

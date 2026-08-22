@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import PremiumLoading from '@/components/ui/premium-loading';
 import { RDV, RDVFormData } from '@/types/rdv';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -397,7 +398,7 @@ const RdvForm: React.FC<RdvFormProps> = ({
               />
               {isSearching && (
                 <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                  <div className="h-4 w-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+                  <PremiumLoading size="sm" showText={false} />
                 </div>
               )}
             </div>

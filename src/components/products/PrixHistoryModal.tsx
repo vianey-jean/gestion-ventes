@@ -27,6 +27,7 @@ import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { Product } from '@/types';
 import { prixProductsApiService, PrixProductEntry } from '@/services/api/prixProductsApi';
+import PremiumLoading from '@/components/ui/premium-loading';
 
 interface Props {
   isOpen: boolean;
@@ -193,7 +194,7 @@ const PrixHistoryModal: React.FC<Props> = ({ isOpen, onClose, product }) => {
             </div>
 
             {loading && (
-              <div className="py-16 text-center text-white/60">Chargement…</div>
+              <PremiumLoading text="Chargement de l'historique des prix…" size="md" variant="tendances" />
             )}
 
             {!loading && !yearEntries.length && (
