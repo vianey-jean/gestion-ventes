@@ -8,7 +8,7 @@
  */
 import React, { useCallback, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Ban, Plus, Trash2, Globe, ShieldAlert } from 'lucide-react';
+import { Ban, Plus, Trash2, Globe, ShieldAlert, Pencil, Play, Pause } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -40,6 +40,15 @@ const BlockageIpCard: React.FC = () => {
 
   const [toDelete, setToDelete] = useState<BlockedIp | null>(null);
   const [deleting, setDeleting] = useState(false);
+
+  // Édition d'une IP bloquée
+  const [editing, setEditing] = useState<BlockedIp | null>(null);
+  const [editIp, setEditIp] = useState('');
+  const [editReason, setEditReason] = useState('');
+  const [updating, setUpdating] = useState(false);
+
+  // Activation / pause
+  const [togglingId, setTogglingId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -100,6 +109,56 @@ const BlockageIpCard: React.FC = () => {
     }
   };
 
+  const openEdit = (entry: BlockedIp) => {
+    setEditing(entry);
+    setEditIp(entry.ip);
+    setEditReason(entry.reason || '');
+  };
+
+  const handleUpdate = async () => {
+    if (!editing) return;
+    const value = editIp.trim();
+    if (!value || !IP_REGEX.test(value)) {
+      toast({ title: 'Adresse IP invalide', description: 'Saisissez une adresse IPv4 ou IPv6 valide.', variant: 'destructive' });
+      return;
+    }
+    if (value.toLowerCase() === currentIp.toLowerCase()) {
+      toast({ title: 'Action impossible', description: 'Vous ne pouvez pas bloquer votre propre adresse IP.', variant: 'destructive' });
+      return;
+    }
+    try {
+      setUpdating(true);
+      const entry = await blockageIpApi.update(editing.id, { ip: value, reason: editReason.trim() || null });
+      setIps(prev => prev.map(i => (i.id === entry.id ? entry : i)));
+      setEditing(null);
+      toast({ title: '✏️ IP modifiée', description: `Le blocage est maintenant sur ${entry.ip}.`, className: 'bg-blue-600 text-white border-blue-600' });
+    } catch (e: any) {
+      toast({ title: 'Erreur', description: e?.response?.data?.message || 'Modification impossible', variant: 'destructive' });
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const handleToggleActive = async (entry: BlockedIp) => {
+    const next = entry.active === false;
+    try {
+      setTogglingId(entry.id);
+      const updated = await blockageIpApi.setActive(entry.id, next);
+      setIps(prev => prev.map(i => (i.id === updated.id ? updated : i)));
+      toast({
+        title: next ? '▶️ Blocage activé' : '⏸️ Blocage en pause',
+        description: next
+          ? `${entry.ip} ne peut plus consulter le site.`
+          : `${entry.ip} peut de nouveau consulter le site (blocage conservé).`,
+        className: next ? 'bg-red-600 text-white border-red-600' : 'bg-amber-600 text-white border-amber-600',
+      });
+    } catch (e: any) {
+      toast({ title: 'Erreur', description: e?.response?.data?.message || 'Action impossible', variant: 'destructive' });
+    } finally {
+      setTogglingId(null);
+    }
+  };
+
   return (
     <>
       <motion.div
@@ -144,27 +203,84 @@ const BlockageIpCard: React.FC = () => {
             </div>
           ) : (
             <div className="space-y-2 max-h-[320px] overflow-y-auto pr-1 custom-scrollbar">
-              {ips.map(entry => (
+              {ips.map(entry => {
+                const active = entry.active !== false;
+                return (
                 <div key={entry.id}
-                  className="flex items-center justify-between gap-3 rounded-xl bg-gradient-to-br from-red-50/40 to-white dark:from-red-950/10 dark:to-white/[0.02] border border-red-200/20 dark:border-red-800/10 p-3">
+                  className={`flex items-center justify-between gap-3 rounded-xl bg-gradient-to-br p-3 border ${
+                    active
+                      ? 'from-red-50/40 to-white dark:from-red-950/10 dark:to-white/[0.02] border-red-200/20 dark:border-red-800/10'
+                      : 'from-amber-50/40 to-white dark:from-amber-950/10 dark:to-white/[0.02] border-amber-200/30 dark:border-amber-800/10 opacity-80'
+                  }`}>
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-mono font-semibold text-foreground truncate">{entry.ip}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-mono font-semibold text-foreground truncate">{entry.ip}</p>
+                      <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                        active
+                          ? 'bg-red-500/10 text-red-600 dark:text-red-400'
+                          : 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                      }`}>
+                        {active ? 'Actif' : 'En pause'}
+                      </span>
+                    </div>
                     {entry.reason && <p className="text-xs text-muted-foreground truncate">{entry.reason}</p>}
                     <p className="text-[10px] text-muted-foreground/70">
                       {new Date(entry.createdAt).toLocaleString('fr-FR')}
                       {entry.createdBy ? ` • ${entry.createdBy}` : ''}
                     </p>
                   </div>
-                  <Button size="sm" variant="ghost" onClick={() => setToDelete(entry)}
-                    className="rounded-lg text-red-600 hover:bg-red-500/10">
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <Button size="sm" variant="ghost" title="Modifier l'adresse IP"
+                      onClick={() => openEdit(entry)}
+                      className="rounded-lg text-blue-600 hover:bg-blue-500/10">
+                      <Pencil className="w-4 h-4" />
+                    </Button>
+                    <Button size="sm" variant="ghost" disabled={togglingId === entry.id}
+                      title={active ? 'Mettre le blocage en pause' : 'Activer le blocage'}
+                      onClick={() => handleToggleActive(entry)}
+                      className={`rounded-lg ${active ? 'text-amber-600 hover:bg-amber-500/10' : 'text-emerald-600 hover:bg-emerald-500/10'}`}>
+                      {active ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={() => setToDelete(entry)}
+                      title="Supprimer le blocage"
+                      className="rounded-lg text-red-600 hover:bg-red-500/10">
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
       </motion.div>
+
+      {/* MODALE DE MODIFICATION */}
+      <Dialog open={!!editing} onOpenChange={v => { if (!v) setEditing(null); }}>
+        <DialogContent className="rounded-3xl max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-blue-600">
+              <Pencil className="w-5 h-5" /> Modifier l'adresse IP bloquée
+            </DialogTitle>
+            <DialogDescription>
+              La modification est enregistrée en base de données ; le blocage s'appliquera à la nouvelle adresse.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <Input value={editIp} onChange={e => setEditIp(e.target.value)}
+              placeholder="Ex : 192.168.1.42" className="rounded-xl font-mono" />
+            <Input value={editReason} onChange={e => setEditReason(e.target.value)}
+              placeholder="Motif (optionnel)" className="rounded-xl" />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" className="rounded-xl" onClick={() => setEditing(null)}>Annuler</Button>
+            <Button onClick={handleUpdate} disabled={updating}
+              className="rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600">
+              {updating ? 'Modification...' : 'Valider'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* MODALE D'AJOUT */}
       <Dialog open={showAdd} onOpenChange={v => { setShowAdd(v); if (!v) { setNewIp(''); setReason(''); } }}>

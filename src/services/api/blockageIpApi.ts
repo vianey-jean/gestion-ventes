@@ -15,6 +15,9 @@ export interface BlockedIp {
   reason: string | null;
   createdAt: string;
   createdBy: string | null;
+  /** true = blocage actif (accès refusé) ; false = blocage en pause */
+  active?: boolean;
+  updatedAt?: string;
 }
 
 export interface IpCheckResult {
@@ -46,6 +49,18 @@ const blockageIpApi = {
 
   add: async (ip: string, reason?: string): Promise<BlockedIp> => {
     const { data } = await api.post('/api/blockage-ip', { ip, reason });
+    return data.entry;
+  },
+
+  /** Modifie l'adresse IP et/ou le motif d'un blocage existant */
+  update: async (id: string, payload: { ip?: string; reason?: string | null }): Promise<BlockedIp> => {
+    const { data } = await api.put(`/api/blockage-ip/${encodeURIComponent(id)}`, payload);
+    return data.entry;
+  },
+
+  /** Active (play) ou met en pause le blocage sans le supprimer */
+  setActive: async (id: string, active: boolean): Promise<BlockedIp> => {
+    const { data } = await api.patch(`/api/blockage-ip/${encodeURIComponent(id)}/active`, { active });
     return data.entry;
   },
 
