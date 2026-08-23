@@ -1,268 +1,2001 @@
+/**
+ * AboutPage.tsx
+ * Ultra Premium Luxury About Experience
+ *
+ * - Design luxe / SaaS premium
+ * - Mode clair + sombre via le thème global
+ * - Animations Framer Motion
+ * - Aurora animée
+ * - Particules flottantes
+ * - Glassmorphism
+ * - Grid / rings décoratifs
+ * - Sections storytelling
+ * - Responsive
+ */
+
 import React from 'react';
-import Layout from '@/components/Layout';
-import { Users, Target, Lightbulb, Award, ArrowRight, Crown, Sparkles, Shield, Zap } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+
+import { Button } from '@/components/ui/button';
+import Layout from '@/components/Layout';
 import SEOHead from '@/components/SEOHead';
+import { useLightMotion } from '@/hooks/useLightMotion';
+
+import {
+  Activity,
+  ArrowRight,
+  BarChart3,
+  CheckCircle2,
+  ChevronRight,
+  Cloud,
+  Crown,
+  Database,
+  Gem,
+  Globe,
+  Layers3,
+  Lock,
+  Package,
+  Rocket,
+  Settings2,
+  Shield,
+  ShieldCheck,
+  Sparkles,
+  Star,
+  Target,
+  TrendingUp,
+  Users,
+  Zap,
+} from 'lucide-react';
+
+/* =========================================================
+   DATA
+========================================================= */
+
+const values = [
+  {
+    icon: Gem,
+    title: 'Simplicité',
+    description:
+      'Une expérience pensée pour rester claire, intuitive et agréable, même lorsque votre activité devient complexe.',
+    color: 'from-violet-500 to-purple-500',
+  },
+  {
+    icon: Zap,
+    title: 'Performance',
+    description:
+      'Des outils rapides et fluides pour vous permettre de travailler efficacement sans perdre de temps.',
+    color: 'from-cyan-500 to-blue-500',
+  },
+  {
+    icon: ShieldCheck,
+    title: 'Sécurité',
+    description:
+      'Vos données et votre activité méritent une infrastructure fiable et une protection pensée dès la conception.',
+    color: 'from-emerald-500 to-teal-500',
+  },
+  {
+    icon: Target,
+    title: 'Précision',
+    description:
+      'Des informations structurées pour vous aider à prendre de meilleures décisions au quotidien.',
+    color: 'from-fuchsia-500 to-pink-500',
+  },
+];
+
+const features = [
+  {
+    icon: BarChart3,
+    title: 'Ventes',
+    description:
+      'Pilotez votre activité commerciale et gardez une vision claire de vos performances.',
+    color: 'from-violet-500 to-purple-500',
+  },
+  {
+    icon: TrendingUp,
+    title: 'Comptabilité',
+    description:
+      'Centralisez les informations essentielles et gardez le contrôle de vos finances.',
+    color: 'from-cyan-500 to-blue-500',
+  },
+  {
+    icon: Users,
+    title: 'Clients',
+    description:
+      'Organisez vos relations clients dans un espace unique et facilement accessible.',
+    color: 'from-fuchsia-500 to-pink-500',
+  },
+  {
+    icon: Package,
+    title: 'Stock',
+    description:
+      'Suivez vos produits, vos quantités et votre inventaire en toute simplicité.',
+    color: 'from-orange-500 to-amber-500',
+  },
+  {
+    icon: Activity,
+    title: 'Rendez-vous',
+    description:
+      'Structurez votre agenda et gardez une meilleure visibilité sur vos rendez-vous.',
+    color: 'from-emerald-500 to-teal-500',
+  },
+  {
+    icon: Layers3,
+    title: 'Tâches',
+    description:
+      'Organisez votre travail, vos priorités et vos actions depuis un espace centralisé.',
+    color: 'from-indigo-500 to-violet-500',
+  },
+];
+
+const stats = [
+  {
+    value: '100%',
+    label: 'Expérience cloud',
+    icon: Cloud,
+  },
+  {
+    value: '24/7',
+    label: 'Accessible partout',
+    icon: Globe,
+  },
+  {
+    value: '1',
+    label: 'Espace centralisé',
+    icon: Layers3,
+  },
+  {
+    value: '∞',
+    label: 'Possibilités',
+    icon: Rocket,
+  },
+];
+
+const securityItems = [
+  {
+    icon: ShieldCheck,
+    title: 'Protection',
+    description: 'Une architecture pensée pour protéger votre environnement.',
+  },
+  {
+    icon: Lock,
+    title: 'Confidentialité',
+    description: 'Vos informations restent au cœur de notre conception.',
+  },
+  {
+    icon: Database,
+    title: 'Données structurées',
+    description: 'Une organisation claire pour retrouver rapidement l’essentiel.',
+  },
+];
+
+/* =========================================================
+   COMPONENT
+========================================================= */
 
 const AboutPage: React.FC = () => {
+  const { light, particleCount } = useLightMotion();
+
   return (
     <Layout>
       <SEOHead
-        title="À propos"
-        description="Découvrez l'histoire de Gestion Vente, notre mission de transformer la gestion commerciale avec des solutions innovantes et intuitives."
+        title="À propos — Gestion Vente Premium"
+        description="Découvrez notre vision d'une plateforme moderne, élégante et performante pour gérer votre activité commerciale."
         canonical="https://riziky-ventes.vercel.app/about"
       />
-      <div className="min-h-screen relative bg-gradient-to-br from-slate-900 via-purple-950/60 to-indigo-950 overflow-hidden">
-        {/* Animated orbs */}
-        <div className="fixed inset-0 overflow-hidden pointer-events-none">
+
+      <main
+        className="
+          relative
+          min-h-screen
+          overflow-hidden
+          bg-slate-50
+          dark:bg-[#02030a]
+          text-slate-900
+          dark:text-white
+          transition-colors
+          duration-500
+        "
+      >
+        {/* =====================================================
+            GLOBAL BACKGROUND
+        ====================================================== */}
+
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          {/* Aurora 1 */}
           <motion.div
-            animate={{ x: [0, 40, 0], y: [0, -30, 0], scale: [1, 1.15, 1] }}
-            transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut' }}
-            className="absolute top-1/4 -left-32 w-[480px] h-[480px] bg-purple-500/20 rounded-full"
+            animate={
+              light
+                ? undefined
+                : {
+                    x: [0, 100, -50, 0],
+                    y: [0, -70, 50, 0],
+                    scale: [1, 1.15, 0.95, 1],
+                  }
+            }
+            transition={{
+              duration: 20,
+              repeat: Infinity,
+              ease: 'easeInOut',
+            }}
+            className="
+              absolute
+              -left-56
+              -top-56
+              h-[700px]
+              w-[700px]
+              rounded-full
+              bg-violet-400/20
+              blur-[110px]
+              dark:bg-fuchsia-600/20
+            "
           />
+
+          {/* Aurora 2 */}
           <motion.div
-            animate={{ x: [0, -50, 0], y: [0, 40, 0], scale: [1, 1.2, 1] }}
-            transition={{ duration: 22, repeat: Infinity, ease: 'easeInOut' }}
-            className="absolute bottom-0 -right-32 w-[560px] h-[560px] bg-pink-500/15 rounded-full"
+            animate={
+              light
+                ? undefined
+                : {
+                    x: [0, -100, 60, 0],
+                    y: [0, 70, -40, 0],
+                    scale: [1, 1.2, 0.9, 1],
+                  }
+            }
+            transition={{
+              duration: 24,
+              repeat: Infinity,
+              ease: 'easeInOut',
+            }}
+            className="
+              absolute
+              -bottom-72
+              -right-56
+              h-[800px]
+              w-[800px]
+              rounded-full
+              bg-cyan-300/20
+              blur-[120px]
+              dark:bg-cyan-600/15
+            "
           />
+
+          {/* Aurora 3 */}
           <motion.div
-            animate={{ y: [0, 50, 0] }}
-            transition={{ duration: 20, repeat: Infinity, ease: 'easeInOut' }}
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-r from-violet-500/10 to-fuchsia-500/10 rounded-full"
+            animate={
+              light
+                ? undefined
+                : {
+                    x: [0, 50, -60, 0],
+                    y: [0, -40, 40, 0],
+                    scale: [1, 1.1, 0.95, 1],
+                  }
+            }
+            transition={{
+              duration: 28,
+              repeat: Infinity,
+              ease: 'easeInOut',
+            }}
+            className="
+              absolute
+              left-1/2
+              top-[35%]
+              h-[550px]
+              w-[550px]
+              -translate-x-1/2
+              rounded-full
+              bg-pink-300/10
+              blur-[130px]
+              dark:bg-violet-600/10
+            "
           />
-          {[...Array(8)].map((_, i) => (
-            <motion.div
-              key={i}
-              animate={{ y: [0, -80, 0], opacity: [0.2, 0.6, 0.2] }}
-              transition={{ duration: 7 + i * 1.5, repeat: Infinity, delay: i * 0.6, ease: 'easeInOut' }}
-              className="absolute w-1.5 h-1.5 bg-purple-300/40 rounded-full"
-              style={{ left: `${10 + i * 11}%`, top: `${15 + i * 9}%` }}
+
+          {/* Grid */}
+          <div
+            className="
+              absolute
+              inset-0
+              opacity-30
+              dark:opacity-100
+              bg-[linear-gradient(rgba(15,23,42,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(15,23,42,0.04)_1px,transparent_1px)]
+              dark:bg-[linear-gradient(rgba(255,255,255,0.025)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.025)_1px,transparent_1px)]
+              bg-[size:70px_70px]
+            "
+          />
+
+          {/* Large ring */}
+          <motion.div
+            animate={
+              light
+                ? undefined
+                : {
+                    rotate: 360,
+                  }
+            }
+            transition={{
+              duration: 80,
+              repeat: Infinity,
+              ease: 'linear',
+            }}
+            className="
+              absolute
+              left-1/2
+              top-[28%]
+              h-[900px]
+              w-[900px]
+              -translate-x-1/2
+              -translate-y-1/2
+              rounded-full
+              border
+              border-slate-900/5
+              dark:border-white/[0.035]
+            "
+          />
+
+          {/* Small ring */}
+          <motion.div
+            animate={
+              light
+                ? undefined
+                : {
+                    rotate: -360,
+                  }
+            }
+            transition={{
+              duration: 55,
+              repeat: Infinity,
+              ease: 'linear',
+            }}
+            className="
+              absolute
+              left-1/2
+              top-[28%]
+              h-[620px]
+              w-[620px]
+              -translate-x-1/2
+              -translate-y-1/2
+              rounded-full
+              border
+              border-violet-500/10
+              dark:border-fuchsia-500/10
+            "
+          />
+
+          {/* Floating particles */}
+          {[...Array(particleCount)].map((_, index) => (
+            <motion.span
+              key={index}
+              animate={
+                light
+                  ? undefined
+                  : {
+                      y: [0, -80, 0],
+                      x: [
+                        0,
+                        index % 2 === 0 ? 25 : -25,
+                        0,
+                      ],
+                      opacity: [0.15, 0.7, 0.15],
+                      scale: [0.8, 1.4, 0.8],
+                    }
+              }
+              transition={{
+                duration: 5 + index * 0.6,
+                repeat: Infinity,
+                delay: index * 0.35,
+                ease: 'easeInOut',
+              }}
+              className="
+                absolute
+                h-1
+                w-1
+                rounded-full
+                bg-violet-500/40
+                dark:bg-white/40
+              "
+              style={{
+                left: `${5 + ((index * 17) % 90)}%`,
+                top: `${5 + ((index * 23) % 90)}%`,
+              }}
             />
           ))}
         </div>
 
-        {/* Grid overlay */}
-        <div className="fixed inset-0 bg-[linear-gradient(rgba(255,255,255,0.015)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.015)_1px,transparent_1px)] bg-[size:64px_64px] pointer-events-none" />
+        {/* =====================================================
+            HERO
+        ====================================================== */}
 
-        <div className="relative z-10">
-          {/* HERO */}
-          <section className="container mx-auto px-4 sm:px-6 pt-20 pb-24 text-center">
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="inline-flex items-center gap-2 px-5 py-2 mb-8 bg-white/[0.05] rounded-full border border-white/[0.08]"
-            >
-              <Crown className="h-4 w-4 text-amber-400" />
-              <span className="text-sm font-medium text-purple-300/80">Notre Histoire</span>
-            </motion.div>
+        <section
+          className="
+            relative
+            z-10
+            px-4
+            pb-24
+            pt-20
+            sm:px-6
+            lg:px-8
+            lg:pb-32
+            lg:pt-28
+          "
+        >
+          <div className="mx-auto max-w-7xl">
+            <div className="grid items-center gap-14 lg:grid-cols-[1.1fr_0.9fr]">
+              {/* HERO LEFT */}
 
-            <motion.h1
-              initial={{ opacity: 0, y: 40, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ duration: 0.9, ease: 'easeOut' }}
-              className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-white mb-8 leading-tight drop-shadow-[0_4px_20px_rgba(139,92,246,0.3)]"
-            >
-              À propos de{' '}
-              <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-fuchsia-400 bg-clip-text text-transparent">
-                Gestion Vente
-              </span>
-            </motion.h1>
+              <motion.div
+                initial={{
+                  opacity: 0,
+                  x: -40,
+                }}
+                animate={{
+                  opacity: 1,
+                  x: 0,
+                }}
+                transition={{
+                  duration: 0.8,
+                  ease: 'easeOut',
+                }}
+              >
+                {/* Badge */}
 
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="max-w-3xl mx-auto text-lg sm:text-xl text-purple-200/60 leading-relaxed"
-            >
-              Nous révolutionnons la gestion commerciale avec des solutions innovantes,
-              intuitives et puissantes pour les entrepreneurs modernes.
-            </motion.p>
-          </section>
+                <motion.div
+                  whileHover={{
+                    scale: 1.03,
+                    y: -2,
+                  }}
+                  className="
+                    inline-flex
+                    items-center
+                    gap-2.5
+                    rounded-full
+                    border
+                    border-slate-900/10
+                    dark:border-white/10
+                    bg-white/70
+                    dark:bg-white/[0.045]
+                    backdrop-blur-xl
+                    px-4
+                    py-2
+                    shadow-lg
+                    dark:shadow-none
+                  "
+                >
+                  <span
+                    className="
+                      flex
+                      h-7
+                      w-7
+                      items-center
+                      justify-center
+                      rounded-full
+                      bg-gradient-to-br
+                      from-violet-500
+                      to-fuchsia-500
+                      shadow-lg
+                      shadow-violet-500/25
+                    "
+                  >
+                    <Gem className="h-3.5 w-3.5 text-white" />
+                  </span>
 
-          {/* MISSION */}
-          <section className="container mx-auto px-4 sm:px-6 pb-24">
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="relative max-w-6xl mx-auto"
-            >
-              <div className="absolute -inset-4 bg-gradient-to-r from-purple-600/20 via-pink-600/20 to-blue-600/20 rounded-[2rem]" />
-              <div className="relative bg-white/[0.04] border border-white/[0.08] rounded-3xl p-8 sm:p-12 shadow-[0_32px_64px_rgba(0,0,0,0.4)] overflow-hidden">
-                <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-purple-400/50 to-transparent" />
+                  <span className="text-sm font-semibold text-slate-700 dark:text-white/80">
+                    Premium Business Suite
+                  </span>
 
-                <div className="grid md:grid-cols-2 gap-10 items-center">
-                  <div>
-                    <div className="inline-flex items-center gap-2 px-3 py-1 mb-4 bg-purple-500/10 border border-purple-400/20 rounded-full">
-                      <Sparkles className="h-3.5 w-3.5 text-purple-400" />
-                      <span className="text-xs font-semibold text-purple-300">Notre Mission</span>
+                  <Sparkles className="h-4 w-4 text-fuchsia-500 dark:text-fuchsia-400" />
+                </motion.div>
+
+                {/* Heading */}
+
+                <h1
+                  className="
+                    mt-8
+                    max-w-4xl
+                    text-5xl
+                    font-black
+                    leading-[0.95]
+                    tracking-[-0.05em]
+                    text-slate-900
+                    dark:text-white
+                    sm:text-6xl
+                    lg:text-7xl
+                    xl:text-[84px]
+                  "
+                >
+                  Une nouvelle façon de gérer votre
+
+                  <span
+                    className="
+                      mt-3
+                      block
+                      bg-gradient-to-r
+                      from-violet-600
+                      via-fuchsia-500
+                      to-cyan-500
+                      bg-clip-text
+                      text-transparent
+                      dark:from-fuchsia-400
+                      dark:via-violet-400
+                      dark:to-cyan-300
+                    "
+                  >
+                    Business.
+                  </span>
+                </h1>
+
+                <p
+                  className="
+                    mt-8
+                    max-w-2xl
+                    text-lg
+                    leading-relaxed
+                    text-slate-600
+                    dark:text-white/50
+                    sm:text-xl
+                  "
+                >
+                  Nous imaginons une expérience de gestion
+                  commerciale plus simple, plus élégante et
+                  plus intelligente — pour vous permettre de
+                  consacrer votre énergie à votre activité.
+                </p>
+
+                {/* CTA */}
+
+                <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+                  <Link to="/register">
+                    <Button
+                      className="
+                        group
+                        h-14
+                        w-full
+                        rounded-2xl
+                        border-0
+                        bg-gradient-to-r
+                        from-violet-600
+                        via-fuchsia-600
+                        to-cyan-500
+                        px-7
+                        text-base
+                        font-bold
+                        text-white
+                        shadow-[0_15px_45px_rgba(124,58,237,0.3)]
+                        transition-all
+                        duration-300
+                        hover:scale-[1.02]
+                        sm:w-auto
+                      "
+                    >
+                      <Rocket className="mr-2.5 h-5 w-5" />
+
+                      Commencer maintenant
+
+                      <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
+                    </Button>
+                  </Link>
+
+                  <Link to="/login">
+                    <Button
+                      variant="outline"
+                      className="
+                        h-14
+                        w-full
+                        rounded-2xl
+                        border
+                        border-slate-900/10
+                        dark:border-white/[0.08]
+                        bg-white/60
+                        dark:bg-white/[0.035]
+                        px-7
+                        text-base
+                        font-semibold
+                        text-slate-800
+                        dark:text-white
+                        backdrop-blur-xl
+                        transition-all
+                        duration-300
+                        hover:scale-[1.02]
+                        hover:bg-white
+                        dark:hover:bg-white/[0.07]
+                        sm:w-auto
+                      "
+                    >
+                      Découvrir la plateforme
+                      <ChevronRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  </Link>
+                </div>
+
+                {/* Mini stats */}
+
+                <div className="mt-10 flex flex-wrap gap-3">
+                  {stats.map((item, index) => {
+                    const Icon = item.icon;
+
+                    return (
+                      <motion.div
+                        key={item.label}
+                        initial={{
+                          opacity: 0,
+                          y: 15,
+                        }}
+                        animate={{
+                          opacity: 1,
+                          y: 0,
+                        }}
+                        transition={{
+                          delay: 0.6 + index * 0.1,
+                        }}
+                        whileHover={{
+                          y: -4,
+                        }}
+                        className="
+                          rounded-2xl
+                          border
+                          border-slate-900/10
+                          dark:border-white/[0.08]
+                          bg-white/60
+                          dark:bg-white/[0.035]
+                          px-4
+                          py-3
+                          backdrop-blur-xl
+                        "
+                      >
+                        <div className="flex items-center gap-3">
+                          <Icon className="h-4 w-4 text-violet-600 dark:text-fuchsia-400" />
+
+                          <div>
+                            <div className="text-sm font-bold text-slate-900 dark:text-white">
+                              {item.value}
+                            </div>
+
+                            <div className="text-[11px] text-slate-500 dark:text-white/40">
+                              {item.label}
+                            </div>
+                          </div>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              </motion.div>
+
+              {/* HERO RIGHT — PREMIUM VISUAL */}
+
+              <motion.div
+                initial={{
+                  opacity: 0,
+                  x: 40,
+                  scale: 0.96,
+                }}
+                animate={{
+                  opacity: 1,
+                  x: 0,
+                  scale: 1,
+                }}
+                transition={{
+                  duration: 0.9,
+                  delay: 0.2,
+                  ease: 'easeOut',
+                }}
+                className="relative mx-auto w-full max-w-xl"
+              >
+                {/* Glow */}
+
+                <motion.div
+                  animate={{
+                    opacity: [0.35, 0.65, 0.35],
+                    scale: [1, 1.04, 1],
+                  }}
+                  transition={{
+                    duration: 5,
+                    repeat: Infinity,
+                    ease: 'easeInOut',
+                  }}
+                  className="
+                    absolute
+                    -inset-8
+                    rounded-[50px]
+                    bg-gradient-to-r
+                    from-violet-500/20
+                    via-fuchsia-500/20
+                    to-cyan-500/20
+                    blur-3xl
+                  "
+                />
+
+                <div
+                  className="
+                    relative
+                    overflow-hidden
+                    rounded-[36px]
+                    border
+                    border-slate-900/10
+                    dark:border-white/[0.09]
+                    bg-white/75
+                    dark:bg-[#0b0b14]/75
+                    p-5
+                    shadow-[0_30px_100px_rgba(15,23,42,0.15)]
+                    backdrop-blur-2xl
+                    dark:shadow-[0_30px_100px_rgba(0,0,0,0.65)]
+                    sm:p-7
+                  "
+                >
+                  {/* Shine */}
+
+                  <div
+                    className="
+                      absolute
+                      left-0
+                      right-0
+                      top-0
+                      h-px
+                      bg-gradient-to-r
+                      from-transparent
+                      via-violet-500/70
+                      to-transparent
+                      dark:via-white/40
+                    "
+                  />
+
+                  {/* Dashboard header */}
+
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-xs font-semibold text-slate-400 dark:text-white/35">
+                        BUSINESS OVERVIEW
+                      </div>
+
+                      <div className="mt-1 text-xl font-black text-slate-900 dark:text-white">
+                        Votre activité
+                      </div>
                     </div>
-                    <h2 className="text-3xl sm:text-4xl font-bold text-white mb-6 leading-tight">
-                      Simplifier pour <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">mieux réussir</span>
-                    </h2>
-                    <p className="text-base sm:text-lg text-purple-200/60 leading-relaxed mb-4">
-                      Notre mission est de fournir un outil de gestion révolutionnaire qui permet aux entreprises
-                      de toutes tailles de prospérer dans l'économie moderne.
-                    </p>
-                    <p className="text-base sm:text-lg text-purple-200/60 leading-relaxed">
-                      Chaque fonctionnalité est pensée pour vous faire gagner du temps, optimiser vos processus
-                      et maximiser votre rentabilité.
-                    </p>
+
+                    <div
+                      className="
+                        flex
+                        h-11
+                        w-11
+                        items-center
+                        justify-center
+                        rounded-2xl
+                        bg-gradient-to-br
+                        from-violet-600
+                        via-fuchsia-500
+                        to-cyan-500
+                        shadow-lg
+                        shadow-violet-500/25
+                      "
+                    >
+                      <Crown className="h-5 w-5 text-white" />
+                    </div>
                   </div>
-                  <div className="relative">
-                    <div className="absolute inset-0 bg-gradient-to-br from-purple-500/30 to-pink-500/30 rounded-3xl" />
-                    <div className="relative aspect-square w-full max-w-sm mx-auto bg-gradient-to-br from-purple-500 via-fuchsia-500 to-pink-500 rounded-3xl flex items-center justify-center shadow-2xl border border-white/20">
-                      <Target className="h-32 w-32 text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.5)]" />
+
+                  {/* Fake graph */}
+
+                  <div
+                    className="
+                      mt-7
+                      rounded-3xl
+                      border
+                      border-slate-900/10
+                      dark:border-white/[0.07]
+                      bg-slate-100/60
+                      dark:bg-white/[0.035]
+                      p-5
+                    "
+                  >
+                    <div className="flex items-end justify-between">
+                      <div>
+                        <div className="text-xs text-slate-500 dark:text-white/35">
+                          Performance
+                        </div>
+
+                        <div className="mt-1 text-3xl font-black text-slate-900 dark:text-white">
+                          +38.4%
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-1">
+                        <TrendingUp className="h-3 w-3 text-emerald-500" />
+                        <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+                          Excellent
+                        </span>
+                      </div>
                     </div>
+
+                    <div className="mt-6 flex h-36 items-end gap-2">
+                      {[28, 42, 35, 58, 49, 70, 63, 84, 76, 96].map(
+                        (height, index) => (
+                          <motion.div
+                            key={index}
+                            initial={{
+                              height: 0,
+                            }}
+                            animate={{
+                              height: `${height}%`,
+                            }}
+                            transition={{
+                              duration: 0.7,
+                              delay: 0.5 + index * 0.06,
+                            }}
+                            className="
+                              flex-1
+                              rounded-t-lg
+                              bg-gradient-to-t
+                              from-violet-600
+                              via-fuchsia-500
+                              to-cyan-400
+                              opacity-80
+                            "
+                          />
+                        )
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Dashboard cards */}
+
+                  <div className="mt-4 grid grid-cols-2 gap-3">
+                    {[
+                      {
+                        icon: Users,
+                        title: 'Clients',
+                        value: 'Centralisés',
+                        color: 'from-fuchsia-500 to-pink-500',
+                      },
+                      {
+                        icon: Package,
+                        title: 'Stock',
+                        value: 'Contrôlé',
+                        color: 'from-orange-500 to-amber-500',
+                      },
+                      {
+                        icon: Activity,
+                        title: 'Agenda',
+                        value: 'Organisé',
+                        color: 'from-emerald-500 to-teal-500',
+                      },
+                      {
+                        icon: ShieldCheck,
+                        title: 'Sécurité',
+                        value: 'Protégée',
+                        color: 'from-cyan-500 to-blue-500',
+                      },
+                    ].map((item, index) => {
+                      const Icon = item.icon;
+
+                      return (
+                        <motion.div
+                          key={item.title}
+                          initial={{
+                            opacity: 0,
+                            y: 15,
+                          }}
+                          animate={{
+                            opacity: 1,
+                            y: 0,
+                          }}
+                          transition={{
+                            delay: 0.9 + index * 0.08,
+                          }}
+                          whileHover={{
+                            y: -4,
+                          }}
+                          className="
+                            rounded-2xl
+                            border
+                            border-slate-900/10
+                            dark:border-white/[0.07]
+                            bg-white/70
+                            dark:bg-white/[0.035]
+                            p-4
+                            backdrop-blur-xl
+                          "
+                        >
+                          <div
+                            className={`
+                              flex
+                              h-9
+                              w-9
+                              items-center
+                              justify-center
+                              rounded-xl
+                              bg-gradient-to-br
+                              ${item.color}
+                            `}
+                          >
+                            <Icon className="h-4 w-4 text-white" />
+                          </div>
+
+                          <div className="mt-3 text-xs font-bold text-slate-900 dark:text-white">
+                            {item.title}
+                          </div>
+
+                          <div className="mt-1 text-[10px] text-slate-500 dark:text-white/35">
+                            {item.value}
+                          </div>
+                        </motion.div>
+                      );
+                    })}
                   </div>
                 </div>
-              </div>
-            </motion.div>
-          </section>
+              </motion.div>
+            </div>
+          </div>
+        </section>
 
-          {/* VALUES */}
-          <section className="container mx-auto px-4 sm:px-6 pb-24">
+        {/* =====================================================
+            VALUES
+        ====================================================== */}
+
+        <section
+          className="
+            relative
+            z-10
+            px-4
+            py-20
+            sm:px-6
+            lg:px-8
+            lg:py-28
+          "
+        >
+          <div className="mx-auto max-w-7xl">
             <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="text-center mb-14"
+              initial={{
+                opacity: 0,
+                y: 30,
+              }}
+              whileInView={{
+                opacity: 1,
+                y: 0,
+              }}
+              viewport={{
+                once: true,
+                margin: '-100px',
+              }}
+              transition={{
+                duration: 0.7,
+              }}
+              className="mx-auto max-w-3xl text-center"
             >
-              <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">Nos valeurs fondamentales</h2>
-              <p className="text-lg text-purple-200/50 max-w-2xl mx-auto">
-                Ces principes guident chacune de nos décisions et innovations
+              <div
+                className="
+                  mx-auto
+                  inline-flex
+                  items-center
+                  gap-2
+                  rounded-full
+                  border
+                  border-violet-500/10
+                  bg-violet-500/5
+                  px-3
+                  py-1.5
+                "
+              >
+                <Sparkles className="h-3.5 w-3.5 text-violet-500 dark:text-fuchsia-400" />
+
+                <span className="text-[11px] font-bold uppercase tracking-[0.15em] text-violet-600 dark:text-fuchsia-400">
+                  Notre vision
+                </span>
+              </div>
+
+              <h2
+                className="
+                  mt-5
+                  text-4xl
+                  font-black
+                  tracking-tight
+                  text-slate-900
+                  dark:text-white
+                  sm:text-5xl
+                "
+              >
+                Une plateforme conçue autour de{' '}
+                <span
+                  className="
+                    bg-gradient-to-r
+                    from-violet-600
+                    via-fuchsia-500
+                    to-cyan-500
+                    bg-clip-text
+                    text-transparent
+                    dark:from-fuchsia-400
+                    dark:via-violet-400
+                    dark:to-cyan-300
+                  "
+                >
+                  vous.
+                </span>
+              </h2>
+
+              <p className="mt-5 text-base leading-relaxed text-slate-600 dark:text-white/45 sm:text-lg">
+                Notre objectif est simple : réunir les outils
+                essentiels de votre activité dans une expérience
+                cohérente, moderne et agréable à utiliser.
               </p>
             </motion.div>
 
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
-              {[
-                { icon: Lightbulb, title: 'Simplicité', desc: 'Interfaces intuitives sans formation complexe.', gradient: 'from-blue-500 to-indigo-500' },
-                { icon: Zap, title: 'Efficacité', desc: 'Optimisation pour maximiser votre productivité.', gradient: 'from-purple-500 to-fuchsia-500' },
-                { icon: Shield, title: 'Fiabilité', desc: 'Sécurité maximale et disponibilité constante.', gradient: 'from-emerald-500 to-teal-500' },
-                { icon: Award, title: 'Innovation', desc: 'Amélioration continue avec les dernières technologies.', gradient: 'from-pink-500 to-rose-500' },
-              ].map((item, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.1 }}
-                  whileHover={{ y: -8 }}
-                  className="group relative"
-                >
-                  <div className={`absolute -inset-0.5 bg-gradient-to-r ${item.gradient} opacity-0 group-hover:opacity-30 rounded-3xl  transition-opacity duration-500`} />
-                  <div className="relative h-full bg-white/[0.04] border border-white/[0.08] rounded-3xl p-6 shadow-[0_20px_50px_rgba(0,0,0,0.3)] overflow-hidden">
-                    <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-                    <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${item.gradient} flex items-center justify-center mb-5 shadow-lg group-hover:scale-110 transition-transform duration-300`}>
-                      <item.icon className="h-7 w-7 text-white drop-shadow" />
+            <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {values.map((value, index) => {
+                const Icon = value.icon;
+
+                return (
+                  <motion.div
+                    key={value.title}
+                    initial={{
+                      opacity: 0,
+                      y: 30,
+                    }}
+                    whileInView={{
+                      opacity: 1,
+                      y: 0,
+                    }}
+                    viewport={{
+                      once: true,
+                      margin: '-70px',
+                    }}
+                    transition={{
+                      duration: 0.6,
+                      delay: index * 0.08,
+                    }}
+                    whileHover={{
+                      y: -7,
+                      scale: 1.015,
+                    }}
+                    className="
+                      group
+                      relative
+                      overflow-hidden
+                      rounded-[28px]
+                      border
+                      border-slate-900/10
+                      dark:border-white/[0.07]
+                      bg-white/65
+                      dark:bg-white/[0.035]
+                      p-6
+                      shadow-sm
+                      backdrop-blur-xl
+                      dark:shadow-none
+                    "
+                  >
+                    <div
+                      className={`
+                        absolute
+                        inset-0
+                        bg-gradient-to-br
+                        ${value.color}
+                        opacity-0
+                        transition-opacity
+                        duration-500
+                        group-hover:opacity-[0.07]
+                      `}
+                    />
+
+                    <div className="relative">
+                      <div
+                        className={`
+                          flex
+                          h-12
+                          w-12
+                          items-center
+                          justify-center
+                          rounded-2xl
+                          bg-gradient-to-br
+                          ${value.color}
+                          shadow-lg
+                        `}
+                      >
+                        <Icon className="h-5 w-5 text-white" />
+                      </div>
+
+                      <h3 className="mt-5 text-lg font-black text-slate-900 dark:text-white">
+                        {value.title}
+                      </h3>
+
+                      <p className="mt-2 text-sm leading-relaxed text-slate-500 dark:text-white/40">
+                        {value.description}
+                      </p>
                     </div>
-                    <h3 className="text-xl font-bold text-white mb-2">{item.title}</h3>
-                    <p className="text-sm text-purple-200/50 leading-relaxed">{item.desc}</p>
-                  </div>
-                </motion.div>
-              ))}
+                  </motion.div>
+                );
+              })}
             </div>
-          </section>
+          </div>
+        </section>
 
-          {/* FEATURES SHOWCASE */}
-          <section className="container mx-auto px-4 sm:px-6 pb-24">
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="relative max-w-6xl mx-auto"
-            >
-              <div className="absolute -inset-4 bg-gradient-to-r from-indigo-600/20 via-purple-600/20 to-pink-600/20 rounded-[2rem]" />
-              <div className="relative bg-white/[0.04] border border-white/[0.08] rounded-3xl p-8 sm:p-12 shadow-[0_32px_64px_rgba(0,0,0,0.4)] overflow-hidden">
-                <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-pink-400/50 to-transparent" />
-                <div className="text-center mb-10">
-                  <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">Fonctionnalités de pointe</h2>
-                  <p className="text-purple-200/50 max-w-2xl mx-auto">
-                    Une suite complète d'outils professionnels pour transformer votre activité
-                  </p>
-                </div>
+        {/* =====================================================
+            STORY SECTION
+        ====================================================== */}
 
-                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {[
-                    'Suivi des ventes en temps réel',
-                    'Gestion d\'inventaire intelligente',
-                    'Calcul automatique des bénéfices',
-                    'Rapports mensuels détaillés',
-                    'Exportation de données en PDF',
-                    'Interface responsive multi-appareils',
-                  ].map((feature, i) => (
-                    <motion.div
-                      key={i}
-                      initial={{ opacity: 0, x: -20 }}
-                      whileInView={{ opacity: 1, x: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ delay: i * 0.05 }}
-                      className="flex items-center gap-3 p-4 bg-white/[0.03] border border-white/[0.06] rounded-2xl hover:bg-white/[0.06] hover:border-purple-400/30 transition-all duration-300"
+        <section
+          className="
+            relative
+            z-10
+            px-4
+            py-20
+            sm:px-6
+            lg:px-8
+            lg:py-32
+          "
+        >
+          <div className="mx-auto max-w-7xl">
+            <div className="grid items-center gap-14 lg:grid-cols-2">
+              {/* Visual */}
+
+              <motion.div
+                initial={{
+                  opacity: 0,
+                  x: -40,
+                }}
+                whileInView={{
+                  opacity: 1,
+                  x: 0,
+                }}
+                viewport={{
+                  once: true,
+                  margin: '-100px',
+                }}
+                transition={{
+                  duration: 0.8,
+                }}
+                className="relative"
+              >
+                <div
+                  className="
+                    absolute
+                    -inset-5
+                    rounded-[40px]
+                    bg-gradient-to-r
+                    from-violet-500/10
+                    via-fuchsia-500/10
+                    to-cyan-500/10
+                    blur-2xl
+                  "
+                />
+
+                <div
+                  className="
+                    relative
+                    overflow-hidden
+                    rounded-[32px]
+                    border
+                    border-slate-900/10
+                    dark:border-white/[0.08]
+                    bg-white/70
+                    dark:bg-[#0b0b14]/70
+                    p-7
+                    backdrop-blur-2xl
+                  "
+                >
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="
+                        flex
+                        h-12
+                        w-12
+                        items-center
+                        justify-center
+                        rounded-2xl
+                        bg-gradient-to-br
+                        from-violet-600
+                        via-fuchsia-500
+                        to-cyan-500
+                      "
                     >
-                      <div className="w-2 h-2 rounded-full bg-gradient-to-r from-purple-400 to-pink-400 shadow-[0_0_10px_rgba(168,85,247,0.6)] flex-shrink-0" />
-                      <span className="text-sm sm:text-base text-purple-100/80">{feature}</span>
-                    </motion.div>
-                  ))}
+                      <Settings2 className="h-5 w-5 text-white" />
+                    </div>
+
+                    <div>
+                      <div className="text-xs font-semibold text-slate-400 dark:text-white/35">
+                        SMART WORKSPACE
+                      </div>
+
+                      <div className="text-lg font-black text-slate-900 dark:text-white">
+                        Tout au même endroit
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-8 space-y-3">
+                    {[
+                      'Une vision globale de votre activité',
+                      'Des outils connectés entre eux',
+                      'Une interface simple et intuitive',
+                      'Une expérience pensée pour évoluer avec vous',
+                    ].map((text, index) => (
+                      <motion.div
+                        key={text}
+                        initial={{
+                          opacity: 0,
+                          x: -15,
+                        }}
+                        whileInView={{
+                          opacity: 1,
+                          x: 0,
+                        }}
+                        viewport={{
+                          once: true,
+                        }}
+                        transition={{
+                          delay: 0.2 + index * 0.1,
+                        }}
+                        className="
+                          flex
+                          items-center
+                          gap-3
+                          rounded-2xl
+                          border
+                          border-slate-900/10
+                          dark:border-white/[0.07]
+                          bg-slate-100/60
+                          dark:bg-white/[0.035]
+                          px-4
+                          py-4
+                        "
+                      >
+                        <div
+                          className="
+                            flex
+                            h-8
+                            w-8
+                            shrink-0
+                            items-center
+                            justify-center
+                            rounded-xl
+                            bg-emerald-500/10
+                            dark:bg-emerald-500/15
+                          "
+                        >
+                          <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                        </div>
+
+                        <span className="text-sm font-medium text-slate-700 dark:text-white/65">
+                          {text}
+                        </span>
+                      </motion.div>
+                    ))}
+                  </div>
+
+                  <div
+                    className="
+                      mt-7
+                      rounded-2xl
+                      border
+                      border-violet-500/10
+                      bg-gradient-to-r
+                      from-violet-500/5
+                      via-fuchsia-500/5
+                      to-cyan-500/5
+                      p-5
+                    "
+                  >
+                    <div className="flex items-center gap-3">
+                      <Star className="h-5 w-5 fill-amber-400 text-amber-400" />
+
+                      <div>
+                        <div className="text-sm font-bold text-slate-900 dark:text-white">
+                          Pensé pour durer
+                        </div>
+
+                        <div className="mt-1 text-xs text-slate-500 dark:text-white/35">
+                          Une expérience qui évolue avec votre entreprise.
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </motion.div>
-          </section>
+              </motion.div>
 
-          {/* TEAM */}
-          <section className="container mx-auto px-4 sm:px-6 pb-24">
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="max-w-4xl mx-auto text-center"
-            >
-              <div className="inline-flex items-center gap-2 px-4 py-2 mb-6 bg-white/[0.05] rounded-full border border-white/[0.08]">
-                <Users className="h-4 w-4 text-purple-400" />
-                <span className="text-sm font-medium text-purple-300/80">L'équipe</span>
-              </div>
-              <h2 className="text-3xl sm:text-4xl font-bold text-white mb-8">Notre équipe passionnée</h2>
-              <div className="bg-white/[0.04] border border-white/[0.08] rounded-3xl p-8 sm:p-10 shadow-[0_20px_50px_rgba(0,0,0,0.3)] space-y-5">
-                <p className="text-base sm:text-lg text-purple-200/60 leading-relaxed">
-                  Derrière Gestion Vente se trouve une équipe de visionnaires : développeurs experts,
-                  designers créatifs et spécialistes du commerce qui collaborent pour créer
-                  la solution de gestion la plus avancée du marché.
-                </p>
-                <p className="text-base sm:text-lg text-purple-200/60 leading-relaxed">
-                  Nous sommes constamment à l'écoute de nos utilisateurs pour anticiper leurs besoins
-                  et dépasser leurs attentes avec des innovations qui font la différence.
-                </p>
-              </div>
-            </motion.div>
-          </section>
+              {/* Text */}
 
-          {/* CTA */}
-          <section className="container mx-auto px-4 sm:px-6 pb-24">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              className="relative max-w-5xl mx-auto"
-            >
-              <div className="absolute -inset-6 bg-gradient-to-r from-purple-600/30 via-pink-600/30 to-fuchsia-600/30 rounded-[2.5rem]" />
-              <div className="relative bg-gradient-to-br from-purple-600/30 via-pink-600/20 to-fuchsia-600/30 border border-white/[0.12] rounded-[2rem] p-10 sm:p-14 text-center shadow-[0_32px_64px_rgba(168,85,247,0.3)] overflow-hidden">
-                <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent" />
-                <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-white mb-4 drop-shadow-lg">
-                  Prêt à révolutionner votre gestion ?
+              <motion.div
+                initial={{
+                  opacity: 0,
+                  x: 40,
+                }}
+                whileInView={{
+                  opacity: 1,
+                  x: 0,
+                }}
+                viewport={{
+                  once: true,
+                  margin: '-100px',
+                }}
+                transition={{
+                  duration: 0.8,
+                }}
+              >
+                <div className="flex items-center gap-2">
+                  <span className="h-px w-10 bg-gradient-to-r from-violet-500 to-fuchsia-500" />
+
+                  <span className="text-xs font-bold uppercase tracking-[0.2em] text-violet-600 dark:text-fuchsia-400">
+                    Notre approche
+                  </span>
+                </div>
+
+                <h2
+                  className="
+                    mt-5
+                    text-4xl
+                    font-black
+                    leading-tight
+                    tracking-tight
+                    text-slate-900
+                    dark:text-white
+                    sm:text-5xl
+                  "
+                >
+                  La puissance sans la complexité.
                 </h2>
-                <p className="text-base sm:text-lg text-purple-100/70 mb-8 max-w-2xl mx-auto">
-                  Que vous dirigiez une startup innovante ou une entreprise établie,
-                  Gestion Vente est l'outil qu'il vous faut pour conquérir de nouveaux marchés.
+
+                <p className="mt-6 text-base leading-relaxed text-slate-600 dark:text-white/45 sm:text-lg">
+                  Une bonne solution de gestion ne devrait pas
+                  vous demander de devenir expert de l'outil.
+                  Elle doit simplement vous aider à travailler
+                  mieux.
                 </p>
-                <div className="inline-flex items-center gap-2 px-8 py-4 bg-white/10 border border-white/20 rounded-2xl text-white font-semibold shadow-lg hover:bg-white/15 hover:scale-105 transition-all duration-300 cursor-default">
-                  <Sparkles className="h-5 w-5 text-amber-300" />
-                  Démarrez votre transformation dès aujourd'hui
-                  <ArrowRight className="h-5 w-5" />
+
+                <p className="mt-5 text-base leading-relaxed text-slate-600 dark:text-white/45 sm:text-lg">
+                  C'est pourquoi nous privilégions une interface
+                  claire, des informations bien organisées et
+                  une expérience fluide, tout en conservant la
+                  puissance nécessaire pour accompagner une
+                  activité professionnelle.
+                </p>
+
+                <div className="mt-8 grid gap-3 sm:grid-cols-2">
+                  {[
+                    {
+                      icon: Zap,
+                      text: 'Rapide à prendre en main',
+                    },
+                    {
+                      icon: Layers3,
+                      text: 'Centralisé et structuré',
+                    },
+                    {
+                      icon: Shield,
+                      text: 'Pensé pour la sécurité',
+                    },
+                    {
+                      icon: Globe,
+                      text: 'Accessible partout',
+                    },
+                  ].map((item) => {
+                    const Icon = item.icon;
+
+                    return (
+                      <div
+                        key={item.text}
+                        className="
+                          flex
+                          items-center
+                          gap-3
+                          rounded-2xl
+                          border
+                          border-slate-900/10
+                          dark:border-white/[0.07]
+                          bg-white/60
+                          dark:bg-white/[0.035]
+                          px-4
+                          py-3
+                          backdrop-blur-xl
+                        "
+                      >
+                        <Icon className="h-4 w-4 text-violet-600 dark:text-fuchsia-400" />
+
+                        <span className="text-xs font-semibold text-slate-700 dark:text-white/60">
+                          {item.text}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </motion.div>
+            </div>
+          </div>
+        </section>
+
+        {/* =====================================================
+            FEATURES
+        ====================================================== */}
+
+        <section
+          className="
+            relative
+            z-10
+            px-4
+            py-20
+            sm:px-6
+            lg:px-8
+            lg:py-32
+          "
+        >
+          <div className="mx-auto max-w-7xl">
+            <motion.div
+              initial={{
+                opacity: 0,
+                y: 30,
+              }}
+              whileInView={{
+                opacity: 1,
+                y: 0,
+              }}
+              viewport={{
+                once: true,
+                margin: '-100px',
+              }}
+              transition={{
+                duration: 0.7,
+              }}
+              className="flex flex-col justify-between gap-6 lg:flex-row lg:items-end"
+            >
+              <div className="max-w-2xl">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-violet-600 dark:text-fuchsia-400" />
+
+                  <span className="text-xs font-bold uppercase tracking-[0.2em] text-violet-600 dark:text-fuchsia-400">
+                    Un écosystème complet
+                  </span>
+                </div>
+
+                <h2
+                  className="
+                    mt-4
+                    text-4xl
+                    font-black
+                    tracking-tight
+                    text-slate-900
+                    dark:text-white
+                    sm:text-5xl
+                  "
+                >
+                  Tout ce dont votre activité a besoin.
+                </h2>
+              </div>
+
+              <p className="max-w-md text-sm leading-relaxed text-slate-500 dark:text-white/40 lg:text-right">
+                Une suite d'outils réunis dans une seule
+                expérience pour simplifier votre quotidien.
+              </p>
+            </motion.div>
+
+            <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {features.map((feature, index) => {
+                const Icon = feature.icon;
+
+                return (
+                  <motion.div
+                    key={feature.title}
+                    initial={{
+                      opacity: 0,
+                      y: 25,
+                    }}
+                    whileInView={{
+                      opacity: 1,
+                      y: 0,
+                    }}
+                    viewport={{
+                      once: true,
+                      margin: '-60px',
+                    }}
+                    transition={{
+                      duration: 0.6,
+                      delay: index * 0.06,
+                    }}
+                    whileHover={{
+                      y: -6,
+                      scale: 1.015,
+                    }}
+                    className="
+                      group
+                      relative
+                      overflow-hidden
+                      rounded-[26px]
+                      border
+                      border-slate-900/10
+                      dark:border-white/[0.07]
+                      bg-white/65
+                      dark:bg-white/[0.035]
+                      p-5
+                      backdrop-blur-xl
+                    "
+                  >
+                    <div
+                      className={`
+                        absolute
+                        inset-0
+                        bg-gradient-to-br
+                        ${feature.color}
+                        opacity-0
+                        transition-opacity
+                        duration-500
+                        group-hover:opacity-[0.08]
+                      `}
+                    />
+
+                    <div className="relative">
+                      <div
+                        className={`
+                          flex
+                          h-11
+                          w-11
+                          items-center
+                          justify-center
+                          rounded-2xl
+                          bg-gradient-to-br
+                          ${feature.color}
+                          shadow-lg
+                        `}
+                      >
+                        <Icon className="h-5 w-5 text-white" />
+                      </div>
+
+                      <h3 className="mt-5 text-base font-black text-slate-900 dark:text-white">
+                        {feature.title}
+                      </h3>
+
+                      <p className="mt-2 text-sm leading-relaxed text-slate-500 dark:text-white/35">
+                        {feature.description}
+                      </p>
+
+                      <div className="mt-5 flex items-center gap-1 text-xs font-bold text-violet-600 dark:text-fuchsia-400">
+                        Découvrir
+                        <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
+        {/* =====================================================
+            SECURITY
+        ====================================================== */}
+
+        <section
+          className="
+            relative
+            z-10
+            px-4
+            py-20
+            sm:px-6
+            lg:px-8
+            lg:py-28
+          "
+        >
+          <div className="mx-auto max-w-7xl">
+            <motion.div
+              initial={{
+                opacity: 0,
+                scale: 0.97,
+              }}
+              whileInView={{
+                opacity: 1,
+                scale: 1,
+              }}
+              viewport={{
+                once: true,
+                margin: '-100px',
+              }}
+              transition={{
+                duration: 0.8,
+              }}
+              className="
+                relative
+                overflow-hidden
+                rounded-[36px]
+                border
+                border-slate-900/10
+                dark:border-white/[0.08]
+                bg-white/70
+                dark:bg-white/[0.035]
+                p-7
+                backdrop-blur-2xl
+                sm:p-10
+                lg:p-14
+              "
+            >
+              <div
+                className="
+                  absolute
+                  -right-40
+                  -top-40
+                  h-[450px]
+                  w-[450px]
+                  rounded-full
+                  bg-cyan-400/10
+                  blur-[100px]
+                  dark:bg-cyan-500/10
+                "
+              />
+
+              <div
+                className="
+                  absolute
+                  -bottom-40
+                  -left-40
+                  h-[450px]
+                  w-[450px]
+                  rounded-full
+                  bg-violet-500/10
+                  blur-[100px]
+                  dark:bg-violet-500/10
+                "
+              />
+
+              <div className="relative">
+                <div className="grid gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
+                  <div>
+                    <div
+                      className="
+                        flex
+                        h-14
+                        w-14
+                        items-center
+                        justify-center
+                        rounded-2xl
+                        bg-gradient-to-br
+                        from-violet-600
+                        via-fuchsia-500
+                        to-cyan-500
+                        shadow-xl
+                        shadow-violet-500/20
+                      "
+                    >
+                      <ShieldCheck className="h-7 w-7 text-white" />
+                    </div>
+
+                    <h2
+                      className="
+                        mt-6
+                        text-3xl
+                        font-black
+                        tracking-tight
+                        text-slate-900
+                        dark:text-white
+                        sm:text-4xl
+                      "
+                    >
+                      La sécurité au cœur de l'expérience.
+                    </h2>
+
+                    <p className="mt-5 max-w-xl text-base leading-relaxed text-slate-600 dark:text-white/45">
+                      Parce que votre activité et vos données
+                      sont essentielles, nous intégrons la
+                      sécurité directement dans l'expérience
+                      produit.
+                    </p>
+                  </div>
+
+                  <div className="grid gap-3">
+                    {securityItems.map((item, index) => {
+                      const Icon = item.icon;
+
+                      return (
+                        <motion.div
+                          key={item.title}
+                          initial={{
+                            opacity: 0,
+                            x: 20,
+                          }}
+                          whileInView={{
+                            opacity: 1,
+                            x: 0,
+                          }}
+                          viewport={{
+                            once: true,
+                          }}
+                          transition={{
+                            delay: index * 0.1,
+                          }}
+                          className="
+                            flex
+                            gap-4
+                            rounded-2xl
+                            border
+                            border-slate-900/10
+                            dark:border-white/[0.07]
+                            bg-white/60
+                            dark:bg-white/[0.035]
+                            p-4
+                            backdrop-blur-xl
+                          "
+                        >
+                          <div
+                            className="
+                              flex
+                              h-11
+                              w-11
+                              shrink-0
+                              items-center
+                              justify-center
+                              rounded-xl
+                              bg-emerald-500/10
+                              dark:bg-emerald-500/15
+                            "
+                          >
+                            <Icon className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                          </div>
+
+                          <div>
+                            <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                              {item.title}
+                            </h3>
+
+                            <p className="mt-1 text-xs leading-relaxed text-slate-500 dark:text-white/35">
+                              {item.description}
+                            </p>
+                          </div>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
             </motion.div>
-          </section>
-        </div>
-      </div>
+          </div>
+        </section>
+
+        {/* =====================================================
+            CTA
+        ====================================================== */}
+
+        <section
+          className="
+            relative
+            z-10
+            px-4
+            pb-24
+            pt-20
+            sm:px-6
+            lg:px-8
+            lg:pb-32
+          "
+        >
+          <div className="mx-auto max-w-5xl">
+            <motion.div
+              initial={{
+                opacity: 0,
+                y: 30,
+              }}
+              whileInView={{
+                opacity: 1,
+                y: 0,
+              }}
+              viewport={{
+                once: true,
+                margin: '-100px',
+              }}
+              transition={{
+                duration: 0.8,
+              }}
+              className="
+                relative
+                overflow-hidden
+                rounded-[40px]
+                border
+                border-slate-900/10
+                dark:border-white/[0.09]
+                bg-white/75
+                dark:bg-[#0b0b14]/80
+                px-6
+                py-14
+                text-center
+                shadow-[0_30px_100px_rgba(15,23,42,0.12)]
+                backdrop-blur-2xl
+                dark:shadow-[0_30px_100px_rgba(0,0,0,0.55)]
+                sm:px-10
+                sm:py-16
+              "
+            >
+              {/* CTA glow */}
+
+              <motion.div
+                animate={{
+                  scale: [1, 1.08, 1],
+                  opacity: [0.25, 0.45, 0.25],
+                }}
+                transition={{
+                  duration: 6,
+                  repeat: Infinity,
+                  ease: 'easeInOut',
+                }}
+                className="
+                  absolute
+                  left-1/2
+                  top-1/2
+                  h-[350px]
+                  w-[350px]
+                  -translate-x-1/2
+                  -translate-y-1/2
+                  rounded-full
+                  bg-gradient-to-r
+                  from-violet-500/20
+                  via-fuchsia-500/20
+                  to-cyan-500/20
+                  blur-[90px]
+                "
+              />
+
+              <div className="relative">
+                <div
+                  className="
+                    mx-auto
+                    flex
+                    h-14
+                    w-14
+                    items-center
+                    justify-center
+                    rounded-2xl
+                    bg-gradient-to-br
+                    from-violet-600
+                    via-fuchsia-500
+                    to-cyan-500
+                    shadow-xl
+                    shadow-violet-500/25
+                  "
+                >
+                  <Rocket className="h-6 w-6 text-white" />
+                </div>
+
+                <h2
+                  className="
+                    mx-auto
+                    mt-7
+                    max-w-3xl
+                    text-4xl
+                    font-black
+                    tracking-tight
+                    text-slate-900
+                    dark:text-white
+                    sm:text-5xl
+                  "
+                >
+                  Prêt à gérer votre activité avec plus de{' '}
+                  <span
+                    className="
+                      bg-gradient-to-r
+                      from-violet-600
+                      via-fuchsia-500
+                      to-cyan-500
+                      bg-clip-text
+                      text-transparent
+                      dark:from-fuchsia-400
+                      dark:via-violet-400
+                      dark:to-cyan-300
+                    "
+                  >
+                    simplicité ?
+                  </span>
+                </h2>
+
+                <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-slate-500 dark:text-white/40 sm:text-lg">
+                  Découvrez une nouvelle expérience de gestion
+                  pensée pour vous faire gagner du temps et garder
+                  le contrôle de votre activité.
+                </p>
+
+                <div className="mt-8 flex justify-center">
+                  <Link to="/register">
+                    <Button
+                      className="
+                        group
+                        relative
+                        h-14
+                        overflow-hidden
+                        rounded-2xl
+                        border-0
+                        bg-gradient-to-r
+                        from-violet-600
+                        via-fuchsia-600
+                        to-cyan-500
+                        px-8
+                        text-base
+                        font-bold
+                        text-white
+                        shadow-[0_15px_45px_rgba(124,58,237,0.3)]
+                        transition-all
+                        duration-300
+                        hover:scale-[1.02]
+                      "
+                    >
+                      {/* Shine */}
+
+                      <motion.div
+                        animate={{
+                          x: ['-120%', '120%'],
+                        }}
+                        transition={{
+                          duration: 2.8,
+                          repeat: Infinity,
+                          repeatDelay: 2,
+                          ease: 'easeInOut',
+                        }}
+                        className="
+                          absolute
+                          inset-y-0
+                          w-1/3
+                          skew-x-[-20deg]
+                          bg-white/20
+                          blur-sm
+                        "
+                      />
+
+                      <span className="relative flex items-center">
+                        Créer mon compte
+
+                        <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
+                      </span>
+                    </Button>
+                  </Link>
+                </div>
+
+                <div
+                  className="
+                    mt-7
+                    flex
+                    items-center
+                    justify-center
+                    gap-2
+                    text-[10px]
+                    text-slate-400
+                    dark:text-white/25
+                  "
+                >
+                  <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
+
+                  Une expérience moderne, sécurisée et accessible.
+
+                  <Star className="h-3 w-3 text-amber-500" />
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        </section>
+
+        {/* =====================================================
+            BOTTOM BRANDING
+        ====================================================== */}
+
+        <motion.div
+          initial={{
+            opacity: 0,
+          }}
+          whileInView={{
+            opacity: 1,
+          }}
+          viewport={{
+            once: true,
+          }}
+          className="
+            relative
+            z-10
+            flex
+            items-center
+            justify-center
+            gap-2
+            pb-8
+            text-[10px]
+            font-medium
+            text-slate-400
+            dark:text-white/25
+          "
+        >
+          <Sparkles className="h-3 w-3 text-violet-500 dark:text-fuchsia-400" />
+
+          Gestion Vente Premium
+
+          <span>•</span>
+
+          <Globe className="h-3 w-3" />
+
+          Cloud Business Suite
+        </motion.div>
+      </main>
     </Layout>
   );
 };

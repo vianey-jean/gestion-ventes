@@ -2,18 +2,80 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Mail, Phone, MapPin, Send, CheckCircle, Clock, Globe, Shield, Sparkles, Crown, MessageCircle, Radio } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+
+import {
+  Mail,
+  Phone,
+  MapPin,
+  Send,
+  CheckCircle,
+  Clock,
+  Globe,
+  Shield,
+  Sparkles,
+  Crown,
+  MessageCircle,
+  Radio,
+  ArrowRight,
+  Gem,
+  Zap,
+  Headphones,
+  MessageSquare,
+  Star,
+} from 'lucide-react';
+
 import { useToast } from '@/hooks/use-toast';
 import Layout from '@/components/Layout';
 import { useMessages } from '@/hooks/use-messages';
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from 'framer-motion';
 import LiveChatVisitor from '@/components/livechat/LiveChatVisitor';
 import SEOHead from '@/components/SEOHead';
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'https://server-gestion-ventes.onrender.com';
+const API_BASE =
+  import.meta.env.VITE_API_BASE_URL ||
+  'https://server-gestion-ventes.onrender.com';
+
+const contactFeatures = [
+  {
+    icon: Shield,
+    title: 'Sécurisé',
+    description: 'Vos échanges sont traités avec confidentialité.',
+    color: 'from-emerald-500 to-teal-500',
+  },
+  {
+    icon: Zap,
+    title: 'Rapide',
+    description: 'Une équipe disponible pour vous répondre.',
+    color: 'from-cyan-500 to-blue-500',
+  },
+  {
+    icon: Headphones,
+    title: 'Support',
+    description: 'Un accompagnement adapté à votre besoin.',
+    color: 'from-violet-500 to-purple-500',
+  },
+  {
+    icon: MessageSquare,
+    title: 'Échange direct',
+    description: 'Discutez directement avec notre équipe.',
+    color: 'from-fuchsia-500 to-pink-500',
+  },
+];
 
 const ContactPage: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -22,125 +84,753 @@ const ContactPage: React.FC = () => {
     expediteurTelephone: '',
     sujet: '',
     contenu: '',
-    destinataireId: '1'
+    destinataireId: '1',
   });
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [adminOnline, setAdminOnline] = useState(false);
   const [showLiveChat, setShowLiveChat] = useState(false);
-  const [submittedName, setSubmittedName] = useState(localStorage.getItem('livechat_pseudo') || '');
+  const [submittedName, setSubmittedName] = useState(
+    localStorage.getItem('livechat_pseudo') || ''
+  );
   const [liveAdminId, setLiveAdminId] = useState<string>('1');
 
   const { toast } = useToast();
   const { sendMessage } = useMessages();
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  // =========================================================
+  // FORM HANDLERS
+  // =========================================================
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
   const handleSelectChange = (name: string, value: string) => {
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
-  // Check admin online status
+  // =========================================================
+  // CHECK ADMIN ONLINE STATUS
+  // =========================================================
+
   useEffect(() => {
     const checkAdmin = async () => {
       try {
-        const res = await fetch(`${API_BASE}/api/messagerie/admin-status`);
+        const res = await fetch(
+          `${API_BASE}/api/messagerie/admin-status`
+        );
+
         if (res.ok) {
           const data = await res.json();
+
           setAdminOnline(data.online);
-          if (data.adminId) setLiveAdminId(data.adminId);
+
+          if (data.adminId) {
+            setLiveAdminId(data.adminId);
+          }
         }
-      } catch { setAdminOnline(false); }
+      } catch {
+        setAdminOnline(false);
+      }
     };
+
     checkAdmin();
+
     const interval = setInterval(checkAdmin, 10000);
+
     return () => clearInterval(interval);
   }, []);
 
+  // =========================================================
+  // SUBMIT
+  // =========================================================
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.expediteurNom || !formData.expediteurEmail || !formData.sujet || !formData.contenu) {
-      toast({ title: "Erreur", description: "Veuillez remplir tous les champs obligatoires.", variant: "destructive", className: "notification-erreur" });
+
+    if (
+      !formData.expediteurNom ||
+      !formData.expediteurEmail ||
+      !formData.sujet ||
+      !formData.contenu
+    ) {
+      toast({
+        title: 'Erreur',
+        description:
+          'Veuillez remplir tous les champs obligatoires.',
+        variant: 'destructive',
+        className: 'notification-erreur',
+      });
+
       return;
     }
+
     setIsSubmitting(true);
+
     try {
       await sendMessage(formData);
+
       setSubmittedName(formData.expediteurNom);
-      localStorage.setItem('livechat_pseudo', formData.expediteurNom);
+
+      localStorage.setItem(
+        'livechat_pseudo',
+        formData.expediteurNom
+      );
+
       setIsSubmitted(true);
-      toast({ title: "Message envoyé", description: "Votre message a été envoyé avec succès." });
-      setFormData({ expediteurNom: '', expediteurEmail: '', expediteurTelephone: '', sujet: '', contenu: '', destinataireId: '1' });
+
+      toast({
+        title: 'Message envoyé',
+        description:
+          'Votre message a été envoyé avec succès.',
+      });
+
+      setFormData({
+        expediteurNom: '',
+        expediteurEmail: '',
+        expediteurTelephone: '',
+        sujet: '',
+        contenu: '',
+        destinataireId: '1',
+      });
     } catch (error) {
-      toast({ title: "Erreur", description: "Une erreur s'est produite lors de l'envoi.", variant: "destructive", className: "notification-erreur" });
+      toast({
+        title: 'Erreur',
+        description:
+          "Une erreur s'est produite lors de l'envoi.",
+        variant: 'destructive',
+        className: 'notification-erreur',
+      });
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  // =========================================================
+  // SUBMITTED STATE
+  // =========================================================
+
   if (isSubmitted) {
     return (
       <Layout>
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-emerald-950/50 to-teal-950 flex items-center justify-center p-4">
-          {/* Glass orbs */}
-          <div className="fixed inset-0 overflow-hidden pointer-events-none">
-            <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 12, repeat: Infinity }} className="absolute top-1/3 left-1/3 w-96 h-96 bg-emerald-500/10 rounded-full" />
+        <SEOHead
+          title="Message envoyé"
+          description="Votre message a été envoyé à l'équipe Gestion Vente."
+          canonical="https://riziky-ventes.vercel.app/contact"
+        />
+
+        <main
+          className="
+            relative
+            min-h-[calc(100vh-64px)]
+            overflow-hidden
+            flex
+            items-center
+            justify-center
+            px-4
+            py-12
+            sm:px-6
+            lg:px-8
+            bg-slate-50
+            dark:bg-[#02030a]
+            transition-colors
+            duration-500
+          "
+        >
+          {/* =====================================================
+              BACKGROUND
+          ====================================================== */}
+
+          <div className="pointer-events-none absolute inset-0 overflow-hidden">
+
+            {/* Aurora 1 */}
+            <motion.div
+              animate={{
+                x: [0, 100, -50, 0],
+                y: [0, -70, 50, 0],
+                scale: [1, 1.15, 0.95, 1],
+              }}
+              transition={{
+                duration: 20,
+                repeat: Infinity,
+                ease: 'easeInOut',
+              }}
+              className="
+                absolute
+                -left-48
+                -top-48
+                h-[650px]
+                w-[650px]
+                rounded-full
+                bg-emerald-400/20
+                blur-[100px]
+                dark:bg-emerald-600/15
+              "
+            />
+
+            {/* Aurora 2 */}
+            <motion.div
+              animate={{
+                x: [0, -100, 60, 0],
+                y: [0, 70, -40, 0],
+                scale: [1, 1.2, 0.9, 1],
+              }}
+              transition={{
+                duration: 24,
+                repeat: Infinity,
+                ease: 'easeInOut',
+              }}
+              className="
+                absolute
+                -bottom-64
+                -right-48
+                h-[750px]
+                w-[750px]
+                rounded-full
+                bg-cyan-300/20
+                blur-[110px]
+                dark:bg-cyan-600/15
+              "
+            />
+
+            {/* Aurora 3 */}
+            <motion.div
+              animate={{
+                x: [0, 50, -60, 0],
+                scale: [1, 1.1, 0.95, 1],
+              }}
+              transition={{
+                duration: 28,
+                repeat: Infinity,
+                ease: 'easeInOut',
+              }}
+              className="
+                absolute
+                left-1/2
+                top-1/2
+                h-[500px]
+                w-[500px]
+                -translate-x-1/2
+                -translate-y-1/2
+                rounded-full
+                bg-violet-300/10
+                blur-[120px]
+                dark:bg-violet-600/10
+              "
+            />
+
+            {/* Grid */}
+            <div
+              className="
+                absolute
+                inset-0
+                opacity-30
+                dark:opacity-100
+                bg-[linear-gradient(rgba(15,23,42,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(15,23,42,0.04)_1px,transparent_1px)]
+                dark:bg-[linear-gradient(rgba(255,255,255,0.025)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.025)_1px,transparent_1px)]
+                bg-[size:70px_70px]
+              "
+            />
+
+            {/* Ring 1 */}
+            <motion.div
+              animate={{
+                rotate: 360,
+              }}
+              transition={{
+                duration: 70,
+                repeat: Infinity,
+                ease: 'linear',
+              }}
+              className="
+                absolute
+                left-1/2
+                top-1/2
+                h-[850px]
+                w-[850px]
+                -translate-x-1/2
+                -translate-y-1/2
+                rounded-full
+                border
+                border-slate-900/5
+                dark:border-white/[0.035]
+              "
+            />
+
+            {/* Ring 2 */}
+            <motion.div
+              animate={{
+                rotate: -360,
+              }}
+              transition={{
+                duration: 55,
+                repeat: Infinity,
+                ease: 'linear',
+              }}
+              className="
+                absolute
+                left-1/2
+                top-1/2
+                h-[600px]
+                w-[600px]
+                -translate-x-1/2
+                -translate-y-1/2
+                rounded-full
+                border
+                border-emerald-500/10
+                dark:border-cyan-500/10
+              "
+            />
+
+            {/* Particles */}
+            {[...Array(24)].map((_, index) => (
+              <motion.span
+                key={index}
+                animate={{
+                  y: [0, -80, 0],
+                  x: [
+                    0,
+                    index % 2 === 0 ? 25 : -25,
+                    0,
+                  ],
+                  opacity: [0.15, 0.7, 0.15],
+                  scale: [0.8, 1.4, 0.8],
+                }}
+                transition={{
+                  duration: 5 + index * 0.6,
+                  repeat: Infinity,
+                  delay: index * 0.35,
+                  ease: 'easeInOut',
+                }}
+                className="
+                  absolute
+                  h-1
+                  w-1
+                  rounded-full
+                  bg-emerald-500/40
+                  dark:bg-white/40
+                "
+                style={{
+                  left: `${5 + ((index * 17) % 90)}%`,
+                  top: `${8 + ((index * 23) % 85)}%`,
+                }}
+              />
+            ))}
           </div>
 
-          <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.5 }}>
-            <Card className="w-full max-w-lg text-center border-0 bg-white/[0.06] border border-white/[0.1] shadow-[0_32px_64px_rgba(0,0,0,0.4)] rounded-3xl overflow-hidden">
-              <div className="h-px bg-gradient-to-r from-transparent via-emerald-400/40 to-transparent" />
-              <CardContent className="pt-12 pb-10">
-                <div className="relative mb-8">
-                  <div className="absolute inset-0 bg-emerald-500/20 rounded-full" />
-                  <CheckCircle className="relative h-24 w-24 text-emerald-400 mx-auto drop-shadow-[0_0_20px_rgba(52,211,153,0.5)]" />
+          {/* =====================================================
+              SUCCESS CONTENT
+          ====================================================== */}
+
+          <motion.div
+            initial={{
+              opacity: 0,
+              y: 30,
+              scale: 0.96,
+            }}
+            animate={{
+              opacity: 1,
+              y: 0,
+              scale: 1,
+            }}
+            transition={{
+              duration: 0.8,
+              ease: 'easeOut',
+            }}
+            className="relative z-10 w-full max-w-xl"
+          >
+            {/* Glow */}
+            <motion.div
+              animate={{
+                opacity: [0.3, 0.6, 0.3],
+                scale: [1, 1.03, 1],
+              }}
+              transition={{
+                duration: 5,
+                repeat: Infinity,
+                ease: 'easeInOut',
+              }}
+              className="
+                absolute
+                -inset-5
+                rounded-[42px]
+                bg-gradient-to-r
+                from-emerald-500/20
+                via-teal-500/20
+                to-cyan-500/20
+                blur-2xl
+              "
+            />
+
+            <Card
+              className="
+                relative
+                overflow-hidden
+                rounded-[32px]
+                border
+                border-slate-900/10
+                dark:border-white/[0.09]
+                bg-white/80
+                dark:bg-[#0b0b14]/80
+                backdrop-blur-2xl
+                shadow-[0_30px_100px_rgba(15,23,42,0.15)]
+                dark:shadow-[0_30px_100px_rgba(0,0,0,0.65)]
+              "
+            >
+              {/* Top shine */}
+              <div
+                className="
+                  absolute
+                  left-0
+                  right-0
+                  top-0
+                  h-px
+                  bg-gradient-to-r
+                  from-transparent
+                  via-emerald-500/60
+                  dark:via-white/40
+                  to-transparent
+                "
+              />
+
+              <CardContent className="px-7 py-12 text-center sm:px-10 sm:py-14">
+
+                {/* Icon */}
+                <motion.div
+                  initial={{
+                    scale: 0,
+                    rotate: -90,
+                  }}
+                  animate={{
+                    scale: 1,
+                    rotate: 0,
+                  }}
+                  transition={{
+                    type: 'spring',
+                    bounce: 0.4,
+                    duration: 0.9,
+                  }}
+                  className="relative mx-auto mb-8 flex w-fit"
+                >
+                  <div
+                    className="
+                      absolute
+                      -inset-4
+                      rounded-full
+                      bg-gradient-to-r
+                      from-emerald-500
+                      via-teal-500
+                      to-cyan-500
+                      opacity-20
+                      blur-xl
+                    "
+                  />
+
+                  <div
+                    className="
+                      relative
+                      flex
+                      h-24
+                      w-24
+                      items-center
+                      justify-center
+                      rounded-[28px]
+                      bg-gradient-to-br
+                      from-emerald-500
+                      via-teal-500
+                      to-cyan-500
+                      shadow-xl
+                      shadow-emerald-500/25
+                    "
+                  >
+                    <CheckCircle className="h-12 w-12 text-white" />
+                  </div>
+
+                  <motion.div
+                    animate={{
+                      rotate: 360,
+                    }}
+                    transition={{
+                      duration: 10,
+                      repeat: Infinity,
+                      ease: 'linear',
+                    }}
+                    className="
+                      absolute
+                      -right-3
+                      -top-3
+                      flex
+                      h-8
+                      w-8
+                      items-center
+                      justify-center
+                      rounded-full
+                      border
+                      border-white/30
+                      bg-gradient-to-br
+                      from-amber-400
+                      to-orange-500
+                      shadow-lg
+                    "
+                  >
+                    <Crown className="h-4 w-4 text-white" />
+                  </motion.div>
+                </motion.div>
+
+                <div
+                  className="
+                    mx-auto
+                    mb-5
+                    inline-flex
+                    items-center
+                    gap-2
+                    rounded-full
+                    border
+                    border-slate-900/10
+                    dark:border-white/[0.08]
+                    bg-slate-100/70
+                    dark:bg-white/[0.04]
+                    px-3
+                    py-1.5
+                  "
+                >
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+
+                  <span className="text-[10px] font-semibold text-slate-500 dark:text-white/50">
+                    Message transmis avec succès
+                  </span>
                 </div>
-                <h2 className="text-4xl font-extrabold text-white mb-4">Message Envoyé !</h2>
-                <div className="text-emerald-200/50 mb-8 text-lg leading-relaxed">
-                  Merci pour votre message. Notre équipe vous répondra dans les plus brefs délais.
-                </div>
-                <div className="space-y-4">
+
+                <h2
+                  className="
+                    text-4xl
+                    sm:text-5xl
+                    font-black
+                    tracking-tight
+                    text-slate-900
+                    dark:text-white
+                  "
+                >
+                  Message
+                  <span
+                    className="
+                      block
+                      bg-gradient-to-r
+                      from-emerald-600
+                      via-teal-500
+                      to-cyan-500
+                      dark:from-emerald-400
+                      dark:via-teal-300
+                      dark:to-cyan-300
+                      bg-clip-text
+                      text-transparent
+                    "
+                  >
+                    Envoyé !
+                  </span>
+                </h2>
+
+                <p
+                  className="
+                    mx-auto
+                    mt-5
+                    max-w-md
+                    text-sm
+                    sm:text-base
+                    leading-relaxed
+                    text-slate-500
+                    dark:text-white/45
+                  "
+                >
+                  Merci pour votre message. Notre équipe vous répondra
+                  dans les plus brefs délais.
+                </p>
+
+                <div className="mt-8 space-y-3">
+
+                  {/* Another message */}
                   <Button
                     onClick={() => setIsSubmitted(false)}
-                    className="w-full h-14 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white text-lg font-semibold shadow-[0_20px_40px_rgba(16,185,129,0.3)] border border-white/10 rounded-xl transition-all duration-300 hover:scale-[1.02]"
+                    className="
+                      group
+                      relative
+                      h-14
+                      w-full
+                      overflow-hidden
+                      rounded-2xl
+                      border-0
+                      bg-gradient-to-r
+                      from-emerald-600
+                      via-teal-500
+                      to-cyan-500
+                      text-base
+                      font-bold
+                      text-white
+                      shadow-[0_15px_45px_rgba(16,185,129,0.3)]
+                      hover:scale-[1.015]
+                      active:scale-[0.99]
+                      transition-all
+                      duration-300
+                    "
                   >
-                    <Send className="mr-3 h-5 w-5" />
-                    Envoyer un autre message
+                    <motion.div
+                      animate={{
+                        x: ['-120%', '120%'],
+                      }}
+                      transition={{
+                        duration: 2.8,
+                        repeat: Infinity,
+                        repeatDelay: 2,
+                        ease: 'easeInOut',
+                      }}
+                      className="
+                        absolute
+                        inset-y-0
+                        w-1/3
+                        skew-x-[-20deg]
+                        bg-white/20
+                        blur-sm
+                      "
+                    />
+
+                    <span className="relative flex items-center justify-center">
+                      <Send className="mr-3 h-5 w-5" />
+                      Envoyer un autre message
+                      <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
+                    </span>
                   </Button>
 
+                  {/* Live Chat */}
                   <Button
                     onClick={() => setShowLiveChat(true)}
                     disabled={!adminOnline}
-                    className={`w-full h-14 text-lg font-semibold rounded-xl border border-white/10 transition-all duration-300 hover:scale-[1.02] ${
-                      adminOnline
-                        ? 'bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white shadow-[0_20px_40px_rgba(139,92,246,0.3)]'
-                        : 'bg-white/[0.05] text-white/30 cursor-not-allowed'
-                    }`}
+                    className={`
+                      group
+                      h-14
+                      w-full
+                      rounded-2xl
+                      border
+                      text-base
+                      font-bold
+                      transition-all
+                      duration-300
+                      ${
+                        adminOnline
+                          ? `
+                            border-white/10
+                            bg-gradient-to-r
+                            from-violet-600
+                            via-fuchsia-600
+                            to-pink-500
+                            text-white
+                            shadow-[0_15px_45px_rgba(139,92,246,0.3)]
+                            hover:scale-[1.015]
+                          `
+                          : `
+                            border-slate-900/10
+                            dark:border-white/[0.08]
+                            bg-slate-100/70
+                            dark:bg-white/[0.035]
+                            text-slate-400
+                            dark:text-white/30
+                            cursor-not-allowed
+                          `
+                      }
+                    `}
                   >
                     <div className="flex items-center justify-center gap-3">
+
                       <div className="relative">
                         <MessageCircle className="h-5 w-5" />
+
                         {adminOnline && (
-                          <Radio className="absolute -top-1 -right-1 h-3 w-3 text-emerald-400 animate-pulse" />
+                          <Radio
+                            className="
+                              absolute
+                              -right-1
+                              -top-1
+                              h-3 w-3
+                              text-emerald-400
+                              animate-pulse
+                            "
+                          />
                         )}
                       </div>
-                      {adminOnline ? 'Chat en direct' : 'Chat hors ligne'}
+
+                      {adminOnline
+                        ? 'Chat en direct'
+                        : 'Chat hors ligne'}
+
                       {adminOnline && (
-                        <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-300 text-xs rounded-full border border-emerald-500/30">
+                        <span
+                          className="
+                            rounded-full
+                            border
+                            border-emerald-400/20
+                            bg-emerald-400/10
+                            px-2
+                            py-0.5
+                            text-[10px]
+                            font-bold
+                            text-emerald-300
+                          "
+                        >
                           LIVE
                         </span>
                       )}
                     </div>
                   </Button>
                 </div>
+
+                {/* Security footer */}
+                <div
+                  className="
+                    mt-7
+                    flex
+                    items-center
+                    justify-center
+                    gap-2
+                    text-[10px]
+                    text-slate-400
+                    dark:text-white/30
+                  "
+                >
+                  <Shield className="h-3.5 w-3.5 text-emerald-500" />
+                  Vos échanges sont traités de manière sécurisée.
+                  <Star className="h-3 w-3 text-amber-500" />
+                </div>
               </CardContent>
+
+              {/* Bottom line */}
+              <div
+                className="
+                  absolute
+                  bottom-0
+                  left-0
+                  right-0
+                  h-px
+                  bg-gradient-to-r
+                  from-transparent
+                  via-cyan-500/40
+                  to-transparent
+                "
+              />
             </Card>
           </motion.div>
 
-          {/* Live Chat Visitor Widget */}
+          {/* Live Chat */}
           <AnimatePresence>
             {showLiveChat && adminOnline && (
               <LiveChatVisitor
@@ -150,10 +840,14 @@ const ContactPage: React.FC = () => {
               />
             )}
           </AnimatePresence>
-        </div>
+        </main>
       </Layout>
     );
   }
+
+  // =========================================================
+  // MAIN CONTACT PAGE
+  // =========================================================
 
   return (
     <Layout>
@@ -162,161 +856,1512 @@ const ContactPage: React.FC = () => {
         description="Contactez l'équipe Gestion Vente. Support technique, partenariat ou consultation - nous répondons sous 24h."
         canonical="https://riziky-ventes.vercel.app/contact"
       />
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-950/50 to-indigo-950 relative">
-        {/* Background effects */}
-        <div className="fixed inset-0 overflow-hidden pointer-events-none">
-          <motion.div animate={{ x: [0, 30, 0], y: [0, -20, 0] }} transition={{ duration: 16, repeat: Infinity, ease: "easeInOut" }} className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/10 rounded-full" />
-          <motion.div animate={{ x: [0, -30, 0], y: [0, 20, 0] }} transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }} className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-blue-500/8 rounded-full" />
+
+      <main
+        className="
+          relative
+          min-h-[calc(100vh-64px)]
+          overflow-hidden
+          bg-slate-50
+          dark:bg-[#02030a]
+          transition-colors
+          duration-500
+        "
+      >
+
+        {/* =====================================================
+            BACKGROUND
+        ====================================================== */}
+
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+
+          {/* Aurora 1 */}
+          <motion.div
+            animate={{
+              x: [0, 100, -50, 0],
+              y: [0, -70, 50, 0],
+              scale: [1, 1.15, 0.95, 1],
+            }}
+            transition={{
+              duration: 20,
+              repeat: Infinity,
+              ease: 'easeInOut',
+            }}
+            className="
+              absolute
+              -left-48
+              -top-48
+              h-[650px]
+              w-[650px]
+              rounded-full
+              bg-violet-400/20
+              blur-[100px]
+              dark:bg-fuchsia-600/20
+            "
+          />
+
+          {/* Aurora 2 */}
+          <motion.div
+            animate={{
+              x: [0, -100, 60, 0],
+              y: [0, 70, -40, 0],
+              scale: [1, 1.2, 0.9, 1],
+            }}
+            transition={{
+              duration: 24,
+              repeat: Infinity,
+              ease: 'easeInOut',
+            }}
+            className="
+              absolute
+              -bottom-64
+              -right-48
+              h-[750px]
+              w-[750px]
+              rounded-full
+              bg-cyan-300/20
+              blur-[110px]
+              dark:bg-cyan-600/15
+            "
+          />
+
+          {/* Aurora 3 */}
+          <motion.div
+            animate={{
+              x: [0, 50, -60, 0],
+              scale: [1, 1.1, 0.95, 1],
+            }}
+            transition={{
+              duration: 28,
+              repeat: Infinity,
+              ease: 'easeInOut',
+            }}
+            className="
+              absolute
+              left-1/2
+              top-1/2
+              h-[500px]
+              w-[500px]
+              -translate-x-1/2
+              -translate-y-1/2
+              rounded-full
+              bg-pink-300/10
+              blur-[120px]
+              dark:bg-violet-600/10
+            "
+          />
+
+          {/* Grid */}
+          <div
+            className="
+              absolute
+              inset-0
+              opacity-30
+              dark:opacity-100
+              bg-[linear-gradient(rgba(15,23,42,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(15,23,42,0.04)_1px,transparent_1px)]
+              dark:bg-[linear-gradient(rgba(255,255,255,0.025)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.025)_1px,transparent_1px)]
+              bg-[size:70px_70px]
+            "
+          />
+
+          {/* Ring 1 */}
+          <motion.div
+            animate={{
+              rotate: 360,
+            }}
+            transition={{
+              duration: 70,
+              repeat: Infinity,
+              ease: 'linear',
+            }}
+            className="
+              absolute
+              left-1/2
+              top-1/2
+              h-[950px]
+              w-[950px]
+              -translate-x-1/2
+              -translate-y-1/2
+              rounded-full
+              border
+              border-slate-900/5
+              dark:border-white/[0.035]
+            "
+          />
+
+          {/* Ring 2 */}
+          <motion.div
+            animate={{
+              rotate: -360,
+            }}
+            transition={{
+              duration: 55,
+              repeat: Infinity,
+              ease: 'linear',
+            }}
+            className="
+              absolute
+              left-1/2
+              top-1/2
+              h-[650px]
+              w-[650px]
+              -translate-x-1/2
+              -translate-y-1/2
+              rounded-full
+              border
+              border-violet-500/10
+              dark:border-fuchsia-500/10
+            "
+          />
+
+          {/* Particles */}
+          {[...Array(30)].map((_, index) => (
+            <motion.span
+              key={index}
+              animate={{
+                y: [0, -80, 0],
+                x: [
+                  0,
+                  index % 2 === 0 ? 25 : -25,
+                  0,
+                ],
+                opacity: [0.15, 0.7, 0.15],
+                scale: [0.8, 1.4, 0.8],
+              }}
+              transition={{
+                duration: 5 + index * 0.6,
+                repeat: Infinity,
+                delay: index * 0.35,
+                ease: 'easeInOut',
+              }}
+              className="
+                absolute
+                h-1
+                w-1
+                rounded-full
+                bg-violet-500/40
+                dark:bg-white/40
+              "
+              style={{
+                left: `${5 + ((index * 17) % 90)}%`,
+                top: `${8 + ((index * 23) % 85)}%`,
+              }}
+            />
+          ))}
         </div>
 
-        {/* Grid */}
-        <div className="fixed inset-0 bg-[linear-gradient(rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:48px_48px] pointer-events-none" />
+        {/* =====================================================
+            CONTENT
+        ====================================================== */}
 
-        <div className="relative container mx-auto px-3 sm:px-4 md:px-6 py-8 sm:py-12 md:py-16">
-          {/* Header */}
-          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-8 sm:mb-12 md:mb-16">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/[0.05] rounded-full border border-white/[0.08] mb-6">
-              <Crown className="h-4 w-4 text-amber-400" />
-              <span className="text-sm font-medium text-purple-300/80">Contact Premium</span>
-            </div>
+        <div
+          className="
+            relative
+            z-10
+            container
+            mx-auto
+            max-w-7xl
+            px-4
+            py-10
+            sm:px-6
+            sm:py-14
+            lg:px-8
+            lg:py-20
+          "
+        >
 
-            <motion.h1
-              initial={{ opacity: 0, y: 60, scale: 0.9 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ duration: 0.9, ease: "easeOut" }}
-              className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-white mb-6 drop-shadow-[0_4px_20px_rgba(139,92,246,0.3)]"
+          {/* ===================================================
+              HEADER
+          ==================================================== */}
+
+          <motion.div
+            initial={{
+              opacity: 0,
+              y: 30,
+            }}
+            animate={{
+              opacity: 1,
+              y: 0,
+            }}
+            transition={{
+              duration: 0.8,
+              ease: 'easeOut',
+            }}
+            className="mb-12 text-center sm:mb-16"
+          >
+
+            {/* Badge */}
+            <motion.div
+              whileHover={{
+                scale: 1.03,
+                y: -2,
+              }}
+              className="
+                mx-auto
+                inline-flex
+                items-center
+                gap-2.5
+                rounded-full
+                border
+                border-slate-900/10
+                dark:border-white/10
+                bg-white/70
+                dark:bg-white/[0.045]
+                backdrop-blur-xl
+                px-4
+                py-2
+                shadow-lg
+                dark:shadow-none
+              "
             >
-              Contactez-nous
+              <span
+                className="
+                  flex
+                  h-7
+                  w-7
+                  items-center
+                  justify-center
+                  rounded-full
+                  bg-gradient-to-br
+                  from-violet-500
+                  to-fuchsia-500
+                  shadow-lg
+                  shadow-violet-500/25
+                "
+              >
+                <Gem className="h-3.5 w-3.5 text-white" />
+              </span>
+
+              <span
+                className="
+                  text-sm
+                  font-semibold
+                  text-slate-700
+                  dark:text-white/80
+                "
+              >
+                Premium Business Support
+              </span>
+
+              <Sparkles
+                className="
+                  h-4
+                  w-4
+                  text-fuchsia-500
+                  dark:text-fuchsia-400
+                "
+              />
+            </motion.div>
+
+            {/* Heading */}
+            <motion.h1
+              initial={{
+                opacity: 0,
+                y: 40,
+              }}
+              animate={{
+                opacity: 1,
+                y: 0,
+              }}
+              transition={{
+                duration: 0.8,
+                delay: 0.15,
+              }}
+              className="
+                mt-8
+                text-5xl
+                font-black
+                leading-[0.95]
+                tracking-[-0.04em]
+                text-slate-900
+                dark:text-white
+                sm:text-6xl
+                lg:text-7xl
+              "
+            >
+              Parlons de votre
+              <span
+                className="
+                  block
+                  mt-3
+                  bg-gradient-to-r
+                  from-violet-600
+                  via-fuchsia-500
+                  to-cyan-500
+                  dark:from-fuchsia-400
+                  dark:via-violet-400
+                  dark:to-cyan-300
+                  bg-clip-text
+                  text-transparent
+                "
+              >
+                projet.
+              </span>
             </motion.h1>
 
-            <div className="max-w-3xl mx-auto px-3 sm:px-4">
-              <div className="text-sm sm:text-base md:text-lg text-purple-200/40 leading-relaxed mb-6 sm:mb-8">
-                Une question ? Un projet ? Notre équipe est à votre disposition.
-              </div>
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6 text-xs sm:text-sm text-purple-300/40">
-                <div className="flex items-center gap-2">
-                  <Shield className="h-3.5 w-3.5 text-emerald-400" />
-                  <span>Sécurisé</span>
-                </div>
-                <div className="hidden sm:block w-1 h-1 bg-purple-400/20 rounded-full" />
-                <div className="flex items-center gap-2">
-                  <Clock className="h-3.5 w-3.5 text-blue-400" />
-                  <span>Réponse sous 24h</span>
-                </div>
-                <div className="hidden sm:block w-1 h-1 bg-purple-400/20 rounded-full" />
-                <div className="flex items-center gap-2">
-                  <Sparkles className="h-3.5 w-3.5 text-purple-400" />
-                  <span>Service Premium</span>
-                </div>
-              </div>
+            <motion.p
+              initial={{
+                opacity: 0,
+                y: 20,
+              }}
+              animate={{
+                opacity: 1,
+                y: 0,
+              }}
+              transition={{
+                duration: 0.7,
+                delay: 0.3,
+              }}
+              className="
+                mx-auto
+                mt-7
+                max-w-2xl
+                text-base
+                leading-relaxed
+                text-slate-600
+                dark:text-white/45
+                sm:text-lg
+              "
+            >
+              Une question ? Un projet ? Notre équipe est à votre
+              disposition pour vous accompagner avec une expérience
+              simple, rapide et premium.
+            </motion.p>
+
+            {/* Mini stats */}
+            <div className="mt-8 flex flex-wrap justify-center gap-3">
+              {[
+                {
+                  icon: Shield,
+                  value: 'Sécurisé',
+                  label: 'Échanges protégés',
+                },
+                {
+                  icon: Clock,
+                  value: '24h',
+                  label: 'Délai de réponse',
+                },
+                {
+                  icon: Globe,
+                  value: 'Cloud',
+                  label: 'Accessible partout',
+                },
+              ].map((item, index) => {
+                const Icon = item.icon;
+
+                return (
+                  <motion.div
+                    key={item.label}
+                    initial={{
+                      opacity: 0,
+                      y: 15,
+                    }}
+                    animate={{
+                      opacity: 1,
+                      y: 0,
+                    }}
+                    transition={{
+                      delay: 0.5 + index * 0.1,
+                    }}
+                    whileHover={{
+                      y: -4,
+                    }}
+                    className="
+                      rounded-2xl
+                      border
+                      border-slate-900/10
+                      dark:border-white/[0.08]
+                      bg-white/60
+                      dark:bg-white/[0.035]
+                      backdrop-blur-xl
+                      px-4
+                      py-3
+                    "
+                  >
+                    <div className="flex items-center gap-3">
+                      <Icon
+                        className="
+                          h-4
+                          w-4
+                          text-violet-600
+                          dark:text-fuchsia-400
+                        "
+                      />
+
+                      <div className="text-left">
+                        <div
+                          className="
+                            text-sm
+                            font-bold
+                            text-slate-900
+                            dark:text-white
+                          "
+                        >
+                          {item.value}
+                        </div>
+
+                        <div
+                          className="
+                            text-[11px]
+                            text-slate-500
+                            dark:text-white/40
+                          "
+                        >
+                          {item.label}
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
             </div>
           </motion.div>
 
-          <div className="grid lg:grid-cols-3 gap-6 sm:gap-8 md:gap-10 max-w-7xl mx-auto">
-            {/* Formulaire */}
-            <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }} className="lg:col-span-2">
-              <Card className="border-0 bg-white/[0.04] border border-white/[0.08] rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] overflow-hidden">
-                <div className="h-px bg-gradient-to-r from-transparent via-purple-400/30 to-transparent" />
-                <CardHeader className="pb-4 sm:pb-6 md:pb-8 p-4 sm:p-6">
-                  <CardTitle className="flex items-center gap-3 text-lg sm:text-xl text-white">
-                    <div className="p-2.5 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl shadow-[0_8px_20px_rgba(59,130,246,0.3)] border border-white/10">
-                      <Mail className="h-5 w-5 text-white" />
+          {/* ===================================================
+              MAIN GRID
+          ==================================================== */}
+
+          <div
+            className="
+              grid
+              gap-8
+              lg:grid-cols-[1fr_360px]
+              xl:gap-12
+            "
+          >
+
+            {/* =================================================
+                FORM CARD
+            ================================================== */}
+
+            <motion.div
+              initial={{
+                opacity: 0,
+                x: -40,
+              }}
+              animate={{
+                opacity: 1,
+                x: 0,
+              }}
+              transition={{
+                duration: 0.8,
+                delay: 0.2,
+              }}
+              className="relative"
+            >
+              {/* Outer glow */}
+              <motion.div
+                animate={{
+                  opacity: [0.3, 0.55, 0.3],
+                  scale: [1, 1.02, 1],
+                }}
+                transition={{
+                  duration: 5,
+                  repeat: Infinity,
+                  ease: 'easeInOut',
+                }}
+                className="
+                  absolute
+                  -inset-4
+                  rounded-[40px]
+                  bg-gradient-to-r
+                  from-violet-500/15
+                  via-fuchsia-500/15
+                  to-cyan-500/15
+                  blur-2xl
+                "
+              />
+
+              <Card
+                className="
+                  relative
+                  overflow-hidden
+                  rounded-[32px]
+                  border
+                  border-slate-900/10
+                  dark:border-white/[0.09]
+                  bg-white/80
+                  dark:bg-[#0b0b14]/80
+                  backdrop-blur-2xl
+                  shadow-[0_30px_100px_rgba(15,23,42,0.12)]
+                  dark:shadow-[0_30px_100px_rgba(0,0,0,0.65)]
+                "
+              >
+                {/* Top shine */}
+                <div
+                  className="
+                    absolute
+                    left-0
+                    right-0
+                    top-0
+                    h-px
+                    bg-gradient-to-r
+                    from-transparent
+                    via-violet-500/60
+                    dark:via-white/40
+                    to-transparent
+                  "
+                />
+
+                <CardHeader className="px-6 pb-6 pt-8 sm:px-9">
+
+                  <div className="flex items-start justify-between gap-4">
+
+                    <div>
+                      {/* Icon */}
+                      <motion.div
+                        initial={{
+                          scale: 0,
+                          rotate: -90,
+                        }}
+                        animate={{
+                          scale: 1,
+                          rotate: 0,
+                        }}
+                        transition={{
+                          type: 'spring',
+                          bounce: 0.4,
+                          duration: 0.9,
+                        }}
+                        className="relative inline-flex"
+                      >
+                        <div
+                          className="
+                            absolute
+                            -inset-2
+                            rounded-[25px]
+                            bg-gradient-to-r
+                            from-violet-500
+                            via-fuchsia-500
+                            to-cyan-500
+                            opacity-20
+                            blur-lg
+                          "
+                        />
+
+                        <div
+                          className="
+                            relative
+                            flex
+                            h-16
+                            w-16
+                            items-center
+                            justify-center
+                            rounded-[20px]
+                            bg-gradient-to-br
+                            from-violet-600
+                            via-fuchsia-500
+                            to-cyan-500
+                            shadow-xl
+                            shadow-violet-500/25
+                          "
+                        >
+                          <Mail className="h-8 w-8 text-white" />
+                        </div>
+
+                        <motion.div
+                          animate={{
+                            rotate: 360,
+                          }}
+                          transition={{
+                            duration: 10,
+                            repeat: Infinity,
+                            ease: 'linear',
+                          }}
+                          className="
+                            absolute
+                            -right-2
+                            -top-2
+                            flex
+                            h-7
+                            w-7
+                            items-center
+                            justify-center
+                            rounded-full
+                            border
+                            border-white/30
+                            bg-gradient-to-br
+                            from-amber-400
+                            to-orange-500
+                            shadow-lg
+                          "
+                        >
+                          <Crown className="h-3.5 w-3.5 text-white" />
+                        </motion.div>
+                      </motion.div>
                     </div>
-                    Envoyez-nous un message
+
+                    {/* Online status */}
+                    <div
+                      className="
+                        flex
+                        shrink-0
+                        items-center
+                        gap-1.5
+                        rounded-full
+                        border
+                        border-slate-900/10
+                        dark:border-white/[0.08]
+                        bg-slate-100/70
+                        dark:bg-white/[0.04]
+                        px-3
+                        py-1.5
+                      "
+                    >
+                      <span
+                        className={`
+                          h-1.5
+                          w-1.5
+                          rounded-full
+                          ${
+                            adminOnline
+                              ? 'bg-emerald-500 animate-pulse'
+                              : 'bg-slate-400'
+                          }
+                        `}
+                      />
+
+                      <span
+                        className="
+                          text-[10px]
+                          font-semibold
+                          text-slate-500
+                          dark:text-white/50
+                        "
+                      >
+                        {adminOnline
+                          ? 'Équipe en ligne'
+                          : 'Équipe disponible'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <CardTitle
+                    className="
+                      mt-6
+                      text-3xl
+                      font-black
+                      tracking-tight
+                      text-slate-900
+                      dark:text-white
+                      sm:text-4xl
+                    "
+                  >
+                    Envoyez-nous un
+                    <span
+                      className="
+                        ml-2
+                        bg-gradient-to-r
+                        from-violet-600
+                        via-fuchsia-500
+                        to-cyan-500
+                        dark:from-fuchsia-400
+                        dark:via-violet-400
+                        dark:to-cyan-300
+                        bg-clip-text
+                        text-transparent
+                      "
+                    >
+                      message.
+                    </span>
                   </CardTitle>
-                  <CardDescription className="text-sm sm:text-base text-purple-200/40 mt-2">
-                    Chaque message est traité avec soin par notre équipe dédiée.
+
+                  <CardDescription
+                    className="
+                      mt-2
+                      text-sm
+                      leading-relaxed
+                      text-slate-500
+                      dark:text-white/45
+                      sm:text-base
+                    "
+                  >
+                    Chaque demande est traitée avec soin par notre
+                    équipe dédiée.
                   </CardDescription>
+
+                  {/* Security badges */}
+                  <div className="mt-5 flex flex-wrap gap-2">
+                    {[
+                      {
+                        icon: Shield,
+                        label: 'Sécurisé',
+                      },
+                      {
+                        icon: Zap,
+                        label: 'Rapide',
+                      },
+                      {
+                        icon: Sparkles,
+                        label: 'Premium',
+                      },
+                    ].map((item) => {
+                      const Icon = item.icon;
+
+                      return (
+                        <div
+                          key={item.label}
+                          className="
+                            flex
+                            items-center
+                            gap-1.5
+                            rounded-full
+                            border
+                            border-slate-900/10
+                            dark:border-white/[0.07]
+                            bg-slate-100/60
+                            dark:bg-white/[0.035]
+                            px-2.5
+                            py-1.5
+                          "
+                        >
+                          <Icon
+                            className="
+                              h-3 w-3
+                              text-violet-600
+                              dark:text-fuchsia-400
+                            "
+                          />
+
+                          <span
+                            className="
+                              text-[10px]
+                              font-semibold
+                              text-slate-500
+                              dark:text-white/50
+                            "
+                          >
+                            {item.label}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </CardHeader>
-                <CardContent className="pb-8">
-                  <form onSubmit={handleSubmit} className="space-y-6">
-                    <div className="grid md:grid-cols-2 gap-5">
-                      <div className="space-y-2">
-                        <Label htmlFor="expediteurNom" className="text-sm font-semibold text-purple-200/70">Nom complet *</Label>
-                        <Input id="expediteurNom" name="expediteurNom" value={formData.expediteurNom} onChange={handleChange} placeholder="Votre nom" required className="h-12 bg-white/[0.04] border-white/[0.08] text-white placeholder:text-purple-300/25 rounded-xl focus:bg-white/[0.08] focus:border-purple-400/30" />
+
+                <CardContent className="px-6 pb-8 sm:px-9">
+
+                  <form
+                    onSubmit={handleSubmit}
+                    className="space-y-6"
+                  >
+
+                    {/* Nom + Email */}
+                    <div className="grid gap-5 md:grid-cols-2">
+
+                      <div className="space-y-2.5">
+                        <Label
+                          htmlFor="expediteurNom"
+                          className="
+                            flex
+                            items-center
+                            gap-2
+                            text-sm
+                            font-semibold
+                            text-slate-700
+                            dark:text-white/75
+                          "
+                        >
+                          <Crown
+                            className="
+                              h-4 w-4
+                              text-violet-600
+                              dark:text-fuchsia-400
+                            "
+                          />
+                          Nom complet *
+                        </Label>
+
+                        <div className="group relative">
+
+                          <div
+                            className="
+                              absolute
+                              -inset-[1px]
+                              rounded-2xl
+                              bg-gradient-to-r
+                              from-violet-500
+                              via-fuchsia-500
+                              to-cyan-500
+                              opacity-0
+                              blur-[2px]
+                              transition
+                              duration-500
+                              group-focus-within:opacity-60
+                            "
+                          />
+
+                          <Input
+                            id="expediteurNom"
+                            name="expediteurNom"
+                            value={formData.expediteurNom}
+                            onChange={handleChange}
+                            placeholder="Votre nom"
+                            required
+                            className="
+                              relative
+                              h-14
+                              rounded-2xl
+                              border
+                              border-slate-900/10
+                              dark:border-white/[0.08]
+                              bg-slate-100/70
+                              dark:bg-white/[0.045]
+                              text-slate-900
+                              dark:text-white
+                              placeholder:text-slate-400
+                              dark:placeholder:text-white/20
+                              focus:border-violet-500/50
+                              dark:focus:border-fuchsia-400/50
+                              focus:bg-white
+                              dark:focus:bg-white/[0.07]
+                              transition-all
+                              duration-300
+                            "
+                          />
+                        </div>
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="expediteurEmail" className="text-sm font-semibold text-purple-200/70">Email *</Label>
-                        <Input id="expediteurEmail" name="expediteurEmail" type="email" value={formData.expediteurEmail} onChange={handleChange} placeholder="votre@email.com" required className="h-12 bg-white/[0.04] border-white/[0.08] text-white placeholder:text-purple-300/25 rounded-xl focus:bg-white/[0.08] focus:border-purple-400/30" />
+
+                      <div className="space-y-2.5">
+                        <Label
+                          htmlFor="expediteurEmail"
+                          className="
+                            flex
+                            items-center
+                            gap-2
+                            text-sm
+                            font-semibold
+                            text-slate-700
+                            dark:text-white/75
+                          "
+                        >
+                          <Mail
+                            className="
+                              h-4 w-4
+                              text-violet-600
+                              dark:text-fuchsia-400
+                            "
+                          />
+                          Email *
+                        </Label>
+
+                        <div className="group relative">
+
+                          <div
+                            className="
+                              absolute
+                              -inset-[1px]
+                              rounded-2xl
+                              bg-gradient-to-r
+                              from-violet-500
+                              via-fuchsia-500
+                              to-cyan-500
+                              opacity-0
+                              blur-[2px]
+                              transition
+                              duration-500
+                              group-focus-within:opacity-60
+                            "
+                          />
+
+                          <Input
+                            id="expediteurEmail"
+                            name="expediteurEmail"
+                            type="email"
+                            value={formData.expediteurEmail}
+                            onChange={handleChange}
+                            placeholder="votre@email.com"
+                            required
+                            className="
+                              relative
+                              h-14
+                              rounded-2xl
+                              border
+                              border-slate-900/10
+                              dark:border-white/[0.08]
+                              bg-slate-100/70
+                              dark:bg-white/[0.045]
+                              text-slate-900
+                              dark:text-white
+                              placeholder:text-slate-400
+                              dark:placeholder:text-white/20
+                              focus:border-violet-500/50
+                              dark:focus:border-fuchsia-400/50
+                              focus:bg-white
+                              dark:focus:bg-white/[0.07]
+                              transition-all
+                              duration-300
+                            "
+                          />
+                        </div>
                       </div>
                     </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="expediteurTelephone" className="text-sm font-semibold text-purple-200/70">Téléphone</Label>
-                      <Input id="expediteurTelephone" name="expediteurTelephone" value={formData.expediteurTelephone} onChange={handleChange} placeholder="Votre numéro" className="h-12 bg-white/[0.04] border-white/[0.08] text-white placeholder:text-purple-300/25 rounded-xl focus:bg-white/[0.08] focus:border-purple-400/30" />
+                    {/* Telephone */}
+                    <div className="space-y-2.5">
+                      <Label
+                        htmlFor="expediteurTelephone"
+                        className="
+                          flex
+                          items-center
+                          gap-2
+                          text-sm
+                          font-semibold
+                          text-slate-700
+                          dark:text-white/75
+                        "
+                      >
+                        <Phone
+                          className="
+                            h-4 w-4
+                            text-violet-600
+                            dark:text-fuchsia-400
+                          "
+                        />
+                        Téléphone
+                      </Label>
+
+                      <Input
+                        id="expediteurTelephone"
+                        name="expediteurTelephone"
+                        value={formData.expediteurTelephone}
+                        onChange={handleChange}
+                        placeholder="Votre numéro"
+                        className="
+                          h-14
+                          rounded-2xl
+                          border
+                          border-slate-900/10
+                          dark:border-white/[0.08]
+                          bg-slate-100/70
+                          dark:bg-white/[0.045]
+                          text-slate-900
+                          dark:text-white
+                          placeholder:text-slate-400
+                          dark:placeholder:text-white/20
+                          focus:border-violet-500/50
+                          dark:focus:border-fuchsia-400/50
+                          focus:bg-white
+                          dark:focus:bg-white/[0.07]
+                          transition-all
+                          duration-300
+                        "
+                      />
                     </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="sujet" className="text-sm font-semibold text-purple-200/70">Sujet *</Label>
-                      <Select onValueChange={(value) => handleSelectChange('sujet', value)} value={formData.sujet}>
-                        <SelectTrigger className="h-12 bg-white/[0.04] border-white/[0.08] text-white rounded-xl focus:bg-white/[0.08] focus:border-purple-400/30">
+                    {/* Sujet */}
+                    <div className="space-y-2.5">
+                      <Label
+                        htmlFor="sujet"
+                        className="
+                          flex
+                          items-center
+                          gap-2
+                          text-sm
+                          font-semibold
+                          text-slate-700
+                          dark:text-white/75
+                        "
+                      >
+                        <MessageSquare
+                          className="
+                            h-4 w-4
+                            text-violet-600
+                            dark:text-fuchsia-400
+                          "
+                        />
+                        Sujet *
+                      </Label>
+
+                      <Select
+                        onValueChange={(value) =>
+                          handleSelectChange('sujet', value)
+                        }
+                        value={formData.sujet}
+                      >
+                        <SelectTrigger
+                          className="
+                            h-14
+                            rounded-2xl
+                            border
+                            border-slate-900/10
+                            dark:border-white/[0.08]
+                            bg-slate-100/70
+                            dark:bg-white/[0.045]
+                            text-slate-900
+                            dark:text-white
+                            focus:border-violet-500/50
+                            dark:focus:border-fuchsia-400/50
+                            transition-all
+                            duration-300
+                          "
+                        >
                           <SelectValue placeholder="Choisissez le sujet" />
                         </SelectTrigger>
-                        <SelectContent className="bg-white/10 border border-white/20 shadow-[0_20px_40px_rgba(0,0,0,0.25)]">
-                          <SelectItem value="Demande d'information">💡 Information</SelectItem>
-                          <SelectItem value="Support technique">🔧 Support technique</SelectItem>
-                          <SelectItem value="Partenariat">🤝 Partenariat</SelectItem>
-                          <SelectItem value="Consultation">👨‍💼 Consultation</SelectItem>
-                          <SelectItem value="Autre">📧 Autre</SelectItem>
+
+                        <SelectContent
+                          className="
+                            border
+                            border-slate-900/10
+                            dark:border-white/10
+                            bg-white/95
+                            dark:bg-[#0b0b14]/95
+                            backdrop-blur-2xl
+                            shadow-2xl
+                          "
+                        >
+                          <SelectItem value="Demande d'information">
+                            💡 Information
+                          </SelectItem>
+
+                          <SelectItem value="Support technique">
+                            🔧 Support technique
+                          </SelectItem>
+
+                          <SelectItem value="Partenariat">
+                            🤝 Partenariat
+                          </SelectItem>
+
+                          <SelectItem value="Consultation">
+                            👨‍💼 Consultation
+                          </SelectItem>
+
+                          <SelectItem value="Autre">
+                            📧 Autre
+                          </SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="contenu" className="text-sm font-semibold text-purple-200/70">Message *</Label>
-                      <Textarea id="contenu" name="contenu" value={formData.contenu} onChange={handleChange} placeholder="Décrivez votre demande..." rows={6} required className="bg-white/[0.04] border-white/[0.08] text-white placeholder:text-purple-300/25 rounded-xl focus:bg-white/[0.08] focus:border-purple-400/30 resize-none" />
+                    {/* Message */}
+                    <div className="space-y-2.5">
+                      <Label
+                        htmlFor="contenu"
+                        className="
+                          flex
+                          items-center
+                          gap-2
+                          text-sm
+                          font-semibold
+                          text-slate-700
+                          dark:text-white/75
+                        "
+                      >
+                        <MessageCircle
+                          className="
+                            h-4 w-4
+                            text-violet-600
+                            dark:text-fuchsia-400
+                          "
+                        />
+                        Message *
+                      </Label>
+
+                      <div className="group relative">
+
+                        <div
+                          className="
+                            absolute
+                            -inset-[1px]
+                            rounded-2xl
+                            bg-gradient-to-r
+                            from-violet-500
+                            via-fuchsia-500
+                            to-cyan-500
+                            opacity-0
+                            blur-[2px]
+                            transition
+                            duration-500
+                            group-focus-within:opacity-60
+                          "
+                        />
+
+                        <Textarea
+                          id="contenu"
+                          name="contenu"
+                          value={formData.contenu}
+                          onChange={handleChange}
+                          placeholder="Décrivez votre demande..."
+                          rows={6}
+                          required
+                          className="
+                            relative
+                            min-h-[170px]
+                            rounded-2xl
+                            border
+                            border-slate-900/10
+                            dark:border-white/[0.08]
+                            bg-slate-100/70
+                            dark:bg-white/[0.045]
+                            text-slate-900
+                            dark:text-white
+                            placeholder:text-slate-400
+                            dark:placeholder:text-white/20
+                            focus:border-violet-500/50
+                            dark:focus:border-fuchsia-400/50
+                            focus:bg-white
+                            dark:focus:bg-white/[0.07]
+                            resize-none
+                            transition-all
+                            duration-300
+                          "
+                        />
+                      </div>
                     </div>
 
+                    {/* Submit */}
                     <Button
                       type="submit"
-                      className="w-full h-14 bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 hover:from-blue-500 hover:via-purple-500 hover:to-indigo-500 text-white text-lg font-semibold shadow-[0_20px_40px_rgba(79,70,229,0.3)] rounded-xl border border-white/10 transition-all duration-300 hover:scale-[1.02]"
                       disabled={isSubmitting}
+                      className="
+                        group
+                        relative
+                        h-14
+                        w-full
+                        overflow-hidden
+                        rounded-2xl
+                        border-0
+                        bg-gradient-to-r
+                        from-violet-600
+                        via-fuchsia-600
+                        to-cyan-500
+                        text-base
+                        font-bold
+                        text-white
+                        shadow-[0_15px_45px_rgba(124,58,237,0.3)]
+                        hover:scale-[1.015]
+                        active:scale-[0.99]
+                        transition-all
+                        duration-300
+                      "
                     >
-                      {isSubmitting ? (
-                        <><div className="animate-spin rounded-full h-5 w-5 border-2 border-white/30 border-t-white mr-2" />Envoi...</>
-                      ) : (
-                        <><Send className="mr-3 h-5 w-5" />Envoyer le message</>
+                      {/* Shine */}
+                      {!isSubmitting && (
+                        <motion.div
+                          animate={{
+                            x: ['-120%', '120%'],
+                          }}
+                          transition={{
+                            duration: 2.8,
+                            repeat: Infinity,
+                            repeatDelay: 2,
+                            ease: 'easeInOut',
+                          }}
+                          className="
+                            absolute
+                            inset-y-0
+                            w-1/3
+                            skew-x-[-20deg]
+                            bg-white/20
+                            blur-sm
+                          "
+                        />
                       )}
+
+                      <span className="relative flex items-center justify-center">
+
+                        {isSubmitting ? (
+                          <>
+                            <span
+                              className="
+                                mr-3
+                                h-5
+                                w-5
+                                rounded-full
+                                border-2
+                                border-white/30
+                                border-t-white
+                                animate-spin
+                              "
+                            />
+
+                            Envoi...
+                          </>
+                        ) : (
+                          <>
+                            <Send className="mr-3 h-5 w-5" />
+
+                            Envoyer le message
+
+                            <ArrowRight
+                              className="
+                                ml-2
+                                h-5
+                                w-5
+                                transition-transform
+                                group-hover:translate-x-1
+                              "
+                            />
+                          </>
+                        )}
+                      </span>
                     </Button>
+
+                    {/* Security footer */}
+                    <div
+                      className="
+                        flex
+                        items-center
+                        justify-center
+                        gap-2
+                        text-[10px]
+                        text-slate-400
+                        dark:text-white/30
+                      "
+                    >
+                      <Shield className="h-3.5 w-3.5 text-emerald-500" />
+
+                      Vos données sont protégées et traitées
+                      avec confidentialité.
+
+                      <Star className="h-3 w-3 text-amber-500" />
+                    </div>
                   </form>
                 </CardContent>
+
+                {/* Bottom line */}
+                <div
+                  className="
+                    absolute
+                    bottom-0
+                    left-0
+                    right-0
+                    h-px
+                    bg-gradient-to-r
+                    from-transparent
+                    via-cyan-500/40
+                    to-transparent
+                  "
+                />
               </Card>
             </motion.div>
 
-            {/* Infos contact */}
-            <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4 }} className="space-y-6">
-              <Card className="border-0 bg-white/[0.04] border border-white/[0.08] rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] overflow-hidden">
-                <div className="h-px bg-gradient-to-r from-transparent via-emerald-400/30 to-transparent" />
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-3 text-lg text-white">
-                    <div className="p-2 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl shadow-[0_8px_20px_rgba(16,185,129,0.3)] border border-white/10">
-                      <Globe className="h-5 w-5 text-white" />
+            {/* =================================================
+                RIGHT SIDE
+            ================================================== */}
+
+            <motion.aside
+              initial={{
+                opacity: 0,
+                x: 40,
+              }}
+              animate={{
+                opacity: 1,
+                x: 0,
+              }}
+              transition={{
+                duration: 0.8,
+                delay: 0.35,
+              }}
+              className="space-y-6"
+            >
+
+              {/* Contact info */}
+              <Card
+                className="
+                  relative
+                  overflow-hidden
+                  rounded-[30px]
+                  border
+                  border-slate-900/10
+                  dark:border-white/[0.09]
+                  bg-white/75
+                  dark:bg-[#0b0b14]/75
+                  backdrop-blur-2xl
+                  shadow-[0_25px_70px_rgba(15,23,42,0.12)]
+                  dark:shadow-[0_25px_70px_rgba(0,0,0,0.55)]
+                "
+              >
+                <div
+                  className="
+                    absolute
+                    left-0
+                    right-0
+                    top-0
+                    h-px
+                    bg-gradient-to-r
+                    from-transparent
+                    via-emerald-500/60
+                    to-transparent
+                  "
+                />
+
+                <CardHeader className="p-6">
+
+                  <div className="flex items-center gap-4">
+
+                    <div
+                      className="
+                        flex
+                        h-12
+                        w-12
+                        items-center
+                        justify-center
+                        rounded-2xl
+                        bg-gradient-to-br
+                        from-emerald-500
+                        to-teal-600
+                        shadow-lg
+                        shadow-emerald-500/20
+                      "
+                    >
+                      <Globe className="h-6 w-6 text-white" />
                     </div>
-                    Nos coordonnées
-                  </CardTitle>
+
+                    <div>
+                      <CardTitle
+                        className="
+                          text-lg
+                          font-black
+                          text-slate-900
+                          dark:text-white
+                        "
+                      >
+                        Nos coordonnées
+                      </CardTitle>
+
+                      <CardDescription
+                        className="
+                          mt-1
+                          text-xs
+                          text-slate-500
+                          dark:text-white/40
+                        "
+                      >
+                        Retrouvez-nous facilement.
+                      </CardDescription>
+                    </div>
+                  </div>
                 </CardHeader>
-                <CardContent className="space-y-4">
+
+                <CardContent className="space-y-3 px-6 pb-6">
+
                   {[
-                    { icon: Mail, label: 'Email :', value: 'vianey.jean@ymail.com', gradient: 'from-blue-500/10 to-purple-500/10', borderColor: 'border-blue-500/10', iconBg: 'from-blue-500 to-purple-600' },
-                    { icon: Phone, label: 'Ligne Directe', value: '+262 00 00 00', gradient: 'from-emerald-500/10 to-teal-500/10', borderColor: 'border-emerald-500/10', iconBg: 'from-emerald-500 to-teal-600' },
-                    { icon: MapPin, label: 'Adresse', value: 'Saint-Denis,La Réunion', gradient: 'from-purple-500/10 to-indigo-500/10', borderColor: 'border-purple-500/10', iconBg: 'from-purple-500 to-indigo-600' },
-                  ].map((item, i) => (
-                    <div key={i} className={`flex items-center gap-4 p-4 bg-gradient-to-r ${item.gradient} rounded-2xl border ${item.borderColor} transition-all duration-300 hover:bg-white/[0.03]`}>
-                      <div className={`p-2.5 bg-gradient-to-br ${item.iconBg} rounded-xl shadow-lg border border-white/10`}>
-                        <item.icon className="h-4 w-4 text-white" />
-                      </div>
-                      <div>
-                        <div className="font-semibold text-purple-100/80 text-sm">{item.label}</div>
-                        <div className="text-purple-200/50 text-sm">{item.value}</div>
-                      </div>
-                    </div>
-                  ))}
+                    {
+                      icon: Mail,
+                      label: 'Email',
+                      value: 'vianey.jean@ymail.com',
+                      gradient:
+                        'from-blue-500/10 to-purple-500/10',
+                      borderColor:
+                        'border-blue-500/10',
+                      iconBg:
+                        'from-blue-500 to-purple-600',
+                    },
+                    {
+                      icon: Phone,
+                      label: 'Ligne Directe',
+                      value: '+262 00 00 00',
+                      gradient:
+                        'from-emerald-500/10 to-teal-500/10',
+                      borderColor:
+                        'border-emerald-500/10',
+                      iconBg:
+                        'from-emerald-500 to-teal-600',
+                    },
+                    {
+                      icon: MapPin,
+                      label: 'Adresse',
+                      value:
+                        'Saint-Denis, La Réunion',
+                      gradient:
+                        'from-purple-500/10 to-indigo-500/10',
+                      borderColor:
+                        'border-purple-500/10',
+                      iconBg:
+                        'from-purple-500 to-indigo-600',
+                    },
+                  ].map((item, index) => {
+                    const Icon = item.icon;
+
+                    return (
+                      <motion.div
+                        key={index}
+                        whileHover={{
+                          y: -3,
+                          scale: 1.01,
+                        }}
+                        className={`
+                          flex
+                          items-center
+                          gap-4
+                          rounded-2xl
+                          border
+                          ${item.borderColor}
+                          bg-gradient-to-r
+                          ${item.gradient}
+                          p-4
+                          transition-all
+                          duration-300
+                        `}
+                      >
+                        <div
+                          className={`
+                            flex
+                            h-11
+                            w-11
+                            shrink-0
+                            items-center
+                            justify-center
+                            rounded-xl
+                            bg-gradient-to-br
+                            ${item.iconBg}
+                            shadow-lg
+                            border
+                            border-white/10
+                          `}
+                        >
+                          <Icon className="h-4 w-4 text-white" />
+                        </div>
+
+                        <div className="min-w-0">
+                          <div
+                            className="
+                              text-xs
+                              font-bold
+                              text-slate-700
+                              dark:text-white/75
+                            "
+                          >
+                            {item.label}
+                          </div>
+
+                          <div
+                            className="
+                              mt-0.5
+                              break-words
+                              text-xs
+                              text-slate-500
+                              dark:text-white/40
+                            "
+                          >
+                            {item.value}
+                          </div>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
                 </CardContent>
               </Card>
-            </motion.div>
+
+            
+
+             
+            </motion.aside>
           </div>
         </div>
-      </div>
+
+
+        <AnimatePresence>
+          {showLiveChat && adminOnline && (
+            <LiveChatVisitor
+              visitorNom={submittedName || 'Visiteur'}
+              adminId={liveAdminId}
+              onClose={() => setShowLiveChat(false)}
+            />
+          )}
+        </AnimatePresence>
+      </main>
     </Layout>
   );
 };
