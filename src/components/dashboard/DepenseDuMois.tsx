@@ -13,6 +13,8 @@ import { depenseService } from '@/service/api';
 import { useApp } from '@/contexts/AppContext';
 import PremiumLoading from '@/components/ui/premium-loading';
 import VersementEspece from './VersementEspece';
+import AdminPrincipalGate from './epargne/AdminPrincipalGate';
+import EpargneCard from './epargne/EpargneCard';
 
 const formatMonthInFrench = (monthIndex: number): string => {
   const months = [
@@ -548,8 +550,15 @@ const DepenseDuMois = () => {
   </div>
       </div>
 
-      {/* Versement espèce - composant ultra-luxe */}
-      <VersementEspece />
+      {/* Versement espèce + Épargne - accès administrateur principale */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+        <AdminPrincipalGate title="Versement espèce" subtitle="Accès protégé — administrateur principale">
+          <VersementEspece />
+        </AdminPrincipalGate>
+        <AdminPrincipalGate title="Épargne" subtitle="Comptes épargne — administrateur principale">
+          <EpargneCard />
+        </AdminPrincipalGate>
+      </div>
 
       
 
