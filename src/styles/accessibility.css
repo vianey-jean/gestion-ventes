@@ -3,7 +3,6 @@
 @import './base/contrast.css';
 @import './base/typography.css';
 @import './base/motion.css';
-@import './base/light-page.css';
 @import './components/forms.css';
 @import './components/navigation.css';
 @import './utilities/screen-reader.css';

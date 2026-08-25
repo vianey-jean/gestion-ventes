@@ -65,9 +65,6 @@ import {
   CircleCheck,
 } from "lucide-react";
 
-// Wrapper de performance : allège animations et effets coûteux (aucune logique modifiée)
-import { withLightPage } from '@/components/common/LightPage';
-
 import {
   motion,
   AnimatePresence,
@@ -2705,4 +2702,4 @@ const ErrorMessage: React.FC<
   );
 };
 
-export default withLightPage(RegisterPage);
+export default RegisterPage;

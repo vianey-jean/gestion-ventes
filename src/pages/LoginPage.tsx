@@ -45,9 +45,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import connecteProfilUniqueApi from '@/services/api/connecteProfilUniqueApi';
 import { savePendingLogin } from '@/pages/SessionConflictPage';
 
-// Wrapper de performance : allège animations et effets coûteux (aucune logique modifiée)
-import { withLightPage } from '@/components/common/LightPage';
-
 import {
   Activity,
   AlertTriangle,
@@ -1932,4 +1929,4 @@ const LoginPage: React.FC = () => {
   );
 };
 
-export default withLightPage(LoginPage);
+export default LoginPage;
