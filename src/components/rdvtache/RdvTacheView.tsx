@@ -139,15 +139,18 @@ const RdvTacheView: React.FC = () => {
       const saleProducts = produits.map(p => {
         const sellingPrice = (Number(p.prixVente) || 0) * (Number(p.quantite) || 0);
         const purchasePrice = (Number(p.prixUnitaire) || 0) * (Number(p.quantite) || 0);
+        // Frais de prestation saisis dans le panier RDV : conservés dans la vente
+        const prestationFee = Number(p.prestationFee) || 0;
         return {
           productId: p.productId,
           description: p.nom,
           quantitySold: Number(p.quantite) || 0,
           purchasePrice,
-          sellingPrice,
-          profit: sellingPrice - purchasePrice,
+          sellingPrice: sellingPrice + prestationFee,
+          profit: sellingPrice + prestationFee - purchasePrice,
           deliveryFee: Number(p.deliveryFee) || 0,
           deliveryLocation: p.deliveryLocation || '',
+          prestationFee,
         };
       });
       const totalSellingPrice = saleProducts.reduce((s, p) => s + p.sellingPrice, 0);
@@ -159,6 +162,8 @@ const RdvTacheView: React.FC = () => {
         totalSellingPrice,
         totalProfit: totalSellingPrice - totalPurchasePrice,
         totalDeliveryFee: saleProducts.reduce((s, p) => s + (p.deliveryFee || 0), 0),
+        // Total des frais de prestation issus du RDV
+        totalPrestationFee: saleProducts.reduce((s, p) => s + (p.prestationFee || 0), 0),
         clientName: rdv.clientNom,
         clientAddress: rdv.clientAdresse || rdv.lieu || '',
         clientPhone: rdv.clientTelephone || rdv.telephone || '',
