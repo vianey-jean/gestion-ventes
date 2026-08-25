@@ -45,6 +45,8 @@ import { useMessages } from '@/hooks/use-messages';
 import { motion, AnimatePresence } from 'framer-motion';
 import LiveChatVisitor from '@/components/livechat/LiveChatVisitor';
 import SEOHead from '@/components/SEOHead';
+// Wrapper de performance : allège animations et effets coûteux (aucune logique modifiée)
+import { withLightPage } from '@/components/common/LightPage';
 
 const API_BASE =
   import.meta.env.VITE_API_BASE_URL ||
@@ -2366,4 +2368,4 @@ const ContactPage: React.FC = () => {
   );
 };
 
-export default ContactPage;
+export default withLightPage(ContactPage);

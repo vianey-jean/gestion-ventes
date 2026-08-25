@@ -45,6 +45,8 @@ const RdvProductSection: React.FC<Props> = ({ produits, onChange }) => {
   const [prixVente, setPrixVente] = useState('');
   const [ville, setVille] = useState('');
   const [fraisLivraison, setFraisLivraison] = useState('0');
+  /** Frais de prestation (main d'œuvre) ajoutés à la ligne du panier */
+  const [fraisPrestation, setFraisPrestation] = useState('0');
   const [erreur, setErreur] = useState<string | null>(null);
   /** Nouveau prix de vente saisi via le bouton « + » (remplace celui du produit) */
   const [prixVenteOverride, setPrixVenteOverride] = useState<number | null>(null);
@@ -84,7 +86,7 @@ const RdvProductSection: React.FC<Props> = ({ produits, onChange }) => {
 
   const resetLine = () => {
     setSelected(null); setSearch(''); setQuantite('1');
-    setPrixUnitaire(''); setPrixVente(''); setVille(''); setFraisLivraison('0');
+    setPrixUnitaire(''); setPrixVente(''); setVille(''); setFraisLivraison('0'); setFraisPrestation('0');
     setPrixVenteOverride(null);
   };
 
@@ -112,12 +114,13 @@ const RdvProductSection: React.FC<Props> = ({ produits, onChange }) => {
         prixVente: pv,
         deliveryLocation: ville,
         deliveryFee: parseFloat(fraisLivraison) || 0,
+        prestationFee: parseFloat(fraisPrestation) || 0,
       },
     ]);
     resetLine();
   };
 
-  const total = produits.reduce((s, p) => s + p.prixVente * p.quantite + (p.deliveryFee || 0), 0);
+  const total = produits.reduce((s, p) => s + p.prixVente * p.quantite + (p.deliveryFee || 0) + (p.prestationFee || 0), 0);
 
   return (
     <div className="space-y-3 p-4 rounded-2xl bg-white/5 border border-white/15">
@@ -193,8 +196,8 @@ const RdvProductSection: React.FC<Props> = ({ produits, onChange }) => {
         </div>
       </div>
 
-      {/* Ville + frais */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      {/* Ville + frais (livraison et prestation) */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div className="space-y-1.5">
           <Label className="text-xs font-bold text-white/80 flex items-center gap-2">
             <Truck className="h-3.5 w-3.5 text-amber-400" /> Ville de livraison
@@ -211,6 +214,12 @@ const RdvProductSection: React.FC<Props> = ({ produits, onChange }) => {
         <div className="space-y-1.5">
           <Label className="text-xs font-bold text-white/80">Frais livraison (€)</Label>
           <Input type="number" step="0.01" value={fraisLivraison} onChange={e => setFraisLivraison(e.target.value)}
+            className="bg-white/10 border border-white/20 rounded-xl text-white" />
+        </div>
+        {/* Frais de prestation : main d'œuvre facturée en plus du produit */}
+        <div className="space-y-1.5">
+          <Label className="text-xs font-bold text-white/80">Frais prestation (€)</Label>
+          <Input type="number" step="0.01" min="0" value={fraisPrestation} onChange={e => setFraisPrestation(e.target.value)}
             className="bg-white/10 border border-white/20 rounded-xl text-white" />
         </div>
       </div>
@@ -230,7 +239,7 @@ const RdvProductSection: React.FC<Props> = ({ produits, onChange }) => {
               <div className="min-w-0 flex-1">
                 <p className="text-xs font-bold text-white truncate">{p.nom}</p>
                 <p className="text-[10px] text-white/60">
-                  x{p.quantite} • {p.prixVente}€ {p.deliveryLocation ? `• 🚚 ${p.deliveryLocation} (${p.deliveryFee || 0}€)` : ''}
+                  x{p.quantite} • {p.prixVente}€ {p.deliveryLocation ? `• 🚚 ${p.deliveryLocation} (${p.deliveryFee || 0}€)` : ''} {p.prestationFee ? `• ✂️ Prestation ${p.prestationFee}€` : ''}
                 </p>
               </div>
               <Button type="button" size="icon" variant="ghost"

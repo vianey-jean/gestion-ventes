@@ -11,6 +11,8 @@ export interface RdvProduit {
   prixVente: number;
   deliveryLocation?: string;
   deliveryFee?: number;
+  /** Frais de prestation facturés en plus du produit (coiffure, pose, etc.) */
+  prestationFee?: number;
 }
 
 

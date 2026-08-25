@@ -34,6 +34,8 @@ import {
 } from 'framer-motion';
 import SEOHead from '@/components/SEOHead';
 import { useLightMotion } from '@/hooks/useLightMotion';
+// Wrapper de performance : allège animations et effets coûteux (aucune logique modifiée)
+import { withLightPage } from '@/components/common/LightPage';
 
 const features = [
   {
@@ -1083,4 +1085,4 @@ const AnalyticsPreview: React.FC = () => {
   );
 };
 
-export default HomePage;
+export default withLightPage(HomePage);

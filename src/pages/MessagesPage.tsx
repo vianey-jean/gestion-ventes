@@ -50,6 +50,8 @@ import { Input } from '@/components/ui/input';
 import PremiumLoading from '@/components/ui/premium-loading';
 import { motion, AnimatePresence } from 'framer-motion';
 import SEOHead from '@/components/SEOHead';
+// Wrapper de performance : allège animations et effets coûteux (aucune logique modifiée)
+import { withLightPage } from '@/components/common/LightPage';
 
 const MessagesPage: React.FC = () => {
   const {
@@ -2476,4 +2478,4 @@ const MessagesPage: React.FC = () => {
   );
 };
 
-export default MessagesPage;
+export default withLightPage(MessagesPage);

@@ -22,6 +22,9 @@ import Layout from '@/components/Layout';
 import SEOHead from '@/components/SEOHead';
 import { useLightMotion } from '@/hooks/useLightMotion';
 
+// Wrapper de performance : allège animations et effets coûteux (aucune logique modifiée)
+import { withLightPage } from '@/components/common/LightPage';
+
 import {
   Activity,
   ArrowRight,
@@ -2000,4 +2003,4 @@ const AboutPage: React.FC = () => {
   );
 };
 
-export default AboutPage;
+export default withLightPage(AboutPage);
