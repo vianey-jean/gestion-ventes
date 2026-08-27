@@ -1,26 +1,25 @@
 /**
  * AboutPage.tsx
- * Ultra Premium Luxury About Experience
+ * Version optimisée Performance
  *
- * - Design luxe / SaaS premium
- * - Mode clair + sombre via le thème global
- * - Animations Framer Motion
- * - Aurora animée
- * - Particules flottantes
- * - Glassmorphism
- * - Grid / rings décoratifs
- * - Sections storytelling
+ * Objectifs :
+ * - Chargement rapide
+ * - Très léger sur mobile / tablette
+ * - Aucun Framer Motion
+ * - Aucun background animé
+ * - Aucun particle system
+ * - Aucun backdrop-blur lourd
+ * - Moins de DOM
+ * - Design premium conservé
  * - Responsive
  */
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
 
 import { Button } from '@/components/ui/button';
 import Layout from '@/components/Layout';
 import SEOHead from '@/components/SEOHead';
-import { useLightMotion } from '@/hooks/useLightMotion';
 
 import {
   Activity,
@@ -57,28 +56,28 @@ const values = [
     icon: Gem,
     title: 'Simplicité',
     description:
-      'Une expérience pensée pour rester claire, intuitive et agréable, même lorsque votre activité devient complexe.',
+      'Une expérience claire, intuitive et agréable, même lorsque votre activité devient complexe.',
     color: 'from-violet-500 to-purple-500',
   },
   {
     icon: Zap,
     title: 'Performance',
     description:
-      'Des outils rapides et fluides pour vous permettre de travailler efficacement sans perdre de temps.',
+      'Des outils rapides et fluides pour travailler efficacement sans perdre de temps.',
     color: 'from-cyan-500 to-blue-500',
   },
   {
     icon: ShieldCheck,
     title: 'Sécurité',
     description:
-      'Vos données et votre activité méritent une infrastructure fiable et une protection pensée dès la conception.',
+      'Une infrastructure fiable avec une protection pensée dès la conception.',
     color: 'from-emerald-500 to-teal-500',
   },
   {
     icon: Target,
     title: 'Précision',
     description:
-      'Des informations structurées pour vous aider à prendre de meilleures décisions au quotidien.',
+      'Des informations structurées pour prendre de meilleures décisions au quotidien.',
     color: 'from-fuchsia-500 to-pink-500',
   },
 ];
@@ -155,27 +154,154 @@ const securityItems = [
   {
     icon: ShieldCheck,
     title: 'Protection',
-    description: 'Une architecture pensée pour protéger votre environnement.',
+    description:
+      'Une architecture pensée pour protéger votre environnement.',
   },
   {
     icon: Lock,
     title: 'Confidentialité',
-    description: 'Vos informations restent au cœur de notre conception.',
+    description:
+      'Vos informations restent au cœur de notre conception.',
   },
   {
     icon: Database,
     title: 'Données structurées',
-    description: 'Une organisation claire pour retrouver rapidement l’essentiel.',
+    description:
+      'Une organisation claire pour retrouver rapidement l’essentiel.',
   },
 ];
+
+const dashboardCards = [
+  {
+    icon: Users,
+    title: 'Clients',
+    value: 'Centralisés',
+    color: 'from-fuchsia-500 to-pink-500',
+  },
+  {
+    icon: Package,
+    title: 'Stock',
+    value: 'Contrôlé',
+    color: 'from-orange-500 to-amber-500',
+  },
+  {
+    icon: Activity,
+    title: 'Agenda',
+    value: 'Organisé',
+    color: 'from-emerald-500 to-teal-500',
+  },
+  {
+    icon: ShieldCheck,
+    title: 'Sécurité',
+    value: 'Protégée',
+    color: 'from-cyan-500 to-blue-500',
+  },
+];
+
+const workspaceItems = [
+  'Une vision globale de votre activité',
+  'Des outils connectés entre eux',
+  'Une interface simple et intuitive',
+  'Une expérience pensée pour évoluer avec vous',
+];
+
+const approachItems = [
+  {
+    icon: Zap,
+    text: 'Rapide à prendre en main',
+  },
+  {
+    icon: Layers3,
+    text: 'Centralisé et structuré',
+  },
+  {
+    icon: Shield,
+    text: 'Pensé pour la sécurité',
+  },
+  {
+    icon: Globe,
+    text: 'Accessible partout',
+  },
+];
+
+/* =========================================================
+   SMALL COMPONENTS
+========================================================= */
+
+interface SectionTitleProps {
+  eyebrow?: string;
+  title: React.ReactNode;
+  description?: string;
+  center?: boolean;
+}
+
+const SectionTitle: React.FC<SectionTitleProps> = ({
+  eyebrow,
+  title,
+  description,
+  center = false,
+}) => {
+  return (
+    <div
+      className={
+        center
+          ? 'mx-auto max-w-3xl text-center'
+          : 'max-w-2xl'
+      }
+    >
+      {eyebrow && (
+        <div
+          className={`flex items-center gap-2 ${
+            center ? 'justify-center' : ''
+          }`}
+        >
+          <Sparkles className="h-4 w-4 text-violet-600 dark:text-fuchsia-400" />
+
+          <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-violet-600 dark:text-fuchsia-400">
+            {eyebrow}
+          </span>
+        </div>
+      )}
+
+      <h2
+        className="
+          mt-4
+          text-3xl
+          font-black
+          leading-tight
+          tracking-tight
+          text-slate-900
+          dark:text-white
+          sm:text-4xl
+          lg:text-5xl
+        "
+      >
+        {title}
+      </h2>
+
+      {description && (
+        <p
+          className="
+            mt-5
+            text-base
+            leading-relaxed
+            text-slate-600
+            dark:text-white/45
+            sm:text-lg
+          "
+        >
+          {description}
+        </p>
+      )}
+    </div>
+  );
+};
 
 /* =========================================================
    COMPONENT
 ========================================================= */
 
 const AboutPage: React.FC = () => {
-  const { light, particleCount } = useLightMotion();
-
   return (
     <Layout>
       <SEOHead
@@ -190,215 +316,51 @@ const AboutPage: React.FC = () => {
           min-h-screen
           overflow-hidden
           bg-slate-50
-          dark:bg-[#02030a]
           text-slate-900
+          dark:bg-[#03040a]
           dark:text-white
-          transition-colors
-          duration-500
         "
       >
         {/* =====================================================
-            GLOBAL BACKGROUND
+            LIGHT BACKGROUND
         ====================================================== */}
 
-        <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          {/* Aurora 1 */}
-          <motion.div
-            animate={
-              light
-                ? undefined
-                : {
-                    x: [0, 100, -50, 0],
-                    y: [0, -70, 50, 0],
-                    scale: [1, 1.15, 0.95, 1],
-                  }
-            }
-            transition={{
-              duration: 20,
-              repeat: Infinity,
-              ease: 'easeInOut',
-            }}
+        <div
+          aria-hidden="true"
+          className="
+            pointer-events-none
+            absolute
+            inset-0
+            overflow-hidden
+          "
+        >
+          <div
             className="
               absolute
-              -left-56
-              -top-56
-              h-[700px]
-              w-[700px]
+              -left-32
+              -top-32
+              h-72
+              w-72
               rounded-full
-              bg-violet-400/20
-              blur-[110px]
-              dark:bg-fuchsia-600/20
-            "
-          />
-
-          {/* Aurora 2 */}
-          <motion.div
-            animate={
-              light
-                ? undefined
-                : {
-                    x: [0, -100, 60, 0],
-                    y: [0, 70, -40, 0],
-                    scale: [1, 1.2, 0.9, 1],
-                  }
-            }
-            transition={{
-              duration: 24,
-              repeat: Infinity,
-              ease: 'easeInOut',
-            }}
-            className="
-              absolute
-              -bottom-72
-              -right-56
-              h-[800px]
-              w-[800px]
-              rounded-full
-              bg-cyan-300/20
-              blur-[120px]
-              dark:bg-cyan-600/15
-            "
-          />
-
-          {/* Aurora 3 */}
-          <motion.div
-            animate={
-              light
-                ? undefined
-                : {
-                    x: [0, 50, -60, 0],
-                    y: [0, -40, 40, 0],
-                    scale: [1, 1.1, 0.95, 1],
-                  }
-            }
-            transition={{
-              duration: 28,
-              repeat: Infinity,
-              ease: 'easeInOut',
-            }}
-            className="
-              absolute
-              left-1/2
-              top-[35%]
-              h-[550px]
-              w-[550px]
-              -translate-x-1/2
-              rounded-full
-              bg-pink-300/10
-              blur-[130px]
+              bg-violet-400/10
+              blur-3xl
               dark:bg-violet-600/10
             "
           />
 
-          {/* Grid */}
           <div
             className="
               absolute
-              inset-0
-              opacity-30
-              dark:opacity-100
-              bg-[linear-gradient(rgba(15,23,42,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(15,23,42,0.04)_1px,transparent_1px)]
-              dark:bg-[linear-gradient(rgba(255,255,255,0.025)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.025)_1px,transparent_1px)]
-              bg-[size:70px_70px]
-            "
-          />
-
-          {/* Large ring */}
-          <motion.div
-            animate={
-              light
-                ? undefined
-                : {
-                    rotate: 360,
-                  }
-            }
-            transition={{
-              duration: 80,
-              repeat: Infinity,
-              ease: 'linear',
-            }}
-            className="
-              absolute
-              left-1/2
-              top-[28%]
-              h-[900px]
-              w-[900px]
-              -translate-x-1/2
-              -translate-y-1/2
+              -right-32
+              top-[35%]
+              h-72
+              w-72
               rounded-full
-              border
-              border-slate-900/5
-              dark:border-white/[0.035]
+              bg-cyan-400/10
+              blur-3xl
+              dark:bg-cyan-600/10
             "
           />
-
-          {/* Small ring */}
-          <motion.div
-            animate={
-              light
-                ? undefined
-                : {
-                    rotate: -360,
-                  }
-            }
-            transition={{
-              duration: 55,
-              repeat: Infinity,
-              ease: 'linear',
-            }}
-            className="
-              absolute
-              left-1/2
-              top-[28%]
-              h-[620px]
-              w-[620px]
-              -translate-x-1/2
-              -translate-y-1/2
-              rounded-full
-              border
-              border-violet-500/10
-              dark:border-fuchsia-500/10
-            "
-          />
-
-          {/* Floating particles */}
-          {[...Array(particleCount)].map((_, index) => (
-            <motion.span
-              key={index}
-              animate={
-                light
-                  ? undefined
-                  : {
-                      y: [0, -80, 0],
-                      x: [
-                        0,
-                        index % 2 === 0 ? 25 : -25,
-                        0,
-                      ],
-                      opacity: [0.15, 0.7, 0.15],
-                      scale: [0.8, 1.4, 0.8],
-                    }
-              }
-              transition={{
-                duration: 5 + index * 0.6,
-                repeat: Infinity,
-                delay: index * 0.35,
-                ease: 'easeInOut',
-              }}
-              className="
-                absolute
-                h-1
-                w-1
-                rounded-full
-                bg-violet-500/40
-                dark:bg-white/40
-              "
-              style={{
-                left: `${5 + ((index * 17) % 90)}%`,
-                top: `${5 + ((index * 23) % 90)}%`,
-              }}
-            />
-          ))}
         </div>
 
         {/* =====================================================
@@ -410,54 +372,45 @@ const AboutPage: React.FC = () => {
             relative
             z-10
             px-4
-            pb-24
-            pt-20
+            pb-16
+            pt-12
             sm:px-6
+            sm:pb-20
+            sm:pt-16
             lg:px-8
-            lg:pb-32
-            lg:pt-28
+            lg:pb-28
+            lg:pt-24
           "
         >
           <div className="mx-auto max-w-7xl">
-            <div className="grid items-center gap-14 lg:grid-cols-[1.1fr_0.9fr]">
-              {/* HERO LEFT */}
+            <div
+              className="
+                grid
+                items-center
+                gap-10
+                lg:grid-cols-[1.05fr_0.95fr]
+                lg:gap-16
+              "
+            >
+              {/* HERO TEXT */}
 
-              <motion.div
-                initial={{
-                  opacity: 0,
-                  x: -40,
-                }}
-                animate={{
-                  opacity: 1,
-                  x: 0,
-                }}
-                transition={{
-                  duration: 0.8,
-                  ease: 'easeOut',
-                }}
-              >
+              <div>
                 {/* Badge */}
 
-                <motion.div
-                  whileHover={{
-                    scale: 1.03,
-                    y: -2,
-                  }}
+                <div
                   className="
                     inline-flex
                     items-center
-                    gap-2.5
+                    gap-2
                     rounded-full
                     border
                     border-slate-900/10
-                    dark:border-white/10
-                    bg-white/70
-                    dark:bg-white/[0.045]
-                    backdrop-blur-xl
-                    px-4
+                    bg-white
+                    px-3
                     py-2
-                    shadow-lg
-                    dark:shadow-none
+                    shadow-sm
+                    dark:border-white/10
+                    dark:bg-white/[0.04]
                   "
                 >
                   <span
@@ -471,42 +424,40 @@ const AboutPage: React.FC = () => {
                       bg-gradient-to-br
                       from-violet-500
                       to-fuchsia-500
-                      shadow-lg
-                      shadow-violet-500/25
                     "
                   >
                     <Gem className="h-3.5 w-3.5 text-white" />
                   </span>
 
-                  <span className="text-sm font-semibold text-slate-700 dark:text-white/80">
+                  <span className="text-xs font-bold text-slate-700 dark:text-white/80 sm:text-sm">
                     Premium Business Suite
                   </span>
 
-                  <Sparkles className="h-4 w-4 text-fuchsia-500 dark:text-fuchsia-400" />
-                </motion.div>
+                  <Sparkles className="h-4 w-4 text-fuchsia-500" />
+                </div>
 
                 {/* Heading */}
 
                 <h1
                   className="
-                    mt-8
+                    mt-7
                     max-w-4xl
-                    text-5xl
+                    text-[2.75rem]
                     font-black
-                    leading-[0.95]
-                    tracking-[-0.05em]
+                    leading-[0.98]
+                    tracking-[-0.045em]
                     text-slate-900
                     dark:text-white
                     sm:text-6xl
                     lg:text-7xl
-                    xl:text-[84px]
+                    xl:text-[78px]
                   "
                 >
                   Une nouvelle façon de gérer votre
 
                   <span
                     className="
-                      mt-3
+                      mt-2
                       block
                       bg-gradient-to-r
                       from-violet-600
@@ -525,29 +476,29 @@ const AboutPage: React.FC = () => {
 
                 <p
                   className="
-                    mt-8
+                    mt-6
                     max-w-2xl
-                    text-lg
+                    text-base
                     leading-relaxed
                     text-slate-600
                     dark:text-white/50
-                    sm:text-xl
+                    sm:mt-7
+                    sm:text-lg
                   "
                 >
                   Nous imaginons une expérience de gestion
-                  commerciale plus simple, plus élégante et
-                  plus intelligente — pour vous permettre de
-                  consacrer votre énergie à votre activité.
+                  commerciale plus simple, plus élégante et plus
+                  intelligente — pour vous permettre de consacrer
+                  votre énergie à votre activité.
                 </p>
 
                 {/* CTA */}
 
-                <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-                  <Link to="/register">
+                <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+                  <Link to="/register" className="w-full sm:w-auto">
                     <Button
                       className="
-                        group
-                        h-14
+                        h-13
                         w-full
                         rounded-2xl
                         border-0
@@ -555,198 +506,136 @@ const AboutPage: React.FC = () => {
                         from-violet-600
                         via-fuchsia-600
                         to-cyan-500
-                        px-7
-                        text-base
+                        px-6
+                        text-sm
                         font-bold
                         text-white
-                        shadow-[0_15px_45px_rgba(124,58,237,0.3)]
-                        transition-all
-                        duration-300
-                        hover:scale-[1.02]
-                        sm:w-auto
+                        shadow-lg
+                        shadow-violet-500/20
+                        sm:h-14
+                        sm:px-7
+                        sm:text-base
                       "
                     >
-                      <Rocket className="mr-2.5 h-5 w-5" />
+                      <Rocket className="mr-2 h-5 w-5" />
 
                       Commencer maintenant
 
-                      <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
+                      <ArrowRight className="ml-2 h-5 w-5" />
                     </Button>
                   </Link>
 
-                  <Link to="/login">
+                  <Link to="/login" className="w-full sm:w-auto">
                     <Button
                       variant="outline"
                       className="
-                        h-14
+                        h-13
                         w-full
                         rounded-2xl
-                        border
                         border-slate-900/10
-                        dark:border-white/[0.08]
-                        bg-white/60
-                        dark:bg-white/[0.035]
-                        px-7
-                        text-base
+                        bg-white
+                        px-6
+                        text-sm
                         font-semibold
                         text-slate-800
+                        sm:h-14
+                        sm:px-7
+                        sm:text-base
+                        dark:border-white/[0.08]
+                        dark:bg-white/[0.035]
                         dark:text-white
-                        backdrop-blur-xl
-                        transition-all
-                        duration-300
-                        hover:scale-[1.02]
-                        hover:bg-white
-                        dark:hover:bg-white/[0.07]
-                        sm:w-auto
                       "
                     >
                       Découvrir la plateforme
+
                       <ChevronRight className="ml-2 h-4 w-4" />
                     </Button>
                   </Link>
                 </div>
 
-                {/* Mini stats */}
+                {/* Stats */}
 
-                <div className="mt-10 flex flex-wrap gap-3">
-                  {stats.map((item, index) => {
+                <div className="mt-8 grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
+                  {stats.map((item) => {
                     const Icon = item.icon;
 
                     return (
-                      <motion.div
+                      <div
                         key={item.label}
-                        initial={{
-                          opacity: 0,
-                          y: 15,
-                        }}
-                        animate={{
-                          opacity: 1,
-                          y: 0,
-                        }}
-                        transition={{
-                          delay: 0.6 + index * 0.1,
-                        }}
-                        whileHover={{
-                          y: -4,
-                        }}
                         className="
                           rounded-2xl
                           border
                           border-slate-900/10
-                          dark:border-white/[0.08]
-                          bg-white/60
-                          dark:bg-white/[0.035]
-                          px-4
+                          bg-white
+                          px-3
                           py-3
-                          backdrop-blur-xl
+                          dark:border-white/[0.08]
+                          dark:bg-white/[0.035]
                         "
                       >
-                        <div className="flex items-center gap-3">
-                          <Icon className="h-4 w-4 text-violet-600 dark:text-fuchsia-400" />
+                        <div className="flex items-center gap-2">
+                          <Icon className="h-4 w-4 shrink-0 text-violet-600 dark:text-fuchsia-400" />
 
-                          <div>
-                            <div className="text-sm font-bold text-slate-900 dark:text-white">
+                          <div className="min-w-0">
+                            <div className="text-sm font-black text-slate-900 dark:text-white">
                               {item.value}
                             </div>
 
-                            <div className="text-[11px] text-slate-500 dark:text-white/40">
+                            <div className="truncate text-[10px] text-slate-500 dark:text-white/40">
                               {item.label}
                             </div>
                           </div>
                         </div>
-                      </motion.div>
+                      </div>
                     );
                   })}
                 </div>
-              </motion.div>
+              </div>
 
-              {/* HERO RIGHT — PREMIUM VISUAL */}
+              {/* HERO DASHBOARD */}
 
-              <motion.div
-                initial={{
-                  opacity: 0,
-                  x: 40,
-                  scale: 0.96,
-                }}
-                animate={{
-                  opacity: 1,
-                  x: 0,
-                  scale: 1,
-                }}
-                transition={{
-                  duration: 0.9,
-                  delay: 0.2,
-                  ease: 'easeOut',
-                }}
-                className="relative mx-auto w-full max-w-xl"
-              >
-                {/* Glow */}
-
-                <motion.div
-                  animate={{
-                    opacity: [0.35, 0.65, 0.35],
-                    scale: [1, 1.04, 1],
-                  }}
-                  transition={{
-                    duration: 5,
-                    repeat: Infinity,
-                    ease: 'easeInOut',
-                  }}
+              <div className="relative mx-auto w-full max-w-xl">
+                <div
                   className="
                     absolute
-                    -inset-8
-                    rounded-[50px]
+                    -inset-3
+                    rounded-[32px]
                     bg-gradient-to-r
-                    from-violet-500/20
-                    via-fuchsia-500/20
-                    to-cyan-500/20
-                    blur-3xl
+                    from-violet-500/10
+                    via-fuchsia-500/10
+                    to-cyan-500/10
+                    blur-2xl
                   "
+                  aria-hidden="true"
                 />
 
                 <div
                   className="
                     relative
                     overflow-hidden
-                    rounded-[36px]
+                    rounded-[28px]
                     border
                     border-slate-900/10
-                    dark:border-white/[0.09]
-                    bg-white/75
-                    dark:bg-[#0b0b14]/75
-                    p-5
-                    shadow-[0_30px_100px_rgba(15,23,42,0.15)]
-                    backdrop-blur-2xl
-                    dark:shadow-[0_30px_100px_rgba(0,0,0,0.65)]
-                    sm:p-7
+                    bg-white
+                    p-4
+                    shadow-xl
+                    shadow-slate-900/5
+                    dark:border-white/[0.08]
+                    dark:bg-[#0b0b14]
+                    dark:shadow-black/30
+                    sm:rounded-[32px]
+                    sm:p-6
                   "
                 >
-                  {/* Shine */}
-
-                  <div
-                    className="
-                      absolute
-                      left-0
-                      right-0
-                      top-0
-                      h-px
-                      bg-gradient-to-r
-                      from-transparent
-                      via-violet-500/70
-                      to-transparent
-                      dark:via-white/40
-                    "
-                  />
-
-                  {/* Dashboard header */}
+                  {/* Header */}
 
                   <div className="flex items-center justify-between">
                     <div>
-                      <div className="text-xs font-semibold text-slate-400 dark:text-white/35">
+                      <div className="text-[10px] font-bold tracking-wide text-slate-400 dark:text-white/35">
                         BUSINESS OVERVIEW
                       </div>
 
-                      <div className="mt-1 text-xl font-black text-slate-900 dark:text-white">
+                      <div className="mt-1 text-lg font-black text-slate-900 dark:text-white sm:text-xl">
                         Votre activité
                       </div>
                     </div>
@@ -754,173 +643,136 @@ const AboutPage: React.FC = () => {
                     <div
                       className="
                         flex
-                        h-11
-                        w-11
+                        h-10
+                        w-10
                         items-center
                         justify-center
-                        rounded-2xl
+                        rounded-xl
                         bg-gradient-to-br
                         from-violet-600
                         via-fuchsia-500
                         to-cyan-500
-                        shadow-lg
-                        shadow-violet-500/25
+                        sm:h-11
+                        sm:w-11
+                        sm:rounded-2xl
                       "
                     >
                       <Crown className="h-5 w-5 text-white" />
                     </div>
                   </div>
 
-                  {/* Fake graph */}
+                  {/* Performance */}
 
                   <div
                     className="
-                      mt-7
-                      rounded-3xl
+                      mt-5
+                      rounded-2xl
                       border
                       border-slate-900/10
+                      bg-slate-50
+                      p-4
                       dark:border-white/[0.07]
-                      bg-slate-100/60
                       dark:bg-white/[0.035]
-                      p-5
+                      sm:mt-6
+                      sm:rounded-3xl
+                      sm:p-5
                     "
                   >
-                    <div className="flex items-end justify-between">
+                    <div className="flex items-end justify-between gap-3">
                       <div>
                         <div className="text-xs text-slate-500 dark:text-white/35">
                           Performance
                         </div>
 
-                        <div className="mt-1 text-3xl font-black text-slate-900 dark:text-white">
+                        <div className="mt-1 text-2xl font-black text-slate-900 dark:text-white sm:text-3xl">
                           +38.4%
                         </div>
                       </div>
 
                       <div className="flex items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-1">
                         <TrendingUp className="h-3 w-3 text-emerald-500" />
+
                         <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
                           Excellent
                         </span>
                       </div>
                     </div>
 
-                    <div className="mt-6 flex h-36 items-end gap-2">
+                    {/* Static graph */}
+
+                    <div className="mt-5 flex h-28 items-end gap-1.5 sm:h-36 sm:gap-2">
                       {[28, 42, 35, 58, 49, 70, 63, 84, 76, 96].map(
                         (height, index) => (
-                          <motion.div
+                          <div
                             key={index}
-                            initial={{
-                              height: 0,
-                            }}
-                            animate={{
-                              height: `${height}%`,
-                            }}
-                            transition={{
-                              duration: 0.7,
-                              delay: 0.5 + index * 0.06,
-                            }}
                             className="
                               flex-1
-                              rounded-t-lg
+                              rounded-t-md
                               bg-gradient-to-t
                               from-violet-600
                               via-fuchsia-500
                               to-cyan-400
                               opacity-80
                             "
+                            style={{ height: `${height}%` }}
                           />
                         )
                       )}
                     </div>
                   </div>
 
-                  {/* Dashboard cards */}
+                  {/* Cards */}
 
-                  <div className="mt-4 grid grid-cols-2 gap-3">
-                    {[
-                      {
-                        icon: Users,
-                        title: 'Clients',
-                        value: 'Centralisés',
-                        color: 'from-fuchsia-500 to-pink-500',
-                      },
-                      {
-                        icon: Package,
-                        title: 'Stock',
-                        value: 'Contrôlé',
-                        color: 'from-orange-500 to-amber-500',
-                      },
-                      {
-                        icon: Activity,
-                        title: 'Agenda',
-                        value: 'Organisé',
-                        color: 'from-emerald-500 to-teal-500',
-                      },
-                      {
-                        icon: ShieldCheck,
-                        title: 'Sécurité',
-                        value: 'Protégée',
-                        color: 'from-cyan-500 to-blue-500',
-                      },
-                    ].map((item, index) => {
+                  <div className="mt-3 grid grid-cols-2 gap-2 sm:mt-4 sm:gap-3">
+                    {dashboardCards.map((item) => {
                       const Icon = item.icon;
 
                       return (
-                        <motion.div
+                        <div
                           key={item.title}
-                          initial={{
-                            opacity: 0,
-                            y: 15,
-                          }}
-                          animate={{
-                            opacity: 1,
-                            y: 0,
-                          }}
-                          transition={{
-                            delay: 0.9 + index * 0.08,
-                          }}
-                          whileHover={{
-                            y: -4,
-                          }}
                           className="
-                            rounded-2xl
+                            rounded-xl
                             border
                             border-slate-900/10
+                            bg-white
+                            p-3
                             dark:border-white/[0.07]
-                            bg-white/70
                             dark:bg-white/[0.035]
-                            p-4
-                            backdrop-blur-xl
+                            sm:rounded-2xl
+                            sm:p-4
                           "
                         >
                           <div
                             className={`
                               flex
-                              h-9
-                              w-9
+                              h-8
+                              w-8
                               items-center
                               justify-center
-                              rounded-xl
+                              rounded-lg
                               bg-gradient-to-br
                               ${item.color}
+                              sm:h-9
+                              sm:w-9
+                              sm:rounded-xl
                             `}
                           >
                             <Icon className="h-4 w-4 text-white" />
                           </div>
 
-                          <div className="mt-3 text-xs font-bold text-slate-900 dark:text-white">
+                          <div className="mt-2 text-xs font-bold text-slate-900 dark:text-white sm:mt-3">
                             {item.title}
                           </div>
 
                           <div className="mt-1 text-[10px] text-slate-500 dark:text-white/35">
                             {item.value}
                           </div>
-                        </motion.div>
+                        </div>
                       );
                     })}
                   </div>
                 </div>
-              </motion.div>
+              </div>
             </div>
           </div>
         </section>
@@ -934,170 +786,81 @@ const AboutPage: React.FC = () => {
             relative
             z-10
             px-4
-            py-20
+            py-16
             sm:px-6
+            sm:py-20
             lg:px-8
-            lg:py-28
+            lg:py-24
           "
         >
           <div className="mx-auto max-w-7xl">
-            <motion.div
-              initial={{
-                opacity: 0,
-                y: 30,
-              }}
-              whileInView={{
-                opacity: 1,
-                y: 0,
-              }}
-              viewport={{
-                once: true,
-                margin: '-100px',
-              }}
-              transition={{
-                duration: 0.7,
-              }}
-              className="mx-auto max-w-3xl text-center"
-            >
-              <div
-                className="
-                  mx-auto
-                  inline-flex
-                  items-center
-                  gap-2
-                  rounded-full
-                  border
-                  border-violet-500/10
-                  bg-violet-500/5
-                  px-3
-                  py-1.5
-                "
-              >
-                <Sparkles className="h-3.5 w-3.5 text-violet-500 dark:text-fuchsia-400" />
+            <SectionTitle
+              eyebrow="Notre vision"
+              center
+              title={
+                <>
+                  Une plateforme conçue autour de{' '}
+                  <span
+                    className="
+                      bg-gradient-to-r
+                      from-violet-600
+                      via-fuchsia-500
+                      to-cyan-500
+                      bg-clip-text
+                      text-transparent
+                    "
+                  >
+                    vous.
+                  </span>
+                </>
+              }
+              description="Notre objectif est simple : réunir les outils essentiels de votre activité dans une expérience cohérente, moderne et agréable à utiliser."
+            />
 
-                <span className="text-[11px] font-bold uppercase tracking-[0.15em] text-violet-600 dark:text-fuchsia-400">
-                  Notre vision
-                </span>
-              </div>
-
-              <h2
-                className="
-                  mt-5
-                  text-4xl
-                  font-black
-                  tracking-tight
-                  text-slate-900
-                  dark:text-white
-                  sm:text-5xl
-                "
-              >
-                Une plateforme conçue autour de{' '}
-                <span
-                  className="
-                    bg-gradient-to-r
-                    from-violet-600
-                    via-fuchsia-500
-                    to-cyan-500
-                    bg-clip-text
-                    text-transparent
-                    dark:from-fuchsia-400
-                    dark:via-violet-400
-                    dark:to-cyan-300
-                  "
-                >
-                  vous.
-                </span>
-              </h2>
-
-              <p className="mt-5 text-base leading-relaxed text-slate-600 dark:text-white/45 sm:text-lg">
-                Notre objectif est simple : réunir les outils
-                essentiels de votre activité dans une expérience
-                cohérente, moderne et agréable à utiliser.
-              </p>
-            </motion.div>
-
-            <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {values.map((value, index) => {
+            <div className="mt-10 grid gap-3 sm:grid-cols-2 lg:mt-12 lg:grid-cols-4">
+              {values.map((value) => {
                 const Icon = value.icon;
 
                 return (
-                  <motion.div
+                  <div
                     key={value.title}
-                    initial={{
-                      opacity: 0,
-                      y: 30,
-                    }}
-                    whileInView={{
-                      opacity: 1,
-                      y: 0,
-                    }}
-                    viewport={{
-                      once: true,
-                      margin: '-70px',
-                    }}
-                    transition={{
-                      duration: 0.6,
-                      delay: index * 0.08,
-                    }}
-                    whileHover={{
-                      y: -7,
-                      scale: 1.015,
-                    }}
                     className="
-                      group
-                      relative
-                      overflow-hidden
-                      rounded-[28px]
+                      rounded-3xl
                       border
                       border-slate-900/10
-                      dark:border-white/[0.07]
-                      bg-white/65
-                      dark:bg-white/[0.035]
-                      p-6
+                      bg-white
+                      p-5
                       shadow-sm
-                      backdrop-blur-xl
+                      dark:border-white/[0.07]
+                      dark:bg-white/[0.035]
                       dark:shadow-none
+                      sm:p-6
                     "
                   >
                     <div
                       className={`
-                        absolute
-                        inset-0
+                        flex
+                        h-11
+                        w-11
+                        items-center
+                        justify-center
+                        rounded-xl
                         bg-gradient-to-br
                         ${value.color}
-                        opacity-0
-                        transition-opacity
-                        duration-500
-                        group-hover:opacity-[0.07]
+                        shadow-md
                       `}
-                    />
-
-                    <div className="relative">
-                      <div
-                        className={`
-                          flex
-                          h-12
-                          w-12
-                          items-center
-                          justify-center
-                          rounded-2xl
-                          bg-gradient-to-br
-                          ${value.color}
-                          shadow-lg
-                        `}
-                      >
-                        <Icon className="h-5 w-5 text-white" />
-                      </div>
-
-                      <h3 className="mt-5 text-lg font-black text-slate-900 dark:text-white">
-                        {value.title}
-                      </h3>
-
-                      <p className="mt-2 text-sm leading-relaxed text-slate-500 dark:text-white/40">
-                        {value.description}
-                      </p>
+                    >
+                      <Icon className="h-5 w-5 text-white" />
                     </div>
-                  </motion.div>
+
+                    <h3 className="mt-4 text-base font-black text-slate-900 dark:text-white">
+                      {value.title}
+                    </h3>
+
+                    <p className="mt-2 text-sm leading-relaxed text-slate-500 dark:text-white/40">
+                      {value.description}
+                    </p>
+                  </div>
                 );
               })}
             </div>
@@ -1105,7 +868,7 @@ const AboutPage: React.FC = () => {
         </section>
 
         {/* =====================================================
-            STORY SECTION
+            STORY
         ====================================================== */}
 
         <section
@@ -1113,70 +876,43 @@ const AboutPage: React.FC = () => {
             relative
             z-10
             px-4
-            py-20
+            py-16
             sm:px-6
+            sm:py-20
             lg:px-8
-            lg:py-32
+            lg:py-24
           "
         >
           <div className="mx-auto max-w-7xl">
-            <div className="grid items-center gap-14 lg:grid-cols-2">
-              {/* Visual */}
+            <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-16">
+              {/* Workspace */}
 
-              <motion.div
-                initial={{
-                  opacity: 0,
-                  x: -40,
-                }}
-                whileInView={{
-                  opacity: 1,
-                  x: 0,
-                }}
-                viewport={{
-                  once: true,
-                  margin: '-100px',
-                }}
-                transition={{
-                  duration: 0.8,
-                }}
-                className="relative"
-              >
+              <div>
                 <div
                   className="
-                    absolute
-                    -inset-5
-                    rounded-[40px]
-                    bg-gradient-to-r
-                    from-violet-500/10
-                    via-fuchsia-500/10
-                    to-cyan-500/10
-                    blur-2xl
-                  "
-                />
-
-                <div
-                  className="
-                    relative
-                    overflow-hidden
-                    rounded-[32px]
+                    rounded-[28px]
                     border
                     border-slate-900/10
+                    bg-white
+                    p-5
+                    shadow-lg
+                    shadow-slate-900/5
                     dark:border-white/[0.08]
-                    bg-white/70
-                    dark:bg-[#0b0b14]/70
-                    p-7
-                    backdrop-blur-2xl
+                    dark:bg-[#0b0b14]
+                    dark:shadow-black/20
+                    sm:rounded-[32px]
+                    sm:p-7
                   "
                 >
                   <div className="flex items-center gap-3">
                     <div
                       className="
                         flex
-                        h-12
-                        w-12
+                        h-11
+                        w-11
                         items-center
                         justify-center
-                        rounded-2xl
+                        rounded-xl
                         bg-gradient-to-br
                         from-violet-600
                         via-fuchsia-500
@@ -1187,62 +923,46 @@ const AboutPage: React.FC = () => {
                     </div>
 
                     <div>
-                      <div className="text-xs font-semibold text-slate-400 dark:text-white/35">
+                      <div className="text-[10px] font-bold tracking-wide text-slate-400 dark:text-white/35">
                         SMART WORKSPACE
                       </div>
 
-                      <div className="text-lg font-black text-slate-900 dark:text-white">
+                      <div className="text-base font-black text-slate-900 dark:text-white sm:text-lg">
                         Tout au même endroit
                       </div>
                     </div>
                   </div>
 
-                  <div className="mt-8 space-y-3">
-                    {[
-                      'Une vision globale de votre activité',
-                      'Des outils connectés entre eux',
-                      'Une interface simple et intuitive',
-                      'Une expérience pensée pour évoluer avec vous',
-                    ].map((text, index) => (
-                      <motion.div
+                  <div className="mt-6 space-y-2.5">
+                    {workspaceItems.map((text) => (
+                      <div
                         key={text}
-                        initial={{
-                          opacity: 0,
-                          x: -15,
-                        }}
-                        whileInView={{
-                          opacity: 1,
-                          x: 0,
-                        }}
-                        viewport={{
-                          once: true,
-                        }}
-                        transition={{
-                          delay: 0.2 + index * 0.1,
-                        }}
                         className="
                           flex
                           items-center
                           gap-3
-                          rounded-2xl
+                          rounded-xl
                           border
                           border-slate-900/10
+                          bg-slate-50
+                          px-3
+                          py-3
                           dark:border-white/[0.07]
-                          bg-slate-100/60
                           dark:bg-white/[0.035]
-                          px-4
-                          py-4
+                          sm:rounded-2xl
+                          sm:px-4
+                          sm:py-4
                         "
                       >
                         <div
                           className="
                             flex
-                            h-8
-                            w-8
+                            h-7
+                            w-7
                             shrink-0
                             items-center
                             justify-center
-                            rounded-xl
+                            rounded-lg
                             bg-emerald-500/10
                             dark:bg-emerald-500/15
                           "
@@ -1250,28 +970,27 @@ const AboutPage: React.FC = () => {
                           <CheckCircle2 className="h-4 w-4 text-emerald-500" />
                         </div>
 
-                        <span className="text-sm font-medium text-slate-700 dark:text-white/65">
+                        <span className="text-xs font-medium text-slate-700 dark:text-white/65 sm:text-sm">
                           {text}
                         </span>
-                      </motion.div>
+                      </div>
                     ))}
                   </div>
 
                   <div
                     className="
-                      mt-7
-                      rounded-2xl
+                      mt-5
+                      rounded-xl
                       border
                       border-violet-500/10
-                      bg-gradient-to-r
-                      from-violet-500/5
-                      via-fuchsia-500/5
-                      to-cyan-500/5
-                      p-5
+                      bg-violet-500/5
+                      p-4
+                      sm:rounded-2xl
+                      sm:p-5
                     "
                   >
                     <div className="flex items-center gap-3">
-                      <Star className="h-5 w-5 fill-amber-400 text-amber-400" />
+                      <Star className="h-5 w-5 shrink-0 fill-amber-400 text-amber-400" />
 
                       <div>
                         <div className="text-sm font-bold text-slate-900 dark:text-white">
@@ -1285,84 +1004,52 @@ const AboutPage: React.FC = () => {
                     </div>
                   </div>
                 </div>
-              </motion.div>
+              </div>
 
               {/* Text */}
 
-              <motion.div
-                initial={{
-                  opacity: 0,
-                  x: 40,
-                }}
-                whileInView={{
-                  opacity: 1,
-                  x: 0,
-                }}
-                viewport={{
-                  once: true,
-                  margin: '-100px',
-                }}
-                transition={{
-                  duration: 0.8,
-                }}
-              >
+              <div>
                 <div className="flex items-center gap-2">
-                  <span className="h-px w-10 bg-gradient-to-r from-violet-500 to-fuchsia-500" />
+                  <span className="h-px w-8 bg-gradient-to-r from-violet-500 to-fuchsia-500" />
 
-                  <span className="text-xs font-bold uppercase tracking-[0.2em] text-violet-600 dark:text-fuchsia-400">
+                  <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-violet-600 dark:text-fuchsia-400">
                     Notre approche
                   </span>
                 </div>
 
                 <h2
                   className="
-                    mt-5
-                    text-4xl
+                    mt-4
+                    text-3xl
                     font-black
                     leading-tight
                     tracking-tight
                     text-slate-900
                     dark:text-white
-                    sm:text-5xl
+                    sm:text-4xl
+                    lg:text-5xl
                   "
                 >
                   La puissance sans la complexité.
                 </h2>
 
-                <p className="mt-6 text-base leading-relaxed text-slate-600 dark:text-white/45 sm:text-lg">
+                <p className="mt-5 text-base leading-relaxed text-slate-600 dark:text-white/45 sm:text-lg">
                   Une bonne solution de gestion ne devrait pas
                   vous demander de devenir expert de l'outil.
                   Elle doit simplement vous aider à travailler
                   mieux.
                 </p>
 
-                <p className="mt-5 text-base leading-relaxed text-slate-600 dark:text-white/45 sm:text-lg">
-                  C'est pourquoi nous privilégions une interface
-                  claire, des informations bien organisées et
-                  une expérience fluide, tout en conservant la
-                  puissance nécessaire pour accompagner une
-                  activité professionnelle.
+                <p className="mt-4 text-base leading-relaxed text-slate-600 dark:text-white/45 sm:text-lg">
+                  Nous privilégions une interface claire, des
+                  informations bien organisées et une expérience
+                  fluide, tout en conservant la puissance
+                  nécessaire pour accompagner une activité
+                  professionnelle.
                 </p>
 
-                <div className="mt-8 grid gap-3 sm:grid-cols-2">
-                  {[
-                    {
-                      icon: Zap,
-                      text: 'Rapide à prendre en main',
-                    },
-                    {
-                      icon: Layers3,
-                      text: 'Centralisé et structuré',
-                    },
-                    {
-                      icon: Shield,
-                      text: 'Pensé pour la sécurité',
-                    },
-                    {
-                      icon: Globe,
-                      text: 'Accessible partout',
-                    },
-                  ].map((item) => {
+                <div className="mt-7 grid gap-2 sm:grid-cols-2 sm:gap-3">
+                  {approachItems.map((item) => {
                     const Icon = item.icon;
 
                     return (
@@ -1372,18 +1059,17 @@ const AboutPage: React.FC = () => {
                           flex
                           items-center
                           gap-3
-                          rounded-2xl
+                          rounded-xl
                           border
                           border-slate-900/10
-                          dark:border-white/[0.07]
-                          bg-white/60
-                          dark:bg-white/[0.035]
-                          px-4
+                          bg-white
+                          px-3
                           py-3
-                          backdrop-blur-xl
+                          dark:border-white/[0.07]
+                          dark:bg-white/[0.035]
                         "
                       >
-                        <Icon className="h-4 w-4 text-violet-600 dark:text-fuchsia-400" />
+                        <Icon className="h-4 w-4 shrink-0 text-violet-600 dark:text-fuchsia-400" />
 
                         <span className="text-xs font-semibold text-slate-700 dark:text-white/60">
                           {item.text}
@@ -1392,7 +1078,7 @@ const AboutPage: React.FC = () => {
                     );
                   })}
                 </div>
-              </motion.div>
+              </div>
             </div>
           </div>
         </section>
@@ -1406,146 +1092,73 @@ const AboutPage: React.FC = () => {
             relative
             z-10
             px-4
-            py-20
+            py-16
             sm:px-6
+            sm:py-20
             lg:px-8
-            lg:py-32
+            lg:py-24
           "
         >
           <div className="mx-auto max-w-7xl">
-            <motion.div
-              initial={{
-                opacity: 0,
-                y: 30,
-              }}
-              whileInView={{
-                opacity: 1,
-                y: 0,
-              }}
-              viewport={{
-                once: true,
-                margin: '-100px',
-              }}
-              transition={{
-                duration: 0.7,
-              }}
-              className="flex flex-col justify-between gap-6 lg:flex-row lg:items-end"
-            >
-              <div className="max-w-2xl">
-                <div className="flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 text-violet-600 dark:text-fuchsia-400" />
-
-                  <span className="text-xs font-bold uppercase tracking-[0.2em] text-violet-600 dark:text-fuchsia-400">
-                    Un écosystème complet
-                  </span>
-                </div>
-
-                <h2
-                  className="
-                    mt-4
-                    text-4xl
-                    font-black
-                    tracking-tight
-                    text-slate-900
-                    dark:text-white
-                    sm:text-5xl
-                  "
-                >
-                  Tout ce dont votre activité a besoin.
-                </h2>
-              </div>
+            <div className="flex flex-col justify-between gap-5 lg:flex-row lg:items-end">
+              <SectionTitle
+                eyebrow="Un écosystème complet"
+                title="Tout ce dont votre activité a besoin."
+              />
 
               <p className="max-w-md text-sm leading-relaxed text-slate-500 dark:text-white/40 lg:text-right">
                 Une suite d'outils réunis dans une seule
                 expérience pour simplifier votre quotidien.
               </p>
-            </motion.div>
+            </div>
 
-            <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {features.map((feature, index) => {
+            <div className="mt-10 grid gap-3 sm:grid-cols-2 lg:mt-12 lg:grid-cols-3">
+              {features.map((feature) => {
                 const Icon = feature.icon;
 
                 return (
-                  <motion.div
+                  <div
                     key={feature.title}
-                    initial={{
-                      opacity: 0,
-                      y: 25,
-                    }}
-                    whileInView={{
-                      opacity: 1,
-                      y: 0,
-                    }}
-                    viewport={{
-                      once: true,
-                      margin: '-60px',
-                    }}
-                    transition={{
-                      duration: 0.6,
-                      delay: index * 0.06,
-                    }}
-                    whileHover={{
-                      y: -6,
-                      scale: 1.015,
-                    }}
                     className="
-                      group
-                      relative
-                      overflow-hidden
-                      rounded-[26px]
+                      rounded-3xl
                       border
                       border-slate-900/10
-                      dark:border-white/[0.07]
-                      bg-white/65
-                      dark:bg-white/[0.035]
+                      bg-white
                       p-5
-                      backdrop-blur-xl
+                      shadow-sm
+                      dark:border-white/[0.07]
+                      dark:bg-white/[0.035]
+                      dark:shadow-none
                     "
                   >
                     <div
                       className={`
-                        absolute
-                        inset-0
+                        flex
+                        h-10
+                        w-10
+                        items-center
+                        justify-center
+                        rounded-xl
                         bg-gradient-to-br
                         ${feature.color}
-                        opacity-0
-                        transition-opacity
-                        duration-500
-                        group-hover:opacity-[0.08]
                       `}
-                    />
-
-                    <div className="relative">
-                      <div
-                        className={`
-                          flex
-                          h-11
-                          w-11
-                          items-center
-                          justify-center
-                          rounded-2xl
-                          bg-gradient-to-br
-                          ${feature.color}
-                          shadow-lg
-                        `}
-                      >
-                        <Icon className="h-5 w-5 text-white" />
-                      </div>
-
-                      <h3 className="mt-5 text-base font-black text-slate-900 dark:text-white">
-                        {feature.title}
-                      </h3>
-
-                      <p className="mt-2 text-sm leading-relaxed text-slate-500 dark:text-white/35">
-                        {feature.description}
-                      </p>
-
-                      <div className="mt-5 flex items-center gap-1 text-xs font-bold text-violet-600 dark:text-fuchsia-400">
-                        Découvrir
-                        <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
-                      </div>
+                    >
+                      <Icon className="h-5 w-5 text-white" />
                     </div>
-                  </motion.div>
+
+                    <h3 className="mt-4 text-base font-black text-slate-900 dark:text-white">
+                      {feature.title}
+                    </h3>
+
+                    <p className="mt-2 text-sm leading-relaxed text-slate-500 dark:text-white/35">
+                      {feature.description}
+                    </p>
+
+                    <div className="mt-4 flex items-center gap-1 text-xs font-bold text-violet-600 dark:text-fuchsia-400">
+                      Découvrir
+                      <ArrowRight className="h-3.5 w-3.5" />
+                    </div>
+                  </div>
                 );
               })}
             </div>
@@ -1561,182 +1174,125 @@ const AboutPage: React.FC = () => {
             relative
             z-10
             px-4
-            py-20
+            py-16
             sm:px-6
+            sm:py-20
             lg:px-8
-            lg:py-28
+            lg:py-24
           "
         >
           <div className="mx-auto max-w-7xl">
-            <motion.div
-              initial={{
-                opacity: 0,
-                scale: 0.97,
-              }}
-              whileInView={{
-                opacity: 1,
-                scale: 1,
-              }}
-              viewport={{
-                once: true,
-                margin: '-100px',
-              }}
-              transition={{
-                duration: 0.8,
-              }}
+            <div
               className="
-                relative
                 overflow-hidden
-                rounded-[36px]
+                rounded-[28px]
                 border
                 border-slate-900/10
+                bg-white
+                p-5
+                shadow-lg
+                shadow-slate-900/5
                 dark:border-white/[0.08]
-                bg-white/70
                 dark:bg-white/[0.035]
-                p-7
-                backdrop-blur-2xl
-                sm:p-10
-                lg:p-14
+                dark:shadow-black/20
+                sm:rounded-[32px]
+                sm:p-8
+                lg:p-12
               "
             >
-              <div
-                className="
-                  absolute
-                  -right-40
-                  -top-40
-                  h-[450px]
-                  w-[450px]
-                  rounded-full
-                  bg-cyan-400/10
-                  blur-[100px]
-                  dark:bg-cyan-500/10
-                "
-              />
-
-              <div
-                className="
-                  absolute
-                  -bottom-40
-                  -left-40
-                  h-[450px]
-                  w-[450px]
-                  rounded-full
-                  bg-violet-500/10
-                  blur-[100px]
-                  dark:bg-violet-500/10
-                "
-              />
-
-              <div className="relative">
-                <div className="grid gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
-                  <div>
-                    <div
-                      className="
-                        flex
-                        h-14
-                        w-14
-                        items-center
-                        justify-center
-                        rounded-2xl
-                        bg-gradient-to-br
-                        from-violet-600
-                        via-fuchsia-500
-                        to-cyan-500
-                        shadow-xl
-                        shadow-violet-500/20
-                      "
-                    >
-                      <ShieldCheck className="h-7 w-7 text-white" />
-                    </div>
-
-                    <h2
-                      className="
-                        mt-6
-                        text-3xl
-                        font-black
-                        tracking-tight
-                        text-slate-900
-                        dark:text-white
-                        sm:text-4xl
-                      "
-                    >
-                      La sécurité au cœur de l'expérience.
-                    </h2>
-
-                    <p className="mt-5 max-w-xl text-base leading-relaxed text-slate-600 dark:text-white/45">
-                      Parce que votre activité et vos données
-                      sont essentielles, nous intégrons la
-                      sécurité directement dans l'expérience
-                      produit.
-                    </p>
+              <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:gap-12">
+                <div>
+                  <div
+                    className="
+                      flex
+                      h-12
+                      w-12
+                      items-center
+                      justify-center
+                      rounded-xl
+                      bg-gradient-to-br
+                      from-violet-600
+                      via-fuchsia-500
+                      to-cyan-500
+                    "
+                  >
+                    <ShieldCheck className="h-6 w-6 text-white" />
                   </div>
 
-                  <div className="grid gap-3">
-                    {securityItems.map((item, index) => {
-                      const Icon = item.icon;
+                  <h2
+                    className="
+                      mt-5
+                      text-3xl
+                      font-black
+                      tracking-tight
+                      text-slate-900
+                      dark:text-white
+                      sm:text-4xl
+                    "
+                  >
+                    La sécurité au cœur de l'expérience.
+                  </h2>
 
-                      return (
-                        <motion.div
-                          key={item.title}
-                          initial={{
-                            opacity: 0,
-                            x: 20,
-                          }}
-                          whileInView={{
-                            opacity: 1,
-                            x: 0,
-                          }}
-                          viewport={{
-                            once: true,
-                          }}
-                          transition={{
-                            delay: index * 0.1,
-                          }}
+                  <p className="mt-4 max-w-xl text-base leading-relaxed text-slate-600 dark:text-white/45">
+                    Parce que votre activité et vos données sont
+                    essentielles, nous intégrons la sécurité
+                    directement dans l'expérience produit.
+                  </p>
+                </div>
+
+                <div className="grid gap-2.5">
+                  {securityItems.map((item) => {
+                    const Icon = item.icon;
+
+                    return (
+                      <div
+                        key={item.title}
+                        className="
+                          flex
+                          gap-3
+                          rounded-xl
+                          border
+                          border-slate-900/10
+                          bg-slate-50
+                          p-3
+                          dark:border-white/[0.07]
+                          dark:bg-white/[0.035]
+                          sm:gap-4
+                          sm:rounded-2xl
+                          sm:p-4
+                        "
+                      >
+                        <div
                           className="
                             flex
-                            gap-4
-                            rounded-2xl
-                            border
-                            border-slate-900/10
-                            dark:border-white/[0.07]
-                            bg-white/60
-                            dark:bg-white/[0.035]
-                            p-4
-                            backdrop-blur-xl
+                            h-10
+                            w-10
+                            shrink-0
+                            items-center
+                            justify-center
+                            rounded-xl
+                            bg-emerald-500/10
+                            dark:bg-emerald-500/15
                           "
                         >
-                          <div
-                            className="
-                              flex
-                              h-11
-                              w-11
-                              shrink-0
-                              items-center
-                              justify-center
-                              rounded-xl
-                              bg-emerald-500/10
-                              dark:bg-emerald-500/15
-                            "
-                          >
-                            <Icon className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-                          </div>
+                          <Icon className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                        </div>
 
-                          <div>
-                            <h3 className="text-sm font-bold text-slate-900 dark:text-white">
-                              {item.title}
-                            </h3>
+                        <div>
+                          <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                            {item.title}
+                          </h3>
 
-                            <p className="mt-1 text-xs leading-relaxed text-slate-500 dark:text-white/35">
-                              {item.description}
-                            </p>
-                          </div>
-                        </motion.div>
-                      );
-                    })}
-                  </div>
+                          <p className="mt-1 text-xs leading-relaxed text-slate-500 dark:text-white/35">
+                            {item.description}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
-            </motion.div>
+            </div>
           </div>
         </section>
 
@@ -1749,75 +1305,53 @@ const AboutPage: React.FC = () => {
             relative
             z-10
             px-4
-            pb-24
-            pt-20
+            pb-16
+            pt-12
             sm:px-6
+            sm:pb-20
+            sm:pt-16
             lg:px-8
-            lg:pb-32
+            lg:pb-24
           "
         >
           <div className="mx-auto max-w-5xl">
-            <motion.div
-              initial={{
-                opacity: 0,
-                y: 30,
-              }}
-              whileInView={{
-                opacity: 1,
-                y: 0,
-              }}
-              viewport={{
-                once: true,
-                margin: '-100px',
-              }}
-              transition={{
-                duration: 0.8,
-              }}
+            <div
               className="
                 relative
                 overflow-hidden
-                rounded-[40px]
+                rounded-[30px]
                 border
                 border-slate-900/10
-                dark:border-white/[0.09]
-                bg-white/75
-                dark:bg-[#0b0b14]/80
-                px-6
-                py-14
+                bg-white
+                px-5
+                py-12
                 text-center
-                shadow-[0_30px_100px_rgba(15,23,42,0.12)]
-                backdrop-blur-2xl
-                dark:shadow-[0_30px_100px_rgba(0,0,0,0.55)]
+                shadow-xl
+                shadow-slate-900/5
+                dark:border-white/[0.09]
+                dark:bg-[#0b0b14]
+                dark:shadow-black/30
+                sm:rounded-[36px]
                 sm:px-10
-                sm:py-16
+                sm:py-14
               "
             >
-              {/* CTA glow */}
+              {/* Static glow */}
 
-              <motion.div
-                animate={{
-                  scale: [1, 1.08, 1],
-                  opacity: [0.25, 0.45, 0.25],
-                }}
-                transition={{
-                  duration: 6,
-                  repeat: Infinity,
-                  ease: 'easeInOut',
-                }}
+              <div
+                aria-hidden="true"
                 className="
+                  pointer-events-none
                   absolute
                   left-1/2
                   top-1/2
-                  h-[350px]
-                  w-[350px]
+                  h-64
+                  w-64
                   -translate-x-1/2
                   -translate-y-1/2
                   rounded-full
-                  bg-gradient-to-r
-                  from-violet-500/20
-                  via-fuchsia-500/20
-                  to-cyan-500/20
-                  blur-[90px]
+                  bg-violet-500/10
+                  blur-3xl
                 "
               />
 
@@ -1826,17 +1360,15 @@ const AboutPage: React.FC = () => {
                   className="
                     mx-auto
                     flex
-                    h-14
-                    w-14
+                    h-12
+                    w-12
                     items-center
                     justify-center
-                    rounded-2xl
+                    rounded-xl
                     bg-gradient-to-br
                     from-violet-600
                     via-fuchsia-500
                     to-cyan-500
-                    shadow-xl
-                    shadow-violet-500/25
                   "
                 >
                   <Rocket className="h-6 w-6 text-white" />
@@ -1845,14 +1377,16 @@ const AboutPage: React.FC = () => {
                 <h2
                   className="
                     mx-auto
-                    mt-7
+                    mt-6
                     max-w-3xl
-                    text-4xl
+                    text-3xl
                     font-black
+                    leading-tight
                     tracking-tight
                     text-slate-900
                     dark:text-white
-                    sm:text-5xl
+                    sm:text-4xl
+                    lg:text-5xl
                   "
                 >
                   Prêt à gérer votre activité avec plus de{' '}
@@ -1873,70 +1407,57 @@ const AboutPage: React.FC = () => {
                   </span>
                 </h2>
 
-                <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-slate-500 dark:text-white/40 sm:text-lg">
+                <p
+                  className="
+                    mx-auto
+                    mt-4
+                    max-w-2xl
+                    text-sm
+                    leading-relaxed
+                    text-slate-500
+                    dark:text-white/40
+                    sm:text-base
+                  "
+                >
                   Découvrez une nouvelle expérience de gestion
                   pensée pour vous faire gagner du temps et garder
                   le contrôle de votre activité.
                 </p>
 
-                <div className="mt-8 flex justify-center">
-                  <Link to="/register">
+                <div className="mt-7 flex justify-center">
+                  <Link to="/register" className="w-full sm:w-auto">
                     <Button
                       className="
-                        group
-                        relative
-                        h-14
-                        overflow-hidden
+                        h-13
+                        w-full
                         rounded-2xl
                         border-0
                         bg-gradient-to-r
                         from-violet-600
                         via-fuchsia-600
                         to-cyan-500
-                        px-8
-                        text-base
+                        px-7
+                        text-sm
                         font-bold
                         text-white
-                        shadow-[0_15px_45px_rgba(124,58,237,0.3)]
-                        transition-all
-                        duration-300
-                        hover:scale-[1.02]
+                        shadow-lg
+                        shadow-violet-500/20
+                        sm:h-14
+                        sm:w-auto
+                        sm:px-8
+                        sm:text-base
                       "
                     >
-                      {/* Shine */}
+                      Créer mon compte
 
-                      <motion.div
-                        animate={{
-                          x: ['-120%', '120%'],
-                        }}
-                        transition={{
-                          duration: 2.8,
-                          repeat: Infinity,
-                          repeatDelay: 2,
-                          ease: 'easeInOut',
-                        }}
-                        className="
-                          absolute
-                          inset-y-0
-                          w-1/3
-                          skew-x-[-20deg]
-                          bg-white/20
-                          blur-sm
-                        "
-                      />
-
-                      <span className="relative flex items-center">
-                        Créer mon compte
-
-                        <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
-                      </span>
+                      <ArrowRight className="ml-2 h-5 w-5" />
                     </Button>
                   </Link>
                 </div>
 
                 <div
                   className="
-                    mt-7
+                    mt-6
                     flex
                     items-center
                     justify-center
@@ -1948,37 +1469,31 @@ const AboutPage: React.FC = () => {
                 >
                   <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
 
-                  Une expérience moderne, sécurisée et accessible.
-
-                  <Star className="h-3 w-3 text-amber-500" />
+                  <span>
+                    Une expérience moderne, sécurisée et accessible.
+                  </span>
                 </div>
               </div>
-            </motion.div>
+            </div>
           </div>
         </section>
 
         {/* =====================================================
-            BOTTOM BRANDING
+            BRANDING
         ====================================================== */}
 
-        <motion.div
-          initial={{
-            opacity: 0,
-          }}
-          whileInView={{
-            opacity: 1,
-          }}
-          viewport={{
-            once: true,
-          }}
+        <div
           className="
             relative
             z-10
             flex
+            flex-wrap
             items-center
             justify-center
             gap-2
-            pb-8
+            px-4
+            pb-7
+            text-center
             text-[10px]
             font-medium
             text-slate-400
@@ -1987,14 +1502,14 @@ const AboutPage: React.FC = () => {
         >
           <Sparkles className="h-3 w-3 text-violet-500 dark:text-fuchsia-400" />
 
-          Gestion Vente Premium
+          <span>Gestion Vente Premium</span>
 
           <span>•</span>
 
           <Globe className="h-3 w-3" />
 
-          Cloud Business Suite
-        </motion.div>
+          <span>Cloud Business Suite</span>
+        </div>
       </main>
     </Layout>
   );

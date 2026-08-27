@@ -1,5 +1,6 @@
 /**
  * LoginPage.tsx
+ *
  * Ultra Premium Luxury Authentication Experience
  *
  * - Design luxe / SaaS premium
@@ -39,9 +40,7 @@ import Layout from '@/components/Layout';
 import PremiumLoading from '@/components/ui/premium-loading';
 import SEOHead from '@/components/SEOHead';
 import { useLightMotion } from '@/hooks/useLightMotion';
-
 import { useAuth } from '@/contexts/AuthContext';
-
 import connecteProfilUniqueApi from '@/services/api/connecteProfilUniqueApi';
 import { savePendingLogin } from '@/pages/SessionConflictPage';
 
@@ -161,11 +160,12 @@ const LoginPage: React.FC = () => {
 
   const [maxAttempts, setMaxAttempts] = useState(5);
   const [failedAttempts, setFailedAttempts] = useState(0);
-
   const [isLocked, setIsLocked] = useState(false);
   const [lockCountdown, setLockCountdown] = useState(0);
 
-  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(
+    null
+  );
 
   // =========================================================
   // COUNTDOWN
@@ -235,6 +235,7 @@ const LoginPage: React.FC = () => {
         ...previous,
         email: 'Veuillez entrer votre adresse email.',
       }));
+
       return false;
     }
 
@@ -243,6 +244,7 @@ const LoginPage: React.FC = () => {
         ...previous,
         email: 'Veuillez entrer une adresse email valide.',
       }));
+
       return false;
     }
 
@@ -271,9 +273,7 @@ const LoginPage: React.FC = () => {
 
         if (response.data.locked) {
           setIsLocked(true);
-
           setLockCountdown(response.data.remainingSeconds || 0);
-
           setFailedAttempts(response.data.maxAttempts || 5);
         }
 
@@ -295,14 +295,18 @@ const LoginPage: React.FC = () => {
 
       return false;
     } catch (error) {
-      console.error('Erreur lors de la vérification de l’email:', error);
+      console.error(
+        "Erreur lors de la vérification de l'email:",
+        error
+      );
 
       setEmailExists(false);
       setShowPasswordField(false);
 
       setErrors((previous) => ({
         ...previous,
-        email: "Une erreur s'est produite. Veuillez réessayer.",
+        email:
+          "Une erreur s'est produite. Veuillez réessayer.",
       }));
 
       return false;
@@ -326,6 +330,7 @@ const LoginPage: React.FC = () => {
       setErrors({
         email: 'Veuillez entrer votre adresse email.',
       });
+
       return;
     }
 
@@ -333,6 +338,7 @@ const LoginPage: React.FC = () => {
       setErrors({
         email: 'Veuillez entrer une adresse email valide.',
       });
+
       return;
     }
 
@@ -345,6 +351,7 @@ const LoginPage: React.FC = () => {
       setErrors({
         password: 'Veuillez entrer votre mot de passe.',
       });
+
       return;
     }
 
@@ -391,7 +398,6 @@ const LoginPage: React.FC = () => {
             });
 
             setIsLoggingIn(false);
-
             navigate('/session-conflict');
 
             return;
@@ -426,7 +432,7 @@ const LoginPage: React.FC = () => {
               registration.sessionId
             );
           } catch {
-            // Non bloquant
+            // Non bloquant.
           }
 
           navigate('/dashboard');
@@ -439,18 +445,26 @@ const LoginPage: React.FC = () => {
       if (status === 423) {
         setIsLocked(true);
 
-        setLockCountdown(data?.remainingSeconds || 0);
+        setLockCountdown(
+          data?.remainingSeconds || 0
+        );
 
-        setFailedAttempts(data?.maxAttempts || maxAttempts);
+        setFailedAttempts(
+          data?.maxAttempts || maxAttempts
+        );
 
-        setMaxAttempts(data?.maxAttempts || maxAttempts);
+        setMaxAttempts(
+          data?.maxAttempts || maxAttempts
+        );
       } else if (
         status === 401 &&
         data?.failedAttempts !== undefined
       ) {
         setFailedAttempts(data.failedAttempts);
 
-        setMaxAttempts(data.maxAttempts || maxAttempts);
+        setMaxAttempts(
+          data.maxAttempts || maxAttempts
+        );
 
         setErrors({
           password: `Mot de passe incorrect (${data.failedAttempts}/${data.maxAttempts})`,
@@ -470,7 +484,9 @@ const LoginPage: React.FC = () => {
   // PASSWORD VALIDITY
   // =========================================================
 
-  const handlePasswordValidityChange = (isValid: boolean) => {
+  const handlePasswordValidityChange = (
+    isValid: boolean
+  ) => {
     setIsPasswordValid(isValid);
   };
 
@@ -484,15 +500,13 @@ const LoginPage: React.FC = () => {
     const value = event.target.value;
 
     setEmail(value);
-
     setShowPasswordField(false);
     setEmailExists(false);
-
     setPassword('');
-
     setFailedAttempts(0);
     setIsLocked(false);
     setLockCountdown(0);
+    setIsPasswordValid(false);
 
     if (errors.email) {
       setErrors((previous) => ({
@@ -556,6 +570,7 @@ const LoginPage: React.FC = () => {
 
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
           {/* Aurora 1 */}
+
           <motion.div
             animate={{
               x: [0, 100, -50, 0],
@@ -581,6 +596,7 @@ const LoginPage: React.FC = () => {
           />
 
           {/* Aurora 2 */}
+
           <motion.div
             animate={{
               x: [0, -100, 60, 0],
@@ -606,11 +622,16 @@ const LoginPage: React.FC = () => {
           />
 
           {/* Aurora 3 */}
+
           <motion.div
-            animate={light ? undefined : {
-              x: [0, 50, -60, 0],
-              scale: [1, 1.1, 0.95, 1],
-            }}
+            animate={
+              light
+                ? undefined
+                : {
+                    x: [0, 50, -60, 0],
+                    scale: [1, 1.1, 0.95, 1],
+                  }
+            }
             transition={{
               duration: 28,
               repeat: Infinity,
@@ -632,6 +653,7 @@ const LoginPage: React.FC = () => {
           />
 
           {/* Grid */}
+
           <div
             className="
               absolute
@@ -645,10 +667,15 @@ const LoginPage: React.FC = () => {
           />
 
           {/* Decorative rings */}
+
           <motion.div
-            animate={light ? undefined : {
-              rotate: 360,
-            }}
+            animate={
+              light
+                ? undefined
+                : {
+                    rotate: 360,
+                  }
+            }
             transition={{
               duration: 70,
               repeat: Infinity,
@@ -670,9 +697,13 @@ const LoginPage: React.FC = () => {
           />
 
           <motion.div
-            animate={light ? undefined : {
-              rotate: -360,
-            }}
+            animate={
+              light
+                ? undefined
+                : {
+                    rotate: -360,
+                  }
+            }
             transition={{
               duration: 55,
               repeat: Infinity,
@@ -694,15 +725,24 @@ const LoginPage: React.FC = () => {
           />
 
           {/* Floating particles */}
+
           {[...Array(particleCount)].map((_, index) => (
             <motion.span
               key={index}
-              animate={light ? undefined : {
-                y: [0, -80, 0],
-                x: [0, index % 2 === 0 ? 25 : -25, 0],
-                opacity: [0.15, 0.7, 0.15],
-                scale: [0.8, 1.4, 0.8],
-              }}
+              animate={
+                light
+                  ? undefined
+                  : {
+                      y: [0, -80, 0],
+                      x: [
+                        0,
+                        index % 2 === 0 ? 25 : -25,
+                        0,
+                      ],
+                      opacity: [0.15, 0.7, 0.15],
+                      scale: [0.8, 1.4, 0.8],
+                    }
+              }
               transition={{
                 duration: 5 + index * 0.6,
                 repeat: Infinity,
@@ -774,6 +814,7 @@ const LoginPage: React.FC = () => {
             className="hidden lg:block"
           >
             {/* Badge */}
+
             <motion.div
               whileHover={{
                 scale: 1.03,
@@ -822,6 +863,7 @@ const LoginPage: React.FC = () => {
             </motion.div>
 
             {/* Heading */}
+
             <h1
               className="
                 mt-8
@@ -835,6 +877,7 @@ const LoginPage: React.FC = () => {
               "
             >
               Gérez votre
+
               <span
                 className="
                   block
@@ -859,6 +902,7 @@ const LoginPage: React.FC = () => {
             </h1>
 
             {/* Description */}
+
             <p
               className="
                 mt-8
@@ -877,6 +921,7 @@ const LoginPage: React.FC = () => {
             </p>
 
             {/* Mini stats */}
+
             <div className="mt-10 flex flex-wrap gap-4">
               {[
                 {
@@ -945,6 +990,7 @@ const LoginPage: React.FC = () => {
             </div>
 
             {/* Features */}
+
             <div className="mt-10 grid grid-cols-2 xl:grid-cols-3 gap-3">
               {features.map((feature, index) => {
                 const Icon = feature.icon;
@@ -1050,6 +1096,7 @@ const LoginPage: React.FC = () => {
             className="relative w-full max-w-xl mx-auto"
           >
             {/* Outer glow */}
+
             <motion.div
               animate={{
                 opacity: [0.35, 0.65, 0.35],
@@ -1088,6 +1135,7 @@ const LoginPage: React.FC = () => {
               "
             >
               {/* Top shine */}
+
               <div
                 className="
                   absolute
@@ -1242,6 +1290,7 @@ const LoginPage: React.FC = () => {
                 </CardDescription>
 
                 {/* Security badges */}
+
                 <div className="mt-5 flex flex-wrap gap-2">
                   {securityFeatures.map((item) => {
                     const Icon = item.icon;
@@ -1299,7 +1348,6 @@ const LoginPage: React.FC = () => {
                       "
                     >
                       <Mail className="h-4 w-4 text-violet-600 dark:text-fuchsia-400" />
-
                       Adresse email
                     </Label>
 
@@ -1390,6 +1438,7 @@ const LoginPage: React.FC = () => {
                     </div>
 
                     {/* Email error */}
+
                     {errors.email && (
                       <motion.div
                         initial={{
@@ -1403,12 +1452,12 @@ const LoginPage: React.FC = () => {
                         className="flex items-center gap-2 text-xs font-medium text-red-500 dark:text-red-400"
                       >
                         <AlertTriangle className="h-4 w-4" />
-
                         {errors.email}
                       </motion.div>
                     )}
 
                     {/* Email success */}
+
                     {emailExists && (
                       <motion.div
                         initial={{
@@ -1430,7 +1479,6 @@ const LoginPage: React.FC = () => {
                         "
                       >
                         <CheckCircle2 className="h-4 w-4" />
-
                         Bienvenue {userName}
                       </motion.div>
                     )}
@@ -1455,66 +1503,67 @@ const LoginPage: React.FC = () => {
                     >
                       {/* ATTEMPTS */}
 
-                      {failedAttempts > 0 && !isLocked && (
-                        <motion.div
-                          initial={{
-                            opacity: 0,
-                            y: -5,
-                          }}
-                          animate={{
-                            opacity: 1,
-                            y: 0,
-                          }}
-                          className="
-                            flex
-                            items-center
-                            justify-between
-                            gap-4
-                            rounded-2xl
-                            border
-                            border-orange-400/20
-                            bg-orange-500/5
-                            px-4
-                            py-3
-                          "
-                        >
-                          <div className="flex items-center gap-2">
-                            <Shield className="h-4 w-4 text-orange-500 dark:text-orange-300" />
+                      {failedAttempts > 0 &&
+                        !isLocked && (
+                          <motion.div
+                            initial={{
+                              opacity: 0,
+                              y: -5,
+                            }}
+                            animate={{
+                              opacity: 1,
+                              y: 0,
+                            }}
+                            className="
+                              flex
+                              items-center
+                              justify-between
+                              gap-4
+                              rounded-2xl
+                              border
+                              border-orange-400/20
+                              bg-orange-500/5
+                              px-4
+                              py-3
+                            "
+                          >
+                            <div className="flex items-center gap-2">
+                              <Shield className="h-4 w-4 text-orange-500 dark:text-orange-300" />
 
-                            <span className="text-xs font-medium text-orange-700 dark:text-orange-200">
-                              Tentatives restantes :{' '}
-                              {remainingAttempts}
-                            </span>
-                          </div>
+                              <span className="text-xs font-medium text-orange-700 dark:text-orange-200">
+                                Tentatives restantes :{' '}
+                                {remainingAttempts}
+                              </span>
+                            </div>
 
-                          <div className="flex gap-1">
-                            {Array.from({
-                              length: maxAttempts,
-                            }).map((_, index) => (
-                              <motion.div
-                                key={index}
-                                initial={{
-                                  scale: 0,
-                                }}
-                                animate={{
-                                  scale: 1,
-                                }}
-                                className={`
-                                  h-2
-                                  w-2
-                                  rounded-full
-                                  ${
-                                    index <
-                                    failedAttempts
-                                      ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.7)]'
-                                      : 'bg-slate-300 dark:bg-white/15'
-                                  }
-                                `}
-                              />
-                            ))}
-                          </div>
-                        </motion.div>
-                      )}
+                            <div className="flex gap-1">
+                              {Array.from({
+                                length: maxAttempts,
+                              }).map((_, index) => (
+                                <motion.div
+                                  key={index}
+                                  initial={{
+                                    scale: 0,
+                                  }}
+                                  animate={{
+                                    scale: 1,
+                                  }}
+                                  className={`
+                                    h-2
+                                    w-2
+                                    rounded-full
+                                    ${
+                                      index <
+                                      failedAttempts
+                                        ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.7)]'
+                                        : 'bg-slate-300 dark:bg-white/15'
+                                    }
+                                  `}
+                                />
+                              ))}
+                            </div>
+                          </motion.div>
+                        )}
 
                       {/* LOCKED */}
 
@@ -1542,7 +1591,11 @@ const LoginPage: React.FC = () => {
                           >
                             <motion.div
                               animate={{
-                                opacity: [0.2, 0.5, 0.2],
+                                opacity: [
+                                  0.2,
+                                  0.5,
+                                  0.2,
+                                ],
                               }}
                               transition={{
                                 duration: 2,
@@ -1579,7 +1632,8 @@ const LoginPage: React.FC = () => {
 
                                 <div>
                                   <h3 className="font-bold text-red-700 dark:text-red-200">
-                                    Compte temporairement bloqué
+                                    Compte temporairement
+                                    bloqué
                                   </h3>
 
                                   <p className="mt-0.5 text-xs text-red-500/70 dark:text-red-300/60">
@@ -1594,7 +1648,11 @@ const LoginPage: React.FC = () => {
 
                                 <motion.div
                                   animate={{
-                                    opacity: [0.7, 1, 0.7],
+                                    opacity: [
+                                      0.7,
+                                      1,
+                                      0.7,
+                                    ],
                                   }}
                                   transition={{
                                     duration: 1,
@@ -1634,7 +1692,6 @@ const LoginPage: React.FC = () => {
                           "
                         >
                           <Lock className="h-4 w-4 text-violet-600 dark:text-fuchsia-400" />
-
                           Mot de passe
                         </Label>
 
@@ -1747,6 +1804,7 @@ const LoginPage: React.FC = () => {
                     "
                   >
                     {/* Shine */}
+
                     <motion.div
                       animate={{
                         x: ['-120%', '120%'],
