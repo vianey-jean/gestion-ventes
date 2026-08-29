@@ -1,30 +1,25 @@
 /**
  * LoginPage.tsx
+ * Premium / performant / responsive
  *
- * Ultra Premium Luxury Authentication Experience
- *
- * - Design luxe / SaaS premium
- * - Mode clair + sombre via le thème global
- * - Animations Framer Motion
- * - Aurora animée
- * - Particules flottantes
- * - Glassmorphism
+ * Logique conservée :
  * - Vérification email
- * - Sécurité / tentatives
- * - Verrouillage avec compte à rebours
+ * - Connexion
+ * - Tentatives / verrouillage
  * - Session unique
- * - Responsive
+ * - AuthContext
+ * - PasswordStrengthChecker
+ * - Redirections existantes
  */
 
 import React, { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-
 import {
   Card,
   CardContent,
@@ -39,16 +34,14 @@ import PasswordStrengthChecker from '@/components/PasswordStrengthChecker';
 import Layout from '@/components/Layout';
 import PremiumLoading from '@/components/ui/premium-loading';
 import SEOHead from '@/components/SEOHead';
-import { useLightMotion } from '@/hooks/useLightMotion';
+
 import { useAuth } from '@/contexts/AuthContext';
 import connecteProfilUniqueApi from '@/services/api/connecteProfilUniqueApi';
 import { savePendingLogin } from '@/pages/SessionConflictPage';
 
 import {
-  Activity,
   AlertTriangle,
   ArrowRight,
-  BarChart3,
   CheckCircle2,
   ChevronRight,
   Cloud,
@@ -57,18 +50,14 @@ import {
   Gem,
   Globe,
   KeyRound,
-  Layers3,
   Lock,
   Mail,
-  Package,
   Rocket,
   Shield,
   ShieldCheck,
   Sparkles,
   Star,
   Timer,
-  TrendingUp,
-  Users,
   Zap,
 } from 'lucide-react';
 
@@ -76,67 +65,25 @@ const AUTH_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ||
   'https://server-gestion-ventes.onrender.com';
 
-const features = [
-  {
-    icon: BarChart3,
-    title: 'Ventes',
-    description: 'Suivez votre activité commerciale en temps réel.',
-    color: 'from-violet-500 to-purple-500',
-  },
-  {
-    icon: TrendingUp,
-    title: 'Comptabilité',
-    description: 'Gardez une vision claire de vos finances.',
-    color: 'from-cyan-500 to-blue-500',
-  },
-  {
-    icon: Users,
-    title: 'Clients',
-    description: 'Centralisez vos clients et vos relations.',
-    color: 'from-fuchsia-500 to-pink-500',
-  },
-  {
-    icon: Package,
-    title: 'Stock',
-    description: 'Contrôlez vos produits et votre inventaire.',
-    color: 'from-orange-500 to-amber-500',
-  },
-  {
-    icon: Activity,
-    title: 'Rendez-vous',
-    description: 'Organisez votre agenda et vos rendez-vous.',
-    color: 'from-emerald-500 to-teal-500',
-  },
-  {
-    icon: Layers3,
-    title: 'Tâches',
-    description: 'Structurez vos priorités et votre travail.',
-    color: 'from-indigo-500 to-violet-500',
-  },
-];
+const isValidEmail = (value: string) =>
+  /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 
-const securityFeatures = [
-  {
-    icon: ShieldCheck,
-    label: 'Sécurisé',
-  },
-  {
-    icon: Zap,
-    label: 'Rapide',
-  },
-  {
-    icon: KeyRound,
-    label: 'Protégé',
-  },
-];
+const formatCountdown = (seconds: number) => {
+  const minutes = Math.floor(seconds / 60);
+  const remaining = seconds % 60;
+
+  return `${minutes.toString().padStart(2, '0')}:${remaining
+    .toString()
+    .padStart(2, '0')}`;
+};
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
-  const { light, particleCount } = useLightMotion();
   const { login } = useAuth();
+  const reducedMotion = useReducedMotion();
 
   // =========================================================
-  // FORM STATES
+  // FORM
   // =========================================================
 
   const [email, setEmail] = useState('');
@@ -163,18 +110,14 @@ const LoginPage: React.FC = () => {
   const [isLocked, setIsLocked] = useState(false);
   const [lockCountdown, setLockCountdown] = useState(0);
 
-  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(
-    null
-  );
+  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // =========================================================
-  // COUNTDOWN
+  // LOCK COUNTDOWN
   // =========================================================
 
   useEffect(() => {
-    if (!isLocked || lockCountdown <= 0) {
-      return;
-    }
+    if (!isLocked || lockCountdown <= 0) return;
 
     countdownRef.current = setInterval(() => {
       setLockCountdown((previous) => {
@@ -203,27 +146,6 @@ const LoginPage: React.FC = () => {
   }, [isLocked, lockCountdown]);
 
   // =========================================================
-  // FORMAT COUNTDOWN
-  // =========================================================
-
-  const formatCountdown = (seconds: number) => {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-
-    return `${minutes.toString().padStart(2, '0')}:${remainingSeconds
-      .toString()
-      .padStart(2, '0')}`;
-  };
-
-  // =========================================================
-  // EMAIL VALIDATION
-  // =========================================================
-
-  const isValidEmail = (value: string) => {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
-  };
-
-  // =========================================================
   // EMAIL CHECK
   // =========================================================
 
@@ -235,7 +157,6 @@ const LoginPage: React.FC = () => {
         ...previous,
         email: 'Veuillez entrer votre adresse email.',
       }));
-
       return false;
     }
 
@@ -244,7 +165,6 @@ const LoginPage: React.FC = () => {
         ...previous,
         email: 'Veuillez entrer une adresse email valide.',
       }));
-
       return false;
     }
 
@@ -253,9 +173,7 @@ const LoginPage: React.FC = () => {
     try {
       const response = await axios.post(
         `${AUTH_BASE_URL}/api/auth/check-email`,
-        {
-          email: cleanEmail,
-        }
+        { email: cleanEmail }
       );
 
       if (response.data?.exists) {
@@ -295,18 +213,14 @@ const LoginPage: React.FC = () => {
 
       return false;
     } catch (error) {
-      console.error(
-        "Erreur lors de la vérification de l'email:",
-        error
-      );
+      console.error('Erreur lors de la vérification de l’email:', error);
 
       setEmailExists(false);
       setShowPasswordField(false);
 
       setErrors((previous) => ({
         ...previous,
-        email:
-          "Une erreur s'est produite. Veuillez réessayer.",
+        email: "Une erreur s'est produite. Veuillez réessayer.",
       }));
 
       return false;
@@ -321,7 +235,6 @@ const LoginPage: React.FC = () => {
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-
     setErrors({});
 
     const cleanEmail = email.trim();
@@ -330,7 +243,6 @@ const LoginPage: React.FC = () => {
       setErrors({
         email: 'Veuillez entrer votre adresse email.',
       });
-
       return;
     }
 
@@ -338,7 +250,6 @@ const LoginPage: React.FC = () => {
       setErrors({
         email: 'Veuillez entrer une adresse email valide.',
       });
-
       return;
     }
 
@@ -351,13 +262,10 @@ const LoginPage: React.FC = () => {
       setErrors({
         password: 'Veuillez entrer votre mot de passe.',
       });
-
       return;
     }
 
-    if (isLocked) {
-      return;
-    }
+    if (isLocked) return;
 
     setIsLoggingIn(true);
 
@@ -399,12 +307,10 @@ const LoginPage: React.FC = () => {
 
             setIsLoggingIn(false);
             navigate('/session-conflict');
-
             return;
           }
         } catch {
-          // Le service de session unique ne doit pas bloquer
-          // une connexion normale s'il est temporairement indisponible.
+          // Service de session unique non bloquant.
         }
 
         // =====================================================
@@ -444,27 +350,15 @@ const LoginPage: React.FC = () => {
 
       if (status === 423) {
         setIsLocked(true);
-
-        setLockCountdown(
-          data?.remainingSeconds || 0
-        );
-
-        setFailedAttempts(
-          data?.maxAttempts || maxAttempts
-        );
-
-        setMaxAttempts(
-          data?.maxAttempts || maxAttempts
-        );
+        setLockCountdown(data?.remainingSeconds || 0);
+        setFailedAttempts(data?.maxAttempts || maxAttempts);
+        setMaxAttempts(data?.maxAttempts || maxAttempts);
       } else if (
         status === 401 &&
         data?.failedAttempts !== undefined
       ) {
         setFailedAttempts(data.failedAttempts);
-
-        setMaxAttempts(
-          data.maxAttempts || maxAttempts
-        );
+        setMaxAttempts(data.maxAttempts || maxAttempts);
 
         setErrors({
           password: `Mot de passe incorrect (${data.failedAttempts}/${data.maxAttempts})`,
@@ -478,16 +372,6 @@ const LoginPage: React.FC = () => {
     } finally {
       setIsLoggingIn(false);
     }
-  };
-
-  // =========================================================
-  // PASSWORD VALIDITY
-  // =========================================================
-
-  const handlePasswordValidityChange = (
-    isValid: boolean
-  ) => {
-    setIsPasswordValid(isValid);
   };
 
   // =========================================================
@@ -523,12 +407,14 @@ const LoginPage: React.FC = () => {
   if (isLoggingIn) {
     return (
       <Layout>
-        <PremiumLoading
-          text="Connexion sécurisée..."
-          size="lg"
-          overlay={true}
-          variant="default"
-        />
+        <div className="flex min-h-[300px] items-center justify-center">
+      <PremiumLoading
+        text="Bienvenue ..."
+        size="lg"
+        overlay={false}
+        variant="default"
+      />
+    </div>
       </Layout>
     );
   }
@@ -537,6 +423,17 @@ const LoginPage: React.FC = () => {
     maxAttempts - failedAttempts,
     0
   );
+
+  const entrance = reducedMotion
+    ? {}
+    : {
+        initial: { opacity: 0, y: 18 },
+        animate: { opacity: 1, y: 0 },
+        transition: {
+          duration: 0.45,
+          ease: 'easeOut',
+        },
+      };
 
   return (
     <Layout>
@@ -548,716 +445,393 @@ const LoginPage: React.FC = () => {
 
       <main
         className="
-          relative
-          min-h-[calc(100vh-64px)]
-          overflow-hidden
-          flex
-          items-center
-          justify-center
-          px-4
-          py-12
-          sm:px-6
+          relative flex min-h-[calc(100vh-64px)] items-center
+          justify-center overflow-hidden px-4 py-8
+          sm:px-6 sm:py-10
           lg:px-8
-          bg-slate-50
-          dark:bg-[#02030a]
-          transition-colors
-          duration-500
+          bg-slate-50 dark:bg-[#03030a]
         "
       >
-        {/* =====================================================
-            BACKGROUND
-        ====================================================== */}
+        {/* ===================================================
+            LIGHTWEIGHT BACKGROUND
+        ==================================================== */}
 
-        <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          {/* Aurora 1 */}
-
-          <motion.div
-            animate={{
-              x: [0, 100, -50, 0],
-              y: [0, -70, 50, 0],
-              scale: [1, 1.15, 0.95, 1],
-            }}
-            transition={{
-              duration: 20,
-              repeat: Infinity,
-              ease: 'easeInOut',
-            }}
+        <div
+          aria-hidden="true"
+          className="
+            pointer-events-none absolute inset-0 overflow-hidden
+          "
+        >
+          {/* Gradient glow — CSS only */}
+          <div
             className="
-              absolute
-              -left-48
-              -top-48
-              h-[650px]
-              w-[650px]
-              rounded-full
-              bg-violet-400/20
-              blur-[100px]
-              dark:bg-fuchsia-600/20
+              absolute -left-32 -top-32
+              h-72 w-72 rounded-full
+              bg-violet-500/15
+              blur-3xl
+              sm:h-96 sm:w-96
+              dark:bg-violet-600/20
             "
           />
 
-          {/* Aurora 2 */}
-
-          <motion.div
-            animate={{
-              x: [0, -100, 60, 0],
-              y: [0, 70, -40, 0],
-              scale: [1, 1.2, 0.9, 1],
-            }}
-            transition={{
-              duration: 24,
-              repeat: Infinity,
-              ease: 'easeInOut',
-            }}
+          <div
             className="
-              absolute
-              -bottom-64
-              -right-48
-              h-[750px]
-              w-[750px]
-              rounded-full
-              bg-cyan-300/20
-              blur-[110px]
+              absolute -bottom-32 -right-32
+              h-80 w-80 rounded-full
+              bg-cyan-400/15
+              blur-3xl
+              sm:h-[28rem] sm:w-[28rem]
               dark:bg-cyan-600/15
             "
           />
 
-          {/* Aurora 3 */}
-
-          <motion.div
-            animate={
-              light
-                ? undefined
-                : {
-                    x: [0, 50, -60, 0],
-                    scale: [1, 1.1, 0.95, 1],
-                  }
-            }
-            transition={{
-              duration: 28,
-              repeat: Infinity,
-              ease: 'easeInOut',
-            }}
-            className="
-              absolute
-              left-1/2
-              top-1/2
-              h-[500px]
-              w-[500px]
-              -translate-x-1/2
-              -translate-y-1/2
-              rounded-full
-              bg-pink-300/10
-              blur-[120px]
-              dark:bg-violet-600/10
-            "
-          />
-
-          {/* Grid */}
-
+          {/* Fine grid */}
           <div
             className="
-              absolute
-              inset-0
-              opacity-30
-              dark:opacity-100
-              bg-[linear-gradient(rgba(15,23,42,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(15,23,42,0.04)_1px,transparent_1px)]
-              dark:bg-[linear-gradient(rgba(255,255,255,0.025)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.025)_1px,transparent_1px)]
-              bg-[size:70px_70px]
+              absolute inset-0 opacity-40 dark:opacity-60
+              [background-image:linear-gradient(rgba(15,23,42,.035)_1px,transparent_1px),linear-gradient(90deg,rgba(15,23,42,.035)_1px,transparent_1px)]
+              [background-size:56px_56px]
+              dark:[background-image:linear-gradient(rgba(255,255,255,.025)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.025)_1px,transparent_1px)]
             "
           />
 
-          {/* Decorative rings */}
-
-          <motion.div
-            animate={
-              light
-                ? undefined
-                : {
-                    rotate: 360,
-                  }
-            }
-            transition={{
-              duration: 70,
-              repeat: Infinity,
-              ease: 'linear',
-            }}
+          {/* Small ambient light */}
+          <div
             className="
-              absolute
-              left-1/2
-              top-1/2
-              h-[850px]
-              w-[850px]
-              -translate-x-1/2
-              -translate-y-1/2
+              absolute left-1/2 top-1/2
+              h-72 w-72 -translate-x-1/2 -translate-y-1/2
               rounded-full
-              border
-              border-slate-900/5
-              dark:border-white/[0.035]
+              bg-fuchsia-500/5
+              blur-3xl
             "
           />
-
-          <motion.div
-            animate={
-              light
-                ? undefined
-                : {
-                    rotate: -360,
-                  }
-            }
-            transition={{
-              duration: 55,
-              repeat: Infinity,
-              ease: 'linear',
-            }}
-            className="
-              absolute
-              left-1/2
-              top-1/2
-              h-[600px]
-              w-[600px]
-              -translate-x-1/2
-              -translate-y-1/2
-              rounded-full
-              border
-              border-violet-500/10
-              dark:border-fuchsia-500/10
-            "
-          />
-
-          {/* Floating particles */}
-
-          {[...Array(particleCount)].map((_, index) => (
-            <motion.span
-              key={index}
-              animate={
-                light
-                  ? undefined
-                  : {
-                      y: [0, -80, 0],
-                      x: [
-                        0,
-                        index % 2 === 0 ? 25 : -25,
-                        0,
-                      ],
-                      opacity: [0.15, 0.7, 0.15],
-                      scale: [0.8, 1.4, 0.8],
-                    }
-              }
-              transition={{
-                duration: 5 + index * 0.6,
-                repeat: Infinity,
-                delay: index * 0.35,
-                ease: 'easeInOut',
-              }}
-              className="
-                absolute
-                h-1
-                w-1
-                rounded-full
-                bg-violet-500/40
-                dark:bg-white/40
-              "
-              style={{
-                left: `${5 + ((index * 17) % 90)}%`,
-                top: `${8 + ((index * 23) % 85)}%`,
-              }}
-            />
-          ))}
         </div>
 
-        {/* =====================================================
-            CONTENT
-        ====================================================== */}
+        {/* ===================================================
+            MAIN
+        ==================================================== */}
 
         <motion.div
-          initial={{
-            opacity: 0,
-            y: 30,
-          }}
-          animate={{
-            opacity: 1,
-            y: 0,
-          }}
-          transition={{
-            duration: 0.8,
-            ease: 'easeOut',
-          }}
+          {...entrance}
           className="
-            relative
-            z-10
-            w-full
-            max-w-7xl
-            grid
-            lg:grid-cols-[1fr_520px]
-            gap-10
+            relative z-10 w-full max-w-6xl
+            lg:grid lg:grid-cols-[1fr_500px]
+            lg:items-center lg:gap-12
             xl:gap-20
-            items-center
           "
         >
-          {/* ===================================================
-              LEFT
-          ==================================================== */}
+          {/* =================================================
+              DESKTOP PRESENTATION
+          ================================================== */}
 
-          <motion.section
-            initial={{
-              opacity: 0,
-              x: -40,
-            }}
-            animate={{
-              opacity: 1,
-              x: 0,
-            }}
-            transition={{
-              duration: 0.8,
-              delay: 0.15,
-            }}
-            className="hidden lg:block"
-          >
-            {/* Badge */}
-
-            <motion.div
-              whileHover={{
-                scale: 1.03,
-                y: -2,
-              }}
+          <section className="hidden lg:block">
+            <div
               className="
-                inline-flex
-                items-center
-                gap-2.5
-                rounded-full
-                border
-                border-slate-900/10
+                inline-flex items-center gap-2
+                rounded-full border border-slate-900/10
+                bg-white/70 px-3 py-2
+                text-xs font-semibold text-slate-600
+                shadow-sm
                 dark:border-white/10
-                bg-white/70
-                dark:bg-white/[0.045]
-                backdrop-blur-xl
-                px-4
-                py-2
-                shadow-lg
-                dark:shadow-none
+                dark:bg-white/[0.04]
+                dark:text-white/70
               "
             >
               <span
                 className="
-                  flex
-                  h-7
-                  w-7
-                  items-center
-                  justify-center
+                  flex h-7 w-7 items-center justify-center
                   rounded-full
-                  bg-gradient-to-br
-                  from-violet-500
-                  to-fuchsia-500
-                  shadow-lg
-                  shadow-violet-500/25
+                  bg-gradient-to-br from-violet-600 to-fuchsia-500
                 "
               >
                 <Gem className="h-3.5 w-3.5 text-white" />
               </span>
 
-              <span className="text-sm font-semibold text-slate-700 dark:text-white/80">
-                Premium Business Suite
-              </span>
+              Premium Business Suite
 
-              <Sparkles className="h-4 w-4 text-fuchsia-500 dark:text-fuchsia-400" />
-            </motion.div>
-
-            {/* Heading */}
+              <Sparkles className="h-3.5 w-3.5 text-fuchsia-500" />
+            </div>
 
             <h1
               className="
-                mt-8
-                text-5xl
+                mt-7 max-w-2xl
+                text-5xl font-black leading-[.95]
+                tracking-[-0.045em]
+                text-slate-950
                 xl:text-7xl
-                font-black
-                leading-[0.95]
-                tracking-[-0.04em]
-                text-slate-900
                 dark:text-white
               "
             >
               Gérez votre
-
               <span
                 className="
-                  block
-                  mt-3
+                  block mt-2
                   bg-gradient-to-r
-                  from-violet-600
-                  via-fuchsia-500
-                  to-cyan-500
+                  from-violet-600 via-fuchsia-500 to-cyan-500
+                  bg-clip-text text-transparent
                   dark:from-fuchsia-400
                   dark:via-violet-400
                   dark:to-cyan-300
-                  bg-clip-text
-                  text-transparent
                 "
               >
                 Business.
               </span>
-
-              <span className="block mt-3">
+              <span className="block mt-2">
                 Avec élégance.
               </span>
             </h1>
 
-            {/* Description */}
-
             <p
               className="
-                mt-8
-                max-w-2xl
-                text-lg
-                xl:text-xl
-                leading-relaxed
+                mt-7 max-w-xl
+                text-base leading-relaxed
                 text-slate-600
+                xl:text-lg
                 dark:text-white/50
               "
             >
               Une plateforme moderne pour centraliser vos
-              ventes, votre comptabilité, vos clients, vos
-              rendez-vous, vos tâches et votre activité
-              commerciale.
+              ventes, vos clients, votre comptabilité, votre
+              stock et votre activité commerciale.
             </p>
 
-            {/* Mini stats */}
-
-            <div className="mt-10 flex flex-wrap gap-4">
+            <div className="mt-8 flex flex-wrap gap-3">
               {[
-                {
-                  icon: ShieldCheck,
-                  value: '100%',
-                  label: 'Sécurisé',
-                },
-                {
-                  icon: Zap,
-                  value: 'Rapide',
-                  label: 'Expérience fluide',
-                },
-                {
-                  icon: Cloud,
-                  value: 'Cloud',
-                  label: 'Accessible partout',
-                },
-              ].map((item, index) => {
-                const Icon = item.icon;
+                [ShieldCheck, '100%', 'Sécurisé'],
+                [Zap, 'Rapide', 'Expérience fluide'],
+                [Cloud, 'Cloud', 'Accessible partout'],
+              ].map(([Icon, value, label]) => {
+                const IconComponent = Icon as React.ElementType;
 
                 return (
-                  <motion.div
-                    key={item.label}
-                    initial={{
-                      opacity: 0,
-                      y: 15,
-                    }}
-                    animate={{
-                      opacity: 1,
-                      y: 0,
-                    }}
-                    transition={{
-                      delay: 0.7 + index * 0.1,
-                    }}
-                    whileHover={{
-                      y: -4,
-                    }}
+                  <div
+                    key={String(label)}
                     className="
                       rounded-2xl
-                      border
-                      border-slate-900/10
-                      dark:border-white/[0.08]
-                      bg-white/60
+                      border border-slate-900/10
+                      bg-white/65 px-4 py-3
+                      shadow-sm
+                      dark:border-white/[0.07]
                       dark:bg-white/[0.035]
-                      backdrop-blur-xl
-                      px-4
-                      py-3
                     "
                   >
-                    <div className="flex items-center gap-3">
-                      <Icon className="h-4 w-4 text-violet-600 dark:text-fuchsia-400" />
+                    <div className="flex items-center gap-2.5">
+                      <IconComponent
+                        className="
+                          h-4 w-4
+                          text-violet-600
+                          dark:text-fuchsia-400
+                        "
+                      />
 
                       <div>
-                        <div className="text-sm font-bold text-slate-900 dark:text-white">
-                          {item.value}
+                        <div
+                          className="
+                            text-sm font-bold
+                            text-slate-900 dark:text-white
+                          "
+                        >
+                          {String(value)}
                         </div>
 
-                        <div className="text-[11px] text-slate-500 dark:text-white/40">
-                          {item.label}
+                        <div
+                          className="
+                            text-[10px]
+                            text-slate-500
+                            dark:text-white/40
+                          "
+                        >
+                          {String(label)}
                         </div>
                       </div>
                     </div>
-                  </motion.div>
+                  </div>
                 );
               })}
             </div>
 
-            {/* Features */}
-
-            <div className="mt-10 grid grid-cols-2 xl:grid-cols-3 gap-3">
-              {features.map((feature, index) => {
-                const Icon = feature.icon;
-
-                return (
-                  <motion.div
-                    key={feature.title}
-                    initial={{
-                      opacity: 0,
-                      y: 25,
-                    }}
-                    animate={{
-                      opacity: 1,
-                      y: 0,
-                    }}
-                    transition={{
-                      delay: 0.45 + index * 0.08,
-                    }}
-                    whileHover={{
-                      y: -5,
-                      scale: 1.02,
-                    }}
+            <div className="mt-8 flex items-center gap-4">
+              <div className="flex -space-x-2">
+                {['V', 'C', 'S'].map((letter) => (
+                  <div
+                    key={letter}
                     className="
-                      group
-                      relative
-                      overflow-hidden
-                      rounded-2xl
-                      border
-                      border-slate-900/10
-                      dark:border-white/[0.07]
-                      bg-white/65
-                      dark:bg-white/[0.035]
-                      backdrop-blur-xl
-                      p-4
-                      shadow-sm
-                      dark:shadow-none
+                      flex h-9 w-9 items-center justify-center
+                      rounded-full border-2
+                      border-slate-50
+                      bg-gradient-to-br
+                      from-violet-500 to-fuchsia-500
+                      text-xs font-bold text-white
+                      dark:border-[#03030a]
                     "
                   >
-                    <div
-                      className={`
-                        absolute
-                        inset-0
-                        bg-gradient-to-br
-                        ${feature.color}
-                        opacity-0
-                        group-hover:opacity-[0.08]
-                        transition-opacity
-                        duration-500
-                      `}
+                    {letter}
+                  </div>
+                ))}
+              </div>
+
+              <div>
+                <div className="flex items-center gap-1">
+                  {[1, 2, 3, 4, 5].map((item) => (
+                    <Star
+                      key={item}
+                      className="
+                        h-3 w-3 fill-amber-400
+                        text-amber-400
+                      "
                     />
+                  ))}
+                </div>
 
-                    <div className="relative">
-                      <div
-                        className={`
-                          flex
-                          h-9
-                          w-9
-                          items-center
-                          justify-center
-                          rounded-xl
-                          bg-gradient-to-br
-                          ${feature.color}
-                          shadow-lg
-                        `}
-                      >
-                        <Icon className="h-4 w-4 text-white" />
-                      </div>
-
-                      <h3 className="mt-3 text-sm font-bold text-slate-900 dark:text-white">
-                        {feature.title}
-                      </h3>
-
-                      <p className="mt-1 text-[11px] leading-relaxed text-slate-500 dark:text-white/35">
-                        {feature.description}
-                      </p>
-                    </div>
-                  </motion.div>
-                );
-              })}
+                <p className="mt-1 text-[11px] text-slate-500 dark:text-white/40">
+                  Une expérience pensée pour votre entreprise
+                </p>
+              </div>
             </div>
-          </motion.section>
+          </section>
 
-          {/* ===================================================
+          {/* =================================================
               LOGIN CARD
-          ==================================================== */}
+          ================================================== */}
 
           <motion.div
-            initial={{
-              opacity: 0,
-              x: 40,
-              scale: 0.96,
-            }}
-            animate={{
-              opacity: 1,
-              x: 0,
-              scale: 1,
-            }}
-            transition={{
-              duration: 0.85,
-              delay: 0.2,
-              ease: 'easeOut',
-            }}
-            className="relative w-full max-w-xl mx-auto"
+            initial={
+              reducedMotion
+                ? undefined
+                : { opacity: 0, y: 22, scale: 0.985 }
+            }
+            animate={
+              reducedMotion
+                ? undefined
+                : { opacity: 1, y: 0, scale: 1 }
+            }
+            transition={
+              reducedMotion
+                ? undefined
+                : {
+                    duration: 0.5,
+                    delay: 0.05,
+                    ease: 'easeOut',
+                  }
+            }
+            className="relative mx-auto w-full max-w-[500px]"
           >
-            {/* Outer glow */}
-
-            <motion.div
-              animate={{
-                opacity: [0.35, 0.65, 0.35],
-                scale: [1, 1.03, 1],
-              }}
-              transition={{
-                duration: 5,
-                repeat: Infinity,
-                ease: 'easeInOut',
-              }}
+            {/* Subtle glow */}
+            <div
+              aria-hidden="true"
               className="
-                absolute
-                -inset-5
-                rounded-[42px]
+                pointer-events-none absolute -inset-2
+                rounded-[30px]
                 bg-gradient-to-r
-                from-violet-500/20
-                via-fuchsia-500/20
-                to-cyan-500/20
-                blur-2xl
+                from-violet-500/15
+                via-fuchsia-500/15
+                to-cyan-500/15
+                blur-xl
+                sm:-inset-3
               "
             />
 
             <Card
               className="
-                relative
-                overflow-hidden
-                rounded-[32px]
-                border
-                border-slate-900/10
-                dark:border-white/[0.09]
-                bg-white/80
-                dark:bg-[#0b0b14]/80
-                backdrop-blur-2xl
-                shadow-[0_30px_100px_rgba(15,23,42,0.15)]
-                dark:shadow-[0_30px_100px_rgba(0,0,0,0.65)]
+                relative overflow-hidden
+                rounded-[26px]
+                border border-slate-900/10
+                bg-white/90
+                shadow-[0_20px_70px_rgba(15,23,42,.12)]
+                dark:border-white/[0.08]
+                dark:bg-[#0a0a12]/90
+                dark:shadow-[0_20px_70px_rgba(0,0,0,.5)]
+                sm:rounded-[30px]
+                sm:backdrop-blur-xl
               "
             >
-              {/* Top shine */}
-
+              {/* Top accent */}
               <div
                 className="
-                  absolute
-                  left-0
-                  right-0
-                  top-0
-                  h-px
+                  absolute inset-x-0 top-0 h-[2px]
                   bg-gradient-to-r
-                  from-transparent
-                  via-violet-500/60
-                  dark:via-white/40
-                  to-transparent
+                  from-violet-500
+                  via-fuchsia-500
+                  to-cyan-400
                 "
               />
 
               {/* =================================================
-                  CARD HEADER
+                  HEADER
               ================================================== */}
 
-              <CardHeader className="px-7 pt-8 pb-6 sm:px-9">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <motion.div
-                      initial={{
-                        scale: 0,
-                        rotate: -90,
-                      }}
-                      animate={{
-                        scale: 1,
-                        rotate: 0,
-                      }}
-                      transition={{
-                        type: 'spring',
-                        bounce: 0.4,
-                        duration: 0.9,
-                      }}
-                      className="relative inline-flex"
+              <CardHeader className="px-6 pb-5 pt-7 sm:px-8 sm:pt-8">
+                <div className="flex items-start justify-between gap-4">
+                  <motion.div
+                    initial={
+                      reducedMotion
+                        ? undefined
+                        : { scale: 0.8, opacity: 0 }
+                    }
+                    animate={
+                      reducedMotion
+                        ? undefined
+                        : { scale: 1, opacity: 1 }
+                    }
+                    transition={{
+                      duration: 0.35,
+                      ease: 'easeOut',
+                    }}
+                    className="relative"
+                  >
+                    <div
+                      className="
+                        flex h-14 w-14 items-center justify-center
+                        rounded-[18px]
+                        bg-gradient-to-br
+                        from-violet-600
+                        via-fuchsia-500
+                        to-cyan-500
+                        shadow-lg shadow-violet-500/20
+                        sm:h-16 sm:w-16
+                      "
                     >
-                      <div
-                        className="
-                          absolute
-                          -inset-2
-                          rounded-[25px]
-                          bg-gradient-to-r
-                          from-violet-500
-                          via-fuchsia-500
-                          to-cyan-500
-                          opacity-20
-                          blur-lg
-                        "
-                      />
+                      <Fingerprint className="h-7 w-7 text-white sm:h-8 sm:w-8" />
+                    </div>
 
-                      <div
-                        className="
-                          relative
-                          flex
-                          h-16
-                          w-16
-                          items-center
-                          justify-center
-                          rounded-[20px]
-                          bg-gradient-to-br
-                          from-violet-600
-                          via-fuchsia-500
-                          to-cyan-500
-                          shadow-xl
-                          shadow-violet-500/25
-                        "
-                      >
-                        <Fingerprint className="h-8 w-8 text-white" />
-                      </div>
-
-                      <motion.div
-                        animate={{
-                          rotate: 360,
-                        }}
-                        transition={{
-                          duration: 10,
-                          repeat: Infinity,
-                          ease: 'linear',
-                        }}
-                        className="
-                          absolute
-                          -right-2
-                          -top-2
-                          flex
-                          h-7
-                          w-7
-                          items-center
-                          justify-center
-                          rounded-full
-                          border
-                          border-white/30
-                          bg-gradient-to-br
-                          from-amber-400
-                          to-orange-500
-                          shadow-lg
-                        "
-                      >
-                        <Crown className="h-3.5 w-3.5 text-white" />
-                      </motion.div>
-                    </motion.div>
-                  </div>
+                    <div
+                      className="
+                        absolute -right-2 -top-2
+                        flex h-6 w-6 items-center justify-center
+                        rounded-full
+                        bg-gradient-to-br from-amber-400 to-orange-500
+                        shadow-md
+                      "
+                    >
+                      <Crown className="h-3 w-3 text-white" />
+                    </div>
+                  </motion.div>
 
                   <div
                     className="
-                      flex
-                      items-center
-                      gap-1.5
+                      flex shrink-0 items-center gap-1.5
                       rounded-full
-                      border
-                      border-slate-900/10
+                      border border-slate-900/10
+                      bg-slate-100/70 px-2.5 py-1.5
                       dark:border-white/[0.08]
-                      bg-slate-100/70
                       dark:bg-white/[0.04]
-                      px-3
-                      py-1.5
                     "
                   >
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    <span
+                      className="
+                        h-1.5 w-1.5 rounded-full
+                        bg-emerald-500
+                        animate-pulse
+                      "
+                    />
 
-                    <span className="text-[10px] font-semibold text-slate-500 dark:text-white/50">
+                    <span
+                      className="
+                        text-[9px] font-semibold
+                        text-slate-500
+                        dark:text-white/50
+                      "
+                    >
                       Système sécurisé
                     </span>
                   </div>
@@ -1265,13 +839,11 @@ const LoginPage: React.FC = () => {
 
                 <CardTitle
                   className="
-                    mt-6
-                    text-3xl
-                    sm:text-4xl
-                    font-black
+                    mt-6 text-3xl font-black
                     tracking-tight
-                    text-slate-900
+                    text-slate-950
                     dark:text-white
+                    sm:text-4xl
                   "
                 >
                   Connexion
@@ -1279,43 +851,52 @@ const LoginPage: React.FC = () => {
 
                 <CardDescription
                   className="
-                    mt-2
-                    text-sm
-                    sm:text-base
+                    mt-2 text-sm
                     text-slate-500
                     dark:text-white/45
+                    sm:text-base
                   "
                 >
                   Accédez à votre espace de gestion premium.
                 </CardDescription>
 
-                {/* Security badges */}
-
-                <div className="mt-5 flex flex-wrap gap-2">
-                  {securityFeatures.map((item) => {
-                    const Icon = item.icon;
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {[
+                    [ShieldCheck, 'Sécurisé'],
+                    [Zap, 'Rapide'],
+                    [KeyRound, 'Protégé'],
+                  ].map(([Icon, label]) => {
+                    const IconComponent = Icon as React.ElementType;
 
                     return (
                       <div
-                        key={item.label}
+                        key={String(label)}
                         className="
-                          flex
-                          items-center
-                          gap-1.5
+                          flex items-center gap-1.5
                           rounded-full
-                          border
-                          border-slate-900/10
-                          dark:border-white/[0.07]
+                          border border-slate-900/10
                           bg-slate-100/60
+                          px-2.5 py-1.5
+                          dark:border-white/[0.07]
                           dark:bg-white/[0.035]
-                          px-2.5
-                          py-1.5
                         "
                       >
-                        <Icon className="h-3 w-3 text-violet-600 dark:text-fuchsia-400" />
+                        <IconComponent
+                          className="
+                            h-3 w-3
+                            text-violet-600
+                            dark:text-fuchsia-400
+                          "
+                        />
 
-                        <span className="text-[10px] font-semibold text-slate-500 dark:text-white/50">
-                          {item.label}
+                        <span
+                          className="
+                            text-[9px] font-semibold
+                            text-slate-500
+                            dark:text-white/50
+                          "
+                        >
+                          {String(label)}
                         </span>
                       </div>
                     );
@@ -1328,21 +909,15 @@ const LoginPage: React.FC = () => {
               ================================================== */}
 
               <form onSubmit={handleSubmit}>
-                <CardContent className="space-y-6 px-7 sm:px-9">
+                <CardContent className="space-y-5 px-6 sm:px-8">
                   {/* EMAIL */}
 
-                  <motion.div
-                    layout
-                    className="space-y-2.5"
-                  >
+                  <div className="space-y-2.5">
                     <Label
                       htmlFor="email"
                       className="
-                        flex
-                        items-center
-                        gap-2
-                        text-sm
-                        font-semibold
+                        flex items-center gap-2
+                        text-sm font-semibold
                         text-slate-700
                         dark:text-white/75
                       "
@@ -1351,129 +926,101 @@ const LoginPage: React.FC = () => {
                       Adresse email
                     </Label>
 
-                    <div className="group relative">
-                      <div
-                        className="
-                          absolute
-                          -inset-[1px]
-                          rounded-2xl
-                          bg-gradient-to-r
-                          from-violet-500
-                          via-fuchsia-500
-                          to-cyan-500
-                          opacity-0
-                          blur-[2px]
-                          transition
-                          duration-500
-                          group-focus-within:opacity-60
-                        "
+                    <div className="relative">
+                      <Input
+                        id="email"
+                        type="email"
+                        autoComplete="email"
+                        inputMode="email"
+                        placeholder="exemple@email.com"
+                        value={email}
+                        disabled={
+                          isCheckingEmail ||
+                          showPasswordField
+                        }
+                        onBlur={() => {
+                          if (
+                            email &&
+                            !showPasswordField
+                          ) {
+                            void handleEmailCheck();
+                          }
+                        }}
+                        onChange={handleEmailChange}
+                        className={`
+                          h-14 rounded-2xl
+                          border-slate-900/10
+                          bg-slate-100/70
+                          text-slate-900
+                          transition-colors
+                          dark:border-white/[0.08]
+                          dark:bg-white/[0.045]
+                          dark:text-white
+                          ${
+                            errors.email
+                              ? 'border-red-400/60'
+                              : 'focus:border-violet-500/50'
+                          }
+                        `}
                       />
 
-                      <div className="relative">
-                        <Input
-                          id="email"
-                          type="email"
-                          autoComplete="email"
-                          placeholder="exemple@email.com"
-                          value={email}
-                          disabled={
-                            isCheckingEmail ||
-                            showPasswordField
-                          }
-                          onBlur={() => {
-                            if (
-                              email &&
-                              !showPasswordField
-                            ) {
-                              void handleEmailCheck();
-                            }
-                          }}
-                          onChange={handleEmailChange}
-                          className={`
-                            h-14
-                            rounded-2xl
-                            border
-                            border-slate-900/10
-                            dark:border-white/[0.08]
-                            bg-slate-100/70
-                            dark:bg-white/[0.045]
-                            text-slate-900
-                            dark:text-white
-                            placeholder:text-slate-400
-                            dark:placeholder:text-white/20
-                            focus:border-violet-500/50
-                            dark:focus:border-fuchsia-400/50
-                            focus:bg-white
-                            dark:focus:bg-white/[0.07]
-                            transition-all
-                            duration-300
-                            ${
-                              errors.email
-                                ? 'border-red-400/60'
-                                : ''
-                            }
-                          `}
+                      {isCheckingEmail && (
+                        <span
+                          className="
+                            absolute right-4 top-1/2
+                            h-5 w-5
+                            -translate-y-1/2
+                            rounded-full
+                            border-2
+                            border-violet-500/20
+                            border-t-violet-500
+                            animate-spin
+                            dark:border-white/20
+                            dark:border-t-white
+                          "
                         />
-
-                        {isCheckingEmail && (
-                          <div
-                            className="
-                              absolute
-                              right-4
-                              top-1/2
-                              -translate-y-1/2
-                              h-5
-                              w-5
-                              rounded-full
-                              border-2
-                              border-violet-500/20
-                              border-t-violet-500
-                              dark:border-white/20
-                              dark:border-t-white
-                              animate-spin
-                            "
-                          />
-                        )}
-                      </div>
+                      )}
                     </div>
-
-                    {/* Email error */}
 
                     {errors.email && (
                       <motion.div
-                        initial={{
-                          opacity: 0,
-                          y: -5,
-                        }}
-                        animate={{
-                          opacity: 1,
-                          y: 0,
-                        }}
-                        className="flex items-center gap-2 text-xs font-medium text-red-500 dark:text-red-400"
+                        initial={
+                          reducedMotion
+                            ? undefined
+                            : { opacity: 0, y: -4 }
+                        }
+                        animate={
+                          reducedMotion
+                            ? undefined
+                            : { opacity: 1, y: 0 }
+                        }
+                        className="
+                          flex items-center gap-2
+                          text-xs font-medium
+                          text-red-500
+                          dark:text-red-400
+                        "
                       >
                         <AlertTriangle className="h-4 w-4" />
                         {errors.email}
                       </motion.div>
                     )}
 
-                    {/* Email success */}
-
                     {emailExists && (
                       <motion.div
-                        initial={{
-                          opacity: 0,
-                          y: -5,
-                        }}
-                        animate={{
-                          opacity: 1,
-                          y: 0,
-                        }}
+                        initial={
+                          reducedMotion
+                            ? undefined
+                            : { opacity: 0, y: -4 }
+                        }
+                        animate={
+                          reducedMotion
+                            ? undefined
+                            : { opacity: 1, y: 0 }
+                        }
                         className="
-                          flex
-                          items-center
-                          gap-2
-                          text-xs
-                          font-medium
+                          flex items-center gap-2
+                          text-xs font-medium
                           text-emerald-600
                           dark:text-emerald-400
                         "
@@ -1482,22 +1029,24 @@ const LoginPage: React.FC = () => {
                         Bienvenue {userName}
                       </motion.div>
                     )}
-                  </motion.div>
+                  </div>
 
                   {/* PASSWORD */}
 
                   {showPasswordField && (
                     <motion.div
-                      initial={{
-                        opacity: 0,
-                        height: 0,
-                      }}
-                      animate={{
-                        opacity: 1,
-                        height: 'auto',
-                      }}
+                      initial={
+                        reducedMotion
+                          ? undefined
+                          : { opacity: 0, height: 0 }
+                      }
+                      animate={
+                        reducedMotion
+                          ? undefined
+                          : { opacity: 1, height: 'auto' }
+                      }
                       transition={{
-                        duration: 0.45,
+                        duration: reducedMotion ? 0 : 0.25,
                       }}
                       className="space-y-5 overflow-hidden"
                     >
@@ -1505,32 +1054,25 @@ const LoginPage: React.FC = () => {
 
                       {failedAttempts > 0 &&
                         !isLocked && (
-                          <motion.div
-                            initial={{
-                              opacity: 0,
-                              y: -5,
-                            }}
-                            animate={{
-                              opacity: 1,
-                              y: 0,
-                            }}
+                          <div
                             className="
-                              flex
-                              items-center
-                              justify-between
-                              gap-4
-                              rounded-2xl
-                              border
-                              border-orange-400/20
+                              flex items-center justify-between
+                              gap-3 rounded-2xl
+                              border border-orange-400/20
                               bg-orange-500/5
-                              px-4
-                              py-3
+                              px-4 py-3
                             "
                           >
                             <div className="flex items-center gap-2">
-                              <Shield className="h-4 w-4 text-orange-500 dark:text-orange-300" />
+                              <Shield className="h-4 w-4 text-orange-500" />
 
-                              <span className="text-xs font-medium text-orange-700 dark:text-orange-200">
+                              <span
+                                className="
+                                  text-xs font-medium
+                                  text-orange-700
+                                  dark:text-orange-200
+                                "
+                              >
                                 Tentatives restantes :{' '}
                                 {remainingAttempts}
                               </span>
@@ -1540,153 +1082,115 @@ const LoginPage: React.FC = () => {
                               {Array.from({
                                 length: maxAttempts,
                               }).map((_, index) => (
-                                <motion.div
+                                <span
                                   key={index}
-                                  initial={{
-                                    scale: 0,
-                                  }}
-                                  animate={{
-                                    scale: 1,
-                                  }}
                                   className={`
-                                    h-2
-                                    w-2
-                                    rounded-full
+                                    h-1.5 w-1.5 rounded-full
                                     ${
                                       index <
                                       failedAttempts
-                                        ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.7)]'
+                                        ? 'bg-red-500'
                                         : 'bg-slate-300 dark:bg-white/15'
                                     }
                                   `}
                                 />
                               ))}
                             </div>
-                          </motion.div>
+                          </div>
                         )}
 
-                      {/* LOCKED */}
+                      {/* LOCK */}
 
                       {isLocked &&
                         lockCountdown > 0 && (
                           <motion.div
-                            initial={{
-                              opacity: 0,
-                              scale: 0.95,
-                            }}
-                            animate={{
-                              opacity: 1,
-                              scale: 1,
-                            }}
+                            initial={
+                              reducedMotion
+                                ? undefined
+                                : {
+                                    opacity: 0,
+                                    scale: 0.98,
+                                  }
+                            }
+                            animate={
+                              reducedMotion
+                                ? undefined
+                                : {
+                                    opacity: 1,
+                                    scale: 1,
+                                  }
+                            }
                             className="
-                              relative
-                              overflow-hidden
-                              rounded-3xl
-                              border
-                              border-red-400/30
+                              rounded-2xl
+                              border border-red-400/30
                               bg-red-500/5
+                              p-4
                               dark:bg-red-500/10
-                              p-5
                             "
                           >
-                            <motion.div
-                              animate={{
-                                opacity: [
-                                  0.2,
-                                  0.5,
-                                  0.2,
-                                ],
-                              }}
-                              transition={{
-                                duration: 2,
-                                repeat: Infinity,
-                              }}
-                              className="
-                                absolute
-                                inset-0
-                                bg-gradient-to-r
-                                from-red-500/10
-                                to-rose-500/10
-                              "
-                            />
-
-                            <div className="relative">
-                              <div className="flex items-center gap-4">
-                                <div
-                                  className="
-                                    flex
-                                    h-12
-                                    w-12
-                                    shrink-0
-                                    items-center
-                                    justify-center
-                                    rounded-2xl
-                                    bg-red-500/10
-                                    dark:bg-red-500/20
-                                    border
-                                    border-red-400/20
-                                  "
-                                >
-                                  <Lock className="h-5 w-5 text-red-500 dark:text-red-300" />
-                                </div>
-
-                                <div>
-                                  <h3 className="font-bold text-red-700 dark:text-red-200">
-                                    Compte temporairement
-                                    bloqué
-                                  </h3>
-
-                                  <p className="mt-0.5 text-xs text-red-500/70 dark:text-red-300/60">
-                                    Trop de tentatives
-                                    échouées
-                                  </p>
-                                </div>
+                            <div className="flex items-center gap-3">
+                              <div
+                                className="
+                                  flex h-11 w-11 shrink-0
+                                  items-center justify-center
+                                  rounded-xl
+                                  bg-red-500/10
+                                  dark:bg-red-500/20
+                                "
+                              >
+                                <Lock className="h-5 w-5 text-red-500" />
                               </div>
 
-                              <div className="mt-5 flex items-center justify-center gap-3">
-                                <Timer className="h-5 w-5 text-red-500 dark:text-red-300" />
-
-                                <motion.div
-                                  animate={{
-                                    opacity: [
-                                      0.7,
-                                      1,
-                                      0.7,
-                                    ],
-                                  }}
-                                  transition={{
-                                    duration: 1,
-                                    repeat: Infinity,
-                                  }}
+                              <div>
+                                <h3
                                   className="
-                                    font-mono
-                                    text-3xl
-                                    font-black
-                                    tracking-widest
-                                    text-red-600
+                                    text-sm font-bold
+                                    text-red-700
                                     dark:text-red-200
                                   "
                                 >
-                                  {formatCountdown(
-                                    lockCountdown
-                                  )}
-                                </motion.div>
+                                  Compte temporairement bloqué
+                                </h3>
+
+                                <p
+                                  className="
+                                    mt-0.5 text-[11px]
+                                    text-red-500/70
+                                    dark:text-red-300/60
+                                  "
+                                >
+                                  Trop de tentatives échouées
+                                </p>
                               </div>
+                            </div>
+
+                            <div className="mt-4 flex items-center justify-center gap-3">
+                              <Timer className="h-5 w-5 text-red-500" />
+
+                              <span
+                                className="
+                                  font-mono text-2xl
+                                  font-black tracking-widest
+                                  text-red-600
+                                  dark:text-red-200
+                                "
+                              >
+                                {formatCountdown(
+                                  lockCountdown
+                                )}
+                              </span>
                             </div>
                           </motion.div>
                         )}
 
                       {/* PASSWORD */}
 
-                      <div className="space-y-3">
+                      <div className="space-y-2.5">
                         <Label
                           htmlFor="password"
                           className="
-                            flex
-                            items-center
-                            gap-2
-                            text-sm
-                            font-semibold
+                            flex items-center gap-2
+                            text-sm font-semibold
                             text-slate-700
                             dark:text-white/75
                           "
@@ -1702,9 +1206,7 @@ const LoginPage: React.FC = () => {
                           disabled={isLocked}
                           error={errors.password}
                           onChange={(event) => {
-                            setPassword(
-                              event.target.value
-                            );
+                            setPassword(event.target.value);
 
                             if (errors.password) {
                               setErrors((previous) => ({
@@ -1714,14 +1216,11 @@ const LoginPage: React.FC = () => {
                             }
                           }}
                           className="
-                            h-14
-                            rounded-2xl
-                            border
+                            h-14 rounded-2xl
                             border-slate-900/10
-                            dark:border-white/[0.08]
                             bg-slate-100/70
+                            dark:border-white/[0.08]
                             dark:bg-white/[0.045]
-                            text-slate-900
                             dark:text-white
                           "
                         />
@@ -1730,34 +1229,35 @@ const LoginPage: React.FC = () => {
                           <PasswordStrengthChecker
                             password={password}
                             onValidityChange={
-                              handlePasswordValidityChange
+                              setIsPasswordValid
                             }
                           />
                         )}
                       </div>
 
-                      {/* Forgot */}
+                      {/* FORGOT PASSWORD */}
 
                       <div className="flex justify-end">
                         <Link
                           to="/reset-password"
                           className="
-                            group
-                            inline-flex
-                            items-center
-                            gap-1
-                            text-xs
-                            font-semibold
+                            group inline-flex items-center gap-1
+                            text-xs font-semibold
                             text-violet-600
-                            dark:text-fuchsia-400
+                            transition-colors
                             hover:text-violet-500
+                            dark:text-fuchsia-400
                             dark:hover:text-fuchsia-300
-                            transition
                           "
                         >
                           Mot de passe oublié ?
-
-                          <ChevronRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+                          <ChevronRight
+                            className="
+                              h-3.5 w-3.5
+                              transition-transform
+                              group-hover:translate-x-0.5
+                            "
+                          />
                         </Link>
                       </div>
                     </motion.div>
@@ -1768,71 +1268,57 @@ const LoginPage: React.FC = () => {
                     FOOTER
                 ================================================== */}
 
-                <CardFooter className="flex flex-col gap-3 px-7 pb-8 pt-7 sm:px-9">
-                  {/* LOGIN */}
-
+                <CardFooter
+                  className="
+                    flex flex-col gap-3
+                    px-6 pb-7 pt-6
+                    sm:px-8
+                  "
+                >
                   <Button
                     type="submit"
                     disabled={
                       isCheckingEmail ||
                       (showPasswordField &&
-                        (!isPasswordValid ||
-                          isLocked)) ||
+                        (!isPasswordValid || isLocked)) ||
                       isLocked
                     }
                     className="
-                      group
-                      relative
-                      h-14
-                      w-full
-                      overflow-hidden
-                      rounded-2xl
+                      group relative h-14 w-full
+                      overflow-hidden rounded-2xl
                       border-0
                       bg-gradient-to-r
                       from-violet-600
                       via-fuchsia-600
                       to-cyan-500
-                      text-base
-                      font-bold
-                      text-white
-                      shadow-[0_15px_45px_rgba(124,58,237,0.3)]
-                      dark:shadow-[0_15px_45px_rgba(168,85,247,0.3)]
-                      hover:scale-[1.015]
-                      active:scale-[0.99]
-                      transition-all
-                      duration-300
+                      text-base font-bold text-white
+                      shadow-lg shadow-violet-500/20
+                      transition-transform
+                      hover:scale-[1.01]
+                      active:scale-[.99]
+                      disabled:pointer-events-none
                     "
                   >
-                    {/* Shine */}
-
-                    <motion.div
-                      animate={{
-                        x: ['-120%', '120%'],
-                      }}
-                      transition={{
-                        duration: 2.8,
-                        repeat: Infinity,
-                        repeatDelay: 2,
-                        ease: 'easeInOut',
-                      }}
-                      className="
-                        absolute
-                        inset-y-0
-                        w-1/3
-                        skew-x-[-20deg]
-                        bg-white/20
-                        blur-sm
-                      "
-                    />
+                    {/* Lightweight shine */}
+                    {!reducedMotion && (
+                      <span
+                        className="
+                          pointer-events-none absolute inset-y-0
+                          -left-1/3 w-1/3
+                          skew-x-[-20deg]
+                          bg-white/15
+                          blur-sm
+                          animate-[login-shine_3.5s_ease-in-out_infinite]
+                        "
+                      />
+                    )}
 
                     <span className="relative flex items-center justify-center">
                       {isCheckingEmail ? (
                         <>
                           <span
                             className="
-                              mr-3
-                              h-5
-                              w-5
+                              mr-3 h-5 w-5
                               rounded-full
                               border-2
                               border-white/30
@@ -1840,28 +1326,22 @@ const LoginPage: React.FC = () => {
                               animate-spin
                             "
                           />
-
                           Vérification...
                         </>
                       ) : showPasswordField ? (
                         <>
                           <Lock className="mr-2 h-5 w-5" />
-
                           Se connecter
-
                           <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
                         </>
                       ) : (
                         <>
                           Continuer
-
                           <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
                         </>
                       )}
                     </span>
                   </Button>
-
-                  {/* REGISTER */}
 
                   <Link
                     to="/register"
@@ -1871,66 +1351,59 @@ const LoginPage: React.FC = () => {
                       type="button"
                       variant="outline"
                       className="
-                        h-14
-                        w-full
-                        rounded-2xl
-                        border
+                        h-14 w-full rounded-2xl
                         border-slate-900/10
-                        dark:border-white/[0.08]
                         bg-slate-100/70
-                        dark:bg-white/[0.035]
                         text-slate-800
-                        dark:text-white
+                        transition-colors
                         hover:bg-slate-200/70
+                        dark:border-white/[0.08]
+                        dark:bg-white/[0.035]
+                        dark:text-white
                         dark:hover:bg-white/[0.07]
-                        hover:border-violet-500/20
-                        dark:hover:border-white/15
-                        hover:scale-[1.01]
-                        transition-all
-                        duration-300
                       "
                     >
-                      <Rocket className="mr-2.5 h-5 w-5 text-cyan-600 dark:text-cyan-300" />
+                      <Rocket
+                        className="
+                          mr-2.5 h-5 w-5
+                          text-cyan-600
+                          dark:text-cyan-300
+                        "
+                      />
 
                       Créer un compte
 
-                      <ArrowRight className="ml-auto h-4 w-4 text-slate-400 dark:text-white/40" />
+                      <ArrowRight
+                        className="
+                          ml-auto h-4 w-4
+                          text-slate-400
+                          dark:text-white/40
+                        "
+                      />
                     </Button>
                   </Link>
 
-                  {/* Footer security */}
-
                   <div
                     className="
-                      mt-3
-                      flex
-                      items-center
-                      justify-center
-                      gap-2
-                      text-[10px]
+                      mt-2 flex items-center justify-center
+                      gap-2 text-center
+                      text-[9px]
                       text-slate-400
                       dark:text-white/30
                     "
                   >
-                    <ShieldCheck className="h-3.5 w-3.5 text-emerald-500 dark:text-emerald-400" />
+                    <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
 
-                    Vos données sont protégées par notre système
-                    de sécurité.
+                    Vos données sont protégées.
 
-                    <Star className="h-3 w-3 text-amber-500 dark:text-amber-400" />
+                    <Star className="h-3 w-3 text-amber-500" />
                   </div>
                 </CardFooter>
               </form>
 
-              {/* Bottom line */}
-
               <div
                 className="
-                  absolute
-                  bottom-0
-                  left-0
-                  right-0
-                  h-px
+                  absolute bottom-0 left-0 right-0 h-px
                   bg-gradient-to-r
                   from-transparent
                   via-cyan-500/40
@@ -1941,48 +1414,50 @@ const LoginPage: React.FC = () => {
           </motion.div>
         </motion.div>
 
-        {/* =====================================================
-            MOBILE BRANDING
-        ====================================================== */}
+        {/* ===================================================
+            MOBILE BRAND
+        ==================================================== */}
 
-        <motion.div
-          initial={{
-            opacity: 0,
-            y: 15,
-          }}
-          animate={{
-            opacity: 1,
-            y: 0,
-          }}
-          transition={{
-            delay: 0.8,
-          }}
+        <div
           className="
-            absolute
-            bottom-3
-            left-1/2
-            -translate-x-1/2
-            lg:hidden
-            flex
-            items-center
-            gap-2
-            text-[10px]
-            font-medium
+            absolute bottom-3 left-1/2
+            flex -translate-x-1/2 items-center
+            gap-1.5 whitespace-nowrap
+            text-[9px] font-medium
             text-slate-400
+            lg:hidden
             dark:text-white/25
           "
         >
-          <Sparkles className="h-3 w-3 text-violet-500 dark:text-fuchsia-400" />
-
+          <Sparkles className="h-3 w-3 text-violet-500" />
           Gestion Vente Premium
-
           <span>•</span>
-
           <Globe className="h-3 w-3" />
-
           Cloud
-        </motion.div>
+        </div>
       </main>
+
+      {/* Petit effet CSS : beaucoup moins coûteux que motion.div en boucle */}
+      <style>{`
+        @keyframes login-shine {
+          0%, 55% {
+            transform: translateX(-120%) skewX(-20deg);
+          }
+          80%, 100% {
+            transform: translateX(420%) skewX(-20deg);
+          }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          *,
+          *::before,
+          *::after {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+          }
+        }
+      `}</style>
     </Layout>
   );
 };
