@@ -1,48 +1,44 @@
 import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
   useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useMemo,
 } from 'react';
 
 import {
-  Activity,
-  AlertTriangle,
-  Bot,
-  CheckCircle2,
-  Cpu,
-  Eye,
-  Fingerprint,
-  Globe,
-  KeyRound,
-  Loader2,
-  Lock,
-  MousePointer2,
-  Orbit,
-  RefreshCw,
-  ScanFace,
-  ScanSearch,
   Shield,
-  ShieldAlert,
-  ShieldCheck,
+  CheckCircle2,
+  Loader2,
+  AlertTriangle,
+  Lock,
   Sparkles,
-  Volume2,
+  Fingerprint,
+  Eye,
+  Cpu,
+  ScanFace,
+  Radar,
+  Orbit,
+  ShieldCheck,
+  Activity,
+  MousePointer2,
+  Globe,
   Wifi,
-  Zap,
+  Binary,
+  ShieldAlert,
+  Bot,
+  Flame,
+  ScanSearch,
+  RefreshCw,
+  Volume2,
+  KeyRound,
 } from 'lucide-react';
 
 import {
-  AnimatePresence,
   motion,
-  useReducedMotion,
+  AnimatePresence,
 } from 'framer-motion';
-
-import {
-  solveProofOfWork,
-  storeProof,
-} from '@/lib/proofOfWork';
-
+import { solveProofOfWork, storeProof } from '@/lib/proofOfWork';
 import blockageIpApi from '@/services/api/blockageIpApi';
 
 interface SecurityCheckPageProps {
@@ -53,262 +49,127 @@ type Phase =
   | 'boot'
   | 'checking'
   | 'challenge'
+  | 'captcha'
   | 'verifying'
   | 'passed'
   | 'failed';
 
-type CaptchaMode = 'text' | 'math';
-
-interface CaptchaChallenge {
-  display: string;
-  answer: string;
-  mode: CaptchaMode;
-  question?: string;
-}
-
-interface Position {
-  x: number;
-  y: number;
-}
-
-interface BotAnalysis {
-  suspicious: boolean;
-  reasons: string[];
-}
-
-interface VerificationPayload {
-  challengeId: string;
-  score: number;
-  puzzleSolved: boolean;
-  humanConfirmed: boolean;
-  captchaPassed: boolean;
-  proofOfWork?: unknown;
-  behavior: {
-    moveCount: number;
-    pathLength: number;
-    entropy: number;
-    timingVariance: number;
-    durationMs: number;
-  };
-  botSignals: string[];
-}
-
-/* -------------------------------------------------------------------------- */
-/* CONFIG                                                                     */
-/* -------------------------------------------------------------------------- */
-
-const VERSION = '5.0.0';
-
-const MAX_TRAIL = 22;
-const MAX_ATTEMPTS = 5;
-const CHALLENGE_TIMEOUT_MS = 90_000;
-
 const images = [
-  'https://images.unsplash.com/photo-1506744038136-46273834b3fb',
-  'https://images.unsplash.com/photo-1491553895911-0055eca6402d',
-  'https://images.unsplash.com/photo-1519681393784-d120267933ba',
-  'https://images.unsplash.com/photo-1501785888041-af3ef285b470',
-  'https://images.unsplash.com/photo-1470770841072-f978cf4d019e',
-  'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee',
-  'https://images.unsplash.com/photo-1500534314209-a25ddb2bd429',
-  'https://images.unsplash.com/photo-1439066615861-d1af74d74000',
-  'https://images.unsplash.com/photo-1469474968028-56623f02e42e',
+  "https://images.unsplash.com/photo-1506744038136-46273834b3fb",
+  "https://images.unsplash.com/photo-1491553895911-0055eca6402d",
+  "https://images.unsplash.com/photo-1519681393784-d120267933ba",
+  "https://images.unsplash.com/photo-1501785888041-af3ef285b470",
+  "https://images.unsplash.com/photo-1470770841072-f978cf4d019e",
+  "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee",
+  "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429",
+  "https://images.unsplash.com/photo-1439066615861-d1af74d74000",
+  "https://images.unsplash.com/photo-1469474968028-56623f02e42e",
 ];
 
-/* -------------------------------------------------------------------------- */
-/* CRYPTOGRAPHIC RANDOM                                                        */
-/* -------------------------------------------------------------------------- */
+const MAX_TRAIL = 18;
 
-const secureRandomInt = (max: number): number => {
-  if (max <= 0) return 0;
+const randomString = (length: number) =>
+  Math.random()
+    .toString(36)
+    .slice(2, 2 + length)
+    .toUpperCase();
 
-  const cryptoObj = globalThis.crypto;
-
-  if (!cryptoObj?.getRandomValues) {
-    return Math.floor(Math.random() * max);
-  }
-
-  const array = new Uint32Array(1);
-
-  cryptoObj.getRandomValues(array);
-
-  return array[0] % max;
+type CaptchaChallenge = {
+  display: string;
+  answer: string;
+  mode: 'text' | 'math';
+  question?: string;
 };
-
-const secureRandomString = (length = 16): string => {
-  const chars =
-    'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789';
-
-  let output = '';
-
-  for (let i = 0; i < length; i++) {
-    output += chars[secureRandomInt(chars.length)];
-  }
-
-  return output;
-};
-
-/* -------------------------------------------------------------------------- */
-/* CAPTCHA                                                                     */
-/* -------------------------------------------------------------------------- */
 
 const generateTextCaptcha = (): CaptchaChallenge => {
   const chars =
-    'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-
+    'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
   let value = '';
-
-  for (let i = 0; i < 7; i++) {
-    value += chars[secureRandomInt(chars.length)];
+  for (let i = 0; i < 8; i++) {
+    value += chars.charAt(Math.floor(Math.random() * chars.length));
   }
-
-  return {
-    display: value,
-    answer: value,
-    mode: 'text',
-  };
+  return { display: value, answer: value, mode: 'text' };
 };
 
 const generateMathCaptcha = (): CaptchaChallenge => {
-  const operations = ['+', '-', '×'] as const;
-
-  const operation =
-    operations[secureRandomInt(operations.length)];
-
-  let a = secureRandomInt(80) + 10;
-  let b = secureRandomInt(80) + 10;
-
+  const ops = ['+', '-', '×'] as const;
+  const op = ops[Math.floor(Math.random() * ops.length)];
+  let a = Math.floor(Math.random() * 90) + 10; // 10-99
+  let b = Math.floor(Math.random() * 90) + 10; // 10-99
   let result = 0;
-
-  if (operation === '+') {
-    result = a + b;
-  }
-
-  if (operation === '-') {
-    if (b > a) {
-      [a, b] = [b, a];
-    }
-
+  if (op === '+') result = a + b;
+  else if (op === '-') {
+    if (b > a) [a, b] = [b, a];
     result = a - b;
-  }
-
-  if (operation === '×') {
-    a = secureRandomInt(8) + 2;
-    b = secureRandomInt(8) + 2;
-
+  } else {
+    a = Math.floor(Math.random() * 9) + 2; // 2-10
+    b = Math.floor(Math.random() * 9) + 2;
     result = a * b;
   }
-
+  const question = `Combien font ${a} ${op} ${b} ?`;
   return {
-    display: `${a} ${operation} ${b}`,
+    display: `${a} ${op} ${b}`,
     answer: String(result),
-    question: `Combien font ${a} ${operation} ${b} ?`,
     mode: 'math',
+    question,
   };
 };
 
 const generateCaptcha = (): CaptchaChallenge => {
-  return secureRandomInt(2) === 0
-    ? generateTextCaptcha()
-    : generateMathCaptcha();
+  // 50% chance math, 50% text — both humain-friendly, hostile aux bots OCR simples
+  return Math.random() < 0.5 ? generateMathCaptcha() : generateTextCaptcha();
 };
-
-/* -------------------------------------------------------------------------- */
-/* HELPERS                                                                    */
-/* -------------------------------------------------------------------------- */
-
-const clamp = (
-  value: number,
-  min: number,
-  max: number,
-) => Math.min(Math.max(value, min), max);
-
-const safeSessionGet = (key: string): string | null => {
-  try {
-    return sessionStorage.getItem(key);
-  } catch {
-    return null;
-  }
-};
-
-const safeSessionSet = (
-  key: string,
-  value: string,
-) => {
-  try {
-    sessionStorage.setItem(key, value);
-  } catch {
-    // Storage may be disabled.
-  }
-};
-
-const safeSessionRemove = (key: string) => {
-  try {
-    sessionStorage.removeItem(key);
-  } catch {
-    // ignore
-  }
-};
-
-/* -------------------------------------------------------------------------- */
-/* STAR                                                                        */
-/* -------------------------------------------------------------------------- */
 
 const Star = ({
-  moving = false,
-  active = false,
-  reducedMotion = false,
+  type = "fixed",
+  glow = false,
 }: {
-  moving?: boolean;
-  active?: boolean;
-  reducedMotion?: boolean;
+  type?: "fixed" | "moving";
+  glow?: boolean;
 }) => {
+  const moving = type === 'moving';
+
   return (
-    <div className="relative w-[54px] h-[54px]">
-      {active && (
+    <div className="relative">
+      {glow && (
         <>
-          <motion.div
-            animate={
-              reducedMotion
-                ? undefined
-                : {
-                    scale: [1, 1.5, 1],
-                    opacity: [0.2, 0.6, 0.2],
-                  }
-            }
-            transition={{
-              duration: 1.8,
-              repeat: Infinity,
-            }}
-            className="absolute inset-0 rounded-full bg-emerald-400/30 blur-xl"
+          <div
+            className={`absolute inset-0 rounded-full  ${moving
+              ? 'bg-rose-500/50'
+              : 'bg-white/40'
+              }`}
           />
 
-          <div className="absolute inset-1 rounded-full border border-emerald-300/40" />
+          <div
+            className={`absolute inset-0 rounded-full  ${moving
+              ? 'bg-red-500/30'
+              : 'bg-slate-200/20'
+              }`}
+          />
         </>
       )}
 
       <motion.svg
+        animate={
+          moving
+            ? {
+              rotate: [0, 5, -5, 0],
+              scale: [1, 1.05, 1],
+            }
+            : {}
+        }
+        transition={{
+          duration: 3,
+          repeat: Infinity,
+        }}
         width="54"
         height="54"
         viewBox="0 0 24 24"
-        animate={
-          reducedMotion || !moving
-            ? undefined
-            : {
-                rotate: [0, 5, -5, 0],
-                scale: [1, 1.06, 1],
-              }
-        }
-        transition={{
-          duration: 2.8,
-          repeat: Infinity,
-          ease: 'easeInOut',
-        }}
-        className="relative z-10 drop-shadow-[0_0_25px_rgba(255,255,255,0.35)]"
+        className="relative drop-shadow-[0_0_35px_rgba(255,255,255,0.4)]"
       >
         <defs>
           <linearGradient
-            id={moving ? 'star-v5-moving' : 'star-v5-fixed'}
+            id={moving ? 'r' : 'w'}
             x1="0%"
             y1="0%"
             x2="100%"
@@ -318,15 +179,15 @@ const Star = ({
               <>
                 <stop
                   offset="0%"
-                  stopColor="#f5d0fe"
+                  stopColor="#ffb4c6"
                 />
                 <stop
                   offset="50%"
-                  stopColor="#ec4899"
+                  stopColor="#ef4444"
                 />
                 <stop
                   offset="100%"
-                  stopColor="#7c3aed"
+                  stopColor="#7f1d1d"
                 />
               </>
             ) : (
@@ -337,7 +198,7 @@ const Star = ({
                 />
                 <stop
                   offset="100%"
-                  stopColor="#94a3b8"
+                  stopColor="#cbd5e1"
                 />
               </>
             )}
@@ -346,11 +207,7 @@ const Star = ({
 
         <path
           d="M12 2 L15 9 L22 9 L17 14 L19 22 L12 18 L5 22 L7 14 L2 9 L9 9 Z"
-          fill={`url(#${
-            moving
-              ? 'star-v5-moving'
-              : 'star-v5-fixed'
-          })`}
+          fill={`url(#${moving ? 'r' : 'w'})`}
           stroke="#ffffff"
           strokeWidth="0.8"
         />
@@ -359,92 +216,84 @@ const Star = ({
   );
 };
 
-/* -------------------------------------------------------------------------- */
-/* METRIC                                                                      */
-/* -------------------------------------------------------------------------- */
-
 const Metric = ({
   icon,
   label,
   value,
-  accent = 'violet',
 }: {
   icon: React.ReactNode;
   label: string;
   value: string;
-  accent?: 'violet' | 'cyan' | 'emerald' | 'rose';
-}) => {
-  const colors = {
-    violet: 'text-violet-300',
-    cyan: 'text-cyan-300',
-    emerald: 'text-emerald-300',
-    rose: 'text-rose-300',
-  };
+}) => (
+  <div className="rounded-2xl border border-white/10 bg-white/[0.05] p-3">
+    <div className="flex items-center gap-2 text-white/50 text-[10px] uppercase tracking-[0.22em]">
+      {icon}
+      {label}
+    </div>
 
-  return (
-    <motion.div
-      whileHover={{
-        y: -2,
-        scale: 1.01,
-      }}
-      className="rounded-2xl border border-white/10 bg-white/[0.045] p-3 backdrop-blur-xl"
-    >
-      <div
-        className={`flex items-center gap-2 text-[9px] uppercase tracking-[0.22em] ${colors[accent]}`}
-      >
-        {icon}
-
-        {label}
-      </div>
-
-      <p className="mt-2 text-sm font-semibold text-white">
-        {value}
-      </p>
-    </motion.div>
-  );
-};
-
-/* -------------------------------------------------------------------------- */
-/* MAIN                                                                        */
-/* -------------------------------------------------------------------------- */
+    <p className="mt-2 text-white text-sm font-semibold">
+      {value}
+    </p>
+  </div>
+);
 
 const SecurityCheckPage: React.FC<
   SecurityCheckPageProps
 > = ({ onVerified }) => {
-  const reducedMotion = useReducedMotion();
-
   const [phase, setPhase] =
     useState<Phase>('boot');
 
-  const [ipBlocked, setIpBlocked] =
-    useState(false);
+  const [ipBlocked, setIpBlocked] = useState(false);
+  const [ipChecked, setIpChecked] = useState(false);
+  const [ipBlockedInfo, setIpBlockedInfo] = useState<{ ip: string; reason: string | null }>({ ip: '', reason: null });
+  const ipBlockedRef = useRef(false);
 
-  const [ipChecked, setIpChecked] =
-    useState(false);
+  // Verrou absolu : impossible d'aller plus loin tant que l'IP est bloquée.
+  const safeVerified = useCallback(() => {
+    if (ipBlockedRef.current) return;
+    onVerified();
+  }, [onVerified]);
 
-  const [ipBlockedInfo, setIpBlockedInfo] =
-    useState<{
-      ip: string;
-      reason: string | null;
-    }>({
-      ip: '',
-      reason: null,
-    });
+  useEffect(() => {
+    let mounted = true;
+    const run = () =>
+      blockageIpApi
+        .check()
+        .then((res) => {
+          if (!mounted) return;
+          ipBlockedRef.current = !!res.blocked;
+          setIpBlocked(!!res.blocked);
+          if (res.blocked) {
+            setIpBlockedInfo({ ip: res.ip, reason: res.reason });
+            try {
+              localStorage.removeItem('security_verified_v4');
+            } catch {
+              // ignore
+            }
+          }
+          setIpChecked(true);
+        })
+        .catch(() => {
+          if (mounted) setIpChecked(true);
+        });
 
-  const [image, setImage] =
-    useState('');
+    run();
+    // Re-vérification périodique : déblocage automatique dès que
+    // l'administrateur retire l'IP de la base de données.
+    const timer = setInterval(run, 15000);
+    return () => {
+      mounted = false;
+      clearInterval(timer);
+    };
+  }, []);
 
-  const [targetX, setTargetX] =
-    useState(0);
 
-  const [targetY, setTargetY] =
-    useState(0);
+  const [image, setImage] = useState('');
+  const [targetX, setTargetX] = useState(0);
+  const [targetY, setTargetY] = useState(0);
 
-  const [starX, setStarX] =
-    useState(30);
-
-  const [starY, setStarY] =
-    useState(180);
+  const [starX, setStarX] = useState(30);
+  const [starY, setStarY] = useState(120);
 
   const [isDragging, setIsDragging] =
     useState(false);
@@ -462,10 +311,12 @@ const SecurityCheckPage: React.FC<
     useState(0);
 
   const [networkQuality, setNetworkQuality] =
-    useState('PROTECTED');
+    useState('ULTRA SECURETE');
 
   const [motionTrail, setMotionTrail] =
-    useState<Position[]>([]);
+    useState<{ x: number; y: number }[]>(
+      []
+    );
 
   const [timingVariance, setTimingVariance] =
     useState(0);
@@ -489,1593 +340,747 @@ const SecurityCheckPage: React.FC<
     useState(false);
 
   const [riskLevel, setRiskLevel] =
-    useState('ÉLEVÉ');
+    useState('LOW');
 
   const [failedAttempts, setFailedAttempts] =
     useState(0);
 
-  const [challengeExpired, setChallengeExpired] =
-    useState(false);
-
-  const [remainingSeconds, setRemainingSeconds] =
+  const [ipReputation] =
     useState(
-      CHALLENGE_TIMEOUT_MS / 1000,
+      [
+        'CONFIANCE',
+        'NETOYER',
+        'SECURESE',
+        'PRIVE',
+      ][Math.floor(Math.random() * 4)]
     );
-
-  const [proofReady, setProofReady] =
-    useState(false);
-
-  const [verificationError, setVerificationError] =
-    useState('');
-
-  /* ------------------------------------------------------------------------ */
-  /* REFS                                                                     */
-  /* ------------------------------------------------------------------------ */
 
   const containerRef =
     useRef<HTMLDivElement>(null);
 
-  const dragStartOffset =
-    useRef<Position>({
-      x: 0,
-      y: 0,
-    });
+  const dragStartOffset = useRef({
+    x: 0,
+    y: 0,
+  });
 
-  const lastPosRef =
-    useRef<Position>({
-      x: 0,
-      y: 0,
-    });
+  const startTime = useRef(Date.now());
 
-  const startTime =
-    useRef(Date.now());
+  const moveCount = useRef(0);
 
-  const lastMoveTime =
-    useRef(Date.now());
+  const entropyRef = useRef(0);
 
-  const moveCount =
-    useRef(0);
+  const pathLengthRef = useRef(0);
 
-  const entropyRef =
-    useRef(0);
+  const velocitySamples = useRef<number[]>(
+    []
+  );
 
-  const pathLengthRef =
-    useRef(0);
+  const movementIntervals = useRef<number[]>(
+    []
+  );
 
-  const velocitySamples =
-    useRef<number[]>([]);
+  const lastMoveTime = useRef(Date.now());
 
-  const movementIntervals =
-    useRef<number[]>([]);
+  const lastPosRef = useRef({
+    x: 0,
+    y: 0,
+  });
 
-  const challengeTimer =
-    useRef<number | null>(null);
+  const challengeId = useMemo(
+    () => randomString(12),
+    []
+  );
 
-  const verificationLock =
-    useRef(false);
+  const generateChallenge = useCallback(() => {
+    const img =
+      images[
+      Math.floor(Math.random() * images.length)
+      ];
 
-  const ipBlockedRef =
-    useRef(false);
+    setImage(img + '?w=1200&q=95');
 
-  const challengeId =
-    useMemo(
-      () => secureRandomString(18),
-      [],
+    setTargetX(
+      Math.floor(Math.random() * 220) + 40
     );
 
-  /* ------------------------------------------------------------------------ */
-  /* SAFE VERIFIED                                                            */
-  /* ------------------------------------------------------------------------ */
+    setTargetY(
+      Math.floor(Math.random() * 100) + 35
+    );
 
-  const safeVerified =
-    useCallback(() => {
-      if (ipBlockedRef.current) return;
+    setStarX(
+      Math.floor(Math.random() * 40) + 10
+    );
 
-      onVerified();
-    }, [onVerified]);
+    setStarY(
+      Math.floor(Math.random() * 50) + 150
+    );
 
-  /* ------------------------------------------------------------------------ */
-  /* IP CHECK                                                                 */
-  /* ------------------------------------------------------------------------ */
+    setVerifiedPuzzle(false);
+    setChecked(false);
+    setCaptchaPassed(false);
+    setCaptchaInput('');
+    setCaptchaText(generateCaptcha());
 
-  useEffect(() => {
-    let mounted = true;
+    setMotionTrail([]);
 
-    const checkIp = async () => {
-      try {
-        const response =
-          await blockageIpApi.check();
+    moveCount.current = 0;
+    entropyRef.current = 0;
+    pathLengthRef.current = 0;
 
-        if (!mounted) return;
+    velocitySamples.current = [];
+    movementIntervals.current = [];
 
-        const blocked =
-          Boolean(response.blocked);
+    startTime.current = Date.now();
 
-        ipBlockedRef.current =
-          blocked;
-
-        setIpBlocked(blocked);
-
-        if (blocked) {
-          setIpBlockedInfo({
-            ip: response.ip,
-            reason: response.reason,
-          });
-
-          safeSessionRemove(
-            'security_verified_v5',
-          );
-        }
-
-        setIpChecked(true);
-      } catch {
-        if (mounted) {
-          setIpChecked(true);
-        }
-      }
-    };
-
-    void checkIp();
-
-    const interval =
-      window.setInterval(
-        checkIp,
-        15_000,
-      );
-
-    return () => {
-      mounted = false;
-      window.clearInterval(interval);
-    };
+    setSecurityScore(0);
   }, []);
 
-  /* ------------------------------------------------------------------------ */
-  /* CHALLENGE GENERATION                                                     */
-  /* ------------------------------------------------------------------------ */
-
-  const generateChallenge =
-    useCallback(() => {
-      const selectedImage =
-        images[
-          secureRandomInt(images.length)
-        ];
-
-      setImage(
-        `${selectedImage}?auto=format&fit=crop&w=1400&q=90`,
-      );
-
-      setTargetX(
-        secureRandomInt(220) + 40,
-      );
-
-      setTargetY(
-        secureRandomInt(110) + 40,
-      );
-
-      setStarX(
-        secureRandomInt(50) + 10,
-      );
-
-      setStarY(
-        secureRandomInt(70) + 150,
-      );
-
-      setVerifiedPuzzle(false);
-      setChecked(false);
-      setCaptchaPassed(false);
-      setCaptchaRequired(false);
-      setCaptchaInput('');
-      setCaptchaText(generateCaptcha());
-
-      setMotionTrail([]);
-
-      setChallengeExpired(false);
-      setRemainingSeconds(
-        CHALLENGE_TIMEOUT_MS / 1000,
-      );
-
-      setVerificationError('');
-
-      moveCount.current = 0;
-      entropyRef.current = 0;
-      pathLengthRef.current = 0;
-
-      velocitySamples.current = [];
-      movementIntervals.current = [];
-
-      startTime.current =
-        Date.now();
-
-      lastMoveTime.current =
-        Date.now();
-
-      lastPosRef.current = {
-        x: 0,
-        y: 0,
-      };
-
-      setSecurityScore(0);
-    }, []);
-
-  /* ------------------------------------------------------------------------ */
-  /* INITIAL BOOT                                                             */
-  /* ------------------------------------------------------------------------ */
-
   useEffect(() => {
-    if (!ipChecked || ipBlocked) {
-      return;
-    }
-
+    // Tant que la vérification d'IP n'est pas terminée, ou si l'IP est
+    // bloquée, aucun processus de vérification ne démarre.
+    if (!ipChecked || ipBlocked) return;
     generateChallenge();
 
-    let trusted = false;
 
+    // Si ce navigateur a déjà passé la vérification précédemment
+    // (localStorage non vidé), on saute la captcha directement.
+    let trusted = false;
     try {
       trusted =
-        localStorage.getItem(
-          'security_browser_trusted_v5',
-        ) === '1';
+        localStorage.getItem('security_browser_trusted') === '1';
     } catch {
       trusted = false;
     }
 
-    const bootTimer =
-      window.setTimeout(() => {
+    if (trusted) {
+      const bootTrusted = setTimeout(() => {
         setPhase('checking');
-      }, 700);
+      }, 400);
 
-    const challengeTimerId =
-      window.setTimeout(() => {
-        setPhase(
-          trusted
-            ? 'passed'
-            : 'challenge',
-        );
-      }, trusted ? 1_500 : 2_300);
+      const passTrusted = setTimeout(() => {
+        setPhase('passed');
+        try {
+          sessionStorage.setItem(
+            'security_verified_v4',
+            JSON.stringify({
+              verified: true,
+              timestamp: Date.now(),
+              challengeId,
+              score: 100,
+              version: 'v4',
+              trustedBrowser: true,
+            })
+          );
+        } catch {
+          // ignore
+        }
+      }, 900);
 
-    return () => {
-      window.clearTimeout(
-        bootTimer,
-      );
+      const callVerified = setTimeout(() => {
+        safeVerified();
+      }, 1600);
 
-      window.clearTimeout(
-        challengeTimerId,
-      );
-    };
-  }, [
-    ipChecked,
-    ipBlocked,
-    generateChallenge,
-  ]);
-
-  /* ------------------------------------------------------------------------ */
-  /* PROOF OF WORK                                                            */
-  /* ------------------------------------------------------------------------ */
-
-  useEffect(() => {
-    if (
-      !ipChecked ||
-      ipBlocked ||
-      phase !== 'checking'
-    ) {
-      return;
+      return () => {
+        clearTimeout(bootTrusted);
+        clearTimeout(passTrusted);
+        clearTimeout(callVerified);
+      };
     }
 
-    let mounted = true;
+    const boot = setTimeout(() => {
+      setPhase('checking');
+      // Preuve de travail : coût CPU négligeable pour un humain, dissuasif
+      // pour une automatisation massive (botnet, fuzzing de session).
+      void solveProofOfWork(undefined, 18).then((proof) => {
+        if (proof) storeProof(proof);
+      });
+    }, 800);
 
-    void solveProofOfWork(
-      undefined,
-      18,
-    ).then((proof) => {
-      if (!mounted) return;
+    const challenge = setTimeout(() => {
+      setPhase('challenge');
+    }, 2500);
 
-      if (proof) {
-        storeProof(proof);
-        setProofReady(true);
+    return () => {
+      clearTimeout(boot);
+      clearTimeout(challenge);
+    };
+  }, [generateChallenge, challengeId, safeVerified, ipChecked, ipBlocked]);
+
+  const getRelativePosition = (
+    clientX: number,
+    clientY: number
+  ) => {
+    if (!containerRef.current) {
+      return { x: 0, y: 0 };
+    }
+
+    const rect =
+      containerRef.current.getBoundingClientRect();
+
+    return {
+      x: Math.max(
+        0,
+        Math.min(
+          rect.width - 55,
+          clientX -
+          rect.left -
+          dragStartOffset.current.x
+        )
+      ),
+
+      y: Math.max(
+        0,
+        Math.min(
+          rect.height - 55,
+          clientY -
+          rect.top -
+          dragStartOffset.current.y
+        )
+      ),
+    };
+  };
+
+  const checkOverlap = useCallback(
+    (x: number, y: number) => {
+      const dist = Math.sqrt(
+        Math.pow(x - targetX, 2) +
+        Math.pow(y - targetY, 2)
+      );
+
+      if (dist < 18) {
+        setIsOverTarget(true);
+        setStarX(targetX);
+        setStarY(targetY);
+      } else {
+        setIsOverTarget(false);
       }
+    },
+    [targetX, targetY]
+  );
+
+  const handleDragStart = (
+    clientX: number,
+    clientY: number
+  ) => {
+    if (!containerRef.current) return;
+
+    const rect =
+      containerRef.current.getBoundingClientRect();
+
+    const relX = clientX - rect.left;
+    const relY = clientY - rect.top;
+
+    if (
+      Math.abs(relX - starX - 25) < 35 &&
+      Math.abs(relY - starY - 25) < 35
+    ) {
+      setIsDragging(true);
+
+      dragStartOffset.current = {
+        x: relX - starX,
+        y: relY - starY,
+      };
+    }
+  };
+
+  const handleDragMove = (
+    clientX: number,
+    clientY: number
+  ) => {
+    if (!isDragging) return;
+
+    const now = Date.now();
+
+    moveCount.current++;
+
+    const delta = now - lastMoveTime.current;
+
+    lastMoveTime.current = now;
+
+    movementIntervals.current.push(delta);
+
+    if (
+      movementIntervals.current.length > 20
+    ) {
+      movementIntervals.current.shift();
+    }
+
+    const pos = getRelativePosition(
+      clientX,
+      clientY
+    );
+
+    const dx =
+      pos.x - lastPosRef.current.x;
+
+    const dy =
+      pos.y - lastPosRef.current.y;
+
+    const velocity = Math.sqrt(
+      dx * dx + dy * dy
+    );
+
+    velocitySamples.current.push(velocity);
+
+    pathLengthRef.current += velocity;
+
+    entropyRef.current +=
+      Math.abs(dx) +
+      Math.abs(dy) +
+      Math.random() * 0.8;
+
+    lastPosRef.current = pos;
+
+    setStarX(pos.x);
+    setStarY(pos.y);
+
+    setMotionTrail((prev) => {
+      const next = [
+        ...prev,
+        { x: pos.x, y: pos.y },
+      ];
+
+      return next.slice(-MAX_TRAIL);
     });
 
-    return () => {
-      mounted = false;
-    };
-  }, [
-    phase,
-    ipChecked,
-    ipBlocked,
-  ]);
+    checkOverlap(pos.x, pos.y);
 
-  /* ------------------------------------------------------------------------ */
-  /* CHALLENGE TIMEOUT                                                        */
-  /* ------------------------------------------------------------------------ */
+    const avg =
+      movementIntervals.current.reduce(
+        (a, b) => a + b,
+        0
+      ) /
+      movementIntervals.current.length;
 
-  useEffect(() => {
-    if (
-      phase !== 'challenge' ||
-      verifiedPuzzle
-    ) {
-      return;
+    const variance =
+      movementIntervals.current.reduce(
+        (acc, val) =>
+          acc + Math.pow(val - avg, 2),
+        0
+      ) /
+      movementIntervals.current.length;
+
+    setTimingVariance(Math.floor(variance));
+  };
+
+  const handleDragEnd = () => {
+    setIsDragging(false);
+
+    if (isOverTarget) {
+      setTimeout(() => {
+        setVerifiedPuzzle(true);
+
+        if (
+          securityScore < 80 ||
+          failedAttempts > 0
+        ) {
+          setCaptchaRequired(true);
+        }
+      }, 500);
     }
-
-    const startedAt =
-      Date.now();
-
-    challengeTimer.current =
-      window.setInterval(() => {
-        const elapsed =
-          Date.now() - startedAt;
-
-        const remaining =
-          Math.max(
-            0,
-            Math.ceil(
-              (CHALLENGE_TIMEOUT_MS -
-                elapsed) /
-                1000,
-            ),
-          );
-
-        setRemainingSeconds(
-          remaining,
-        );
-
-        if (
-          elapsed >=
-          CHALLENGE_TIMEOUT_MS
-        ) {
-          setChallengeExpired(
-            true,
-          );
-
-          setIsDragging(false);
-
-          if (
-            challengeTimer.current
-          ) {
-            window.clearInterval(
-              challengeTimer.current,
-            );
-          }
-        }
-      }, 250);
-
-    return () => {
-      if (
-        challengeTimer.current
-      ) {
-        window.clearInterval(
-          challengeTimer.current,
-        );
-      }
-    };
-  }, [
-    phase,
-    verifiedPuzzle,
-  ]);
-
-  /* ------------------------------------------------------------------------ */
-  /* POSITION                                                                  */
-  /* ------------------------------------------------------------------------ */
-
-  const getRelativePosition =
-    useCallback(
-      (
-        clientX: number,
-        clientY: number,
-      ): Position => {
-        if (!containerRef.current) {
-          return {
-            x: 0,
-            y: 0,
-          };
-        }
-
-        const rect =
-          containerRef.current.getBoundingClientRect();
-
-        return {
-          x: clamp(
-            clientX -
-              rect.left -
-              dragStartOffset.current.x,
-            0,
-            rect.width - 54,
-          ),
-
-          y: clamp(
-            clientY -
-              rect.top -
-              dragStartOffset.current.y,
-            0,
-            rect.height - 54,
-          ),
-        };
-      },
-      [],
-    );
-
-  /* ------------------------------------------------------------------------ */
-  /* OVERLAP                                                                   */
-  /* ------------------------------------------------------------------------ */
-
-  const checkOverlap =
-    useCallback(
-      (x: number, y: number) => {
-        const distance =
-          Math.sqrt(
-            Math.pow(
-              x - targetX,
-              2,
-            ) +
-              Math.pow(
-                y - targetY,
-                2,
-              ),
-          );
-
-        const matched =
-          distance < 24;
-
-        setIsOverTarget(
-          matched,
-        );
-
-        if (matched) {
-          setStarX(targetX);
-          setStarY(targetY);
-        }
-      },
-      [targetX, targetY],
-    );
-
-  /* ------------------------------------------------------------------------ */
-  /* DRAG START                                                                */
-  /* ------------------------------------------------------------------------ */
-
-  const handleDragStart =
-    useCallback(
-      (
-        clientX: number,
-        clientY: number,
-      ) => {
-        if (
-          challengeExpired ||
-          verifiedPuzzle ||
-          !containerRef.current
-        ) {
-          return;
-        }
-
-        const rect =
-          containerRef.current.getBoundingClientRect();
-
-        const relX =
-          clientX - rect.left;
-
-        const relY =
-          clientY - rect.top;
-
-        const inside =
-          Math.abs(
-            relX -
-              starX -
-              27,
-          ) < 38 &&
-          Math.abs(
-            relY -
-              starY -
-              27,
-          ) < 38;
-
-        if (!inside) return;
-
-        dragStartOffset.current = {
-          x: relX - starX,
-          y: relY - starY,
-        };
-
-        lastPosRef.current = {
-          x: starX,
-          y: starY,
-        };
-
-        lastMoveTime.current =
-          Date.now();
-
-        setIsDragging(true);
-      },
-      [
-        challengeExpired,
-        verifiedPuzzle,
-        starX,
-        starY,
-      ],
-    );
-
-  /* ------------------------------------------------------------------------ */
-  /* DRAG MOVE                                                                 */
-  /* ------------------------------------------------------------------------ */
-
-  const handleDragMove =
-    useCallback(
-      (
-        clientX: number,
-        clientY: number,
-      ) => {
-        if (
-          !isDragging ||
-          challengeExpired
-        ) {
-          return;
-        }
-
-        const now =
-          Date.now();
-
-        const delta =
-          Math.max(
-            1,
-            now -
-              lastMoveTime.current,
-          );
-
-        lastMoveTime.current =
-          now;
-
-        moveCount.current += 1;
-
-        movementIntervals.current.push(
-          delta,
-        );
-
-        if (
-          movementIntervals.current
-            .length > 30
-        ) {
-          movementIntervals.current.shift();
-        }
-
-        const position =
-          getRelativePosition(
-            clientX,
-            clientY,
-          );
-
-        const dx =
-          position.x -
-          lastPosRef.current.x;
-
-        const dy =
-          position.y -
-          lastPosRef.current.y;
-
-        const distance =
-          Math.sqrt(
-            dx * dx + dy * dy,
-          );
-
-        pathLengthRef.current +=
-          distance;
-
-        velocitySamples.current.push(
-          distance / delta,
-        );
-
-        if (
-          velocitySamples.current
-            .length > 60
-        ) {
-          velocitySamples.current.shift();
-        }
-
-        entropyRef.current +=
-          Math.abs(dx) +
-          Math.abs(dy);
-
-        lastPosRef.current =
-          position;
-
-        setStarX(position.x);
-        setStarY(position.y);
-
-        setMotionTrail(
-          (previous) =>
-            [
-              ...previous,
-              position,
-            ].slice(-MAX_TRAIL),
-        );
-
-        checkOverlap(
-          position.x,
-          position.y,
-        );
-
-        const samples =
-          movementIntervals.current;
-
-        if (samples.length > 2) {
-          const avg =
-            samples.reduce(
-              (a, b) => a + b,
-              0,
-            ) /
-            samples.length;
-
-          const variance =
-            samples.reduce(
-              (acc, value) =>
-                acc +
-                Math.pow(
-                  value - avg,
-                  2,
-                ),
-              0,
-            ) /
-            samples.length;
-
-          setTimingVariance(
-            Math.round(
-              variance,
-            ),
-          );
-        }
-      },
-      [
-        isDragging,
-        challengeExpired,
-        getRelativePosition,
-        checkOverlap,
-      ],
-    );
-
-  /* ------------------------------------------------------------------------ */
-  /* DRAG END                                                                  */
-  /* ------------------------------------------------------------------------ */
-
-  const handleDragEnd =
-    useCallback(() => {
-      if (!isDragging) return;
-
-      setIsDragging(false);
-
-      if (
-        isOverTarget &&
-        !challengeExpired
-      ) {
-        window.setTimeout(() => {
-          setVerifiedPuzzle(
-            true,
-          );
-        }, reducedMotion ? 0 : 350);
-      }
-    }, [
-      isDragging,
-      isOverTarget,
-      challengeExpired,
-      reducedMotion,
-    ]);
-
-  /* ------------------------------------------------------------------------ */
-  /* POINTER EVENTS                                                            */
-  /* ------------------------------------------------------------------------ */
+  };
 
   useEffect(() => {
     if (!isDragging) return;
 
-    const move =
-      (event: PointerEvent) => {
-        handleDragMove(
-          event.clientX,
-          event.clientY,
-        );
-      };
-
-    const up = () => {
-      handleDragEnd();
+    const move = (e: MouseEvent) => {
+      handleDragMove(
+        e.clientX,
+        e.clientY
+      );
     };
 
+    const up = () => handleDragEnd();
+
     window.addEventListener(
-      'pointermove',
-      move,
-      { passive: true },
+      'mousemove',
+      move
     );
 
     window.addEventListener(
-      'pointerup',
-      up,
-    );
-
-    window.addEventListener(
-      'pointercancel',
-      up,
+      'mouseup',
+      up
     );
 
     return () => {
       window.removeEventListener(
-        'pointermove',
-        move,
+        'mousemove',
+        move
       );
 
       window.removeEventListener(
-        'pointerup',
-        up,
-      );
-
-      window.removeEventListener(
-        'pointercancel',
-        up,
+        'mouseup',
+        up
       );
     };
-  }, [
-    isDragging,
-    handleDragMove,
-    handleDragEnd,
-  ]);
+  }, [isDragging]);
 
-  /* ------------------------------------------------------------------------ */
-  /* BOT SIGNALS                                                              */
-  /* ------------------------------------------------------------------------ */
+  const advancedBotDetection =
+    useCallback(() => {
+      const nav = navigator as any;
+      const win = window as any;
 
-  const analyzeEnvironment =
-    useCallback((): BotAnalysis => {
       const reasons: string[] = [];
 
-      const navigatorData =
-        navigator as Navigator & {
-          webdriver?: boolean;
-        };
+      let bonus = 0;
+
+      if (nav.webdriver)
+        reasons.push('webdriver');
 
       if (
-        navigatorData.webdriver
+        /HeadlessChrome|PhantomJS|Selenium|Puppeteer|Playwright|Bot|Crawler|Spider/i.test(
+          navigator.userAgent
+        )
       ) {
-        reasons.push(
-          'automation-signal',
-        );
+        reasons.push('ua-bot');
+      }
+
+      if (
+        Object.keys(win).some((k) =>
+          /^cdc_|^__webdriver|^__driver/i.test(
+            k
+          )
+        )
+      ) {
+        reasons.push('automation');
       }
 
       if (
         !navigator.language ||
-        !navigator.languages?.length
+        navigator.languages.length === 0
       ) {
-        reasons.push(
-          'missing-language',
-        );
+        reasons.push('languages');
+      }
+
+      try {
+        const canvas =
+          document.createElement('canvas');
+
+        const gl =
+          canvas.getContext('webgl');
+
+        if (!gl) {
+          reasons.push('webgl');
+        } else {
+          bonus += 8;
+        }
+      } catch {
+        reasons.push('webgl-error');
       }
 
       if (
-        !window.crypto?.subtle
+        !window.crypto ||
+        !window.crypto.subtle
       ) {
-        reasons.push(
-          'crypto-unavailable',
-        );
+        reasons.push('crypto');
+      } else {
+        bonus += 5;
       }
 
       if (
-        !navigator.hardwareConcurrency
+        navigator.hardwareConcurrency &&
+        navigator.hardwareConcurrency >= 4
       ) {
-        reasons.push(
-          'hardware-info-unavailable',
-        );
+        bonus += 4;
       }
 
       return {
-        suspicious:
-          reasons.length > 0,
+        passed: reasons.length === 0,
         reasons,
+        bonus,
       };
     }, []);
 
-  /* ------------------------------------------------------------------------ */
-  /* SCORE                                                                     */
-  /* ------------------------------------------------------------------------ */
-
   const computeLiveScore =
     useCallback(() => {
-      const duration =
-        Date.now() -
-        startTime.current;
+      const timeSpent =
+        Date.now() - startTime.current;
 
       let score = 0;
 
-      if (duration > 2_500) {
-        score += 12;
-      }
+      if (timeSpent > 2500) score += 15;
 
-      if (duration > 6_000) {
-        score += 8;
-      }
-
-      if (moveCount.current > 8) {
-        score += 12;
-      }
-
-      if (
-        moveCount.current > 20
-      ) {
-        score += 8;
-      }
-
-      if (
-        pathLengthRef.current >
-        120
-      ) {
+      if (moveCount.current > 8)
         score += 10;
-      }
 
-      if (
-        entropyRef.current >
-        100
-      ) {
-        score += 10;
-      }
-
-      if (
-        timingVariance >
-        5
-      ) {
-        score += 8;
-      }
-
-      if (verifiedPuzzle) {
-        score += 18;
-      }
-
-      if (checked) {
-        score += 8;
-      }
-
-      if (captchaPassed) {
+      if (entropyRef.current > 100)
         score += 15;
-      }
 
-      if (proofReady) {
-        score += 5;
-      }
+      if (pathLengthRef.current > 120)
+        score += 10;
+
+      if (timingVariance > 5)
+        score += 10;
+
+      if (verifiedPuzzle)
+        score += 20;
+
+      if (checked) score += 10;
+
+      if (captchaPassed)
+        score += 20;
 
       const bot =
-        analyzeEnvironment();
+        advancedBotDetection();
 
-      if (
-        bot.reasons.length === 0
-      ) {
-        score += 6;
-      }
+      if (bot.passed) score += 10;
 
-      /*
-       * Honeypot = signal de fraude.
-       * Il ne doit pas être considéré comme une
-       * preuve de sécurité.
-       */
-      if (honeypot.trim()) {
+      score += bot.bonus;
+
+      if (honeypot.length > 0)
         score = 0;
-      }
 
-      score = clamp(
-        Math.round(score),
-        0,
+      score = Math.min(
         100,
+        Math.max(0, score)
       );
 
-      setSecurityScore(
-        score,
-      );
+      setSecurityScore(score);
 
-      setBotReasons(
-        bot.reasons,
-      );
+      setBotReasons(bot.reasons);
 
-      if (score >= 90) {
-        setRiskLevel(
-          'MINIMAL',
-        );
-      } else if (
-        score >= 75
-      ) {
+      if (score > 90)
+        setRiskLevel('MINIMAL');
+      else if (score > 75)
         setRiskLevel('BAS');
-      } else if (
-        score >= 50
-      ) {
-        setRiskLevel(
-          'MOYEN',
-        );
-      } else {
-        setRiskLevel(
-          'ÉLEVÉ',
-        );
-      }
+      else if (score > 50)
+        setRiskLevel('MOYENNE');
+      else setRiskLevel('HAUTE');
 
       return {
         score,
         bot,
       };
     }, [
-      analyzeEnvironment,
-      captchaPassed,
-      checked,
-      honeypot,
-      proofReady,
-      timingVariance,
       verifiedPuzzle,
+      checked,
+      captchaPassed,
+      honeypot,
+      timingVariance,
+      advancedBotDetection,
     ]);
 
   useEffect(() => {
-    if (
-      phase !== 'challenge'
-    ) {
-      return;
-    }
-
     const interval =
       window.setInterval(() => {
         computeLiveScore();
-      }, 500);
+      }, 400);
 
-    return () => {
-      window.clearInterval(
-        interval,
-      );
-    };
-  }, [
-    phase,
-    computeLiveScore,
-  ]);
-
-  /* ------------------------------------------------------------------------ */
-  /* CAPTCHA REQUIREMENT                                                      */
-  /* ------------------------------------------------------------------------ */
-
-  useEffect(() => {
-    if (
-      !verifiedPuzzle ||
-      challengeExpired
-    ) {
-      return;
-    }
-
-    const { score } =
-      computeLiveScore();
-
-    if (
-      failedAttempts > 0 ||
-      score < 82 ||
-      botReasons.length > 0
-    ) {
-      setCaptchaRequired(
-        true,
-      );
-    }
-  }, [
-    verifiedPuzzle,
-    challengeExpired,
-    failedAttempts,
-    computeLiveScore,
-    botReasons.length,
-  ]);
-
-  /* ------------------------------------------------------------------------ */
-  /* CAPTCHA CHECK                                                            */
-  /* ------------------------------------------------------------------------ */
-
-  const verifyCaptcha =
-    useCallback(() => {
-      const userValue =
-        captchaInput
-          .trim()
-          .toUpperCase();
-
-      const expected =
-        captchaText.answer
-          .trim()
-          .toUpperCase();
-
-      if (
-        userValue.length === 0
-      ) {
-        return false;
-      }
-
-      if (
-        userValue !== expected
-      ) {
-        setCaptchaPassed(
-          false,
-        );
-
-        setCaptchaText(
-          generateCaptcha(),
-        );
-
-        setCaptchaInput('');
-
-        return false;
-      }
-
-      setCaptchaPassed(
-        true,
-      );
-
-      return true;
-    }, [
-      captchaInput,
-      captchaText.answer,
-    ]);
-
-  /* ------------------------------------------------------------------------ */
-  /* FINAL SECURITY CHECK                                                     */
-  /* ------------------------------------------------------------------------ */
+    return () =>
+      window.clearInterval(interval);
+  }, [computeLiveScore]);
 
   const performSecurityCheck =
     useCallback(() => {
-      if (
-        honeypot.trim()
-      ) {
-        return false;
-      }
-
-      if (
-        challengeExpired
-      ) {
-        return false;
-      }
-
-      if (
-        !verifiedPuzzle
-      ) {
-        return false;
-      }
-
-      if (!checked) {
-        return false;
-      }
-
-      if (
-        captchaRequired &&
-        !captchaPassed
-      ) {
-        return false;
-      }
-
-      const {
-        score,
-        bot,
-      } =
+      const { score, bot } =
         computeLiveScore();
 
-      /*
-       * Les signaux frontend ne sont pas
-       * une autorité de sécurité.
-       *
-       * Ici ils servent seulement à bloquer
-       * les scénarios manifestement anormaux.
-       */
+      if (honeypot.length > 0)
+        return false;
+
       if (
-        bot.reasons.includes(
-          'automation-signal',
+        !bot.passed &&
+        bot.reasons.some((r) =>
+          [
+            'webdriver',
+            'ua-bot',
+            'automation',
+          ].includes(r)
         )
       ) {
         return false;
       }
 
-      return score >= 75;
-    }, [
-      honeypot,
-      challengeExpired,
-      verifiedPuzzle,
-      checked,
-      captchaRequired,
-      captchaPassed,
-      computeLiveScore,
-    ]);
-
-  /* ------------------------------------------------------------------------ */
-  /* SERVER VERIFICATION                                                      */
-  /* ------------------------------------------------------------------------ */
-
-  const verifyWithBackend =
-    useCallback(
-      async (
-        payload: VerificationPayload,
-      ): Promise<boolean> => {
-        /*
-         * IMPORTANT :
-         *
-         * Branche ici ton endpoint backend.
-         *
-         * Exemple :
-         *
-         * const response = await fetch(
-         *   '/api/security/verify',
-         *   {
-         *     method: 'POST',
-         *     headers: {
-         *       'Content-Type': 'application/json',
-         *       'X-CSRF-Token': csrfToken,
-         *     },
-         *     credentials: 'include',
-         *     body: JSON.stringify(payload),
-         *   },
-         * );
-         *
-         * return response.ok;
-         */
-
-        /*
-         * Pour conserver la compatibilité avec ton
-         * composant actuel, on utilise ici la décision
-         * frontend.
-         *
-         * EN PRODUCTION :
-         * remplace cette ligne par ton endpoint backend.
-         */
-        return performSecurityCheck();
-      },
-      [performSecurityCheck],
-    );
-
-  /* ------------------------------------------------------------------------ */
-  /* VERIFY                                                                    */
-  /* ------------------------------------------------------------------------ */
-
-  const handleVerify =
-    useCallback(async () => {
-      if (
-        verificationLock.current
-      ) {
-        return;
-      }
-
-      if (
-        failedAttempts >=
-        MAX_ATTEMPTS
-      ) {
-        setVerificationError(
-          'Nombre maximal de tentatives atteint.',
-        );
-
-        return;
-      }
-
       if (
         captchaRequired &&
         !captchaPassed
       ) {
-        return;
+        return false;
       }
 
-      verificationLock.current =
-        true;
+      if (score < 75) return false;
 
-      setVerificationError('');
+      return true;
+    }, [
+      captchaRequired,
+      captchaPassed,
+      honeypot,
+      computeLiveScore,
+    ]);
 
-      setPhase(
-        'verifying',
-      );
+  const handleVerify = () => {
+    setPhase('verifying');
 
-      const engines = [
-        'BEHAVIORAL',
-        'CRYPTOGRAPHIC',
-        'RISK ENGINE',
-        'SECURE CORE',
-      ];
+    const states = [
+      'QUANTUM',
+      'ENCRYPTED',
+      'NEURAL',
+      'SECURE',
+    ];
 
-      setNetworkQuality(
-        engines[
-          secureRandomInt(
-            engines.length,
-          )
-        ],
-      );
+    setNetworkQuality(
+      states[
+      Math.floor(
+        Math.random() * states.length
+      )
+      ]
+    );
 
-      const analysis =
-        analyzeEnvironment();
+    setTimeout(() => {
+      const passed =
+        performSecurityCheck();
 
-      const payload: VerificationPayload =
-        {
-          challengeId,
-          score: securityScore,
-          puzzleSolved:
-            verifiedPuzzle,
-          humanConfirmed:
-            checked,
-          captchaPassed:
-            captchaPassed ||
-            !captchaRequired,
-          behavior: {
-            moveCount:
-              moveCount.current,
-            pathLength:
-              pathLengthRef.current,
-            entropy:
-              entropyRef.current,
-            timingVariance,
-            durationMs:
-              Date.now() -
-              startTime.current,
-          },
-          botSignals:
-            analysis.reasons,
-        };
+      if (passed) {
+        setPhase('passed');
 
-      try {
-        const passed =
-          await new Promise<boolean>(
-            (resolve) => {
-              window.setTimeout(
-                async () => {
-                  resolve(
-                    await verifyWithBackend(
-                      payload,
-                    ),
-                  );
-                },
-                reducedMotion
-                  ? 250
-                  : 1_800,
-              );
-            },
-          );
-
-        if (!passed) {
-          setFailedAttempts(
-            (previous) =>
-              previous + 1,
-          );
-
-          setPhase(
-            'failed',
-          );
-
-          setVerificationError(
-            'La vérification n’a pas été validée.',
-          );
-
-          verificationLock.current =
-            false;
-
-          window.setTimeout(
-            () => {
-              generateChallenge();
-              setPhase(
-                'challenge',
-              );
-            },
-            reducedMotion
-              ? 500
-              : 2_400,
-          );
-
-          return;
-        }
-
-        /* -------------------------------------------------------------- */
-        /* SUCCESS                                                         */
-        /* -------------------------------------------------------------- */
-
-        setSecurityScore(
-          Math.max(
-            securityScore,
-            92,
-          ),
-        );
-
-        setPhase(
-          'passed',
-        );
-
-        /*
-         * Ce stockage n'est PAS une preuve de sécurité.
-         * Il sert uniquement à améliorer l'expérience utilisateur.
-         */
-        safeSessionSet(
-          'security_verified_v5',
+        sessionStorage.setItem(
+          'security_verified_v4',
           JSON.stringify({
             verified: true,
             timestamp: Date.now(),
             challengeId,
-            version: VERSION,
-          }),
+            score: securityScore,
+            version: 'v4',
+          })
         );
 
+        // Marquer ce navigateur comme déjà vérifié, pour sauter
+        // la captcha lors des prochaines visites tant que le
+        // localStorage n'est pas vidé.
         try {
           localStorage.setItem(
-            'security_browser_trusted_v5',
-            '1',
+            'security_browser_trusted',
+            '1'
           );
         } catch {
           // ignore
         }
 
-        window.setTimeout(
-          () => {
-            safeVerified();
-          },
-          reducedMotion
-            ? 300
-            : 1_700,
-        );
-      } catch {
+        setTimeout(() => {
+          safeVerified();
+        }, 1800);
+      } else {
+        setFailedAttempts((p) => p + 1);
+
         setPhase('failed');
 
-        setVerificationError(
-          'Impossible de contacter le service de sécurité.',
-        );
-
-        verificationLock.current =
-          false;
+        setTimeout(() => {
+          generateChallenge();
+          setPhase('challenge');
+        }, 2800);
       }
-    }, [
-      failedAttempts,
-      captchaRequired,
-      captchaPassed,
-      analyzeEnvironment,
-      challengeId,
-      securityScore,
-      verifiedPuzzle,
-      checked,
-      timingVariance,
-      verifyWithBackend,
-      reducedMotion,
-      generateChallenge,
-      safeVerified,
-    ]);
-
-  /* ------------------------------------------------------------------------ */
-  /* REGENERATE                                                               */
-  /* ------------------------------------------------------------------------ */
-
-  const regenerateCaptcha =
-    useCallback(() => {
-      setCaptchaText(
-        generateCaptcha(),
-      );
-
-      setCaptchaInput('');
-      setCaptchaPassed(false);
-    }, []);
-
-  /* ------------------------------------------------------------------------ */
-  /* SPEECH                                                                    */
-  /* ------------------------------------------------------------------------ */
-
-  const speakCaptcha =
-    useCallback(() => {
-      try {
-        const speech =
-          new SpeechSynthesisUtterance(
-            captchaText.mode ===
-            'math'
-              ? captchaText.question ||
-                  captchaText.display
-              : captchaText.answer
-                  .split('')
-                  .join(' '),
-          );
-
-        speech.rate = 0.75;
-
-        window.speechSynthesis.cancel();
-
-        window.speechSynthesis.speak(
-          speech,
-        );
-      } catch {
-        // Speech API unavailable.
-      }
-    }, [
-      captchaText,
-    ]);
-
-  /* ------------------------------------------------------------------------ */
-  /* BLOCKED IP UI                                                            */
-  /* ------------------------------------------------------------------------ */
+    }, 2600);
+  };
 
   if (ipBlocked) {
     return (
-      <div className="min-h-screen bg-[#050102] text-white flex items-center justify-center p-6 overflow-hidden relative">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(239,68,68,0.22),transparent_55%)]" />
-
-        <motion.div
-          initial={{
-            opacity: 0,
-            scale: 0.92,
-            y: 20,
-          }}
-          animate={{
-            opacity: 1,
-            scale: 1,
-            y: 0,
-          }}
-          className="relative z-10 w-full max-w-lg"
-        >
-          <div className="absolute -inset-px rounded-[34px] bg-gradient-to-br from-red-500/50 via-orange-500/20 to-transparent" />
-
-          <div className="relative rounded-[34px] border border-red-500/20 bg-black/50 backdrop-blur-2xl p-8 text-center shadow-[0_30px_100px_rgba(0,0,0,0.7)]">
-            <motion.div
-              animate={
-                reducedMotion
-                  ? undefined
-                  : {
-                      scale: [1, 1.05, 1],
-                    }
-              }
-              transition={{
-                duration: 2,
-                repeat: Infinity,
-              }}
-              className="w-20 h-20 mx-auto rounded-3xl bg-gradient-to-br from-red-500 to-orange-600 flex items-center justify-center shadow-[0_20px_60px_rgba(239,68,68,0.35)]"
-            >
-              <ShieldAlert className="w-10 h-10" />
-            </motion.div>
-
-            <h1 className="mt-7 text-2xl font-bold">
-              Accès bloqué
-            </h1>
-
-            <p className="mt-3 text-sm leading-6 text-white/55">
-              Votre adresse IP a été bloquée
-              par l'administrateur.
-            </p>
-
-            {ipBlockedInfo.ip && (
-              <div className="mt-6 rounded-2xl border border-red-500/20 bg-red-500/5 p-4">
-                <p className="text-[10px] uppercase tracking-[0.25em] text-red-300/60">
-                  Identifiant réseau
-                </p>
-
-                <p className="mt-2 font-mono text-sm text-red-200">
-                  {ipBlockedInfo.ip}
-                </p>
-              </div>
-            )}
-
-            {ipBlockedInfo.reason && (
-              <p className="mt-4 text-xs text-white/40">
-                Motif :{' '}
-                {ipBlockedInfo.reason}
-              </p>
-            )}
-
-            <div className="mt-7 flex items-center justify-center gap-2 text-[10px] uppercase tracking-[0.25em] text-white/25">
-              <Lock className="w-3 h-3" />
-              Security Gateway V5
-            </div>
+      <div className="min-h-screen relative overflow-hidden bg-[#0a0203] flex items-center justify-center p-5">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(239,68,68,0.25),transparent_60%)]" />
+        <div className="relative z-10 w-full max-w-md rounded-3xl border border-red-500/30 bg-white/5 backdrop-blur-2xl p-8 text-center shadow-2xl">
+          <div className="w-16 h-16 mx-auto mb-5 rounded-2xl bg-gradient-to-br from-red-500 to-orange-600 flex items-center justify-center shadow-lg shadow-red-500/30">
+            <ShieldAlert className="w-8 h-8 text-white" />
           </div>
-        </motion.div>
+          <h1 className="text-2xl font-bold text-white mb-2">
+            Vous ne pouvez pas entrer dans ce site
+          </h1>
+          <p className="text-sm text-white/60">
+            Votre adresse IP a été bloquée par l'administrateur.
+          </p>
+          {ipBlockedInfo.ip && (
+            <p className="mt-4 text-xs font-mono text-red-300">{ipBlockedInfo.ip}</p>
+          )}
+          {ipBlockedInfo.reason && (
+            <p className="mt-2 text-xs text-white/50">Motif : {ipBlockedInfo.reason}</p>
+          )}
+        </div>
       </div>
     );
   }
 
-  /* ------------------------------------------------------------------------ */
-  /* MAIN UI                                                                  */
-  /* ------------------------------------------------------------------------ */
-
   return (
-    <div className="min-h-screen relative overflow-hidden bg-[#020207] flex items-center justify-center p-4 sm:p-6 text-white">
-      {/* ------------------------------------------------------------------ */}
-      {/* BACKGROUND                                                          */}
-      {/* ------------------------------------------------------------------ */}
-
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_15%,rgba(124,58,237,0.25),transparent_28%),radial-gradient(circle_at_85%_85%,rgba(236,72,153,0.18),transparent_30%),radial-gradient(circle_at_50%_45%,rgba(59,130,246,0.10),transparent_45%)]" />
+    <div className="min-h-screen relative overflow-hidden bg-[#020207] flex items-center justify-center p-5">
+      {/* ULTRA LUXURY BACKGROUND */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(139,92,246,0.25),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(236,72,153,0.18),transparent_28%),radial-gradient(circle_at_center,rgba(59,130,246,0.12),transparent_50%)]" />
 
         <motion.div
-          animate={
-            reducedMotion
-              ? undefined
-              : {
-                  rotate: 360,
-                }
-          }
+          animate={{
+            rotate: 360,
+          }}
           transition={{
-            duration: 100,
+            duration: 90,
             repeat: Infinity,
             ease: 'linear',
           }}
-          className="absolute -top-[360px] -left-[360px] w-[900px] h-[900px] rounded-full border border-violet-500/10"
+          className="absolute -top-52 -left-52 w-[900px] h-[900px] rounded-full border border-violet-500/10"
         />
 
         <motion.div
-          animate={
-            reducedMotion
-              ? undefined
-              : {
-                  rotate: -360,
-                }
-          }
+          animate={{
+            rotate: -360,
+          }}
           transition={{
-            duration: 130,
+            duration: 120,
             repeat: Infinity,
             ease: 'linear',
           }}
-          className="absolute -bottom-[450px] -right-[450px] w-[1100px] h-[1100px] rounded-full border border-fuchsia-500/10"
+          className="absolute -bottom-72 -right-72 w-[1200px] h-[1200px] rounded-full border border-fuchsia-500/10"
         />
 
         <div
-          className="absolute inset-0 opacity-[0.025]"
+          className="absolute inset-0 opacity-[0.03]"
           style={{
             backgroundImage:
-              'linear-gradient(rgba(255,255,255,.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.5) 1px, transparent 1px)',
-            backgroundSize:
-              '52px 52px',
+              'linear-gradient(rgba(255,255,255,0.4) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.4) 1px, transparent 1px)',
+            backgroundSize: '50px 50px',
           }}
         />
 
-        {!reducedMotion && (
-          <>
-            <motion.div
-              animate={{
-                x: [
-                  '-25%',
-                  '25%',
-                  '-25%',
-                ],
-                opacity: [
-                  0.2,
-                  0.5,
-                  0.2,
-                ],
-              }}
-              transition={{
-                duration: 18,
-                repeat: Infinity,
-                ease: 'easeInOut',
-              }}
-              className="absolute top-[-20%] left-[10%] w-[60%] h-[60%] rounded-full bg-[radial-gradient(circle,rgba(167,139,250,.22),transparent_65%)]"
-            />
+        {/* Aurora sweeps — couche premium additive */}
+        <motion.div
+          animate={{ x: ['-30%', '30%', '-30%'], opacity: [0.25, 0.5, 0.25] }}
+          transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut' }}
+          className="absolute top-[-20%] left-[10%] w-[60%] h-[60%] rounded-full bg-[radial-gradient(circle,rgba(167,139,250,0.22),transparent_65%)]"
+        />
+        <motion.div
+          animate={{ x: ['20%', '-20%', '20%'], opacity: [0.2, 0.45, 0.2] }}
+          transition={{ duration: 24, repeat: Infinity, ease: 'easeInOut' }}
+          className="absolute bottom-[-25%] right-[5%] w-[65%] h-[65%] rounded-full bg-[radial-gradient(circle,rgba(232,121,249,0.18),transparent_65%)]"
+        />
 
-            <motion.div
-              animate={{
-                x: [
-                  '20%',
-                  '-20%',
-                  '20%',
-                ],
-                opacity: [
-                  0.15,
-                  0.4,
-                  0.15,
-                ],
-              }}
-              transition={{
-                duration: 23,
-                repeat: Infinity,
-                ease: 'easeInOut',
-              }}
-              className="absolute bottom-[-25%] right-[5%] w-[65%] h-[65%] rounded-full bg-[radial-gradient(circle,rgba(232,121,249,.18),transparent_65%)]"
-            />
+        {/* Ligne de scan sécurité */}
+        <motion.div
+          animate={{ top: ['-5%', '105%'] }}
+          transition={{ duration: 6, repeat: Infinity, ease: 'linear' }}
+          className="absolute left-0 right-0 h-px bg-gradient-to-r from-transparent via-violet-300/40 to-transparent"
+        />
 
-            <motion.div
-              animate={{
-                top: [
-                  '-5%',
-                  '105%',
-                ],
-              }}
-              transition={{
-                duration: 7,
-                repeat: Infinity,
-                ease: 'linear',
-              }}
-              className="absolute left-0 right-0 h-px bg-gradient-to-r from-transparent via-violet-300/30 to-transparent"
-            />
-          </>
-        )}
+        {[...Array(30)].map((_, i) => (
+          <motion.div
+            key={i}
+            animate={{
+              y: [0, -40, 0],
+              opacity: [0.2, 1, 0.2],
+            }}
+            transition={{
+              duration: 5 + i,
+              repeat: Infinity,
+            }}
+            className="absolute w-1 h-1 rounded-full bg-white/50"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+            }}
+          />
+        ))}
       </div>
 
-      {/* ------------------------------------------------------------------ */}
-      {/* CARD                                                                */}
-      {/* ------------------------------------------------------------------ */}
-
-      <motion.main
-        initial={
-          reducedMotion
-            ? undefined
-            : {
-                opacity: 0,
-                y: 25,
-                scale: 0.97,
-              }
-        }
+      <motion.div
+        initial={{
+          opacity: 0,
+          y: 30,
+          scale: 0.96,
+        }}
         animate={{
           opacity: 1,
           y: 0,
@@ -2083,127 +1088,80 @@ const SecurityCheckPage: React.FC<
         }}
         transition={{
           duration: 0.8,
-          ease: [
-            0.16,
-            1,
-            0.3,
-            1,
-          ],
+          ease: [0.16, 1, 0.3, 1],
         }}
-        className="relative z-10 w-full max-w-3xl"
+        className="relative w-full max-w-2xl"
       >
-        <div className="absolute -inset-px rounded-[38px] bg-gradient-to-br from-white/15 via-violet-500/20 to-fuchsia-500/15" />
+        <div className="absolute -inset-[1px] rounded-[36px] bg-gradient-to-br from-white/20 via-violet-500/20 to-fuchsia-500/20" />
 
-        <div className="relative overflow-hidden rounded-[38px] border border-white/10 bg-white/[0.055] backdrop-blur-3xl shadow-[0_40px_140px_-30px_rgba(0,0,0,.95)]">
-          {/* -------------------------------------------------------------- */}
-          {/* HEADER                                                          */}
-          {/* -------------------------------------------------------------- */}
-
-          <header className="relative px-6 sm:px-8 pt-7 pb-6 border-b border-white/10">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5">
+        <div className="relative overflow-hidden rounded-[36px] border border-white/10 bg-white/[0.06] shadow-[0_40px_120px_-20px_rgba(0,0,0,0.95)]">
+          {/* HEADER */}
+          <div className="relative px-8 pt-7 pb-6 border-b border-white/10">
+            <div className="flex items-center justify-between gap-5">
               <div className="flex items-center gap-4">
-                <motion.div
-                  animate={
-                    reducedMotion
-                      ? undefined
-                      : {
-                          boxShadow: [
-                            '0 0 20px rgba(139,92,246,.2)',
-                            '0 0 50px rgba(236,72,153,.35)',
-                            '0 0 20px rgba(139,92,246,.2)',
-                          ],
-                        }
-                  }
-                  transition={{
-                    duration: 3,
-                    repeat: Infinity,
-                  }}
-                  className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-3xl bg-gradient-to-br from-violet-500 via-purple-500 to-fuchsia-500 flex items-center justify-center"
-                >
-                  <ShieldCheck className="w-7 h-7 sm:w-8 sm:h-8" />
-                </motion.div>
+                <div className="relative">
+                  <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-violet-500 to-fuchsia-500 opacity-80" />
+
+                  <div className="relative w-16 h-16 rounded-3xl bg-gradient-to-br from-violet-500 via-purple-500 to-fuchsia-500 flex items-center justify-center">
+                    <ShieldCheck className="w-8 h-8 text-white" />
+                  </div>
+                </div>
 
                 <div>
                   <div className="flex items-center gap-2">
-                    <h1 className="text-xl sm:text-2xl font-bold tracking-tight">
-                      Security Gateway
+                    <h1 className="text-white text-2xl font-bold tracking-tight">
+                      Sécurité quantique
                     </h1>
 
-                    <Sparkles className="w-4 h-4 text-violet-300" />
+                    <Sparkles className="w-5 h-5 text-violet-300" />
                   </div>
 
                   <div className="flex items-center gap-2 mt-2">
-                    <motion.div
-                      animate={
-                        reducedMotion
-                          ? undefined
-                          : {
-                              opacity: [
-                                0.4,
-                                1,
-                                0.4,
-                              ],
-                            }
-                      }
-                      transition={{
-                        duration: 1.6,
-                        repeat: Infinity,
-                      }}
-                      className="w-2 h-2 rounded-full bg-emerald-400"
-                    />
+                    <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
 
-                    <p className="text-[9px] sm:text-[10px] uppercase tracking-[0.25em] text-white/40">
-                      Adaptive Anti-Bot Engine
+                    <p className="text-[11px] uppercase tracking-[0.3em] text-white/45">
+                      AI Anti-Bot Neural Engine
                     </p>
                   </div>
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3">
-                <p className="text-[9px] uppercase tracking-[0.25em] text-white/30">
-                  CHALLENGE
+              <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-right">
+                <p className="text-[10px] text-white/40 uppercase tracking-[0.25em]">
+                  SESSION
                 </p>
 
-                <p className="mt-1 font-mono text-xs text-violet-200/80">
+                <p className="text-white font-mono text-xs mt-1">
                   {challengeId}
                 </p>
               </div>
             </div>
-          </header>
+          </div>
 
-          {/* -------------------------------------------------------------- */}
-          {/* BODY                                                            */}
-          {/* -------------------------------------------------------------- */}
-
-          <section className="relative p-5 sm:p-8">
-            {/* Honeypot */}
-
+          {/* BODY */}
+          <div className="relative p-8">
+            {/* HONEYPOT */}
             <input
-              aria-hidden="true"
-              tabIndex={-1}
               type="text"
               autoComplete="off"
+              tabIndex={-1}
               value={honeypot}
-              onChange={(event) =>
-                setHoneypot(
-                  event.target.value,
-                )
+              onChange={(e) =>
+                setHoneypot(e.target.value)
               }
-              className="absolute -left-[9999px] w-px h-px opacity-0 pointer-events-none"
+              style={{
+                position: 'absolute',
+                left: '-9999px',
+                opacity: 0,
+              }}
             />
 
             {/* METRICS */}
-
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-7">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-7">
               <Metric
-                icon={
-                  <Cpu className="w-3 h-3" />
-                }
-                label="ENGINE"
-                value={
-                  networkQuality
-                }
-                accent="violet"
+                icon={<Cpu className="w-3 h-3" />}
+                label="MOTEUR"
+                value={networkQuality}
               />
 
               <Metric
@@ -2212,519 +1170,302 @@ const SecurityCheckPage: React.FC<
                 }
                 label="SCORE"
                 value={`${securityScore}%`}
-                accent="cyan"
               />
 
               <Metric
-                icon={
-                  <Shield className="w-3 h-3" />
-                }
-                label="RISK"
+                icon={<Shield className="w-3 h-3" />}
+                label="RISQUE"
                 value={riskLevel}
-                accent={
-                  riskLevel ===
-                  'ÉLEVÉ'
-                    ? 'rose'
-                    : 'emerald'
-                }
               />
 
               <Metric
-                icon={
-                  <Wifi className="w-3 h-3" />
-                }
-                label="PROTOCOL"
-                value={
-                  proofReady
-                    ? 'PoW READY'
-                    : 'SECURE'
-                }
-                accent="emerald"
+                icon={<Wifi className="w-3 h-3" />}
+                label="RÉSEAU"
+                value={ipReputation}
               />
             </div>
 
-            {/* ------------------------------------------------------------ */}
-            {/* PHASES                                                        */}
-            {/* ------------------------------------------------------------ */}
-
             <AnimatePresence mode="wait">
-              {/* BOOT */}
-
               {(phase === 'boot' ||
-                phase ===
-                  'checking') && (
-                <motion.div
-                  key="checking"
-                  initial={{
-                    opacity: 0,
-                  }}
-                  animate={{
-                    opacity: 1,
-                  }}
-                  exit={{
-                    opacity: 0,
-                  }}
-                  className="py-16 sm:py-20 text-center"
-                >
-                  <div className="relative w-36 h-36 mx-auto flex items-center justify-center">
-                    <motion.div
-                      animate={
-                        reducedMotion
-                          ? undefined
-                          : {
-                              rotate: 360,
-                            }
-                      }
-                      transition={{
-                        duration: 9,
-                        repeat: Infinity,
-                        ease: 'linear',
-                      }}
-                      className="absolute inset-0 rounded-full border border-violet-500/20"
-                    />
+                phase === 'checking') && (
+                  <motion.div
+                    key="checking"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="py-20 text-center"
+                  >
+                    <div className="relative w-36 h-36 mx-auto">
+                      <motion.div
+                        animate={{
+                          rotate: 360,
+                        }}
+                        transition={{
+                          duration: 10,
+                          repeat: Infinity,
+                          ease: 'linear',
+                        }}
+                        className="absolute inset-0 rounded-full border border-violet-500/20"
+                      />
 
-                    <motion.div
-                      animate={
-                        reducedMotion
-                          ? undefined
-                          : {
-                              rotate: -360,
-                            }
-                      }
-                      transition={{
-                        duration: 5,
-                        repeat: Infinity,
-                        ease: 'linear',
-                      }}
-                      className="absolute inset-5 rounded-full border border-fuchsia-500/20"
-                    />
+                      <motion.div
+                        animate={{
+                          rotate: -360,
+                        }}
+                        transition={{
+                          duration: 6,
+                          repeat: Infinity,
+                          ease: 'linear',
+                        }}
+                        className="absolute inset-5 rounded-full border border-fuchsia-500/20"
+                      />
 
-                    <motion.div
-                      animate={
-                        reducedMotion
-                          ? undefined
-                          : {
-                              rotate: 360,
-                            }
-                      }
-                      transition={{
-                        duration: 2.2,
-                        repeat: Infinity,
-                        ease: 'linear',
-                      }}
-                      className="absolute inset-0 rounded-full border-t-2 border-violet-400 border-r-2 border-transparent"
-                    />
+                      <motion.div
+                        animate={{
+                          rotate: 360,
+                        }}
+                        transition={{
+                          duration: 2,
+                          repeat: Infinity,
+                          ease: 'linear',
+                        }}
+                        className="absolute inset-0 rounded-full border-t-2 border-violet-400 border-r-2 border-transparent"
+                      />
 
-                    <Fingerprint className="relative w-14 h-14 text-violet-300" />
-                  </div>
+                      <Fingerprint className="absolute inset-0 m-auto w-14 h-14 text-violet-300" />
+                    </div>
 
-                  <h2 className="mt-9 text-xl sm:text-2xl font-semibold">
-                    Initialisation du moteur de sécurité
-                  </h2>
+                    <h2 className="mt-10 text-white text-2xl font-semibold">
+                      Analyse comportementale IA
+                    </h2>
 
-                  <p className="mt-3 text-sm text-white/40">
-                    Analyse environnementale •
-                    preuve de travail •
-                    génération du challenge
-                  </p>
+                    <p className="mt-3 text-white/45 text-sm">
+                      Deep fingerprint • Neural
+                      verification • Quantum anti-bot
+                    </p>
+                  </motion.div>
+                )}
 
-                  <div className="mt-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-xs text-white/50">
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    Initialisation...
-                  </div>
-                </motion.div>
-              )}
-
-              {/* CHALLENGE */}
-
-              {phase ===
-                'challenge' && (
+              {phase === 'challenge' && (
                 <motion.div
                   key="challenge"
-                  initial={
-                    reducedMotion
-                      ? undefined
-                      : {
-                          opacity: 0,
-                          y: 12,
-                        }
-                  }
+                  initial={{
+                    opacity: 0,
+                    y: 10,
+                  }}
                   animate={{
                     opacity: 1,
                     y: 0,
                   }}
-                  exit={
-                    reducedMotion
-                      ? undefined
-                      : {
-                          opacity: 0,
-                          y: -10,
-                        }
-                  }
+                  exit={{
+                    opacity: 0,
+                    y: -10,
+                  }}
                   className="space-y-6"
                 >
-                  {/* STATUS */}
-
-                  <div className="flex flex-wrap justify-center gap-2">
-                    <div className="inline-flex items-center gap-2 rounded-full border border-violet-400/20 bg-violet-500/10 px-4 py-2">
+                  {/* TOP INFO */}
+                  <div className="flex flex-wrap items-center justify-center gap-3">
+                    <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.05] px-4 py-2">
                       <Orbit className="w-4 h-4 text-violet-300" />
 
-                      <span className="text-xs text-violet-100">
-                        Défi comportemental
+                      <span className="text-white/80 text-xs">
+                        Synchronisez l'étoile
                       </span>
                     </div>
 
-                    <div className="inline-flex items-center gap-2 rounded-full border border-cyan-400/20 bg-cyan-500/10 px-4 py-2">
-                      <Zap className="w-4 h-4 text-cyan-300" />
+                    <div className="inline-flex items-center gap-2 rounded-full border border-red-500/20 bg-red-500/10 px-4 py-2">
+                      <Bot className="w-4 h-4 text-red-300" />
 
-                      <span className="text-xs text-cyan-100">
-                        Adaptive protection
-                      </span>
-                    </div>
-
-                    <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2">
-                      <span className="font-mono text-xs text-white/60">
-                        {remainingSeconds}s
+                      <span className="text-red-200 text-xs">
+                        Anti Automation Active
                       </span>
                     </div>
                   </div>
 
-                  {/* CHALLENGE IMAGE */}
-
+                  {/* CHALLENGE */}
                   <div className="relative">
-                    <div className="absolute -inset-px rounded-[30px] bg-gradient-to-r from-violet-500/30 via-fuchsia-500/25 to-cyan-500/20" />
+                    <div className="absolute -inset-[1px] rounded-[30px] bg-gradient-to-r from-violet-500/30 via-fuchsia-500/30 to-rose-500/30" />
 
                     <div
-                      ref={
-                        containerRef
-                      }
-                      className="relative h-[290px] sm:h-[330px] overflow-hidden rounded-[30px] border border-white/10 bg-black/50 select-none"
+                      ref={containerRef}
+                      className="relative h-80 overflow-hidden rounded-[30px] border border-white/10 bg-black/40"
                       style={{
-                        touchAction:
-                          'none',
-                        cursor:
-                          isDragging
-                            ? 'grabbing'
-                            : 'default',
+                        touchAction: 'none',
+                        cursor: isDragging
+                          ? 'grabbing'
+                          : 'default',
                       }}
-                      onPointerDown={(
-                        event,
-                      ) => {
-                        (
-                          event.currentTarget as HTMLElement
-                        ).setPointerCapture?.(
-                          event.pointerId,
-                        );
+                      onMouseDown={(e) =>
+                        handleDragStart(
+                          e.clientX,
+                          e.clientY
+                        )
+                      }
+                      onMouseMove={(e) =>
+                        handleDragMove(
+                          e.clientX,
+                          e.clientY
+                        )
+                      }
+                      onMouseUp={handleDragEnd}
+                      onTouchStart={(e) => {
+                        const t = e.touches[0];
 
                         handleDragStart(
-                          event.clientX,
-                          event.clientY,
+                          t.clientX,
+                          t.clientY
                         );
                       }}
+                      onTouchMove={(e) => {
+                        e.preventDefault();
+
+                        const t = e.touches[0];
+
+                        handleDragMove(
+                          t.clientX,
+                          t.clientY
+                        );
+                      }}
+                      onTouchEnd={handleDragEnd}
                     >
                       <img
                         src={image}
-                        alt="Challenge visuel de sécurité"
-                        draggable={
-                          false
-                        }
-                        className="absolute inset-0 w-full h-full object-cover scale-[1.04]"
+                        draggable={false}
+                        className="w-full h-full object-cover scale-105"
                       />
 
-                      <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black/15 to-black/65" />
+                      <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black/20 to-black/60" />
 
-                      {!reducedMotion && (
-                        <>
-                          <motion.div
-                            animate={{
-                              y: [
-                                '-100%',
-                                '100%',
-                              ],
-                            }}
-                            transition={{
-                              duration: 5,
-                              repeat: Infinity,
-                              ease: 'linear',
-                            }}
-                            className="absolute left-0 right-0 h-32 bg-gradient-to-b from-transparent via-violet-300/10 to-transparent pointer-events-none"
-                          />
-
-                          <motion.div
-                            animate={{
-                              opacity: [
-                                0.2,
-                                0.5,
-                                0.2,
-                              ],
-                            }}
-                            transition={{
-                              duration: 3,
-                              repeat: Infinity,
-                            }}
-                            className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(167,139,250,.12),transparent_35%)]"
-                          />
-                        </>
-                      )}
+                      <motion.div
+                        animate={{
+                          y: [-400, 400],
+                        }}
+                        transition={{
+                          duration: 4,
+                          repeat: Infinity,
+                          ease: 'linear',
+                        }}
+                        className="absolute inset-x-0 h-32 bg-gradient-to-b from-transparent via-violet-400/10 to-transparent"
+                      />
 
                       {/* TRAIL */}
-
-                      {motionTrail.map(
-                        (
-                          point,
-                          index,
-                        ) => (
-                          <motion.div
-                            key={`${point.x}-${point.y}-${index}`}
-                            initial={{
-                              opacity:
-                                0.65,
-                              scale: 1,
-                            }}
-                            animate={{
-                              opacity: 0,
-                              scale:
-                                0.25,
-                            }}
-                            transition={{
-                              duration: 0.65,
-                            }}
-                            className="absolute z-10 w-5 h-5 rounded-full bg-fuchsia-400/25 blur-[2px] pointer-events-none"
-                            style={{
-                              left:
-                                point.x +
-                                20,
-                              top:
-                                point.y +
-                                20,
-                            }}
-                          />
-                        ),
-                      )}
+                      {motionTrail.map((p, i) => (
+                        <motion.div
+                          key={i}
+                          initial={{
+                            opacity: 0.8,
+                          }}
+                          animate={{
+                            opacity: 0,
+                            scale: 0.4,
+                          }}
+                          transition={{
+                            duration: 0.6,
+                          }}
+                          className="absolute w-5 h-5 rounded-full bg-rose-400/30"
+                          style={{
+                            left: p.x + 18,
+                            top: p.y + 18,
+                          }}
+                        />
+                      ))}
 
                       {/* TARGET */}
-
                       <div
-                        className="absolute pointer-events-none"
                         style={{
-                          left:
-                            targetX -
-                            10,
-                          top:
-                            targetY -
-                            10,
+                          left: targetX - 10,
+                          top: targetY - 10,
                         }}
+                        className="absolute pointer-events-none"
                       >
                         <motion.div
-                          animate={
-                            reducedMotion
-                              ? undefined
-                              : {
-                                  scale: [
-                                    1,
-                                    1.2,
-                                    1,
-                                  ],
-                                  opacity: [
-                                    0.3,
-                                    0.9,
-                                    0.3,
-                                  ],
-                                }
-                          }
+                          animate={{
+                            scale: [1, 1.12, 1],
+                            opacity: [0.5, 1, 0.5],
+                          }}
                           transition={{
-                            duration: 1.8,
+                            duration: 2,
                             repeat: Infinity,
                           }}
-                          className="absolute w-20 h-20 rounded-full border border-white/50"
+                          className="absolute inset-0 w-20 h-20 rounded-full border border-white/40"
                         />
 
-                        <div className="absolute w-20 h-20 rounded-full border border-dashed border-white/40" />
-
-                        <div className="absolute inset-[10px] rounded-full border border-white/10" />
+                        <div className="absolute inset-0 w-20 h-20 rounded-full border border-dashed border-white/40" />
                       </div>
 
                       <div
-                        className="absolute pointer-events-none"
                         style={{
                           left: targetX,
                           top: targetY,
                         }}
+                        className="absolute pointer-events-none"
                       >
                         <Star
-                          active={
-                            isOverTarget
-                          }
-                          reducedMotion={
-                            Boolean(
-                              reducedMotion,
-                            )
-                          }
+                          type="fixed"
+                          glow={isOverTarget}
                         />
                       </div>
 
                       {/* MOVING STAR */}
-
-                      <motion.div
-                        className="absolute z-30"
-                        animate={{
+                      <div
+                        style={{
                           left: starX,
                           top: starY,
-                          scale:
-                            isDragging
-                              ? 1.08
-                              : 1,
+                          cursor: isDragging
+                            ? 'grabbing'
+                            : 'grab',
                         }}
-                        transition={{
-                          left: {
-                            duration:
-                              isDragging
-                                ? 0
-                                : 0.08,
-                          },
-                          top: {
-                            duration:
-                              isDragging
-                                ? 0
-                                : 0.08,
-                          },
-                          scale: {
-                            duration:
-                              0.15,
-                          },
-                        }}
-                        style={{
-                          cursor:
-                            isDragging
-                              ? 'grabbing'
-                              : 'grab',
-                        }}
-                        onPointerDown={(
-                          event,
-                        ) => {
-                          event.stopPropagation();
-
-                          handleDragStart(
-                            event.clientX,
-                            event.clientY,
-                          );
-                        }}
+                        className="absolute z-20 transition-transform hover:scale-110"
                       >
                         <Star
-                          moving
-                          active={
-                            isOverTarget
-                          }
-                          reducedMotion={
-                            Boolean(
-                              reducedMotion,
-                            )
-                          }
+                          type="moving"
+                          glow
                         />
-                      </motion.div>
-
-                      {/* HUD */}
-
-                      <div className="absolute top-4 left-4 right-4 flex items-center justify-between gap-3 pointer-events-none">
-                        <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/35 backdrop-blur-xl px-3 py-2">
-                          <Globe className="w-3 h-3 text-cyan-300" />
-
-                          <span className="hidden sm:inline text-[9px] uppercase tracking-[0.18em] text-white/65">
-                            Human interaction
-                          </span>
-                        </div>
-
-                        <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/35 backdrop-blur-xl px-3 py-2">
-                          <Bot className="w-3 h-3 text-fuchsia-300" />
-
-                          <span className="hidden sm:inline text-[9px] uppercase tracking-[0.18em] text-white/65">
-                            Adaptive AI
-                          </span>
-                        </div>
                       </div>
 
-                      {/* SUCCESS OVERLAY */}
+                      {/* HUD */}
+                      <div className="absolute top-4 left-4 flex items-center gap-2 rounded-full border border-white/10 bg-black/40 px-3 py-2">
+                        <Globe className="w-3 h-3 text-cyan-300" />
 
-                      <AnimatePresence>
-                        {verifiedPuzzle && (
-                          <motion.div
-                            initial={{
-                              opacity: 0,
-                            }}
-                            animate={{
-                              opacity: 1,
-                            }}
-                            className="absolute inset-0 z-40 flex items-center justify-center bg-emerald-500/10 backdrop-blur-[2px]"
-                          >
-                            <motion.div
-                              initial={{
-                                scale: 0.7,
-                                opacity: 0,
-                              }}
-                              animate={{
-                                scale: 1,
-                                opacity: 1,
-                              }}
-                              className="text-center"
-                            >
-                              <div className="mx-auto w-20 h-20 rounded-full bg-emerald-400/15 border border-emerald-400/30 flex items-center justify-center">
-                                <CheckCircle2 className="w-12 h-12 text-emerald-300" />
-                              </div>
+                        <span className="text-[11px] text-white/70 uppercase tracking-[0.2em]">
+                          Analyse comportementale humaine
+                        </span>
+                      </div>
 
-                              <p className="mt-4 font-semibold">
-                                Interaction validée
-                              </p>
+                      {/* VERIFIED */}
+                      {verifiedPuzzle && (
+                        <motion.div
+                          initial={{
+                            scale: 0,
+                            opacity: 0,
+                          }}
+                          animate={{
+                            scale: [0, 1.4, 1],
+                            opacity: [0, 1, 0.7],
+                          }}
+                          className="absolute inset-0 flex items-center justify-center bg-emerald-500/10"
+                        >
+                          <div className="text-center">
+                            <CheckCircle2 className="w-16 h-16 text-emerald-400 mx-auto" />
 
-                              <p className="mt-1 text-xs text-white/50">
-                                Signature comportementale reçue
-                              </p>
-                            </motion.div>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-
-                      {/* EXPIRED */}
-
-                      {challengeExpired && (
-                        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md">
-                          <div className="text-center p-6">
-                            <AlertTriangle className="w-12 h-12 mx-auto text-amber-300" />
-
-                            <p className="mt-4 font-semibold">
-                              Challenge expiré
+                            <p className="mt-3 text-white font-semibold">
+                              Signature validée
                             </p>
-
-                            <p className="mt-2 text-xs text-white/45">
-                              Générez un nouveau challenge pour continuer.
-                            </p>
-
-                            <button
-                              type="button"
-                              onClick={() => {
-                                generateChallenge();
-                                setPhase(
-                                  'challenge',
-                                );
-                              }}
-                              className="mt-5 inline-flex items-center gap-2 rounded-xl bg-white/10 border border-white/10 px-4 py-2 text-sm hover:bg-white/15 transition"
-                            >
-                              <RefreshCw className="w-4 h-4" />
-                              Nouveau challenge
-                            </button>
                           </div>
-                        </div>
+                        </motion.div>
                       )}
                     </div>
                   </div>
 
-                  {/* HUMAN CONFIRMATION */}
 
+
+                  {/* CHECKBOX */}
                   <AnimatePresence>
                     {verifiedPuzzle && (
                       <motion.label
                         initial={{
                           opacity: 0,
-                          y: 8,
+                          y: 10,
                         }}
                         animate={{
                           opacity: 1,
@@ -2732,395 +1473,348 @@ const SecurityCheckPage: React.FC<
                         }}
                         className="flex items-center gap-4 rounded-2xl border border-white/10 bg-white/[0.04] p-4 cursor-pointer"
                       >
-                        <div className="relative shrink-0">
+                        <div className="relative">
                           <input
                             type="checkbox"
-                            checked={
-                              checked
-                            }
-                            onChange={(
-                              event,
-                            ) =>
+                            checked={checked}
+                            onChange={(e) =>
                               setChecked(
-                                event
-                                  .target
-                                  .checked,
+                                e.target.checked
                               )
                             }
-                            className="peer appearance-none w-6 h-6 rounded-lg border border-white/20 bg-black/20 checked:bg-gradient-to-br checked:from-violet-500 checked:to-fuchsia-500 checked:border-transparent"
+                            className="peer appearance-none w-6 h-6 rounded-lg border border-white/20 bg-white/5 checked:bg-gradient-to-br checked:from-violet-500 checked:to-fuchsia-500 checked:border-transparent"
                           />
 
                           <CheckCircle2 className="absolute inset-0 m-auto w-4 h-4 text-white opacity-0 peer-checked:opacity-100 pointer-events-none" />
                         </div>
 
                         <div>
-                          <p className="text-sm font-medium">
-                            Je confirme être humain
+                          <p className="text-white font-medium text-sm">
+                            Je confirme être
+                            humain
                           </p>
 
-                          <p className="mt-1 text-xs text-white/40">
-                            Interaction + analyse de risque + validation sécurisée
+                          <p className="text-white/40 text-xs mt-1">
+                            Validation IA +
+                            comportementale +
+                            CAPTCHA sécurisé
                           </p>
                         </div>
                       </motion.label>
                     )}
                   </AnimatePresence>
 
-                  {/* CAPTCHA */}
-
+                  {/* CAPTCHA — ULTRA LUXURY */}
                   <AnimatePresence>
                     {captchaRequired &&
                       verifiedPuzzle && (
                         <motion.div
-                          initial={{
-                            opacity: 0,
-                            y: 15,
-                            scale: 0.98,
-                          }}
-                          animate={{
-                            opacity: 1,
-                            y: 0,
-                            scale: 1,
-                          }}
-                          exit={{
-                            opacity: 0,
-                            y: -10,
-                          }}
+                          initial={{ opacity: 0, y: 20, scale: 0.97 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: -10, scale: 0.97 }}
+                          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
                           className="relative"
                         >
-                          <div className="absolute -inset-px rounded-[28px] bg-gradient-to-br from-violet-500/40 via-fuchsia-500/30 to-amber-400/30" />
+                          {/* Aura gradient border */}
+                          <div className="absolute -inset-[1.5px] rounded-[28px] bg-gradient-to-br from-violet-500/50 via-fuchsia-500/40 to-amber-400/40 opacity-80" />
+                          <motion.div
+                            animate={{ backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'] }}
+                            transition={{ duration: 8, repeat: Infinity }}
+                            className="absolute -inset-[1px] rounded-[28px] opacity-60"
+                            style={{
+                              background:
+                                'linear-gradient(120deg,#8b5cf6,#ec4899,#f59e0b,#8b5cf6)',
+                              backgroundSize: '300% 300%',
+                            }}
+                          />
 
-                          <div className="relative overflow-hidden rounded-[28px] border border-white/10 bg-black/25 backdrop-blur-xl p-5 sm:p-6">
-                            <div className="flex items-center justify-between gap-3 mb-5">
+                          <div className="relative rounded-[28px] border border-white/10 bg-gradient-to-br from-white/[0.07] via-white/[0.04] to-white/[0.02] p-4 sm:p-6 overflow-hidden">
+                            {/* Decorative floating orbs */}
+                            <motion.div
+                              animate={{ x: [0, 30, 0], y: [0, -20, 0], scale: [1, 1.15, 1] }}
+                              transition={{ duration: 9, repeat: Infinity }}
+                              className="pointer-events-none absolute -top-10 -right-10 w-40 h-40 rounded-full bg-fuchsia-500/20"
+                            />
+                            <motion.div
+                              animate={{ x: [0, -25, 0], y: [0, 25, 0], scale: [1, 1.1, 1] }}
+                              transition={{ duration: 11, repeat: Infinity }}
+                              className="pointer-events-none absolute -bottom-12 -left-12 w-44 h-44 rounded-full bg-violet-500/20"
+                            />
+
+                            {/* Header */}
+                            <div className="relative flex items-start sm:items-center justify-between gap-3 mb-5">
                               <div className="flex items-center gap-3">
-                                <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-amber-400 via-rose-400 to-fuchsia-500 flex items-center justify-center">
-                                  <KeyRound className="w-5 h-5" />
+                                <div className="relative shrink-0">
+                                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-amber-400 to-fuchsia-500 opacity-70" />
+                                  <div className="relative w-11 h-11 rounded-2xl bg-gradient-to-br from-amber-400 via-rose-400 to-fuchsia-500 flex items-center justify-center shadow-lg">
+                                    <KeyRound className="w-5 h-5 text-white" />
+                                  </div>
                                 </div>
-
                                 <div>
-                                  <p className="font-bold">
-                                    Vérification secondaire
-                                  </p>
-
-                                  <p className="text-[11px] text-white/40 mt-1">
-                                    Challenge adaptatif
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <p className="text-white font-bold text-base sm:text-lg leading-tight">
+                                      Vérification CAPTCHA
+                                    </p>
+                                    <span className="hidden xs:inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gradient-to-r from-violet-500/20 to-fuchsia-500/20 border border-white/10 text-[9px] uppercase tracking-[0.2em] text-violet-200">
+                                      <Sparkles className="w-2.5 h-2.5" /> Luxe
+                                    </span>
+                                  </div>
+                                  <p className="text-white/45 text-[11px] sm:text-xs mt-1">
+                                    {captchaText.mode === 'math'
+                                      ? 'Résolvez le calcul et saisissez le résultat'
+                                      : 'Saisissez le code dans les cases'}
                                   </p>
                                 </div>
                               </div>
 
-                              <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-1.5 shrink-0">
                                 <button
                                   type="button"
-                                  onClick={
-                                    speakCaptcha
-                                  }
-                                  aria-label="Écouter le CAPTCHA"
-                                  className="w-10 h-10 rounded-xl border border-white/10 bg-white/[0.04] flex items-center justify-center hover:bg-white/[0.09] transition"
+                                  aria-label="Lire le code"
+                                  onClick={() => {
+                                    try {
+                                      const u = new SpeechSynthesisUtterance(
+                                        captchaText.mode === 'math'
+                                          ? (captchaText.question || captchaText.display)
+                                          : captchaText.answer.split('').join(' ')
+                                      );
+                                      u.rate = 0.7;
+                                      window.speechSynthesis.cancel();
+                                      window.speechSynthesis.speak(u);
+                                    } catch {}
+                                  }}
+                                  className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl border border-white/10 bg-white/[0.05] hover:bg-white/[0.1] flex items-center justify-center text-white/70 hover:text-white transition-all hover:scale-105 active:scale-95"
                                 >
                                   <Volume2 className="w-4 h-4" />
                                 </button>
-
                                 <button
                                   type="button"
-                                  onClick={
-                                    regenerateCaptcha
-                                  }
-                                  aria-label="Nouveau CAPTCHA"
-                                  className="w-10 h-10 rounded-xl border border-white/10 bg-white/[0.04] flex items-center justify-center hover:bg-white/[0.09] transition"
+                                  aria-label="Régénérer le code"
+                                  onClick={() => {
+                                    setCaptchaText(generateCaptcha());
+                                    setCaptchaInput('');
+                                    setCaptchaPassed(false);
+                                  }}
+                                  className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl border border-white/10 bg-white/[0.05] hover:bg-white/[0.1] flex items-center justify-center text-white/70 hover:text-white transition-all hover:scale-105 active:scale-95"
                                 >
                                   <RefreshCw className="w-4 h-4" />
                                 </button>
                               </div>
                             </div>
 
-                            {/* CAPTCHA DISPLAY */}
-
-                            <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-black/50 min-h-[120px] flex items-center justify-center">
+                            {/* Captcha display */}
+                            <div className="relative rounded-2xl overflow-hidden border border-white/10 bg-gradient-to-br from-black/60 via-violet-950/40 to-black/60 mb-4">
+                              {/* Mesh background */}
                               <div
-                                className="absolute inset-0 opacity-20"
+                                className="absolute inset-0 opacity-[0.15]"
                                 style={{
                                   backgroundImage:
-                                    'radial-gradient(circle at 20% 20%, #a78bfa 0, transparent 30%), radial-gradient(circle at 80% 70%, #ec4899 0, transparent 30%), linear-gradient(90deg, transparent, rgba(255,255,255,.08), transparent)',
+                                    'radial-gradient(circle at 20% 30%, #a78bfa 0, transparent 35%), radial-gradient(circle at 80% 70%, #f0abfc 0, transparent 35%), radial-gradient(circle at 50% 50%, #fbbf24 0, transparent 40%)',
                                 }}
                               />
-
+                              {/* Grid lines */}
                               <div
-                                className="absolute inset-0 opacity-[0.07]"
+                                className="absolute inset-0 opacity-[0.08]"
                                 style={{
                                   backgroundImage:
-                                    'linear-gradient(rgba(255,255,255,.6) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.6) 1px, transparent 1px)',
-                                  backgroundSize:
-                                    '15px 15px',
+                                    'linear-gradient(rgba(255,255,255,0.6) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.6) 1px, transparent 1px)',
+                                  backgroundSize: '14px 14px',
                                 }}
                               />
-
-                              {!reducedMotion && (
-                                <motion.div
-                                  animate={{
-                                    x: [
-                                      '-120%',
-                                      '120%',
-                                    ],
+                              {/* Animated scan */}
+                              <motion.div
+                                animate={{ x: ['-100%', '120%'] }}
+                                transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
+                                className="absolute inset-y-0 w-1/3 bg-gradient-to-r from-transparent via-white/10 to-transparent"
+                              />
+                              {/* Noise dots */}
+                              {[...Array(35)].map((_, i) => (
+                                <div
+                                  key={i}
+                                  className="absolute rounded-full bg-white/40"
+                                  style={{
+                                    left: `${(i * 37) % 100}%`,
+                                    top: `${(i * 53) % 100}%`,
+                                    width: `${1 + (i % 3)}px`,
+                                    height: `${1 + (i % 3)}px`,
                                   }}
-                                  transition={{
-                                    duration: 3,
-                                    repeat: Infinity,
-                                    ease: 'linear',
-                                  }}
-                                  className="absolute inset-y-0 w-1/3 bg-gradient-to-r from-transparent via-white/10 to-transparent"
                                 />
-                              )}
+                              ))}
+                              {/* Wavy lines */}
+                              <svg
+                                className="absolute inset-0 w-full h-full opacity-30"
+                                preserveAspectRatio="none"
+                                viewBox="0 0 400 100"
+                              >
+                                <path
+                                  d="M0,50 Q100,10 200,50 T400,50"
+                                  stroke="url(#capg1)"
+                                  strokeWidth="1.5"
+                                  fill="none"
+                                />
+                                <path
+                                  d="M0,30 Q100,80 200,30 T400,30"
+                                  stroke="url(#capg2)"
+                                  strokeWidth="1"
+                                  fill="none"
+                                />
+                                <defs>
+                                  <linearGradient id="capg1" x1="0" x2="1">
+                                    <stop offset="0%" stopColor="#a78bfa" />
+                                    <stop offset="100%" stopColor="#f0abfc" />
+                                  </linearGradient>
+                                  <linearGradient id="capg2" x1="0" x2="1">
+                                    <stop offset="0%" stopColor="#fbbf24" />
+                                    <stop offset="100%" stopColor="#ec4899" />
+                                  </linearGradient>
+                                </defs>
+                              </svg>
 
-                              {captchaText.mode ===
-                                'math' && (
-                                <div className="absolute top-3 left-0 right-0 text-center text-[9px] uppercase tracking-[0.25em] text-white/40">
-                                  Résolvez l'opération
+                              {/* Question (mode math) */}
+                              {captchaText.mode === 'math' && (
+                                <div className="relative pt-4 px-3 text-center">
+                                  <p className="text-[10px] sm:text-xs uppercase tracking-[0.25em] text-white/50 font-semibold">
+                                    Résolvez l'opération
+                                  </p>
                                 </div>
                               )}
-
-                              <div className="relative flex items-center justify-center gap-1.5 sm:gap-2 px-4 py-8">
-                                {captchaText.display
-                                  .split('')
-                                  .map(
-                                    (
-                                      char,
-                                      index,
-                                    ) => {
-                                      const gradients =
-                                        [
-                                          'from-violet-300 to-fuchsia-400',
-                                          'from-amber-300 to-rose-400',
-                                          'from-cyan-300 to-violet-400',
-                                          'from-fuchsia-300 to-amber-300',
-                                          'from-emerald-300 to-cyan-400',
-                                        ];
-
-                                      const rotation =
-                                        captchaText.mode ===
-                                        'math'
-                                          ? 0
-                                          : (index *
-                                              11) %
-                                              26 -
-                                            13;
-
-                                      return (
-                                        <motion.span
-                                          key={`${captchaText.display}-${index}`}
-                                          initial={{
-                                            opacity: 0,
-                                            y: 8,
-                                          }}
-                                          animate={{
-                                            opacity: 1,
-                                            y: 0,
-                                          }}
-                                          transition={{
-                                            delay:
-                                              index *
-                                              0.04,
-                                          }}
-                                          className={`bg-gradient-to-br ${
-                                            gradients[
-                                              index %
-                                                gradients.length
-                                            ]
-                                          } bg-clip-text text-transparent font-black text-2xl sm:text-3xl md:text-4xl select-none`}
-                                          style={{
-                                            transform: `rotate(${rotation}deg)`,
-                                          }}
-                                        >
-                                          {
-                                            char
-                                          }
-                                        </motion.span>
-                                      );
-                                    },
-                                  )}
-
-                                {captchaText.mode ===
-                                  'math' && (
-                                  <span className="text-2xl sm:text-3xl md:text-4xl font-black text-white/80 ml-2">
-                                    = ?
+                              {/* Characters */}
+                              <div className="relative flex items-center justify-center gap-1 sm:gap-2 py-6 sm:py-8 px-3 select-none">
+                                {captchaText.display.split('').map((ch, i) => {
+                                  const colors = [
+                                    'from-violet-300 to-fuchsia-400',
+                                    'from-amber-300 to-rose-400',
+                                    'from-cyan-300 to-violet-400',
+                                    'from-fuchsia-300 to-amber-300',
+                                    'from-emerald-300 to-cyan-400',
+                                    'from-rose-300 to-fuchsia-400',
+                                    'from-yellow-300 to-orange-400',
+                                    'from-violet-300 to-pink-400',
+                                  ];
+                                  const rot = captchaText.mode === 'math' ? 0 : ((i * 13) % 30) - 15;
+                                  const ty = captchaText.mode === 'math' ? 0 : ((i * 7) % 10) - 5;
+                                  return (
+                                    <motion.span
+                                      key={`${captchaText.display}-${i}`}
+                                      initial={{ opacity: 0, y: 12 }}
+                                      animate={{ opacity: 1, y: 0 }}
+                                      transition={{ delay: i * 0.05 }}
+                                      className={`bg-gradient-to-br ${colors[i % colors.length]} bg-clip-text text-transparent font-black text-2xl sm:text-3xl md:text-4xl`}
+                                      style={{
+                                        transform: `rotate(${rot}deg) translateY(${ty}px)`,
+                                        textShadow: '0 4px 20px rgba(255,255,255,0.25)',
+                                        fontFamily:
+                                          captchaText.mode === 'math'
+                                            ? '"Georgia", serif'
+                                            : i % 2 ? '"Georgia", serif' : '"Courier New", monospace',
+                                        letterSpacing: captchaText.mode === 'math' ? '0.15em' : '0.05em',
+                                      }}
+                                    >
+                                      {ch === ' ' ? '\u00A0' : ch}
+                                    </motion.span>
+                                  );
+                                })}
+                                {captchaText.mode === 'math' && (
+                                  <span className="bg-gradient-to-br from-white to-white/70 bg-clip-text text-transparent font-black text-2xl sm:text-3xl md:text-4xl ml-1">
+                                    =&nbsp;?
                                   </span>
                                 )}
                               </div>
                             </div>
 
-                            {/* INPUT */}
-
-                            <div className="mt-5 flex justify-center gap-1.5 sm:gap-2">
-                              {Array.from({
-                                length:
-                                  captchaText
-                                    .answer
-                                    .length,
-                              }).map(
-                                (
-                                  _,
-                                  index,
-                                ) => (
-                                  <input
-                                    key={
-                                      index
+                            {/* Input — case par caractère */}
+                            <div className="flex items-center justify-center gap-1.5 sm:gap-2 mb-4">
+                              {Array.from({ length: captchaText.answer.length }).map((_, i) => (
+                                <input
+                                  key={i}
+                                  id={`captcha-cell-${i}`}
+                                  type="text"
+                                  inputMode="text"
+                                  maxLength={1}
+                                  autoComplete="off"
+                                  value={captchaInput[i] || ''}
+                                  onChange={(e) => {
+                                    const v = e.target.value.slice(-1);
+                                    const arr = captchaInput.split('');
+                                    arr[i] = v;
+                                    const next = arr.join('').slice(0, captchaText.answer.length);
+                                    setCaptchaInput(next);
+                                    if (v && i < captchaText.answer.length - 1) {
+                                      const nxt = document.getElementById(
+                                        `captcha-cell-${i + 1}`
+                                      ) as HTMLInputElement | null;
+                                      nxt?.focus();
                                     }
-                                    id={`captcha-v5-${index}`}
-                                    type="text"
-                                    inputMode="text"
-                                    autoComplete="off"
-                                    maxLength={
-                                      1
+                                  }}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Backspace' && !captchaInput[i] && i > 0) {
+                                      const prv = document.getElementById(
+                                        `captcha-cell-${i - 1}`
+                                      ) as HTMLInputElement | null;
+                                      prv?.focus();
                                     }
-                                    value={
-                                      captchaInput[
-                                        index
-                                      ] ||
-                                      ''
-                                    }
-                                    onChange={(
-                                      event,
-                                    ) => {
-                                      const value =
-                                        event.target.value
-                                          .slice(
-                                            -1,
-                                          )
-                                          .toUpperCase();
-
-                                      const array =
-                                        captchaInput.split('');
-
-                                      array[
-                                        index
-                                      ] =
-                                        value;
-
-                                      setCaptchaInput(
-                                        array
-                                          .join(
-                                            '',
-                                          )
-                                          .slice(
-                                            0,
-                                            captchaText
-                                              .answer
-                                              .length,
-                                          ),
-                                      );
-
-                                      if (
-                                        value &&
-                                        index <
-                                          captchaText
-                                            .answer
-                                            .length -
-                                            1
-                                      ) {
-                                        (
-                                          document.getElementById(
-                                            `captcha-v5-${index + 1}`,
-                                          ) as HTMLInputElement | null
-                                        )?.focus();
-                                      }
-                                    }}
-                                    onKeyDown={(
-                                      event,
-                                    ) => {
-                                      if (
-                                        event.key ===
-                                          'Backspace' &&
-                                        !captchaInput[
-                                          index
-                                        ] &&
-                                        index >
-                                          0
-                                      ) {
-                                        (
-                                          document.getElementById(
-                                            `captcha-v5-${index - 1}`,
-                                          ) as HTMLInputElement | null
-                                        )?.focus();
-                                      }
-                                    }}
-                                    onPaste={(
-                                      event,
-                                    ) => {
-                                      event.preventDefault();
-
-                                      const value =
-                                        event.clipboardData
-                                          .getData(
-                                            'text',
-                                          )
-                                          .replace(
-                                            /\s/g,
-                                            '',
-                                          )
-                                          .slice(
-                                            0,
-                                            captchaText
-                                              .answer
-                                              .length,
-                                          )
-                                          .toUpperCase();
-
-                                      setCaptchaInput(
-                                        value,
-                                      );
-                                    }}
-                                    aria-label={`Caractère CAPTCHA ${index + 1}`}
-                                    className={`w-9 h-11 sm:w-11 sm:h-13 rounded-xl bg-black/40 text-center text-white font-bold outline-none border transition-all ${
-                                      captchaInput[
-                                        index
-                                      ]
-                                        ? 'border-violet-400/60 shadow-[0_0_20px_rgba(139,92,246,.25)]'
-                                        : 'border-white/10'
-                                    } focus:border-fuchsia-400/70 focus:scale-105`}
-                                  />
-                                ),
-                              )}
+                                  }}
+                                  onPaste={(e) => {
+                                    e.preventDefault();
+                                    const txt = e.clipboardData
+                                      .getData('text')
+                                      .slice(0, captchaText.answer.length);
+                                    setCaptchaInput(txt);
+                                  }}
+                                  className={`w-8 h-10 sm:w-10 sm:h-12 md:w-11 md:h-14 rounded-lg sm:rounded-xl text-center font-bold text-base sm:text-lg md:text-xl text-white bg-black/40 border outline-none transition-all focus:scale-110 focus:bg-black/60 ${
+                                    captchaInput[i]
+                                      ? 'border-violet-400/60 shadow-[0_0_20px_rgba(167,139,250,0.4)]'
+                                      : 'border-white/10 hover:border-white/20'
+                                  } focus:border-fuchsia-400/80 focus:shadow-[0_0_25px_rgba(236,72,153,0.5)]`}
+                                />
+                              ))}
                             </div>
 
-                            {captchaPassed && (
-                              <motion.div
-                                initial={{
-                                  opacity: 0,
-                                  height: 0,
-                                }}
-                                animate={{
-                                  opacity: 1,
-                                  height: 'auto',
-                                }}
-                                className="mt-4 flex items-center gap-2 rounded-xl border border-emerald-400/20 bg-emerald-500/10 px-3 py-2"
-                              >
-                                <CheckCircle2 className="w-4 h-4 text-emerald-300" />
-
-                                <span className="text-xs text-emerald-100">
-                                  Validation secondaire réussie
-                                </span>
-                              </motion.div>
-                            )}
+                            {/* Status */}
+                            <AnimatePresence>
+                              {captchaPassed && (
+                                <motion.div
+                                  initial={{ opacity: 0, height: 0 }}
+                                  animate={{ opacity: 1, height: 'auto' }}
+                                  exit={{ opacity: 0, height: 0 }}
+                                  className="flex items-center gap-2 mb-3 px-3 py-2 rounded-xl bg-emerald-500/10 border border-emerald-400/30"
+                                >
+                                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                                  <p className="text-emerald-200 text-xs sm:text-sm font-medium">
+                                    Code CAPTCHA validé avec succès
+                                  </p>
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
 
                             <button
-                              type="button"
+                              onClick={() => {
+                                if (
+                                  captchaInput.trim().toLowerCase() ===
+                                  captchaText.answer.trim().toLowerCase()
+                                ) {
+                                  setCaptchaPassed(true);
+                                } else {
+                                  setCaptchaPassed(false);
+                                  setCaptchaText(generateCaptcha());
+                                  setCaptchaInput('');
+                                }
+                              }}
                               disabled={
-                                captchaInput.length !==
-                                  captchaText
-                                    .answer
-                                    .length ||
-                                captchaPassed
+                                captchaInput.length !== captchaText.answer.length || captchaPassed
                               }
-                              onClick={
-                                verifyCaptcha
-                              }
-                              className="relative overflow-hidden mt-4 w-full h-12 rounded-2xl bg-gradient-to-r from-violet-600 via-fuchsia-600 to-amber-500 text-sm font-semibold disabled:opacity-40 disabled:cursor-not-allowed hover:-translate-y-0.5 transition-all"
+                              className="group relative w-full h-12 sm:h-14 rounded-2xl overflow-hidden font-semibold text-white text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed transition-transform hover:-translate-y-0.5 active:translate-y-0"
                             >
-                              <span className="relative z-10 flex items-center justify-center gap-2">
-                                <ShieldCheck className="w-4 h-4" />
-
-                                {captchaPassed
-                                  ? 'CAPTCHA validé'
-                                  : 'Vérifier'}
+                              <div className="absolute inset-0 bg-gradient-to-r from-violet-600 via-fuchsia-600 to-amber-500" />
+                              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-gradient-to-r from-amber-500 via-fuchsia-600 to-violet-600" />
+                              <motion.div
+                                animate={{ x: ['-120%', '220%'] }}
+                                transition={{ duration: 2.2, repeat: Infinity }}
+                                className="absolute inset-y-0 w-24 bg-white/25 rotate-12"
+                              />
+                              <span className="relative flex items-center justify-center gap-2">
+                                <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5" />
+                                {captchaPassed ? 'CAPTCHA validé' : 'Vérifier le CAPTCHA'}
                               </span>
                             </button>
                           </div>
@@ -3128,261 +1822,226 @@ const SecurityCheckPage: React.FC<
                       )}
                   </AnimatePresence>
 
-                  {/* BOT SIGNALS */}
 
-                  {botReasons.length >
-                    0 && (
-                    <motion.div
-                      initial={{
-                        opacity: 0,
-                        y: 8,
-                      }}
-                      animate={{
-                        opacity: 1,
-                        y: 0,
-                      }}
-                      className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4"
-                    >
-                      <div className="flex items-center gap-2">
-                        <AlertTriangle className="w-4 h-4 text-amber-300" />
+                  {/* BOT REASONS */}
+                  {botReasons.length > 0 && (
+                    <div className="rounded-2xl border border-red-500/20 bg-red-500/10 p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Flame className="w-4 h-4 text-red-300" />
 
-                        <p className="text-sm font-medium text-amber-100">
-                          Analyse renforcée
+                        <p className="text-red-200 text-sm font-semibold">
+                          Signatures suspectes
+                          détectées
                         </p>
                       </div>
 
-                      <div className="flex flex-wrap gap-2 mt-3">
-                        {botReasons.map(
-                          (reason) => (
-                            <span
-                              key={
-                                reason
-                              }
-                              className="rounded-full border border-amber-500/20 bg-black/20 px-3 py-1 text-[10px] font-mono text-amber-200/80"
-                            >
-                              {reason}
-                            </span>
-                          ),
-                        )}
+                      <div className="flex flex-wrap gap-2">
+                        {botReasons.map((r) => (
+                          <span
+                            key={r}
+                            className="px-3 py-1 rounded-full bg-black/30 text-red-200 text-xs border border-red-500/20"
+                          >
+                            {r}
+                          </span>
+                        ))}
                       </div>
-                    </motion.div>
+                    </div>
                   )}
 
-                  {/* VERIFY BUTTON */}
-
+                  {/* BUTTON */}
                   <button
-                    type="button"
-                    onClick={
-                      handleVerify
-                    }
+                    onClick={handleVerify}
                     disabled={
-                      challengeExpired ||
                       !verifiedPuzzle ||
                       !checked ||
                       (captchaRequired &&
-                        !captchaPassed) ||
-                      failedAttempts >=
-                        MAX_ATTEMPTS
+                        !captchaPassed)
                     }
-                    className={`group relative overflow-hidden w-full h-15 sm:h-16 rounded-2xl font-semibold transition-all ${
-                      challengeExpired ||
-                      !verifiedPuzzle ||
+                    className={`group relative overflow-hidden w-full h-16 rounded-2xl font-semibold transition-all ${!verifiedPuzzle ||
                       !checked ||
                       (captchaRequired &&
-                        !captchaPassed) ||
-                      failedAttempts >=
-                        MAX_ATTEMPTS
-                        ? 'bg-white/[0.04] border border-white/10 text-white/25 cursor-not-allowed'
-                        : 'bg-gradient-to-r from-violet-600 via-fuchsia-600 to-rose-600 text-white shadow-[0_25px_70px_-20px_rgba(139,92,246,.75)] hover:-translate-y-1'
-                    }`}
+                        !captchaPassed)
+                      ? 'bg-white/[0.04] border border-white/10 text-white/30 cursor-not-allowed'
+                      : 'text-white hover:-translate-y-1 shadow-[0_25px_70px_-15px_rgba(139,92,246,0.8)]'
+                      }`}
                   >
-                    {!challengeExpired &&
-                      verifiedPuzzle &&
-                      checked &&
-                      !(
-                        captchaRequired &&
-                        !captchaPassed
-                      ) && (
-                        <motion.div
-                          animate={
-                            reducedMotion
-                              ? undefined
-                              : {
-                                  x: [
-                                    '-120%',
-                                    '220%',
-                                  ],
-                                }
-                          }
-                          transition={{
-                            duration: 2.2,
-                            repeat: Infinity,
-                            ease: 'linear',
-                          }}
-                          className="absolute inset-y-0 w-24 bg-white/20 rotate-12"
-                        />
+                    {verifiedPuzzle &&
+                      checked && (
+                        <>
+                          <div className="absolute inset-0 bg-gradient-to-r from-violet-600 via-fuchsia-600 to-rose-600" />
+
+                          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-gradient-to-r from-fuchsia-600 via-rose-600 to-violet-600" />
+
+                          <motion.div
+                            animate={{
+                              x: [
+                                '-100%',
+                                '220%',
+                              ],
+                            }}
+                            transition={{
+                              duration: 2,
+                              repeat: Infinity,
+                            }}
+                            className="absolute inset-y-0 w-24 bg-white/20 rotate-12"
+                          />
+                        </>
                       )}
 
                     <span className="relative flex items-center justify-center gap-3">
                       <ScanFace className="w-5 h-5" />
 
-                      Vérifier mon accès
+                      Validation
                     </span>
                   </button>
-
-                  {verificationError && (
-                    <motion.div
-                      initial={{
-                        opacity: 0,
-                      }}
-                      animate={{
-                        opacity: 1,
-                      }}
-                      className="rounded-xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-center text-xs text-red-200"
-                    >
-                      {verificationError}
-                    </motion.div>
-                  )}
-
-                  {failedAttempts >
-                    0 && (
-                    <p className="text-center text-[10px] uppercase tracking-[0.2em] text-white/25">
-                      Tentatives :{' '}
-                      {
-                        failedAttempts
-                      }{' '}
-                      /{' '}
-                      {
-                        MAX_ATTEMPTS
-                      }
-                    </p>
-                  )}
                 </motion.div>
               )}
 
-              {/* VERIFYING */}
-
-              {phase ===
-                'verifying' && (
+              {phase === 'verifying' && (
                 <motion.div
                   key="verifying"
-                  initial={{
-                    opacity: 0,
-                  }}
-                  animate={{
-                    opacity: 1,
-                  }}
-                  className="py-16 sm:py-20 text-center"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="py-20 text-center"
                 >
                   <div className="relative w-40 h-40 mx-auto flex items-center justify-center">
+                    {/* Glow background */}
+                    <div className="absolute inset-0 rounded-full bg-gradient-to-br from-violet-500/10 via-fuchsia-500/5 to-transparent" />
+
+                    {/* Outer ring */}
                     <motion.div
-                      animate={
-                        reducedMotion
-                          ? undefined
-                          : {
-                              rotate: 360,
-                            }
-                      }
+                      animate={{ rotate: 360 }}
                       transition={{
                         duration: 8,
                         repeat: Infinity,
-                        ease: 'linear',
+                        ease: "linear",
                       }}
-                      className="absolute inset-0 rounded-full border border-violet-400/20"
+                      className="absolute inset-0 rounded-full border border-violet-400/20 shadow-[0_0_30px_rgba(139,92,246,0.15)]"
                     />
 
+                    {/* Middle ring */}
                     <motion.div
-                      animate={
-                        reducedMotion
-                          ? undefined
-                          : {
-                              rotate: -360,
-                            }
-                      }
+                      animate={{ rotate: -360 }}
                       transition={{
-                        duration: 5,
+                        duration: 6,
                         repeat: Infinity,
-                        ease: 'linear',
+                        ease: "linear",
                       }}
-                      className="absolute inset-6 rounded-full border border-fuchsia-400/25"
+                      className="absolute inset-6 rounded-full border border-fuchsia-400/30 bg-white/5"
                     />
 
+                    {/* Accent rotating arc */}
                     <motion.div
-                      animate={
-                        reducedMotion
-                          ? undefined
-                          : {
-                              rotate: 360,
-                            }
-                      }
+                      animate={{ rotate: 360 }}
+                      transition={{
+                        duration: 3,
+                        repeat: Infinity,
+                        ease: "linear",
+                      }}
+                      className="absolute inset-0 rounded-full"
+                    >
+                      <div className="w-full h-full rounded-full border-t-2 border-violet-300 border-r-2 border-transparent shadow-[0_0_25px_rgba(167,139,250,0.4)]" />
+                    </motion.div>
+
+                    {/* Inner pulse ring */}
+                    <motion.div
+                      animate={{
+                        scale: [1, 1.08, 1],
+                        opacity: [0.4, 0.8, 0.4],
+                      }}
                       transition={{
                         duration: 2.5,
                         repeat: Infinity,
-                        ease: 'linear',
+                        ease: "easeInOut",
                       }}
-                      className="absolute inset-0 rounded-full border-t-2 border-violet-300 border-r-2 border-transparent"
+                      className="absolute inset-10 rounded-full bg-gradient-to-br from-violet-500/10 to-fuchsia-500/10"
                     />
 
+                    {/* Center ultra modern AI core */}
                     <motion.div
-                      animate={
-                        reducedMotion
-                          ? undefined
-                          : {
-                              scale: [
-                                1,
-                                1.15,
-                                1,
-                              ],
-                            }
-                      }
-                      transition={{
-                        duration: 2,
-                        repeat: Infinity,
+                      animate={{
+                        scale: [1, 1.1, 1],
+                        rotate: [0, 2, -2, 0],
                       }}
-                      className="relative w-16 h-16 rounded-full border border-white/10 bg-black/40 flex items-center justify-center"
+                      transition={{
+                        duration: 4,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                      }}
+                      className="relative z-10 flex items-center justify-center w-16 h-16 rounded-full bg-black/30 border border-white/10 overflow-hidden"
                     >
-                      <Zap className="w-7 h-7 text-violet-300" />
+                      {/* Pulsing core orb */}
+                      <motion.div
+                        animate={{
+                          scale: [1, 1.6, 1],
+                          opacity: [0.4, 0.9, 0.4],
+                        }}
+                        transition={{
+                          duration: 2,
+                          repeat: Infinity,
+                          ease: "easeInOut",
+                        }}
+                        className="absolute w-6 h-6 rounded-full bg-gradient-to-r from-violet-400 via-fuchsia-400 to-cyan-300"
+                      />
+
+                      {/* Scanning line */}
+                      <motion.div
+                        animate={{ y: [-20, 20, -20] }}
+                        transition={{
+                          duration: 1.8,
+                          repeat: Infinity,
+                          ease: "linear",
+                        }}
+                        className="absolute w-full h-[2px] bg-gradient-to-r from-transparent via-violet-300 to-transparent opacity-60"
+                      />
+
+                      {/* Digital particles */}
+                      <motion.div
+                        animate={{ opacity: [0.2, 0.8, 0.2] }}
+                        transition={{
+                          duration: 1.5,
+                          repeat: Infinity,
+                        }}
+                        className="absolute text-[10px] font-mono text-fuchsia-200 tracking-widest"
+                      >
+                        SECURITE
+                      </motion.div>
                     </motion.div>
                   </div>
 
-                  <h2 className="mt-10 text-xl sm:text-2xl font-semibold">
-                    Vérification en cours
+                  <h2 className="mt-10 text-white text-2xl font-semibold">
+                    Validation cryptographique
                   </h2>
 
-                  <p className="mt-3 text-sm text-white/40">
-                    Analyse du challenge et des signaux de risque...
-                  </p>
+                  <div className="mt-5 inline-flex items-center gap-3 rounded-full border border-white/10 bg-white/[0.04] px-5 py-3">
+                    <Loader2 className="w-4 h-4 animate-spin text-violet-300" />
 
-                  <div className="mt-6 inline-flex items-center gap-3 rounded-full border border-white/10 bg-white/[0.04] px-5 py-3">
-                    <Loader2 className="w-4 h-4 text-violet-300 animate-spin" />
-
-                    <span className="text-sm text-white/60">
-                      Secure verification
+                    <span className="text-white/75 text-sm">
+                      Analyse neuronale IA en
+                      cours...
                     </span>
                   </div>
                 </motion.div>
               )}
 
-              {/* PASSED */}
-
-              {phase ===
-                'passed' && (
+              {phase === 'passed' && (
                 <motion.div
                   key="passed"
                   initial={{
                     opacity: 0,
-                    scale: 0.85,
+                    scale: 0.8,
                   }}
                   animate={{
                     opacity: 1,
                     scale: 1,
                   }}
-                  className="py-14 sm:py-16 text-center"
+                  className="py-16 text-center"
                 >
                   <motion.div
                     initial={{
                       scale: 0,
-                      rotate: -90,
+                      rotate: -180,
                     }}
                     animate={{
                       scale: 1,
@@ -3390,133 +2049,93 @@ const SecurityCheckPage: React.FC<
                     }}
                     transition={{
                       type: 'spring',
-                      stiffness: 180,
-                      damping: 14,
+                      stiffness: 200,
                     }}
                     className="relative w-32 h-32 mx-auto"
                   >
-                    {!reducedMotion && (
-                      <motion.div
-                        animate={{
-                          scale: [
-                            1,
-                            1.25,
-                            1,
-                          ],
-                          opacity: [
-                            0.2,
-                            0.5,
-                            0.2,
-                          ],
-                        }}
-                        transition={{
-                          duration: 2,
-                          repeat: Infinity,
-                        }}
-                        className="absolute inset-0 rounded-full bg-emerald-400/30 blur-xl"
-                      />
-                    )}
+                    <div className="absolute inset-0 rounded-full bg-emerald-400/40 animate-pulse" />
 
-                    <div className="relative w-full h-full rounded-full bg-gradient-to-br from-emerald-400 to-green-600 flex items-center justify-center shadow-[0_25px_80px_-15px_rgba(16,185,129,.8)]">
-                      <CheckCircle2 className="w-16 h-16" />
+                    <div className="relative w-full h-full rounded-full bg-gradient-to-br from-emerald-400 to-green-600 flex items-center justify-center shadow-[0_25px_70px_-10px_rgba(16,185,129,0.8)]">
+                      <CheckCircle2 className="w-16 h-16 text-white" />
                     </div>
                   </motion.div>
 
-                  <h2 className="mt-10 text-3xl font-bold">
+                  <h2 className="mt-10 text-white text-3xl font-bold">
                     Accès autorisé
                   </h2>
 
-                  <p className="mt-3 text-sm text-white/45">
-                    Vérification réussie • environnement approuvé
+                  <p className="mt-3 text-white/50">
+                    Signature humaine confirmée •
+                    environnement sécurisé
                   </p>
 
-                  <div className="mt-6 inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-500/10 px-5 py-3">
+                  <div className="mt-6 inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-5 py-3">
                     <Shield className="w-4 h-4 text-emerald-300" />
 
-                    <span className="text-sm font-medium text-emerald-100">
-                      Security score{' '}
-                      {
-                        securityScore
-                      }
-                      %
+                    <span className="text-emerald-200 text-sm font-medium">
+                      Security score:{' '}
+                      {securityScore}%
                     </span>
                   </div>
                 </motion.div>
               )}
 
-              {/* FAILED */}
-
-              {phase ===
-                'failed' && (
+              {phase === 'failed' && (
                 <motion.div
                   key="failed"
-                  initial={{
-                    opacity: 0,
-                  }}
+                  initial={{ opacity: 0 }}
                   animate={{
                     opacity: 1,
-                    x: reducedMotion
-                      ? 0
-                      : [
-                          0,
-                          -6,
-                          6,
-                          -6,
-                          6,
-                          0,
-                        ],
+                    x: [0, -8, 8, -8, 8, 0],
                   }}
-                  className="py-14 sm:py-16 text-center"
+                  className="py-16 text-center"
                 >
-                  <div className="relative w-28 h-28 mx-auto">
-                    <div className="absolute inset-0 rounded-full bg-red-500/20 blur-xl" />
+                  <div className="relative w-32 h-32 mx-auto">
+                    <div className="absolute inset-0 rounded-full bg-red-500/40" />
 
                     <div className="relative w-full h-full rounded-full bg-gradient-to-br from-red-500 to-rose-700 flex items-center justify-center">
-                      <AlertTriangle className="w-14 h-14" />
+                      <AlertTriangle className="w-16 h-16 text-white" />
                     </div>
                   </div>
 
-                  <h2 className="mt-9 text-2xl font-semibold">
-                    Vérification refusée
+                  <h2 className="mt-10 text-white text-2xl font-semibold">
+                    Signature invalide
                   </h2>
 
-                  <p className="mt-3 text-sm text-white/45">
-                    Génération d'un nouveau challenge sécurisé...
+                  <p className="mt-3 text-white/50">
+                    Nouvelle analyse sécurisée...
                   </p>
                 </motion.div>
               )}
             </AnimatePresence>
-          </section>
+          </div>
 
-          {/* -------------------------------------------------------------- */}
-          {/* FOOTER                                                          */}
-          {/* -------------------------------------------------------------- */}
-
-          <footer className="relative border-t border-white/10 bg-white/[0.025] px-5 sm:px-8 py-4">
+          {/* FOOTER */}
+          <div className="relative border-t border-white/10 bg-white/[0.03] px-8 py-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-2">
-                <Lock className="w-3 h-3 text-white/30" />
+                <Lock className="w-3 h-3 text-white/40" />
 
-                <span className="text-[9px] uppercase tracking-[0.2em] text-white/35">
-                  Protected security gateway
-                </span>
+                <p className="text-[11px] text-white/45 uppercase tracking-[0.2em]">
+                  Tunnel chiffré quantique
+                </p>
               </div>
 
               <div className="flex items-center gap-4">
-                <Eye className="w-3 h-3 text-white/20" />
+                <Eye className="w-3 h-3 text-white/30" />
 
-                <MousePointer2 className="w-3 h-3 text-white/20" />
+                <MousePointer2 className="w-3 h-3 text-white/30" />
 
-                <ScanSearch className="w-3 h-3 text-white/20" />
+                <ScanSearch className="w-3 h-3 text-white/30" />
 
-                <span className="font-mono text-[9px] text-white/25">
-                  V{VERSION}
-                </span>
+                <p className="text-[11px] font-mono text-white/35">
+                  v4.0 ULTRA LUXE
+                </p>
               </div>
             </div>
-          </footer>
+          </div>
         </div>
-      </motion.main>
+      </motion.div>
     </div>
   );
 };
