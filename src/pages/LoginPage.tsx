@@ -424,7 +424,7 @@ const LoginPage: React.FC = () => {
     0
   );
 
-  const entrance = reducedMotion
+  const entrance = (reducedMotion
     ? {}
     : {
         initial: { opacity: 0, y: 18 },
@@ -433,7 +433,8 @@ const LoginPage: React.FC = () => {
           duration: 0.45,
           ease: 'easeOut',
         },
-      };
+      }) as React.ComponentProps<typeof motion.div>;
+
 
   return (
     <Layout>

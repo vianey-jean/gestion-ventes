@@ -13,11 +13,12 @@ import InvoiceGenerator from '@/components/dashboard/InvoiceGenerator';
 import RefundForm from '@/components/dashboard/RefundForm';
 import ViewRefundsModal from '@/components/dashboard/ViewRefundsModal';
 import { AccessibleButton } from '@/components/accessibility/AccessibleButton';
-import { PlusCircle, Edit, ShoppingCart, FileText, FileSignature, Package, FileDown, Layers, PenLine, CirclePlus, Users, RotateCcw, Eye, MapPin, MapPinned, ArrowLeftRight } from 'lucide-react';
+import { PlusCircle, Edit, ShoppingCart, FileText, FileSignature, Package, FileDown, Layers, PenLine, CirclePlus, Users, RotateCcw, Eye, MapPin, MapPinned, ArrowLeftRight, Search } from 'lucide-react';
 import VentesParClientsModal from '@/components/dashboard/VentesParClientsModal';
 import AddLivraisonVilleModal from '@/components/dashboard/forms/modals/AddLivraisonVilleModal';
 import LivraisonVilleListModal from '@/components/dashboard/forms/modals/LivraisonVilleListModal';
 import EchangerVentesModal from '@/components/dashboard/forms/modals/EchangerVentesModal';
+import SearchSalesModal from '@/components/dashboard/forms/modals/SearchSalesModal';
 import { cn } from '@/lib/utils';
 
 
@@ -69,6 +70,8 @@ const SalesManagementSection: React.FC<SalesManagementSectionProps> = ({
   const [viewRefundsOpen, setViewRefundsOpen] = useState(false);
   const [detailVilleLivraisonOpen, setDetailVilleLivraisonOpen] = useState(false);
   const [echangerVentesOpen, setEchangerVentesOpen] = useState(false);
+  const [searchSalesOpen, setSearchSalesOpen] = useState(false);
+
 
   const handleRowClick = (sale: Sale) => {
     setSelectedSale(sale);
@@ -139,8 +142,16 @@ const SalesManagementSection: React.FC<SalesManagementSectionProps> = ({
   onClick: () => setEchangerVentesOpen(true),
   gradient: 'orange' as const,
   'aria-label': 'Échanger les produits d\'une vente existante'
+},
+{
+  icon: Search,
+  label: 'Recherche sur vente',
+  onClick: () => setSearchSalesOpen(true),
+  gradient: 'teal' as const,
+  'aria-label': 'Rechercher une vente dans tout l\'historique'
 }
   ];
+
 
   return (
     <section aria-labelledby="sales-management-title">
@@ -336,6 +347,11 @@ const SalesManagementSection: React.FC<SalesManagementSectionProps> = ({
       <EchangerVentesModal
         isOpen={echangerVentesOpen}
         onClose={() => setEchangerVentesOpen(false)}
+      />
+
+      <SearchSalesModal
+        isOpen={searchSalesOpen}
+        onClose={() => setSearchSalesOpen(false)}
       />
     </section>
   );
