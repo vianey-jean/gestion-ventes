@@ -86,31 +86,48 @@ const emptyEntry = (name: string): FideliteEntry => ({
   tier: '', tierLabel: '',
 });
 
-export const fideliteApiService = {
-  async getAll(): Promise<Record<string, FideliteEntry>> {
+/**
+ * Cache partagé de la map complète : évite d'ouvrir une requête HTTP par
+ * client (des centaines d'appels simultanés faisaient tomber le serveur).
+ */
+let _mapCache: { at: number; data: Record<string, FideliteEntry> } | null = null;
+let _mapInFlight: Promise<Record<string, FideliteEntry>> | null = null;
+
+const loadMap = async (force = false): Promise<Record<string, FideliteEntry>> => {
+  const now = Date.now();
+  if (!force && _mapCache && now - _mapCache.at < 15000) return _mapCache.data;
+  if (!force && _mapInFlight) return _mapInFlight;
+
+  _mapInFlight = (async () => {
+    let data: Record<string, FideliteEntry> | null = null;
     try {
       const res = await api.get('/api/fidelite');
-      const data = res.data;
-      if (data && typeof data === 'object' && !Array.isArray(data) && Object.keys(data).length > 0) {
-        return data;
+      const d = res.data;
+      if (d && typeof d === 'object' && !Array.isArray(d) && Object.keys(d).length > 0) {
+        data = d as Record<string, FideliteEntry>;
       }
-    } catch { /* fallback below */ }
-    const sales = await getSales();
-    return buildFromSales(sales);
+    } catch { /* fallback ventes */ }
+    if (!data) data = buildFromSales(await getSales());
+    _mapCache = { at: Date.now(), data };
+    return data;
+  })().finally(() => { _mapInFlight = null; });
+
+  return _mapInFlight;
+};
+
+export const fideliteApiService = {
+  async getAll(): Promise<Record<string, FideliteEntry>> {
+    return loadMap();
   },
   async getByName(name: string): Promise<FideliteEntry> {
-    try {
-      const res = await api.get(`/api/fidelite/${encodeURIComponent(name)}`);
-      const d = res.data;
-      if (d && typeof d === 'object' && d.name) return d;
-    } catch { /* fallback below */ }
-    const sales = await getSales();
-    const all = buildFromSales(sales);
+    const all = await loadMap();
     return all[norm(name)] || emptyEntry(name);
   },
   async rebuild(): Promise<void> {
     try { await api.post('/api/fidelite/rebuild'); } catch { /* ignore if unavailable */ }
     _salesCache = null;
+    _mapCache = null;
+    await loadMap(true).catch(() => undefined);
   },
 };
 

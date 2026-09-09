@@ -108,7 +108,7 @@ const createApiInstance = (): AxiosInstance => {
       // Session de chiffrement expirée → renégociation + rejeu unique
       const status = error.response?.status;
       const needsHandshake =
-        status === 409 &&
+        (status === 409 || status === 400) &&
         (error.response?.data?.renegotiate === true ||
           error.response?.headers?.['x-handshake-required'] === '1');
       if (needsHandshake && error.config && !(error.config as any).__handshakeRetried) {
