@@ -63,53 +63,39 @@ export function installAntiTamper() {
   if (installed || typeof window === 'undefined') return;
   installed = true;
 
-  // Les protections bloquantes ne s'appliquent qu'en production sur un domaine
-  // réellement public : jamais en développement ni dans l'aperçu Lovable
-  // (qui affiche le site dans une iframe légitime).
-  const host = window.location.host.toLowerCase().split(':')[0];
-  const isPreviewOrDev =
-    !import.meta.env.PROD ||
-    host === 'localhost' ||
-    host === '127.0.0.1' ||
-    host === '[::1]' ||
-    host.endsWith('.lovable.app') ||
-    host.endsWith('.lovableproject.com');
-
-  if (!isPreviewOrDev) {
-    // 1) Framebusting — l'app ne doit jamais tourner dans une frame tierce
-    try {
-      if (window.top && window.top !== window.self) {
-        let sameOrigin = false;
-        try {
-          sameOrigin = window.top.location.origin === window.location.origin;
-        } catch {
-          sameOrigin = false;
-        }
-        if (!sameOrigin) {
-          blockScreen(
-            'Affichage non autorisé',
-            "Cette application ne peut pas être intégrée dans un site externe."
-          );
-          try {
-            window.top.location.href = window.location.href;
-          } catch {
-            /* origine croisée : l'écran de blocage suffit */
-          }
-          return;
-        }
+  // 1) Framebusting — l'app ne doit jamais tourner dans une frame tierce
+  try {
+    if (window.top && window.top !== window.self) {
+      let sameOrigin = false;
+      try {
+        sameOrigin = window.top.location.origin === window.location.origin;
+      } catch {
+        sameOrigin = false;
       }
-    } catch {
-      /* ignore */
+      if (!sameOrigin) {
+        blockScreen(
+          'Affichage non autorisé',
+          "Cette application ne peut pas être intégrée dans un site externe."
+        );
+        try {
+          window.top.location.href = window.location.href;
+        } catch {
+          /* origine croisée : l'écran de blocage suffit */
+        }
+        return;
+      }
     }
+  } catch {
+    /* ignore */
+  }
 
-    // 2) Vérification d'origine (anti-clone déployé sur un domaine pirate)
-    if (!isAllowedHost(window.location.host)) {
-      blockScreen(
-        'Copie non autorisée',
-        'Ce déploiement ne correspond pas à un domaine officiel de l’application. Accès bloqué.'
-      );
-      return;
-    }
+  // 2) Vérification d'origine (anti-clone déployé sur un domaine pirate)
+  if (!isAllowedHost(window.location.host)) {
+    blockScreen(
+      'Copie non autorisée',
+      'Ce déploiement ne correspond pas à un domaine officiel de l’application. Accès bloqué.'
+    );
+    return;
   }
 
   // 3) Anti-copie / anti-exfiltration des blocs sensibles
@@ -129,20 +115,23 @@ export function installAntiTamper() {
     );
   });
 
-  // 4) Intégrité runtime : NON BLOQUANTE.
-  // Si un script tiers (souvent une extension de navigateur légitime) remplace
-  // fetch/XHR, on restaure simplement les fonctions natives. Aucun écran de
-  // blocage : une extension ne doit jamais interrompre la session utilisateur.
+  // 4) Intégrité runtime : un script injecté qui remplace fetch/XHR est détecté
   const nativeFetch = window.fetch;
   const nativeXhrOpen = XMLHttpRequest.prototype.open;
   const checkIntegrity = () => {
-    try {
-      if (window.fetch !== nativeFetch) window.fetch = nativeFetch;
-      if (XMLHttpRequest.prototype.open !== nativeXhrOpen) {
+    if (window.fetch !== nativeFetch || XMLHttpRequest.prototype.open !== nativeXhrOpen) {
+      try {
+        window.fetch = nativeFetch;
         XMLHttpRequest.prototype.open = nativeXhrOpen;
+      } catch {
+        /* ignore */
       }
-    } catch {
-      /* ignore */
+      if (import.meta.env.PROD) {
+        blockScreen(
+          'Environnement compromis',
+          'Une modification du code de l’application a été détectée. Session interrompue par sécurité.'
+        );
+      }
     }
   };
   window.setInterval(checkIntegrity, 15000);
