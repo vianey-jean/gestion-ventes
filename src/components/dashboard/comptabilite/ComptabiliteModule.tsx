@@ -21,6 +21,9 @@ import ComptabiliteStatsCards from './ComptabiliteStatsCards';
 import SecondaryStatsCards from './SecondaryStatsCards';
 import ComptabiliteTabs from './ComptabiliteTabs';
 
+// Composants UI
+import PremiumLoading from '@/components/ui/premium-loading';
+
 // Formulaires modales
 import AchatFormDialog from './AchatFormDialog';
 import DepenseFormDialog from './DepenseFormDialog';
@@ -51,6 +54,7 @@ const ComptabiliteModule: React.FC<ComptabiliteModuleProps> = ({ className }) =>
     // Données
     achats,
     comptabiliteData,
+    loading,
     monthlySales,
     monthlyChartData,
     depensesRepartition,
@@ -102,6 +106,19 @@ const ComptabiliteModule: React.FC<ComptabiliteModuleProps> = ({ className }) =>
     // Utilitaires
     formatEuro,
   } = useComptabilite();
+
+  if (loading) {
+    return (
+      <div className={`flex items-center justify-center min-h-[60vh] ${className}`}>
+        <PremiumLoading
+          text="Chargement de la comptabilité..."
+          size="lg"
+          variant="default"
+          showText={true}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className={`space-y-6 ${className}`}>

@@ -63,6 +63,16 @@ const VentesProduits: React.FC = React.memo(() => {
   const [overrideSales, setOverrideSales] = useState<Sale[] | null>(null);
   const [loadingOverride, setLoadingOverride] = useState(false);
 
+  // Loader initial : garantit l'affichage du PremiumLoading avant le rendu de la page
+  const [initialLoading, setInitialLoading] = useState(true);
+
+  useEffect(() => {
+    if (!appLoading && !authLoading && !loadingOverride) {
+      const timer = setTimeout(() => setInitialLoading(false), 400);
+      return () => clearTimeout(timer);
+    }
+  }, [appLoading, authLoading, loadingOverride]);
+
   const readNav = useCallback(() => {
     try {
       const raw = sessionStorage.getItem('fideliteSaleNav');
@@ -144,7 +154,7 @@ const VentesProduits: React.FC = React.memo(() => {
     );
   }
 
-  if (appLoading || authLoading) {
+  if (initialLoading || appLoading || authLoading || loadingOverride) {
     return (
       <PremiumLoading 
         text="Chargement des Ventes et Produits ...."

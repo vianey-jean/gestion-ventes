@@ -66,7 +66,7 @@ export function useComptabilite() {
   const [fournisseurs, setFournisseurs] = useState<Fournisseur[]>([]);
   const [fournisseurSearch, setFournisseurSearch] = useState('');
   const [showFournisseurList, setShowFournisseurList] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   
   // États des modales
   const [modalStates, setModalStates] = useState<ModalStates>({
