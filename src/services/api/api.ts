@@ -15,6 +15,14 @@
  */
 import axios, { AxiosInstance } from 'axios';
 import axiosRetry from 'axios-retry';
+import {
+  ensureSession,
+  resetSession,
+  encryptPayload,
+  decryptEnvelope,
+  isEnvelope,
+  isExemptUrl,
+} from '@/lib/secureTransport';
 
 // Configuration de l'URL de base - sans préfixe /api pour éviter le doublement
 const getBaseURL = () => {
@@ -54,10 +62,70 @@ const createApiInstance = (): AxiosInstance => {
     (error) => Promise.reject(error)
   );
 
+  // Intercepteur : chiffrement de transport (handshake ECDH → AES-256-GCM)
+  instance.interceptors.request.use(async (config) => {
+    try {
+      const url = `${config.url || ''}`;
+      const isMultipart =
+        typeof FormData !== 'undefined' && (config.data as any) instanceof FormData;
+      if (isExemptUrl(url, config.headers as any, isMultipart)) return config;
+
+      const session = await ensureSession();
+      if (!session) return config;
+
+      config.headers.set?.('x-session-id', session.sessionId);
+      config.headers.set?.('x-app-id', 'web');
+
+      const method = String(config.method || 'get').toUpperCase();
+      if (config.data !== undefined && method !== 'GET' && method !== 'HEAD' && !isMultipart) {
+        const plain = typeof config.data === 'string' ? config.data : JSON.stringify(config.data);
+        const envelope = await encryptPayload(plain);
+        if (envelope) {
+          config.data = envelope;
+          config.headers.set?.('Content-Type', 'application/json');
+          config.headers.set?.('x-encrypted', '1');
+        }
+      }
+    } catch {
+      /* mode dégradé : envoi en clair */
+    }
+    return config;
+  });
+
   // Response interceptor for error handling
   instance.interceptors.response.use(
-    (response) => response,
-    (error) => {
+    async (response) => {
+      if (isEnvelope(response.data)) {
+        try {
+          response.data = await decryptEnvelope(response.data);
+        } catch {
+          /* laisse la charge utile telle quelle */
+        }
+      }
+      return response;
+    },
+    async (error) => {
+      // Session de chiffrement expirée → renégociation + rejeu unique
+      const status = error.response?.status;
+      const needsHandshake =
+        status === 409 &&
+        (error.response?.data?.renegotiate === true ||
+          error.response?.headers?.['x-handshake-required'] === '1');
+      if (needsHandshake && error.config && !(error.config as any).__handshakeRetried) {
+        (error.config as any).__handshakeRetried = true;
+        resetSession();
+        await ensureSession();
+        return instance.request(error.config);
+      }
+
+      if (isEnvelope(error.response?.data)) {
+        try {
+          error.response.data = await decryptEnvelope(error.response.data);
+        } catch {
+          /* ignore */
+        }
+      }
+
       if (error.response?.status === 401) {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
