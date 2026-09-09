@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ChevronLeft, ChevronRight, X, ImageOff, Star, Camera } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import SafeImage from '@/components/ui/SafeImage';
 
 interface ProductPhotoSlideshowProps {
   photos: string[];
@@ -125,15 +126,13 @@ const ProductPhotoSlideshow: React.FC<ProductPhotoSlideshowProps> = ({
           )}
 
           {/* Current Photo */}
-          <img
+          <SafeImage
             key={currentIndex}
             src={getPhotoUrl(allPhotos[currentIndex])}
             alt={`${productName} - Photo ${currentIndex + 1}`}
             className="max-h-96 max-w-full object-contain transition-all duration-500 select-none"
-            onError={(e) => {
-              (e.target as HTMLImageElement).src = '';
-              (e.target as HTMLImageElement).className = 'hidden';
-            }}
+            fallbackClassName="min-h-[12rem] w-full bg-white/5 text-white/60 text-sm"
+            fallback={<><Camera className="h-6 w-6 opacity-70" /><span>Photo à ajouter</span></>}
           />
 
           {/* Main photo badge */}
@@ -159,10 +158,12 @@ const ProductPhotoSlideshow: React.FC<ProductPhotoSlideshowProps> = ({
                     : "border-white/20 hover:border-white/40 hover:scale-105 opacity-60 hover:opacity-100"
                 )}
               >
-                <img
+                <SafeImage
                   src={getPhotoUrl(photo)}
                   alt={`Miniature ${idx + 1}`}
                   className="w-full h-full object-cover"
+                  fallbackClassName="bg-white/10 text-white/50"
+                  fallback={<ImageOff className="h-4 w-4" />}
                 />
                 {photo === mainPhoto && (
                   <div className="absolute top-0.5 right-0.5">

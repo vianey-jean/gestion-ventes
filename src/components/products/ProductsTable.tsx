@@ -13,6 +13,7 @@ import {
   Package, Eye, Edit, Trash2, ImageOff, ArrowUp, ArrowDown, AlertTriangle,
   XCircle, CheckCircle2, Star, PackageX,
 } from 'lucide-react';
+import SafeImage from '@/components/ui/SafeImage';
 import ProductCommentScroller from '@/components/products/ProductCommentScroller';
 import ProductCharacteristicCard from '@/components/products/ProductCharacteristicCard';
 import { Product } from '@/types';
@@ -93,7 +94,13 @@ const ProductsTable: React.FC<Props> = ({
                     <div className="relative group cursor-pointer h-full" onClick={() => onView(product)}>
                       <div className={cn("rounded-xl overflow-hidden border-2 border-violet-200/30 dark:border-violet-800/30 shadow-md", allRatings[product.id]?.comments?.length > 0 ? "h-20 min-h-[3rem]" : "h-12")} >
                         {product.mainPhoto || (product.photos && product.photos.length > 0) ? (
-                          <img src={getPhotoUrl(product.mainPhoto || product.photos![0])} alt="" className="w-full h-full object-cover" />
+                          <SafeImage
+                            src={getPhotoUrl(product.mainPhoto || product.photos![0])}
+                            alt=""
+                            className="w-full h-full object-cover"
+                            fallbackClassName="bg-violet-100 dark:bg-violet-900/30"
+                            fallback={<ImageOff className="h-5 w-5 text-violet-400" />}
+                          />
                         ) : (
                           <div className="w-full h-full bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center">
                             <ImageOff className="h-5 w-5 text-violet-400" />

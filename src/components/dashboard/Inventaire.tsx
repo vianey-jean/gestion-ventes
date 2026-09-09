@@ -19,6 +19,7 @@ import PremiumLoading from '@/components/ui/premium-loading';
 import jsPDF from 'jspdf';
 import ProductPhotoSlideshow from './ProductPhotoSlideshow';
 import PhotoUploadSection from './PhotoUploadSection';
+import SafeImage from '@/components/ui/SafeImage';
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://server-gestion-ventes.onrender.com';
 
@@ -728,12 +729,13 @@ const Inventaire = () => {
                           className="relative w-14 h-14 rounded-xl overflow-hidden border-2 border-purple-400/50 hover:border-purple-400 shadow-lg shadow-purple-500/20 hover:shadow-xl hover:shadow-purple-500/40 hover:scale-105 transition-all duration-300 group/photo"
                           title="Voir toutes les photos"
                         >
-                          <img
-                            src={getPhotoUrl(product.mainPhoto || (product.photos && product.photos[0]) || '')}
-                            alt={product.description}
-                            className="w-full h-full object-cover"
-                            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                          />
+                           <SafeImage
+                             src={getPhotoUrl(product.mainPhoto || (product.photos && product.photos[0]) || '')}
+                             alt={product.description}
+                             className="w-full h-full object-cover"
+                             fallbackClassName="bg-purple-100 dark:bg-purple-900/30 text-purple-400"
+                             fallback={<ImageOff className="h-4 w-4" />}
+                           />
                           {/* Photo count badge */}
                           {product.photos && product.photos.length > 1 && (
                             <div className="absolute bottom-0 right-0 bg-black/70 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-tl-lg">
@@ -1142,10 +1144,12 @@ const Inventaire = () => {
                       className="relative w-full h-40 rounded-xl overflow-hidden border-2 border-pink-200 hover:border-pink-400 transition-all hover:shadow-lg group/photo"
                       title="Voir toutes les photos"
                     >
-                      <img
+                      <SafeImage
                         src={getPhotoUrl(viewingProduct.mainPhoto || (viewingProduct.photos?.[0] ?? ''))}
                         alt={viewingProduct.description}
                         className="w-full h-full object-cover group-hover/photo:scale-105 transition-transform duration-300"
+                        fallbackClassName="bg-pink-50 dark:bg-pink-900/20 text-pink-400 text-sm gap-2"
+                        fallback={<><Camera className="h-6 w-6" /><span>Photo à ajouter</span></>}
                       />
                       <div className="absolute inset-0 bg-black/30 opacity-0 group-hover/photo:opacity-100 transition-opacity flex items-center justify-center gap-2">
                         <Eye className="h-6 w-6 text-white" />

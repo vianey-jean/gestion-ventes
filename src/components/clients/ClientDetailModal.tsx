@@ -9,6 +9,7 @@ import { Printer, Phone, MapPin, Crown, Download, User as UserIcon, X, PhoneCall
 import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
 import jsPDF from 'jspdf';
+import SafeImage from '@/components/ui/SafeImage';
 
 interface ClientLike {
   id: string;
@@ -413,7 +414,13 @@ const ClientDetailModal: React.FC<Props> = ({ open, onOpenChange, client, photoU
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row gap-4 items-center sm:items-start p-4 rounded-xl bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 border border-purple-100 dark:border-purple-900/40">
             {photoUrl ? (
-              <img src={photoUrl} alt={client.nom} className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg shrink-0" />
+              <SafeImage
+                src={photoUrl}
+                alt={client.nom}
+                className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg shrink-0"
+                fallbackClassName="rounded-full bg-gradient-to-br from-purple-400 to-indigo-500 text-white text-3xl font-bold border-4 border-white shadow-lg shrink-0"
+                fallback={<span>{client.nom.charAt(0).toUpperCase()}</span>}
+              />
             ) : (
               <div className="w-24 h-24 rounded-full bg-gradient-to-br from-purple-400 to-indigo-500 flex items-center justify-center text-white text-3xl font-bold shrink-0 shadow-lg">
                 {client.nom.charAt(0).toUpperCase()}

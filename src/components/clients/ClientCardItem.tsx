@@ -6,6 +6,7 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Crown, Edit, Eye, MapPin, Phone, Star, Trash2, User } from 'lucide-react';
+import SafeImage from '@/components/ui/SafeImage';
 import ClientFideliteBadge from './ClientFideliteBadge';
 
 interface ClientLike {
@@ -53,15 +54,13 @@ const ClientCardItem: React.FC<Props> = ({
           >
             {photoUrl ? (
               <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full overflow-hidden ring-2 ring-purple-400/50 ring-offset-2 ring-offset-white dark:ring-offset-gray-900 shadow-lg group-hover/photo:ring-purple-500 group-hover/photo:scale-110 transition-all duration-300">
-                <img
+                <SafeImage
                   src={photoUrl}
                   alt={client.nom}
                   className="w-full h-full object-cover"
-                  onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden'); }}
+                  fallbackClassName="bg-gradient-to-br from-purple-500 via-violet-500 to-indigo-500"
+                  fallback={<User className="w-6 h-6 text-white" />}
                 />
-                <div className="hidden w-full h-full bg-gradient-to-br from-purple-500 via-violet-500 to-indigo-500 flex items-center justify-center">
-                  <User className="w-6 h-6 text-white" />
-                </div>
               </div>
             ) : (
               <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-purple-500 via-violet-500 to-indigo-500 flex items-center justify-center ring-2 ring-purple-400/30 ring-offset-2 ring-offset-white dark:ring-offset-gray-900 shadow-lg">

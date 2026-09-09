@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Eye, Edit, Trash2, ChevronLeft, ChevronRight, Star, LineChart as LineChartIcon, MessageSquare } from 'lucide-react';
+import SafeImage from '@/components/ui/SafeImage';
 import { Product } from '@/types';
 import { ProductRatingInfo } from '@/services/api/productCommentsApi';
 
@@ -51,16 +52,22 @@ const ProductViewModal: React.FC<Props> = ({
           <div className="relative rounded-2xl overflow-hidden border border-white/10">
             <div className="aspect-[4/3] relative">
               <AnimatePresence mode="wait">
-                <motion.img
+                <motion.div
                   key={currentPhotoIndex}
-                  src={getPhotoUrl(selectedProduct.photos[currentPhotoIndex])}
-                  alt={`Photo ${currentPhotoIndex + 1}`}
-                  className="w-full h-full object-contain bg-black/20"
+                  className="w-full h-full"
                   initial={{ opacity: 0, x: 50 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -50 }}
                   transition={{ duration: 0.3 }}
-                />
+                >
+                  <SafeImage
+                    src={getPhotoUrl(selectedProduct.photos[currentPhotoIndex])}
+                    alt={`Photo ${currentPhotoIndex + 1}`}
+                    className="w-full h-full object-contain bg-black/20"
+                    fallbackClassName="bg-black/20 text-white/60 text-xs"
+                    fallback={<span className="px-3 text-center">Photo à ajouter</span>}
+                  />
+                </motion.div>
               </AnimatePresence>
               {selectedProduct.photos.length > 1 && (
                 <>
