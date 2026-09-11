@@ -181,7 +181,7 @@ const SessionUniqueWatcher: React.FC = () => {
           exit={{ opacity: 0, y: -80 }}
           transition={{ duration: 0.3 }}
           className="
-            fixed top-4 left-1/2 z-[9998] -translate-x-1/2
+            fixed top-4 inset-x-0 z-[9998] mx-auto
             w-[92vw] max-w-md text-left
             overflow-hidden rounded-2xl
             border border-white/25
@@ -191,14 +191,14 @@ const SessionUniqueWatcher: React.FC = () => {
           "
         >
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/20">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/20">
               <History className="h-5 w-5 text-emerald-300" />
             </div>
-            <div className="flex-1">
-              <p className="text-sm font-bold text-white">
+            <div className="min-w-0 flex-1">
+              <p className="text-[13px] sm:text-sm font-bold text-white break-words">
                 Activité du jour avant votre connexion
               </p>
-              <p className="text-[12px] text-emerald-100">
+              <p className="text-[12px] text-emerald-100 break-words">
                 <span className="font-semibold text-emerald-300">
                   {summary.details?.connexions || 0}
                 </span>{' '}
@@ -209,7 +209,7 @@ const SessionUniqueWatcher: React.FC = () => {
                 déconnexion(s)
               </p>
             </div>
-            <ArrowRight className="h-5 w-5 text-white/70" />
+            <ArrowRight className="h-5 w-5 shrink-0 text-white/70" />
           </div>
           <div className="mx-auto mt-2 h-1 w-10 rounded-full bg-white/30 sm:hidden" />
         </motion.div>
