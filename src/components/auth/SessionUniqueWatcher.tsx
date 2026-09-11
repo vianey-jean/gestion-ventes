@@ -161,13 +161,24 @@ const SessionUniqueWatcher: React.FC = () => {
   const summaryBanner = (
     <AnimatePresence>
       {summary && (
-        <motion.button
+        <motion.div
           key={summary.id}
-          type="button"
+          role="button"
+          tabIndex={0}
           onClick={goToHistorique}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
+          drag="y"
+          dragDirectionLock
+          dragConstraints={{ top: -200, bottom: 0 }}
+          dragElastic={{ top: 0.6, bottom: 0 }}
+          onDragEnd={(_, info) => {
+            if (info.offset.y < -60 || info.velocity.y < -400) {
+              if (summaryTimer.current) window.clearTimeout(summaryTimer.current);
+              setSummary(null);
+            }
+          }}
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -80 }}
           transition={{ duration: 0.3 }}
           className="
             fixed top-4 left-1/2 z-[9998] -translate-x-1/2
@@ -200,7 +211,8 @@ const SessionUniqueWatcher: React.FC = () => {
             </div>
             <ArrowRight className="h-5 w-5 text-white/70" />
           </div>
-        </motion.button>
+          <div className="mx-auto mt-2 h-1 w-10 rounded-full bg-white/30 sm:hidden" />
+        </motion.div>
       )}
     </AnimatePresence>
   );
