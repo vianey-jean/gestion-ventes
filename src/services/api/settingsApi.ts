@@ -59,9 +59,9 @@ const settingsApi = {
     return response.data;
   },
 
-  /** Télécharge l'archive .zip (photos produits/clients/profils, pièces justificatives) */
-  async backupMedia(): Promise<{ blob: Blob; filename: string; filesCount: number }> {
-    const response = await api.post('/api/settings/backup-media', {}, { responseType: 'blob' });
+  /** Télécharge l'archive .zip (photos produits/clients/profils, pièces justificatives), protégée par le code de sauvegarde */
+  async backupMedia(encryptionCode: string): Promise<{ blob: Blob; filename: string; filesCount: number }> {
+    const response = await api.post('/api/settings/backup-media', { encryptionCode }, { responseType: 'blob' });
     const headers: any = response.headers || {};
     return {
       blob: response.data as Blob,
@@ -70,9 +70,9 @@ const settingsApi = {
     };
   },
 
-  /** Injecte une archive .zip de fichiers (base64) */
-  async restoreMedia(zipBase64: string): Promise<{ success: boolean; restoredFilesCount: number; skippedFilesCount: number; manifest?: any; message: string }> {
-    const response = await api.post('/api/settings/restore-media', { zipBase64 });
+  /** Injecte une archive .zip de fichiers (base64), avec le code de sauvegarde si l'archive est protégée */
+  async restoreMedia(zipBase64: string, encryptionCode?: string): Promise<{ success: boolean; restoredFilesCount: number; skippedFilesCount: number; manifest?: any; message: string }> {
+    const response = await api.post('/api/settings/restore-media', { zipBase64, encryptionCode });
     return response.data;
   },
 

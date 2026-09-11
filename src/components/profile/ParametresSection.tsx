@@ -361,7 +361,7 @@ const ParametresSection: React.FC<ParametresSectionProps> = ({ userRole }) => {
         // Archive .zip liée : photos produits/clients/profils + pièces justificatives
         let zipInfo = '';
         try {
-          const media = await settingsApi.backupMedia();
+          const media = await settingsApi.backupMedia(backupCode);
           if (media.filesCount > 0) {
             download(media.blob, media.filename);
             zipInfo = ` + ${media.filesCount} fichier(s) dans ${media.filename}`;
@@ -400,8 +400,8 @@ const ParametresSection: React.FC<ParametresSectionProps> = ({ userRole }) => {
   });
 
   /** Injecte l'archive .zip des photos et fichiers */
-  const uploadZip = async (base64: string, name: string) => {
-    const media = await settingsApi.restoreMedia(base64);
+  const uploadZip = async (base64: string, name: string, code?: string) => {
+    const media = await settingsApi.restoreMedia(base64, code);
     toast({
       title: '🖼️ Fichiers restaurés',
       description: `${media.restoredFilesCount} fichier(s) restauré(s) depuis ${name}`,
@@ -431,18 +431,14 @@ const ParametresSection: React.FC<ParametresSectionProps> = ({ userRole }) => {
         setRestoreZipName(zipFile.name);
 
         if (!jsonFile) {
-          // Seul le .zip est fourni : on restaure les fichiers et on réclame le .json
-          setRestoring(true);
-          const media = await uploadZip(base64, zipFile.name);
-          setRestoreZipBase64(null);
-          setRestoreZipName('');
-          const expected = media?.manifest?.jsonFilename || zipFile.name.replace(/\.zip$/i, '.json');
+          // Seul le .zip est fourni : l'archive est protégée par le code de
+          // sauvegarde, on réclame donc le .json pour saisir ce code une seule fois
+          const expected = zipFile.name.replace(/\.zip$/i, '.json');
           toast({
             title: '📄 Fichier de données manquant',
-            description: `Les photos ont été restaurées. Sélectionnez maintenant le fichier ${expected} pour compléter toutes les données.`,
+            description: `Archive ${zipFile.name} chargée. Sélectionnez maintenant le fichier ${expected} : le code de sauvegarde vous sera demandé pour déverrouiller les photos et les données.`,
             className: 'bg-yellow-500 text-black border-yellow-500'
           });
-          setRestoring(false);
           return;
         }
       } catch (err: any) {
@@ -491,7 +487,7 @@ const ParametresSection: React.FC<ParametresSectionProps> = ({ userRole }) => {
         // Archive .zip liée : restaurée si fournie, sinon réclamée
         if (restoreZipBase64) {
           try {
-            await uploadZip(restoreZipBase64, restoreZipName);
+            await uploadZip(restoreZipBase64, restoreZipName, restoreCode);
           } catch (err: any) {
             toast({ title: 'Erreur', description: err?.response?.data?.message || 'Échec de la restauration des photos', variant: 'destructive' });
           }
