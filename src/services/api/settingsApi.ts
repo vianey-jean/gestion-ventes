@@ -54,12 +54,29 @@ const settingsApi = {
     return response.data;
   },
 
-  async backupData(encryptionCode: string): Promise<{ success: boolean; backup: any; filename: string }> {
+  async backupData(encryptionCode: string): Promise<{ success: boolean; backup: any; filename: string; mediaFilename?: string | null; mediaFilesCount?: number }> {
     const response = await api.post('/api/settings/backup', { encryptionCode });
     return response.data;
   },
 
-  async restoreData(encryptedData: any, decryptionCode: string): Promise<{ success: boolean; message: string; status?: 'updated' | 'unchanged'; updatedFilesCount?: number; unchangedFilesCount?: number; totalAddedEntries?: number }> {
+  /** Télécharge l'archive .zip (photos produits/clients/profils, pièces justificatives) */
+  async backupMedia(): Promise<{ blob: Blob; filename: string; filesCount: number }> {
+    const response = await api.post('/api/settings/backup-media', {}, { responseType: 'blob' });
+    const headers: any = response.headers || {};
+    return {
+      blob: response.data as Blob,
+      filename: headers['x-backup-filename'] || `backup-riziky-${new Date().toISOString().split('T')[0]}.zip`,
+      filesCount: Number(headers['x-backup-files-count'] || 0)
+    };
+  },
+
+  /** Injecte une archive .zip de fichiers (base64) */
+  async restoreMedia(zipBase64: string): Promise<{ success: boolean; restoredFilesCount: number; skippedFilesCount: number; manifest?: any; message: string }> {
+    const response = await api.post('/api/settings/restore-media', { zipBase64 });
+    return response.data;
+  },
+
+  async restoreData(encryptedData: any, decryptionCode: string): Promise<{ success: boolean; message: string; status?: 'updated' | 'unchanged'; updatedFilesCount?: number; unchangedFilesCount?: number; totalAddedEntries?: number; mediaRequired?: boolean; mediaZipFilename?: string | null; mediaFilesCount?: number }> {
     const response = await api.post('/api/settings/restore', { encryptedData, decryptionCode });
     return response.data;
   },

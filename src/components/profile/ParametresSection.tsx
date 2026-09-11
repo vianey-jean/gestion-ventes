@@ -68,6 +68,9 @@ const ParametresSection: React.FC<ParametresSectionProps> = ({ userRole }) => {
   const [restoring, setRestoring] = useState(false);
   const [restoreFile, setRestoreFile] = useState<any>(null);
   const [restoreFileName, setRestoreFileName] = useState('');
+  /** Archive .zip des photos/fichiers sélectionnée en même temps que le .json */
+  const [restoreZipBase64, setRestoreZipBase64] = useState<string | null>(null);
+  const [restoreZipName, setRestoreZipName] = useState('');
 
   // Bulk delete modal state
   const [showBulkDelete, setShowBulkDelete] = useState(false);
@@ -342,17 +345,32 @@ const ParametresSection: React.FC<ParametresSectionProps> = ({ userRole }) => {
         manualBackupDoneRef.current = true;
         clearAutoBackupCountdown();
 
-        const blob = new Blob([JSON.stringify(result.backup)], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = result.filename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+        const download = (blob: Blob, name: string) => {
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = name;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        };
 
-        toast({ title: '✅ Sauvegarde réussie', description: 'Le fichier a été téléchargé. Gardez votre code en sécurité !', className: 'bg-green-600 text-white border-green-600' });
+        download(new Blob([JSON.stringify(result.backup)], { type: 'application/json' }), result.filename);
+
+        // Archive .zip liée : photos produits/clients/profils + pièces justificatives
+        let zipInfo = '';
+        try {
+          const media = await settingsApi.backupMedia();
+          if (media.filesCount > 0) {
+            download(media.blob, media.filename);
+            zipInfo = ` + ${media.filesCount} fichier(s) dans ${media.filename}`;
+          }
+        } catch {
+          zipInfo = ' (⚠️ archive des photos non téléchargée)';
+        }
+
+        toast({ title: '✅ Sauvegarde réussie', description: `Fichier ${result.filename} téléchargé${zipInfo}. Gardez votre code en sécurité !`, className: 'bg-green-600 text-white border-green-600' });
         setShowBackupDialog(false);
         setBackupCode('');
       }
@@ -363,23 +381,91 @@ const ParametresSection: React.FC<ParametresSectionProps> = ({ userRole }) => {
     }
   };
 
-  // ========== RESTORE ==========
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setRestoreFileName(file.name);
-    const reader = new FileReader();
-    reader.onload = (event) => {
+  // ========== RESTORE (.json de données + .zip des photos/fichiers) ==========
+  const readAsText = (file: File) => new Promise<string>((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(r.result as string);
+    r.onerror = () => reject(new Error('lecture impossible'));
+    r.readAsText(file);
+  });
+
+  const readAsBase64 = (file: File) => new Promise<string>((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => {
+      const result = String(r.result || '');
+      resolve(result.includes(',') ? result.split(',')[1] : result);
+    };
+    r.onerror = () => reject(new Error('lecture impossible'));
+    r.readAsDataURL(file);
+  });
+
+  /** Injecte l'archive .zip des photos et fichiers */
+  const uploadZip = async (base64: string, name: string) => {
+    const media = await settingsApi.restoreMedia(base64);
+    toast({
+      title: '🖼️ Fichiers restaurés',
+      description: `${media.restoredFilesCount} fichier(s) restauré(s) depuis ${name}`,
+      className: 'bg-green-600 text-white border-green-600'
+    });
+    return media;
+  };
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    e.target.value = '';
+    if (files.length === 0) return;
+
+    const jsonFile = files.find(f => f.name.toLowerCase().endsWith('.json'));
+    const zipFile = files.find(f => f.name.toLowerCase().endsWith('.zip'));
+
+    if (!jsonFile && !zipFile) {
+      toast({ title: 'Erreur', description: 'Sélectionnez un fichier .json et/ou une archive .zip de sauvegarde.', variant: 'destructive' });
+      return;
+    }
+
+    // Archive .zip
+    if (zipFile) {
       try {
-        const data = JSON.parse(event.target?.result as string);
+        const base64 = await readAsBase64(zipFile);
+        setRestoreZipBase64(base64);
+        setRestoreZipName(zipFile.name);
+
+        if (!jsonFile) {
+          // Seul le .zip est fourni : on restaure les fichiers et on réclame le .json
+          setRestoring(true);
+          const media = await uploadZip(base64, zipFile.name);
+          setRestoreZipBase64(null);
+          setRestoreZipName('');
+          const expected = media?.manifest?.jsonFilename || zipFile.name.replace(/\.zip$/i, '.json');
+          toast({
+            title: '📄 Fichier de données manquant',
+            description: `Les photos ont été restaurées. Sélectionnez maintenant le fichier ${expected} pour compléter toutes les données.`,
+            className: 'bg-yellow-500 text-black border-yellow-500'
+          });
+          setRestoring(false);
+          return;
+        }
+      } catch (err: any) {
+        setRestoring(false);
+        toast({ title: 'Erreur', description: err?.response?.data?.message || 'Archive .zip illisible ou trop volumineuse', variant: 'destructive' });
+        if (!jsonFile) return;
+      }
+    } else {
+      setRestoreZipBase64(null);
+      setRestoreZipName('');
+    }
+
+    // Fichier .json
+    if (jsonFile) {
+      try {
+        const data = JSON.parse(await readAsText(jsonFile));
         setRestoreFile(data);
+        setRestoreFileName(jsonFile.name);
         setShowRestoreDialog(true);
       } catch {
-        toast({ title: 'Erreur', description: 'Fichier invalide. Sélectionnez un fichier de sauvegarde valide.', variant: 'destructive' });
+        toast({ title: 'Erreur', description: 'Fichier .json invalide. Sélectionnez un fichier de sauvegarde valide.', variant: 'destructive' });
       }
-    };
-    reader.readAsText(file);
-    e.target.value = '';
+    }
   };
 
   const handleRestore = async () => {
@@ -401,9 +487,27 @@ const ParametresSection: React.FC<ParametresSectionProps> = ({ userRole }) => {
             className: 'bg-green-600 text-white border-green-600'
           });
         }
+
+        // Archive .zip liée : restaurée si fournie, sinon réclamée
+        if (restoreZipBase64) {
+          try {
+            await uploadZip(restoreZipBase64, restoreZipName);
+          } catch (err: any) {
+            toast({ title: 'Erreur', description: err?.response?.data?.message || 'Échec de la restauration des photos', variant: 'destructive' });
+          }
+        } else if (result.mediaRequired) {
+          toast({
+            title: '🖼️ Archive des photos manquante',
+            description: `Cette sauvegarde contient ${result.mediaFilesCount || 0} fichier(s). Sélectionnez aussi l'archive ${result.mediaZipFilename || '.zip'} pour restaurer les photos des produits, clients et profils.`,
+            className: 'bg-yellow-500 text-black border-yellow-500'
+          });
+        }
+
         setShowRestoreDialog(false);
         setRestoreCode('');
         setRestoreFile(null);
+        setRestoreZipBase64(null);
+        setRestoreZipName('');
         fetchSettings();
       }
     } catch (e: any) {
@@ -598,7 +702,7 @@ const ParametresSection: React.FC<ParametresSectionProps> = ({ userRole }) => {
                   <Upload className="w-4 h-4 mr-2" />
                   Injecter
                 </Button>
-                <input ref={fileInputRef} type="file" accept=".json" className="hidden" onChange={handleFileSelect} />
+                <input ref={fileInputRef} type="file" accept=".json,.zip" multiple className="hidden" onChange={handleFileSelect} />
 
                 {/* DELETE BUTTON - Only for administrateur principale */}
                 {isAdminPrincipal && (
@@ -780,6 +884,9 @@ const ParametresSection: React.FC<ParametresSectionProps> = ({ userRole }) => {
             </AlertDialogTitle>
             <AlertDialogDescription>
               Fichier sélectionné : <strong>{restoreFileName}</strong>
+              {restoreZipName
+                ? <><br />Archive des photos : <strong>{restoreZipName}</strong></>
+                : <><br /><span className="text-amber-600">Aucune archive .zip sélectionnée (les photos ne seront pas restaurées).</span></>}
               <br />Saisissez le code de cryptage utilisé lors de la sauvegarde.
             </AlertDialogDescription>
           </AlertDialogHeader>
