@@ -132,6 +132,8 @@ const ComptabiliteModule: React.FC<ComptabiliteModuleProps> = ({ className }) =>
         onNewDepense={() => toggleModal('showDepenseForm', true)}
         onExport={() => toggleModal('showExportDialog', true)}
         onOpenFacturation={() => setShowFacturationModal(true)}
+        onUpdateAchat={handleUpdateAchat}
+        onDeleteAchat={handleDeleteAchat}
       />
 
       {/* Cartes statistiques principales */}

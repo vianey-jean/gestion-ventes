@@ -11,6 +11,8 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calculator, ShoppingCart, Receipt, FileDown, Crown, Diamond, Sparkles, Gem, Zap, FileSearch } from 'lucide-react';
 import { MONTHS } from '@/hooks/useComptabilite';
+import { NouvelleAchat } from '@/types/comptabilite';
+import AchatSearchBar from './AchatSearchBar';
 
 export interface ComptabiliteHeaderProps {
   selectedMonth: number;
@@ -21,6 +23,8 @@ export interface ComptabiliteHeaderProps {
   onNewDepense: () => void;
   onExport: () => void;
   onOpenFacturation?: () => void;
+  onUpdateAchat: (id: string, data: Partial<NouvelleAchat>) => Promise<void>;
+  onDeleteAchat: (id: string) => Promise<void>;
 }
 
 const ComptabiliteHeader: React.FC<ComptabiliteHeaderProps> = ({
@@ -31,7 +35,9 @@ const ComptabiliteHeader: React.FC<ComptabiliteHeaderProps> = ({
   onNewAchat,
   onNewDepense,
   onExport,
-  onOpenFacturation
+  onOpenFacturation,
+  onUpdateAchat,
+  onDeleteAchat
 }) => {
   return (
     <Card className="relative overflow-hidden bg-gradient-to-br from-emerald-900/40 via-teal-900/30 to-green-900/40 border-2 border-emerald-500/30 shadow-2xl rounded-2xl sm:rounded-3xl">
@@ -100,6 +106,11 @@ const ComptabiliteHeader: React.FC<ComptabiliteHeaderProps> = ({
           </Select>
           
           {/* Boutons d'action */}
+          <AchatSearchBar
+            onUpdateAchat={onUpdateAchat}
+            onDeleteAchat={onDeleteAchat}
+          />
+
           <Button
             onClick={onNewAchat}
             className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-xl hover:shadow-blue-500/30 rounded-xl transition-all duration-300 hover:scale-105 text-xs sm:text-sm px-3 sm:px-4 py-2"
