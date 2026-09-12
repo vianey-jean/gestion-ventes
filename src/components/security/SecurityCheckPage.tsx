@@ -5,6 +5,7 @@ import React, {
   useCallback,
   useMemo,
 } from 'react';
+import useLightMotion from '@/hooks/useLightMotion';
 
 import {
   Shield,
@@ -61,16 +62,18 @@ type Phase =
   | 'passed'
   | 'failed';
 
+// Images du test : servies en WebP compressé et redimensionné (LCP/poids réseau)
+const IMG_OPTS = '?auto=format&fit=crop&w=640&h=640&q=55&fm=webp';
 const images = [
-  "https://images.unsplash.com/photo-1506744038136-46273834b3fb",
-  "https://images.unsplash.com/photo-1491553895911-0055eca6402d",
-  "https://images.unsplash.com/photo-1519681393784-d120267933ba",
-  "https://images.unsplash.com/photo-1501785888041-af3ef285b470",
-  "https://images.unsplash.com/photo-1470770841072-f978cf4d019e",
-  "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee",
-  "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429",
-  "https://images.unsplash.com/photo-1439066615861-d1af74d74000",
-  "https://images.unsplash.com/photo-1469474968028-56623f02e42e",
+  "https://images.unsplash.com/photo-1506744038136-46273834b3fb" + IMG_OPTS,
+  "https://images.unsplash.com/photo-1491553895911-0055eca6402d" + IMG_OPTS,
+  "https://images.unsplash.com/photo-1519681393784-d120267933ba" + IMG_OPTS,
+  "https://images.unsplash.com/photo-1501785888041-af3ef285b470" + IMG_OPTS,
+  "https://images.unsplash.com/photo-1470770841072-f978cf4d019e" + IMG_OPTS,
+  "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee" + IMG_OPTS,
+  "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429" + IMG_OPTS,
+  "https://images.unsplash.com/photo-1439066615861-d1af74d74000" + IMG_OPTS,
+  "https://images.unsplash.com/photo-1469474968028-56623f02e42e" + IMG_OPTS,
 ];
 
 const MAX_TRAIL = 18;
@@ -295,6 +298,17 @@ const RiskGauge = ({ score }: { score: number }) => {
 
 const SecurityCheckPage: React.FC<SecurityCheckPageProps> = ({ onVerified }) => {
   const [phase, setPhase] = useState<Phase>('boot');
+
+  // Allège les décorations animées permanentes (mobile / animations réduites)
+  const { light: lightMotion, particleCount } = useLightMotion();
+  const particles = useMemo(
+    () =>
+      Array.from({ length: particleCount }, () => ({
+        left: Math.random() * 100,
+        top: Math.random() * 100,
+      })),
+    [particleCount]
+  );
 
   const [ipBlocked, setIpBlocked] = useState(false);
   const [ipChecked, setIpChecked] = useState(false);
@@ -888,17 +902,21 @@ const SecurityCheckPage: React.FC<SecurityCheckPageProps> = ({ onVerified }) => 
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(139,92,246,0.25),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(236,72,153,0.18),transparent_28%),radial-gradient(circle_at_center,rgba(59,130,246,0.12),transparent_50%)]" />
 
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 90, repeat: Infinity, ease: 'linear' }}
-          className="absolute -top-52 -left-52 w-[900px] h-[900px] rounded-full border border-violet-500/10"
-        />
+        {!lightMotion && (
+          <>
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 90, repeat: Infinity, ease: 'linear' }}
+              className="absolute -top-52 -left-52 w-[900px] h-[900px] rounded-full border border-violet-500/10"
+            />
 
-        <motion.div
-          animate={{ rotate: -360 }}
-          transition={{ duration: 120, repeat: Infinity, ease: 'linear' }}
-          className="absolute -bottom-72 -right-72 w-[1200px] h-[1200px] rounded-full border border-fuchsia-500/10"
-        />
+            <motion.div
+              animate={{ rotate: -360 }}
+              transition={{ duration: 120, repeat: Infinity, ease: 'linear' }}
+              className="absolute -bottom-72 -right-72 w-[1200px] h-[1200px] rounded-full border border-fuchsia-500/10"
+            />
+          </>
+        )}
 
         <div
           className="absolute inset-0 opacity-[0.03]"
@@ -909,22 +927,33 @@ const SecurityCheckPage: React.FC<SecurityCheckPageProps> = ({ onVerified }) => 
           }}
         />
 
-        <motion.div
-          animate={{ x: ['-30%', '30%', '-30%'], opacity: [0.25, 0.5, 0.25] }}
-          transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut' }}
-          className="absolute top-[-20%] left-[10%] w-[60%] h-[60%] rounded-full bg-[radial-gradient(circle,rgba(167,139,250,0.22),transparent_65%)]"
-        />
-        <motion.div
-          animate={{ x: ['20%', '-20%', '20%'], opacity: [0.2, 0.45, 0.2] }}
-          transition={{ duration: 24, repeat: Infinity, ease: 'easeInOut' }}
-          className="absolute bottom-[-25%] right-[5%] w-[65%] h-[65%] rounded-full bg-[radial-gradient(circle,rgba(232,121,249,0.18),transparent_65%)]"
-        />
+        {!lightMotion && (
+          <>
+            <motion.div
+              animate={{ x: ['-30%', '30%', '-30%'], opacity: [0.25, 0.5, 0.25] }}
+              transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut' }}
+              className="absolute top-[-20%] left-[10%] w-[60%] h-[60%] rounded-full bg-[radial-gradient(circle,rgba(167,139,250,0.22),transparent_65%)]"
+            />
+            <motion.div
+              animate={{ x: ['20%', '-20%', '20%'], opacity: [0.2, 0.45, 0.2] }}
+              transition={{ duration: 24, repeat: Infinity, ease: 'easeInOut' }}
+              className="absolute bottom-[-25%] right-[5%] w-[65%] h-[65%] rounded-full bg-[radial-gradient(circle,rgba(232,121,249,0.18),transparent_65%)]"
+            />
 
-        <motion.div
-          animate={{ top: ['-5%', '105%'] }}
-          transition={{ duration: 6, repeat: Infinity, ease: 'linear' }}
-          className="absolute left-0 right-0 h-px bg-gradient-to-r from-transparent via-violet-300/40 to-transparent"
-        />
+            <motion.div
+              animate={{ top: ['-5%', '105%'] }}
+              transition={{ duration: 6, repeat: Infinity, ease: 'linear' }}
+              className="absolute left-0 right-0 h-px bg-gradient-to-r from-transparent via-violet-300/40 to-transparent"
+            />
+          </>
+        )}
+
+        {lightMotion && (
+          <>
+            <div className="absolute top-[-20%] left-[10%] w-[60%] h-[60%] rounded-full bg-[radial-gradient(circle,rgba(167,139,250,0.22),transparent_65%)]" />
+            <div className="absolute bottom-[-25%] right-[5%] w-[65%] h-[65%] rounded-full bg-[radial-gradient(circle,rgba(232,121,249,0.18),transparent_65%)]" />
+          </>
+        )}
 
         <svg className="absolute inset-0 w-full h-full opacity-[0.15]">
           {[...Array(14)].map((_, i) => {
@@ -946,19 +975,17 @@ const SecurityCheckPage: React.FC<SecurityCheckPageProps> = ({ onVerified }) => 
           })}
         </svg>
 
-        {[...Array(30)].map((_, i) => (
+        {particles.map((p, i) => (
           <motion.div
             key={i}
             animate={{ y: [0, -40, 0], opacity: [0.2, 1, 0.2] }}
             transition={{ duration: 5 + i, repeat: Infinity }}
             className="absolute w-1 h-1 rounded-full bg-white/50"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-            }}
+            style={{ left: `${p.left}%`, top: `${p.top}%` }}
           />
         ))}
       </div>
+
 
       <motion.div
         initial={{ opacity: 0, y: 30, scale: 0.96 }}
@@ -1154,6 +1181,10 @@ const SecurityCheckPage: React.FC<SecurityCheckPageProps> = ({ onVerified }) => 
                         src={image}
                         alt="Image du test de vérification humaine : faites glisser l'étoile rouge à sa place"
                         draggable={false}
+                        width={640}
+                        height={640}
+                        decoding="async"
+                        fetchPriority="high"
                         className="w-full h-full object-cover scale-105"
                       />
 

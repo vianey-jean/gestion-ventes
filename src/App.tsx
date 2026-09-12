@@ -7,7 +7,6 @@
 
 import React, { Suspense, lazy, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import SecurityCheckPage from '@/components/security/SecurityCheckPage';
 
 // Contexts
 import { AuthProvider } from '@/contexts/AuthContext';
@@ -19,17 +18,20 @@ import { AccessibilityProvider } from '@/components/accessibility/AccessibilityP
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 import { Toaster } from '@/components/ui/toaster';
-import CookieConsent from '@/components/CookieConsent';
 import MaintenanceGate from '@/components/maintenance/MaintenanceGate';
 
 // Fallback pendant chargement des pages
 import PremiumLoading from '@/components/ui/premium-loading';
-import PointageAutoWatcher from '@/components/pointage/PointageAutoWatcher';
-import AutoInjectWatcher from '@/components/AutoInjectWatcher';
-import GlobalRdvTodayNotifier from '@/components/rdv/GlobalRdvTodayNotifier';
-import VisitTracker from '@/components/VisitTracker';
-import SessionUniqueWatcher from '@/components/auth/SessionUniqueWatcher';
-import SessionConflictPage from '@/pages/SessionConflictPage';
+
+// Chargés à la demande : ne pèsent plus sur le démarrage
+const SecurityCheckPage = lazy(() => import('@/components/security/SecurityCheckPage'));
+const CookieConsent = lazy(() => import('@/components/CookieConsent'));
+const PointageAutoWatcher = lazy(() => import('@/components/pointage/PointageAutoWatcher'));
+const AutoInjectWatcher = lazy(() => import('@/components/AutoInjectWatcher'));
+const GlobalRdvTodayNotifier = lazy(() => import('@/components/rdv/GlobalRdvTodayNotifier'));
+const VisitTracker = lazy(() => import('@/components/VisitTracker'));
+const SessionUniqueWatcher = lazy(() => import('@/components/auth/SessionUniqueWatcher'));
+const SessionConflictPage = lazy(() => import('@/pages/SessionConflictPage'));
 
 // ==================
 // Lazy loading pages
@@ -80,9 +82,11 @@ function App() {
   if (!securityVerified) {
     return (
       <ThemeProvider>
-        <SecurityCheckPage
-          onVerified={() => setSecurityVerified(true)}
-        />
+        <Suspense fallback={<div className="min-h-screen bg-[#020207]" />}>
+          <SecurityCheckPage
+            onVerified={() => setSecurityVerified(true)}
+          />
+        </Suspense>
       </ThemeProvider>
     );
   }
@@ -216,15 +220,19 @@ function App() {
                   </Suspense>
                 </MaintenanceGate>
 
-                {/* Composants qui utilisent potentiellement React Router */}
-                <VisitTracker />
-                <SessionUniqueWatcher />
-                <PointageAutoWatcher />
-                <AutoInjectWatcher />
-                <GlobalRdvTodayNotifier />
+                {/* Composants d'arrière-plan : chargés après le premier rendu */}
+                <Suspense fallback={null}>
+                  <VisitTracker />
+                  <SessionUniqueWatcher />
+                  <PointageAutoWatcher />
+                  <AutoInjectWatcher />
+                  <GlobalRdvTodayNotifier />
+                </Suspense>
 
                 <Toaster />
-                <CookieConsent />
+                <Suspense fallback={null}>
+                  <CookieConsent />
+                </Suspense>
               </AppProvider>
             </AuthProvider>
           </AccessibilityProvider>
