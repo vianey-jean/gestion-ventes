@@ -205,7 +205,7 @@ import { Link as RouterLink } from 'react-router-dom';
                         <div className="absolute rounded-full border-2 border-emerald-500" style={{ inset: 2, animation: 'navGreenPulse 1s ease-in-out infinite 0.5s' }} />
                         <div className="absolute rounded-full overflow-hidden bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center" style={{ inset: 4 }}>
                           {profilePhoto ? (
-                            <img src={profilePhoto} alt="" className="w-full h-full object-cover" />
+                            <img src={profilePhoto} alt="Photo de profil de l’utilisateur connecté" loading="lazy" decoding="async" className="w-full h-full object-cover" />
                           ) : (
                             <Crown className="h-3 w-3 text-white" />
                           )}
@@ -261,7 +261,7 @@ import { Link as RouterLink } from 'react-router-dom';
                        <div className="absolute rounded-full border-2 border-emerald-500" style={{ inset: 2, animation: 'navGreenPulse 1s ease-in-out infinite 0.5s' }} />
                        <div className="absolute rounded-full overflow-hidden bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center" style={{ inset: 4 }}>
                          {profilePhoto ? (
-                           <img src={profilePhoto} alt="" className="w-full h-full object-cover" />
+                           <img src={profilePhoto} alt="Photo de profil de l’utilisateur connecté" loading="lazy" decoding="async" className="w-full h-full object-cover" />
                          ) : (
                            <Crown className="h-3 w-3 text-white" />
                          )}

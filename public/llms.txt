@@ -1,0 +1,33 @@
+# Gestion Vente
+
+> Solution web de gestion commerciale : suivi des ventes, des stocks, des clients,
+> des commandes, des rendez-vous, du pointage et de la comptabilité en temps réel.
+
+Gestion Vente est une application professionnelle destinée aux commerçants et aux
+petites structures. L'espace de travail (tableau de bord, clients, produits,
+commandes, rendez-vous, comptabilité) est privé et nécessite une authentification.
+Seules les pages publiques ci-dessous sont destinées à la consultation.
+
+## Pages publiques
+
+- [Accueil](https://riziky-ventes.vercel.app/): présentation de la solution et de ses fonctionnalités
+- [À propos](https://riziky-ventes.vercel.app/about): présentation du projet et de son auteur
+- [Contact](https://riziky-ventes.vercel.app/contact): formulaire de contact et messagerie visiteur
+- [Connexion](https://riziky-ventes.vercel.app/login): accès à l'espace de travail
+- [Créer un compte](https://riziky-ventes.vercel.app/register): ouverture d'un compte
+
+## Fonctionnalités principales
+
+- Ventes : enregistrement des ventes, historique, tendances et objectifs
+- Produits : stocks, achats, fournisseurs, attributs et caractéristiques
+- Clients : fiches clients, villes de livraison, fidélité
+- Commandes : réservations, disponibilité des stocks, livraison
+- Rendez-vous : planning, tâches liées, conversion en vente
+- Comptabilité : dépenses, bénéfices, prêts, remboursements, épargne
+- Pointage : temps de travail, avances sur salaire, indisponibilités
+
+## Notes
+
+- Langue principale : français
+- Les données affichées dans l'application sont privées et protégées par authentification.
+- Contact : via la page Contact du site.

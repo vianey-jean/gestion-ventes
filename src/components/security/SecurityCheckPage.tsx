@@ -1026,6 +1026,9 @@ const SecurityCheckPage: React.FC<SecurityCheckPageProps> = ({ onVerified }) => 
           <div className="relative p-8">
             <input
               type="text"
+              name="company-website"
+              aria-label="Champ technique anti-robot (ne pas remplir)"
+              aria-hidden="true"
               autoComplete="off"
               tabIndex={-1}
               value={honeypot}
@@ -1034,6 +1037,9 @@ const SecurityCheckPage: React.FC<SecurityCheckPageProps> = ({ onVerified }) => 
             />
             <input
               type="email"
+              name="company-email"
+              aria-label="Champ technique anti-robot secondaire (ne pas remplir)"
+              aria-hidden="true"
               autoComplete="off"
               tabIndex={-1}
               value={honeypot2}
@@ -1144,7 +1150,12 @@ const SecurityCheckPage: React.FC<SecurityCheckPageProps> = ({ onVerified }) => 
                       }}
                       onTouchEnd={handleDragEnd}
                     >
-                      <img src={image} draggable={false} className="w-full h-full object-cover scale-105" />
+                      <img
+                        src={image}
+                        alt="Image du test de vérification humaine : faites glisser l'étoile rouge à sa place"
+                        draggable={false}
+                        className="w-full h-full object-cover scale-105"
+                      />
 
                       <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black/20 to-black/60" />
 
@@ -1224,6 +1235,7 @@ const SecurityCheckPage: React.FC<SecurityCheckPageProps> = ({ onVerified }) => 
                         <div className="relative">
                           <input
                             type="checkbox"
+                            aria-label="Je confirme être humain"
                             checked={checked}
                             onChange={(e) => setChecked(e.target.checked)}
                             className="peer appearance-none w-6 h-6 rounded-lg border border-white/20 bg-white/5 checked:bg-gradient-to-br checked:from-violet-500 checked:to-fuchsia-500 checked:border-transparent"
@@ -1436,6 +1448,7 @@ const SecurityCheckPage: React.FC<SecurityCheckPageProps> = ({ onVerified }) => 
                               <input
                                 key={i}
                                 id={`captcha-cell-${i}`}
+                                aria-label={`Caractère ${i + 1} du code de sécurité`}
                                 type="text"
                                 inputMode="text"
                                 maxLength={1}
