@@ -15,7 +15,7 @@ const SEOHead: React.FC<SEOHeadProps> = ({
   title,
   description,
   canonical,
-  ogImage = '/images/logo.ico',
+  ogImage = 'https://riziky-ventes.vercel.app/images/og-image.jpg',
   noindex = false,
 }) => {
   useEffect(() => {
@@ -58,6 +58,7 @@ const SEOHead: React.FC<SEOHeadProps> = ({
       'og:image': ogImage,
       'og:type': 'website',
       'og:locale': 'fr_FR',
+      ...(canonical ? { 'og:url': canonical } : {}),
     };
 
     Object.entries(ogTags).forEach(([property, content]) => {
@@ -75,6 +76,7 @@ const SEOHead: React.FC<SEOHeadProps> = ({
       'twitter:card': 'summary_large_image',
       'twitter:title': title,
       'twitter:description': description,
+      'twitter:image': ogImage,
     };
 
     Object.entries(twitterTags).forEach(([name, content]) => {

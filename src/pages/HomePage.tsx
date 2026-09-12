@@ -123,7 +123,7 @@ const HomePage: React.FC = () => {
         canonical="https://riziky-ventes.vercel.app/"
       />
 
-      <main className="relative min-h-screen overflow-x-hidden bg-slate-50 text-slate-900 dark:bg-[#05030d] dark:text-white">
+      <main id="main-content" tabIndex={-1} className="relative min-h-screen overflow-x-hidden bg-slate-50 text-slate-900 dark:bg-[#05030d] dark:text-white">
 
         {/* =========================================================
             LIGHTWEIGHT BACKGROUND

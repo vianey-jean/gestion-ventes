@@ -1,0 +1,25 @@
+{
+  "name": "Gestion Vente — Logiciel de gestion commerciale",
+  "short_name": "Gestion Vente",
+  "description": "Suivi des ventes, stocks, clients et comptabilité en temps réel.",
+  "lang": "fr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#05030d",
+  "theme_color": "#7c3aed",
+  "icons": [
+    {
+      "src": "/images/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/images/og-image.jpg",
+      "sizes": "1200x630",
+      "type": "image/jpeg",
+      "purpose": "any"
+    }
+  ]
+}

@@ -95,6 +95,10 @@ function App() {
             <AuthProvider>
               <AppProvider>
                 <MaintenanceGate>
+                  {/* Lien d'évitement pour la navigation au clavier (accessibilité) */}
+                  <a href="#main-content" className="skip-link">
+                    Aller au contenu principal
+                  </a>
                   {/* Suspense : gestion du chargement asynchrone */}
                   <Suspense
                     fallback={
