@@ -714,22 +714,6 @@ const LoginPage: React.FC = () => {
         // =====================================================
         // SESSION UNIQUE (effectuée une fois la 2FA validée)
         // =====================================================
-        // CORRECTIF 2FA : dès que la 2FA est validée, isAuthenticated
-        // passe à true et SessionUniqueWatcher (heartbeat /poll toutes
-        // les 2 s) peut se monter AVANT que registerLogin() ci-dessous
-        // n'ait eu le temps d'enregistrer le nouvel identifiant de
-        // session. S'il reste un ancien session_unique_id (session
-        // précédente sur ce navigateur), le heartbeat interroge le
-        // serveur avec cet identifiant périmé, qui ne correspond plus
-        // à la session courante -> le serveur répond forceLogout=true
-        // -> l'admin qui vient tout juste de se connecter est aussitôt
-        // déconnecté, et disparaît "en ligne" de la messagerie/chat
-        // admin/groupe/visiteur. On efface donc l'ancien identifiant
-        // immédiatement, avant le moindre appel réseau supplémentaire,
-        // pour que le heartbeat ne sonde rien tant que la nouvelle
-        // session n'est pas confirmée.
-        connecteProfilUniqueApi.setSessionId(null);
-
         try {
           const check = await connecteProfilUniqueApi.check({
             userId: String(loggedUser.id || ''),

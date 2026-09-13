@@ -1,0 +1,96 @@
+[
+  {
+    "id": "cpu_mtx2lm3hip0dvg",
+    "userId": "1",
+    "email": "vianey.jean@ymail.com",
+    "nom": "RABEMANALINA Jean Marie Vianey",
+    "role": "administrateur principale",
+    "ip": "::ffff:127.0.0.1",
+    "browser": "Firefox",
+    "os": "Windows",
+    "device": "Desktop",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:155.0) Gecko/20100101 Firefox/155.0",
+    "timezone": "Indian/Mauritius",
+    "clientKey": "dev_93whyzflmtucjh3g",
+    "deviceKey": "::ffff:127.0.0.1|Firefox|Windows|Desktop|dev_93whyzflmtucjh3g",
+    "firstSeenAt": "2026-09-11T14:47:29.309Z",
+    "historique": [
+      {
+        "sessionId": "sess_mtx2lm3hj18j2o",
+        "dateConnexion": "2026-09-11",
+        "heureConnexion": "18:47:29",
+        "connecteAt": "2026-09-11T14:47:29.309Z",
+        "ip": "::ffff:127.0.0.1",
+        "browser": "Firefox",
+        "os": "Windows",
+        "device": "Desktop",
+        "timezone": "Indian/Mauritius",
+        "dateDeconnexion": "2026-09-13",
+        "heureDeconnexion": "19:01:10",
+        "deconnecteAt": "2026-09-13T15:01:10.680Z",
+        "motif": "session inactive (navigateur fermé)"
+      }
+    ],
+    "logoutRequest": null,
+    "notifications": [],
+    "active": false,
+    "currentSessionId": null,
+    "forceLogout": false,
+    "forceLogoutReason": "",
+    "lastSeenAt": "2026-09-13T15:01:10.680Z"
+  },
+  {
+    "id": "cpu_mtzxyxg1iz8sa1",
+    "userId": "1",
+    "email": "vianey.jean@ymail.com",
+    "nom": "RABEMANALINA Jean Marie Vianey",
+    "role": "administrateur principale",
+    "ip": "::ffff:127.0.0.1",
+    "browser": "Firefox",
+    "os": "Windows",
+    "device": "Desktop",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:155.0) Gecko/20100101 Firefox/155.0",
+    "timezone": "Indian/Mauritius",
+    "clientKey": "dev_las7kuz8mtzxyx6y",
+    "deviceKey": "::ffff:127.0.0.1|Firefox|Windows|Desktop|dev_las7kuz8mtzxyx6y",
+    "firstSeenAt": "2026-09-13T15:01:10.992Z",
+    "historique": [
+      {
+        "sessionId": "sess_mtzxyxg17qigb8",
+        "dateConnexion": "2026-09-13",
+        "heureConnexion": "19:01:10",
+        "connecteAt": "2026-09-13T15:01:10.992Z",
+        "ip": "::ffff:127.0.0.1",
+        "browser": "Firefox",
+        "os": "Windows",
+        "device": "Desktop",
+        "timezone": "Indian/Mauritius",
+        "dateDeconnexion": null,
+        "heureDeconnexion": null,
+        "deconnecteAt": null,
+        "motif": null
+      }
+    ],
+    "logoutRequest": null,
+    "notifications": [
+      {
+        "id": "notif_mtzxyxg2x513aw",
+        "type": "daily_summary",
+        "message": "0 connexion(s) et 1 déconnexion(s) aujourd'hui avant votre arrivée",
+        "details": {
+          "connexions": "0",
+          "deconnexions": "1",
+          "date": "2026-09-13",
+          "heure": "19:01:10"
+        },
+        "createdAt": "2026-09-13T15:01:10.992Z",
+        "delivered": true
+      }
+    ],
+    "active": true,
+    "currentSessionId": "sess_mtzxyxg17qigb8",
+    "forceLogout": false,
+    "forceLogoutReason": "",
+    "lastSeenAt": "2026-09-13T15:01:13.821Z"
+  }
+]

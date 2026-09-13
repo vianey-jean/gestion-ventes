@@ -8,7 +8,7 @@
  *   - le mot de passe oublié (resetPasswordRequest -> verifyResetOtp -> resetPassword)
  */
 
-import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import {
   LoginCredentials,
   PasswordResetRequest,
@@ -79,13 +79,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [registerChallenge, setRegisterChallenge] = useState<OtpChallenge | null>(null);
   const [registerEmail, setRegisterEmail] = useState<string | null>(null);
   const [registerSetupToken, setRegisterSetupToken] = useState<string | null>(null);
-  // Référence synchrone : l'état React n'est pas encore à jour dans le même
-  // gestionnaire d'événement (vérification du code -> création du compte).
-  const registerSetupTokenRef = useRef<string | null>(null);
 
   const [resetChallenge, setResetChallenge] = useState<OtpChallenge | null>(null);
   const [resetTokenValue, setResetTokenValue] = useState<string | null>(null);
-  const resetTokenRef = useRef<string | null>(null);
 
   // CRITICAL: Verify session against database
   const verifySession = useCallback(async (): Promise<boolean> => {
@@ -359,7 +355,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const result = await authService.verifyRegisterOtp({ challengeId: registerChallenge.challengeId, code });
 
       if (result?.verified && result?.setupToken) {
-        registerSetupTokenRef.current = result.setupToken;
         setRegisterSetupToken(result.setupToken);
         setRegisterChallenge(null);
         toast({
@@ -393,11 +388,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const completeRegistration = async (password: string, confirmPassword: string): Promise<boolean> => {
-    const setupToken = registerSetupTokenRef.current || registerSetupToken;
-    if (!setupToken) return false;
+    if (!registerSetupToken) return false;
     try {
       setIsLoading(true);
-      const result = await authService.completeRegistration({ setupToken, password, confirmPassword });
+      const result = await authService.completeRegistration({ setupToken: registerSetupToken, password, confirmPassword });
 
       if (result && result.user) {
         localStorage.removeItem('token');
@@ -405,7 +399,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(null);
         setToken(null);
         setIsVerified(false);
-        registerSetupTokenRef.current = null;
         setRegisterSetupToken(null);
         setRegisterEmail(null);
 
@@ -488,7 +481,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const result = await authService.verifyForgotPasswordOtp({ challengeId: resetChallenge.challengeId, code });
 
       if (result?.verified && result?.resetToken) {
-        resetTokenRef.current = result.resetToken;
         setResetTokenValue(result.resetToken);
         setResetChallenge(null);
         return true;
@@ -517,11 +509,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const resetPassword = async (newPassword: string, confirmPassword: string): Promise<boolean> => {
-    const resetTok = resetTokenRef.current || resetTokenValue;
-    if (!resetTok) return false;
+    if (!resetTokenValue) return false;
     try {
       setIsLoading(true);
-      const result = await authService.resetPassword({ resetToken: resetTok, newPassword, confirmPassword });
+      const result = await authService.resetPassword({ resetToken: resetTokenValue, newPassword, confirmPassword });
 
       if (result.success) {
         toast({
@@ -529,7 +520,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           description: "Votre mot de passe a été réinitialisé avec succès",
           className: "bg-green-600 text-white border-green-600",
         });
-        resetTokenRef.current = null;
         setResetTokenValue(null);
         return true;
       } else {

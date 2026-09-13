@@ -193,34 +193,7 @@ const LiveChatAdmin: React.FC = () => {
   const isAdmin = user?.role === 'administrateur' || user?.role === 'administrateur principale';
 
   const token = localStorage.getItem('token');
-  // Toujours relire le jeton au moment de l'appel (évite un jeton périmé/absent
-  // capturé au premier rendu, juste avant la fin de la connexion)
-  const getAuthHeaders = useCallback(() => {
-    const t = localStorage.getItem('token');
-    return t
-      ? { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' }
-      : null;
-  }, []);
-  // CORRECTIF : authHeaders relit désormais le jeton à chaque appel via
-  // getAuthHeaders() (au lieu de la variable `token` figée au rendu),
-  // pour éviter un Authorization: Bearer null/périmé juste après la
-  // validation du code 2FA (le token est écrit dans localStorage par
-  // authService.verifyLoginOtp() avant la mise à jour du contexte React,
-  // mais il vaut mieux ne jamais dépendre de l'ordre de ces deux étapes).
-  const authHeaders = getAuthHeaders() || { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
-
-  // Si le serveur refuse le jeton (expiré / secret changé), on arrête de boucler
-  // et on demande une reconnexion propre.
-  const unauthorizedRef = useRef(false);
-  const handleAuthFailure = useCallback((res: Response) => {
-    if (res.status === 401 && !unauthorizedRef.current) {
-      unauthorizedRef.current = true;
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      window.dispatchEvent(new CustomEvent('auth:logout'));
-    }
-    return res;
-  }, []);
+  const authHeaders = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
 
   // ========== VISITOR CHAT FUNCTIONS ==========
   const loadConversations = useCallback(async () => {
@@ -270,7 +243,6 @@ const LiveChatAdmin: React.FC = () => {
     if (!user) return;
     try {
       const res = await fetch(`${API_BASE}/api/messagerie/admin-users`, { headers: authHeaders });
-      handleAuthFailure(res);
       if (res.ok) {
         const data = await res.json();
         const safeAdmins = Array.isArray(data) ? data : [];

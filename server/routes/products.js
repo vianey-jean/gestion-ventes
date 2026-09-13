@@ -1,0 +1,564 @@
+/**
+ * products.js - Routes API pour la gestion des produits
+ * 
+ * CRUD complet pour les produits avec support de :
+ * - Upload d'images produit
+ * - Gestion du stock (entrées, sorties, alertes)
+ * - Recherche et filtrage
+ * - Commentaires sur les produits
+ * Toutes les routes sont authentifiées.
+ */
+
+const express = require('express');
+const router = express.Router();
+const Product = require('../models/Product');
+const authMiddleware = require('../middleware/auth');
+const upload = require('../middleware/upload');
+const path = require('path');
+const fs = require('fs');
+
+// Get all products
+router.get('/', async (req, res) => {
+  try {
+    const products = Product.getAll();
+    res.json(products);
+  } catch (error) {
+    console.error('Error getting products:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Generate codes for existing products without codes
+router.post('/generate-codes', authMiddleware, async (req, res) => {
+  try {
+    console.log('🔧 API: Generating codes for existing products...');
+    const result = Product.generateCodesForExistingProducts();
+    
+    if (result.success) {
+      console.log(`✅ API: Generated codes for ${result.updatedCount} products`);
+      res.json({ 
+        message: `Codes générés pour ${result.updatedCount} produits`,
+        updatedCount: result.updatedCount 
+      });
+    } else {
+      console.error('❌ API: Error generating codes:', result.error);
+      res.status(500).json({ message: 'Error generating codes', error: result.error });
+    }
+  } catch (error) {
+    console.error('❌ API: Error generating codes:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Search products
+router.get('/search', async (req, res) => {
+  try {
+    const { query } = req.query;
+    
+    if (!query || query.length < 3) {
+      return res.json([]);
+    }
+    
+    const products = Product.search(query);
+    res.json(products);
+  } catch (error) {
+    console.error('Error searching products:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Get product by ID
+router.get('/:id', async (req, res) => {
+  try {
+    const product = Product.getById(req.params.id);
+    
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+    
+    res.json(product);
+  } catch (error) {
+    console.error('Error getting product by ID:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Create product (requires authentication)
+router.post('/', authMiddleware, async (req, res) => {
+  try {
+    const { description, purchasePrice, quantity } = req.body;
+    
+    if (!description || purchasePrice === undefined || quantity === undefined) {
+      return res.status(400).json({ message: 'All fields are required' });
+    }
+    
+    const productData = {
+      description,
+      purchasePrice: Number(purchasePrice),
+      quantity: Number(quantity),
+      fournisseur: req.body.fournisseur || '',
+      sellingPrice: req.body.sellingPrice !== undefined ? Number(req.body.sellingPrice) : undefined,
+      ...(req.body.caracteristique ? { caracteristique: req.body.caracteristique } : {}),
+    };
+    
+    const newProduct = Product.create(productData);
+    
+    if (!newProduct) {
+      return res.status(500).json({ message: 'Error creating product' });
+    }
+    
+    console.log('✅ Product created successfully:', newProduct);
+    res.status(201).json(newProduct);
+  } catch (error) {
+    console.error('❌ Error creating product:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Create product WITH photos in one request (multipart/form-data)
+// Fields: description, purchasePrice, quantity, fournisseur (optional), sellingPrice (optional)
+// Files: photos[] (max 6), mainPhotoIndex (optional)
+router.post('/with-photos', authMiddleware, upload.array('photos', 6), async (req, res) => {
+  try {
+    const { description, purchasePrice, quantity } = req.body;
+
+    if (!description || purchasePrice === undefined || quantity === undefined) {
+      return res.status(400).json({ message: 'description, purchasePrice and quantity required' });
+    }
+
+    const productData = {
+      description,
+      purchasePrice: Number(purchasePrice),
+      quantity: Number(quantity),
+      fournisseur: req.body.fournisseur || '',
+      sellingPrice: req.body.sellingPrice !== undefined ? Number(req.body.sellingPrice) : undefined,
+      ...(req.body.caracteristique ? { caracteristique: req.body.caracteristique } : {}),
+    };
+
+    const newProduct = Product.create(productData);
+    if (!newProduct) {
+      return res.status(500).json({ message: 'Error creating product' });
+    }
+
+    if (req.files && req.files.length > 0) {
+      const newPhotoUrls = req.files.map(f => `/uploads/${f.filename}`);
+      const mainIndex = req.body.mainPhotoIndex !== undefined ? parseInt(req.body.mainPhotoIndex) : 0;
+      const mainPhoto = newPhotoUrls[mainIndex] || newPhotoUrls[0];
+      const updated = Product.update(newProduct.id, { photos: newPhotoUrls, mainPhoto });
+      return res.status(201).json(updated || newProduct);
+    }
+
+    res.status(201).json(newProduct);
+  } catch (error) {
+    console.error('❌ Error creating product with photos:', error);
+    res.status(500).json({ message: error.message || 'Server error' });
+  }
+});
+
+// Update product (requires authentication)
+// Cette route accepte des mises à jour partielles - seuls les champs fournis seront mis à jour
+router.put('/:id', authMiddleware, async (req, res) => {
+  try {
+    const { description, purchasePrice, quantity, reserver, fournisseur, sellingPrice, caracteristique } = req.body;
+    
+    // Vérifier qu'au moins un champ est fourni pour la mise à jour
+    if (description === undefined && purchasePrice === undefined && quantity === undefined && reserver === undefined && fournisseur === undefined && sellingPrice === undefined && caracteristique === undefined) {
+      return res.status(400).json({ message: 'At least one field is required for update' });
+    }
+    
+    // Construire l'objet de mise à jour avec seulement les champs fournis
+    const productData = {};
+    if (description !== undefined) productData.description = description;
+    if (purchasePrice !== undefined) productData.purchasePrice = Number(purchasePrice);
+    if (quantity !== undefined) productData.quantity = Number(quantity);
+    if (reserver !== undefined) productData.reserver = reserver;
+    if (fournisseur !== undefined) productData.fournisseur = fournisseur;
+    if (sellingPrice !== undefined) productData.sellingPrice = Number(sellingPrice);
+    if (req.body.sellingPriceDate !== undefined) productData.sellingPriceDate = req.body.sellingPriceDate;
+    if (caracteristique !== undefined) productData.caracteristique = caracteristique;
+    
+    const updatedProduct = Product.update(req.params.id, productData);
+    
+    if (!updatedProduct) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+    
+    if (updatedProduct.error) {
+      return res.status(400).json({ message: updatedProduct.error });
+    }
+    
+    console.log('✅ Product updated successfully:', updatedProduct);
+    res.json(updatedProduct);
+  } catch (error) {
+    console.error('❌ Error updating product:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Delete product (requires authentication)
+router.delete('/:id', authMiddleware, async (req, res) => {
+  try {
+    console.log('🗑️ Attempting to delete product with ID:', req.params.id);
+    
+    const product = Product.getById(req.params.id);
+    
+    if (!product) {
+      console.log('❌ Product not found for deletion:', req.params.id);
+      return res.status(404).json({ message: 'Product not found' });
+    }
+    
+    const success = Product.delete(req.params.id);
+    
+    if (!success) {
+      console.log('❌ Failed to delete product:', req.params.id);
+      return res.status(500).json({ message: 'Error deleting product' });
+    }
+    
+    console.log('✅ Product deleted successfully:', req.params.id);
+    res.json({ message: 'Product deleted successfully' });
+  } catch (error) {
+    console.error('❌ Error deleting product:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Update product quantity (requires authentication)
+router.patch('/:id/quantity', authMiddleware, async (req, res) => {
+  try {
+    const { quantityChange } = req.body;
+    
+    if (quantityChange === undefined) {
+      return res.status(400).json({ message: 'Quantity change is required' });
+    }
+    
+    const result = Product.updateQuantity(req.params.id, Number(quantityChange));
+    
+    if (!result) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+    
+    if (result.error) {
+      return res.status(400).json({ message: result.error });
+    }
+    
+    res.json(result);
+  } catch (error) {
+    console.error('Error updating product quantity:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Toggle disponibilité d'un achat d'un produit
+// PATCH /api/products/:id/achats/:index/disponibilite { disponible: boolean }
+router.patch('/:id/achats/:index/disponibilite', authMiddleware, async (req, res) => {
+  try {
+    const { disponible } = req.body || {};
+    if (typeof disponible !== 'boolean') {
+      return res.status(400).json({ message: 'disponible (boolean) requis' });
+    }
+    const result = Product.setAchatDisponibilite(
+      req.params.id,
+      parseInt(req.params.index, 10),
+      disponible
+    );
+    if (!result) return res.status(404).json({ message: 'Produit introuvable' });
+    if (result.error) return res.status(400).json({ message: result.error });
+    res.json(result);
+  } catch (error) {
+    console.error('Error toggling achat disponibilite:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// === Achat: modifier / supprimer un achat précis ===
+router.put('/:id/achats/:index', authMiddleware, async (req, res) => {
+  try {
+    const result = Product.updateAchat(req.params.id, parseInt(req.params.index, 10), req.body || {});
+    if (!result) return res.status(404).json({ message: 'Produit introuvable' });
+    if (result.error) return res.status(400).json({ message: result.error });
+    res.json(result);
+  } catch (error) {
+    console.error('Error updateAchat:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+router.delete('/:id/achats/:index', authMiddleware, async (req, res) => {
+  try {
+    const result = Product.deleteAchat(req.params.id, parseInt(req.params.index, 10));
+    if (!result) return res.status(404).json({ message: 'Produit introuvable' });
+    if (result.error) return res.status(400).json({ message: result.error });
+    res.json(result);
+  } catch (error) {
+    console.error('Error deleteAchat:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// === Vente: modifier / supprimer une vente précise dans products.json ===
+router.put('/:id/ventes/:index', authMiddleware, async (req, res) => {
+  try {
+    const result = Product.updateVente(req.params.id, parseInt(req.params.index, 10), req.body || {});
+    if (!result) return res.status(404).json({ message: 'Produit introuvable' });
+    if (result.error) return res.status(400).json({ message: result.error });
+    res.json(result);
+  } catch (error) {
+    console.error('Error updateVente:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+router.delete('/:id/ventes/:index', authMiddleware, async (req, res) => {
+  try {
+    const result = Product.deleteVente(req.params.id, parseInt(req.params.index, 10));
+    if (!result) return res.status(404).json({ message: 'Produit introuvable' });
+    if (result.error) return res.status(400).json({ message: result.error });
+    res.json(result);
+  } catch (error) {
+    console.error('Error deleteVente:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+
+
+// Upload product image (requires authentication)
+router.post('/:id/image', authMiddleware, upload.single('image'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'No image uploaded' });
+    }
+    
+    const product = Product.getById(req.params.id);
+    
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+    
+    // Update product with image URL
+    const imageUrl = `/uploads/${req.file.filename}`;
+    const updatedProduct = Product.update(req.params.id, { imageUrl });
+    
+    res.json(updatedProduct);
+  } catch (error) {
+    console.error('Error uploading product image:', error);
+    res.status(500).json({ message: error.message || 'Server error' });
+  }
+});
+
+// Upload multiple photos for a product (requires authentication)
+router.post('/:id/photos', authMiddleware, upload.array('photos', 6), async (req, res) => {
+  try {
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ message: 'No photos uploaded' });
+    }
+
+    const product = Product.getById(req.params.id);
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+
+    const mainPhotoIndex = req.body.mainPhotoIndex !== undefined ? parseInt(req.body.mainPhotoIndex) : 0;
+    
+    // Build photo URLs
+    const newPhotoUrls = req.files.map(file => `/uploads/${file.filename}`);
+    
+    // Merge with existing photos if any
+    const existingPhotos = product.photos || [];
+    const allPhotos = [...existingPhotos, ...newPhotoUrls];
+    
+    // Determine main photo
+    let mainPhoto = req.body.mainPhotoUrl || newPhotoUrls[mainPhotoIndex] || newPhotoUrls[0];
+    if (!mainPhoto && allPhotos.length > 0) mainPhoto = allPhotos[0];
+
+    const updatedProduct = Product.update(req.params.id, { 
+      photos: allPhotos, 
+      mainPhoto 
+    });
+
+    console.log(`✅ Photos uploaded for product ${req.params.id}: ${newPhotoUrls.length} photos`);
+    res.json(updatedProduct);
+  } catch (error) {
+    console.error('Error uploading product photos:', error);
+    res.status(500).json({ message: error.message || 'Server error' });
+  }
+});
+
+// Replace all photos for a product (requires authentication)
+router.put('/:id/photos', authMiddleware, upload.array('photos', 6), async (req, res) => {
+  try {
+    const product = Product.getById(req.params.id);
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+
+    const mainPhotoIndex = req.body.mainPhotoIndex !== undefined ? parseInt(req.body.mainPhotoIndex) : 0;
+    
+    // Parse kept existing photo URLs
+    let keptExistingUrls = [];
+    if (req.body.photosJson) {
+      try {
+        keptExistingUrls = JSON.parse(req.body.photosJson);
+      } catch(e) {}
+    }
+
+    // New uploaded file URLs
+    const newPhotoUrls = (req.files || []).map(file => `/uploads/${file.filename}`);
+    
+    // Combined photos: kept existing + new uploads
+    const photos = [...keptExistingUrls, ...newPhotoUrls];
+    const mainPhoto = photos[mainPhotoIndex] || photos[0] || null;
+
+    // Delete old photo files that are no longer kept
+    const oldPhotos = product.photos || [];
+    oldPhotos.forEach(oldUrl => {
+      if (!keptExistingUrls.includes(oldUrl)) {
+        try {
+          const filename = oldUrl.replace('/uploads/', '');
+          const filePath = path.join(__dirname, '../uploads', filename);
+          if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+            console.log(`🗑️ Deleted replaced photo: ${filename}`);
+          }
+        } catch (e) {
+          console.warn(`⚠️ Could not delete old photo: ${oldUrl}`);
+        }
+      }
+    });
+
+    const updatedProduct = Product.update(req.params.id, { photos, mainPhoto });
+    console.log(`✅ Photos updated for product ${req.params.id}`);
+    res.json(updatedProduct);
+  } catch (error) {
+    console.error('Error updating product photos:', error);
+    res.status(500).json({ message: error.message || 'Server error' });
+  }
+});
+
+// Delete a specific photo from a product (requires authentication)
+router.delete('/:id/photos/:photoIndex', authMiddleware, async (req, res) => {
+  try {
+    const product = Product.getById(req.params.id);
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+
+    const photoIndex = parseInt(req.params.photoIndex);
+    const photos = product.photos || [];
+    
+    if (photoIndex < 0 || photoIndex >= photos.length) {
+      return res.status(400).json({ message: 'Invalid photo index' });
+    }
+
+    // Try to delete file from disk
+    const photoUrl = photos[photoIndex];
+    const filename = photoUrl.replace('/uploads/', '');
+    const filePath = path.join(__dirname, '../uploads', filename);
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
+
+    photos.splice(photoIndex, 1);
+    
+    // Update main photo if needed
+    let mainPhoto = product.mainPhoto;
+    if (mainPhoto === photoUrl) {
+      mainPhoto = photos[0] || null;
+    }
+
+    const updatedProduct = Product.update(req.params.id, { photos, mainPhoto });
+    res.json(updatedProduct);
+  } catch (error) {
+    console.error('Error deleting product photo:', error);
+    res.status(500).json({ message: error.message || 'Server error' });
+  }
+});
+
+/**
+ * POST /api/products/merge
+ * Fusionne plusieurs produits en un seul.
+ * Body (multipart ou JSON):
+ *  - sourceIds: string[] (JSON string si multipart) - ids des produits à fusionner (≥2)
+ *  - description, purchasePrice, quantity (requis)
+ *  - fournisseur (optionnel)
+ *  - keptPhotos: string[] (JSON string) - URLs photos existantes à conserver
+ *  - photos[]: nouveaux fichiers (optionnel)
+ *  - mainPhotoIndex: index parmi (keptPhotos + nouveaux)
+ *
+ * Crée un nouveau produit avec ces données puis supprime tous les produits sources.
+ */
+router.post('/merge', authMiddleware, upload.array('photos', 6), async (req, res) => {
+  try {
+    let { sourceIds, description, purchasePrice, quantity, fournisseur, keptPhotos, mainPhotoIndex, sellingPrice } = req.body;
+
+    if (typeof sourceIds === 'string') {
+      try { sourceIds = JSON.parse(sourceIds); } catch { sourceIds = []; }
+    }
+    if (typeof keptPhotos === 'string') {
+      try { keptPhotos = JSON.parse(keptPhotos); } catch { keptPhotos = []; }
+    }
+    keptPhotos = Array.isArray(keptPhotos) ? keptPhotos : [];
+
+    if (!Array.isArray(sourceIds) || sourceIds.length < 2) {
+      // Nettoyer fichiers uploadés
+      if (req.files) req.files.forEach(f => { try { fs.unlinkSync(f.path); } catch {} });
+      return res.status(400).json({ message: 'Au moins 2 produits source requis' });
+    }
+    if (!description || purchasePrice === undefined || quantity === undefined) {
+      if (req.files) req.files.forEach(f => { try { fs.unlinkSync(f.path); } catch {} });
+      return res.status(400).json({ message: 'description, purchasePrice et quantity requis' });
+    }
+
+    // Vérifier que tous les produits source existent
+    const sourceProducts = sourceIds.map(id => Product.getById(id)).filter(Boolean);
+    if (sourceProducts.length < 2) {
+      if (req.files) req.files.forEach(f => { try { fs.unlinkSync(f.path); } catch {} });
+      return res.status(404).json({ message: 'Produits source introuvables' });
+    }
+
+    // Créer le nouveau produit
+    const productData = {
+      description,
+      purchasePrice: Number(purchasePrice),
+      quantity: Number(quantity),
+      fournisseur: fournisseur || '',
+      ...(sellingPrice !== undefined && sellingPrice !== '' ? { sellingPrice: Number(sellingPrice) } : {}),
+    };
+    const newProduct = Product.create(productData);
+    if (!newProduct) {
+      if (req.files) req.files.forEach(f => { try { fs.unlinkSync(f.path); } catch {} });
+      return res.status(500).json({ message: 'Erreur création produit fusionné' });
+    }
+
+    // Gestion des photos : combiner keptPhotos + nouvelles uploadées
+    const newPhotoUrls = (req.files || []).map(f => `/uploads/${f.filename}`);
+    const allPhotos = [...keptPhotos, ...newPhotoUrls];
+    if (allPhotos.length > 0) {
+      const idx = mainPhotoIndex !== undefined ? parseInt(mainPhotoIndex) : 0;
+      const mainPhoto = allPhotos[idx] || allPhotos[0];
+      Product.update(newProduct.id, { photos: allPhotos, mainPhoto });
+    }
+
+    // Supprimer les produits sources (sauf si on a gardé leurs photos → ne pas effacer ces fichiers)
+    // Construire un set des photos à préserver
+    const preservedSet = new Set(keptPhotos);
+    sourceIds.forEach(id => {
+      const p = Product.getById(id);
+      if (!p) return;
+      // Retirer du produit les photos qui sont préservées avant suppression pour éviter unlink
+      const photos = (p.photos || []).filter(ph => !preservedSet.has(ph));
+      const mainPhoto = preservedSet.has(p.mainPhoto) ? null : p.mainPhoto;
+      Product.update(id, { photos, mainPhoto });
+      Product.delete(id);
+    });
+
+    const finalProduct = Product.getById(newProduct.id);
+    res.status(201).json(finalProduct || newProduct);
+  } catch (error) {
+    console.error('❌ Error merging products:', error);
+    if (req.files) req.files.forEach(f => { try { fs.unlinkSync(f.path); } catch {} });
+    res.status(500).json({ message: error.message || 'Server error' });
+  }
+});
+
+module.exports = router;

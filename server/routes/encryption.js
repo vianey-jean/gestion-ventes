@@ -1,0 +1,204 @@
+/**
+ * Routes pour la gestion du cryptage des données
+ */
+
+const express = require('express');
+const router = express.Router();
+const authMiddleware = require('../middleware/auth');
+const {
+  getEncryptionConfig,
+  saveEncryptionConfig,
+  encryptAllData,
+  decryptAllData,
+  reEncryptAllData
+} = require('../middleware/encryption');
+const {
+  encryptAllUploads,
+  decryptAllUploads,
+  reEncryptAllUploads
+} = require('../middleware/fileEncryption');
+
+// Check if user is admin principale
+const isAdminPrincipale = (user) => {
+  return user && user.role === 'administrateur principale';
+};
+
+/**
+ * GET /api/encryption/status - Get encryption status
+ */
+router.get('/status', authMiddleware, (req, res) => {
+  try {
+    if (!isAdminPrincipale(req.user)) {
+      return res.status(403).json({ message: 'Accès refusé' });
+    }
+    const config = getEncryptionConfig();
+    res.json({
+      enabled: config.enabled || false,
+      hasKey: !!config.key,
+      keyHint: config.keyHint || null,
+      keyFingerprint: config.keyFingerprint || null,
+      keyProtected: true,
+      activatedAt: config.activatedAt || null
+    });
+
+  } catch (error) {
+    console.error('Error getting encryption status:', error);
+    res.status(500).json({ message: 'Erreur serveur' });
+  }
+});
+
+/**
+ * POST /api/encryption/activate - Activate encryption with a key
+ */
+router.post('/activate', authMiddleware, (req, res) => {
+  try {
+    if (!isAdminPrincipale(req.user)) {
+      return res.status(403).json({ message: 'Accès refusé' });
+    }
+
+    const { encryptionKey } = req.body;
+    if (!encryptionKey || encryptionKey.length < 10) {
+      return res.status(400).json({ message: 'La clé de cryptage doit contenir au moins 10 caractères' });
+    }
+
+    const config = getEncryptionConfig();
+    if (config.enabled) {
+      return res.status(400).json({ message: 'Le cryptage est déjà activé. Désactivez-le d\'abord.' });
+    }
+
+    // Encrypt all existing data
+    const encryptedCount = encryptAllData(encryptionKey);
+
+    // Chiffrer aussi TOUS les fichiers (photos profil/produits/clients,
+    // pièces justificatives, factures d'achat, PDF...)
+    let encryptedFilesCount = 0;
+    try {
+      encryptedFilesCount = encryptAllUploads(encryptionKey);
+    } catch (e) {
+      console.error('Erreur chiffrement des fichiers:', e.message);
+    }
+
+    // Save config
+    saveEncryptionConfig({
+      enabled: true,
+      key: encryptionKey,
+      activatedAt: new Date().toISOString()
+    });
+
+    res.json({
+      success: true,
+      message: `Cryptage activé. ${encryptedCount} fichiers de données et ${encryptedFilesCount} fichier(s) joint(s) cryptés.`,
+      encryptedCount,
+      encryptedFilesCount
+    });
+  } catch (error) {
+    console.error('Error activating encryption:', error);
+    res.status(500).json({ message: 'Erreur lors de l\'activation du cryptage' });
+  }
+});
+
+/**
+ * POST /api/encryption/deactivate - Deactivate encryption
+ */
+router.post('/deactivate', authMiddleware, (req, res) => {
+  try {
+    if (!isAdminPrincipale(req.user)) {
+      return res.status(403).json({ message: 'Accès refusé' });
+    }
+
+    const { encryptionKey } = req.body;
+    const config = getEncryptionConfig();
+
+    if (!config.enabled) {
+      return res.status(400).json({ message: 'Le cryptage n\'est pas activé' });
+    }
+
+    if (encryptionKey !== config.key) {
+      return res.status(400).json({ message: 'Clé de cryptage incorrecte' });
+    }
+
+    // Disable encryption first so decrypted files are written back in plain JSON
+    saveEncryptionConfig({
+      enabled: false,
+      key: null,
+      deactivatedAt: new Date().toISOString()
+    });
+
+    // Decrypt all data
+    const decryptedCount = decryptAllData(encryptionKey);
+
+    // Déchiffrer aussi tous les fichiers joints
+    let decryptedFilesCount = 0;
+    try {
+      decryptedFilesCount = decryptAllUploads(encryptionKey);
+    } catch (e) {
+      console.error('Erreur déchiffrement des fichiers:', e.message);
+    }
+
+    res.json({
+      success: true,
+      message: `Cryptage désactivé. ${decryptedCount} fichiers de données et ${decryptedFilesCount} fichier(s) joint(s) décryptés.`,
+      decryptedCount,
+      decryptedFilesCount
+    });
+  } catch (error) {
+    console.error('Error deactivating encryption:', error);
+    res.status(500).json({ message: 'Erreur lors de la désactivation du cryptage' });
+  }
+});
+
+/**
+ * POST /api/encryption/change-key - Change encryption key
+ */
+router.post('/change-key', authMiddleware, (req, res) => {
+  try {
+    if (!isAdminPrincipale(req.user)) {
+      return res.status(403).json({ message: 'Accès refusé' });
+    }
+
+    const { currentKey, newKey } = req.body;
+    if (!newKey || newKey.length < 10) {
+      return res.status(400).json({ message: 'La nouvelle clé doit contenir au moins 10 caractères' });
+    }
+
+    const config = getEncryptionConfig();
+    if (!config.enabled) {
+      return res.status(400).json({ message: 'Le cryptage n\'est pas activé' });
+    }
+
+    if (currentKey !== config.key) {
+      return res.status(400).json({ message: 'Clé de cryptage actuelle incorrecte' });
+    }
+
+    // Re-encrypt with new key
+    const count = reEncryptAllData(currentKey, newKey);
+
+    // Re-chiffrer aussi tous les fichiers joints
+    let filesCount = 0;
+    try {
+      filesCount = reEncryptAllUploads(currentKey, newKey);
+    } catch (e) {
+      console.error('Erreur re-chiffrement des fichiers:', e.message);
+    }
+
+    // Update config
+    saveEncryptionConfig({
+      enabled: true,
+      key: newKey,
+      activatedAt: config.activatedAt,
+      keyChangedAt: new Date().toISOString()
+    });
+
+    res.json({
+      success: true,
+      message: `Clé de cryptage modifiée. ${count} fichiers de données et ${filesCount} fichier(s) joint(s) re-cryptés.`,
+      count,
+      filesCount
+    });
+  } catch (error) {
+    console.error('Error changing encryption key:', error);
+    res.status(500).json({ message: 'Erreur lors du changement de clé' });
+  }
+});
+
+module.exports = router;

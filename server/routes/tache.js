@@ -1,0 +1,165 @@
+/**
+ * tache.js - Routes API pour la gestion des tâches
+ * 
+ * CRUD complet pour les tâches avec support de :
+ * - Création, modification, suppression de tâches
+ * - Marquage comme complétée/non complétée
+ * - Filtrage par date, importance, travailleur
+ * Toutes les routes sont authentifiées.
+ */
+const express = require('express');
+const router = express.Router();
+const Tache = require('../models/Tache');
+const { checkIndisponibilite } = require('../services/availabilityService');
+
+// GET all taches or filter by date/month/week
+router.get('/', (req, res) => {
+  try {
+    const { date, year, month, startDate, endDate } = req.query;
+    let taches;
+    if (date) {
+      taches = Tache.getByDate(date);
+    } else if (startDate && endDate) {
+      taches = Tache.getByWeek(startDate, endDate);
+    } else if (year && month) {
+      taches = Tache.getByMonth(year, month);
+    } else if (year) {
+      taches = Tache.getAll().filter(t => new Date(t.date).getFullYear() === parseInt(year));
+    } else {
+      taches = Tache.getAll();
+    }
+    res.json(taches);
+  } catch (error) {
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// GET by id
+router.get('/:id', (req, res) => {
+  const tache = Tache.getById(req.params.id);
+  if (!tache) return res.status(404).json({ error: 'Tâche non trouvée' });
+  res.json(tache);
+});
+
+// POST create
+router.post('/', (req, res) => {
+  const { date, heureDebut, heureFin, description, importance, travailleurId, travailleurNom, parentId, commandeId } = req.body;
+  const normalizedHeureFin = heureFin || heureDebut;
+
+  if (!date || !heureDebut || !description || !importance) {
+    return res.status(400).json({ error: 'Champs requis: date, heureDebut, description, importance' });
+  }
+
+  // Check indisponibilité
+  const indispoCheck = checkIndisponibilite(date, heureDebut, normalizedHeureFin);
+  if (!indispoCheck.disponible) {
+    return res.status(409).json({ error: `🚫 ${indispoCheck.message}. Impossible d'ajouter une tâche pendant un créneau indisponible.` });
+  }
+
+  const validation = Tache.validateTimeSlot({
+    date,
+    heureDebut,
+    heureFin: normalizedHeureFin,
+    travailleurNom: travailleurNom || ''
+  });
+
+  if (!validation.valid) {
+    return res.status(409).json({
+      error: validation.error,
+      availableSlots: validation.availableSlots,
+      conflict: validation.conflict || null
+    });
+  }
+
+  const tache = Tache.create({
+    date,
+    heureDebut,
+    heureFin: normalizedHeureFin,
+    description,
+    importance,
+    travailleurId: travailleurId || '',
+    travailleurNom: travailleurNom || '',
+    parentId: parentId || undefined,
+    commandeId: commandeId || undefined
+  });
+  if (!tache) return res.status(500).json({ error: 'Erreur création' });
+  res.status(201).json(tache);
+});
+
+// PUT update
+router.put('/:id', (req, res) => {
+  const existing = Tache.getById(req.params.id);
+  if (!existing) return res.status(404).json({ error: 'Tâche non trouvée' });
+
+  if (req.body.completed !== undefined && Object.keys(req.body).filter(k => k !== 'completed' && k !== 'heureFin').length === 0) {
+    const updateData = { completed: req.body.completed };
+    if (req.body.heureFin) updateData.heureFin = req.body.heureFin;
+    const updated = Tache.update(req.params.id, updateData);
+    if (!updated) return res.status(500).json({ error: 'Erreur mise à jour' });
+    return res.json(updated);
+  }
+
+  if (existing.importance === 'pertinent') {
+    const updated = Tache.update(req.params.id, { description: req.body.description });
+    if (!updated) return res.status(500).json({ error: 'Erreur mise à jour' });
+    return res.json(updated);
+  }
+
+  const nextDate = req.body.date || existing.date;
+  const nextHeureDebut = req.body.heureDebut || existing.heureDebut;
+  const nextHeureFin = req.body.heureFin || existing.heureFin;
+  const nextTravailleurNom = req.body.travailleurNom || existing.travailleurNom || '';
+
+  const validation = Tache.validateTimeSlot({
+    date: nextDate,
+    heureDebut: nextHeureDebut,
+    heureFin: nextHeureFin,
+    excludeId: req.params.id,
+    travailleurNom: nextTravailleurNom
+  });
+
+  if (!validation.valid) {
+    return res.status(409).json({
+      error: validation.error,
+      availableSlots: validation.availableSlots,
+      conflict: validation.conflict || null
+    });
+  }
+
+  const updated = Tache.update(req.params.id, {
+    ...req.body,
+    heureFin: nextHeureFin
+  });
+  if (!updated) return res.status(500).json({ error: 'Erreur mise à jour' });
+  res.json(updated);
+});
+
+// PUT update by commande ID (for reservation sync)
+router.put('/by-commande/:commandeId', (req, res) => {
+  const updated = Tache.updateByCommandeId(req.params.commandeId, req.body);
+  if (!updated || updated.length === 0) {
+    return res.status(404).json({ error: 'Aucune tâche liée à cette commande' });
+  }
+  res.json(updated);
+});
+
+// DELETE
+router.delete('/:id', (req, res) => {
+  const existing = Tache.getById(req.params.id);
+  if (!existing) return res.status(404).json({ error: 'Tâche non trouvée' });
+  if (existing.importance === 'pertinent') {
+    return res.status(403).json({ error: 'Impossible de supprimer une tâche pertinente' });
+  }
+  const deleted = Tache.delete(req.params.id);
+  if (!deleted) return res.status(500).json({ error: 'Erreur suppression' });
+  res.json({ message: 'Tâche supprimée' });
+});
+
+// DELETE by commande ID (for reservation sync)
+router.delete('/by-commande/:commandeId', (req, res) => {
+  const deleted = Tache.deleteByCommandeId(req.params.commandeId);
+  if (!deleted) return res.status(404).json({ error: 'Aucune tâche liée à cette commande' });
+  res.json({ message: 'Tâches liées supprimées' });
+});
+
+module.exports = router;

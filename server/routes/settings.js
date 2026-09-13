@@ -1,0 +1,1525 @@
+/**
+ * =============================================================================
+ * Routes Paramètres - Gestion des données et configuration
+ * =============================================================================
+ */
+
+const express = require('express');
+const router = express.Router();
+const fs = require('fs');
+const path = require('path');
+const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
+const authMiddleware = require('../middleware/auth');
+const syncManager = require('../middleware/sync');
+const { readJsonDecrypted, writeJsonEncrypted } = require('../middleware/encryption');
+const { createZip, readZip } = require('../utils/zipArchive');
+const {
+  encryptBuffer: encryptFileBuffer,
+  decryptBuffer: decryptFileBuffer,
+  isEncryptedBuffer: isEncryptedFileBuffer
+} = require('../middleware/fileEncryption');
+const { getEncryptionConfig } = require('../middleware/encryption');
+
+
+const dbPath = path.join(__dirname, '../db');
+const settingsPath = path.join(dbPath, 'settings.json');
+const usersPath = path.join(dbPath, 'users.json');
+
+// Helper: read JSON file safely (with decryption support)
+const readJson = (filePath) => {
+  return readJsonDecrypted(filePath);
+};
+
+// Default settings structure
+const DEFAULT_SETTINGS = {
+  siteName: 'Riziky',
+  language: 'fr',
+  timezone: 'Indian/Reunion',
+  currency: 'EUR',
+  dateFormat: 'DD/MM/YYYY',
+  notifications: {
+    rdvReminder: true,
+    rdvReminderMinutes: 30,
+    tacheReminder: true,
+    emailNotifications: false,
+    soundEnabled: true,
+  },
+  display: {
+    itemsPerPage: 10,
+    theme: 'system',
+    compactMode: false,
+    showWelcomeMessage: true,
+  },
+  security: {
+    sessionTimeoutMinutes: 60,
+    maxLoginAttempts: 5,
+    requireStrongPassword: true,
+  },
+  backup: {
+    lastBackupDate: null,
+    autoBackup: false,
+    autoBackupIntervalDays: 7,
+  },
+};
+
+// Helper: write JSON file (with encryption support)
+const writeJson = (filePath, data) => {
+  writeJsonEncrypted(filePath, data);
+};
+
+// Helper: check if user is admin (both types)
+const isAdmin = (user) => {
+  return user && (user.role === 'administrateur' || user.role === 'administrateur principale');
+};
+
+// Helper: check if user is admin principale
+const isAdminPrincipale = (user) => {
+  return user && user.role === 'administrateur principale';
+};
+
+// Dynamically get ALL .json files in the db folder for backup/restore/delete
+const getDbFiles = () => {
+  try {
+    return fs.readdirSync(dbPath).filter(f => f.endsWith('.json'));
+  } catch {
+    return [];
+  }
+};
+
+// =============================================================================
+// FICHIERS MÉDIAS (photos produits / clients / profils, pièces justificatives)
+// =============================================================================
+const uploadsRoot = path.join(__dirname, '../uploads');
+
+// Extensions sauvegardées dans l'archive .zip associée à la sauvegarde .json
+const MEDIA_EXTENSIONS = new Set([
+  '.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.svg', '.heic', '.avif',
+  '.pdf', '.doc', '.docx', '.txt', '.rtf', '.odt', '.csv', '.xls', '.xlsx'
+]);
+
+/** Liste récursivement tous les fichiers médias de server/uploads (chemins relatifs posix) */
+const listMediaFiles = (dir = uploadsRoot, prefix = '') => {
+  const out = [];
+  let items = [];
+  try {
+    items = fs.readdirSync(dir, { withFileTypes: true });
+  } catch {
+    return out;
+  }
+  items.forEach((item) => {
+    const relative = prefix ? `${prefix}/${item.name}` : item.name;
+    const absolute = path.join(dir, item.name);
+    if (item.isDirectory()) {
+      out.push(...listMediaFiles(absolute, relative));
+    } else if (MEDIA_EXTENSIONS.has(path.extname(item.name).toLowerCase())) {
+      out.push(relative);
+    }
+  });
+  return out;
+};
+
+/**
+ * Construit le lien entre chaque enregistrement de la base (produit, client,
+ * compte, achat...) et ses fichiers, en cherchant les noms de fichiers
+ * référencés dans les données JSON.
+ */
+const buildMediaLinks = (mediaFiles) => {
+  const byBasename = new Map();
+  mediaFiles.forEach((relative) => {
+    byBasename.set(relative.split('/').pop(), relative);
+  });
+
+  const links = {};
+
+  getDbFiles().forEach((file) => {
+    let data = null;
+    try {
+      data = readJson(path.join(dbPath, file));
+    } catch {
+      return;
+    }
+    if (data === null || data === undefined) return;
+
+    const records = Array.isArray(data) ? data : [data];
+
+    records.forEach((record, index) => {
+      const found = new Set();
+
+      const walk = (value, depth = 0) => {
+        if (depth > 8 || value === null || value === undefined) return;
+        if (typeof value === 'string') {
+          const base = value.split('?')[0].split('#')[0].split('/').pop();
+          if (base && byBasename.has(base)) found.add(byBasename.get(base));
+          return;
+        }
+        if (Array.isArray(value)) {
+          value.forEach((v) => walk(v, depth + 1));
+          return;
+        }
+        if (typeof value === 'object') {
+          Object.values(value).forEach((v) => walk(v, depth + 1));
+        }
+      };
+
+      walk(record);
+
+      if (found.size > 0) {
+        const id = isPlainObject(record) && (record.id || record._id)
+          ? String(record.id || record._id)
+          : `#${index}`;
+        links[`${file}:${id}`] = Array.from(found);
+      }
+    });
+  });
+
+  return links;
+};
+
+/** Nettoie un chemin issu d'une archive pour empêcher toute sortie du dossier uploads */
+const safeMediaTarget = (entryName) => {
+  const cleaned = String(entryName).replace(/\\/g, '/').replace(/^\/+/, '');
+  const withoutPrefix = cleaned.replace(/^uploads\//i, '');
+  if (!withoutPrefix || withoutPrefix.includes('..')) return null;
+  if (!MEDIA_EXTENSIONS.has(path.extname(withoutPrefix).toLowerCase())) return null;
+  const absolute = path.join(uploadsRoot, withoutPrefix);
+  if (!absolute.startsWith(uploadsRoot)) return null;
+  return { relative: withoutPrefix, absolute };
+};
+
+
+const isPlainObject = (value) => value !== null && typeof value === 'object' && !Array.isArray(value);
+
+const sortDeep = (value) => {
+  if (Array.isArray(value)) {
+    return value.map(sortDeep);
+  }
+
+  if (isPlainObject(value)) {
+    return Object.keys(value)
+      .sort()
+      .reduce((acc, key) => {
+        acc[key] = sortDeep(value[key]);
+        return acc;
+      }, {});
+  }
+
+  return value;
+};
+
+const stableStringify = (value) => JSON.stringify(sortDeep(value));
+
+const getComparableIdentity = (item) => {
+  if (!isPlainObject(item)) {
+    return stableStringify(item);
+  }
+
+  if (item.annee !== undefined && item.mois !== undefined) {
+    return `mois-annee:${String(item.annee)}-${String(item.mois)}`;
+  }
+
+  if (item.year !== undefined && item.month !== undefined) {
+    return `month-year:${String(item.year)}-${String(item.month)}`;
+  }
+
+  const priorityKeys = ['id', '_id', 'email', 'code', 'reference', 'numero', 'phone', 'nom', 'name'];
+  const matchedKey = priorityKeys.find((key) => item[key] !== undefined && item[key] !== null && item[key] !== '');
+
+  return matchedKey ? `${matchedKey}:${String(item[matchedKey])}` : stableStringify(item);
+};
+
+const areItemsEquivalent = (existingItem, incomingItem) => {
+  if (stableStringify(existingItem) === stableStringify(incomingItem)) {
+    return true;
+  }
+
+  if (isPlainObject(existingItem) && isPlainObject(incomingItem)) {
+    return getComparableIdentity(existingItem) === getComparableIdentity(incomingItem);
+  }
+
+  return false;
+};
+
+const isEmptyContainer = (value) => {
+  if (Array.isArray(value)) return value.length === 0;
+  if (isPlainObject(value)) return Object.keys(value).length === 0;
+  return false;
+};
+
+const mergeRestoreData = (existingData, incomingData) => {
+  if (existingData === null || existingData === undefined) {
+    return { data: incomingData, added: 1, skipped: 0, changed: true };
+  }
+
+  // Type mismatch (e.g. existing {} after delete-all but incoming is an array,
+  // or existing [] but incoming is an object) — replace with incoming data.
+  // Also covers the case where the local file was reset to an empty container
+  // of the wrong shape so newly added DB files (like pointageauto.json) restore correctly.
+  const typesDiffer =
+    Array.isArray(existingData) !== Array.isArray(incomingData) ||
+    isPlainObject(existingData) !== isPlainObject(incomingData);
+
+  if (typesDiffer || (isEmptyContainer(existingData) && !isEmptyContainer(incomingData))) {
+    const addedCount = Array.isArray(incomingData)
+      ? incomingData.length
+      : isPlainObject(incomingData)
+        ? Object.keys(incomingData).length
+        : 1;
+    return { data: incomingData, added: addedCount, skipped: 0, changed: true };
+  }
+
+  if (Array.isArray(existingData) && Array.isArray(incomingData)) {
+    const merged = [...existingData];
+    let added = 0;
+    let skipped = 0;
+    let changed = false;
+
+    incomingData.forEach((incomingItem) => {
+      const existingIndex = merged.findIndex((existingItem) => getComparableIdentity(existingItem) === getComparableIdentity(incomingItem));
+
+      if (existingIndex === -1) {
+        merged.push(incomingItem);
+        added += 1;
+        changed = true;
+        return;
+      }
+
+      const existingItem = merged[existingIndex];
+
+      if (areItemsEquivalent(existingItem, incomingItem)) {
+        skipped += 1;
+        return;
+      }
+
+      const nested = mergeRestoreData(existingItem, incomingItem);
+      merged[existingIndex] = nested.data;
+      added += nested.added;
+      skipped += nested.skipped;
+      changed = true;
+    });
+
+    return { data: merged, added, skipped, changed };
+  }
+
+  if (isPlainObject(existingData) && isPlainObject(incomingData)) {
+    const merged = { ...existingData };
+    let added = 0;
+    let skipped = 0;
+    let changed = false;
+
+    Object.entries(incomingData).forEach(([key, value]) => {
+      if (!(key in existingData)) {
+        merged[key] = value;
+        added += 1;
+        changed = true;
+        return;
+      }
+
+      const nested = mergeRestoreData(existingData[key], value);
+
+      if (nested.changed) {
+        merged[key] = nested.data;
+        changed = true;
+      }
+
+      added += nested.added;
+      skipped += nested.skipped;
+
+      if (!nested.changed && stableStringify(existingData[key]) === stableStringify(value)) {
+        skipped += 1;
+      }
+    });
+
+    return { data: merged, added, skipped, changed };
+  }
+
+  if (stableStringify(existingData) === stableStringify(incomingData)) {
+    return { data: existingData, added: 0, skipped: 1, changed: false };
+  }
+
+  return { data: incomingData, added: 0, skipped: 0, changed: true };
+};
+
+// ==================
+// GET /api/settings
+// ==================
+router.get('/', authMiddleware, (req, res) => {
+  try {
+    const rawSettings = readJson(settingsPath) || {};
+    // Merge with defaults to ensure all fields exist
+    const settings = {
+      ...DEFAULT_SETTINGS,
+      ...rawSettings,
+      notifications: { ...DEFAULT_SETTINGS.notifications, ...(rawSettings.notifications || {}) },
+      display: { ...DEFAULT_SETTINGS.display, ...(rawSettings.display || {}) },
+      security: { ...DEFAULT_SETTINGS.security, ...(rawSettings.security || {}) },
+      backup: { ...DEFAULT_SETTINGS.backup, ...(rawSettings.backup || {}) },
+    };
+    const isUserAdmin = isAdmin(req.user);
+    res.json({ settings, isAdmin: isUserAdmin });
+  } catch (error) {
+    console.error('Error reading settings:', error);
+    res.status(500).json({ message: 'Erreur serveur' });
+  }
+});
+
+// ==================
+// GET /api/settings/users - List all users (for role management)
+// ==================
+router.get('/users', authMiddleware, (req, res) => {
+  try {
+    if (!isAdminPrincipale(req.user)) {
+      return res.status(403).json({ message: 'Accès refusé. Administrateur principale requis.' });
+    }
+    const users = readJson(usersPath) || [];
+    const usersWithoutPasswords = users.map(({ password, ...rest }) => rest);
+    res.json({ users: usersWithoutPasswords });
+  } catch (error) {
+    console.error('Error listing users:', error);
+    res.status(500).json({ message: 'Erreur serveur' });
+  }
+});
+
+// ==================
+// PUT /api/settings/user-role - Change user role
+// ==================
+router.put('/user-role', authMiddleware, (req, res) => {
+  try {
+    if (!isAdminPrincipale(req.user)) {
+      return res.status(403).json({ message: 'Accès refusé. Administrateur principale requis.' });
+    }
+
+    const { userId, newRole } = req.body;
+    if (!userId) {
+      return res.status(400).json({ message: 'ID utilisateur requis' });
+    }
+
+    const users = readJson(usersPath) || [];
+    const userIndex = users.findIndex(u => u.id === userId);
+    if (userIndex === -1) {
+      return res.status(404).json({ message: 'Utilisateur non trouvé' });
+    }
+
+    if (users[userIndex].role === 'administrateur principale') {
+      return res.status(403).json({ message: 'Impossible de modifier le rôle de l\'administrateur principale' });
+    }
+
+    if (newRole !== '' && newRole !== 'administrateur') {
+      return res.status(400).json({ message: 'Rôle invalide' });
+    }
+
+    if (newRole === '') {
+      delete users[userIndex].role;
+      delete users[userIndex].specification;
+    } else {
+      users[userIndex].role = newRole;
+    }
+
+    writeJson(usersPath, users);
+
+    const { password, ...userWithoutPassword } = users[userIndex];
+    res.json({ success: true, user: userWithoutPassword });
+  } catch (error) {
+    console.error('Error changing user role:', error);
+    res.status(500).json({ message: 'Erreur serveur' });
+  }
+});
+
+// ==================
+// DELETE /api/settings/user/:id - Delete a user account
+// ==================
+router.delete('/user/:id', authMiddleware, (req, res) => {
+  try {
+    if (!isAdminPrincipale(req.user)) {
+      return res.status(403).json({ message: 'Accès refusé. Administrateur principale requis.' });
+    }
+
+    const userId = req.params.id;
+    const users = readJson(usersPath) || [];
+    const userIndex = users.findIndex(u => u.id === userId);
+    if (userIndex === -1) {
+      return res.status(404).json({ message: 'Utilisateur non trouvé' });
+    }
+
+    if (users[userIndex].role === 'administrateur principale') {
+      return res.status(403).json({ message: 'Impossible de supprimer le compte administrateur principale' });
+    }
+
+    const deletedUser = users[userIndex];
+    
+    // Delete profile photo if exists
+    if (deletedUser.profilePhoto) {
+      const photoPath = path.join(__dirname, '..', deletedUser.profilePhoto);
+      if (fs.existsSync(photoPath)) {
+        try { fs.unlinkSync(photoPath); } catch (e) { console.error('Error deleting user photo:', e); }
+      }
+    }
+
+    // Remove user from array
+    users.splice(userIndex, 1);
+    writeJson(usersPath, users);
+
+    // Clean up user data in other db files
+    const dbFiles = ['pointage.json', 'rdv.json', 'taches.json'];
+    dbFiles.forEach(file => {
+      const filePath = path.join(dbPath, file);
+      if (fs.existsSync(filePath)) {
+        try {
+          const data = readJson(filePath);
+          if (Array.isArray(data)) {
+            const filtered = data.filter(item => item.userId !== userId && item.assignedTo !== userId);
+            writeJson(filePath, filtered);
+          }
+        } catch (e) { console.error(`Error cleaning ${file}:`, e); }
+      }
+    });
+
+    res.json({ success: true, message: `Le compte de ${deletedUser.firstName || ''} ${deletedUser.lastName || ''} a été supprimé` });
+  } catch (error) {
+    console.error('Error deleting user:', error);
+    res.status(500).json({ message: 'Erreur serveur' });
+  }
+});
+
+// ==================
+// PUT /api/settings/user-specification - Change user specification
+// ==================
+router.put('/user-specification', authMiddleware, (req, res) => {
+  try {
+    if (!isAdminPrincipale(req.user)) {
+      return res.status(403).json({ message: 'Accès refusé. Administrateur principale requis.' });
+    }
+
+    const { userId, specification } = req.body;
+    if (!userId) {
+      return res.status(400).json({ message: 'ID utilisateur requis' });
+    }
+
+    const users = readJson(usersPath) || [];
+    const userIndex = users.findIndex(u => u.id === userId);
+    if (userIndex === -1) {
+      return res.status(404).json({ message: 'Utilisateur non trouvé' });
+    }
+
+    if (users[userIndex].role !== 'administrateur') {
+      return res.status(400).json({ message: 'Seul un administrateur peut avoir une spécification' });
+    }
+
+    if (specification === 'live') {
+      users[userIndex].specification = 'live';
+    } else {
+      delete users[userIndex].specification;
+    }
+
+    writeJson(usersPath, users);
+
+    const { password, ...userWithoutPassword } = users[userIndex];
+    res.json({ success: true, user: userWithoutPassword });
+  } catch (error) {
+    console.error('Error changing user specification:', error);
+    res.status(500).json({ message: 'Erreur serveur' });
+  }
+});
+
+// ==================
+// PUT /api/settings
+// ==================
+router.put('/', authMiddleware, (req, res) => {
+  try {
+    if (!isAdmin(req.user)) {
+      return res.status(403).json({ message: 'Accès refusé. Administrateur requis.' });
+    }
+    const currentSettings = readJson(settingsPath) || {};
+    const updatedSettings = { ...currentSettings, ...req.body };
+    writeJson(settingsPath, updatedSettings);
+    res.json({ success: true, settings: updatedSettings });
+  } catch (error) {
+    console.error('Error updating settings:', error);
+    res.status(500).json({ message: 'Erreur serveur' });
+  }
+});
+
+// ==================
+// POST /api/settings/backup - Sauvegarder toutes les données
+// ==================
+router.post('/backup', authMiddleware, (req, res) => {
+  try {
+    if (!isAdmin(req.user)) {
+      return res.status(403).json({ message: 'Accès refusé. Administrateur requis.' });
+    }
+
+    const { encryptionCode } = req.body;
+    if (!encryptionCode || encryptionCode.length < 6) {
+      return res.status(400).json({ message: 'Code de cryptage requis (min 6 caractères)' });
+    }
+
+    // Collect all DB data
+    const backupData = {};
+    getDbFiles().forEach(file => {
+      const filePath = path.join(dbPath, file);
+      const data = readJson(filePath);
+      if (data !== null) {
+        backupData[file] = data;
+      }
+    });
+
+    const dbFilesCount = Object.keys(backupData).length;
+    const backupDate = new Date().toISOString();
+    const dateStr = backupDate.split('T')[0];
+    const jsonFilename = `backup-riziky-${dateStr}.json`;
+    const zipFilename = `backup-riziky-${dateStr}.zip`;
+
+    // Fichiers médias (photos produits/clients/profils, pièces justificatives...)
+    const mediaFiles = listMediaFiles();
+    const mediaLinks = buildMediaLinks(mediaFiles);
+
+    // Lien entre le fichier .json et l'archive .zip
+    backupData._media = {
+      zipFilename,
+      jsonFilename,
+      backupDate,
+      filesCount: mediaFiles.length,
+      required: mediaFiles.length > 0,
+      files: mediaFiles,
+      links: mediaLinks
+    };
+
+    // Add metadata
+    backupData._metadata = {
+      backupDate,
+      version: '1.1',
+      filesCount: dbFilesCount,
+      mediaZip: mediaFiles.length > 0 ? zipFilename : null,
+      mediaFilesCount: mediaFiles.length,
+      dataEncrypted: !!getEncryptionConfig().enabled,
+      protected: true
+    };
+
+    // Encrypt data with the code
+    const jsonData = JSON.stringify(backupData);
+    const algorithm = 'aes-256-cbc';
+    const key = crypto.scryptSync(encryptionCode, 'riziky-salt-2024', 32);
+    const iv = crypto.randomBytes(16);
+    const cipher = crypto.createCipheriv(algorithm, key, iv);
+    let encrypted = cipher.update(jsonData, 'utf8', 'hex');
+    encrypted += cipher.final('hex');
+
+    // Hash the encryption code with bcrypt (like a password)
+    const hashedCode = bcrypt.hashSync(encryptionCode, 10);
+
+    const encryptedPackage = {
+      iv: iv.toString('hex'),
+      data: encrypted,
+      checksum: crypto.createHash('sha256').update(jsonData).digest('hex'),
+      codeHash: hashedCode
+    };
+
+    // Update last backup date
+    const settings = readJson(settingsPath) || {};
+    settings.backup = settings.backup || {};
+    settings.backup.lastBackupDate = new Date().toISOString();
+    writeJson(settingsPath, settings);
+    syncManager.markBackupCompleted('manual');
+
+    res.json({
+      success: true,
+      backup: encryptedPackage,
+      filename: jsonFilename,
+      mediaFilename: mediaFiles.length > 0 ? zipFilename : null,
+      mediaFilesCount: mediaFiles.length
+    });
+
+  } catch (error) {
+    console.error('Error creating backup:', error);
+    res.status(500).json({ message: 'Erreur lors de la sauvegarde' });
+  }
+});
+
+// ==================
+// POST /api/settings/backup-media - Archive .zip de tous les fichiers
+// (photos produits, clients, profils, pièces justificatives d'achat...)
+// Retourne un binaire ZIP lié à la sauvegarde .json du même jour.
+// ==================
+router.post('/backup-media', authMiddleware, (req, res) => {
+  try {
+    if (!isAdmin(req.user)) {
+      return res.status(403).json({ message: 'Accès refusé. Administrateur requis.' });
+    }
+
+    // Le code de sauvegarde protège l'archive : sans lui, aucune photo ni
+    // pièce justificative n'est lisible dans le .zip
+    const { encryptionCode } = req.body || {};
+    if (!encryptionCode || String(encryptionCode).length < 6) {
+      return res.status(400).json({ message: 'Code de cryptage requis (min 6 caractères)' });
+    }
+
+    const backupDate = new Date().toISOString();
+    const dateStr = backupDate.split('T')[0];
+    const jsonFilename = `backup-riziky-${dateStr}.json`;
+    const zipFilename = `backup-riziky-${dateStr}.zip`;
+
+    const mediaFiles = listMediaFiles();
+    const entries = [];
+
+    mediaFiles.forEach((relative) => {
+      try {
+        // fs.readFileSync est patché : contenu en clair même si chiffré au repos
+        const plain = fs.readFileSync(path.join(uploadsRoot, relative));
+        entries.push({
+          name: `uploads/${relative}`,
+          data: encryptFileBuffer(Buffer.isBuffer(plain) ? plain : Buffer.from(plain), encryptionCode)
+        });
+      } catch {
+        /* fichier illisible : ignoré */
+      }
+    });
+
+    const manifest = {
+      jsonFilename,
+      zipFilename,
+      backupDate,
+      version: '1.2',
+      filesCount: entries.length,
+      protected: true,
+      encrypted: true,
+      codeHash: bcrypt.hashSync(String(encryptionCode), 10),
+      dataEncrypted: !!getEncryptionConfig().enabled,
+      files: mediaFiles,
+      links: buildMediaLinks(mediaFiles)
+    };
+
+    entries.push({ name: 'manifest.json', data: Buffer.from(JSON.stringify(manifest, null, 2), 'utf8') });
+
+    const archive = createZip(entries);
+
+    res.setHeader('Content-Type', 'application/zip');
+    res.setHeader('Content-Disposition', `attachment; filename="${zipFilename}"`);
+    res.setHeader('X-Backup-Filename', zipFilename);
+    res.setHeader('X-Backup-Json', jsonFilename);
+    res.setHeader('X-Backup-Files-Count', String(entries.length - 1));
+    res.setHeader('Access-Control-Expose-Headers', 'X-Backup-Filename, X-Backup-Json, X-Backup-Files-Count, Content-Disposition');
+    return res.status(200).send(archive);
+  } catch (error) {
+    console.error('Error creating media backup:', error);
+    return res.status(500).json({ message: 'Erreur lors de la sauvegarde des fichiers' });
+  }
+});
+
+// ==================
+// POST /api/settings/restore-media - Injecter l'archive .zip des fichiers
+// Body JSON : { zipBase64: string }
+// ==================
+router.post('/restore-media', authMiddleware, (req, res) => {
+  try {
+    if (!isAdmin(req.user)) {
+      return res.status(403).json({ message: 'Accès refusé. Administrateur requis.' });
+    }
+
+    const { zipBase64, encryptionCode } = req.body || {};
+    if (!zipBase64 || typeof zipBase64 !== 'string') {
+      return res.status(400).json({ message: 'Archive .zip requise' });
+    }
+
+    let entries;
+    try {
+      entries = readZip(Buffer.from(zipBase64, 'base64'));
+    } catch (e) {
+      return res.status(400).json({ message: 'Archive .zip invalide ou corrompue' });
+    }
+
+    let manifest = null;
+    entries.forEach((entry) => {
+      if (entry.name === 'manifest.json') {
+        try { manifest = JSON.parse(entry.data.toString('utf8')); } catch { /* ignoré */ }
+      }
+    });
+
+    // Archive protégée par un code : le code est obligatoire et vérifié
+    const isProtected = entries.some((e) => e.name !== 'manifest.json' && isEncryptedFileBuffer(e.data))
+      || !!(manifest && (manifest.protected || manifest.encrypted));
+
+    if (isProtected) {
+      if (!encryptionCode) {
+        return res.status(400).json({
+          message: 'Cette archive est protégée : le code de sauvegarde est requis',
+          codeRequired: true
+        });
+      }
+      if (manifest && manifest.codeHash && !bcrypt.compareSync(String(encryptionCode), manifest.codeHash)) {
+        return res.status(401).json({ message: 'Code de sauvegarde incorrect', codeRequired: true });
+      }
+    }
+
+    let restored = 0;
+    let skipped = 0;
+
+    entries.forEach((entry) => {
+      if (entry.name === 'manifest.json') return;
+
+      const target = safeMediaTarget(entry.name);
+      if (!target) {
+        skipped += 1;
+        return;
+      }
+
+      try {
+        let data = entry.data;
+        if (isEncryptedFileBuffer(data)) {
+          if (!encryptionCode) {
+            skipped += 1;
+            return;
+          }
+          data = decryptFileBuffer(data, String(encryptionCode));
+        }
+        fs.mkdirSync(path.dirname(target.absolute), { recursive: true });
+        // fs.writeFileSync est patché : re-chiffré au repos si le cryptage est actif
+        fs.writeFileSync(target.absolute, data);
+        restored += 1;
+      } catch {
+        skipped += 1;
+      }
+    });
+
+    return res.json({
+      success: true,
+      restoredFilesCount: restored,
+      skippedFilesCount: skipped,
+      manifest: manifest ? {
+        jsonFilename: manifest.jsonFilename,
+        zipFilename: manifest.zipFilename,
+        backupDate: manifest.backupDate,
+        filesCount: manifest.filesCount
+      } : null,
+      message: `${restored} fichier(s) restauré(s)`
+    });
+  } catch (error) {
+    console.error('Error restoring media backup:', error);
+    return res.status(500).json({ message: 'Erreur lors de la restauration des fichiers' });
+  }
+});
+
+
+
+// ==================
+// POST /api/settings/restore - Injecter des données
+// ==================
+router.post('/restore', authMiddleware, (req, res) => {
+  try {
+    if (!isAdmin(req.user)) {
+      return res.status(403).json({ message: 'Accès refusé. Administrateur requis.' });
+    }
+
+    const { encryptedData, decryptionCode } = req.body;
+    if (!encryptedData || !decryptionCode) {
+      return res.status(400).json({ message: 'Données et code de décryptage requis' });
+    }
+
+    if (encryptedData.codeHash) {
+      const codeMatch = bcrypt.compareSync(decryptionCode, encryptedData.codeHash);
+      if (!codeMatch) {
+        return res.status(400).json({ message: 'Code de décryptage incorrect. Veuillez vérifier votre code.' });
+      }
+    }
+
+    const algorithm = 'aes-256-cbc';
+    const key = crypto.scryptSync(decryptionCode, 'riziky-salt-2024', 32);
+    const iv = Buffer.from(encryptedData.iv, 'hex');
+
+    let decrypted;
+    try {
+      const decipher = crypto.createDecipheriv(algorithm, key, iv);
+      decrypted = decipher.update(encryptedData.data, 'hex', 'utf8');
+      decrypted += decipher.final('utf8');
+    } catch (e) {
+      return res.status(400).json({ message: 'Code de décryptage incorrect. Impossible de lire les données.' });
+    }
+
+    const backupData = JSON.parse(decrypted);
+    const checksum = crypto.createHash('sha256').update(decrypted).digest('hex');
+    if (encryptedData.checksum && encryptedData.checksum !== checksum) {
+      return res.status(400).json({ message: 'Fichier corrompu ou incomplet. Vérifiez la sauvegarde.' });
+    }
+
+    let updatedFilesCount = 0;
+    let unchangedFilesCount = 0;
+    let totalAddedEntries = 0;
+
+    // Restore all files from backup - including files that may not exist locally yet
+    const allFilesToRestore = new Set([
+      ...getDbFiles(),
+      ...Object.keys(backupData).filter(k => k !== '_metadata' && k.endsWith('.json'))
+    ]);
+
+    // ✅ Fichiers à TOUJOURS remplacer entièrement lors d'une restauration.
+    // Le merge "intelligent" peut perdre des données pour ces fichiers car
+    // les entrées partagent souvent les mêmes ids mais avec des valeurs
+    // numériques mises à jour (quantités produits, objectifs, montants...).
+    const REPLACE_ON_RESTORE = new Set([
+      'objectif.json',
+      'products.json',
+      'nouvelle_achat.json',
+      'pretproduits.json',
+      'pretfamilles.json',
+      'avance.json',
+      'sales.json',
+      'remboursement.json',
+      'compta.json',
+      'benefice.json',
+      'depensedumois.json',
+      'depensefixe.json',
+      'pointage.json',
+      'pointageauto.json',
+      'pointageDeleted.json',
+      'pointageAutoSessions.json'
+    ]);
+
+    // ✅ Les données d'épargne (index + fichiers compte-<NOM>.json) doivent être
+    // remplacées entièrement : le merge par id fausserait les soldes/opérations.
+    const isEpargneFile = (f) => f === 'comptes-epargne.json' || /^compte-.+\.json$/.test(f);
+
+    allFilesToRestore.forEach(file => {
+      if (backupData[file] === undefined) {
+        return;
+      }
+
+      const filePath = path.join(dbPath, file);
+      const existingData = fs.existsSync(filePath) ? readJson(filePath) : null;
+
+      // Pour les fichiers critiques (état numérique, stocks, finances) on
+      // remplace directement par le contenu de la sauvegarde au lieu de
+      // fusionner — sinon on risque de perdre des quantités/objectifs.
+      if (REPLACE_ON_RESTORE.has(file) || isEpargneFile(file)) {
+        const existingStr = stableStringify(existingData);
+        const incomingStr = stableStringify(backupData[file]);
+        if (existingStr !== incomingStr) {
+          writeJson(filePath, backupData[file]);
+          updatedFilesCount += 1;
+          const addedCount = Array.isArray(backupData[file])
+            ? backupData[file].length
+            : isPlainObject(backupData[file])
+              ? Object.keys(backupData[file]).length
+              : 1;
+          totalAddedEntries += addedCount;
+        } else {
+          unchangedFilesCount += 1;
+        }
+        return;
+      }
+
+      const mergeResult = mergeRestoreData(existingData, backupData[file]);
+
+      if (mergeResult.changed) {
+        writeJson(filePath, mergeResult.data);
+        updatedFilesCount += 1;
+        totalAddedEntries += mergeResult.added;
+      } else {
+        unchangedFilesCount += 1;
+      }
+    });
+
+    // Informations sur l'archive .zip liée à cette sauvegarde .json
+    const mediaInfo = backupData._media && typeof backupData._media === 'object'
+      ? {
+          mediaRequired: !!backupData._media.required,
+          mediaZipFilename: backupData._media.zipFilename || null,
+          mediaFilesCount: backupData._media.filesCount || 0
+        }
+      : { mediaRequired: false, mediaZipFilename: null, mediaFilesCount: 0 };
+
+    if (updatedFilesCount === 0 && totalAddedEntries === 0) {
+      return res.json({
+        success: true,
+        status: 'unchanged',
+        message: 'Ces données déjà dans la base de donnée.',
+        metadata: backupData._metadata,
+        ...mediaInfo,
+        updatedFilesCount,
+        unchangedFilesCount,
+        totalAddedEntries
+      });
+    }
+
+
+    // Après une restauration, s'assurer que tous les produits ont leur
+    // caractéristique (nom, numero, codeBarre obfusqué, code). Les vieilles
+    // sauvegardes peuvent ne pas en contenir.
+    try {
+      const ProductModel = require('../models/Product');
+      ProductModel.generateCodesForExistingProducts();
+    } catch (e) {
+      console.warn('⚠️ Migration caracteristique post-restore ignorée :', e.message);
+    }
+
+    // Reconstruire fidelite.json à partir des ventes restaurées
+    try {
+      require('../models/Fidelite').rebuild();
+    } catch (e) {
+      console.warn('⚠️ Rebuild fidelite post-restore ignoré :', e.message);
+    }
+
+    return res.json({
+      success: true,
+      status: 'updated',
+      message: 'Vos donné sont mise a jours.',
+      metadata: backupData._metadata,
+      ...mediaInfo,
+      updatedFilesCount,
+      unchangedFilesCount,
+      totalAddedEntries
+    });
+
+  } catch (error) {
+    console.error('Error restoring backup:', error);
+    res.status(500).json({ message: 'Erreur lors de la restauration' });
+  }
+});
+
+// ==================
+// POST /api/settings/delete-all - Supprimer toutes les données
+// Only administrateur principale can delete. Preserves admin principale account.
+// ==================
+router.post('/delete-all', authMiddleware, (req, res) => {
+  try {
+    if (!isAdminPrincipale(req.user)) {
+      return res.status(403).json({ message: 'Accès refusé. Administrateur principale requis.' });
+    }
+
+    const { password } = req.body;
+    if (!password) {
+      return res.status(400).json({ message: 'Mot de passe requis' });
+    }
+
+    // Verify admin principale password
+    const users = readJson(usersPath) || [];
+    const adminUser = users.find(u => u.id === req.user.id);
+    if (!adminUser) {
+      return res.status(404).json({ message: 'Utilisateur non trouvé' });
+    }
+
+    const isPasswordValid = bcrypt.compareSync(password, adminUser.password);
+    if (!isPasswordValid) {
+      return res.status(401).json({ message: 'Mot de passe incorrect' });
+    }
+
+    // Preserve admin principale user(s) - reset security counters but keep settings
+    const adminPrincipaleUsers = users
+      .filter(u => u.role === 'administrateur principale')
+      .map(u => ({
+        ...u,
+        failedAttempts: 0,
+        lockedUntil: null
+      }));
+
+    // Files that MUST always be arrays (even if currently encrypted/corrupt)
+    const ARRAY_FILES = [
+      'admin-messages.json', 'avance.json', 'benefice.json', 'clients.json',
+      'attribut_kinds.json', 'modeleproduit.json', 'tailleproduits.json',
+      'couleurproduits.json', 'devantproduits.json', 'autresproduits.json',
+      'commandes.json', 'compta.json', 'depensedumois.json', 'depensefixe.json',
+      'entreprise.json',
+      'fournisseurs.json', 'group-chats.json', 'group-messages.json',
+      'indisponible.json', 'lienpartagecommente.json', 'messagerie.json',
+      'messages.json', 'notes.json', 'nouvelle_achat.json', 'pointage.json',
+      'pointageauto.json', 'pointageDeleted.json', 'pointageAutoSessions.json',
+      'pretfamilles.json', 'pretproduits.json', 'productComments.json',
+      'products.json', 'rdv.json', 'rdvNotifications.json', 'remboursement.json',
+      'sales.json', 'shareTokens.json', 'tache.json', 'travailleur.json',
+      'users.json'
+    ];
+
+    // Fichiers de configuration auto à préserver/réinitialiser explicitement
+    // (jamais vidés à {}, sinon les flags auto disparaissent)
+    const PRESERVE_FILES = new Set(['auto-injecter.json', 'auto-sauvegarde.json']);
+
+    // Delete all data - write empty arrays/objects, but keep admin principale in users.
+    // Couvre dynamiquement TOUS les fichiers .json présents et futurs dans /db.
+    getDbFiles().forEach(file => {
+      const filePath = path.join(dbPath, file);
+      if (!fs.existsSync(filePath)) return;
+      if (PRESERVE_FILES.has(file)) return; // gérés ci-dessous
+      if (file === 'users.json') {
+        writeJson(filePath, adminPrincipaleUsers);
+      } else if (file === 'comptes-epargne.json') {
+        // Index des propriétaires d'épargne : vidé
+        writeJson(filePath, []);
+      } else if (/^compte-.+\.json$/.test(file)) {
+        // Fichier de compte épargne d'un propriétaire : supprimé entièrement
+        try { fs.unlinkSync(filePath); } catch { writeJson(filePath, { comptes: [] }); }
+      } else if (ARRAY_FILES.includes(file)) {
+        writeJson(filePath, []);
+      } else {
+        // Heuristique : on regarde la forme actuelle pour déterminer le vide approprié
+        try {
+          const current = readJson(filePath);
+          writeJson(filePath, Array.isArray(current) ? [] : {});
+        } catch {
+          writeJson(filePath, {});
+        }
+      }
+    });
+
+    // Réinitialise timeoutinactive.json et tentativeblocage.json à {}
+    try {
+      writeJson(path.join(dbPath, 'timeoutinactive.json'), {});
+      writeJson(path.join(dbPath, 'tentativeblocage.json'), {});
+    } catch (e) {
+      console.error('Erreur reset fichiers paramètres:', e);
+    }
+
+    // Force auto-injecter = true (pour redéclencher la demande d'injection)
+    // Force auto-sauvegarde = false (pas de sauvegarde auto sur base vide)
+    try {
+      fs.writeFileSync(path.join(dbPath, 'auto-injecter.json'), JSON.stringify({ autoInjecter: true }, null, 2));
+      fs.writeFileSync(path.join(dbPath, 'auto-sauvegarde.json'), JSON.stringify({ autoSauvegarde: false }, null, 2));
+    } catch (e) {
+      console.error('Erreur reset flags auto:', e);
+    }
+
+    // ---------------------------------------------------------------------
+    // Suppression des fichiers médias (photos produits, clients, profils,
+    // pièces justificatives...) SAUF la photo de profil de l'administrateur
+    // principale.
+    // ---------------------------------------------------------------------
+    let deletedMediaCount = 0;
+    try {
+      const preserved = new Set();
+      adminPrincipaleUsers.forEach((u) => {
+        [u.profilePhoto, u.photo, u.avatar].forEach((p) => {
+          if (typeof p === 'string' && p.trim()) {
+            preserved.add(p.split('?')[0].split('#')[0].split('/').pop());
+          }
+        });
+      });
+
+      listMediaFiles().forEach((relative) => {
+        const base = relative.split('/').pop();
+        if (preserved.has(base)) return;
+        try {
+          fs.unlinkSync(path.join(uploadsRoot, relative));
+          deletedMediaCount += 1;
+        } catch { /* fichier déjà absent ou verrouillé */ }
+      });
+    } catch (e) {
+      console.error('Erreur suppression des fichiers médias:', e);
+    }
+
+    res.json({
+      success: true,
+      deletedMediaCount,
+      message: `Toutes les données ont été supprimées (compte administrateur principale et sa photo de profil préservés) — ${deletedMediaCount} fichier(s) supprimé(s)`
+    });
+  } catch (error) {
+    console.error('Error deleting all data:', error);
+    res.status(500).json({ message: 'Erreur lors de la suppression' });
+  }
+});
+
+// ==================
+// POST /api/settings/bulk-delete - Suppression sélective (ventes, produits, clients)
+// Admin principale uniquement
+// ==================
+router.post('/bulk-delete', authMiddleware, (req, res) => {
+  try {
+    if (!isAdminPrincipale(req.user)) {
+      return res.status(403).json({ message: 'Accès refusé. Administrateur principale requis.' });
+    }
+
+    const { type, ids, deleteAll, month, year } = req.body;
+
+    if (!type || !['sales', 'products', 'clients', 'notes'].includes(type)) {
+      return res.status(400).json({ message: 'Type invalide. Choisir: sales, products, clients, notes' });
+    }
+
+    const fileMap = {
+      sales: 'sales.json',
+      products: 'products.json',
+      clients: 'clients.json',
+      notes: 'notes.json'
+    };
+
+    const filePath = path.join(dbPath, fileMap[type]);
+    let data = readJson(filePath) || [];
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ message: 'Format de données invalide' });
+    }
+
+    const originalCount = data.length;
+    let deletedCount = 0;
+
+    if (deleteAll) {
+      // Supprimer tout pour ce type
+      if (type === 'sales' && month !== undefined && year !== undefined) {
+        // Supprimer uniquement les ventes d'un mois/année spécifique
+        const monthNum = Number(month);
+        const yearNum = Number(year);
+        data = data.filter(sale => {
+          const d = new Date(sale.date);
+          const match = (d.getMonth() + 1) === monthNum && d.getFullYear() === yearNum;
+          if (match) deletedCount++;
+          return !match;
+        });
+      } else if (type === 'sales' && year !== undefined) {
+        // Supprimer toutes les ventes d'une année
+        const yearNum = Number(year);
+        data = data.filter(sale => {
+          const d = new Date(sale.date);
+          const match = d.getFullYear() === yearNum;
+          if (match) deletedCount++;
+          return !match;
+        });
+      } else {
+        deletedCount = data.length;
+        data = [];
+      }
+    } else if (ids && Array.isArray(ids) && ids.length > 0) {
+      // Supprimer par IDs sélectionnés
+      const idSet = new Set(ids);
+      data = data.filter(item => {
+        if (idSet.has(item.id)) {
+          deletedCount++;
+          return false;
+        }
+        return true;
+      });
+    } else {
+      return res.status(400).json({ message: 'Fournir ids[] ou deleteAll=true' });
+    }
+
+    writeJson(filePath, data);
+
+    // Notifier les clients SSE
+    if (req.app?.locals?.broadcastSSE) {
+      req.app.locals.broadcastSSE({ type, action: 'bulk-delete', data: { deletedCount } });
+    }
+
+    const labelMap = { sales: 'vente(s)', products: 'produit(s)', clients: 'client(s)', notes: 'note(s)' };
+    res.json({
+      success: true,
+      message: `${deletedCount} ${labelMap[type]} supprimé(s)`,
+      deletedCount,
+      remainingCount: data.length
+    });
+  } catch (error) {
+    console.error('Error in bulk-delete:', error);
+    res.status(500).json({ message: 'Erreur lors de la suppression' });
+  }
+});
+
+// GET /api/settings/bulk-data - Récupérer données pour la modale de suppression
+router.get('/bulk-data', authMiddleware, (req, res) => {
+  try {
+    if (!isAdminPrincipale(req.user)) {
+      return res.status(403).json({ message: 'Accès refusé' });
+    }
+
+    const { type, month, year } = req.query;
+
+    if (!type || !['sales', 'products', 'clients', 'notes'].includes(type)) {
+      return res.status(400).json({ message: 'Type invalide' });
+    }
+
+    const fileMap = {
+      sales: 'sales.json',
+      products: 'products.json',
+      clients: 'clients.json',
+      notes: 'notes.json'
+    };
+
+    const filePath = path.join(dbPath, fileMap[type]);
+    let data = readJson(filePath) || [];
+
+    if (type === 'sales' && month !== undefined && year !== undefined) {
+      const monthNum = Number(month);
+      const yearNum = Number(year);
+      data = data.filter(sale => {
+        const d = new Date(sale.date);
+        return (d.getMonth() + 1) === monthNum && d.getFullYear() === yearNum;
+      });
+    } else if (type === 'sales' && year !== undefined) {
+      const yearNum = Number(year);
+      data = data.filter(sale => {
+        const d = new Date(sale.date);
+        return d.getFullYear() === yearNum;
+      });
+    }
+
+    // Return lightweight data for selection
+    const lightData = data.map(item => {
+      if (type === 'sales') {
+        return {
+          id: item.id,
+          date: item.date,
+          description: item.description || (item.products ? item.products.map(p => p.description).join(', ') : ''),
+          totalSellingPrice: item.totalSellingPrice || item.sellingPrice || 0,
+          clientName: item.clientName || ''
+        };
+      } else if (type === 'products') {
+        return {
+          id: item.id,
+          description: item.description,
+          purchasePrice: item.purchasePrice,
+          sellingPrice: item.sellingPrice,
+          quantity: item.quantity
+        };
+      } else if (type === 'notes') {
+        // Strip HTML for preview
+        const stripHtml = (html) => String(html || '').replace(/<[^>]*>/g, '').trim();
+        return {
+          id: item.id,
+          nom: item.title || stripHtml(item.titleHtml) || 'Sans titre',
+          description: stripHtml(item.contentHtml || item.content || '').slice(0, 100),
+          date: item.createdAt || item.updatedAt || ''
+        };
+      } else {
+        return {
+          id: item.id,
+          nom: item.nom,
+          phone: item.phone,
+          adresse: item.adresse
+        };
+      }
+    });
+
+    // For sales, also return available years/months
+    let years = [];
+    if (type === 'sales') {
+      const allSales = readJson(filePath) || [];
+      const yearSet = new Set();
+      allSales.forEach(s => {
+        const d = new Date(s.date);
+        if (!isNaN(d.getTime())) yearSet.add(d.getFullYear());
+      });
+      years = Array.from(yearSet).sort((a, b) => b - a);
+    }
+
+    res.json({ data: lightData, total: lightData.length, years });
+  } catch (error) {
+    console.error('Error in bulk-data:', error);
+    res.status(500).json({ message: 'Erreur serveur' });
+  }
+});
+
+// ==================
+// POST /api/settings/auto-backup - Sauvegarde automatique avec mot de passe utilisateur
+// ==================
+router.post('/auto-backup', authMiddleware, (req, res) => {
+  try {
+    if (!isAdmin(req.user)) {
+      return res.status(403).json({ message: 'Accès refusé. Administrateur requis.' });
+    }
+
+    // Get the user's actual password from DB to use as encryption code
+    const users = readJson(usersPath) || [];
+    const currentUser = users.find(u => u.id === req.user.id);
+    if (!currentUser) {
+      return res.status(404).json({ message: 'Utilisateur non trouvé' });
+    }
+
+    const { encryptionPassword } = req.body;
+    if (!encryptionPassword || encryptionPassword.length < 1) {
+      return res.status(400).json({ message: 'Mot de passe requis pour la sauvegarde automatique' });
+    }
+
+    // Verify the password matches
+    const isPasswordValid = bcrypt.compareSync(encryptionPassword, currentUser.password);
+    if (!isPasswordValid) {
+      return res.status(401).json({ message: 'Mot de passe invalide' });
+    }
+
+    // Use the plain password as encryption code
+    const encryptionCode = encryptionPassword;
+
+    // Collect all DB data
+    const backupData = {};
+    getDbFiles().forEach(file => {
+      const filePath = path.join(dbPath, file);
+      const data = readJson(filePath);
+      if (data !== null) {
+        backupData[file] = data;
+      }
+    });
+
+    backupData._metadata = {
+      backupDate: new Date().toISOString(),
+      version: '1.0',
+      filesCount: Object.keys(backupData).length - 1,
+      autoBackup: true
+    };
+
+    // Encrypt data
+    const jsonData = JSON.stringify(backupData);
+    const algorithm = 'aes-256-cbc';
+    const key = crypto.scryptSync(encryptionCode, 'riziky-salt-2024', 32);
+    const iv = crypto.randomBytes(16);
+    const cipher = crypto.createCipheriv(algorithm, key, iv);
+    let encrypted = cipher.update(jsonData, 'utf8', 'hex');
+    encrypted += cipher.final('hex');
+
+    const hashedCode = bcrypt.hashSync(encryptionCode, 10);
+
+    const encryptedPackage = {
+      iv: iv.toString('hex'),
+      data: encrypted,
+      checksum: crypto.createHash('sha256').update(jsonData).digest('hex'),
+      codeHash: hashedCode
+    };
+
+    // Update last backup date
+    const settings = readJson(settingsPath) || {};
+    settings.backup = settings.backup || {};
+    settings.backup.lastBackupDate = new Date().toISOString();
+    writeJson(settingsPath, settings);
+    syncManager.markBackupCompleted('auto');
+
+    // Build filename with user's name
+    const userName = (currentUser.lastName || currentUser.firstName || 'inconnu').replace(/[^a-zA-Z0-9À-ÿ\s-]/g, '').replace(/\s+/g, ' ').trim();
+    const dateStr = new Date().toISOString().split('T')[0];
+
+    res.json({
+      success: true,
+      backup: encryptedPackage,
+      filename: `auto-backup-riziky-${userName}-${dateStr}.json`
+    });
+  } catch (error) {
+    console.error('Error creating auto-backup:', error);
+    res.status(500).json({ message: 'Erreur lors de la sauvegarde automatique' });
+  }
+});
+
+// ==================
+// POST /api/settings/verify-password - Vérifier mot de passe admin
+// ==================
+router.post('/verify-password', authMiddleware, (req, res) => {
+  try {
+    if (!isAdmin(req.user)) {
+      return res.status(403).json({ message: 'Accès refusé' });
+    }
+
+    const { password } = req.body;
+    const users = readJson(usersPath) || [];
+    const adminUser = users.find(u => u.id === req.user.id);
+    if (!adminUser) {
+      return res.status(404).json({ message: 'Utilisateur non trouvé' });
+    }
+
+    const isValid = bcrypt.compareSync(password, adminUser.password);
+    res.json({ valid: isValid });
+  } catch (error) {
+    res.status(500).json({ message: 'Erreur serveur' });
+  }
+});
+
+// ========== AUTO-SAUVEGARDE STATUS ==========
+const autoSauvegardePath = path.join(dbPath, 'auto-sauvegarde.json');
+
+const readAutoSauvegarde = () => {
+  try {
+    if (!fs.existsSync(autoSauvegardePath)) {
+      fs.writeFileSync(autoSauvegardePath, JSON.stringify({ autoSauvegarde: true }, null, 2));
+      return { autoSauvegarde: true };
+    }
+    return JSON.parse(fs.readFileSync(autoSauvegardePath, 'utf8'));
+  } catch {
+    return { autoSauvegarde: true };
+  }
+};
+
+// GET auto-sauvegarde status
+router.get('/auto-sauvegarde', authMiddleware, (req, res) => {
+  try {
+    const data = readAutoSauvegarde();
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ message: 'Erreur serveur' });
+  }
+});
+
+// PUT auto-sauvegarde status
+router.put('/auto-sauvegarde', authMiddleware, (req, res) => {
+  try {
+    const { autoSauvegarde } = req.body;
+    const data = { autoSauvegarde: !!autoSauvegarde };
+    fs.writeFileSync(autoSauvegardePath, JSON.stringify(data, null, 2));
+    res.json({ success: true, ...data });
+  } catch (error) {
+    res.status(500).json({ message: 'Erreur serveur' });
+  }
+});
+
+// ========== AUTO-INJECTER STATUS ==========
+const autoInjecterPath = path.join(dbPath, 'auto-injecter.json');
+
+const readAutoInjecter = () => {
+  try {
+    if (!fs.existsSync(autoInjecterPath)) {
+      fs.writeFileSync(autoInjecterPath, JSON.stringify({ autoInjecter: true }, null, 2));
+      return { autoInjecter: true };
+    }
+    return JSON.parse(fs.readFileSync(autoInjecterPath, 'utf8'));
+  } catch {
+    return { autoInjecter: true };
+  }
+};
+
+router.get('/auto-injecter', authMiddleware, (req, res) => {
+  try { res.json(readAutoInjecter()); }
+  catch { res.status(500).json({ message: 'Erreur serveur' }); }
+});
+
+router.put('/auto-injecter', authMiddleware, (req, res) => {
+  try {
+    if (!isAdmin(req.user)) {
+      return res.status(403).json({ message: 'Accès refusé. Administrateur requis.' });
+    }
+    const { autoInjecter } = req.body;
+    const data = { autoInjecter: !!autoInjecter };
+    fs.writeFileSync(autoInjecterPath, JSON.stringify(data, null, 2));
+    res.json({ success: true, ...data });
+  } catch {
+    res.status(500).json({ message: 'Erreur serveur' });
+  }
+});
+
+// Vérifie si la base est "vide" (toutes les bases sauf users.json sont vides,
+// et users.json ne contient que l'admin principale).
+router.get('/needs-injection', authMiddleware, (req, res) => {
+  try {
+    const cfg = readAutoInjecter();
+    if (!cfg.autoInjecter) return res.json({ needsInjection: false, autoInjecter: false });
+
+    // Bases métier critiques : si l'UNE d'elles est vide -> injection requise
+    const CRITICAL = [
+      'products.json', 'sales.json', 'clients.json',
+      'rdv.json', 'tache.json', 'notes.json', 'pointage.json'
+    ];
+
+    const emptyFiles = [];
+    for (const f of CRITICAL) {
+      const fp = path.join(dbPath, f);
+      if (!fs.existsSync(fp)) { emptyFiles.push(f); continue; }
+      const data = readJson(fp);
+      const isEmpty =
+        (Array.isArray(data) && data.length === 0) ||
+        (isPlainObject(data) && Object.keys(data).length === 0) ||
+        data == null;
+      if (isEmpty) emptyFiles.push(f);
+    }
+
+    // users.json : doit contenir uniquement l'admin principale
+    const users = readJson(usersPath) || [];
+    const onlyAdminPrincipal = users.length > 0 &&
+      users.every(u => u.role === 'administrateur principale');
+
+    res.json({
+      needsInjection: emptyFiles.length > 0 && onlyAdminPrincipal,
+      emptyFiles,
+      autoInjecter: true
+    });
+  } catch (e) {
+    console.error('needs-injection error:', e);
+    res.status(500).json({ message: 'Erreur serveur', needsInjection: false });
+  }
+});
+
+module.exports = router;

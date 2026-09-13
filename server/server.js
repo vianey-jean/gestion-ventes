@@ -1,0 +1,622 @@
+/**
+ * =============================================================================
+ * Serveur Express - Point d'entrée principal
+ * =============================================================================
+ * 
+ * Serveur API REST avec :
+ * - Authentification JWT (8h expiration)
+ * - Base de données JSON (fichiers dans server/db/)
+ * - Synchronisation temps réel via SSE (/api/sync/events)
+ * - Sécurité : rate limiting, sanitization, headers sécurisés
+ * - CORS configuré pour Vercel et localhost
+ * 
+ * @module server
+ * @version 4.2.0
+ */
+
+// Patch db I/O for transparent encryption — MUST be before any model imports
+require('./middleware/patchDbIO');
+// Chiffrement transparent de TOUS les fichiers de server/uploads (photos, PDF...)
+require('./middleware/fileEncryption').patchUploadsIO();
+
+const express = require('express');
+const bodyParser = require('body-parser');
+const cors = require('cors');
+const fs = require('fs');
+const path = require('path');
+const dotenv = require('dotenv');
+const bcrypt = require('bcryptjs');
+const compression = require('compression');
+
+// Middleware de sécurité
+const {
+  rateLimitMiddleware,
+  sanitizeMiddleware,
+  securityHeadersMiddleware,
+  suspiciousActivityLogger
+} = require('./middleware/security');
+const { threatShield, getShieldStats, getIntrusions, resetIntrusions } = require('./middleware/threatShield');
+const authMiddleware = require('./middleware/auth');
+
+// Load environment variables
+dotenv.config();
+
+// Initialize express app
+const app = express();
+const PORT = process.env.PORT || 10000;
+
+// ===================
+// SECURITY MIDDLEWARE
+// ===================
+
+// Compression pour performance
+app.use(compression({
+  filter: (req, res) => {
+    if (req.path === '/api/sync/events' || req.path === '/api/messagerie/events') {
+      return false;
+    }
+    return compression.filter(req, res);
+  }
+}));
+
+// Security headers
+app.use(securityHeadersMiddleware);
+
+// ===================
+// CORS (DOIT ÊTRE AVANT LE RATE LIMIT)
+// ===================
+
+// Configuration CORS avec toutes les origines autorisées
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:8080',
+  'http://localhost:8081',
+  'https://server-gestion-ventes.onrender.com',
+  'https://riziky-gestion-ventes.vercel.app',
+  'https://riziky-boutic.vercel.app',
+  'https://sales-gestion-ventes.lovable.app'
+];
+
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Permettre les requêtes sans origine (comme les apps mobiles ou curl)
+    if (!origin) return callback(null, true);
+
+    // Permettre toutes les origines Lovable preview
+    if (origin.includes('lovable.app') || origin.includes('lovableproject.com')) {
+      return callback(null, true);
+    }
+
+    // Permettre les origines dans la liste
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    // En production : refus strict de toute origine hors whitelist
+    if (process.env.NODE_ENV === 'production') {
+      return callback(new Error('Origine non autorisée par la politique CORS'));
+    }
+
+    // En développement uniquement : autoriser (évite les blocages preview)
+    return callback(null, true);
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: [
+    'Content-Type',
+    'Authorization',
+    'Cache-Control',
+    'X-Requested-With',
+    'Accept',
+    'Origin',
+    'Last-Event-ID'
+  ],
+  exposedHeaders: ['Content-Type', 'Cache-Control'],
+  optionsSuccessStatus: 200
+};
+
+// Middleware CORS global
+app.use(cors(corsOptions));
+
+// Endpoint de santé (utilisé par le front pour sonder la disponibilité
+// avant d'ouvrir une connexion SSE — évite les erreurs CORS/réseau en console)
+app.get('/api/health', (req, res) => {
+  const origin = req.headers.origin || '*';
+  res.setHeader('Access-Control-Allow-Origin', origin);
+  res.setHeader('Cache-Control', 'no-store');
+  res.status(200).json({ ok: true, timestamp: Date.now() });
+});
+
+// ===================
+// RATE LIMIT (APRÈS CORS)
+// ===================
+
+// Ne pas bloquer SSE (connexion longue) avec le rate-limit global
+// Le heartbeat de session unique est également exempté (appel fréquent)
+app.use((req, res, next) => {
+  if (
+    req.path === '/api/sync/events' ||
+    req.path === '/api/messagerie/events' ||
+    req.path.startsWith('/api/connecte-profil-unique')
+  ) {
+    return next();
+  }
+  return rateLimitMiddleware('general')(req, res, next);
+});
+
+
+// Détection d'activités suspectes
+app.use(suspiciousActivityLogger);
+
+// ===================
+// BOUCLIER ADAPTATIF ANTI-INTRUSION
+// ===================
+// Moteur heuristique + comportemental : signatures d'attaque, honeypots,
+// tarpit progressif et bannissement gradué. Couche additive : aucune logique
+// métier n'est modifiée.
+app.use(threatShield());
+
+// ===================
+// BLOCAGE D'IP GLOBAL
+// ===================
+// Toute requête provenant d'une IP listée dans db/blockage-ip.json est
+// refusée (403), sauf l'endpoint public de vérification.
+const { ipBlocklistMiddleware } = require('./middleware/ipBlocklist');
+app.use(ipBlocklistMiddleware);
+
+// Body parsing avec limites de taille
+// Archive .zip des photos/fichiers : limite élargie (payload base64 volumineux)
+app.use('/api/settings/restore-media', bodyParser.json({ limit: '512mb' }));
+app.use(bodyParser.json({ limit: '10mb' }));
+app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }));
+
+// Sanitization de tous les inputs
+// Skip pour payloads volumineux/chiffrés qui seraient tronqués par la sanitization
+app.use((req, res, next) => {
+  if (req.path === '/api/notes/upload-drawing' || req.path === '/api/settings/restore' || req.path === '/api/settings/restore-media') {
+    return next();
+  }
+  return sanitizeMiddleware(req, res, next);
+});
+
+// Create db directory if it doesn't exist
+const dbPath = path.join(__dirname, 'db');
+if (!fs.existsSync(dbPath)) {
+  fs.mkdirSync(dbPath);
+}
+
+// Create uploads directory if it doesn't exist
+const uploadsPath = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadsPath)) {
+  fs.mkdirSync(uploadsPath);
+}
+
+// Hash a password
+const hashPassword = (password) => {
+  const salt = bcrypt.genSaltSync(10);
+  return bcrypt.hashSync(password, salt);
+};
+
+const productsPath = path.join(dbPath, 'products.json');
+if (!fs.existsSync(productsPath)) {
+  fs.writeFileSync(productsPath, JSON.stringify([
+    {
+      id: "1",
+      description: "Laptop",
+      purchasePrice: 500,
+      quantity: 10
+    },
+    {
+      id: "2",
+      description: "Smartphone",
+      purchasePrice: 300,
+      quantity: 15
+    },
+    {
+      id: "3",
+      description: "Headphones",
+      purchasePrice: 50,
+      quantity: 30
+    }
+  ], null, 2));
+}
+
+// Migration automatique : s'assurer que TOUS les produits ont un `code`
+// ET une `caracteristique` (nom, numero, codeBarre obfusqué, code).
+// Couvre :
+//   - première installation (fichier seed)
+//   - après une restauration / injection d'une vieille sauvegarde
+//   - après un delete-all (fichier remis à [] puis nouveaux produits ajoutés)
+// Sans planter si products.json est vide ou absent.
+try {
+  const ProductModel = require('./models/Product');
+  if (fs.existsSync(productsPath)) {
+    const raw = fs.readFileSync(productsPath, 'utf8');
+    const list = JSON.parse(raw || '[]');
+    if (Array.isArray(list) && list.length > 0) {
+      const needsMigration = list.some(
+        p => !p.code || !p.caracteristique || typeof p.caracteristique !== 'object'
+      );
+      if (needsMigration) {
+        const result = ProductModel.generateCodesForExistingProducts();
+        if (result && result.success) {
+          console.log(`🏷️  Migration produits OK : ${result.updatedCount} code(s) générés / caractéristiques ajoutées.`);
+        }
+      }
+    }
+  }
+} catch (e) {
+  console.warn('⚠️ Migration caracteristique produits ignorée :', e.message);
+}
+
+const salesPath = path.join(dbPath, 'sales.json');
+if (!fs.existsSync(salesPath)) {
+  fs.writeFileSync(salesPath, JSON.stringify([], null, 2));
+}
+
+// Créer le fichier clients.json s'il n'existe pas
+const clientsPath = path.join(dbPath, 'clients.json');
+if (!fs.existsSync(clientsPath)) {
+  fs.writeFileSync(clientsPath, JSON.stringify([
+    {
+      id: "1",
+      nom: "Marie Dupont",
+      phone: "0692123456",
+      adresse: "123 Rue de la Paix, Saint-Denis",
+      dateCreation: "2024-01-15T10:30:00.000Z"
+    },
+    {
+      id: "2", 
+      nom: "Jean Martin",
+      phone: "0693987654",
+      adresse: "45 Avenue des Palmiers, Saint-Paul",
+      dateCreation: "2024-01-20T14:15:00.000Z"
+    }
+  ], null, 2));
+}
+
+// Créer les nouveaux fichiers JSON s'ils n'existent pas
+const pretFamillesPath = path.join(dbPath, 'pretfamilles.json');
+if (!fs.existsSync(pretFamillesPath)) {
+  fs.writeFileSync(pretFamillesPath, JSON.stringify([
+    { id: "1", nom: "Famille Martin", pretTotal: 2000, soldeRestant: 1500, dernierRemboursement: 500, dateRemboursement: "2024-04-15" },
+    { id: "2", nom: "Famille Dupont", pretTotal: 1000, soldeRestant: 500, dernierRemboursement: 200, dateRemboursement: "2024-04-10" },
+    { id: "3", nom: "Famille Bernard", pretTotal: 3000, soldeRestant: 2000, dernierRemboursement: 1000, dateRemboursement: "2024-04-05" }
+  ], null, 2));
+}
+
+const pretProduitsPath = path.join(dbPath, 'pretproduits.json');
+if (!fs.existsSync(pretProduitsPath)) {
+  fs.writeFileSync(pretProduitsPath, JSON.stringify([
+    { id: "1", nom: "Marie Dupont", phone: "0692123456", date: "2023-04-10", description: "Perruque Blonde", prixVente: 450, avanceRecue: 200, reste: 250, estPaye: false, dateProchaineVente: null },
+    { id: "2", nom: "Jean Martin", phone: "0693987654", date: "2023-04-15", description: "Perruque Brune", prixVente: 300, avanceRecue: 300, reste: 0, estPaye: true, dateProchaineVente: null },
+    { id: "3", nom: "Marie Dupont", phone: "0692123456", date: "2023-04-20", description: "Perruque Rousse", prixVente: 500, avanceRecue: 250, reste: 250, estPaye: false, dateProchaineVente: null }
+  ], null, 2));
+}
+
+const depenseDuMoisPath = path.join(dbPath, 'depensedumois.json');
+if (!fs.existsSync(depenseDuMoisPath)) {
+  fs.writeFileSync(depenseDuMoisPath, JSON.stringify([
+    { id: "1", date: "2023-04-05", description: "Salaire", categorie: "salaire", debit: 0, credit: 2000, solde: 2000 },
+    { id: "2", date: "2023-04-10", description: "Courses Leclerc", categorie: "courses", debit: 150, credit: 0, solde: 1850 },
+    { id: "3", date: "2023-04-15", description: "Restaurant", categorie: "restaurant", debit: 45, credit: 0, solde: 1805 },
+    { id: "4", date: "2023-04-20", description: "Free Mobile", categorie: "free", debit: 19.99, credit: 0, solde: 1785.01 }
+  ], null, 2));
+}
+
+const depenseFixePath = path.join(dbPath, 'depensefixe.json');
+if (!fs.existsSync(depenseFixePath)) {
+  fs.writeFileSync(depenseFixePath, JSON.stringify({
+    free: 19.99,
+    internetZeop: 39.99,
+    assuranceVoiture: 85,
+    autreDepense: 45,
+    assuranceVie: 120,
+    total: 309.98
+  }, null, 2));
+}
+
+const beneficePath = path.join(dbPath, 'benefice.json');
+if (!fs.existsSync(beneficePath)) {
+  fs.writeFileSync(beneficePath, JSON.stringify([], null, 2));
+}
+
+const commandesPath = path.join(dbPath, 'commandes.json');
+if (!fs.existsSync(commandesPath)) {
+  fs.writeFileSync(commandesPath, JSON.stringify([], null, 2));
+}
+
+const remboursementPath = path.join(dbPath, 'remboursement.json');
+if (!fs.existsSync(remboursementPath)) {
+  fs.writeFileSync(remboursementPath, JSON.stringify([], null, 2));
+}
+
+// Garantit l'existence du fichier pointage automatique pour qu'il soit
+// toujours inclus dans les sauvegardes/restaurations dynamiques.
+const pointageAutoPath = path.join(dbPath, 'pointageauto.json');
+if (!fs.existsSync(pointageAutoPath)) {
+  fs.writeFileSync(pointageAutoPath, JSON.stringify([], null, 2));
+}
+
+// Import routes
+const authRoutes = require('./routes/auth');
+const productRoutes = require('./routes/products');
+const productsVenduRoutes = require('./routes/productsVendu');
+const clientsVillesRoutes = require('./routes/clientsVilles');
+const livraisonVilleRoutes = require('./routes/livraisonVille');
+const salesRoutes = require('./routes/sales');
+const clientRoutes = require('./routes/clients');
+const pretFamillesRoutes = require('./routes/pretfamilles');
+const pretProduitsRoutes = require('./routes/pretproduits');
+const depensesRoutes = require('./routes/depenses');
+const syncRoutes = require('./routes/sync');
+const beneficesRoutes = require('./routes/benefices');
+const messagesRoutes = require('./routes/messages');
+
+const commandesRoutes = require('./routes/commandes');
+const rdvRoutes = require('./routes/rdv');
+const rdvNotificationsRoutes = require('./routes/rdvNotifications');
+const objectifRoutes = require('./routes/objectif');
+const nouvelleAchatRoutes = require('./routes/nouvelleAchat');
+const comptaRoutes = require('./routes/compta');
+const remboursementsRoutes = require('./routes/remboursements');
+const fournisseursRoutes = require('./routes/fournisseurs');
+const entrepriseRoutes = require('./routes/entreprise');
+const pointageRoutes = require('./routes/pointage');
+const pointageAutoRoutes = require('./routes/pointageAuto');
+const pointageDeletedRoutes = require('./routes/pointageDeleted');
+const pointageAutoSessionsRoutes = require('./routes/pointageAutoSessions');
+const pointageAutoDeclancheRoutes = require('./routes/pointageAutoDeclanche');
+const travailleurRoutes = require('./routes/travailleur');
+const tacheRoutes = require('./routes/tache');
+const tachesRdvRoutes = require('./routes/tachesRdv');
+const rdvTachesRoutes = require('./routes/rdvTaches');
+const notesRoutes = require('./routes/notes');
+const notesShareRoutes = require('./routes/notesShare');
+const shareLinksRoutes = require('./routes/shareLinks');
+const avanceRoutes = require('./routes/avance');
+const profileRoutes = require('./routes/profile');
+const messagerieRoutes = require('./routes/messagerie');
+const settingsRoutes = require('./routes/settings');
+const indisponibleRoutes = require('./routes/indisponible');
+const moduleSettingsRoutes = require('./routes/moduleSettings');
+const parametresRoutes = require('./routes/parametres');
+const encryptionRoutes = require('./routes/encryption');
+const shareCommentsRoutes = require('./routes/shareComments');
+const productCommentsRoutes = require('./routes/productComments');
+const maintenanceRoutes = require('./routes/maintenance');
+const prepaLivraisonRoutes = require('./routes/prepaLivraison');
+const confirmationRdvRoutes = require('./routes/confirmationRdv');
+const historiqueConnexionRoutes = require('./routes/historiqueConnexion');
+const versementRoutes = require('./routes/versement');
+const banksRoutes = require('./routes/banks');
+const epargneRoutes = require('./routes/epargne');
+const prixProductsRoutes = require('./routes/prixproducts');
+const fideliteRoutes = require('./routes/fidelite');
+const listesFideliteRoutes = require('./routes/listesFidelite');
+
+
+// Reconstruire fidelite.json au démarrage depuis sales.json
+try { require('./models/Fidelite').rebuild(); } catch (e) { console.error('Fidelite initial rebuild failed:', e); }
+
+
+
+// Use routes
+// ===================
+// SUPERVISION SÉCURITÉ (lecture seule, réservée aux comptes authentifiés)
+// ===================
+app.get('/api/security/shield-stats', authMiddleware, (req, res) => {
+  try {
+    res.setHeader('Cache-Control', 'no-store');
+    res.json({ ok: true, ...getShieldStats() });
+  } catch (error) {
+    res.status(500).json({ ok: false, message: 'Statistiques indisponibles' });
+  }
+});
+
+// Journal détaillé des intrusions (base de données server/db/intrusions.json)
+app.get('/api/security/intrusions', authMiddleware, (req, res) => {
+  try {
+    res.setHeader('Cache-Control', 'no-store');
+    const { limit, severity, mode, ip, since } = req.query;
+    const result = getIntrusions({
+      limit: Math.min(Number(limit) || 200, 1000),
+      severity: severity || undefined,
+      mode: mode || undefined,
+      ip: ip || undefined,
+      since: since || undefined,
+    });
+    res.json({ ok: true, ...result });
+  } catch (error) {
+    res.status(500).json({ ok: false, message: 'Journal des intrusions indisponible' });
+  }
+});
+
+// Purge du journal (administrateur principale uniquement)
+app.delete('/api/security/intrusions', authMiddleware, (req, res) => {
+  try {
+    if (!req.user || req.user.role !== 'administrateur principale') {
+      return res.status(403).json({ ok: false, message: 'Accès refusé' });
+    }
+    resetIntrusions();
+    res.json({ ok: true, message: 'Journal des intrusions réinitialisé' });
+  } catch (error) {
+    res.status(500).json({ ok: false, message: 'Réinitialisation impossible' });
+  }
+});
+
+
+app.use('/api/auth', authRoutes);
+app.use('/api/products', productRoutes);
+app.use('/api/products-vendu', productsVenduRoutes);
+app.use('/api/sales', salesRoutes);
+app.use('/api/fidelite', fideliteRoutes);
+app.use('/api/listes-fidelite', listesFideliteRoutes);
+
+app.use('/api/clients', clientRoutes);
+app.use('/api/clients-villes', clientsVillesRoutes);
+app.use('/api/livraison-villes', livraisonVilleRoutes);
+app.use('/api/pretfamilles', pretFamillesRoutes);
+app.use('/api/pretproduits', pretProduitsRoutes);
+app.use('/api/depenses', depensesRoutes);
+app.use('/api/versements', versementRoutes);
+app.use('/api/banks', banksRoutes);
+app.use('/api/epargne', epargneRoutes);
+app.use('/api/prix-products', prixProductsRoutes);
+app.use('/api/sync', syncRoutes);
+app.use('/api/benefices', beneficesRoutes);
+app.use('/api/messages', messagesRoutes);
+
+app.use('/api/commandes', commandesRoutes);
+app.use('/api/rdv', rdvRoutes);
+app.use('/api/rdv-notifications', rdvNotificationsRoutes);
+app.use('/api/objectif', objectifRoutes);
+app.use('/api/nouvelle-achat', nouvelleAchatRoutes);
+app.use('/api/compta', comptaRoutes);
+app.use('/api/remboursements', remboursementsRoutes);
+app.use('/api/fournisseurs', fournisseursRoutes);
+app.use('/api/entreprises', entrepriseRoutes);
+app.use('/api/pointages', pointageRoutes);
+app.use('/api/pointages-auto', pointageAutoRoutes);
+app.use('/api/pointages-deleted', pointageDeletedRoutes);
+app.use('/api/pointages-auto-sessions', pointageAutoSessionsRoutes);
+app.use('/api/pointages-auto-declanche', pointageAutoDeclancheRoutes);
+app.use('/api/travailleurs', travailleurRoutes);
+app.use('/api/taches', tacheRoutes);
+app.use('/api/taches-rdv', tachesRdvRoutes);
+app.use('/api/rdv-taches', rdvTachesRoutes);
+app.use('/api/notes', notesRoutes);
+app.use('/api/notes-share', notesShareRoutes);
+app.use('/api/share-links', shareLinksRoutes);
+app.use('/api/avances', avanceRoutes);
+app.use('/api/profile', profileRoutes);
+app.use('/api/messagerie', messagerieRoutes);
+app.use('/api/settings', settingsRoutes);
+app.use('/api/indisponible', indisponibleRoutes);
+app.use('/api/module-settings', moduleSettingsRoutes);
+app.use('/api/parametres', parametresRoutes);
+app.use('/api/encryption', encryptionRoutes);
+app.use('/api/share-comments', shareCommentsRoutes);
+app.use('/api/product-comments', productCommentsRoutes);
+app.use('/api/maintenance', maintenanceRoutes);
+app.use('/api/prepa-livraison', prepaLivraisonRoutes);
+app.use('/api/confirmation-rdv', confirmationRdvRoutes);
+app.use('/api/historique-connexion', historiqueConnexionRoutes);
+app.use('/api/availability', require('./routes/availability'));
+app.use('/api/blockage-ip', require('./routes/blockageIp'));
+
+// Session unique par profil (connecte-profil-unique.json)
+app.use('/api/connecte-profil-unique', require('./routes/connecteProfilUnique'));
+
+
+
+
+// Attributs produits (modele, taille, couleur, devant)
+const productAttributeRoutes = require('./routes/productAttributes');
+app.use('/api/modele-produits', productAttributeRoutes.modeleRouter);
+app.use('/api/taille-produits', productAttributeRoutes.tailleRouter);
+app.use('/api/couleur-produits', productAttributeRoutes.couleurRouter);
+app.use('/api/devant-produits', productAttributeRoutes.devantRouter);
+app.use('/api/autres-produits', productAttributeRoutes.autresRouter);
+
+// Attributs dynamiques (kinds + valeurs) — permet d'ajouter/modifier/supprimer des types d'attribut
+app.use('/api/attribut-kinds', require('./routes/attributKinds'));
+
+// Expose historique logger globally for cross-route logging (used by auth)
+app.locals.logHistorique = historiqueConnexionRoutes.logEntry;
+
+// Static file serving for uploaded files
+app.use('/uploads', (req, res, next) => {
+  const origin = req.headers.origin;
+  if (origin) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Vary', 'Origin');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+  } else {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+  }
+  res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Cache-Control, X-Requested-With, Accept, Origin, Range');
+  res.setHeader('Access-Control-Expose-Headers', 'Content-Type, Content-Length, Content-Disposition, Accept-Ranges, Content-Range');
+  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+  if (req.method === 'OPTIONS') return res.sendStatus(204);
+  next();
+}, (req, res, next) => {
+  // Si le fichier est chiffré au repos, on le déchiffre à la volée
+  try {
+    const fileEnc = require('./middleware/fileEncryption');
+    const relative = decodeURIComponent(req.path.replace(/^\/+/, ''));
+    if (!relative || relative.includes('..')) return next();
+    const absolute = path.join(fileEnc.uploadsRoot, relative);
+    if (!absolute.startsWith(fileEnc.uploadsRoot) || !fs.existsSync(absolute)) return next();
+    if (!fs.statSync(absolute).isFile()) return next();
+
+    // fs.readFileSync est patché : le contenu renvoyé est déjà déchiffré
+    const buffer = fs.readFileSync(absolute);
+    if (!Buffer.isBuffer(buffer)) return next();
+
+    const ext = path.extname(absolute).toLowerCase();
+    const types = {
+      '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png',
+      '.gif': 'image/gif', '.webp': 'image/webp', '.svg': 'image/svg+xml',
+      '.avif': 'image/avif', '.bmp': 'image/bmp', '.pdf': 'application/pdf',
+    };
+    if (types[ext]) res.setHeader('Content-Type', types[ext]);
+    res.setHeader('Content-Disposition', 'inline');
+    res.setHeader('Content-Length', String(buffer.length));
+    res.removeHeader('X-Content-Type-Options');
+    if (req.method === 'HEAD') return res.status(200).end();
+    return res.status(200).end(buffer);
+  } catch {
+    return next();
+  }
+}, express.static(path.join(__dirname, 'uploads')));
+
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({ error: 'Route non trouvée' });
+});
+
+// Error handling middleware avec sécurité
+app.use((err, req, res, next) => {
+  // Log l'erreur en interne
+  console.error('Server error:', err.message);
+  
+  // Ne jamais exposer les stack traces en production
+  const isProduction = process.env.NODE_ENV === 'production';
+  
+  res.status(err.status || 500).json({ 
+    error: 'Une erreur est survenue', 
+    message: isProduction ? 'Erreur serveur interne' : err.message,
+    ...(isProduction ? {} : { stack: err.stack })
+  });
+});
+
+// Gestion gracieuse de l'arrêt
+process.on('SIGTERM', () => {
+  console.log('SIGTERM reçu, arrêt gracieux...');
+  process.exit(0);
+});
+
+process.on('uncaughtException', (err) => {
+  console.error('Exception non capturée:', err);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Promesse rejetée non gérée:', reason);
+});
+
+// Start reservation cleanup service (purge réservations ultérieures > 10 jours)
+try {
+  require('./services/reservationCleanupService').start();
+} catch (e) {
+  console.error('Erreur démarrage reservationCleanupService:', e.message);
+}
+
+// Start server
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`🔒 Security middleware enabled`);
+  console.log(`📡 Sync events available at /api/sync/events`);
+});
