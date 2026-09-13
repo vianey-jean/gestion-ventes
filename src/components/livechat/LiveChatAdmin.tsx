@@ -61,6 +61,7 @@ interface Conversation {
   messages: ChatMessage[];
   lastMessage: ChatMessage;
   unreadCount: number;
+  online?: boolean;
 }
 
 interface AdminUser {
@@ -192,15 +193,41 @@ const LiveChatAdmin: React.FC = () => {
 
   const isAdmin = user?.role === 'administrateur' || user?.role === 'administrateur principale';
 
+  // NOTE: `token` et `authHeaders` ne sont PLUS utilisés directement pour les
+  // appels réseau — ils étaient capturés au rendu et pouvaient rester "null"
+  // dans les closures mémorisées (useCallback) même après connexion, causant
+  // des 401 Unauthorized juste après le login. Tous les appels utilisent
+  // désormais getAuthHeaders(), qui relit le token depuis localStorage au
+  // moment exact de l'appel.
   const token = localStorage.getItem('token');
-  const authHeaders = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
+  // Toujours relire le jeton au moment de l'appel (évite un jeton périmé/absent
+  // capturé au premier rendu, juste avant la fin de la connexion)
+  const getAuthHeaders = useCallback((): Record<string, string> => {
+    const t = localStorage.getItem('token');
+    return t
+      ? { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' }
+      : { 'Content-Type': 'application/json' };
+  }, []);
+
+  // Si le serveur refuse le jeton (expiré / secret changé), on arrête de boucler
+  // et on demande une reconnexion propre.
+  const unauthorizedRef = useRef(false);
+  const handleAuthFailure = useCallback((res: Response) => {
+    if (res.status === 401 && !unauthorizedRef.current) {
+      unauthorizedRef.current = true;
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      window.dispatchEvent(new CustomEvent('auth:logout'));
+    }
+    return res;
+  }, []);
 
   // ========== VISITOR CHAT FUNCTIONS ==========
   const loadConversations = useCallback(async () => {
     if (!user) return;
     try {
       const res = await fetch(`${API_BASE}/api/messagerie/conversations`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: getAuthHeaders()
       });
       if (res.ok) {
         const data = await res.json();
@@ -242,7 +269,7 @@ const LiveChatAdmin: React.FC = () => {
   const loadAdminUsers = useCallback(async () => {
     if (!user) return;
     try {
-      const res = await fetch(`${API_BASE}/api/messagerie/admin-users`, { headers: authHeaders });
+      const res = await fetch(`${API_BASE}/api/messagerie/admin-users`, { headers: getAuthHeaders() });
       if (res.ok) {
         const data = await res.json();
         const safeAdmins = Array.isArray(data) ? data : [];
@@ -263,7 +290,7 @@ const LiveChatAdmin: React.FC = () => {
   const loadAdminConversations = useCallback(async () => {
     if (!user) return;
     try {
-      const res = await fetch(`${API_BASE}/api/messagerie/admin-conversations`, { headers: authHeaders });
+      const res = await fetch(`${API_BASE}/api/messagerie/admin-conversations`, { headers: getAuthHeaders() });
       if (res.ok) {
         const data = await res.json();
         const safeConversations = Array.isArray(data) ? data : [];
@@ -279,13 +306,13 @@ const LiveChatAdmin: React.FC = () => {
     if (!user) return;
     setThreadLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/api/messagerie/admin-messages/${otherAdminId}`, { headers: authHeaders });
+      const res = await fetch(`${API_BASE}/api/messagerie/admin-messages/${otherAdminId}`, { headers: getAuthHeaders() });
       if (res.ok) {
         const data = await res.json();
         setAdminMessages(Array.isArray(data) ? data : []);
         // Mark as read
         fetch(`${API_BASE}/api/messagerie/admin-mark-read/${otherAdminId}`, {
-          method: 'PUT', headers: authHeaders
+          method: 'PUT', headers: getAuthHeaders()
         }).then(() => loadAdminConversations()).catch(() => {});
       }
     } catch (e) {
@@ -299,7 +326,7 @@ const LiveChatAdmin: React.FC = () => {
   const loadGroups = useCallback(async () => {
     if (!user) return;
     try {
-      const res = await fetch(`${API_BASE}/api/messagerie/groups`, { headers: authHeaders });
+      const res = await fetch(`${API_BASE}/api/messagerie/groups`, { headers: getAuthHeaders() });
       if (res.ok) {
         const data = await res.json();
         const safeGroups = Array.isArray(data) ? data : [];
@@ -317,12 +344,12 @@ const LiveChatAdmin: React.FC = () => {
     if (!user) return;
     setThreadLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/api/messagerie/group-messages/${groupId}`, { headers: authHeaders });
+      const res = await fetch(`${API_BASE}/api/messagerie/group-messages/${groupId}`, { headers: getAuthHeaders() });
       if (res.ok) {
         const data = await res.json();
         setGroupMessages(data);
         fetch(`${API_BASE}/api/messagerie/group-mark-read/${groupId}`, {
-          method: 'PUT', headers: authHeaders
+          method: 'PUT', headers: getAuthHeaders()
         }).then(() => loadGroups()).catch(() => {});
       }
     } catch (e) {
@@ -336,7 +363,7 @@ const LiveChatAdmin: React.FC = () => {
     if (!newGroupName.trim() || selectedMembers.length < 2) return;
     try {
       const res = await fetch(`${API_BASE}/api/messagerie/group/create`, {
-        method: 'POST', headers: authHeaders,
+        method: 'POST', headers: getAuthHeaders(),
         body: JSON.stringify({ name: newGroupName.trim(), memberIds: selectedMembers })
       });
       if (res.ok) {
@@ -355,7 +382,7 @@ const LiveChatAdmin: React.FC = () => {
     if (!renameText.trim()) return;
     try {
       await fetch(`${API_BASE}/api/messagerie/group/rename/${groupId}`, {
-        method: 'PUT', headers: authHeaders,
+        method: 'PUT', headers: getAuthHeaders(),
         body: JSON.stringify({ name: renameText.trim() })
       });
       setRenamingGroup(null);
@@ -369,7 +396,7 @@ const LiveChatAdmin: React.FC = () => {
   const sendGroupTypingIndicator = (isTyping: boolean) => {
     if (!selectedGroup || !user) return;
     fetch(`${API_BASE}/api/messagerie/group-typing`, {
-      method: 'POST', headers: authHeaders,
+      method: 'POST', headers: getAuthHeaders(),
       body: JSON.stringify({ groupId: selectedGroup, isTyping })
     }).catch(() => {});
   };
@@ -413,6 +440,18 @@ const LiveChatAdmin: React.FC = () => {
     es.onopen = () => {
       scheduleSidebarRefresh();
     };
+
+    // Un autre admin/admin principal vient de se connecter ou de se déconnecter
+    // -> rafraîchir la liste "qui est en ligne" (pastille verte) en direct.
+    es.addEventListener('admin_presence_changed', () => {
+      loadAdminUsers();
+    });
+
+    // Un visiteur vient d'ouvrir ou de fermer le chat -> rafraîchir la liste
+    // des conversations pour mettre à jour sa pastille de présence.
+    es.addEventListener('visitor_presence_changed', () => {
+      loadConversations();
+    });
 
     es.addEventListener('new_message', (e) => {
       try {
@@ -484,7 +523,7 @@ const LiveChatAdmin: React.FC = () => {
           setAdminMessages(prev => prev.find(m => m.id === msg.id) ? prev : [...prev, msg]);
           if (msg.senderId !== user.id) {
             fetch(`${API_BASE}/api/messagerie/admin-mark-read/${msg.senderId}`, {
-              method: 'PUT', headers: authHeaders
+              method: 'PUT', headers: getAuthHeaders()
             }).catch(() => {});
           }
         }
@@ -617,7 +656,7 @@ const LiveChatAdmin: React.FC = () => {
       try {
         const targetAdmin = adminUsers.find(a => a.id === selectedAdmin);
         const res = await fetch(`${API_BASE}/api/messagerie/admin-send`, {
-          method: 'POST', headers: authHeaders,
+          method: 'POST', headers: getAuthHeaders(),
           body: JSON.stringify({ receiverId: selectedAdmin, receiverName: `${targetAdmin?.firstName} ${targetAdmin?.lastName}`, contenu: input.trim() })
         });
         if (res.ok) {
@@ -654,7 +693,7 @@ const LiveChatAdmin: React.FC = () => {
       setIsSending(true);
       try {
         const res = await fetch(`${API_BASE}/api/messagerie/group-send`, {
-          method: 'POST', headers: authHeaders,
+          method: 'POST', headers: getAuthHeaders(),
           body: JSON.stringify({ groupId: selectedGroup, contenu: input.trim() })
         });
         if (res.ok) {
@@ -729,7 +768,7 @@ const LiveChatAdmin: React.FC = () => {
   const handleAdminDeleteOwn = async (msgId: string) => {
     try {
       await fetch(`${API_BASE}/api/messagerie/admin-delete-own/${msgId}`, {
-        method: 'DELETE', headers: authHeaders
+        method: 'DELETE', headers: getAuthHeaders()
       });
       setAdminMessages(prev => prev.filter(m => m.id !== msgId));
     } catch (e) { console.error('Error deleting own admin message:', e); }
@@ -739,7 +778,7 @@ const LiveChatAdmin: React.FC = () => {
   const handleAdminHideOther = async (msgId: string) => {
     try {
       await fetch(`${API_BASE}/api/messagerie/admin-hide/${msgId}`, {
-        method: 'DELETE', headers: authHeaders
+        method: 'DELETE', headers: getAuthHeaders()
       });
       setAdminMessages(prev => prev.filter(m => m.id !== msgId));
     } catch (e) { console.error('Error hiding admin message:', e); }
@@ -924,8 +963,14 @@ const LiveChatAdmin: React.FC = () => {
                   onClick={() => { setActiveTab('visitors'); openConversation(conv.visitorId); }}
                   className="w-full px-5 py-4 flex items-center gap-3 hover:bg-white/[0.04] transition-colors border-b border-white/[0.04] text-left"
                 >
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-violet-500/30 to-fuchsia-500/30 border border-white/[0.08] flex items-center justify-center text-white font-bold text-sm shrink-0">
-                    {conv.visitorNom.charAt(0).toUpperCase()}
+                  <div className="relative w-10 h-10 shrink-0">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-violet-500/30 to-fuchsia-500/30 border border-white/[0.08] flex items-center justify-center text-white font-bold text-sm">
+                      {conv.visitorNom.charAt(0).toUpperCase()}
+                    </div>
+                    <div
+                      title={conv.online ? 'En ligne' : 'Hors ligne'}
+                      className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-slate-900 ${conv.online ? 'bg-emerald-400' : 'bg-slate-500'}`}
+                    />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">

@@ -54,3 +54,31 @@ export interface AuthResponse {
   user: User;
   token: string;
 }
+
+// ============================================================
+// Double authentification (2FA) — code à 6 chiffres
+// ============================================================
+
+/** Réponse renvoyée quand un challenge OTP vient d'être créé et envoyé */
+export interface OtpChallenge {
+  challengeId: string;
+  method: 'email' | 'sms';
+  maskedDestination: string;
+  expiresAt: string;
+}
+
+export interface OtpVerifyPayload {
+  challengeId: string;
+  code: string;
+}
+
+/** État de connexion en cours d'authentification à 2 facteurs */
+export interface LoginOtpState extends OtpChallenge {
+  requires2FA: true;
+}
+
+/** État d'inscription en attente de validation par email */
+export interface RegisterOtpState extends OtpChallenge {
+  pendingRegistration: true;
+}
+

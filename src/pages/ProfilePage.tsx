@@ -17,7 +17,10 @@ import PremiumLoading from '@/components/ui/premium-loading';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import profileApi, { ProfileData } from '@/services/api/profileApi';
+import { authService } from '@/service/api';
 import SEOHead from '@/components/SEOHead';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import OtpVerificationForm from '@/components/auth/OtpVerificationForm';
 
 import ProfileCard from '@/components/profile/ProfileCard';
 import ProfileInfoCard from '@/components/profile/ProfileInfoCard';
@@ -52,6 +55,13 @@ const ProfilePage: React.FC = () => {
   const [pendingPhoto, setPendingPhoto] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+
+  // 2FA — changement de mot de passe
+  const [showPwOtpDialog, setShowPwOtpDialog] = useState(false);
+  const [pwChallenge, setPwChallenge] = useState<{ challengeId: string; method: 'email' | 'sms'; maskedDestination: string } | null>(null);
+  const [pwOtpError, setPwOtpError] = useState<string | null>(null);
+  const [verifyingPwOtp, setVerifyingPwOtp] = useState(false);
+  const [resendingPwOtp, setResendingPwOtp] = useState(false);
 
   const userRole = (profile as any)?.role || (user as any)?.role || '';
   const isAdminPrincipal = userRole === 'administrateur principale';
@@ -136,17 +146,61 @@ const ProfilePage: React.FC = () => {
   const changePassword = async () => {
     try {
       setSaving(true);
-      const result = await profileApi.changePassword(pwForm);
+      // Étape 1 : on demande un code de vérification à 6 chiffres (2FA) avant
+      // d'appliquer le changement de mot de passe.
+      const challenge = await authService.requestChangePasswordOtp();
+      setPwChallenge(challenge);
+      setPwOtpError(null);
+      setConfirmPassword(false);
+      setShowPwOtpDialog(true);
+    } catch (e: any) {
+      const msg = e?.response?.data?.message || "Erreur lors de l'envoi du code de vérification";
+      toast({ title: 'Erreur', description: msg, variant: 'destructive' });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const verifyPasswordOtp = async (code: string) => {
+    if (!pwChallenge) return;
+    try {
+      setVerifyingPwOtp(true);
+      setPwOtpError(null);
+      const result = await authService.verifyChangePassword({
+        challengeId: pwChallenge.challengeId,
+        code,
+        currentPassword: pwForm.currentPassword,
+        newPassword: pwForm.newPassword,
+        confirmPassword: pwForm.confirmPassword,
+      });
       if (result.success) {
         toast({ title: '✅ Mot de passe modifié', description: 'Votre mot de passe a été changé avec succès', className: 'bg-green-600 text-white border-green-600' });
         setPwForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
         setShowPasswordForm(false);
+        setShowPwOtpDialog(false);
+        setPwChallenge(null);
       }
     } catch (e: any) {
-      const msg = e?.response?.data?.message || 'Erreur lors du changement de mot de passe';
-      toast({ title: 'Erreur', description: msg, variant: 'destructive' });
+      setPwOtpError(e?.response?.data?.message || 'Code incorrect');
     } finally {
-      setSaving(false);
+      setVerifyingPwOtp(false);
+    }
+  };
+
+  const resendPasswordOtp = async () => {
+    if (!pwChallenge) return;
+    try {
+      setResendingPwOtp(true);
+      const result = await authService.resendChangePasswordOtp(pwChallenge.challengeId);
+      if (result.success !== false) {
+        toast({ title: 'Code renvoyé', description: 'Un nouveau code vous a été envoyé' });
+      } else {
+        toast({ title: 'Erreur', description: result.message || 'Impossible de renvoyer le code', variant: 'destructive' });
+      }
+    } catch (e: any) {
+      toast({ title: 'Erreur', description: e?.response?.data?.message || 'Erreur lors du renvoi', variant: 'destructive' });
+    } finally {
+      setResendingPwOtp(false);
     }
   };
 
@@ -245,6 +299,28 @@ const ProfilePage: React.FC = () => {
         saving={saving}
         onPhotoDialogClose={() => { setPendingPhoto(null); setPhotoPreview(null); }}
       />
+
+      {/* Étape 2FA : validation du code à 6 chiffres pour le changement de mot de passe */}
+      <Dialog open={showPwOtpDialog} onOpenChange={(open) => { if (!open) { setShowPwOtpDialog(false); setPwChallenge(null); } }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="sr-only">Vérification en 2 étapes</DialogTitle>
+          </DialogHeader>
+          {pwChallenge && (
+            <OtpVerificationForm
+              maskedDestination={pwChallenge.maskedDestination}
+              method={pwChallenge.method}
+              onVerify={verifyPasswordOtp}
+              onResend={resendPasswordOtp}
+              error={pwOtpError}
+              isVerifying={verifyingPwOtp}
+              isResending={resendingPwOtp}
+              title="Confirmez le changement"
+              description="Un code de vérification vous a été envoyé pour confirmer le changement de votre mot de passe."
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 };

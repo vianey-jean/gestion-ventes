@@ -25,7 +25,6 @@ const PENDING_KEY = 'session_conflict_pending';
 
 interface PendingLogin {
   email: string;
-  password: string;
   userId: string;
   role?: string;
   nom?: string;
@@ -33,15 +32,14 @@ interface PendingLogin {
 }
 
 export const savePendingLogin = (data: PendingLogin) => {
-  try { sessionStorage.setItem(PENDING_KEY, JSON.stringify({ ...data, password: btoa(data.password) })); } catch { /* ignore */ }
+  try { sessionStorage.setItem(PENDING_KEY, JSON.stringify(data)); } catch { /* ignore */ }
 };
 
 const readPendingLogin = (): PendingLogin | null => {
   try {
     const raw = sessionStorage.getItem(PENDING_KEY);
     if (!raw) return null;
-    const parsed = JSON.parse(raw);
-    return { ...parsed, password: atob(parsed.password) };
+    return JSON.parse(raw);
   } catch {
     return null;
   }
@@ -54,7 +52,7 @@ const clearPendingLogin = () => {
 const SessionConflictPage: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { login } = useAuth();
+  const { logout } = useAuth();
   const [pending] = useState<PendingLogin | null>(() => readPendingLogin());
   const [mode, setMode] = useState<'auto' | 'manuel' | null>(null);
   const [waiting, setWaiting] = useState(false);
@@ -66,29 +64,32 @@ const SessionConflictPage: React.FC = () => {
     if (!pending) navigate('/login', { replace: true });
   }, [pending, navigate]);
 
-  /** Connexion réelle une fois le créneau libéré */
+  /**
+   * Finalise la prise de session une fois le créneau libéré.
+   * NOTE : à ce stade, l'utilisateur a déjà validé son mot de passe ET son
+   * code de double authentification (2FA) lors de la connexion — c'est
+   * justement cette validation qui a révélé le conflit de session. Il n'y a
+   * donc plus besoin de ressaisir/renvoyer le mot de passe ici : on finalise
+   * simplement l'enregistrement de la session unique.
+   */
   const finishLogin = useCallback(async () => {
     if (!pending || finishedRef.current) return;
     finishedRef.current = true;
-    const ok = await login({ email: pending.email, password: pending.password });
-    if (ok) {
-      try {
-        const reg = await connecteProfilUniqueApi.registerLogin({
-          userId: pending.userId,
-          email: pending.email,
-          nom: pending.nom,
-          role: pending.role,
-        });
-        connecteProfilUniqueApi.setSessionId(reg.sessionId);
-      } catch { /* ignore */ }
-      clearPendingLogin();
-      navigate('/dashboard', { replace: true });
-    } else {
-      finishedRef.current = false;
-      clearPendingLogin();
-      navigate('/login', { replace: true });
+    try {
+      const reg = await connecteProfilUniqueApi.registerLogin({
+        userId: pending.userId,
+        email: pending.email,
+        nom: pending.nom,
+        role: pending.role,
+      });
+      connecteProfilUniqueApi.setSessionId(reg.sessionId);
+    } catch {
+      // Non bloquant : la session applicative (JWT) reste valide même si
+      // l'enregistrement du suivi de session unique échoue.
     }
-  }, [pending, login, navigate]);
+    clearPendingLogin();
+    navigate('/dashboard', { replace: true });
+  }, [pending, navigate]);
 
   const handleAuto = async () => {
     if (!pending) return;
@@ -168,6 +169,7 @@ const SessionConflictPage: React.FC = () => {
             description: 'La demande de déconnexion a été refusée.',
             variant: 'destructive',
           });
+          logout();
           navigate('/login', { replace: true });
         }
       } catch { /* retente */ }
@@ -286,7 +288,7 @@ const SessionConflictPage: React.FC = () => {
               <button
                 type="button"
                 className="w-full rounded-xl py-3 text-sm text-white/50 hover:text-white hover:bg-white/5 transition-colors"
-                onClick={() => { clearPendingLogin(); navigate('/login', { replace: true }); }}
+                onClick={() => { clearPendingLogin(); logout(); navigate('/login', { replace: true }); }}
               >
                 Annuler et revenir à la connexion
               </button>
