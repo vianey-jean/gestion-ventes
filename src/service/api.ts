@@ -25,100 +25,28 @@ import type { Product, Sale, PretFamille, PretProduit, DepenseFixe, DepenseDuMoi
 // ===============================
 
 export const authService = {
-  // ============================================================
-  // CONNEXION — étape 1: identifiants -> étape 2: code OTP
-  // ============================================================
-  async login(credentials: { email: string; password: string; channel?: 'email' | 'sms' }) {
+  async login(credentials: any) {
     const response = await apiInstance.post('/api/auth/login', credentials);
-    return response.data; // { requires2FA, challengeId, method, maskedDestination, expiresAt }
+    const data = response.data;
+    localStorage.setItem('token', data.token);
+    localStorage.setItem('user', JSON.stringify(data.user));
+    return data;
   },
-  async verifyLoginOtp(data: { challengeId: string; code: string }) {
-    const response = await apiInstance.post('/api/auth/login/verify-otp', data);
-    const result = response.data;
-    if (result?.token) {
-      localStorage.setItem('token', result.token);
-      localStorage.setItem('user', JSON.stringify(result.user));
-    }
-    return result;
-  },
-  async resendLoginOtp(challengeId: string) {
-    const response = await apiInstance.post('/api/auth/login/resend-otp', { challengeId });
-    return response.data;
-  },
-
-  // ============================================================
-  // INSCRIPTION — étape 1: infos (sans mdp) -> étape 2: code OTP -> étape 3: mdp
-  // ============================================================
   async register(credentials: any) {
-    // Étape 1 uniquement : PAS de mot de passe envoyé ici, pas de session créée.
-    const { password, confirmPassword, ...profileData } = credentials || {};
-    const response = await apiInstance.post('/api/auth/register', profileData);
-    return response.data; // { pendingRegistration, challengeId, method, maskedDestination }
+    const response = await apiInstance.post('/api/auth/register', credentials);
+    const data = response.data;
+    localStorage.setItem('token', data.token);
+    localStorage.setItem('user', JSON.stringify(data.user));
+    return data;
   },
-  async verifyRegisterOtp(data: { challengeId: string; code: string }) {
-    const response = await apiInstance.post('/api/auth/register/verify-otp', data);
-    return response.data; // { verified, setupToken, email }
-  },
-  async resendRegisterOtp(challengeId: string) {
-    const response = await apiInstance.post('/api/auth/register/resend-otp', { challengeId });
-    return response.data;
-  },
-  async completeRegistration(data: { setupToken: string; password: string; confirmPassword: string }) {
-    const response = await apiInstance.post('/api/auth/register/complete', data);
-    return response.data; // { user, token, verified, registeredAt }
-  },
-
   async checkEmail(email: string) {
     const response = await apiInstance.post('/api/auth/check-email', { email });
     return response.data;
   },
-
-  // ============================================================
-  // MOT DE PASSE OUBLIÉ — demande -> code OTP -> nouveau mot de passe
-  // ============================================================
-  async resetPasswordRequest(data: { email: string; channel?: 'email' | 'sms' }) {
-    try {
-      const response = await apiInstance.post('/api/auth/forgot-password', data);
-      return response.data; // { exists, challengeId?, method?, maskedDestination? }
-    } catch {
-      return { exists: false };
-    }
-  },
-  async verifyForgotPasswordOtp(data: { challengeId: string; code: string }) {
-    const response = await apiInstance.post('/api/auth/forgot-password/verify-otp', data);
-    return response.data; // { verified, resetToken }
-  },
-  async resendForgotPasswordOtp(challengeId: string) {
-    const response = await apiInstance.post('/api/auth/forgot-password/resend-otp', { challengeId });
-    return response.data;
-  },
-  async resetPassword(data: { resetToken: string; newPassword: string; confirmPassword: string }) {
+  async resetPassword(data: any) {
     const response = await apiInstance.post('/api/auth/reset-password', data);
-    return response.data; // { success, message }
-  },
-
-  // ============================================================
-  // CHANGEMENT DE MOT DE PASSE (utilisateur connecté)
-  // ============================================================
-  async requestChangePasswordOtp(channel?: 'email' | 'sms') {
-    const response = await apiInstance.post('/api/auth/change-password/request', { channel });
-    return response.data; // { challengeId, method, maskedDestination }
-  },
-  async resendChangePasswordOtp(challengeId: string) {
-    const response = await apiInstance.post('/api/auth/change-password/resend-otp', { challengeId });
     return response.data;
   },
-  async verifyChangePassword(data: {
-    challengeId: string;
-    code: string;
-    currentPassword: string;
-    newPassword: string;
-    confirmPassword: string;
-  }) {
-    const response = await apiInstance.post('/api/auth/change-password/verify', data);
-    return response.data; // { success, message }
-  },
-
   async verifyToken() {
     const response = await apiInstance.get('/api/auth/verify');
     return response.data;
@@ -140,6 +68,12 @@ export const authService = {
       localStorage.removeItem('user');
       localStorage.removeItem('token');
     }
+  },
+  async resetPasswordRequest(data: { email: string }) {
+    try {
+      const response = await apiInstance.post('/api/auth/reset-password-request', data);
+      return { exists: response.data.exists || response.data.success, token: response.data.token };
+    } catch { return { exists: false }; }
   },
 };
 

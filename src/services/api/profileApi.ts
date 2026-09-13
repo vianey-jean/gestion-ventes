@@ -45,8 +45,10 @@ const profileApi = {
     return response.json();
   },
 
-  // changePassword : désactivé — voir authService.requestChangePasswordOtp() /
-  // authService.verifyChangePassword() (double authentification requise).
+  async changePassword(data: { currentPassword: string; newPassword: string; confirmPassword: string }): Promise<{ success: boolean; message: string }> {
+    const response = await api.put('/api/profile/password', data);
+    return response.data;
+  },
 
   getPhotoUrl(path: string | undefined): string {
     if (!path) return '';
