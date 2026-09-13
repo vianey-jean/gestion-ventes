@@ -76,7 +76,12 @@ export const useSessionUnique = ({ isAuthenticated, onForceLogout, onNotificatio
       } catch { /* réseau : on retente au prochain tick */ }
     };
 
-    beat();
+    // Ne pas sonder immédiatement au montage : juste après une connexion
+    // (surtout avec la 2FA, qui ajoute un aller-retour réseau supplémentaire
+    // entre l'authentification et l'enregistrement du sessionId), un appel
+    // immédiat risquerait de tomber pendant que registerLogin() n'a pas
+    // encore écrit le nouvel identifiant de session. On laisse le premier
+    // intervalle s'écouler avant le tout premier battement.
     timer = window.setInterval(beat, 2000);
 
     return () => {
