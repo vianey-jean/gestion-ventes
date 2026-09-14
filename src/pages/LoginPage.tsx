@@ -29,12 +29,48 @@
  * - Le PremiumLoading plein écran s'affiche désormais aussi pendant la
  *   vérification du code OTP (isVerifyingLoginOtp), pas uniquement lors
  *   du login initial (isLoggingIn).
- * - Si le code est correct → navigation directe vers /dashboard (déjà
- *   géré par handleLoginOtpVerify, inchangé).
+ * - Si le code est correct → on passe à l'étape "appareil de confiance"
+ *   (voir ci-dessous) avant de terminer la connexion.
  * - Si le code est incorrect → une fois le loading terminé, on revient
  *   automatiquement sur l'écran "Vérification en 2 étapes / Entrez le
  *   code à 6 chiffres reçu pour terminer votre connexion." avec le
  *   message d'erreur (comportement déjà géré par loginOtpError, inchangé).
+ *
+ * Nouveauté (Appareil de confiance / "rester connecté") :
+ * - Un identifiant d'appareil (deviceId) unique est généré et stocké en
+ *   localStorage pour CE navigateur (jamais partagé entre navigateurs
+ *   ou appareils différents).
+ * - Ce deviceId est envoyé au serveur à chaque tentative de connexion
+ *   (`/api/auth/login`). C'est le SERVEUR qui décide si ce deviceId est
+ *   déjà reconnu comme "de confiance" pour ce compte : si oui, il répond
+ *   sans `requires2FA`, et on saute directement l'étape du code à 6
+ *   chiffres. Si non (nouveau navigateur, appareil non reconnu, ou
+ *   utilisateur ayant refusé la confiance précédemment), `requires2FA`
+ *   reste à true comme avant.
+ * - Une fois le code OTP validé avec succès, on demande à l'utilisateur
+ *   "Rester connecté sur ce navigateur ?" :
+ *     - Oui  → on appelle `/api/auth/trust-device` avec ce deviceId pour
+ *              que le serveur mémorise cet appareil comme fiable pour ce
+ *              compte. Les prochaines connexions depuis ce même
+ *              navigateur ne redemanderont plus le code.
+ *     - Non  → on supprime le deviceId stocké localement. Le prochain
+ *              login régénérera un nouvel identifiant "anonyme", donc ce
+ *              navigateur redemandera systématiquement le code à 6
+ *              chiffres.
+ * - Sécurité : le localStorage ne sert qu'à IDENTIFIER l'appareil (un
+ *   identifiant aléatoire, pas un secret). La décision de confiance
+ *   ("ce device peut sauter la 2FA") est toujours prise et stockée côté
+ *   serveur, associée au compte utilisateur — un utilisateur malveillant
+ *   qui modifierait la valeur en localStorage n'obtient donc rien : le
+ *   serveur ne connaîtra simplement pas ce nouvel identifiant et
+ *   redemandera la 2FA.
+ * - NB : ceci suppose que le backend expose bien :
+ *     - `/api/auth/login` acceptant un champ `deviceId` dans le body et
+ *       omettant `requires2FA` quand ce deviceId est déjà de confiance ;
+ *     - `/api/auth/trust-device` acceptant `{ deviceId }` pour associer
+ *       l'appareil au compte connecté.
+ *   Si vos endpoints portent un autre nom, il suffit d'ajuster les deux
+ *   appels axios correspondants ci-dessous (clairement identifiés).
  */
 
 import React, {
@@ -67,7 +103,7 @@ import Layout from '@/components/Layout';
 import SEOHead from '@/components/SEOHead';
 
 import { useAuth } from '@/contexts/AuthContext';
-import { authService } from '@/service/api';
+import { authService, api } from '@/service/api';
 import OtpVerificationForm from '@/components/auth/OtpVerificationForm';
 import connecteProfilUniqueApi from '@/services/api/connecteProfilUniqueApi';
 import { savePendingLogin } from '@/pages/SessionConflictPage';
@@ -139,6 +175,51 @@ const SECURITY_BADGES = [
 
 const AVATAR_LETTERS = ['V', 'C', 'S'] as const;
 const STAR_INDICES = [1, 2, 3, 4, 5] as const;
+
+// =============================================================
+// APPAREIL DE CONFIANCE ("rester connecté sur ce navigateur")
+// =============================================================
+
+const DEVICE_ID_STORAGE_KEY = 'gv_trusted_device_id';
+
+/**
+ * Récupère l'identifiant d'appareil déjà stocké pour ce navigateur,
+ * ou en génère un nouveau si absent (nouveau navigateur / stockage vidé).
+ * Cet identifiant est un simple "nom" pour l'appareil, pas un secret :
+ * la confiance réelle est décidée et stockée côté serveur.
+ */
+const getOrCreateDeviceId = () => {
+  try {
+    const existing = window.localStorage.getItem(DEVICE_ID_STORAGE_KEY);
+    if (existing) return existing;
+
+    const generated =
+      typeof crypto !== 'undefined' && 'randomUUID' in crypto
+        ? crypto.randomUUID()
+        : `dev-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+    window.localStorage.setItem(DEVICE_ID_STORAGE_KEY, generated);
+    return generated;
+  } catch {
+    // localStorage indisponible (navigation privée stricte, etc.) :
+    // on retombe sur un identifiant volatile, valable pour cette session
+    // uniquement (le comportement redevient alors "toujours redemander").
+    return `dev-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  }
+};
+
+/**
+ * Supprime l'identifiant d'appareil stocké : ce navigateur redeviendra
+ * "inconnu" du serveur à la prochaine connexion, et la 2FA sera donc
+ * redemandée systématiquement.
+ */
+const clearTrustedDeviceId = () => {
+  try {
+    window.localStorage.removeItem(DEVICE_ID_STORAGE_KEY);
+  } catch {
+    // ignore
+  }
+};
 
 // =============================================================
 // SOUS-COMPOSANTS STATIQUES MÉMOÏSÉS
@@ -405,13 +486,97 @@ const CardHeaderBlock = React.memo(function CardHeaderBlock() {
   );
 });
 
+/**
+ * Étape "appareil de confiance" affichée juste après une validation
+ * réussie du code OTP. Ne modifie aucune logique existante : elle
+ * s'intercale simplement entre "code validé" et "navigation finale".
+ */
+const TrustDevicePrompt = React.memo(function TrustDevicePrompt({
+  isSaving,
+  onChoice,
+}: {
+  isSaving: boolean;
+  onChoice: (trust: boolean) => void;
+}) {
+  return (
+    <div className="space-y-5 animate-[fade-slide-in_0.3s_ease-out_both]">
+      <div
+        className="
+          flex flex-col items-center gap-3 rounded-2xl
+          border border-slate-900/10 bg-slate-100/60 px-5 py-6 text-center
+          dark:border-white/[0.07] dark:bg-white/[0.035]
+        "
+      >
+        <div
+          className="
+            flex h-12 w-12 items-center justify-center rounded-full
+            bg-gradient-to-br from-violet-600 via-fuchsia-500 to-cyan-500
+          "
+        >
+          <ShieldCheck className="h-6 w-6 text-white" />
+        </div>
+
+        <h3 className="text-base font-bold text-slate-900 dark:text-white">
+          Rester connecté sur ce navigateur ?
+        </h3>
+
+        <p className="text-xs leading-relaxed text-slate-500 dark:text-white/50">
+          Si vous faites confiance à cet appareil, nous ne vous
+          redemanderons plus le code de vérification à 6 chiffres lors
+          de vos prochaines connexions depuis ce navigateur.
+        </p>
+      </div>
+
+      <div className="flex flex-col gap-3 sm:flex-row">
+        <Button
+          type="button"
+          disabled={isSaving}
+          onClick={() => onChoice(true)}
+          className="
+            h-12 flex-1 rounded-2xl border-0 bg-gradient-to-r
+            from-violet-600 via-fuchsia-600 to-cyan-500 text-sm
+            font-bold text-white disabled:pointer-events-none
+            disabled:opacity-70
+          "
+        >
+          {isSaving ? (
+            <span
+              className="
+                h-4 w-4 rounded-full border-2 border-white/30
+                border-t-white animate-spin transform-gpu
+              "
+            />
+          ) : (
+            'Oui, faire confiance'
+          )}
+        </Button>
+
+        <Button
+          type="button"
+          variant="outline"
+          disabled={isSaving}
+          onClick={() => onChoice(false)}
+          className="
+            h-12 flex-1 rounded-2xl border-slate-900/10 bg-transparent
+            text-sm font-semibold text-slate-600
+            disabled:pointer-events-none disabled:opacity-70
+            dark:border-white/[0.08] dark:text-white/60
+          "
+        >
+          Non, redemander à chaque fois
+        </Button>
+      </div>
+    </div>
+  );
+});
+
 // =============================================================
 // COMPOSANT PRINCIPAL
 // =============================================================
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
-  const { login, loginChallenge, hydrateLoginChallenge, verifyLoginOtp, resendLoginOtp, cancelLoginChallenge } = useAuth();
+  const { hydrateAuthenticatedSession, loginChallenge, hydrateLoginChallenge, verifyLoginOtp, resendLoginOtp, cancelLoginChallenge } = useAuth();
   const reducedMotion = useReducedMotion();
 
   // =========================================================
@@ -444,6 +609,14 @@ const LoginPage: React.FC = () => {
 
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const emailCheckAbortRef = useRef<AbortController | null>(null);
+
+  // =========================================================
+  // APPAREIL DE CONFIANCE (nouveau)
+  // =========================================================
+
+  const [showTrustDevicePrompt, setShowTrustDevicePrompt] = useState(false);
+  const [isSavingTrustChoice, setIsSavingTrustChoice] = useState(false);
+  const pendingLoggedUserRef = useRef<any>(null);
 
   // =========================================================
   // PRÉCONNEXION RÉSEAU (DNS + TLS avant le 1er appel API)
@@ -600,6 +773,49 @@ const LoginPage: React.FC = () => {
   }, [email]);
 
   // =========================================================
+  // FINALISATION DE LA CONNEXION
+  // (session unique + navigation) — factorisée pour être appelée
+  // soit directement (login sans 2FA / appareil déjà de confiance),
+  // soit après le choix "rester connecté ?" qui suit une 2FA validée.
+  // =========================================================
+
+  const finalizeLogin = useCallback(
+    async (loggedUser: any) => {
+      try {
+        const check = await connecteProfilUniqueApi.check({
+          userId: String(loggedUser?.id || ''),
+          role: loggedUser?.role,
+        });
+
+        if (!check.allowed && check.conflict) {
+          savePendingLogin({
+            email,
+            userId: String(loggedUser?.id || ''),
+            role: loggedUser?.role,
+            nom: `${loggedUser?.firstName || ''} ${loggedUser?.lastName || ''}`.trim(),
+            conflict: check.conflict,
+          });
+          navigate('/session-conflict');
+          return;
+        }
+
+        const registration = await connecteProfilUniqueApi.registerLogin({
+          userId: String(loggedUser?.id || ''),
+          email,
+          nom: `${loggedUser?.firstName || ''} ${loggedUser?.lastName || ''}`.trim(),
+          role: loggedUser?.role,
+        });
+        connecteProfilUniqueApi.setSessionId(registration.sessionId);
+      } catch {
+        // Service de session unique non bloquant.
+      }
+
+      navigate('/dashboard');
+    },
+    [email, navigate]
+  );
+
+  // =========================================================
   // LOGIN
   // =========================================================
 
@@ -646,6 +862,10 @@ const LoginPage: React.FC = () => {
           {
             email: cleanEmail,
             password,
+            // Identifiant de CE navigateur : permet au serveur de
+            // reconnaître un appareil déjà marqué "de confiance" et de
+            // sauter la demande du code à 6 chiffres.
+            deviceId: getOrCreateDeviceId(),
           }
         );
 
@@ -660,6 +880,26 @@ const LoginPage: React.FC = () => {
               expiresAt: response.data.expiresAt,
             },
             password
+          );
+        } else {
+          // Pas de 2FA à faire : soit le compte ne l'exige pas, soit ce
+          // navigateur est déjà reconnu comme appareil de confiance par
+          // le serveur. La réponse contient directement { user, token },
+          // exactement comme /login/verify-otp — on enregistre donc cette
+          // session avec hydrateAuthenticatedSession() (pas d'appel réseau
+          // supplémentaire, contrairement à login() qui attend des
+          // identifiants email/password).
+          setFailedAttempts(0);
+
+          const loggedUser = response.data?.user;
+          const sessionToken = response.data?.token;
+
+          if (loggedUser && sessionToken) {
+            hydrateAuthenticatedSession(loggedUser, sessionToken);
+          }
+
+          await finalizeLogin(
+            loggedUser || authService.getCurrentUser() || {}
           );
         }
       } catch (error: any) {
@@ -698,6 +938,8 @@ const LoginPage: React.FC = () => {
       maxAttempts,
       hydrateLoginChallenge,
       handleEmailCheck,
+      hydrateAuthenticatedSession,
+      finalizeLogin,
     ]
   );
 
@@ -720,46 +962,16 @@ const LoginPage: React.FC = () => {
           return;
         }
 
-        const loggedUser = authService.getCurrentUser() || {};
-
-        // =====================================================
-        // SESSION UNIQUE (effectuée une fois la 2FA validée)
-        // =====================================================
-        try {
-          const check = await connecteProfilUniqueApi.check({
-            userId: String(loggedUser.id || ''),
-            role: loggedUser.role,
-          });
-
-          if (!check.allowed && check.conflict) {
-            savePendingLogin({
-              email,
-              userId: String(loggedUser.id || ''),
-              role: loggedUser.role,
-              nom: `${loggedUser.firstName || ''} ${loggedUser.lastName || ''}`.trim(),
-              conflict: check.conflict,
-            });
-            navigate('/session-conflict');
-            return;
-          }
-
-          const registration = await connecteProfilUniqueApi.registerLogin({
-            userId: String(loggedUser.id || ''),
-            email,
-            nom: `${loggedUser.firstName || ''} ${loggedUser.lastName || ''}`.trim(),
-            role: loggedUser.role,
-          });
-          connecteProfilUniqueApi.setSessionId(registration.sessionId);
-        } catch {
-          // Service de session unique non bloquant.
-        }
-
-        navigate('/dashboard');
+        // Code correct : on ne finalise pas tout de suite. On demande
+        // d'abord à l'utilisateur s'il souhaite que ce navigateur soit
+        // reconnu comme appareil de confiance pour la prochaine fois.
+        pendingLoggedUserRef.current = authService.getCurrentUser() || {};
+        setShowTrustDevicePrompt(true);
       } finally {
         setIsVerifyingLoginOtp(false);
       }
     },
-    [verifyLoginOtp, email, password, navigate]
+    [verifyLoginOtp]
   );
 
   const handleLoginOtpResend = useCallback(async () => {
@@ -770,6 +982,49 @@ const LoginPage: React.FC = () => {
       setIsResendingLoginOtp(false);
     }
   }, [resendLoginOtp]);
+
+  // =========================================================
+  // CHOIX "RESTER CONNECTÉ SUR CE NAVIGATEUR ?" (nouveau)
+  // =========================================================
+
+  const handleTrustDeviceChoice = useCallback(
+    async (trust: boolean) => {
+      setIsSavingTrustChoice(true);
+
+      try {
+        if (trust) {
+          try {
+            // Demande au serveur de mémoriser cet appareil comme fiable
+            // pour ce compte : les prochaines connexions depuis ce même
+            // navigateur n'auront plus besoin du code à 6 chiffres.
+            // NB : on utilise ici l'instance `api` (et non `axios` brut)
+            // car la route /trust-device est protégée par authMiddleware
+            // et exige un header "Authorization: Bearer <token>". C'est
+            // l'intercepteur de requête de `api` (service/api.ts) qui
+            // ajoute automatiquement ce token depuis le localStorage.
+            await api.post('/api/auth/trust-device', {
+              deviceId: getOrCreateDeviceId(),
+            });
+          } catch {
+            // Non bloquant : si l'appel échoue, l'utilisateur se verra
+            // simplement redemander le code lors de sa prochaine connexion.
+          }
+        } else {
+          // L'utilisateur ne veut pas être reconnu : on oublie
+          // l'identifiant local. Ce navigateur redemandera donc
+          // systématiquement le code à 6 chiffres.
+          clearTrustedDeviceId();
+        }
+
+        setShowTrustDevicePrompt(false);
+        await finalizeLogin(pendingLoggedUserRef.current);
+        pendingLoggedUserRef.current = null;
+      } finally {
+        setIsSavingTrustChoice(false);
+      }
+    },
+    [finalizeLogin]
+  );
 
   // =========================================================
   // EMAIL CHANGE
@@ -831,10 +1086,12 @@ const LoginPage: React.FC = () => {
   // =========================================================
   // LOADING
   // Affiché pendant le login initial ET pendant la vérification
-  // du code OTP (2FA). En cas de code correct, handleLoginOtpVerify
-  // navigue directement vers /dashboard. En cas de code incorrect,
-  // isVerifyingLoginOtp repasse à false et on retombe naturellement
-  // sur l'écran "Vérification en 2 étapes" avec l'erreur affichée.
+  // du code OTP (2FA). En cas de code correct, on affiche ensuite
+  // l'étape "appareil de confiance" (voir showTrustDevicePrompt),
+  // gérée directement dans la carte ci-dessous. En cas de code
+  // incorrect, isVerifyingLoginOtp repasse à false et on retombe
+  // naturellement sur l'écran "Vérification en 2 étapes" avec
+  // l'erreur affichée.
   // =========================================================
 
   if (isLoggingIn || isVerifyingLoginOtp) {
@@ -939,7 +1196,12 @@ const LoginPage: React.FC = () => {
 
               <form onSubmit={handleSubmit}>
                 <CardContent className="space-y-5 px-6 sm:px-8">
-                  {loginChallenge ? (
+                  {showTrustDevicePrompt ? (
+                    <TrustDevicePrompt
+                      isSaving={isSavingTrustChoice}
+                      onChoice={handleTrustDeviceChoice}
+                    />
+                  ) : loginChallenge ? (
                     <OtpVerificationForm
                       maskedDestination={loginChallenge.maskedDestination}
                       method={loginChallenge.method}
@@ -1204,7 +1466,7 @@ const LoginPage: React.FC = () => {
                 ================================================== */}
 
                 <CardFooter className="flex flex-col gap-3 px-6 pb-7 pt-6 sm:px-8">
-                  {!loginChallenge && (
+                  {!loginChallenge && !showTrustDevicePrompt && (
                   <Button
                     type="submit"
                     disabled={
@@ -1262,6 +1524,7 @@ const LoginPage: React.FC = () => {
                   </Button>
                   )}
 
+                  {!showTrustDevicePrompt && (
                   <Link to="/register" className="w-full">
                     <Button
                       type="button"
@@ -1279,6 +1542,7 @@ const LoginPage: React.FC = () => {
                       <ArrowRight className="ml-auto h-4 w-4 text-slate-400 dark:text-white/40" />
                     </Button>
                   </Link>
+                  )}
 
                   <div
                     className="

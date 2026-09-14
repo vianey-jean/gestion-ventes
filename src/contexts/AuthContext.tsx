@@ -6,6 +6,16 @@
  *   - la connexion (login -> verifyLoginOtp)
  *   - l'inscription (register -> verifyRegisterOtp -> completeRegistration)
  *   - le mot de passe oublié (resetPasswordRequest -> verifyResetOtp -> resetPassword)
+ *
+ * NOUVEAU — Appareil de confiance :
+ *   - hydrateAuthenticatedSession(user, token) permet d'enregistrer une
+ *     session DÉJÀ authentifiée côté serveur, sans refaire d'appel réseau.
+ *     Cas d'usage : LoginPage a elle-même appelé POST /api/auth/login et
+ *     a reçu directement { user, token } (pas de requires2FA) car le
+ *     navigateur est reconnu comme "de confiance". On ne peut pas utiliser
+ *     login(credentials) ici car cette fonction attend des identifiants
+ *     (email/password) et refait un appel réseau — elle n'est pas conçue
+ *     pour "enregistrer" une session déjà obtenue.
  */
 
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
@@ -38,6 +48,13 @@ interface AuthContextType {
   verifyLoginOtp: (code: string) => Promise<boolean>;
   resendLoginOtp: () => Promise<{ success: boolean; message?: string }>;
   cancelLoginChallenge: () => void;
+  /** NOUVEAU — enregistre directement une session déjà authentifiée côté
+   *  serveur (ex: connexion réussie sans 2FA car l'appareil appelant est
+   *  reconnu comme "de confiance"). Ne fait AUCUN appel réseau : met
+   *  simplement à jour le contexte + le localStorage, comme la fin de
+   *  verifyLoginOtp() après validation du code. Renvoie false (et affiche
+   *  une erreur) si le profil utilisateur reçu est incomplet. */
+  hydrateAuthenticatedSession: (user: User, token: string) => boolean;
 
   logout: () => void;
 
@@ -304,6 +321,47 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setPendingCredentials({ password });
   };
 
+  /**
+   * NOUVEAU — Enregistre directement une session { user, token } déjà
+   * authentifiée côté serveur, sans appel réseau. Utilisé quand LoginPage
+   * a elle-même appelé POST /api/auth/login et a reçu directement une
+   * session complète (cas "appareil de confiance", pas de 2FA à faire).
+   * Reprend exactement la même logique de fin que verifyLoginOtp().
+   */
+  const hydrateAuthenticatedSession = (sessionUser: User, sessionToken: string): boolean => {
+    if (!sessionUser?.id || !sessionUser?.email || !sessionUser?.firstName || !sessionUser?.lastName) {
+      toast({
+        title: "Erreur de profil",
+        description: "Profil utilisateur incomplet dans la base de données",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    // authService peut déjà s'en charger selon son implémentation, mais on
+    // le fait explicitement ici pour garantir que l'intercepteur axios
+    // (qui lit localStorage.getItem('token')) trouve bien le token.
+    localStorage.setItem('token', sessionToken);
+    localStorage.setItem('user', JSON.stringify(sessionUser));
+
+    const fullName = `${sessionUser.firstName || ''} ${sessionUser.lastName || ''}`.trim();
+    if (fullName) localStorage.setItem('user_name', fullName);
+
+    setUser(sessionUser);
+    setToken(sessionToken);
+    setIsVerified(true);
+    setLoginChallenge(null);
+    setPendingCredentials(null);
+
+    toast({
+      title: "Connexion réussie",
+      description: `Bienvenue ${sessionUser.firstName} ${sessionUser.lastName}`,
+      className: "bg-green-600 text-white border-green-600",
+    });
+
+    return true;
+  };
+
   // ==========================================================================
   // INSCRIPTION — étape 1 : infos (sans mdp) -> étape 2 : OTP -> étape 3 : mdp
   // ==========================================================================
@@ -567,6 +625,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     verifyLoginOtp,
     resendLoginOtp,
     cancelLoginChallenge,
+    hydrateAuthenticatedSession,
 
     logout,
 
