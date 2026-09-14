@@ -20,6 +20,7 @@ import IndisponibiliteSection from './IndisponibiliteSection';
 import ModuleSettingsSection from './ModuleSettingsSection';
 import BulkDeleteModal from './BulkDeleteModal';
 import PremiumLoading from '@/components/ui/premium-loading';
+import OtpVerificationForm from '@/components/auth/OtpVerificationForm';
 
 const premiumBtnClass = "group relative overflow-hidden rounded-xl sm:rounded-2xl  border transition-all duration-300 hover:scale-105 px-4 py-2 sm:px-5 sm:py-3 text-xs sm:text-sm font-semibold";
 
@@ -50,8 +51,21 @@ const ParametresSection: React.FC<ParametresSectionProps> = ({ userRole }) => {
   const [deletePassword, setDeletePassword] = useState('');
   const [showDeletePw, setShowDeletePw] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [confirmDeleteStep, setConfirmDeleteStep] = useState(false);
   const [isDeletePasswordValid, setIsDeletePasswordValid] = useState(false);
+  /** PremiumLoading affiché juste après le clic sur "Vérifier le mot de passe"
+   *  (vérification du mot de passe + envoi automatique du code par email) */
+  const [verifyingDeletePassword, setVerifyingDeletePassword] = useState(false);
+
+  // Delete — 2FA (code à 6 chiffres envoyé par email) avant suppression définitive
+  const [showDeleteOtpStep, setShowDeleteOtpStep] = useState(false);
+  const [deleteMaskedDestination, setDeleteMaskedDestination] = useState('');
+  const [deleteOtpMethod, setDeleteOtpMethod] = useState<string>('email');
+  const [deleteOtpError, setDeleteOtpError] = useState<string | null>(null);
+  const [verifyingDeleteOtp, setVerifyingDeleteOtp] = useState(false);
+  const [resendingDeleteOtp, setResendingDeleteOtp] = useState(false);
+  /** Code à 6 chiffres validé → on affiche l'étape finale avec le bouton
+   *  "Supprimer définitivement" (la suppression n'a lieu qu'après ce clic) */
+  const [showDeleteFinalStep, setShowDeleteFinalStep] = useState(false);
 
   // Backup state
   const [showBackupDialog, setShowBackupDialog] = useState(false);
@@ -514,6 +528,137 @@ const ParametresSection: React.FC<ParametresSectionProps> = ({ userRole }) => {
     }
   };
 
+  // ========== DELETE ALL — 2FA (code à 6 chiffres envoyé par email) ==========
+  //
+  // Étapes :
+  //   1) Saisie du mot de passe → clic "Vérifier le mot de passe"
+  //      → PremiumLoading (verifyingDeletePassword) pendant la vérification
+  //        ET l'envoi automatique du code à 6 chiffres par email (comme LoginPage).
+  //   2) Formulaire de saisie du code à 6 chiffres (OtpVerificationForm)
+  //      → PremiumLoading (verifyingDeleteOtp) pendant la vérification du code.
+  //   3) Dès que le code est exact → étape finale avec le bouton
+  //      "🗑️ Supprimer définitivement" (showDeleteFinalStep).
+  //   4) La suppression réelle des données sur le serveur n'a lieu qu'au clic
+  //      sur ce bouton final → PremiumLoading (deleting) pendant la suppression.
+
+  /** Réinitialise entièrement le flux de suppression (fermeture du dialog) */
+  const resetDeleteFlow = () => {
+    setDeletePassword('');
+    setVerifyingDeletePassword(false);
+    setShowDeleteOtpStep(false);
+    setDeleteMaskedDestination('');
+    setDeleteOtpError(null);
+    setVerifyingDeleteOtp(false);
+    setResendingDeleteOtp(false);
+    setShowDeleteFinalStep(false);
+    setDeleting(false);
+  };
+
+  /**
+   * Étape 1 : vérifie le mot de passe puis, s'il est correct, envoie
+   * automatiquement le code à 6 chiffres par email (comme sur la page de
+   * connexion). Un seul PremiumLoading couvre les deux appels.
+   */
+  const handleVerifyDeletePassword = async () => {
+    if (!deletePassword) return;
+    setVerifyingDeletePassword(true);
+    try {
+      const result = await settingsApi.verifyPassword(deletePassword);
+      if (!result.valid) {
+        toast({ title: 'Erreur', description: 'Mot de passe incorrect', variant: 'destructive' });
+        return;
+      }
+
+      const response = await api.post('/api/settings/delete-all/request-otp', {
+        password: deletePassword,
+      });
+
+      if (response.data?.success) {
+        setDeleteMaskedDestination(response.data.maskedDestination || '');
+        setDeleteOtpMethod(response.data.method || 'email');
+        setDeleteOtpError(null);
+        setShowDeleteOtpStep(true);
+      } else {
+        toast({ title: 'Erreur', description: "Impossible d'envoyer le code de vérification", variant: 'destructive' });
+      }
+    } catch (e: any) {
+      toast({ title: 'Erreur', description: e?.response?.data?.message || "Mot de passe incorrect", variant: 'destructive' });
+    } finally {
+      setVerifyingDeletePassword(false);
+    }
+  };
+
+  const handleDeleteOtpResend = async () => {
+    try {
+      setResendingDeleteOtp(true);
+      const response = await api.post('/api/settings/delete-all/request-otp', {
+        password: deletePassword,
+      });
+      if (response.data?.success) {
+        setDeleteMaskedDestination(response.data.maskedDestination || deleteMaskedDestination);
+        setDeleteOtpMethod(response.data.method || deleteOtpMethod);
+        setDeleteOtpError(null);
+      }
+    } catch {
+      toast({ title: 'Erreur', description: 'Échec du renvoi du code', variant: 'destructive' });
+    } finally {
+      setResendingDeleteOtp(false);
+    }
+  };
+
+  /**
+   * Étape 2 : vérifie le code à 6 chiffres (backend :
+   * '/api/settings/delete-all/verify-otp', renvoie { valid }).
+   * Si le code est correct → on passe à l'étape finale (bouton "Supprimer
+   * définitivement"), sans encore rien supprimer. Si le code est incorrect,
+   * on reste sur l'écran "Vérification en 2 étapes" avec le message d'erreur.
+   */
+  const handleDeleteOtpVerify = async (code: string) => {
+    setVerifyingDeleteOtp(true);
+    setDeleteOtpError(null);
+    try {
+      const verifyResponse = await api.post('/api/settings/delete-all/verify-otp', { code });
+
+      if (!verifyResponse.data?.valid) {
+        setDeleteOtpError('Code incorrect ou expiré');
+        return;
+      }
+
+      // Code valide → on dirige vers l'étape finale (bouton de suppression)
+      setShowDeleteOtpStep(false);
+      setShowDeleteFinalStep(true);
+    } catch {
+      setDeleteOtpError('Code incorrect ou expiré');
+    } finally {
+      setVerifyingDeleteOtp(false);
+    }
+  };
+
+  /**
+   * Étape 3 : déclenchée uniquement par le clic sur "🗑️ Supprimer
+   * définitivement" à l'étape finale. C'est ici, et seulement ici, que
+   * toutes les données sont réellement supprimées sur le serveur.
+   */
+  const handleConfirmFinalDelete = async () => {
+    setDeleting(true);
+    try {
+      const result = await settingsApi.deleteAllData(deletePassword);
+      if (result.success) {
+        toast({ title: '✅ Données supprimées', description: result.message, className: 'bg-green-600 text-white border-green-600' });
+        setShowDeleteDialog(false);
+        resetDeleteFlow();
+        // Auto-logout after deletion
+        setTimeout(() => {
+          logout();
+        }, 1500);
+      }
+    } catch (e: any) {
+      toast({ title: 'Erreur', description: e?.response?.data?.message || 'Erreur lors de la suppression', variant: 'destructive' });
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   // Toggle component
   const Toggle = ({ value, onChange, label }: { value: boolean; onChange: (v: boolean) => void; label: string }) => (
     <div className="flex items-center justify-between py-2">
@@ -703,7 +848,7 @@ const ParametresSection: React.FC<ParametresSectionProps> = ({ userRole }) => {
                 {/* DELETE BUTTON - Only for administrateur principale */}
                 {isAdminPrincipal && (
                   <Button
-                    onClick={() => { setShowDeleteDialog(true); setDeletePassword(''); setConfirmDeleteStep(false); setIsDeletePasswordValid(false); }}
+                    onClick={() => { setShowDeleteDialog(true); resetDeleteFlow(); }}
                     className={`${premiumBtnClass} bg-gradient-to-r from-red-500/10 to-rose-500/10 border-red-300/30 text-red-600 dark:text-red-400 hover:from-red-500/20 hover:to-rose-500/20`}
                   >
                     <Trash2 className="w-4 h-4 mr-2" />
@@ -719,101 +864,117 @@ const ParametresSection: React.FC<ParametresSectionProps> = ({ userRole }) => {
 
 
       {/* ========== DELETE ALL DIALOG ========== */}
-      <AlertDialog open={showDeleteDialog} onOpenChange={v => { setShowDeleteDialog(v); if (!v) { setDeletePassword(''); setConfirmDeleteStep(false); } }}>
+      <AlertDialog open={showDeleteDialog} onOpenChange={v => { setShowDeleteDialog(v); if (!v) { resetDeleteFlow(); } }}>
         <AlertDialogContent className="rounded-3xl bg-white/95 dark:bg-[#0a0020]/95 border border-red-200/30 max-w-md">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2 text-red-600">
-              <Trash2 className="w-5 h-5" /> Supprimer toutes les données
-            </AlertDialogTitle>
-            <AlertDialogDescription className="space-y-2">
-              {!confirmDeleteStep ? (
-                <>
-                  <span className="block text-red-500 font-bold">⚠️ Cette action est IRRÉVERSIBLE !</span>
-                  <span className="block">Toutes les données seront supprimées sauf votre compte administrateur principal. Saisissez votre mot de passe pour continuer.</span>
-                </>
-              ) : (
-                <>
-                  <span className="block text-red-500 font-bold">⚠️ DERNIÈRE CONFIRMATION</span>
-                  <span className="block">Êtes-vous absolument certain de vouloir supprimer toutes les données ? Cette action ne peut pas être annulée. Vous serez déconnecté automatiquement après la suppression.</span>
-                </>
-              )}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-
-          {!confirmDeleteStep && (
-            <div className="space-y-4 py-4">
-              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">
-                Mot de passe
-              </label>
-              <div className="relative">
-                <Input
-                  type={showDeletePw ? 'text' : 'password'}
-                  value={deletePassword}
-                  onChange={e => setDeletePassword(e.target.value)}
-                  placeholder="Saisissez votre mot de passe"
-                  autoComplete="current-password"
-                  className="rounded-xl border-red-200/30 dark:border-red-800/20 pr-10"
-                />
-                <button type="button" onClick={() => setShowDeletePw(!showDeletePw)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-                  {showDeletePw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-              <PasswordStrengthChecker password={deletePassword} onValidityChange={setIsDeletePasswordValid} />
+          {deleting ? (
+            /* ================= ÉTAPE 5 — SUPPRESSION EN COURS (bouton final cliqué) ================= */
+            <div className="flex flex-col items-center justify-center gap-4 py-10">
+              <PremiumLoading text="Suppression des données..." size="md" overlay={false} variant="default" />
             </div>
-          )}
+          ) : verifyingDeletePassword ? (
+            /* ================= ÉTAPE 2 — VÉRIFICATION DU MOT DE PASSE + ENVOI DU CODE ================= */
+            <div className="flex flex-col items-center justify-center gap-4 py-10">
+              <PremiumLoading text="Vérification du mot de passe..." size="md" overlay={false} variant="default" />
+            </div>
+          ) : verifyingDeleteOtp ? (
+            /* ================= ÉTAPE 4 — VÉRIFICATION DU CODE À 6 CHIFFRES ================= */
+            <div className="flex flex-col items-center justify-center gap-4 py-10">
+              <PremiumLoading text="Vérification du code..." size="md" overlay={false} variant="default" />
+            </div>
+          ) : showDeleteFinalStep ? (
+            /* ================= ÉTAPE 5 (BOUTON) — CODE VALIDÉ, SUPPRESSION DÉFINITIVE ================= */
+            <>
+              <AlertDialogHeader>
+                <AlertDialogTitle className="flex items-center gap-2 text-red-600">
+                  <Trash2 className="w-5 h-5" /> Supprimer toutes les données
+                </AlertDialogTitle>
+                <AlertDialogDescription className="space-y-2">
+                  <span className="block text-red-500 font-bold">⚠️ DERNIÈRE ÉTAPE — ACTION IRRÉVERSIBLE</span>
+                  <span className="block">Votre code de vérification a été validé. Cliquez sur le bouton ci-dessous pour supprimer définitivement toutes les données. Vous serez déconnecté automatiquement une fois la suppression terminée.</span>
+                </AlertDialogDescription>
+              </AlertDialogHeader>
 
-          <AlertDialogFooter>
-            <AlertDialogCancel className="rounded-xl">Annuler</AlertDialogCancel>
-            {!confirmDeleteStep ? (
-              <Button
-                onClick={async () => {
-                  if (!deletePassword) return;
-                  try {
-                    const result = await settingsApi.verifyPassword(deletePassword);
-                    if (result.valid) {
-                      setConfirmDeleteStep(true);
-                    } else {
-                      toast({ title: 'Erreur', description: 'Mot de passe incorrect', variant: 'destructive' });
-                    }
-                  } catch (e: any) {
-                    toast({ title: 'Erreur', description: e?.response?.data?.message || 'Mot de passe incorrect', variant: 'destructive' });
-                  }
-                }}
-                disabled={!deletePassword || !isDeletePasswordValid}
-                className="rounded-xl bg-gradient-to-r from-red-500 to-rose-500 text-white hover:from-red-600 hover:to-rose-600"
-              >
-                Vérifier le mot de passe
-              </Button>
-            ) : (
-              <Button
-                onClick={async () => {
-                  try {
-                    setDeleting(true);
-                    const result = await settingsApi.deleteAllData(deletePassword);
-                    if (result.success) {
-                      toast({ title: '✅ Données supprimées', description: result.message, className: 'bg-green-600 text-white border-green-600' });
-                      setShowDeleteDialog(false);
-                      setDeletePassword('');
-                      setConfirmDeleteStep(false);
-                      // Auto-logout after deletion
-                      setTimeout(() => {
-                        logout();
-                      }, 1500);
-                    }
-                  } catch (e: any) {
-                    toast({ title: 'Erreur', description: e?.response?.data?.message || 'Erreur lors de la suppression', variant: 'destructive' });
-                  } finally {
-                    setDeleting(false);
-                  }
-                }}
-                disabled={deleting}
-                className="rounded-xl bg-gradient-to-r from-red-600 to-rose-600 text-white hover:from-red-700 hover:to-rose-700"
-              >
-                {deleting ? 'Suppression...' : '🗑️ Supprimer définitivement'}
-              </Button>
-            )}
-          </AlertDialogFooter>
+              <AlertDialogFooter>
+                <AlertDialogCancel className="rounded-xl">Annuler</AlertDialogCancel>
+                <Button
+                  onClick={handleConfirmFinalDelete}
+                  className="rounded-xl bg-gradient-to-r from-red-600 to-rose-600 text-white hover:from-red-700 hover:to-rose-700"
+                >
+                  🗑️ Supprimer définitivement
+                </Button>
+              </AlertDialogFooter>
+            </>
+          ) : showDeleteOtpStep ? (
+            /* ================= ÉTAPE 3 — CODE À 6 CHIFFRES (EMAIL) ================= */
+            <>
+              <AlertDialogHeader>
+                <AlertDialogTitle className="flex items-center gap-2 text-red-600">
+                  <Trash2 className="w-5 h-5" /> Supprimer toutes les données
+                </AlertDialogTitle>
+              </AlertDialogHeader>
+
+              <OtpVerificationForm
+                maskedDestination={deleteMaskedDestination}
+                method={deleteOtpMethod}
+                onVerify={handleDeleteOtpVerify}
+                onResend={handleDeleteOtpResend}
+                error={deleteOtpError}
+                isVerifying={verifyingDeleteOtp}
+                isResending={resendingDeleteOtp}
+                title="Vérification en 2 étapes"
+                description="Entrez le code à 6 chiffres reçu par email pour confirmer la suppression définitive des données."
+              />
+
+              <AlertDialogFooter>
+                <AlertDialogCancel className="rounded-xl">Annuler</AlertDialogCancel>
+              </AlertDialogFooter>
+            </>
+          ) : (
+            /* ================= ÉTAPE 1 — SAISIE DU MOT DE PASSE ================= */
+            <>
+              <AlertDialogHeader>
+                <AlertDialogTitle className="flex items-center gap-2 text-red-600">
+                  <Trash2 className="w-5 h-5" /> Supprimer toutes les données
+                </AlertDialogTitle>
+                <AlertDialogDescription className="space-y-2">
+                  <span className="block text-red-500 font-bold">⚠️ Cette action est IRRÉVERSIBLE !</span>
+                  <span className="block">Toutes les données seront supprimées sauf votre compte administrateur principal. Saisissez votre mot de passe pour recevoir un code de vérification par email.</span>
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+
+              <div className="space-y-4 py-4">
+                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">
+                  Mot de passe
+                </label>
+                <div className="relative">
+                  <Input
+                    type={showDeletePw ? 'text' : 'password'}
+                    value={deletePassword}
+                    onChange={e => setDeletePassword(e.target.value)}
+                    placeholder="Saisissez votre mot de passe"
+                    autoComplete="current-password"
+                    className="rounded-xl border-red-200/30 dark:border-red-800/20 pr-10"
+                  />
+                  <button type="button" onClick={() => setShowDeletePw(!showDeletePw)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                    {showDeletePw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+                <PasswordStrengthChecker password={deletePassword} onValidityChange={setIsDeletePasswordValid} />
+              </div>
+
+              <AlertDialogFooter>
+                <AlertDialogCancel className="rounded-xl">Annuler</AlertDialogCancel>
+                <Button
+                  onClick={handleVerifyDeletePassword}
+                  disabled={!deletePassword || !isDeletePasswordValid}
+                  className="rounded-xl bg-gradient-to-r from-red-500 to-rose-500 text-white hover:from-red-600 hover:to-rose-600"
+                >
+                  Vérifier le mot de passe
+                </Button>
+              </AlertDialogFooter>
+            </>
+          )}
         </AlertDialogContent>
       </AlertDialog>
 
