@@ -28,6 +28,7 @@ import {
 
 import PasswordInput from "@/components/PasswordInput";
 import PasswordStrengthChecker from "@/components/PasswordStrengthChecker";
+import OtpVerificationForm from "@/components/auth/OtpVerificationForm";
 import Layout from "@/components/Layout";
 import PremiumLoading from "@/components/ui/premium-loading";
 import SEOHead from "@/components/SEOHead";
@@ -88,7 +89,7 @@ const initialFormData: FormData = {
 
 const RegisterPage: React.FC = () => {
   const navigate = useNavigate();
-  const { register, checkEmail } = useAuth();
+  const { register, checkEmail, registerChallenge, verifyRegisterOtp, resendRegisterOtp, completeRegistration } = useAuth();
   const { toast } = useToast();
 
   const [formData, setFormData] =
@@ -355,6 +356,11 @@ const RegisterPage: React.FC = () => {
     setErrors({});
 
     try {
+      // Étape 1/3 : on envoie les informations du profil (SANS mot de passe).
+      // Le mot de passe saisi ci-dessus est conservé localement le temps que
+      // l'email soit confirmé par code OTP ; il n'est transmis au serveur, et
+      // le compte n'est réellement créé, qu'après validation du code
+      // (voir handleRegisterOtpVerify -> completeRegistration).
       const success = await register({
         email: formData.email.trim(),
         password: formData.password,
@@ -373,16 +379,8 @@ const RegisterPage: React.FC = () => {
       if (!success) {
         return;
       }
-
-      toast({
-        title: "Compte créé avec succès !",
-        description:
-          "Vous pouvez maintenant vous connecter avec vos identifiants.",
-        className:
-          "bg-emerald-600 text-white border-emerald-600",
-      });
-
-      navigate("/login");
+      // Le formulaire cède maintenant la place à l'étape de vérification OTP
+      // (voir le rendu conditionnel sur `registerChallenge`).
     } catch (error: any) {
       console.error("Erreur d'inscription :", error);
 
@@ -404,6 +402,55 @@ const RegisterPage: React.FC = () => {
       });
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  /*
+   * --------------------------------------------------------------------------
+   * 2FA — VALIDATION DU CODE D'INSCRIPTION PUIS CRÉATION DU COMPTE
+   * --------------------------------------------------------------------------
+   */
+
+  const [isVerifyingRegisterOtp, setIsVerifyingRegisterOtp] = useState(false);
+  const [isResendingRegisterOtp, setIsResendingRegisterOtp] = useState(false);
+  const [registerOtpError, setRegisterOtpError] = useState<string | null>(null);
+
+  const handleRegisterOtpVerify = async (code: string) => {
+    setIsVerifyingRegisterOtp(true);
+    setRegisterOtpError(null);
+    try {
+      const verified = await verifyRegisterOtp(code);
+      if (!verified) {
+        setRegisterOtpError('Code incorrect ou expiré');
+        return;
+      }
+
+      // Email confirmé : on crée maintenant réellement le compte avec le
+      // mot de passe déjà saisi et validé à l'étape précédente.
+      const created = await completeRegistration(formData.password, formData.confirmPassword);
+      if (!created) {
+        setRegisterOtpError("Impossible de finaliser la création du compte");
+        return;
+      }
+
+      toast({
+        title: "Compte créé avec succès !",
+        description: "Vous pouvez maintenant vous connecter avec vos identifiants.",
+        className: "bg-emerald-600 text-white border-emerald-600",
+      });
+
+      navigate("/login");
+    } finally {
+      setIsVerifyingRegisterOtp(false);
+    }
+  };
+
+  const handleRegisterOtpResend = async () => {
+    setIsResendingRegisterOtp(true);
+    try {
+      await resendRegisterOtp();
+    } finally {
+      setIsResendingRegisterOtp(false);
     }
   };
 
@@ -810,6 +857,20 @@ const RegisterPage: React.FC = () => {
 
               <form onSubmit={handleSubmit}>
                 <CardContent className="space-y-8 px-6 sm:px-9">
+                  {registerChallenge ? (
+                    <OtpVerificationForm
+                      maskedDestination={registerChallenge.maskedDestination}
+                      method={registerChallenge.method}
+                      onVerify={handleRegisterOtpVerify}
+                      onResend={handleRegisterOtpResend}
+                      error={registerOtpError}
+                      isVerifying={isVerifyingRegisterOtp}
+                      isResending={isResendingRegisterOtp}
+                      title="Confirmez votre inscription"
+                      description="Un code à 6 chiffres vous a été envoyé pour valider votre adresse email avant la création de votre compte."
+                    />
+                  ) : (
+                  <>
                   {/* ---------------------------------------------------------- */}
                   {/* PERSONAL                                                     */}
                   {/* ---------------------------------------------------------- */}
@@ -1205,6 +1266,8 @@ const RegisterPage: React.FC = () => {
                       />
                     )}
                   </section>
+                  </>
+                  )}
                 </CardContent>
 
                 {/* ------------------------------------------------------------ */}
@@ -1212,6 +1275,7 @@ const RegisterPage: React.FC = () => {
                 {/* ------------------------------------------------------------ */}
 
                 <CardFooter className="flex flex-col gap-5 px-6 pb-9 pt-7 sm:px-9">
+                  {!registerChallenge && (
                   <Button
                     type="submit"
                     disabled={
@@ -1238,21 +1302,21 @@ const RegisterPage: React.FC = () => {
                     "
                   >
                     <span className="flex items-center justify-center gap-3">
-                      {isEmailChecking ? (
+                      {isEmailChecking || isSubmitting ? (
                         <>
                           <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                          Vérification...
+                          {isSubmitting ? "Envoi du code..." : "Vérification..."}
                         </>
                       ) : (
                         <>
                           <Sparkles className="h-5 w-5" />
-                          Créer mon compte
+                          Continuer
                           <ArrowRight className="h-5 w-5" />
                         </>
                       )}
                     </span>
                   </Button>
-
+                  )}
                   <p
                     className={`text-center text-sm ${secondaryText}`}
                   >

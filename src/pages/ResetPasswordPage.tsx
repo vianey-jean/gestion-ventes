@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import PasswordInput from '@/components/PasswordInput';
 import PasswordStrengthChecker from '@/components/PasswordStrengthChecker';
+import OtpVerificationForm from '@/components/auth/OtpVerificationForm';
 import Layout from '@/components/Layout';
 import PremiumLoading from '@/components/ui/premium-loading';
 import { KeyRound, Mail, ArrowLeft, Shield, CheckCircle, Crown, Fingerprint, Star, BarChart3, Users, Package, TrendingUp } from 'lucide-react';
@@ -15,38 +16,61 @@ import SEOHead from '@/components/SEOHead';
 
 const ResetPasswordPage: React.FC = () => {
   const navigate = useNavigate();
-  const { resetPasswordRequest, resetPassword } = useAuth();
-  
+  const { resetPasswordRequest, resetChallenge, verifyResetOtp, resendResetOtp, resetPassword } = useAuth();
+
   const [email, setEmail] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [emailVerified, setEmailVerified] = useState(false);
+  const [otpVerified, setOtpVerified] = useState(false);
+  const [otpError, setOtpError] = useState<string | null>(null);
+  const [verifyingOtp, setVerifyingOtp] = useState(false);
+  const [resendingOtp, setResendingOtp] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; newPassword?: string; confirmPassword?: string }>({});
   const [isLoading, setIsLoading] = useState(false);
   const [isPasswordValid, setIsPasswordValid] = useState(false);
   const [showPasswordChecker, setShowPasswordChecker] = useState(true); // Pour fermer le checker automatiquement
+
+  // On est à l'étape "mot de passe" une fois le code OTP validé
+  const emailVerified = otpVerified;
 
   const validatePassword = () => {
     const hasLowerCase = /[a-z]/.test(newPassword);
     const hasUpperCase = /[A-Z]/.test(newPassword);
     const hasNumber = /[0-9]/.test(newPassword);
     const hasSpecialChar = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(newPassword);
-    const hasMinLength = newPassword.length >= 6;
-    
+    const hasMinLength = newPassword.length >= 8;
+
     return hasLowerCase && hasUpperCase && hasNumber && hasSpecialChar && hasMinLength;
   };
-  
+
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrors({});
     if (!email) { setErrors({ email: 'Veuillez entrer votre email' }); return; }
     if (!/\S+@\S+\.\S+/.test(email)) { setErrors({ email: 'Veuillez entrer un email valide' }); return; }
     setIsLoading(true);
-    const success = await resetPasswordRequest({ email });
+    await resetPasswordRequest({ email });
     setIsLoading(false);
-    if (success) setEmailVerified(true);
   };
-  
+
+  const handleOtpVerify = async (code: string) => {
+    setVerifyingOtp(true);
+    setOtpError(null);
+    const success = await verifyResetOtp(code);
+    setVerifyingOtp(false);
+    if (success) {
+      setOtpVerified(true);
+    } else {
+      setOtpError('Code incorrect ou expiré');
+    }
+  };
+
+  const handleOtpResend = async () => {
+    setResendingOtp(true);
+    await resendResetOtp();
+    setResendingOtp(false);
+  };
+
   const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrors({});
@@ -57,7 +81,7 @@ const ResetPasswordPage: React.FC = () => {
     else if (newPassword !== confirmPassword) { newErrors.confirmPassword = 'Les mots de passe ne correspondent pas'; }
     if (Object.keys(newErrors).length > 0) { setErrors(newErrors); return; }
     setIsLoading(true);
-    const success = await resetPassword({ email, newPassword, confirmPassword });
+    const success = await resetPassword(newPassword, confirmPassword);
     setIsLoading(false);
     if (success) navigate('/login');
   };
@@ -186,6 +210,21 @@ const ResetPasswordPage: React.FC = () => {
               </CardHeader>
               
               {!emailVerified ? (
+                resetChallenge ? (
+                  <CardContent className="px-8 pb-10">
+                    <OtpVerificationForm
+                      maskedDestination={resetChallenge.maskedDestination}
+                      method={resetChallenge.method}
+                      onVerify={handleOtpVerify}
+                      onResend={handleOtpResend}
+                      error={otpError}
+                      isVerifying={verifyingOtp}
+                      isResending={resendingOtp}
+                      title="Vérifiez votre identité"
+                      description="Saisissez le code à 6 chiffres reçu pour continuer la réinitialisation."
+                    />
+                  </CardContent>
+                ) : (
                 <form onSubmit={handleEmailSubmit}>
                   <CardContent className="space-y-6 px-8">
                     <Label htmlFor="email" className="text-sm font-semibold text-purple-200/80 flex items-center gap-2">
@@ -205,10 +244,11 @@ const ResetPasswordPage: React.FC = () => {
                   </CardContent>
                   <CardFooter className="px-8 pb-10">
                     <Button type="submit" disabled={isLoading} className="w-full h-14 bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 text-white font-bold rounded-xl">
-                      Envoyer le lien
+                      Envoyer le code
                     </Button>
                   </CardFooter>
                 </form>
+                )
               ) : (
                 <form onSubmit={handlePasswordSubmit}>
                   <CardContent className="space-y-6 px-8">

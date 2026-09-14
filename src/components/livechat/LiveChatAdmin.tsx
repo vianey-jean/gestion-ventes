@@ -193,7 +193,28 @@ const LiveChatAdmin: React.FC = () => {
   const isAdmin = user?.role === 'administrateur' || user?.role === 'administrateur principale';
 
   const token = localStorage.getItem('token');
+  // Toujours relire le jeton au moment de l'appel (évite un jeton périmé/absent
+  // capturé au premier rendu, juste avant la fin de la connexion)
+  const getAuthHeaders = useCallback(() => {
+    const t = localStorage.getItem('token');
+    return t
+      ? { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' }
+      : null;
+  }, []);
   const authHeaders = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
+
+  // Si le serveur refuse le jeton (expiré / secret changé), on arrête de boucler
+  // et on demande une reconnexion propre.
+  const unauthorizedRef = useRef(false);
+  const handleAuthFailure = useCallback((res: Response) => {
+    if (res.status === 401 && !unauthorizedRef.current) {
+      unauthorizedRef.current = true;
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      window.dispatchEvent(new CustomEvent('auth:logout'));
+    }
+    return res;
+  }, []);
 
   // ========== VISITOR CHAT FUNCTIONS ==========
   const loadConversations = useCallback(async () => {

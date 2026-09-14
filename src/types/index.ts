@@ -9,6 +9,10 @@ export type {
   PasswordResetRequest,
   PasswordResetData,
   AuthResponse,
+  OtpChallenge,
+  OtpVerifyPayload,
+  LoginOtpState,
+  RegisterOtpState,
 } from './auth';
 
 // Types de clients

@@ -56,6 +56,8 @@ import Layout from '@/components/Layout';
 import SEOHead from '@/components/SEOHead';
 
 import { useAuth } from '@/contexts/AuthContext';
+import { authService } from '@/service/api';
+import OtpVerificationForm from '@/components/auth/OtpVerificationForm';
 import connecteProfilUniqueApi from '@/services/api/connecteProfilUniqueApi';
 import { savePendingLogin } from '@/pages/SessionConflictPage';
 
@@ -398,7 +400,7 @@ const CardHeaderBlock = React.memo(function CardHeaderBlock() {
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, loginChallenge, hydrateLoginChallenge, verifyLoginOtp, resendLoginOtp, cancelLoginChallenge } = useAuth();
   const reducedMotion = useReducedMotion();
 
   // =========================================================
@@ -636,71 +638,18 @@ const LoginPage: React.FC = () => {
           }
         );
 
-        if (response.data?.token) {
+        if (response.data?.requires2FA && response.data?.challengeId) {
           setFailedAttempts(0);
-
-          const loggedUser = response.data.user || {};
-
-          // =====================================================
-          // SESSION UNIQUE
-          // =====================================================
-
-          try {
-            const check = await connecteProfilUniqueApi.check({
-              userId: String(loggedUser.id || ''),
-              role: loggedUser.role,
-            });
-
-            if (!check.allowed && check.conflict) {
-              savePendingLogin({
-                email: cleanEmail,
-                password,
-                userId: String(loggedUser.id || ''),
-                role: loggedUser.role,
-                nom: `${loggedUser.firstName || ''} ${
-                  loggedUser.lastName || ''
-                }`.trim(),
-                conflict: check.conflict,
-              });
-
-              setIsLoggingIn(false);
-              navigate('/session-conflict');
-              return;
-            }
-          } catch {
-            // Service de session unique non bloquant.
-          }
-
-          // =====================================================
-          // AUTH CONTEXT
-          // =====================================================
-
-          const success = await login({
-            email: cleanEmail,
-            password,
-          });
-
-          if (success) {
-            try {
-              const registration =
-                await connecteProfilUniqueApi.registerLogin({
-                  userId: String(loggedUser.id || ''),
-                  email: cleanEmail,
-                  nom: `${loggedUser.firstName || ''} ${
-                    loggedUser.lastName || ''
-                  }`.trim(),
-                  role: loggedUser.role,
-                });
-
-              connecteProfilUniqueApi.setSessionId(
-                registration.sessionId
-              );
-            } catch {
-              // Non bloquant.
-            }
-
-            navigate('/dashboard');
-          }
+          // Enregistre le challenge OTP dans le contexte (sans nouvel appel réseau)
+          hydrateLoginChallenge(
+            {
+              challengeId: response.data.challengeId,
+              method: response.data.method,
+              maskedDestination: response.data.maskedDestination,
+              expiresAt: response.data.expiresAt,
+            },
+            password
+          );
         }
       } catch (error: any) {
         const status = error?.response?.status;
@@ -736,11 +685,80 @@ const LoginPage: React.FC = () => {
       showPasswordField,
       isLocked,
       maxAttempts,
-      login,
-      navigate,
+      hydrateLoginChallenge,
       handleEmailCheck,
     ]
   );
+
+  // =========================================================
+  // 2FA — VALIDATION DU CODE DE CONNEXION
+  // =========================================================
+
+  const [isVerifyingLoginOtp, setIsVerifyingLoginOtp] = useState(false);
+  const [isResendingLoginOtp, setIsResendingLoginOtp] = useState(false);
+  const [loginOtpError, setLoginOtpError] = useState<string | null>(null);
+
+  const handleLoginOtpVerify = useCallback(
+    async (code: string) => {
+      setIsVerifyingLoginOtp(true);
+      setLoginOtpError(null);
+      try {
+        const success = await verifyLoginOtp(code);
+        if (!success) {
+          setLoginOtpError('Code incorrect ou expiré');
+          return;
+        }
+
+        const loggedUser = authService.getCurrentUser() || {};
+
+        // =====================================================
+        // SESSION UNIQUE (effectuée une fois la 2FA validée)
+        // =====================================================
+        try {
+          const check = await connecteProfilUniqueApi.check({
+            userId: String(loggedUser.id || ''),
+            role: loggedUser.role,
+          });
+
+          if (!check.allowed && check.conflict) {
+            savePendingLogin({
+              email,
+              userId: String(loggedUser.id || ''),
+              role: loggedUser.role,
+              nom: `${loggedUser.firstName || ''} ${loggedUser.lastName || ''}`.trim(),
+              conflict: check.conflict,
+            });
+            navigate('/session-conflict');
+            return;
+          }
+
+          const registration = await connecteProfilUniqueApi.registerLogin({
+            userId: String(loggedUser.id || ''),
+            email,
+            nom: `${loggedUser.firstName || ''} ${loggedUser.lastName || ''}`.trim(),
+            role: loggedUser.role,
+          });
+          connecteProfilUniqueApi.setSessionId(registration.sessionId);
+        } catch {
+          // Service de session unique non bloquant.
+        }
+
+        navigate('/dashboard');
+      } finally {
+        setIsVerifyingLoginOtp(false);
+      }
+    },
+    [verifyLoginOtp, email, password, navigate]
+  );
+
+  const handleLoginOtpResend = useCallback(async () => {
+    setIsResendingLoginOtp(true);
+    try {
+      await resendLoginOtp();
+    } finally {
+      setIsResendingLoginOtp(false);
+    }
+  }, [resendLoginOtp]);
 
   // =========================================================
   // EMAIL CHANGE
@@ -905,6 +923,20 @@ const LoginPage: React.FC = () => {
 
               <form onSubmit={handleSubmit}>
                 <CardContent className="space-y-5 px-6 sm:px-8">
+                  {loginChallenge ? (
+                    <OtpVerificationForm
+                      maskedDestination={loginChallenge.maskedDestination}
+                      method={loginChallenge.method}
+                      onVerify={handleLoginOtpVerify}
+                      onResend={handleLoginOtpResend}
+                      error={loginOtpError}
+                      isVerifying={isVerifyingLoginOtp}
+                      isResending={isResendingLoginOtp}
+                      title="Vérification en 2 étapes"
+                      description="Entrez le code à 6 chiffres reçu pour terminer votre connexion."
+                    />
+                  ) : (
+                  <>
                   {/* EMAIL */}
 
                   <div className="space-y-2.5">
@@ -1147,6 +1179,8 @@ const LoginPage: React.FC = () => {
                       </div>
                     </div>
                   )}
+                  </>
+                  )}
                 </CardContent>
 
                 {/* =================================================
@@ -1154,6 +1188,7 @@ const LoginPage: React.FC = () => {
                 ================================================== */}
 
                 <CardFooter className="flex flex-col gap-3 px-6 pb-7 pt-6 sm:px-8">
+                  {!loginChallenge && (
                   <Button
                     type="submit"
                     disabled={
@@ -1209,6 +1244,7 @@ const LoginPage: React.FC = () => {
                       )}
                     </span>
                   </Button>
+                  )}
 
                   <Link to="/register" className="w-full">
                     <Button
