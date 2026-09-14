@@ -24,6 +24,17 @@
  * - Préconnexion réseau anticipée vers l'API (DNS + TLS avant le 1er call)
  * - useCallback sur les handlers, constantes hors-composant (pas de
  *   recréation d'objets/array à chaque render)
+ *
+ * Correction apportée (2FA) :
+ * - Le PremiumLoading plein écran s'affiche désormais aussi pendant la
+ *   vérification du code OTP (isVerifyingLoginOtp), pas uniquement lors
+ *   du login initial (isLoggingIn).
+ * - Si le code est correct → navigation directe vers /dashboard (déjà
+ *   géré par handleLoginOtpVerify, inchangé).
+ * - Si le code est incorrect → une fois le loading terminé, on revient
+ *   automatiquement sur l'écran "Vérification en 2 étapes / Entrez le
+ *   code à 6 chiffres reçu pour terminer votre connexion." avec le
+ *   message d'erreur (comportement déjà géré par loginOtpError, inchangé).
  */
 
 import React, {
@@ -819,15 +830,20 @@ const LoginPage: React.FC = () => {
 
   // =========================================================
   // LOADING
+  // Affiché pendant le login initial ET pendant la vérification
+  // du code OTP (2FA). En cas de code correct, handleLoginOtpVerify
+  // navigue directement vers /dashboard. En cas de code incorrect,
+  // isVerifyingLoginOtp repasse à false et on retombe naturellement
+  // sur l'écran "Vérification en 2 étapes" avec l'erreur affichée.
   // =========================================================
 
-  if (isLoggingIn) {
+  if (isLoggingIn || isVerifyingLoginOtp) {
     return (
       <Layout>
         <div className="flex min-h-[300px] items-center justify-center">
           <Suspense fallback={null}>
             <PremiumLoading
-              text="Bienvenue ..."
+              text={isVerifyingLoginOtp ? 'Vérification du code ...' : 'Bienvenue ...'}
               size="lg"
               overlay={false}
               variant="default"
